@@ -1,6 +1,13 @@
-NEWS  Last Modified: Tue Dec 30 03:21:15 2003.
+NEWS  Last Modified: Sun Feb 29 23:48:23 2004.
 
-THIS IS A DEVELOPING RELEASE.
+20040229:
+ Upgraded libmpeg2 to 0.4.0 from 0.2.1.
+ Integrated libmad-0.15.0b, libj2k.
+ New Loader plugins: JasPer, J2K.
+ Generic player architecture.
+ Audiodecoder plugins: mad, mpglib, vorbis
+ Videodecoder plugins: avcodec, DivX, LibMPEG2, raw
+ Demultiplexer plugins: AVI MPEG OGG
 
 20031230:
  Meta:
