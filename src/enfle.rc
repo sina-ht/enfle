@@ -1,5 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Sep 30 18:17:31 2000.
+; Last Modified: Mon Oct  2 10:47:23 2000.
+; $Id: enfle.rc,v 1.2 2000/10/02 03:01:20 sian Exp $
 
 enfle {
 	plugins {
