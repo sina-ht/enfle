@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Mar 11 22:42:08 2004.
-# $Id: Makefile.am,v 1.5 2004/03/11 15:09:01 sian Exp $
+# Last Modified: Fri Mar 12 08:13:01 2004.
+# $Id: Makefile.am,v 1.6 2004/03/11 23:13:58 sian Exp $
 
 AM_CFLAGS = -Dasm=__asm__
 EXTRA_DIST = mad.h.sed CHANGES COPYRIGHT CREDITS README TODO VERSION
@@ -25,6 +25,7 @@ exported_headers = \
 
 noinst_HEADERS = \
 	$(exported_headers) \
+	config.h \
 	global.h \
 	huffman.h \
 	layer12.h \
