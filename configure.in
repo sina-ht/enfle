@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Oct 10 05:18:30 2000.
-dnl $Id: configure.in,v 1.5 2000/10/09 20:30:11 sian Exp $
+dnl Last Modified: Wed Oct 11 16:45:41 2000.
+dnl $Id: configure.in,v 1.6 2000/10/12 03:47:04 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -77,6 +77,15 @@ AC_CHECK_HEADER(jpeglib.h,
 AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
 AC_SUBST(LIBADD_JPEG)
 
+available_mpeg_lib=no
+AC_CHECK_HEADER(mpeg.h, [
+  AC_CHECK_LIB(mpeg, OpenMPEG, [ available_mpeg_lib=partial ])
+  if test "$available_mpeg_lib" = "partial"; then
+    AC_CHECK_LIB(mpeg, OpenMPEGStream, [ available_mpeg_lib=yes; LIBADD_MPEG_LIB=-lmpeg ], [ echo "mpeg_lib requires patch." ])
+  fi])
+AM_CONDITIONAL(HAVE_MPEG_LIB, test "$available_mpeg_lib" = "yes")
+AC_SUBST(LIBADD_MPEG_LIB)
+
 available_zlib=no
 AC_CHECK_HEADER(zlib.h,
   AC_CHECK_LIB(z, gzseek, [ available_zlib=yes; LIBADD_ZLIB=-lz; ]))
@@ -89,7 +98,7 @@ if test "$available_zlib" = "yes"; then
   dnl Some libpng needs pow
   AC_CHECK_HEADER(png.h, [
     AC_CHECK_LIB(png, png_get_IHDR, [ available_png=yes; LIBADD_PNG="$LIBADD_PNG -lpng"; ])
-    if test "$avalable_png" = "no"; then
+    if test "$available_png" = "no"; then
       AC_CHECK_LIB(m, pow)
       AC_CHECK_LIB(png, png_get_IHDR, [ available_png=yes; LIBADD_PNG="$LIBADD_PNG -lm -lpng"; ])
     fi;
@@ -191,4 +200,5 @@ AC_OUTPUT(
     plugins/archiver/tar/Makefile
    plugins/player/Makefile
     plugins/player/ungif/Makefile
+    plugins/player/mpeg_lib/Makefile
 )
