@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug  8 23:41:40 2002.
- * $Id: hash.h,v 1.7 2002/08/08 15:07:24 sian Exp $
+ * Last Modified: Thu Aug 15 22:43:36 2002.
+ * $Id: hash.h,v 1.8 2002/08/17 02:16:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,9 +30,11 @@ typedef struct {
   unsigned int len;
 } Hash_key;
 
+typedef void (*Hash_data_destructor)(void *);
 typedef struct {
   Dlist_data *key;
   void *datum;
+  Hash_data_destructor data_destructor;
 } Hash_data;
 
 typedef struct _hash Hash;
@@ -45,20 +47,26 @@ struct _hash {
 };
 
 Hash *hash_create(int);
+int hash_define_object(Hash *, void *, unsigned int, void *, Hash_data_destructor);
 int hash_define(Hash *, void *, unsigned int, void *);
+int hash_define_value(Hash *, void *, unsigned int, void *);
+int hash_set_object(Hash *, void *, unsigned int, void *, Hash_data_destructor);
 int hash_set(Hash *, void *, unsigned int, void *);
+int hash_set_value(Hash *, void *, unsigned int, void *);
 void *hash_lookup(Hash *, void *, unsigned int);
-int hash_delete(Hash *, void *, unsigned int, int);
+int hash_delete(Hash *, void *, unsigned int);
 void hash_set_function(Hash *, unsigned int (*)(void *, unsigned int));
 void hash_set_function2(Hash *, unsigned int (*)(void *, unsigned int));
 int hash_get_key_size(Hash *);
-void hash_destroy(Hash *, int);
+void hash_destroy(Hash *);
 
 /* avoid side effect */
 #define hash_define_str(h, k, d) ({void * _k = (void *)(k); hash_define((h), _k, strlen((const char *)_k) + 1, (d));})
 #define hash_set_str(h, k, d) ({void * _k = (void *)(k); hash_set((h), _k, strlen((const char *)_k) + 1, (d));})
+#define hash_define_str_value(h, k, d) ({void * _k = (void *)(k); hash_define_value((h), _k, strlen((const char *)_k) + 1, (d));})
+#define hash_set_str_value(h, k, d) ({void * _k = (void *)(k); hash_set_value((h), _k, strlen((const char *)_k) + 1, (d));})
 #define hash_lookup_str(h, k) ({void * _k = (void *)(k); hash_lookup((h), _k, strlen((const char *)_k) + 1);})
-#define hash_delete_str(h, k, f) ({void * _k = (void *)(k); hash_delete((h), _k, strlen((const char *)_k) + 1, (f));})
+#define hash_delete_str(h, k) ({void * _k = (void *)(k); hash_delete((h), _k, strlen((const char *)_k) + 1);})
 
 #define hash_get_keys(h) ((h)->keys)
 
