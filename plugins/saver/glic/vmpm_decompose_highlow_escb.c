@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow_escb.c -- Threshold ESC-B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep  6 12:34:12 2001.
- * $Id: vmpm_decompose_highlow_escb.c,v 1.4 2001/09/07 04:56:33 sian Exp $
+ * Last Modified: Mon Sep 10 09:01:46 2001.
+ * $Id: vmpm_decompose_highlow_escb.c,v 1.5 2001/09/10 00:04:51 sian Exp $
  */
 
 #include <stdio.h>
@@ -277,8 +277,10 @@ encode(VMPM *vmpm)
     for (j = 0; j < (1 << vmpm->nlowbits); j++)
       arithmodel_install_symbol(low_ams[i], 1);
   }
-  for (i = 0; i < vmpm->bufferused; i++)
-    arithmodel_encode(low_ams[vmpm->buffer[i]], vmpm->buffer_low[i]);
+
+  for (i = 0; i < vmpm->buffer_low_size; i++)
+    arithmodel_encode(low_ams[vmpm->buffer_high[i]], vmpm->buffer_low[i]);
+
   for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
     arithmodel_encode_final(low_ams[i]);
   for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
@@ -286,6 +288,8 @@ encode(VMPM *vmpm)
 
   arithcoder_encode_final(ac);
   arithcoder_destroy(ac);
+
+  free(low_ams);
 }
 
 static void

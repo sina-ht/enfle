@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep  6 12:34:34 2001.
- * $Id: glic.c,v 1.17 2001/09/07 04:46:19 sian Exp $
+ * Last Modified: Sun Sep  9 10:28:14 2001.
+ * $Id: glic.c,v 1.18 2001/09/10 00:04:51 sian Exp $
  */
 
 #include <stdlib.h>
@@ -198,6 +198,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   if ((vmpm.buffer = malloc(image_size)) == NULL)
     memory_error(NULL, MEMORY_ERROR);
   vmpm.buffersize = image_size;
+  vmpm.bufferused = image_size;
   debug_message("glic: %d bytes allocated.\n", image_size);
 
   /* prediction */
@@ -215,10 +216,12 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   scan(vmpm.buffer, predicted, p->width, p->height, scan_id);
   free(predicted);
 
-  vmpm.bufferused = image_size;
+  if (vmpm.nlowbits > 0 && !threshold(&vmpm)) {
+    show_message("threshold() failed.\n");
+    return 0;
+  }
 
-  if (vmpm.nlowbits > 0)
-    threshold(&vmpm);
+  debug_message(__FUNCTION__ ": nlowbits = %d, bufferused = %d, bps = %d, alphasize = %d\n", vmpm.nlowbits, vmpm.bufferused, vmpm.bits_per_symbol, vmpm.alphabetsize);
 
   if (vmpm.bitwise)
     expand(&vmpm);
@@ -227,10 +230,15 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   debug_message("glic: decomposed.\n");
 
   /* output header */
-  fprintf(vmpm.outfile, "GC%s\n\x1a%c%c", decompose_method, scan_id, predict_id);
+  fprintf(vmpm.outfile, "GC%s\n\x1a%c%c%c%c", decompose_method, scan_id, predict_id, (vmpm.nlowbits << 4) | vmpm.bits_per_symbol, vmpm.r);
 
   vmpm.decomposer->encode(&vmpm);
   debug_message("glic: encoded.\n");
+
+  if (vmpm.buffer_high) {
+    free(vmpm.buffer_high);
+    vmpm.buffer_high = NULL;
+  }
 
   if (vmpm.buffer_low) {
     free(vmpm.buffer_low);
@@ -249,10 +257,13 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
       stat_message(&vmpm, "Invalid character after the header: %c\n", c);
       debug_message("glic: check failed.\n");
     } else {
+      int t, r;
       scan_id = fgetc(vmpm.outfile);
       predict_id = fgetc(vmpm.outfile);
-      stat_message(&vmpm, "D:scan %s/predictor %s\n", scan_get_name_by_id(scan_id), predict_get_name_by_id(predict_id));
-      debug_message("glic: checked (incomplete).\n");
+      t = fgetc(vmpm.outfile);
+      r = fgetc(vmpm.outfile);
+      stat_message(&vmpm, "D:scan %s/predictor %s/%d lowbits/%d bps/r=%d\n", scan_get_name_by_id(scan_id), predict_get_name_by_id(predict_id), t >> 4, t & 0xf, r);
+      debug_message("glic: header OK.\n");
     }
   }
 
