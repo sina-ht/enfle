@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  7 01:03:47 2003.
- * $Id: fifo.c,v 1.11 2003/11/08 06:15:29 sian Exp $
+ * Last Modified: Sat Dec 27 13:12:04 2003.
+ * $Id: fifo.c,v 1.12 2003/12/27 14:26:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -191,19 +191,17 @@ destroy(FIFO *f)
   pthread_mutex_lock(&f->lock);
   pthread_cond_signal(&f->put_ok_cond);
   pthread_cond_signal(&f->get_ok_cond);
+  pthread_mutex_unlock(&f->lock);
   pthread_cond_destroy(&f->put_ok_cond);
   pthread_cond_destroy(&f->get_ok_cond);
-  pthread_mutex_unlock(&f->lock);
   pthread_mutex_destroy(&f->lock);
 #endif
 
-  if (f) {
-    for (m = f->next_get; m; m = n) {
-      n = m->next;
-      if (m->destructor)
-	m->destructor(m->data);
-      free(m);
-    }
-    free(f);
+  for (m = f->next_get; m; m = n) {
+    n = m->next;
+    if (m->destructor)
+      m->destructor(m->data);
+    free(m);
   }
+  free(f);
 }
