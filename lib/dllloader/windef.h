@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 10 17:18:48 2001.
- * $Id: windef.h,v 1.7 2001/09/10 11:59:21 sian Exp $
+ * Last Modified: Fri Sep 28 13:06:01 2001.
+ * $Id: windef.h,v 1.8 2001/09/29 18:02:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -99,6 +99,8 @@ typedef DWORD CALLBACK (*LPTHREAD_START_ROUTINE)(LPVOID);
 #define DLL_THREAD_DETACH  3
 
 /* file handle */
+
+#define HFILE_ERROR (-1)
 
 #define STD_INPUT_HANDLE  -10
 #define STD_OUTPUT_HANDLE -11
