@@ -271,6 +271,7 @@ load(PE_image *p, char *path)
     show_message("PE_image: load: PE file but corrupted optional header.\n");
     return 0;
   }
+#if 0
   debug_message("-- Optional header\n");
   debug_message("Code:              %d\n", p->opt_header.SizeOfCode);
   debug_message("InitializedData:   %d\n", p->opt_header.SizeOfInitializedData);
@@ -284,6 +285,7 @@ load(PE_image *p, char *path)
   debug_message("SizeOfImage:       0x%08X\n", p->opt_header.SizeOfImage);
   debug_message("SizeOfHeaders:     0x%08X\n", p->opt_header.SizeOfHeaders);
   debug_message("DataDirectories:\n");
+#endif
 #ifdef DEBUG
   for (i = 0; i < 12; i++)
     if (p->opt_header.DataDirectory[i].Size)
@@ -293,21 +295,30 @@ load(PE_image *p, char *path)
 	      p->opt_header.DataDirectory[i].Size);
 #endif
 
-  if ((p->image = malloc(p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage)) == NULL) {
+  //if ((p->image = malloc(p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage)) == NULL) {
+  if ((p->image = calloc(1, p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage)) == NULL) {
     show_message("No enough memory for image (%d bytes)\n",
 		 p->opt_header.SizeOfImage + p->opt_header.SizeOfHeaders);
     return 0;
   }
+  debug_message("Image base %p size 0x%X\n", p->image, p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage);
   fseek(fp, 0, SEEK_SET);
   fread(p->image, 1, p->opt_header.SizeOfHeaders, fp);
 
   p->sect_headers = (IMAGE_SECTION_HEADER *)(p->image + pe_header_start + 4 + PE_HEADER_SIZE + OPTIONAL_HEADER_SIZE);
   for (i = 0; i < p->pe_header.NumberOfSections; i++) {
-    debug_message("Section[%s]: RVA: 0x%08X File: 0x%08X Size: %d ", p->sect_headers[i].Name, p->sect_headers[i].VirtualAddress, p->sect_headers[i].PointerToRawData, p->sect_headers[i].SizeOfRawData);
-    fseek(fp, p->sect_headers[i].PointerToRawData, SEEK_SET);
-    fread(p->image + p->sect_headers[i].VirtualAddress, 1, p->sect_headers[i].SizeOfRawData, fp);
-    debug_message("loaded at %d.\n", p->sect_headers[i].VirtualAddress);
+    debug_message("Section[%s]: RVA: 0x%08X File: 0x%08X Memory %p Size: 0x%X ", p->sect_headers[i].Name, p->sect_headers[i].VirtualAddress, p->sect_headers[i].PointerToRawData, p->image + p->sect_headers[i].VirtualAddress, p->sect_headers[i].SizeOfRawData);
+    if (p->sect_headers[i].Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA) {
+      memset(p->image + p->sect_headers[i].VirtualAddress, 0, p->opt_header.SizeOfUninitializedData);
+      debug_message("zero-cleared at 0x%X (%d bytes).\n", p->sect_headers[i].VirtualAddress, p->opt_header.SizeOfUninitializedData);
+    } else {
+      fseek(fp, p->sect_headers[i].PointerToRawData, SEEK_SET);
+      fread(p->image + p->sect_headers[i].VirtualAddress, 1, p->sect_headers[i].SizeOfRawData, fp);
+      debug_message("loaded at 0x%X.\n", p->sect_headers[i].VirtualAddress);
+    }
   }
+
+  fclose(fp);
 
   /* export symbols */
   debug_message("-- Exported Symbols\n");
@@ -358,25 +369,32 @@ load(PE_image *p, char *path)
       debug_message("Import DLL Name: %s\n", p->image + iid[i].Name);
       /* symbols in each DLL */
       for (j = 0; othunk[j].u1.AddressOfData; j++) {
-	iibn = (IMAGE_IMPORT_BY_NAME *)(p->image + (int)othunk[j].u1.AddressOfData);
-	/* import */
-	if ((syminfo = get_dll_symbols(p->image + iid[i].Name)) != NULL) {
-	  for (; ; syminfo++) {
-	    if (syminfo->name) {
-	      if (strcmp(iibn->Name, syminfo->name) == 0) {
-		debug_message(" [%s]", iibn->Name);
+	if (othunk[j].u1.Ordinal & IMAGE_ORDINAL_FLAG) {
+#ifdef DEBUG
+	  DWORD ordinal = othunk[j].u1.Ordinal & ~IMAGE_ORDINAL_FLAG;
+	  debug_message(" #%d", ordinal);
+#endif
+	} else {
+	  iibn = (IMAGE_IMPORT_BY_NAME *)(p->image + (int)othunk[j].u1.AddressOfData);
+	  /* import */
+	  if ((syminfo = get_dll_symbols(p->image + iid[i].Name)) != NULL) {
+	    for (; ; syminfo++) {
+	      if (syminfo->name) {
+		if (strcmp(iibn->Name, syminfo->name) == 0) {
+		  debug_message(" [%s]", iibn->Name);
+		  thunk[j].u1.Function = (FARPROC)syminfo->value;
+		  break;
+		}
+	      } else {
 		thunk[j].u1.Function = (FARPROC)syminfo->value;
+		debug_message(" %s", iibn->Name);
 		break;
 	      }
-	    } else {
-	      thunk[j].u1.Function = (FARPROC)syminfo->value;
-	      debug_message(" %s", iibn->Name);
-	      break;
 	    }
+	  } else {
+	    thunk[j].u1.Function = (FARPROC)unknown_symbol;
+	    debug_message(" %s", iibn->Name);
 	  }
-	} else {
-	  thunk[j].u1.Function = (FARPROC)unknown_symbol;
-	  debug_message(" %s", iibn->Name);
 	}
       }
       debug_message("\n");
@@ -421,17 +439,34 @@ load(PE_image *p, char *path)
 
   debug_message("-- Call InitDll\n");
   {
-    DllEntryProc InitDll = (DllEntryProc)(p->image + p->opt_header.AddressOfEntryPoint);
+    DllEntryProc InitDll;
     int result;
 
-    debug_message("InitDll %p\n", InitDll);
-    if ((result = InitDll((HMODULE)p->image, DLL_PROCESS_ATTACH, NULL)) != 1)
-      show_message("InitDll returns %d\n", result);
+    if ((InitDll = resolve(p, "DllMain")) == NULL) {
+      InitDll = (DllEntryProc)(p->image + p->opt_header.AddressOfEntryPoint);
+      if (p->opt_header.AddressOfEntryPoint > p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage) {
+	show_message("%s: InitDll %p is bad address\n", path, InitDll);
+	InitDll = NULL;
+      }
+      if (p->opt_header.AddressOfEntryPoint < p->opt_header.SizeOfHeaders) {
+	debug_message("EntryPoint %d < %d SizeOfHeaders\n", p->opt_header.AddressOfEntryPoint, p->opt_header.SizeOfHeaders);
+	InitDll = NULL;
+      }
+    } else {
+      debug_message("DllMain() found: %p <=> %p EntryPoint\n", InitDll, p->image + p->opt_header.AddressOfEntryPoint);
+    }
+
+    if (InitDll) {
+      debug_message("InitDll %p\n", InitDll);
+      /* some dll (e.g. ir32_32.dll) break %ebx */
+      __asm__("pushl %ebx\n\t");
+      if ((result = InitDll((HMODULE)p->image, DLL_PROCESS_ATTACH, NULL)) != 1)
+	show_message("InitDll returns %d\n", result);
+      __asm__("popl %ebx\n\t");
+    }
   }
 
   debug_message("-- Load completed.\n");
-
-  fclose(fp);
 
   return 1;
 }
