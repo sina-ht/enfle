@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 01:35:26 2004.
- * $Id: cpucaps.c,v 1.7 2004/04/18 06:29:04 sian Exp $
+ * Last Modified: Sat May  1 16:50:29 2004.
+ * $Id: cpucaps.c,v 1.8 2004/05/15 04:06:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -198,6 +198,8 @@ cpucaps_get(void)
     caps |= _SSE;
   if (edx & 0x04000000)
     caps |= _SSE2;
+  if (ecx & 0x00000001)
+    caps |= _SSE3;
 
   /* Extended capabilities exist? */
   cpuid (0x80000000, &eax, &ebx, &ecx, &edx);

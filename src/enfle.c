@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 15:44:02 2004.
- * $Id: enfle.c,v 1.66 2004/04/23 16:34:12 sian Exp $
+ * Last Modified: Sat May  1 16:55:24 2004.
+ * $Id: enfle.c,v 1.67 2004/05/15 04:09:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -114,26 +114,36 @@ usage(void)
   printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n\n");
   printf("usage: enfle [options] [path...]\n");
   printf("Extension: %s", ext);
-#ifdef __i386__
+#if defined(__i386__)
   {
     CPUCaps caps = cpucaps_get();
-#ifdef USE_MMX
+
+    printf("CPU Caps.: ");
+#if defined(USE_MMX)
     if (caps & _MMX)
-      printf("MMX is available.\n");
-    else
-      printf("MMX is not available.\n");
+      printf("MMX ");
 #else
     if (caps & _MMX)
-      printf("MMX is available, but disabled at compile-time.\n");
+      printf("MMX* ");
 #endif
-#ifdef USE_SSE
+#if defined(USE_SSE)
     if (caps & _SSE)
-      printf("SSE is available.\n");
-    else
-      printf("SSE is not available.\n");
+      printf("SSE ");
+    if (caps & _SSE2)
+      printf("SSE2 ");
+    if (caps & _SSE3)
+      printf("SSE3 ");
 #else
     if (caps & _SSE)
-      printf("SSE is available, but disabled at compile-time.\n");
+      printf("SSE* ");
+    if (caps & _SSE2)
+      printf("SSE2* ");
+    if (caps & _SSE3)
+      printf("SSE3* ");
+#endif
+    printf("\n");
+#if !defined(USE_MMX) || !defined(USE_SSE)
+    printf("*, like MMX*, means CPU has that capability but enfle was not compiled for it.");
 #endif
   }
 #endif
