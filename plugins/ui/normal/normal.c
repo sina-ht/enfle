@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Nov 27 17:25:18 2000.
- * $Id: normal.c,v 1.6 2000/11/27 14:42:59 sian Exp $
+ * Last Modified: Sun Dec  3 17:13:06 2000.
+ * $Id: normal.c,v 1.7 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -75,11 +75,13 @@ initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
 static int
 render_frame(VideoWindow *vw, Movie *m, Image *p)
 {
+#if 0
   /* CHECK */
   if (p->width != m->width || p->height != m->height) {
     show_message(__FUNCTION__ ": p(%d, %d) != m(%d, %d)\n", p->width, p->height, m->width, m->height);
     exit(1);
   }
+#endif
 
   video_window_render(vw, p);
 
@@ -96,7 +98,10 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
 
   if (p) {
     video_window_resize(vw, p->width, p->height);
+    vw->if_direct = 0;
     video_window_render(vw, p);
+  } else if (m) {
+    vw->if_direct = 1;
   }
 
   while (loop) {

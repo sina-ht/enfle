@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 06:04:05 2000.
- * $Id: image.c,v 1.3 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sun Dec  3 16:33:26 2000.
+ * $Id: image.c,v 1.4 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,12 +44,12 @@ static const char *image_type_to_string_array[] = {
   "_BGRA32"
 };
 
-static Image *dup(Image *);
+static Image *duplicate(Image *);
 static Image *magnify(Image *, int, int, ImageInterpolateMethod);
 static void destroy(Image *);
 
 static Image template = {
-  dup: dup,
+  duplicate: duplicate,
   magnify: magnify,
   destroy: destroy
 };
@@ -62,6 +62,17 @@ image_create(void)
   if ((p = calloc(1, sizeof(Image))) == NULL)
     return NULL;
   memcpy(p, &template, sizeof(Image));
+
+  if ((p->image = memory_create()) == NULL) {
+    free(p);
+    return NULL;
+  }
+
+  if ((p->mask = memory_create()) == NULL) {
+    free(p);
+    memory_destroy(p->mask);
+    return NULL;
+  }
 
   return p;
 }
@@ -79,7 +90,7 @@ image_type_to_string(ImageType type)
 /* methods */
 
 static Image *
-dup(Image *p)
+duplicate(Image *p)
 {
   Image *new;
 
@@ -87,16 +98,13 @@ dup(Image *p)
     return NULL;
   memcpy(new, p, sizeof(Image));
 
-  if (p->image) {
-    if ((new->image = calloc(1, p->image_size)) == NULL) {
-      destroy(new);
-      return NULL;
-    }
-    memcpy(new->image, p->image, p->image_size);
+  if ((new->image = memory_dup_as_shm(p->image)) == NULL) {
+    destroy(new);
+    return NULL;
   }
 
   if (p->next) {
-    if ((new->next = dup(p->next)) == NULL) {
+    if ((new->next = duplicate(p->next)) == NULL) {
       destroy(new);
       return NULL;
     }
@@ -121,6 +129,10 @@ static void
 destroy(Image *p)
 {
   if (p->image)
-    free(p->image);
+    memory_destroy(p->image);
+  if (p->mask)
+    memory_destroy(p->mask);
+  if (p->comment)
+    free(p->comment);
   free(p);
 }

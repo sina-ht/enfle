@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Nov 27 23:41:35 2000.
-dnl $Id: configure.in,v 1.18 2000/11/27 14:43:22 sian Exp $
+dnl Last Modified: Sun Dec  3 04:46:36 2000.
+dnl $Id: configure.in,v 1.19 2000/12/03 08:40:03 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@ AM_CONFIG_HEADER(config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20001127)
+AM_INIT_AUTOMAKE(enfle, 20001203)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -182,6 +182,15 @@ AC_CHECK_LIB(X11, XOpenDisplay)
 AM_CONDITIONAL(HAVE_X11, test "$have_x" = "yes")
 
 dnl Checks for libraries which require X library.
+available_shm=no
+AC_CHECK_HEADER(sys/ipc.h,
+  AC_CHECK_HEADER(sys/shm.h,
+    AC_CHECK_HEADER(X11/extensions/XShm.h,
+      AC_CHECK_LIB(Xext, XShmCreateImage, [ available_shm=yes; LIBADD_SHM="-lXext"; ]))))
+dnl AM_CONDITIONAL(HAVE_SHM, test "$available_shm" = "yes")
+test "$available_shm" = "yes" && AC_DEFINE(USE_SHM,,[ Define if you have MIT Shared Memory extension ])
+AC_SUBST(LIBADD_SHM)
+
 available_ungif=no
 AC_CHECK_HEADER(gif_lib.h,
   AC_CHECK_LIB(ungif, DGifOpen, [ available_ungif=yes; LIBADD_UNGIF=-lungif; ]))

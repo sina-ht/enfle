@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 03:20:17 2000.
- * $Id: bmp.c,v 1.3 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Sat Dec  2 23:05:40 2000.
+ * $Id: bmp.c,v 1.4 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,7 +34,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "BMP",
-  description: "BMP Loader plugin version 0.1",
+  description: "BMP Loader plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -65,7 +65,7 @@ plugin_exit(void *p)
 static int
 load_image(Image *p, Stream *st)
 {
-  unsigned char buf[1024], *pp;
+  unsigned char buf[1024], *pp, *d;
   unsigned int file_size, header_size, image_size, offset_to_image;
   unsigned short int biPlanes;
   int i, bytes_per_pal;
@@ -147,13 +147,12 @@ load_image(Image *p, Stream *st)
 
   p->bytes_per_line = (p->width * p->bits_per_pixel) >> 3;
   p->bytes_per_line += (4 - (p->bytes_per_line % 4)) % 4;
-  p->image_size = p->bytes_per_line * p->height;
 
-  if ((p->image = calloc(1, p->image_size)) == NULL)
+  if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
     return 0;
 
   stream_seek(st, offset_to_image, _SET);
-  pp = p->image + p->bytes_per_line * (p->height - 1);
+  pp = d + p->bytes_per_line * (p->height - 1);
   if (!compress_method) {
     for (i = p->height - 1; i >= 0; i--) {
       stream_read(st, pp, p->bytes_per_line);
@@ -161,13 +160,9 @@ load_image(Image *p, Stream *st)
     }
   } else {
     fprintf(stderr, "Compressed bitmap not yet supported.\n");
-    free(p->image);
-    p->image = NULL;
     return 0;
   }
 
-  p->mask = NULL;
-  p->mask_size = 0;
   p->next = NULL;
 
   return 1;

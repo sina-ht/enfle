@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 06:04:21 2000.
- * $Id: image.h,v 1.5 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sat Dec  2 22:55:28 2000.
+ * $Id: image.h,v 1.6 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,8 @@
 
 #ifndef _IMAGE_H
 #define _IMAGE_H
+
+#include "memory.h"
 
 typedef enum _image_type {
   _BITMAP_LSBFirst = 0,
@@ -41,7 +43,7 @@ typedef enum _image_type {
 } ImageType;
 
 typedef enum {
-  _NORMAL,
+  _NOINTERPOLATE,
   _BILINEAR
 } ImageInterpolateMethod;
 
@@ -57,10 +59,8 @@ typedef struct _image Image;
 struct _image {
   int width, height;
   int left, top;
-  unsigned char *image;
-  unsigned int image_size;
-  unsigned char *mask;
-  unsigned int mask_size;
+  Memory *image;
+  Memory *mask;
   unsigned char *comment;
   char *format;
   ImageType type;
@@ -75,12 +75,12 @@ struct _image {
   unsigned long red_mask, green_mask, blue_mask;
   Image *next;
 
-  Image *(*dup)(Image *);
+  Image *(*duplicate)(Image *);
   Image *(*magnify)(Image *, int, int, ImageInterpolateMethod);
   void (*destroy)(Image *);
 };
 
-#define image_dup(p) (p)->dup((p))
+#define image_dup(p) (p)->duplicate((p))
 #define image_magnify(p, dw, dh, m) (p)->magnify((p), (dw), (dh), (m))
 #define image_destroy(p) (p)->destroy((p))
 

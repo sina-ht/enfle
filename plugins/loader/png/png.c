@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 03:20:02 2000.
- * $Id: png.c,v 1.3 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Sat Dec  2 23:05:21 2000.
+ * $Id: png.c,v 1.4 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "PNG",
-  description: "PNG Loader plugin version 0.1",
+  description: "PNG Loader plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -242,8 +242,6 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
 
   png_read_update_info(png_ptr, info_ptr);
 
-  p->mask = NULL;
-  p->mask_size = 0;
 #if 0
   /* Set the transparent color */
   if (png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values)) {
@@ -315,10 +313,9 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
       p->colormap[i][2] = info_ptr->palette[i].blue;
     }
   }
-  p->image_size = p->bytes_per_line * p->height;
 
   /* allocate memory for returned image */
-  if ((p->image = calloc(1, p->image_size)) == NULL) {
+  if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return LOAD_ERROR;
   }
@@ -326,13 +323,11 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
   /* allocate memory for pointer array */
   if ((image_array = calloc(height, sizeof(png_bytep))) == NULL) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-    free(p->image);
-    p->image = NULL;
     return LOAD_ERROR;
   }
 
   for (i = 0; i < height; i++)
-    image_array[i] = p->image + png_get_rowbytes(png_ptr, info_ptr) * i;
+    image_array[i] = memory_ptr(p->image) + png_get_rowbytes(png_ptr, info_ptr) * i;
 
   /* read image */
   png_read_image(png_ptr, image_array);
@@ -347,16 +342,12 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
   if (color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
     if (!png_process_alpha_rgb(p)) {
       png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-      free(p->image);
-      p->image = NULL;
       return LOAD_ERROR;
     } else
       p->transparent_disposal = info->transparent_disposal;
   } else if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
     if (!png_process_alpha_gray(p)) {
       png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-      free(p->image);
-      p->image = NULL;
       return LOAD_ERROR;
     } else
       p->transparent_disposal = info->transparent_disposal;

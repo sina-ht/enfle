@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 05:05:21 2000.
- * $Id: mpeg_lib.c,v 1.6 2000/11/04 17:32:19 sian Exp $
+ * Last Modified: Sun Dec  3 16:58:16 2000.
+ * $Id: mpeg_lib.c,v 1.7 2000/12/03 08:40:04 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -32,7 +32,7 @@
 #include "player-plugin.h"
 
 typedef struct _mpeg_lib_info {
-  unsigned char *buffer;
+  Memory *buffer;
   ImageDesc img;
 } MPEG_lib_info;
 
@@ -45,7 +45,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "MPEG_lib",
-  description: "MPEG_lib Player plugin version 0.2",
+  description: "MPEG_lib Player plugin version 0.2.1",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -107,9 +107,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->width = info->img.Width;
   m->height = info->img.Height;
 
-  if ((info->buffer = calloc(m->width * 4, m->height)) == NULL) {
+  if ((info->buffer = memory_create()) == NULL) {
+    free(info);
     return PLAY_ERROR;
   }
+  //memory_request_type(info->buffer, video_window_preferred_memory_type(vw));
+
+  if (memory_alloc(info->buffer, m->height * m->width * 4) == NULL)
+    return PLAY_ERROR;
 
   m->movie_private = (void *)info;
   m->st = st;
@@ -128,7 +133,7 @@ get_screen(Movie *m)
 
   if (m->movie_private) {
     info = (MPEG_lib_info *)m->movie_private;
-    return info->buffer;
+    return memory_ptr(info->buffer);
   }
 
   return NULL;
@@ -173,7 +178,8 @@ play_main(Movie *m, VideoWindow *vw)
 
   p = image_create();
 
-  more_frame = GetMPEGFrame(info->buffer);
+  memory_used(info->buffer) = memory_size(info->buffer);
+  more_frame = GetMPEGFrame(memory_ptr(info->buffer));
 
   p->width  = m->width;
   p->height = m->height;
@@ -182,21 +188,13 @@ play_main(Movie *m, VideoWindow *vw)
   p->bytes_per_line = m->width * 4;
   p->bits_per_pixel = 32;
   p->next = NULL;
-  p->image_size = p->bytes_per_line * p->height;
-#if 0
-  if ((p->image = malloc(p->image_size)) == NULL)
-    goto error;
-  memcpy(p->image, info->buffer, p->image_size);
-#else
+  memory_destroy(p->image);
   p->image = info->buffer;
-#endif
 
   m->current_frame++;
 
   m->render_frame(vw, m, p);
-#if 1
   p->image = NULL;
-#endif
 
   image_destroy(p);
 
@@ -204,13 +202,6 @@ play_main(Movie *m, VideoWindow *vw)
     stop_movie(m);
 
   return PLAY_OK;
-
-#if 0
- error:
-  image_destroy(p);
-
-  return PLAY_ERROR;
-#endif
 }
 
 static PlayerStatus
@@ -263,7 +254,7 @@ unload_movie(Movie *m)
   MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
 
   if (info->buffer)
-    free(info->buffer);
+    memory_destroy(info->buffer);
 
   CloseMPEG();
 
@@ -285,8 +276,7 @@ identify(Movie *m, Stream *st)
   if (memcmp(buf, video_stream_header, 4) == 0)
     return PLAY_OK;
   if (memcmp(buf, system_stream_header, 4) == 0) {
-    show_message("This is a system MPEG stream. Needs demultiplexing.\n");
-    show_message("mpeg_lib only supports video MPEG stream. Sorry.\n");
+    show_message("This seems to be a system MPEG stream. mpeg_lib can play video MPEG streams only.\n");
     return PLAY_NOT;
   }
 

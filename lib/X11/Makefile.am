@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Sep 24 05:36:26 2000.
-# $Id: Makefile.am,v 1.1 2000/09/30 17:36:36 sian Exp $
+# Last Modified: Sun Dec  3 14:00:36 2000.
+# $Id: Makefile.am,v 1.2 2000/12/03 08:40:03 sian Exp $
 
 noinst_LTLIBRARIES = libenfleX11.la
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib/enfle
@@ -17,7 +17,7 @@ else
 libenfleX11_la_SOURCES = $(sources)
 endif
 
-libenfleX11_la_LIBADD = -lX11
+libenfleX11_la_LIBADD = -lX11 @LIBADD_SHM@
 
 SUFFIXES=.asm
 .asm.lo:

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 07:56:35 2000.
- * $Id: enfle.c,v 1.13 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sun Dec  3 04:55:17 2000.
+ * $Id: enfle.c,v 1.14 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,7 +71,11 @@ usage(void)
   printf(PROGNAME " version " VERSION "\n");
   printf("(C)Copyright 2000 by Hiroshi Takekawa\n\n");
   printf("usage: enfle [options] [path...]\n");
-  
+
+#ifdef USE_SHM
+  printf("Extension: SHM\n");
+#endif
+
   printf("Options:\n");
   i = 0;
   while (enfle_options[i].longopt != NULL) {

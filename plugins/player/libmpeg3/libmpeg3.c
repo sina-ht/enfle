@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 05:06:11 2000.
- * $Id: libmpeg3.c,v 1.6 2000/11/04 17:32:19 sian Exp $
+ * Last Modified: Sun Dec  3 17:11:48 2000.
+ * $Id: libmpeg3.c,v 1.7 2000/12/03 08:40:04 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -40,7 +40,8 @@ typedef struct _libmpeg3_info {
   mpeg3_t *file;
   int nstreams;
   int nstream;
-  unsigned char **buffer;
+  unsigned char **lines;
+  Memory *buffer;
 } LibMPEG3_info;
 
 static PlayerStatus identify(Movie *, Stream *);
@@ -105,8 +106,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 
   if (mpeg3_has_audio(info->file)) {
-    show_message("audio is ignored, which surpasses this software's purpose.\n");
-    show_message("but audio is mandatory, might be implemented someday.\n");
+    show_message("Audio support is not yet implemented, might be implemented someday.\n");
   }
 
   if ((info->nstreams = mpeg3_total_vstreams(info->file)) > 1) {
@@ -127,19 +127,22 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   /* rewind stream */
   mpeg3_seek_percentage(info->file, 0);
 
-  if ((info->buffer =
-       (unsigned char **)calloc(m->height, sizeof(unsigned char *))) == NULL)
+  if ((info->buffer = memory_create()) == NULL)
+    goto error;
+  memory_request_type(info->buffer, video_window_preferred_memory_type(vw));
+
+  debug_message(__FUNCTION__ ": requested memory type %s\n", memory_type(info->buffer) == _NORMAL ? "NORMAL" : "SHM");
+
+  if ((info->lines = calloc(m->height, sizeof(unsigned char *))) == NULL)
     goto error;
 
   Bpp = vw->bits_per_pixel >> 3;
   /* extra 4 bytes are needed for MMX routine */
-  if ((info->buffer[0] =
-       (unsigned char *)malloc(m->width * m->height * Bpp + 4)) == NULL)
+  if (memory_alloc(info->buffer, m->width * m->height * Bpp + 4) == NULL)
     goto error;
-  memset(info->buffer[0], 0, m->width * m->height * Bpp + 4);
 
-  for (i = 1; i < m->height; i++)
-    info->buffer[i] = info->buffer[0] + i * m->width * Bpp;
+  for (i = 0; i < m->height; i++)
+    info->lines[i] = memory_ptr(info->buffer) + i * m->width * Bpp;
 
   m->movie_private = (void *)info;
   m->st = st;
@@ -165,7 +168,7 @@ get_screen(Movie *m)
 
   if (m->movie_private) {
     info = (LibMPEG3_info *)m->movie_private;
-    return info->buffer[0];
+    return memory_ptr(info->buffer);
   }
 
   return NULL;
@@ -246,15 +249,15 @@ play_main(Movie *m, VideoWindow *vw)
     break;
   }
 
-  decode_error = (mpeg3_read_frame(info->file, info->buffer,
+  decode_error = (mpeg3_read_frame(info->file, info->lines,
 				   0, 0,
 				   m->width, m->height,
 				   m->width, m->height,
 				   rendering_type, info->nstream) == -1) ? 0 : 1;
 
   p->next = NULL;
-  p->image_size = p->bytes_per_line * p->height;
-  p->image = info->buffer[0];
+  memory_destroy(p->image);
+  p->image = info->buffer;
 
   m->current_frame++;
 
@@ -338,10 +341,10 @@ unload_movie(Movie *m)
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
   if (info) {
-    if (info->buffer[0])
-      free(info->buffer[0]);
     if (info->buffer)
-      free(info->buffer);
+      memory_destroy(info->buffer);
+    if (info->lines)
+      free(info->lines);
 
     /* close */
     mpeg3_close(info->file);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Nov  4 05:39:24 2000.
- * $Id: x11.c,v 1.4 2000/11/04 17:29:42 sian Exp $
+ * Last Modified: Sun Dec  3 13:57:18 2000.
+ * $Id: x11.c,v 1.5 2000/12/03 08:40:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,10 @@
 #include <X11/Xutil.h>
 
 #include "common.h"
+
+#ifdef USE_SHM
+#include <X11/extensions/XShm.h>
+#endif
 
 #ifdef DEBUG
 #  include <stdio.h>
@@ -82,14 +86,14 @@ open(X11 *x11, char *dispname)
     x11->visual = xvi[0].visual;
     x11->depth = 24;
 
-    debug_message("x11: open: Depth 24 TrueColor visual available\n");
+    debug_message("x11: " __FUNCTION__ ": Depth 24 TrueColor visual available\n");
 
     XFree(xvi);
   } else {
     x11->visual = DefaultVisual(x11_display(x11), x11_screen(x11));
     x11->depth = DefaultDepth(x11_display(x11), x11_screen(x11));
 
-    debug_message("x11: open: using default visual\n");
+    debug_message("x11: " __FUNCTION__ ": using default visual\n");
   }
 
   xpfv = XListPixmapFormats(x11_display(x11), &count);
@@ -109,8 +113,15 @@ open(X11 *x11, char *dispname)
   }
   XFree(xpfv);
 
+#ifdef USE_SHM
+  if (XShmQueryExtension(x11_display(x11))) {
+    x11->extensions |= X11_EXT_SHM;
+    debug_message("x11: " __FUNCTION__ ": MIT-SHM Extension OK\n");
+  }
+#endif
+
 #ifdef DEBUG
-  debug_message("x11: open: bits_per_pixel = %d\n", x11_bpp(x11));
+  debug_message("x11: " __FUNCTION__ ": bits_per_pixel = %d\n", x11_bpp(x11));
   if (x11_bpp(x11) == 32)
     debug_message("You have 32bpp ZPixmap.\n");
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 03:20:31 2000.
- * $Id: ungif.c,v 1.6 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Sun Dec  3 00:37:06 2000.
+ * $Id: ungif.c,v 1.7 2000/12/03 08:40:04 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -42,7 +42,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "UNGIF",
-  description: "UNGIF Loader plugin version 0.2",
+  description: "UNGIF Loader plugin version 0.3",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -89,6 +89,7 @@ load_image(Image *p, Stream *st)
   GifFileType *GifFile;
   ColorMapObject *ColorMap;
   int image_loaded = 0;
+  unsigned char *d;
 
   if ((GifFile = DGifOpen(st, ungif_input_func)) == NULL) {
 #if DEBUG
@@ -134,6 +135,11 @@ load_image(Image *p, Stream *st)
 	DGifCloseFile(GifFile);
 	free(ScreenBuffer[0]);
 	free(ScreenBuffer);
+
+	if (p->comment) {
+	  free(p->comment);
+	  p->comment = NULL;
+	}
 
 	/* This GIF should be treated by player plugin. */
 	return LOAD_NOT;
@@ -237,12 +243,11 @@ load_image(Image *p, Stream *st)
   p->bytes_per_line = p->width;
   p->next = NULL;
 
-  p->image_size = p->bytes_per_line * p->height;
-  if ((p->image = calloc(1, p->image_size)) == NULL)
+  if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
     goto error_after_closed;
 
   for (i = 0; i < p->height; i++)
-    memcpy(&p->image[i * p->width], &ScreenBuffer[p->top + i][p->left], p->width * sizeof(GifPixelType));
+    memcpy(&d[i * p->width], &ScreenBuffer[p->top + i][p->left], p->width * sizeof(GifPixelType));
 
   free(ScreenBuffer[0]);
   free(ScreenBuffer);

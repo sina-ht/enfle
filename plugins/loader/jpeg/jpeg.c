@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 03:19:37 2000.
- * $Id: jpeg.c,v 1.3 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Sat Dec  2 23:05:02 2000.
+ * $Id: jpeg.c,v 1.4 2000/12/03 08:40:04 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -42,7 +42,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "JPEG",
-  description: "JPEG Loader plugin version 0.1",
+  description: "JPEG Loader plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -203,6 +203,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
   struct my_error_mgr jerr;
   JSAMPROW buffer[1]; /* output row buffer */
   int i, j;
+  unsigned char *d;
 
   if ((cinfo = calloc(1, sizeof(struct jpeg_decompress_struct))) == NULL)
     return LOAD_ERROR;
@@ -253,26 +254,23 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
 
   /* JSAMPLEs per row in output buffer */
   p->bytes_per_line = p->width * cinfo->output_components;
-  p->image_size = p->bytes_per_line * p->height;
 
-  /* allocate memory for image */
+  debug_message("Attempt to allocate memory %d bytes... ", p->bytes_per_line * p->height);
 
-  debug_message("Attempt to allocate memory %d bytes... ", p->image_size);
-
-  if ((p->image = calloc(1, p->image_size)) == NULL) {
+  if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
 #ifdef DEBUG
-    fprintf(stderr, "failed.\n");
+    debug_message("failed.\n");
 #else
-    fprintf(stderr, "No enough memory (%d bytes)\n", p->image_size);
+    show_message("No enough memory (%d bytes)\n", p->bytes_per_line * p->height);
 #endif
     goto error_destroy_free;
   }
 
-  debug_message(" Ok.\n");
+  debug_message("Ok.\n");
 
   /* loading... */
   while (cinfo->output_scanline < p->height) {
-    buffer[0] = (JSAMPROW)&p->image[cinfo->output_scanline * p->bytes_per_line];
+    buffer[0] = (JSAMPROW)&d[cinfo->output_scanline * p->bytes_per_line];
     (void)jpeg_read_scanlines(cinfo, buffer, 1);
   }
 
@@ -303,8 +301,6 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
     }
   }
 
-  p->mask = NULL;
-  p->mask_size = 0;
   p->next = NULL;
 
   (void)jpeg_finish_decompress(cinfo);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 18 12:29:48 2000.
- * $Id: ungif.c,v 1.10 2000/11/20 12:57:32 sian Exp $
+ * Last Modified: Sat Dec  2 23:17:07 2000.
+ * $Id: ungif.c,v 1.11 2000/12/03 08:40:04 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -59,7 +59,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "UNGIF",
-  description: "UNGIF Player plugin version 0.2",
+  description: "UNGIF Player plugin version 0.2.1",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -238,8 +238,6 @@ play_main(Movie *m, VideoWindow *vw)
 
       debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", l, t, w, h);
 
-      p->image_size = p->bytes_per_line * p->height;
-
       if (if_transparent) {
 	/* First, allocate memory */
 	if ((rows = calloc(h, sizeof(GifRowType *))) == NULL)
@@ -288,9 +286,9 @@ play_main(Movie *m, VideoWindow *vw)
 	}
       }
 
-      if ((p->image = malloc(p->image_size)) == NULL)
+      if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
 	goto error;
-      memcpy(p->image, info->buffer[0], p->image_size);
+      memcpy(memory_ptr(p->image), info->buffer[0], memory_used(p->image));
 
       m->current_frame++;
       image_loaded = 1;

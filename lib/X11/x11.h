@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Nov  4 07:35:56 2000.
- * $Id: x11.h,v 1.5 2000/11/04 17:29:42 sian Exp $
+ * Last Modified: Sun Dec  3 15:21:21 2000.
+ * $Id: x11.h,v 1.6 2000/12/03 08:40:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,8 @@
 #ifndef _ENFLE_X11_H
 #define _ENFLE_X11_H
 
+#define X11_EXT_SHM 0x1
+
 typedef struct _x11 X11;
 struct _x11 {
   Display *disp;
@@ -34,6 +36,7 @@ struct _x11 {
   int bits_per_pixel;
   unsigned long white;
   unsigned long black;
+  unsigned int extensions;
 
   int (*open)(X11 *, char *);
   int (*close)(X11 *);
@@ -49,6 +52,8 @@ struct _x11 {
 #define x11_bpp(x) (x)->bits_per_pixel
 #define x11_white(x) (x)->white
 #define x11_black(x) (x)->black
+
+#define x11_if_shm(x) ((x)->extensions & X11_EXT_SHM)
 
 #define x11_open(x, d) (x)->open((x), (d))
 #define x11_create_window(x, p, w, h) \

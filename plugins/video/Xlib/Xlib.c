@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Nov 30 14:21:10 2000.
- * $Id: Xlib.c,v 1.6 2000/12/02 11:33:44 sian Exp $
+ * Last Modified: Sun Dec  3 17:10:07 2000.
+ * $Id: Xlib.c,v 1.7 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -52,7 +52,7 @@ typedef struct {
 } WindowResource;
 
 typedef struct {
-  XImage *ximage;
+  X11XImage *xi;
   WindowResource current;
   WindowResource normal;
   WindowResource full;
@@ -63,6 +63,7 @@ typedef struct {
 static void *open_video(void *);
 static int close_video(void *);
 static VideoWindow *open_window(void *, unsigned int, unsigned int);
+static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
 static int dispatch_event(VideoWindow *, VideoEventData *);
 static void set_caption(VideoWindow *, unsigned char *);
@@ -77,7 +78,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.1.1",
+  description: "Xlib Video plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -87,6 +88,7 @@ static VideoPlugin plugin = {
 };
 
 static VideoWindow template = {
+  preferred_memory_type: preferred_memory_type,
   set_event_mask: set_event_mask,
   dispatch_event: dispatch_event,
   set_caption: set_caption,
@@ -119,25 +121,6 @@ plugin_exit(void *p)
 /* for internal use */
 
 static void
-create_window_ximage(VideoWindow *vw, unsigned int w, unsigned int h)
-{
-  X11Window_info *xwi = (X11Window_info *)vw->private;
-  X11Window *xw = xwi->current.xw;
-  X11 *x11 = x11window_x11(xw);
-
-  if (xwi->ximage) {
-    if (xwi->share_image)
-      xwi->ximage->data = NULL;
-    x11_destroy_ximage(xwi->ximage);
-  }
-
-  xwi->ximage = x11_create_ximage(x11, x11_visual(x11), x11_depth(x11), NULL, w, h, 8, 0);
-
-  vw->width = w;
-  vw->height = h;
-}
-
-static void
 create_window_doublebuffer(VideoWindow *vw, unsigned int w, unsigned int h)
 {
   X11Window_info *xwi = (X11Window_info *)vw->private;
@@ -157,7 +140,8 @@ create_window_doublebuffer(VideoWindow *vw, unsigned int w, unsigned int h)
 static void
 create_window_resource(VideoWindow *vw, unsigned int w, unsigned int h)
 {
-  create_window_ximage(vw, w, h);
+  vw->width = w;
+  vw->height = h;
   create_window_doublebuffer(vw, w, h);
 }
 
@@ -225,6 +209,7 @@ open_window(void *data, unsigned int w, unsigned int h)
   xwi = (X11Window_info *)vw->private;
 
   xwi->current.xw = xwi->normal.xw = xw = x11window_create(x11, NULL, w, h);
+  xwi->xi = x11ximage_create(x11);
 
   vw->depth = x11_depth(x11);
   vw->bits_per_pixel = x11_bpp(x11);
@@ -239,6 +224,16 @@ open_window(void *data, unsigned int w, unsigned int h)
 }
 
 /* video window methods */
+
+static MemoryType
+preferred_memory_type(VideoWindow *vw)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private;
+  X11Window *xw = xwi->current.xw;
+  X11 *x11 = x11window_x11(xw);
+
+  return x11_if_shm(x11) ? _SHM : _NORMAL;
+}
 
 static int
 set_event_mask(VideoWindow *vw, int mask)
@@ -444,12 +439,11 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     xwi->current.pix = xwi->normal.pix;
     xwi->current.gc = xwi->normal.gc;
 
-    x11window_resize(xwi->current.xw, xwi->ximage->width, xwi->ximage->height);
-    create_window_doublebuffer(vw, xwi->ximage->width, xwi->ximage->height);
+    x11window_resize(xwi->current.xw, vw->width, vw->height);
+    create_window_doublebuffer(vw, vw->width, vw->height);
     xwi->normal.pix = xwi->current.pix;
     xwi->normal.gc  = xwi->current.gc;
-    XPutImage(x11_display(x11), xwi->current.pix, xwi->current.gc, xwi->ximage, 0, 0,
-	      0, 0, xwi->ximage->width, xwi->ximage->height);
+    x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0, 0, 0, vw->width, vw->height);
   } else {
     unsigned int full_w, full_h;
 
@@ -475,9 +469,8 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     xwi->current.pix = xwi->full.pix;
     xwi->current.gc = xwi->full.gc;
     XFillRectangle(x11_display(x11), xwi->current.pix, xwi->current.gc, 0, 0, full_w, full_h);
-    XPutImage(x11_display(x11), xwi->current.pix, xwi->current.gc, xwi->ximage, 0, 0,
-	      (full_w - xwi->ximage->width) >> 1, (full_h - xwi->ximage->height) >> 1,
-	      xwi->ximage->width, xwi->ximage->height);
+    x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0,
+		  (full_w - vw->width) >> 1, (full_h - vw->height) >> 1, vw->width, vw->height);
   }
 
   x11window_map_raised(xwi->current.xw);
@@ -510,7 +503,8 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
     }
   }
 
-  create_window_ximage(vw, w, h);
+  vw->width = w;
+  vw->height = h;
 
   return 1;
 }
@@ -542,21 +536,28 @@ render(VideoWindow *vw, Image *p)
 {
   X11Window_info *xwi = (X11Window_info *)vw->private;
   X11Window *xw = xwi->current.xw;
-  X11 *x11 = x11window_x11(xw);
 
-  x11ximage_convert_image(xwi->ximage, p);
+  x11ximage_convert(xwi->xi, p);
+
   if (vw->if_fullscreen) {
-    XPutImage(x11_display(x11), xwi->current.pix, xwi->current.gc, xwi->ximage, 0, 0,
-	      (xwi->full_width - p->width) >> 1, (xwi->full_height - p->height) >> 1,
-	      p->width, p->height);
-    update(vw, p->left + ((xwi->full_width - p->width) >> 1), p->top + ((xwi->full_height - p->height) >> 1), p->width, p->height);
+    if (vw->if_direct) {
+      x11ximage_put(xwi->xi, x11window_win(xw), xwi->current.gc, 0, 0,
+		    (xwi->full_width - p->width) >> 1, (xwi->full_height - p->height) >> 1,
+		    p->width, p->height);
+    } else {
+      x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0,
+		    (xwi->full_width - p->width) >> 1, (xwi->full_height - p->height) >> 1,
+		    p->width, p->height);
+      update(vw, p->left + ((xwi->full_width - p->width) >> 1), p->top + ((xwi->full_height - p->height) >> 1), p->width, p->height);
+    }
   } else {
-    XPutImage(x11_display(x11), xwi->current.pix, xwi->current.gc, xwi->ximage, 0, 0,
-	      0, 0, p->width, p->height);
-    update(vw, p->left, p->top, p->width, p->height);
+    if (vw->if_direct) {
+      x11ximage_put(xwi->xi, x11window_win(xw), xwi->current.gc, 0, 0, 0, 0, p->width, p->height);
+    } else {
+      x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0, 0, 0, p->width, p->height);
+      update(vw, p->left, p->top, p->width, p->height);
+    }
   }
-
-  xwi->share_image = (xwi->ximage->data == (char *)p->image) ? 1 : 0;
 
   return 1;
 }
@@ -568,11 +569,8 @@ destroy_window(VideoWindow *vw)
   X11Window *xw = (X11Window *)xwi->current.xw;
   X11 *x11 = x11window_x11(xw);
 
-  if (xwi->ximage) {
-    if (xwi->share_image)
-      xwi->ximage->data = NULL;
-    x11_destroy_ximage(xwi->ximage);
-  }
+  if (xwi->xi)
+    x11ximage_destroy(xwi->xi);
   if (xwi->current.pix)
     x11_free_pixmap(x11, xwi->current.pix);
   if (xwi->current.gc)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 08:04:53 2000.
- * $Id: spi.c,v 1.6 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sat Dec  2 22:26:28 2000.
+ * $Id: spi.c,v 1.7 2000/12/03 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -124,7 +124,7 @@ static LoaderStatus
 loader_load(Image *p, Stream *st, void *priv)
 {
   SusieLoader *sl = priv;
-  unsigned char *image;
+  unsigned char *image, *d;
   BITMAPINFOHEADER *bih;
   int i, err, bpl;
 
@@ -137,15 +137,15 @@ loader_load(Image *p, Stream *st, void *priv)
     p->depth = p->bits_per_pixel = bih->biBitCount;
     p->bytes_per_line = p->width * 3;
     bpl = (p->bytes_per_line + 3) & ~3;
-    p->image_size = p->bytes_per_line * p->height;
-    if ((p->image = malloc(p->image_size)) == NULL) {
+
+    if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
       free(image);
       free(bih);
       show_message("No enough memory for image\n");
       return LOAD_ERROR;
     }
     for (i = p->height - 1; i >= 0; i--)
-      memcpy(p->image + p->bytes_per_line * (p->height - 1 - i), image + bpl * i, p->bytes_per_line);
+      memcpy(d + p->bytes_per_line * (p->height - 1 - i), image + bpl * i, p->bytes_per_line);
     free(image);
     free(bih);
     return LOAD_OK;

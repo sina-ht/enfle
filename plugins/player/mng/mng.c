@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Nov 30 14:34:49 2000.
- * $Id: mng.c,v 1.4 2000/12/02 11:34:44 sian Exp $
+ * Last Modified: Sun Dec  3 04:12:57 2000.
+ * $Id: mng.c,v 1.5 2000/12/03 08:40:04 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -79,7 +79,6 @@ plugin_exit(void *p)
 static mng_ptr
 memalloc(mng_size_t n)
 {
-  /* debug_message("MNG: " __FUNCTION__ ": request %d bytes\n", n); */
   return calloc(1, n);
 }
 
@@ -129,22 +128,16 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
   p = image_create();
 
   this->p = p;
-#if 0
-  p->type = _RGB24;
-  p->bits_per_pixel = 24;
-  mng_set_canvasstyle(mng, MNG_CANVAS_RGB8);
-#else
+
   p->type = _BGRA32;
   p->bits_per_pixel = 32;
   mng_set_canvasstyle(mng, MNG_CANVAS_BGRA8);
-#endif
+
   p->width = width;
   p->height = height;
   p->depth = 24;
   p->bytes_per_line = width * (p->bits_per_pixel >> 3);
-  p->next = NULL;
-  p->image_size = p->bytes_per_line * height;
-  p->image = calloc(1, p->image_size);
+  memory_alloc(p->image, p->bytes_per_line * height);
 
   return MNG_TRUE;
 }
@@ -153,9 +146,13 @@ static mng_ptr
 getcanvasline(mng_handle mng, mng_uint32 nthline)
 {
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
-  unsigned char *pp = &this->p->image[this->p->bytes_per_line * nthline];
+  Image *p;
+  unsigned char *d;
 
-  return (mng_ptr)pp;
+  p = this->p;
+  d = memory_ptr(p->image);
+
+  return (mng_ptr)&d[p->bytes_per_line * nthline];
 }
 
 static mng_bool
@@ -164,8 +161,7 @@ refresh(mng_handle mng, mng_uint32 left, mng_uint32 top,
 {
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
 
-  debug_message(__FUNCTION__ ": (%d,%d)-(%d,%d)\n",
-		left, top, left + width - 1, top + height - 1);
+  debug_message(__FUNCTION__ ": (%d,%d)-(%d,%d)\n", left, top, left + width - 1, top + height - 1);
 
   this->m->render_frame(this->vw, this->m, this->p);
 
@@ -181,7 +177,7 @@ gettickcount(mng_handle mng)
 
   gettimeofday(&tv, NULL);
 
-  return (tv.tv_sec * 1000 * 1000 + tv.tv_usec) / 1000;
+  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
 static mng_bool
@@ -264,6 +260,8 @@ play_main(Movie *m, VideoWindow *vw)
     break;
   case MNG_NEEDTIMERWAIT:
     debug_message("MNG: " __FUNCTION__ ": delay %d msec\n", this->delay);
+    /* XXX: hmm unless don't do this, not properly updated... why? */
+    this->m->render_frame(this->vw, this->m, this->p);
     m->pause_usec(this->delay * 1000);
     break;
   default:
