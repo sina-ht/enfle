@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 12 07:27:25 2001.
- * $Id: Xlib.c,v 1.18 2001/01/11 22:28:18 sian Exp $
+ * Last Modified: Sun Jan 14 07:39:43 2001.
+ * $Id: Xlib.c,v 1.19 2001/01/14 15:19:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,6 +86,7 @@ static int set_offset(VideoWindow *, int, int);
 static int adjust_offset(VideoWindow *, int, int);
 static int render(VideoWindow *, Image *);
 static void update(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
+static void do_sync(VideoWindow *);
 static void destroy(void *);
 
 static VideoPlugin plugin = {
@@ -114,7 +115,8 @@ static VideoWindow template = {
   set_offset: set_offset,
   adjust_offset: adjust_offset,
   render: render,
-  update: update
+  update: update,
+  do_sync: do_sync
 };
 
 void *
@@ -891,6 +893,16 @@ render(VideoWindow *vw, Image *p)
 #endif
 
   return 1;
+}
+
+static void
+do_sync(VideoWindow *vw)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+
+  XSync(x11_display(x11), False);
 }
 
 static int
