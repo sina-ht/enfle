@@ -1,9 +1,26 @@
 /*
  * spi.c -- spi to enfle bridge
+ * (C)Copyright 2000 by Hiroshi Takekawa
+ * This file is part of Enfle.
+ *
+ * Last Modified: Tue Oct 31 01:03:07 2000.
+ * $Id: spi.c,v 1.3 2000/10/30 16:17:34 sian Exp $
+ *
+ * Enfle is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * Enfle is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "pe_image.h"
 #include "spi-private.h"
@@ -12,6 +29,10 @@
 #include "loader-extra.h"
 #include "archiver-plugin.h"
 #include "archiver-extra.h"
+#include "misc.h"
+
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "common.h"
 
@@ -35,6 +56,12 @@ typedef struct _susie_archiver {
   GetFileFunc get_file;
 } SusieArchiver;
 
+typedef struct _susie_archiver_info {
+  GetFileFunc get_file;
+  unsigned long position;
+  unsigned long filesize;
+} Susie_archiver_info;
+
 static LoaderPlugin loader_template = {
   type: ENFLE_PLUGIN_LOADER,
   identify: loader_identify,
@@ -55,11 +82,15 @@ loader_identify(Image *p, Stream *st, void *priv)
   int err;
 
   debug_message("loader_identify() called\n");
-  if ((err = sl->get_pic_info(st->path, 0, 0, &info)) == SPI_SUCCESS) {
+  if (st->path)
+    err = sl->get_pic_info(st->path, 0, 0, &info);
+  else
+    err = sl->get_pic_info(st->buffer, st->buffer_size, 1, &info);
+  if (err == SPI_SUCCESS) {
     if (info.width <= 0 || info.height <= 0) {
       debug_message("Invalid dimension (%ld, %ld)\n", info.width, info.height);
       return LOAD_ERROR;
-    } else if (info.colorDepth > 32) {
+    } else if (info.colorDepth > 32 || info.colorDepth <= 0) {
       debug_message("Invalid depth %d\n", info.colorDepth);
       return LOAD_ERROR;
     }
@@ -72,6 +103,12 @@ loader_identify(Image *p, Stream *st, void *priv)
   return LOAD_ERROR;
 }
 
+static int PASCAL
+susie_loader_progress_callback(int nNum, int nDenom, long lData)
+{
+  return 0;
+}
+
 static LoaderStatus
 loader_load(Image *p, Stream *st, void *priv)
 {
@@ -81,7 +118,8 @@ loader_load(Image *p, Stream *st, void *priv)
   int i, err, bpl;
 
   debug_message("loader_load() called\n");
-  if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image, NULL, 0)) == SPI_SUCCESS) {
+  if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image,
+			 susie_loader_progress_callback, 0)) == SPI_SUCCESS) {
     p->type = _BGR24;
     p->width = bih->biWidth;
     p->height = bih->biHeight;
@@ -108,7 +146,7 @@ loader_load(Image *p, Stream *st, void *priv)
 }
 
 static ArchiverStatus
-archiver_identify(Archive *p, Stream *st, void *priv)
+archiver_identify(Archive *a, Stream *st, void *priv)
 {
   SusieArchiver *sa = priv;
   unsigned char buffer[2048];
@@ -124,11 +162,72 @@ archiver_identify(Archive *p, Stream *st, void *priv)
   return OPEN_ERROR;
 }
 
-static ArchiverStatus
-archiver_open(Archive *p, Stream *st, void *priv)
+static int PASCAL
+susie_archive_progress_callback(int nNum, int nDenom, long lData)
 {
-  show_message("archiver_open() called, but spi-to-enfle bridge not yet implemented.\n");
-  return OPEN_ERROR;
+    return 0;
+}
+
+static int
+susie_archive_open(Archive *a, Stream *st, char *path)
+{
+  Susie_archiver_info *sai;
+  unsigned char *dest;
+
+  debug_message("susie_archive_open: %s: %s: %s\n", a->format, a->st->path, path);
+
+  if ((sai = (Susie_archiver_info *)archive_get(a, path)) == NULL)
+    return 0;
+
+  if ((sai->get_file(a->st->path, sai->position, (LPSTR)&dest, 0x100,
+		     susie_archive_progress_callback, 0)) != SPI_SUCCESS) {
+    show_message("archive_open: GetFile() failed.\n");
+    return 0;
+  }
+
+  return stream_make_memorystream(st, dest, sai->filesize);
+}
+
+static void
+susie_archive_destroy(Archive *a)
+{
+  stream_destroy(a->st);
+  hash_destroy(a->filehash, 1);
+  free(a);
+}
+
+static ArchiverStatus
+archiver_open(Archive *a, Stream *st, void *priv)
+{
+  int i, err;
+  SusieArchiver *sa = priv;
+  Susie_archiver_info *sai;
+  fileInfo *info;
+
+  if ((err = sa->get_archive_info(st->path, 0, 0, (HLOCAL *)&info)) != SPI_SUCCESS) {
+    show_message("archive_open: %s: %s\n", st->path, spi_errormsg[err]);
+    return OPEN_ERROR;
+  }
+
+  for (i = 0; info[i].method[0]; i++) {
+    if ((sai = malloc(sizeof(Susie_archiver_info))) == NULL) {
+      show_message("archiver_open: No enough memory.\n");
+      free(info);
+      return OPEN_ERROR;
+    }
+    sai->get_file = sa->get_file;
+    sai->position = info[i].position;
+    sai->filesize = info[i].filesize;
+    archive_add(a, info[i].filename, (void *)sai);
+  }
+
+  free(info);
+
+  a->st = stream_transfer(st);
+  a->open = susie_archive_open;
+  a->destroy = susie_archive_destroy;
+
+  return OPEN_OK;
 }
 
 static void
@@ -171,7 +270,6 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
     goto error;
   }
 
-  memset(buf, 0, 256);
   debug_message("GetPluginInfo 0 ");
   if ((err = get_plugin_info(0, buf, 256)) == 0) {
     show_message("GetPluginInfo returns 0\n");
@@ -254,7 +352,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   }
   debug_message("OK\n");
 
-  ep->name = strdup(path);
+  ep->name = strdup(misc_basename(path));
   ep->description = strdup(buf);
   ep->author = "SPI author";
 
