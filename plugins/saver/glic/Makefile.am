@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.3 2001/05/23 12:13:14 sian Exp $
+# $Id: Makefile.am,v 1.4 2001/07/02 11:30:51 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -8,7 +8,7 @@ noinst_LTLIBRARIES = libarith.la
 libarith_la_SOURCES = \
 	arithcoder.h arithcoder_arith.c arithcoder_arith.h \
 	arithmodel.h arithmodel_order_zero.c arithmodel_order_zero.h \
-	arithmodel_utils.c \
+	arithmodel_utils.c arithmodel_utils.h \
 	bitstream.c bitstream.h
 
 lib_LTLIBRARIES = \
@@ -26,8 +26,10 @@ saver_glic_la_SOURCES = \
 	predict.c predict.h \
 	scan.c scan.h \
 	floorlog2.c floorlog2.h \
+	ipow.c ipow.h \
 	vmpm_decompose.c vmpm_decompose.h \
-	vmpm_error.c vmpm_error.h
+	vmpm_error.c vmpm_error.h \
+	vmpm.h
 
 COMMON_FILES = ipow.c vmpm_hash.c vmpm_hash.h
 
