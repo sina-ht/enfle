@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 17:21:25 2001.
- * $Id: hash.h,v 1.5 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Thu Aug  8 00:08:12 2002.
+ * $Id: hash.h,v 1.6 2002/08/07 15:32:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,9 +24,6 @@
 #define _HASH_H
 
 #include "dlist.h"
-
-#define HASH_LOOKUP_SEARCH_MATCH 0
-#define HASH_LOOKUP_ACCEPT_DELETED 1
 
 typedef struct {
   void *key;
@@ -77,14 +74,17 @@ struct _hash {
 #define hash_key_key(hk) ((Hash_key *)hk)->key
 #define hash_key_len(hk) ((Hash_key *)hk)->len
 
-#define hash_iter(h, dl, dd, hk, d) \
- dl = hash_get_keys(h); \
- dd = dlist_top((dl)); \
- hk = dlist_data((dd)); \
- if (hk) \
-   for (d = hash_lookup((h), (hk->key), (hk->len)); \
-        dd != NULL && (hk = dlist_data((dd))) && (d = hash_lookup((h), (hk->key), (hk->len))); \
-        dd = dlist_next((dd)))
+#define hash_iter(h, k, kl, d) { \
+ Dlist *__dl = hash_get_keys(h); \
+ Dlist_data *__dd = dlist_top(__dl); \
+ Hash_key *__hk = dlist_data(__dd); \
+ if (__hk) \
+   for (k = __hk->key, kl = __hk->len, d = hash_lookup((h), k, kl); \
+        __dd != NULL && (__hk = dlist_data(__dd)) && (k = __hk->key, kl = __hk->len, d = hash_lookup((h), k, kl)); \
+        __dd = dlist_next(__dd))
+#define hash_iter_dl __dl
+#define hash_iter_dd __dd
+#define hash_iter_end }
 
 Hash *hash_create(int);
 

@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul 30 21:23:34 2002.
- * $Id: hash.c,v 1.9 2002/08/01 12:42:26 sian Exp $
+ * Last Modified: Wed Aug  7 23:26:20 2002.
+ * $Id: hash.c,v 1.10 2002/08/07 15:32:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,6 +29,9 @@
 #include "common.h"
 
 #include "hash.h"
+
+#define HASH_LOOKUP_SEARCH_MATCH 0
+#define HASH_LOOKUP_ACCEPT_DELETED 1
 
 static int define(Hash *, void *, unsigned int, void *);
 static int set(Hash *, void *, unsigned int, void *);
