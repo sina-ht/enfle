@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:07:09 2001.
- * $Id: jpeg.c,v 1.7 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 05:02:00 2001.
+ * $Id: jpeg.c,v 1.8 2001/06/19 08:17:26 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -29,6 +29,8 @@
 #include <jerror.h>
 #include <setjmp.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "enfle/loader-plugin.h"
@@ -318,20 +320,35 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     {
       /* Convert to I420 */
       char *y, *u, *v;
+      unsigned int w, h;
 
-      if ((y = malloc(p->width * p->height + ((p->width * p->height) >> 1))) == NULL)
+      w = ((p->width  + 7) >> 3) << 3;
+      h = ((p->height + 7) >> 3) << 3;
+
+      if ((y = calloc(1, (w * h * 3) >> 1)) == NULL)
 	goto error_destroy_free;
-      u = y + p->width * p->height;
-      v = u + ((p->width * p->height) >> 2);
+      u = y + w * h;
+      v = u + ((w * h) >> 2);
       for (i = 0; i < p->height; i += 2)
 	for (j = 0; j < p->width; j += 2) {
-	  y[ i       *  p->width +        j      ] = d[( i      * p->width + j    ) * 3    ];
-	  y[ i       *  p->width +        j + 1  ] = d[( i      * p->width + j + 1) * 3    ];
-	  y[(i + 1)  *  p->width +        j      ] = d[((i + 1) * p->width + j    ) * 3    ];
-	  y[(i + 1)  *  p->width +        j + 1  ] = d[((i + 1) * p->width + j + 1) * 3    ];
-	  u[(i >> 1) * (p->width >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 1];
-	  v[(i >> 1) * (p->width >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 2];
+	  y[ i       *  w +        j      ] = d[( i      * p->width + j    ) * 3    ];
+	  y[ i       *  w +        j + 1  ] = d[( i      * p->width + j + 1) * 3    ];
+	  y[(i + 1)  *  w +        j      ] = d[((i + 1) * p->width + j    ) * 3    ];
+	  y[(i + 1)  *  w +        j + 1  ] = d[((i + 1) * p->width + j + 1) * 3    ];
+	  u[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 1];
+	  v[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 2];
 	}
+      if (!p->rendered.image)
+	p->rendered.image = memory_create();
+      memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+      if ((d = memory_alloc(p->rendered.image, (w * h * 3) >> 1)) == NULL)
+	goto error_destroy_free;
+      memcpy(d, y, (w * h * 3) >> 1);
+      free(y);
+      p->width = w;
+      p->height = h;
+      p->bytes_per_line = p->width * 1.5;
+      p->bits_per_pixel = 12;
       p->type = _I420;
     }
     break;
