@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Jan  4 08:19:34 2001.
- * $Id: x11ximage.c,v 1.20 2001/01/06 23:50:19 sian Exp $
+ * Last Modified: Mon Jan  8 01:49:51 2001.
+ * $Id: x11ximage.c,v 1.21 2001/01/11 22:30:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -67,7 +67,7 @@ destroy_ximage(X11XImage *xi)
     if (xi->if_attached) {
       XShmDetach(x11_display(xi->x11), &xi->shminfo);
       xi->if_attached = 0;
-      debug_message(__FUNCTION__ ": SHM detached\n");
+      //debug_message(__FUNCTION__ ": SHM detached\n");
     }
 #endif
     x11_destroy_ximage(xi->ximage);
@@ -418,7 +418,7 @@ convert(X11XImage *xi, Image *p)
     xi->shminfo.readOnly = False;
     XShmAttach(x11_display(xi->x11), &xi->shminfo);
     xi->if_attached = 1;
-    debug_message(__FUNCTION__": SHM attached\n");
+    //debug_message(__FUNCTION__": SHM attached\n");
   }
 #endif
 
