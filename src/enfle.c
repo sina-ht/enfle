@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 19 00:56:30 2000.
- * $Id: enfle.c,v 1.15 2000/12/18 17:01:49 sian Exp $
+ * Last Modified: Mon Dec 25 00:23:02 2000.
+ * $Id: enfle.c,v 1.16 2000/12/24 15:30:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -61,6 +61,7 @@ static Option enfle_options[] = {
   { "ui",    'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
   { "video", 'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
   { "audio", 'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
+  { "info", 'I', _NO_ARGUMENT, "Print more information." },
   { NULL }
 };
 
@@ -73,8 +74,15 @@ usage(void)
   printf("(C)Copyright 2000 by Hiroshi Takekawa\n\n");
   printf("usage: enfle [options] [path...]\n");
 
+#if defined(USE_SHM) || defined (USE_PTHREAD)
+  printf("Extension: "
 #ifdef USE_SHM
-  printf("Extension: SHM\n");
+ "SHM "
+#endif
+#ifdef USE_PTHREAD
+ "pthread "
+#endif
+	 "\n");
 #endif
 
   printf("Options:\n");
@@ -132,10 +140,47 @@ check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
 
   if (((tmp = config_get(c, string_get(s))) != NULL) &&
       !strcasecmp(tmp, "yes")) {
-    printf("unload %s (disabled)\n", name);
+    //printf("unload %s (disabled)\n", name);
     enfle_plugins_unload(eps, type, name);
   }
   string_destroy(s);
+}
+
+static void
+print_plugin_info(EnflePlugins *eps, int level)
+{
+  int i;
+  Dlist *dl;
+  Dlist_data *dd;
+  const unsigned char *plugintypename;
+  char *pluginname;
+  const unsigned char *description, *author;
+
+  printf("Plugins:\n");
+  for (i = 0; i < ENFLE_PLUGIN_END; i++) {
+    plugintypename = enfle_plugin_type_to_name((PluginType)i);
+    if ((dl = enfle_plugins_get_names(eps, i))) {
+      printf(" %s:", plugintypename);
+      if (level >= 1)
+	printf("\n");
+      dlist_iter(dl, dd) {
+	pluginname = dlist_data(dd);
+	if (level == 0) {
+	  printf(" %s", pluginname);
+	} else {
+	  description = enfle_plugins_get_description(eps, i, pluginname);
+	  printf("  %s", description);
+	  if (level >= 2) {
+	    author = enfle_plugins_get_author(eps, i, pluginname);
+	    printf(" by %s", author);
+	  }
+	  printf("\n");
+	}
+      }
+      if (level == 0)
+	printf("\n");
+    }
+  }
 }
 
 int
@@ -153,6 +198,7 @@ main(int argc, char **argv)
   Player *player;
   Archive *a;
   int i, ch, spi_enabled = 1;
+  int print_more_info = 0;
   char *plugin_path, *path, *ext, *name;
   char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
   char *optstr, *tmp;
@@ -175,22 +221,16 @@ main(int argc, char **argv)
     case 'a':
       audio_name = strdup(optarg);
       break;
+    case 'I':
+      print_more_info++;
+      break;
     default:
       fprintf(stderr, "unknown option %c\n", ch);
       usage();
-      if (ui_name)
-	free(ui_name);
       exit(1);
     }
   }
   free(optstr);
-
-  if (argc == optind) {
-    usage();
-    if (ui_name)
-      free(ui_name);
-    return 0;
-  }
 
   c = uidata.c = config_create();
   config_load(c, "enfle.rc");
@@ -222,9 +262,6 @@ main(int argc, char **argv)
 	fprintf(stderr, "enfle_plugin_load %s failed.\n", path);
 	return 1;
       }
-      printf("%s by %s\n",
-	     enfle_plugins_get_description(eps, type, name),
-	     enfle_plugins_get_author(eps, type, name));
       check_and_unload(eps, c, type, name);
     } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
       PluginType type;
@@ -240,6 +277,12 @@ main(int argc, char **argv)
     path = archive_iteration_next(a);
   }
   archive_destroy(a);
+
+  if (argc == optind) {
+    usage();
+    print_plugin_info(eps, print_more_info);
+    return 0;
+  }
 
   uidata.a = archive_create();
 
