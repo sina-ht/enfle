@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 19 02:00:52 2000.
- * $Id: mpeg_lib.c,v 1.12 2000/12/18 17:01:27 sian Exp $
+ * Last Modified: Sat Dec 23 05:20:38 2000.
+ * $Id: mpeg_lib.c,v 1.13 2000/12/22 23:13:19 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -41,6 +41,7 @@ static const unsigned int types = IMAGE_RGBA32;
 static PlayerStatus identify(Movie *, Stream *);
 static PlayerStatus load(VideoWindow *, Movie *, Stream *);
 
+static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
@@ -139,10 +140,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->movie_private = (void *)info;
   m->st = st;
-  m->status = _PLAY;
-  m->current_frame = 0;
 
   m->initialize_screen(vw, m, p->width, p->height);
+
+  play(m);
 
   return PLAY_OK;
 }
@@ -163,6 +164,8 @@ get_screen(Movie *m)
 static PlayerStatus
 play(Movie *m)
 {
+  MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
+
   switch (m->status) {
   case _PLAY:
     return PLAY_OK;
@@ -170,12 +173,17 @@ play(Movie *m)
     return pause_movie(m);
   case _STOP:
     m->status = _PLAY;
-    return PLAY_OK;
+    break;
   case _UNLOADED:
+    return PLAY_ERROR;
+  default:
     return PLAY_ERROR;
   }
 
-  return PLAY_ERROR;
+  RewindMPEGStream(m->st, &info->img, mpeg_lib_rewind_func);
+  m->current_frame = 0;
+
+  return PLAY_OK;
 }
 
 static PlayerStatus
@@ -230,26 +238,18 @@ pause_movie(Movie *m)
 static PlayerStatus
 stop_movie(Movie *m)
 {
-  MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
-
   switch (m->status) {
   case _PLAY:
     m->status = _STOP;
-    break;
+    return PLAY_OK;
   case _PAUSE:
   case _STOP:
     return PLAY_OK;
   case _UNLOADED:
     return PLAY_ERROR;
-  default:
-    return PLAY_ERROR;
   }
 
-  /* stop */
-  RewindMPEGStream(m->st, &info->img, mpeg_lib_rewind_func);
-  m->current_frame = 0;
-
-  return PLAY_OK;
+  return PLAY_ERROR;
 }
 
 static void
