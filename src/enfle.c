@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:16:15 2002.
- * $Id: enfle.c,v 1.50 2002/08/18 04:19:26 sian Exp $
+ * Last Modified: Sun Aug 25 02:05:45 2002.
+ * $Id: enfle.c,v 1.51 2002/08/25 02:39:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -163,11 +163,11 @@ print_plugin_info(EnflePlugins *eps, int level)
     pl = eps->pls[i];
     plugintypename = enfle_plugin_type_to_name((PluginType)i);
     printf(" %s:", plugintypename);
+    if (level >= 1)
+      printf("\n");
     pluginlist_iter(pl, k, kl, p) {
       ep = plugin_get(p);
       pluginname = (char *)k;
-      if (level >= 1)
-	printf("\n");
       if (level == 0) {
 	printf(" %s", pluginname);
       } else {
