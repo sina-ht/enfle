@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 01:28:14 2001.
- * $Id: demultiplexer_mpeg.c,v 1.3 2001/02/21 17:56:29 sian Exp $
+ * Last Modified: Thu Feb 22 18:25:26 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.4 2001/02/22 17:47:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,6 +71,7 @@ examine(Demultiplexer *demux)
   unsigned char *buf, id;
   int read_total, read_size, used_size, skip;
   int nvstream, nastream;
+  int vstream, astream;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -79,27 +80,29 @@ examine(Demultiplexer *demux)
   used_size = 0;
   read_total = 0;
 
+  vstream = 0;
+  astream = 0;
   info->ver = 0;
   info->nastreams = 0;
   info->nvstreams = 0;
 
   do {
-    if ((read_size = stream_read(info->st, buf + used_size, DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
-      show_message(__FUNCTION__ ": read error.\n");
-      goto error;
-    }
-    if (read_size == 0) {
-      if (used_size < 4)
-	break;
-    } else {
-      used_size += read_size;
-      read_total += read_size;
-      if (read_total > DEMULTIPLEXER_MPEG_DETERMINE_SIZE && info->ver == 0) {
-	debug_message(__FUNCTION__ ": determined as not MPEG.\n");
+    if (read_total < DEMULTIPLEXER_MPEG_DETERMINE_SIZE) {
+      if ((read_size = stream_read(info->st, buf + used_size, DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
+	show_message(__FUNCTION__ ": read error.\n");
 	goto error;
       }
-      if (used_size < 4)
-	continue;
+      used_size += read_size;
+      read_total += read_size;
+    }
+
+    if (read_total >= DEMULTIPLEXER_MPEG_DETERMINE_SIZE && used_size < 4) {
+      if (info->ver == 0) {
+	debug_message(__FUNCTION__ ": determined as not MPEG.\n");
+	goto error;
+      } else {
+	break;
+      }
     }
 
     if (buf[0]) {
@@ -127,6 +130,7 @@ examine(Demultiplexer *demux)
     id = buf[3];
     switch (id) {
     case MPEG_PROGRAM_END:
+      debug_message(__FUNCTION__ ": MPEG_PROGRAM_END\n");
       goto end;
     case MPEG_PACK_HEADER:
       if ((buf[4] & 0xc0) == 0x40) {
@@ -143,8 +147,10 @@ examine(Demultiplexer *demux)
 	show_message(__FUNCTION__ ": weird version\n");
 	goto error;
       }
+      debug_message(__FUNCTION__ ": MPEG_PACK_HEADER: version %d skip %d\n", info->ver, skip);
       break;
     case MPEG_SYSTEM_START:
+      debug_message(__FUNCTION__ ": MPEG_SYSTEM_START\n");
       skip = 6 + utils_get_big_uint16(buf + 4);
       if (used_size < skip)
 	continue;
@@ -156,6 +162,7 @@ examine(Demultiplexer *demux)
       debug_message("MPEG_AUDIO_AC3??\n");
       break;
     case MPEG_PADDING:
+      debug_message(__FUNCTION__ ": MPEG_PADDING\n");
       skip = 6 + utils_get_big_uint16(buf + 4);
       if (used_size < skip)
 	continue;
@@ -166,12 +173,18 @@ examine(Demultiplexer *demux)
 	continue;
       if ((id & 0xe0) == 0xc0) {
 	nastream = id & 0x1f;
-	if (info->nastreams < nastream)
-	  info->nastreams = nastream;
+	debug_message(__FUNCTION__ ": MPEG_AUDIO %d\n", nastream);
+	if (!(astream & (1 << nastream))) {
+	  astream |= 1 << nastream;
+	  info->nastreams++;
+	}
       } else if ((id & 0xf0) == 0xe0) {
 	nvstream = id & 0xf;
-	if (info->nvstreams < nvstream)
-	  info->nvstreams = nvstream;
+	debug_message(__FUNCTION__ ": MPEG_VIDEO %d\n", nvstream);
+	if (!(vstream & (1 << nvstream))) {
+	  vstream |= 1 << nvstream;
+	  info->nvstreams++;
+	}
       } else if (id < 0xb9) {
 	debug_message("Looks like video stream.\n");
 	goto end;
@@ -193,6 +206,21 @@ examine(Demultiplexer *demux)
   return 0;
 }
 
+static void
+close_pipes(Demultiplexer *demux)
+{
+  MpegInfo *info = (MpegInfo *)demux->private_data;
+
+  if (info->v_fd) {
+    close(info->v_fd);
+    info->v_fd = 0;
+  }
+  if (info->a_fd) {
+    close(info->a_fd);
+    info->a_fd = 0;
+  }
+}
+
 static void *
 demux_main(void *arg)
 {
@@ -202,7 +230,7 @@ demux_main(void *arg)
   int read_total, read_size, used_size, skip;
   int nvstream, nastream;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message(__FUNCTION__ "() v_fd %d a_fd %d\n", info->v_fd, info->a_fd);
 
   if ((buf = malloc(DEMULTIPLEXER_MPEG_BUFFER_SIZE)) == NULL)
     pthread_exit((void *)0);
@@ -295,7 +323,7 @@ demux_main(void *arg)
 	if (nastream == info->nastream) {
 	  if ((buf[6] & 0xc0) == 0x80) {
 	    /* ?, flags, header_len */
-	    write(info->v_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
+	    write(info->a_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
 	  } else {
 	    unsigned char *p;
 
@@ -320,7 +348,7 @@ demux_main(void *arg)
 	      goto error;
 	    }
 	    if (p < buf + skip)
-	      write(info->v_fd, p, buf + skip - p);
+	      write(info->a_fd, p, buf + skip - p);
 	  }
 	}
       } else if ((id & 0xf0) == 0xe0) {
@@ -370,10 +398,12 @@ demux_main(void *arg)
 
  end:
   free(buf);
+  close_pipes(demux);
   pthread_exit((void *)1);
 
  error:
   free(buf);
+  close_pipes(demux);
   pthread_exit((void *)0);
 }
 
