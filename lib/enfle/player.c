@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 21:11:35 2002.
- * $Id: player.c,v 1.17 2002/02/08 12:15:01 sian Exp $
+ * Last Modified: Sat Feb  9 00:45:32 2002.
+ * $Id: player.c,v 1.18 2002/02/08 15:46:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,7 +62,6 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
 	  if (pp->identify(m, st, c, NULL) == PLAY_OK) {
 	    m->format = strdup(pluginname);
 	    free(ext);
-	    misc_free_str_array(pluginnames);
 	    return 1;
 	  }
 	  debug_message_fnc("%s failed.\n", pluginname);
