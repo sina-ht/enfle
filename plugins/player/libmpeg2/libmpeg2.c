@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 18:24:04 2001.
- * $Id: libmpeg2.c,v 1.9 2001/02/22 17:49:02 sian Exp $
+ * Last Modified: Sat Feb 24 09:52:03 2001.
+ * $Id: libmpeg2.c,v 1.10 2001/02/24 08:24:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,8 +20,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <inttypes.h>
 
 #define REQUIRE_STRING_H
@@ -32,6 +36,8 @@
 #ifndef USE_PTHREAD
 #  error pthread is mandatory for libmpeg2 plugin
 #endif
+
+#include <pthread.h>
 
 #include "utils/timer.h"
 #include "enfle/player-plugin.h"
@@ -243,10 +249,18 @@ play(Movie *m)
   stream_rewind(m->st);
 
   if (m->has_video) {
-    if (pipe(fds) != 0)
+    if (pipe(fds) != 0) {
+      perror("libmpeg2");
       return PLAY_ERROR;
+    }
     info->v_fd_in = fds[0];
     info->v_fd_out = fds[1];
+    if (fcntl(info->v_fd_in, F_SETFL, O_NONBLOCK)) {
+      perror("libmpeg2: ");
+      close(fds[0]);
+      close(fds[1]);
+      return PLAY_ERROR;
+    }
     demultiplexer_mpeg_set_vfd(info->demux, info->v_fd_out);
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
@@ -259,6 +273,12 @@ play(Movie *m)
       return PLAY_ERROR;
     info->a_fd_in = fds[0];
     info->a_fd_out = fds[1];
+    if (fcntl(info->a_fd_in, F_SETFL, O_NONBLOCK)) {
+      perror("libmpeg2: ");
+      close(fds[0]);
+      close(fds[1]);
+      return PLAY_ERROR;
+    }
     demultiplexer_mpeg_set_afd(info->demux, info->a_fd_out);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
@@ -268,7 +288,7 @@ play(Movie *m)
   return PLAY_OK;
 }
 
-#define MPEG_VIDEO_DECODE_BUFFER_SIZE 8192
+#define MPEG_VIDEO_DECODE_BUFFER_SIZE 4096
 
 static void *
 play_video(void *arg)
@@ -283,10 +303,25 @@ play_video(void *arg)
 
   while (m->status == _PLAY) {
     if ((read_size = read(info->v_fd_in, buf, MPEG_VIDEO_DECODE_BUFFER_SIZE)) < 0) {
+#if 0
+      int errnum = errno;
+
+      debug_message(__FUNCTION__ ": errno %d EAGAIN %d\n", errnum, EAGAIN);
+      if (errnum == EAGAIN) {
+	continue;
+      }
+      perror("libmpeg2: play_video");
+      demultiplexer_set_eof(info->demux, 1);
+      break;
+#endif
+      continue;
+    } else if (read_size == 0) {
       demultiplexer_set_eof(info->demux, 1);
       break;
     }
+    debug_message(__FUNCTION__ ": decode %d bytes\n", read_size);
     nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, buf, buf + read_size);
+    debug_message(__FUNCTION__ ": decode %d frames\n", nframe_decoded);
   }
 
   debug_message(__FUNCTION__ " exiting.\n");
