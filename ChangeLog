@@ -1,3 +1,17 @@
+2001-01-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/player/Makefile.am: New mpglib player
+	plugin.
+
+	* src/enfle.c, src/enfle.rc: A few tweaks.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Avoid playing mp3 file. MP3
+	stream is now played by mpglib.
+
+	* plugins/player/mpglib/.cvsignore,
+	plugins/player/mpglib/Makefile.am, plugins/player/mpglib/mpglib.c:
+	New mpglib player plugin.
+
 2001-01-28  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, lib/divxdecore/Makefile.am,
