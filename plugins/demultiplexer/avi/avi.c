@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 01:48:39 2004.
- * $Id: avi.c,v 1.1 2004/02/14 05:22:04 sian Exp $
+ * Last Modified: Sat Feb 21 13:23:16 2004.
+ * $Id: avi.c,v 1.2 2004/02/21 07:50:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -496,7 +496,7 @@ demux_main(void *arg)
     nstream = (p[0] - '0') * 10 + (p[1] - '0');
     if (p[2] == 'd' && (p[3] == 'c' || p[3] == 'b')) {
       /* video data */
-      if (nstream == demux->nvstream) {
+      if (nstream == demux->nvstream && demux->vstream) {
 	if (!riff_file_read_data(info->rf, rc))
 	  break;
 	if (riff_chunk_get_size(rc) > 0) {
@@ -511,7 +511,7 @@ demux_main(void *arg)
       }
     } else if (p[2] == 'w' && p[3] == 'b') {
       /* audio data */
-      if (nstream == demux->nastream) {
+      if (nstream == demux->nastream && demux->astream) {
 	if (!riff_file_read_data(info->rf, rc))
 	  break;
 	if (riff_chunk_get_size(rc) > 0) {
