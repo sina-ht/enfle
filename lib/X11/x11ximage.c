@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Jan 19 23:08:16 2004.
- * $Id: x11ximage.c,v 1.49 2004/01/19 14:08:54 sian Exp $
+ * Last Modified: Sat Feb 21 15:51:16 2004.
+ * $Id: x11ximage.c,v 1.50 2004/02/21 07:49:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -301,7 +301,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
     image_bpl_by_index(p, dst) = ximage->bytes_per_line;
 #if 0
     debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
-    debug_message("p type: %s p bpp: %d x bpp: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel);
+    debug_message("p type: %s p bpp: %d x bpp: %d bpl: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel, ximage->bytes_per_line);
 #endif
   }
 
@@ -686,8 +686,8 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 #endif
   }
 
-  xi->if_attached = 0;
 #ifdef USE_SHM
+  xi->if_attached = 0;
   if (to_be_attached) {
     xi->shminfo->shmid = memory_shmid(dst_img);
     xi->shminfo->shmaddr = memory_ptr(dst_img);
