@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 01:28:39 2001.
- * $Id: libriff.c,v 1.1 2001/09/03 00:31:03 sian Exp $
+ * Last Modified: Wed Sep 12 01:11:11 2001.
+ * $Id: libriff.c,v 1.2 2001/09/12 11:38:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,6 +123,7 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
 {
   unsigned char buffer[8];
   unsigned int chunk_read;
+  int byte_read;
 
   if ((chunk_read = rf->input_func(rf->func_arg, buffer, 8)) != 8) {
     if (chunk_read == 0) {
@@ -130,6 +131,7 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
       rf->err = _RIFF_ERR_SUCCESS;
       return 0;
     }
+    debug_message(__FUNCTION__ ": need 8bytes but got only %d bytes.\n", chunk_read);
     rf->err = _RIFF_ERR_PREMATURE_CHUNK;
     return 0;
   }
@@ -145,7 +147,8 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
     rc->is_list = 0;
   } else {
     rc->is_list = 1;
-    if (rf->input_func(rf->func_arg, buffer, 4) != 4) {
+    if ((byte_read = rf->input_func(rf->func_arg, buffer, 4)) != 4) {
+      debug_message(__FUNCTION__ ": need 4bytes but got only %d bytes.\n", byte_read);
       rf->err = _RIFF_ERR_PREMATURE_CHUNK;
       return 0;
     }
@@ -185,14 +188,18 @@ static int
 read_data(RIFF_File *rf, RIFF_Chunk *rc)
 {
   //debug_message(__FUNCTION__ ": [%s] %d bytes (aligned %d bytes)\n", rc->name, rc->size, rc->_size);
+  int byte_read;
 
-  if ((rc->data = malloc(rc->_size)) == NULL) {
-    rf->err = _RIFF_ERR_NO_ENOUGH_MEMORY;
-    return 0;
-  }
-  if (rf->input_func(rf->func_arg, rc->data, rc->_size) != rc->_size) {
-    rf->err = _RIFF_ERR_TRUNCATED_CHUNK;
-    return 0;
+  if (rc->_size > 0) {
+    if ((rc->data = malloc(rc->_size)) == NULL) {
+      rf->err = _RIFF_ERR_NO_ENOUGH_MEMORY;
+      return 0;
+    }
+    if ((byte_read = rf->input_func(rf->func_arg, rc->data, rc->_size)) != rc->_size) {
+      debug_message(__FUNCTION__ ": requested %d bytes, but got %d bytes\n", rc->_size, byte_read);
+      rf->err = _RIFF_ERR_TRUNCATED_CHUNK;
+      return 0;
+    }
   }
 
   return 1;
