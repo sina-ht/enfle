@@ -273,9 +273,9 @@ void addblockInter (int comp, int bx, int by)
 int find_pmv (int block, int comp)
 {
   int p1, p2, p3;
-  int xin1, xin2, xin3;
-  int yin1, yin2, yin3;
-  int vec1, vec2, vec3;
+  int xin1 = 0, xin2 = 0, xin3 = 0;
+  int yin1 = 0, yin2 = 0, yin3 = 0;
+  int vec1 = 0, vec2 = 0, vec3 = 0;
 
 	int x = mp4_hdr.mb_xpos;
 	int y = mp4_hdr.mb_ypos;
