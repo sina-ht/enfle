@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 02:26:16 2004.
- * $Id: videodecoder.c,v 1.1 2004/01/30 12:39:04 sian Exp $
+ * Last Modified: Fri Feb 13 21:28:52 2004.
+ * $Id: videodecoder.c,v 1.2 2004/02/14 05:30:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,6 +35,7 @@
 #include <pthread.h>
 
 #include "videodecoder-plugin.h"
+#include "utils/libstring.h"
 
 VideoDecoder *
 _videodecoder_init(void)
@@ -59,6 +60,162 @@ _videodecoder_destroy(VideoDecoder *vdec)
   }
 }
 
+const char *
+videodecoder_codec_name(unsigned int fourcc)
+{
+  switch (fourcc) {
+  case FCC_H263:
+    return "h263";
+  case FCC_I263:
+    return "h263i";
+  case FCC_U263:
+  case FCC_viv1:
+    return "h263p";
+  case FCC_DIVX: // invalid_asf
+  case FCC_divx: // invalid_asf
+  case FCC_DX50: // invalid_asf
+  case FCC_XVID: // invalid_asf
+  case FCC_MP4S:
+  case FCC_M4S2:
+  case FCC_0x04000000:
+  case FCC_DIV1:
+  case FCC_BLZ0:
+  case FCC_mp4v:
+  case FCC_UMP4:
+    return "mpeg4";
+  case FCC_DIV3: // invalid_asf
+  case FCC_DIV4:
+  case FCC_DIV5:
+  case FCC_DIV6:
+  case FCC_MP43:
+  case FCC_MPG3:
+  case FCC_AP41:
+  case FCC_COL1:
+  case FCC_COL0:
+    return "msmpeg4";
+  case FCC_MP42:
+  case FCC_mp42:
+  case FCC_DIV2:
+    return "msmpeg4v2";
+  case FCC_MP41:
+  case FCC_MPG4:
+  case FCC_mpg4:
+    return "msmpeg4v1";
+  case FCC_WMV1:
+    return "wmv1";
+  case FCC_WMV2:
+    return "wmv2";
+  case FCC_dvsd:
+  case FCC_dvhd:
+  case FCC_dvsl:
+  case FCC_dv25:
+    return "dvvideo";
+  case FCC_mpg1:
+  case FCC_mpg2:
+  case FCC_PIM1:
+  case FCC_VCR2:
+    return "mpeg1video";
+  case FCC_MJPG:
+    return "mjpeg";
+  case FCC_JPGL:
+  case FCC_LJPG:
+    return "ljpeg";
+  case FCC_HFYU:
+    return "huffyuv";
+  case FCC_CYUV:
+    return "cyuv";
+  case FCC_Y422:
+  case FCC_I420:
+    return "rawvideo";
+  case FCC_IV31:
+  case FCC_IV32:
+    return "indeo3";
+  case FCC_VP31:
+    return "vp3";
+  case FCC_ASV1:
+    return "asv1";
+  case FCC_ASV2:
+    return "asv2";
+  case FCC_VCR1:
+    return "vcr1";
+  case FCC_FFV1:
+    return "ffv1";
+  case FCC_Xxan:
+    return "xan_wc4";
+  case FCC_mrle:
+  case FCC_0x01000000:
+    return "msrle";
+  case FCC_cvid:
+    return "cinepak";
+  case FCC_MSVC:
+  case FCC_msvc:
+  case FCC_CRAM:
+  case FCC_cram:
+  case FCC_WHAM:
+  case FCC_wham:
+    return"msvideo1";
+  default:
+    break;
+  }
+
+  return NULL;
+}
+
+int
+videodecoder_select(EnflePlugins *eps, Movie *m, unsigned int fourcc, Config *c)
+{
+  PluginList *pl = eps->pls[ENFLE_PLUGIN_VIDEODECODER];
+  Plugin *p;
+  VideoDecoderPlugin *vdp;
+  String *s;
+  char *pluginname, **pluginnames;
+  int res;
+  void *k;
+  unsigned int kl;
+  const char *codec_name = videodecoder_codec_name(fourcc);
+
+  if (codec_name == NULL)
+    return 0;
+
+  s = string_create();
+  string_catf(s, "/enfle/plugins/videodecoder/preference/%s", codec_name);
+  pluginnames = config_get_list(c, string_get(s), &res);
+  string_destroy(s);
+  if (pluginnames) {
+    int i = 0;
+
+    while ((pluginname = pluginnames[i])) {
+      if (strcmp(pluginname, ".") == 0) {
+	debug_message_fnc("Failed, no further try.\n");
+	return 0;
+      }
+      if ((p = pluginlist_get(pl, pluginname))) {
+	vdp = plugin_get(p);
+	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
+	if ((m->vdec = vdp->init(fourcc)) != NULL)
+	  return 1;
+	debug_message_fnc("%s failed.\n", pluginname);
+      } else {
+	show_message_fnc("%s (prefered for %s) not found.\n", pluginname, codec_name);
+      }
+      i++;
+    }
+  }
+  
+  pluginlist_iter(pl, k, kl, p) {
+    vdp = plugin_get(p);
+    debug_message_fnc("try %s\n", (char *)k);
+    if ((m->vdec = vdp->init(fourcc)) != NULL) {
+      pluginlist_move_to_top;
+      return 1;
+    }
+    //debug_message("%s: failed\n", (char *)k);
+  }
+  pluginlist_iter_end;
+
+  return 0;
+}
+
 VideoDecoder *
 videodecoder_create(EnflePlugins *eps, const char *pluginname)
 {
@@ -69,5 +226,5 @@ videodecoder_create(EnflePlugins *eps, const char *pluginname)
     return NULL;
   vdp = plugin_get(p);
 
-  return vdp->init();
+  return vdp->init(0);
 }

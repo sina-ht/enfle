@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 02:05:09 2004.
- * $Id: videodecoder.h,v 1.1 2004/01/30 12:39:04 sian Exp $
+ * Last Modified: Sat Feb 14 02:27:28 2004.
+ * $Id: videodecoder.h,v 1.2 2004/02/14 05:30:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,8 @@
 #if !defined(_ENFLE_VIDEO_DECODER_H)
 #define _ENFLE_VIDEO_DECODER_H
 
+typedef struct _video_decoder VideoDecoder;
+
 #include "enfle/enfle-plugins.h"
 #include "enfle/movie.h"
 
@@ -32,8 +34,8 @@ typedef enum _video_decoder_status {
   VD_NEED_MORE_DATA
 } VideoDecoderStatus;
 
-typedef struct _video_decoder VideoDecoder;
 struct _video_decoder {
+  const char *name;
   void *opaque;
   int to_render;
   pthread_mutex_t update_mutex;
@@ -52,6 +54,8 @@ struct _video_decoder {
 VideoDecoder *_videodecoder_init(void);
 void _videodecoder_destroy(VideoDecoder *);
 
+const char *videodecoder_codec_name(unsigned int);
+int videodecoder_select(EnflePlugins *, Movie *, unsigned int, Config *);
 VideoDecoder *videodecoder_create(EnflePlugins *, const char *);
 
 #endif
