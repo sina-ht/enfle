@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 15 03:54:22 2001.
- * $Id: normal.c,v 1.18 2001/01/14 18:57:10 sian Exp $
+ * Last Modified: Fri Feb  2 14:04:25 2001.
+ * $Id: normal.c,v 1.19 2001/02/02 16:39:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -470,7 +470,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       movie_unload(m);
     } else {
 
-      debug_message("%s: (%d, %d)\n", path, p->width, p->height);
+      debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
 
       if (p->comment) {
 	show_message("comment:\n%s\n", p->comment);
