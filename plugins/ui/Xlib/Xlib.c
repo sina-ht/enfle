@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:56:04 2000.
- * $Id: Xlib.c,v 1.11 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Thu Oct 19 20:22:07 2000.
+ * $Id: Xlib.c,v 1.12 2000/10/20 18:12:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,17 +20,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <errno.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+
+#define REQUIRE_STRING_H
+#define REQUIRE_UNISTD_H
+#include "compat.h"
 
 #include "common.h"
 
