@@ -2,62 +2,64 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-   (C) Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa.
+           (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Fri Nov 22 00:53:55 2002.
-
- This file is part of Enfle.
-
- Enfle is free software; you can redistribute it and/or modify it
- under the terms of the GNU General Public License version 2 as
- published by the Free Software Foundation.
-
- Enfle is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
-
- ATTENTION: GPL version 2 only. You cannot apply any later
- version. This situation may change.
+             Last Modified: Sat Dec 13 13:00:50 2003.
 
 ***************************************************************************
 
- JPEG Loader plugin and JPEG Saver plugin are based in part on the
- work of the Independent JPEG Group
+Licensing Term
 
- -- libjpeg is only linked, not distributed with this archive. You
- -- should install it.
+  This file is part of Enfle.
 
- The Graphics Interchange Format (c) is
- the Copyright property of CompuServe Incorporated.
- GIF (sm) is a Service Mark property of CompuServe Incorporated.
+  Enfle is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License version 2 as
+  published by the Free Software Foundation.
 
- -- libungif is only linked, not distributed with this archive.  Moreover,
- -- libungif is not used by default, for avoiding possible patent
- -- infringement.  It's up to you whether use it or not.
+  Enfle is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+  License for more details.
 
- It seems I should include this sentence: "This product includes
- software developed by or derived from software developed by Project
- Mayo".  Strictly speaking, Enfle and OpenDivX plugin itself don't
- include any portion of software by them.  OpenDivX plugin will be
- dynamically linked with libdivxdecore.  I'm not sure this plugin is
- regarded as "Larger Work".  But it doesn't matter because this plugin
- can be and is released under GPL.  See
- plugins/player/opendivx/opendivx.c for further details.
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
- This archive includes mpglib by Michael Hipp.  Read lib/mpglib/README.
+  ATTENTION: GPL version 2 only. You cannot apply any later version.
+  This situation may change in the future.
 
- This software includes libmpeg2 by Aaron Holtzman.  For this part,
- you can apply GPL2 or later version.
+***************************************************************************
 
- This archive includes fnmatch.[ch] by FSF.  These files can be
- distributed under GPL2 or (at your option) any later version.
+Acknowledgement
 
-***************************************************
+  JPEG Loader plugin and JPEG Saver plugin are based in part on the
+  work of the Independent JPEG Group
+
+  libjpeg is only linked, not distributed with this archive.  You
+  should install it.
+
+  The Graphics Interchange Format (c) is
+  the Copyright property of CompuServe Incorporated.
+  GIF (sm) is a Service Mark property of CompuServe Incorporated.
+
+  libungif is only linked, not distributed with this archive.
+  Moreover, libungif is not used by default, for avoiding possible
+  patent infringement.  It's up to you whether use it or not.  This
+  situation will change as the patent is expiring.
+
+  This archive includes mpglib by Michael Hipp.  Read lib/mpglib/README.
+
+  This software includes libmpeg2 by Aaron Holtzman.  For this part,
+  you can apply GPL2 or later version.
+
+  This archive includes fnmatch.[ch] by FSF. These files can be
+  distributed under GPL2 or any later version.
+
+  This archive includes libavcodec from ffmpeg.  These files can be
+  distributed under LGPL2 or any later version.  LGPL license is in
+  lib/avcodec/COPYING.LIB.
+
+***************************************************************************
 
 OK, legal part is over.  The rest is fun.
 BTW, my English is rather bad.  Are there any volunteers for correction?
@@ -81,21 +83,24 @@ various formatted pictures and movies with several effects.
  mng
  mpeg(mpeg1, mpeg2)
  avi,asf(avifile uses Windows DLL)
+ avi (codec supported by avcodec)
  DivX in AVI format supported by divx4linux
 
 This software has plugin architecture.  You can write plugins to
 loader new formatted pictures and movies.  Also, you can read
 irregular files, such as tar, gz, bz2, and so on.
 
-***
+***************************************************************************
+
 GIF decoder must perform LZW decompression.  Unfortunately, it's
 patented.  (Many think that patent doesn't cover decompression.  But
 Unisys won't permit).  So, this software never includes LZW
 decompression code, though I've written.  UNGIF plugin which uses
 libungif is included.  But, I'm not sure that usage of this library is
 legal.  It's up to you whether use this or not.  You must explicit
-pass --with-ungif option to configure script.
-***
+pass --with-ungif option to configure script.  The patent is expiring.  After it is expired, I will release GIF plugin, which has already been created.
+
+***************************************************************************
 
 Some plugins use libraries which is not included in distribution.  You
 should install corresponding libraries to use them.
@@ -110,7 +115,8 @@ mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
 avifile: avifile-0.53.5 or avifile-0.6 in CVS
-opendivx: divx4linux-20010807, divx4linux501-20020418
+divx: divx4linux-20030428 (old version will not work)
+alsa: require ALSA_PCM_NEW_HW_PARAMS_API.
 
 
 2. Requirements
@@ -123,20 +129,20 @@ be supported sometime.
 
 These environments are checked:
 
-Linux (kernel 2.2 or 2.4 + glibc-2.1 or 2.2, x86)
+Linux (kernel 2.2, 2.4 or 2.6 + glibc-2.1, 2.2, or 2.3, x86)
 FreeBSD (4.1R, x86)
 
 Other similar environments should work.  Please let me know if you try
 on the same/other environments.
 
-My main environment is:
+My main environment (2003/12/13) is:
 
-Kernel: Linux-2.5.25
+Kernel: Linux-2.6.0-test11(-bk5)
 CPU: PentiumIII/1GHz or PentiumIII/700MHz
-X server: XFree86-4.2.0
-Video: Matrox Millennium G450 DH/AGP 16M or Silicon Motion, Inc. SM720 Lynx3DM
-Compiler: gcc version 2.95.3 or 3.1
-libc: glibc-2.2.5
+X server: XFree86-4.3.99.16
+Video: NVIDIA GeForce4 Ti4800 SE or Silicon Motion, Inc. SM720 Lynx3DM
+Compiler: gcc version 2.95.3 or 3.3.2, icc 8.0
+libc: glibc-2.3.2
 
 
 3. Compile
@@ -189,9 +195,14 @@ directory will be added recursively.  Supported archives(such as
 
 5. Usage
 
-Left click,n,space	next image
-Right click,b		previous image
-Center click,N		next archive
+Left click,n,space		next image
+Right click,b			previous image
+Center click,N (shift+n)	next archive
+B (shift+b)			previous archive
+Ctrl+n				5th next image
+Ctrl+b				5th previous image
+Alt+n				5th next archive
+Alt+b				5th previous archive
 d			delete displaying file from list
 D(shift+d)		delete displaying file
 q			quit
@@ -217,7 +228,7 @@ $prefix/share/enfle/enfle.rc(normally, /usr/local/share/enfle/enfle.rc
 or like).  If you'd like to customize, copy and edit it.
 
 mkdir ~/.enfle
-cp /usr/share/enfle/enfle.rc ~/.enfle/config
+cp /usr/local/share/enfle/enfle.rc ~/.enfle/config
 
 Customizing the caption
 

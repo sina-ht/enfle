@@ -2,62 +2,64 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-   (C) Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa.
+           (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Fri Nov 22 00:52:59 2002.
-
- This file is part of Enfle.
-
- Enfle is free software; you can redistribute it and/or modify it
- under the terms of the GNU General Public License version 2 as
- published by the Free Software Foundation.
-
- Enfle is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
-
- ATTENTION: GPL version 2 only. You cannot apply any later
- version. This situation may change.
+             Last Modified: Sat Dec 13 13:02:45 2003.
 
 ***************************************************************************
 
- JPEG Loader plugin and JPEG Saver plugin are based in part on the
- work of the Independent JPEG Group
+Licensing Term
 
- -- libjpeg is only linked, not distributed with this archive. You
- -- should install it.
+  This file is part of Enfle.
 
- The Graphics Interchange Format (c) is
- the Copyright property of CompuServe Incorporated.
- GIF (sm) is a Service Mark property of CompuServe Incorporated.
+  Enfle is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License version 2 as
+  published by the Free Software Foundation.
 
- -- libungif is only linked, not distributed with this
- -- archive. Moreover, libungif is not used by default, for avoiding
- -- possible patent infringement. It's up to you whether use it or not.
+  Enfle is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+  License for more details.
 
- It seems I should include this sentence: "This product includes
- software developed by or derived from software developed by Project
- Mayo".  Strictly speaking, Enfle and OpenDivX plugin itself don't
- include any portion of software by them.  OpenDivX plugin will be
- dynamically linked with libdivxdecore.  I'm not sure this plugin is
- regarded as "Larger Work".  But it doesn't matter because this plugin
- can be and is released under GPL.  See
- plugins/player/opendivx/opendivx.c for further details.
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
- This archive includes mpglib by Michael Hipp. Read lib/mpglib/README.
+  ATTENTION: GPL version 2 only. You cannot apply any later version.
+  This situation may change in the future.
 
- This software includes libmpeg2 by Aaron Holtzman. For this part, you
- can apply GPL2 or later version.
+***************************************************************************
 
- This archive includes fnmatch.[ch] by FSF. These files can be
- distributed under GPL2 or (at your option) any later version.
+Acknowledgement
 
-***************************************************
+  JPEG Loader plugin and JPEG Saver plugin are based in part on the
+  work of the Independent JPEG Group
+
+  libjpeg is only linked, not distributed with this archive.  You
+  should install it.
+
+  The Graphics Interchange Format (c) is
+  the Copyright property of CompuServe Incorporated.
+  GIF (sm) is a Service Mark property of CompuServe Incorporated.
+
+  libungif is only linked, not distributed with this archive.
+  Moreover, libungif is not used by default, for avoiding possible
+  patent infringement.  It's up to you whether use it or not.  This
+  situation will change as the patent is expiring.
+
+  This archive includes mpglib by Michael Hipp.  Read lib/mpglib/README.
+
+  This software includes libmpeg2 by Aaron Holtzman.  For this part,
+  you can apply GPL2 or later version.
+
+  This archive includes fnmatch.[ch] by FSF. These files can be
+  distributed under GPL2 or any later version.
+
+  This archive includes libavcodec from ffmpeg.  These files can be
+  distributed under LGPL2 or any later version.  LGPL license is in
+  lib/avcodec/COPYING.LIB.
+
+***************************************************************************
 
 OK, legal part is over. The rest is fun.
 
@@ -76,14 +78,15 @@ See README.e if you don't read Japanese, but English.
 ダです。ガンマ補正、拡大縮小、 90 度回転、軸対称変換などが行えます。動画
 にも対応しています。
 
- 対応フォーマット
- BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM
- spi (不安定, Susie plugin を利用できる)
- animated GIF
- mng
- mpeg (mpeg1, mpeg2)
- avi,asf (avifile を利用)
- DivX in AVI format supported by divx4linux
+対応フォーマット
+  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM
+  spi (不安定, Susie plugin を利用できる)
+  animated GIF
+  mng
+  mpeg (mpeg1, mpeg2)
+  avi,asf (avifile を利用)
+  avi (avcodec が対応している codec)
+  DivX in AVI format supported by divx4linux
 
 各フォーマットへの対応はプラグインによって実装されております。画像の他
 に特殊なアーカイブ、 tar などの一般的なアーカイブ、圧縮された gz などのファ
@@ -91,16 +94,20 @@ See README.e if you don't read Japanese, but English.
 を参考にすることにより (開発バージョンのドキュメントはまだなし) 、誰で
 もプラグインを作って拡張することが可能です。
 
-***
-GIF の decode には LZW の decode が必要ですが、 patent (特許) の問題があるので、
-enfle のコード自体には LZW decoder は含まれておりません。 decode には特許は
-及ばないというのが大方の見方ですが patent holder である Unisys が否定して
-いるので一応含まないでおきます。 libungif を使う ungif プラグインが含まれ
-ていますが、 ungif プラグイン自体は LZW 関連の code を含んでいません。ただし、
-libungif の LZW code を使用できるかどうかとは別ですので、各自の責任におい
-て使用してください。 ungif plugin を利用するには、 configure 時に
---with-ungif を明示的に指定する必要があります。
-***
+***************************************************************************
+
+GIF の decode には LZW の decode が必要ですが、 patent (特許) の問題が
+あるので、enfle のコード自体には LZW decoder は含まれておりません。
+decode には特許は及ばないというのが大方の見方ですが patent holder であ
+る Unisys が否定しているので一応含まないでおきます。 libungif を使う
+ungif プラグインが含まれていますが、 ungif プラグイン自体は LZW 関連の
+code を含んでいません。ただし、libungif の LZW code を使用できるかどう
+かとは別ですので、各自の責任において使用してください。 ungif plugin を
+利用するには、 configure 時に--with-ungif を明示的に指定する必要があり
+ます。特許が切れようとしています。特許が切れたら GIF の plugin を配布に
+含めます。GIF plugin 自体は既に作成済です。
+
+***************************************************************************
 
 以下の plugin には library が別途必要です。動作するであろう version を書いて
 おきます。
@@ -115,7 +122,8 @@ mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (パッチが必要な場合は私までどうぞ)
 avifile: avifile-0.53.5 or avifile-0.6 in CVS
-opendivx: divx4linux-20010807, divx4linux501-20020418
+divx: divx4linux-20030428 (古い API のものは使えません)
+alsa: ALSA_PCM_NEW_HW_PARAMS_API に対応しているものが必要です。
 
 
 2.動作環境
@@ -133,20 +141,24 @@ FreeBSD (4.1R, x86)
 
 同じ/他の環境下で試された方は結果を御報告ください。
 
-私のメインの開発環境は 2002/07/17 現在 以下の通りです。
+私のメインの開発環境は 2003/12/13 現在 以下の通りです。
 
-Kernel: Linux-2.5.25
+Kernel: Linux-2.6.0-test11(-bk5)
 CPU: PentiumIII/1GHz or PentiumIII/700MHz
-X server: XFree86-4.2.0
-Video: Matrox Millennium G450 DH/AGP 16M or Silicon Motion, Inc. SM720 Lynx3DM
-Compiler: gcc version 2.95.3 or 3.1
-libc: glibc-2.2.5
+X server: XFree86-4.3.99.16
+Video: NVIDIA GeForce4 Ti4800 SE or Silicon Motion, Inc. SM720 Lynx3DM
+Compiler: gcc version 2.95.3 or 3.3.2, icc 8.0
+libc: glibc-2.3.2
 
 
 3.コンパイル
 
 コンパイルには gcc が必要です。コードに gcc の extension を使っています。
-~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Intel C++ Compiler 8.0 でのコンパイルも可能です。CC=icc ./configure。
+libtool の compiler_c_o が no になっていたら yes に変更。make。うまくい
+かないかもしれません…)
+
 基本は configure して make するだけです。うまくいかない際には、どのよ
 うなエラーがでたか報告していただければ幸いです。configure が生成する
 config.log なども参考になります。報告先は後述してあります。
@@ -201,7 +213,12 @@ Enfle は非常にシンプルなプログラムです。引数に表示したいファイル名を続
 
 左クリック,n,space	次の画像へ
 右クリック,b		前の画像へ
-中クリック,N		次のアーカイブへ
+中クリック,N (shift+n)	次のアーカイブへ
+B (shift+b)		前のアーカイブへ
+Ctrl+n			5つ後の画像へ
+Ctrl+b			5つ前の画像へ
+Alt+n			5つ後のアーカイブへ
+Alt+b			5つ前のアーカイブへ
 d			今表示してるファイルを表示リストからはずす
 D (shift+d)		今表示してるファイルを削除する
 q			終了
@@ -229,9 +246,9 @@ install すると$prefix/share/enfle/enfle.rc (だいたい
 install されます。カスタマイズするには、
 
 mkdir ~/.enfle
-cp /usr/share/enfle/enfle.rc ~/.enfle/config
+cp /usr/local/share/enfle/enfle.rc ~/.enfle/config
 
-とコピーして~/.enfle/config を書きかえてください。
+とコピーして ~/.enfle/config を書きかえてください。
 
 キャプションのカスタマイズ
 enfle.rc (~/.enfle/config) の caption_template = "%p %f %xx%y"で設定し
@@ -293,5 +310,18 @@ image/*;enfle %s
 
 Enfle は GNU GENERAL PUBLIC LICENSE Version 2 に従います。Version 2 の
 みで、それ以降の Version にするオプションはいまのところありません。
-GPL2 については COPYING をお読みください。補助として日本語訳 COPYING.j 
+GPL2 については COPYING をお読みください。補助として日本語訳 COPYING.j
 もつけてあります。
+
+改変したものの配布についての補足: 日本では、著作権法により、著作者人格
+権が著作物に対して自動的に発生し、放棄することができません。著作者人格
+権の一部の権利として同一性保持権があります。義務とはしませんが、改変し
+たものを配布する場合は誰がどのような変更を行ったかわかるようにしておく
+と良いと思われます。著作権法20条、改変に関する例外規定「プログラムの著
+作物をコンピュータでより効果的に利用するために必要な改変」にあてはまる
+ような改変が行われることを期待します。
+
+10.使用について
+
+使用は自身の責任において行ってください。使用によって発生するいかなる不
+利益についても、作者は一切責任を負いません。
