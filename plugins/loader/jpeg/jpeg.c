@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 29 09:35:58 2000.
- * $Id: jpeg.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  9 01:31:54 2000.
+ * $Id: jpeg.c,v 1.2 2000/10/08 17:28:02 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -308,7 +308,6 @@ load(Image *p, Stream *st)
 
   p->mask = NULL;
   p->mask_size = 0;
-  p->delay_usec = 0;
   p->next = NULL;
 
   (void)jpeg_finish_decompress(cinfo);
