@@ -1,3 +1,42 @@
+2000-10-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added new plugins.
+
+	* common.h: Added stdio.h inclusion.
+
+	* lib/enfle/enfle-plugintype.h, lib/enfle/movie.c,
+	lib/enfle/movie.h, lib/enfle/player-plugin.h, lib/enfle/player.c,
+	lib/enfle/player.h, lib/enfle/ui-extra.h, lib/enfle/ui-plugin.h,
+	lib/enfle/ui.c: Adapted for new video architecture.
+
+	* lib/X11/x11window.c, lib/X11/x11window.h: Added
+	set_event_mask(), get_position().
+
+	* plugins/ui/Makefile.am: New Normal UI plugin.
+
+	* src/enfle.c, src/enfle.rc, plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/ungif/ungif.c:
+	Adapt for new video architecture.
+
+	* plugins/Makefile.am: New Video plugin implementation.
+
+	* lib/utils/dlist.c, lib/utils/hash.c, lib/utils/libconfig.c,
+	lib/utils/libstring.c, lib/utils/plugin.c,
+	lib/utils/stdio-support.c: Deleted unnecessary header file
+	inclusion.
+
+	* lib/enfle/video-plugin.h, lib/enfle/video.h: New Video plugin
+	implementation.
+
+	* plugins/video/Xlib/.cvsignore, plugins/video/Xlib/Makefile.am,
+	plugins/video/Xlib/Xlib.c: New Xlib Video plugin.
+
+	* plugins/video/.cvsignore, plugins/video/Makefile.am: New Video
+	plugin implementation.
+
+	* plugins/ui/normal/.cvsignore, plugins/ui/normal/Makefile.am,
+	plugins/ui/normal/normal.c: New Normal UI plugin.
+
 2000-10-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/archiver.c, lib/enfle/archiver-extra.h,
