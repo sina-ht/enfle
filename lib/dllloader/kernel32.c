@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 10 20:49:04 2001.
- * $Id: kernel32.c,v 1.11 2001/09/10 12:01:04 sian Exp $
+ * Last Modified: Mon Sep 10 23:17:21 2001.
+ * $Id: kernel32.c,v 1.12 2001/09/10 14:21:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -323,7 +323,7 @@ DEFINE_W32API(DWORD, GetFileSize,
 {
   DWORD size, cur;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message(__FUNCTION__ "(%p) called: ", handle);
   if (filesizehigh)
     *filesizehigh = 0;
   cur = ftell((FILE *)handle);
@@ -331,6 +331,7 @@ DEFINE_W32API(DWORD, GetFileSize,
   size = ftell((FILE *)handle);
   fseek((FILE *)handle, cur, SEEK_SET);
 
+  debug_message("%d bytes\n", size);
   return size;
 }
 
@@ -347,16 +348,20 @@ DEFINE_W32API(DWORD, GetFileType,
 DEFINE_W32API(HANDLE, GetStdHandle,
 	      (DWORD std))
 {
-  debug_message(__FUNCTION__ "(%d) called\n", std);
+  debug_message(__FUNCTION__ "(%d) called: ", std);
 
   switch (std) {
   case STD_INPUT_HANDLE:
+    debug_message("stdin returned.\n");
     return (HANDLE)stdin;
   case STD_OUTPUT_HANDLE:
+    debug_message("stdout returned.\n");
     return (HANDLE)stdout;
   case STD_ERROR_HANDLE:
+    debug_message("stderr returned.\n");
     return (HANDLE)stderr;
   default:
+    debug_message("unknown.\n");
     break;
   }
   return (HANDLE)INVALID_HANDLE_VALUE;
@@ -399,11 +404,13 @@ DEFINE_W32API(HMODULE, GetModuleHandleA,
 }
 
 DEFINE_W32API(DWORD, GetModuleFileNameA,
-	      (HMODULE handle, LPSTR fileName, DWORD size))
+	      (HMODULE handle, LPSTR s, DWORD size))
 {
-  debug_message(__FUNCTION__ "(%d) called\n", (int)handle);
+  debug_message(__FUNCTION__ "(%d, %p[%s], %d) called\n", (int)handle, s, s, size);
   /* XXX */
-  return 0;
+  strcpy(s, "c:\\windows\\system\\enfle.dll");
+
+  return strlen(s);
 }
 
 /* memory related */
@@ -998,7 +1005,7 @@ DEFINE_W32API(LPSTR, GetCommandLineA,
 	      (void))
 {
   debug_message(__FUNCTION__ "() called\n");
-  return (LPSTR)"";
+  return (LPSTR)"c:\\enfle.exe";
 }
 
 /*
@@ -1024,29 +1031,27 @@ DEFINE_W32API(LPSTR, GetEnvironmentStringsA,
 	      (void))
 {
   debug_message(__FUNCTION__ "() called\n");
-  return (LPSTR)"";
+  return (LPSTR)"Name=Value";
 }
 
 DEFINE_W32API(LPWSTR, GetEnvironmentStringsW,
 	      (void))
 {
   debug_message(__FUNCTION__ "() called\n");
-  return (LPWSTR)"";
+  return (LPWSTR)0;
 }
 
 DEFINE_W32API(BOOL, FreeEnvironmentStringsA,
 	      (LPSTR ptr))
 {
-  debug_message(__FUNCTION__ "() called\n");
-
+  debug_message(__FUNCTION__ "(%p[%s]) called\n", ptr, ptr);
   return TRUE;
 }
 
 DEFINE_W32API(BOOL, FreeEnvironmentStringsW,
 	      (LPWSTR ptr))
 {
-  debug_message(__FUNCTION__ "() called\n");
-
+  debug_message(__FUNCTION__ "(%p[%s]) called\n", ptr, (char *)ptr);
   return TRUE;
 }
 
@@ -1054,6 +1059,8 @@ DEFINE_W32API(VOID, GetStartupInfoA,
 	      (LPSTARTUPINFOA info))
 {
   debug_message(__FUNCTION__ "() called\n");
+  memset(info, 0, sizeof(*info));
+  info->cb = sizeof(*info);
 }
 
 /* codepage */
@@ -1061,12 +1068,27 @@ DEFINE_W32API(VOID, GetStartupInfoA,
 DEFINE_W32API(INT, GetLocaleInfoA,
 	      (LCID id, LCTYPE type, LPSTR buf, INT len))
 {
-  debug_message(__FUNCTION__ "(%d, %d)\n", id, type);
-  if (len)
+  debug_message(__FUNCTION__ "(%d, %d, %p, %d)\n", id, type, buf, len);
+  if (buf && len)
     buf[0] = '\0';
   return 0;
 }
 
+/*
+ * CodePages
+ * 0000 => 7-bit ASCII
+ * 03a4 => Japan (Shift - JIS X-0208)
+ * 03b5 => Korea (Shift - KSC 5601)
+ * 03b6 => Taiwan (Big5)
+ * 04b0 => Unicode
+ * 04e2 => Latin-2 (Eastern European)
+ * 04e3 => Cyrillic
+ * 04e4 => Multilingual
+ * 04e5 => Greek
+ * 04e6 => Turkish
+ * 04e7 => Hebrew
+ * 04e8 => Arabic
+ */
 DEFINE_W32API(UINT, GetACP,
 	      (void))
 {
@@ -1195,7 +1217,7 @@ DEFINE_W32API(VOID, GetLocalTime,
 DEFINE_W32API(DWORD, GetLastError,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message(__FUNCTION__ "() called: 0\n");
   return 0;
 }
 
