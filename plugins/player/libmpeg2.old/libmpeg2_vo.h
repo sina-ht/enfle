@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan  1 20:05:50 2004.
- * $Id: libmpeg2_vo.h,v 1.1 2004/01/09 15:58:31 sian Exp $
+ * Last Modified: Fri Feb 13 00:06:50 2004.
+ * $Id: libmpeg2_vo.h,v 1.2 2004/02/14 05:11:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,7 +29,7 @@
 #include "mpeg2.old/video_out_internal.h"
 #include "mpeg2.old/yuv2rgb.h"
 #include "mpeg2.old/mpeg2.h"
-#include "demultiplexer/demultiplexer_mpeg.h"
+#include "demultiplexer/demultiplexer_old_mpeg.h"
 #include "utils/fifo.h"
 
 typedef struct _enfle_frame_t {
@@ -61,7 +61,7 @@ typedef struct _libmpeg2_info {
   AudioDevice *ad;
   struct mpstr mp;
   mpeg2dec_t mpeg2dec;
-  Demultiplexer *demux;
+  Demultiplexer_old *demux;
   vo_instance_t *vo;
   int rendering_type;
   int to_render;

@@ -1,10 +1,10 @@
 /*
- * demultiplexer.c -- Demultiplexer abstraction layer
+ * demultiplexer_old.c -- Demultiplexer abstraction layer
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan 20 22:25:10 2004.
- * $Id: demultiplexer.c,v 1.4 2004/01/24 07:08:10 sian Exp $
+ * Last Modified: Fri Feb 13 00:08:03 2004.
+ * $Id: demultiplexer_old.c,v 1.1 2004/02/14 05:09:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,29 +25,29 @@
 #include "compat.h"
 #include "common.h"
 
-#include "demultiplexer.h"
+#include "demultiplexer_old.h"
 
-Demultiplexer *
-_demultiplexer_create(void)
+Demultiplexer_old *
+_demultiplexer_old_create(void)
 {
-  Demultiplexer *demux;
+  Demultiplexer_old *demux;
 
-  if ((demux = calloc(1, sizeof(Demultiplexer))) == NULL)
+  if ((demux = calloc(1, sizeof(Demultiplexer_old))) == NULL)
     return NULL;
 
   return demux;
 }
 
 void
-_demultiplexer_destroy(Demultiplexer *demux)
+_demultiplexer_old_destroy(Demultiplexer_old *demux)
 {
   free(demux);
 }
 
 void
-demultiplexer_destroy_packet(void *d)
+demultiplexer_old_destroy_packet(void *d)
 {
-  DemuxedPacket *dp = (DemuxedPacket *)d;
+  DemuxedPacket_old *dp = (DemuxedPacket_old *)d;
 
   if (dp) {
     if (dp->data)

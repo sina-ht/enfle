@@ -1,10 +1,10 @@
 /*
- * demultiplexer_mpeg.c -- MPEG stream demultiplexer
+ * demultiplexer_old_mpeg.c -- MPEG stream demultiplexer
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 24 22:48:32 2004.
- * $Id: demultiplexer_mpeg.c,v 1.33 2004/01/30 12:35:27 sian Exp $
+ * Last Modified: Fri Feb 13 00:08:25 2004.
+ * $Id: demultiplexer_old_mpeg.c,v 1.1 2004/02/14 05:09:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,28 +28,28 @@
 #include "common.h"
 
 #ifndef USE_PTHREAD
-#  error pthread is mandatory for demultiplexer_mpeg
+#  error pthread is mandatory for demultiplexer_old_mpeg
 #endif
 
-#include "demultiplexer_mpeg.h"
+#include "demultiplexer_old_mpeg.h"
 #define UTILS_NEED_GET_BIG_UINT16
 #include "enfle/utils.h"
 
-DECLARE_DEMULTIPLEXER_METHODS;
-PREPARE_DEMULTIPLEXER_TEMPLATE;
+DECLARE_DEMULTIPLEXER_OLD_METHODS;
+PREPARE_DEMULTIPLEXER_OLD_TEMPLATE;
 
-Demultiplexer *
+Demultiplexer_old *
 demultiplexer_mpeg_create(void)
 {
-  Demultiplexer *demux;
+  Demultiplexer_old *demux;
   MpegInfo *info;
 
-  if ((demux = _demultiplexer_create()) == NULL)
+  if ((demux = _demultiplexer_old_create()) == NULL)
     return NULL;
-  memcpy(demux, &template, sizeof(Demultiplexer));
+  memcpy(demux, &template, sizeof(Demultiplexer_old));
 
   if ((info = calloc(1, sizeof(MpegInfo))) == NULL) {
-    _demultiplexer_destroy(demux);
+    _demultiplexer_old_destroy(demux);
     return NULL;
   }
 
@@ -78,7 +78,7 @@ demultiplexer_mpeg_create(void)
 #define MPEG_PRIVATE_STREAM2 0xbf
 
 static int
-examine(Demultiplexer *demux)
+examine(Demultiplexer_old *demux)
 {
   MpegInfo *info = (MpegInfo *)demux->private_data;
   unsigned char *buf, id;
@@ -216,7 +216,7 @@ examine(Demultiplexer *demux)
 	  vstream |= 1 << nvstream;
 	  info->nvstreams++;
 	}
-      } else if (id < 0xb9) {
+      } else if (id < 0xb9 && id >= 0xa0) {
 	debug_message_fnc("Looks like video stream.\n");
 	vstream = 1;
 	info->nvstreams = 1;
@@ -260,9 +260,9 @@ get_timestamp(unsigned char *p)
 static void *
 demux_main(void *arg)
 {
-  Demultiplexer *demux = (Demultiplexer *)arg;
+  Demultiplexer_old *demux = (Demultiplexer_old *)arg;
   MpegInfo *info = (MpegInfo *)demux->private_data;
-  DemuxedPacket *dp;
+  DemuxedPacket_old *dp;
   unsigned char *buf, id;
   int read_total, read_size, used_size, used_size_prev = 0, skip;
   int nvstream = 0, nastream = 0;
@@ -297,13 +297,13 @@ demux_main(void *arg)
     if (info->ver == 3) {
       /* Video stream */
       skip = used_size;
-      dp = malloc(sizeof(DemuxedPacket));
+      dp = malloc(sizeof(DemuxedPacket_old));
       dp->pts_dts_flag = 0xff;
       dp->pts = dp->dts = -1;
       dp->size = skip;
       dp->data = malloc(dp->size);
       memcpy(dp->data, buf, dp->size);
-      fifo_put(info->vstream, dp, demultiplexer_destroy_packet);
+      fifo_put(info->vstream, dp, demultiplexer_old_destroy_packet);
       used_size = 0;
       CONTINUE_IF_RUNNING;
     }
@@ -404,13 +404,13 @@ demux_main(void *arg)
 	  (v_or_a == 2 && nastream == info->nastream)) {
 	if ((buf[6] & 0xc0) == 0x80) {
 	  /* MPEG II */
-	  dp = malloc(sizeof(DemuxedPacket));
+	  dp = malloc(sizeof(DemuxedPacket_old));
 	  dp->pts_dts_flag = 0xff;
 	  dp->pts = dp->dts = -1;
 	  dp->size = skip - 9 - buf[8];
 	  dp->data = malloc(dp->size);
 	  memcpy(dp->data, buf + 9 + buf[8], dp->size);
-	  fifo_put((v_or_a == 1) ? info->vstream : info->astream, dp, demultiplexer_destroy_packet);
+	  fifo_put((v_or_a == 1) ? info->vstream : info->astream, dp, demultiplexer_old_destroy_packet);
 	} else {
 	  unsigned char *p;
 	  int pts_dts_flag;
@@ -442,28 +442,28 @@ demux_main(void *arg)
 	    goto error;
 	  }
 	  if (p < buf + skip) {
-	    dp = malloc(sizeof(DemuxedPacket));
+	    dp = malloc(sizeof(DemuxedPacket_old));
 	    dp->pts_dts_flag = pts_dts_flag;
 	    dp->pts = pts;
 	    dp->dts = dts;
 	    dp->size = buf + skip - p;
 	    dp->data = malloc(dp->size);
 	    memcpy(dp->data, p, dp->size);
-	    fifo_put((v_or_a == 1) ? info->vstream : info->astream, dp, demultiplexer_destroy_packet);
+	    fifo_put((v_or_a == 1) ? info->vstream : info->astream, dp, demultiplexer_old_destroy_packet);
 	  }
 	}
       } else if (!v_or_a) {
-	if (id < 0xb9) {
+	if (id < 0xb9 && id >= 0xa0) {
 	  /* Video stream */
 	  debug_message_fnc("identified as video stream.  Put data in raw.\n");
 	  skip = used_size;
-	  dp = malloc(sizeof(DemuxedPacket));
+	  dp = malloc(sizeof(DemuxedPacket_old));
 	  dp->pts_dts_flag = 0xff;
 	  dp->pts = dp->dts = -1;
 	  dp->size = skip;
 	  dp->data = malloc(dp->size);
 	  memcpy(dp->data, buf, dp->size);
-	  fifo_put(info->vstream, dp, demultiplexer_destroy_packet);
+	  fifo_put(info->vstream, dp, demultiplexer_old_destroy_packet);
 	  info->ver = 3;
 	} else {
 	  debug_message_fnc("Unknown id %02X %d bytes\n", id, skip - 6);
@@ -476,7 +476,7 @@ demux_main(void *arg)
   } while (demux->running);
 
  end:
-  demultiplexer_set_eof(demux, 1);
+  demultiplexer_old_set_eof(demux, 1);
   demux->running = 0;
   free(buf);
   debug_message_fnc("exiting.\n");
@@ -489,12 +489,12 @@ demux_main(void *arg)
 }
 
 static int
-start(Demultiplexer *demux)
+start(Demultiplexer_old *demux)
 {
   if (demux->running)
     return 0;
 
-  debug_message_fn(" demultiplexer_mpeg\n");
+  debug_message_fn(" demultiplexer_old_mpeg\n");
 
   pthread_create(&demux->thread, NULL, demux_main, demux);
 
@@ -502,11 +502,11 @@ start(Demultiplexer *demux)
 }
 
 static int
-stop(Demultiplexer *demux)
+stop(Demultiplexer_old *demux)
 {
   void *ret;
 
-  debug_message_fn(" demultiplexer_mpeg\n");
+  debug_message_fn(" demultiplexer_old_mpeg\n");
 
   demux->running = 0;
   if (demux->thread) {
@@ -514,13 +514,13 @@ stop(Demultiplexer *demux)
     demux->thread = 0;
   }
 
-  debug_message_fn(" demultiplexer_mpeg OK\n");
+  debug_message_fn(" demultiplexer_old_mpeg OK\n");
 
   return 1;
 }
 
 static int
-demux_rewind(Demultiplexer *demux)
+demux_rewind(Demultiplexer_old *demux)
 {
   MpegInfo *info = (MpegInfo *)demux->private_data;
 
@@ -530,10 +530,10 @@ demux_rewind(Demultiplexer *demux)
 }
 
 static void
-destroy(Demultiplexer *demux)
+destroy(Demultiplexer_old *demux)
 {
   stop(demux);
   if (demux->private_data)
     free(demux->private_data);
-  _demultiplexer_destroy(demux);
+  _demultiplexer_old_destroy(demux);
 }

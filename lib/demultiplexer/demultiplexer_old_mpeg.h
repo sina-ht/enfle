@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan 20 22:17:44 2004.
- * $Id: demultiplexer_mpeg.h,v 1.5 2004/01/24 07:08:10 sian Exp $
+ * Last Modified: Fri Feb 13 00:06:12 2004.
+ * $Id: demultiplexer_old_mpeg.h,v 1.1 2004/02/14 05:09:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,10 +20,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#ifndef _DEMULTIPLEXER_MPEG_H
-#define _DEMULTIPLEXER_MPEG_H
+#ifndef _DEMULTIPLEXER_OLD_MPEG_H
+#define _DEMULTIPLEXER_OLD_MPEG_H
 
-#include "demultiplexer.h"
+#include "demultiplexer_old.h"
 #include "enfle/stream.h"
 #include "utils/fifo.h"
 
@@ -38,7 +38,7 @@ typedef struct _mpeg_info {
   int nastream;
 } MpegInfo;
 
-Demultiplexer *demultiplexer_mpeg_create(void);
+Demultiplexer_old *demultiplexer_mpeg_create(void);
 
 #define demultiplexer_mpeg_set_input(de, st) ((MpegInfo *)(de)->private_data)->st = (st)
 #define demultiplexer_mpeg_set_vst(de, v) ((MpegInfo *)(de)->private_data)->vstream = (v)

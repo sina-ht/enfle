@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 31 14:55:32 2004.
- * $Id: divx.c,v 1.7 2004/02/02 16:39:04 sian Exp $
+ * Last Modified: Fri Feb 13 00:19:26 2004.
+ * $Id: divx.c,v 1.8 2004/02/14 05:11:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,7 +33,7 @@
 #include "enfle/player-plugin.h"
 #include "enfle/audiodecoder.h"
 #include "enfle/videodecoder.h"
-#include "demultiplexer/demultiplexer_avi.h"
+#include "demultiplexer/demultiplexer_old_avi.h"
 #include "enfle/fourcc.h"
 
 typedef struct _divx_info {
@@ -43,7 +43,7 @@ typedef struct _divx_info {
   AudioDevice *ad;
   AudioDecoder *adec;
   VideoDecoder *vdec;
-  Demultiplexer *demux;
+  Demultiplexer_old *demux;
   int to_skip;
   int use_xv;
   // int if_initialized;
@@ -98,13 +98,6 @@ ENFLE_PLUGIN_EXIT(player_divx, p)
 }
 
 /* XXX: dirty... */
-int
-divx_get_input_format(Movie *m)
-{
-  DivX_info *info = (DivX_info *)m->movie_private;
-  return info->input_format;
-}
-
 int
 divx_get_biCompression(Movie *m)
 {
@@ -199,7 +192,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 	info->input_format = 500;
 	break;
       default:
-	demultiplexer_destroy(info->demux);
+	demultiplexer_old_destroy(info->demux);
 	free(info);
 	return PLAY_NOT;
       }
@@ -327,7 +320,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
  error:
   if (info->demux) {
-    demultiplexer_destroy(info->demux);
+    demultiplexer_old_destroy(info->demux);
     info->demux = NULL;
   }
   free(info);
@@ -364,8 +357,8 @@ play(Movie *m)
   m->current_frame = 0;
   m->current_sample = 0;
   timer_start(m->timer);
-  demultiplexer_set_eof(info->demux, 0);
-  demultiplexer_rewind(info->demux);
+  demultiplexer_old_set_eof(info->demux, 0);
+  demultiplexer_old_rewind(info->demux);
 
   if (m->has_video) {
     if ((info->vstream = fifo_create()) == NULL)
@@ -384,7 +377,7 @@ play(Movie *m)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
 
-  demultiplexer_start(info->demux);
+  demultiplexer_old_start(info->demux);
 
   return PLAY_OK;
 }
@@ -426,7 +419,7 @@ play_video(void *arg)
 
   debug_message_fn("()\n");
 
-  info->vdec = videodecoder_create(info->eps, "divx");
+  info->vdec = videodecoder_create(info->eps, "DivX");
   if (info->vdec == NULL) {
     warning_fnc("videodecoder plugin not found.\n");
     return (void *)VD_ERROR;
@@ -588,7 +581,7 @@ play_main(Movie *m, VideoWindow *vw)
   if (!m->has_video)
     return PLAY_OK;
 
-  if (demultiplexer_get_eof(info->demux)) {
+  if (demultiplexer_old_get_eof(info->demux)) {
     if (info->astream && fifo_is_empty(info->astream)) {
       /* Audio existed, but over. */
       if (m->has_audio != 2) {
@@ -727,7 +720,7 @@ stop_movie(Movie *m)
 
   if (info->demux) {
     debug_message_fnc("waiting for demultiplexer to stop.\n");
-    demultiplexer_stop(info->demux);
+    demultiplexer_old_stop(info->demux);
     debug_message_fnc("demultiplexer stopped\n");
   }
 
@@ -760,7 +753,7 @@ unload_movie(Movie *m)
     if (info->p)
       image_destroy(info->p);
     if (info->demux)
-      demultiplexer_destroy(info->demux);
+      demultiplexer_old_destroy(info->demux);
     free(info);
     m->movie_private = NULL;
   }
@@ -785,8 +778,8 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 
   info->demux = demultiplexer_avi_create();
   demultiplexer_avi_set_input(info->demux, st);
-  if (!demultiplexer_examine(info->demux)) {
-    demultiplexer_destroy(info->demux);
+  if (!demultiplexer_old_examine(info->demux)) {
+    demultiplexer_old_destroy(info->demux);
     free(info);
     m->movie_private = NULL;
     return PLAY_NOT;
@@ -822,7 +815,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 		       (aviinfo->vhandler >> 16) & 0xff,
 		       (aviinfo->vhandler >> 24) & 0xff,
 			aviinfo->vhandler);
-      demultiplexer_destroy(info->demux);
+      demultiplexer_old_destroy(info->demux);
       free(info);
       m->movie_private = NULL;
       return PLAY_NOT;

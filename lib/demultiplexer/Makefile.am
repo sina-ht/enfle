@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Sep  3 10:53:42 2001.
-# $Id: Makefile.am,v 1.4 2001/09/03 02:01:27 sian Exp $
+# Last Modified: Thu Feb 12 23:56:12 2004.
+# $Id: Makefile.am,v 1.5 2004/02/14 05:09:32 sian Exp $
 
 if HAVE_PTHREAD
 noinst_LTLIBRARIES = libdemultiplexer.la
@@ -10,7 +10,7 @@ endif
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir)
 
 libdemultiplexer_la_SOURCES = \
-	demultiplexer.c demultiplexer.h \
-	demultiplexer_mpeg.c demultiplexer_mpeg.h \
+	demultiplexer_old.c demultiplexer_old.h \
+	demultiplexer_old_mpeg.c demultiplexer_old_mpeg.h \
 	libriff.c libriff.h \
-	demultiplexer_avi.c demultiplexer_avi.h demultiplexer_avi_private.h
+	demultiplexer_old_avi.c demultiplexer_old_avi.h demultiplexer_old_avi_private.h

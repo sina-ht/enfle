@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Jan 12 04:15:39 2004.
- * $Id: demultiplexer_avi_private.h,v 1.3 2004/01/11 21:39:05 sian Exp $
+ * $Id: demultiplexer_old_avi_private.h,v 1.1 2004/02/14 05:09:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan 20 22:28:41 2004.
- * $Id: libmpeg2.c,v 1.5 2004/01/24 07:08:30 sian Exp $
+ * Last Modified: Fri Feb 13 00:03:22 2004.
+ * $Id: libmpeg2.c,v 1.6 2004/02/14 05:11:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -116,7 +116,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   info->demux = demultiplexer_mpeg_create();
   demultiplexer_mpeg_set_input(info->demux, st);
-  if (!demultiplexer_examine(info->demux))
+  if (!demultiplexer_old_examine(info->demux))
     return PLAY_NOT;
   info->nastreams = demultiplexer_mpeg_naudios(info->demux);
   info->nvstreams = demultiplexer_mpeg_nvideos(info->demux);
@@ -215,7 +215,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
  error:
   if (info->demux)
-    demultiplexer_destroy(info->demux);
+    demultiplexer_old_destroy(info->demux);
   free(info);
   return PLAY_ERROR;
 }
@@ -249,8 +249,8 @@ play(Movie *m)
   m->current_frame = 0;
   m->current_sample = 0;
   timer_start(m->timer);
-  demultiplexer_set_eof(info->demux, 0);
-  demultiplexer_rewind(info->demux);
+  demultiplexer_old_set_eof(info->demux, 0);
+  demultiplexer_old_rewind(info->demux);
 
   if (m->has_video) {
     unsigned int accel;
@@ -275,7 +275,7 @@ play(Movie *m)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
 
-  demultiplexer_start(info->demux);
+  demultiplexer_old_start(info->demux);
 
   return PLAY_OK;
 }
@@ -527,7 +527,7 @@ play_main(Movie *m, VideoWindow *vw)
   if (!m->has_video)
     return PLAY_OK;
 
-  if (demultiplexer_get_eof(info->demux)) {
+  if (demultiplexer_old_get_eof(info->demux)) {
     if (info->astream && fifo_is_empty(info->astream))
       /* Audio existed, but over. */
       m->has_audio = 2;
@@ -691,7 +691,7 @@ stop_movie(Movie *m)
 
   if (info->demux) {
     debug_message_fnc("waiting for demultiplexer to stop.\n");
-    demultiplexer_stop(info->demux);
+    demultiplexer_old_stop(info->demux);
     debug_message_fnc("demultiplexer stopped\n");
   }
 
@@ -724,7 +724,7 @@ unload_movie(Movie *m)
     if (info->p)
       image_destroy(info->p);
     if (info->demux)
-      demultiplexer_destroy(info->demux);
+      demultiplexer_old_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
 

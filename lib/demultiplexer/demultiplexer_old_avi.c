@@ -1,10 +1,10 @@
 /*
- * demultiplexer_avi.c -- AVI stream demultiplexer
+ * demultiplexer_old_avi.c -- AVI stream demultiplexer
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan 20 22:26:11 2004.
- * $Id: demultiplexer_avi.c,v 1.28 2004/01/24 07:08:10 sian Exp $
+ * Last Modified: Fri Feb 13 00:08:39 2004.
+ * $Id: demultiplexer_old_avi.c,v 1.1 2004/02/14 05:09:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,27 +28,27 @@
 #include "common.h"
 
 #ifndef USE_PTHREAD
-#  error pthread is mandatory for demultiplexer_avi
+#  error pthread is mandatory for demultiplexer_old_avi
 #endif
 
-#include "demultiplexer_avi.h"
-#include "demultiplexer_avi_private.h"
+#include "demultiplexer_old_avi.h"
+#include "demultiplexer_old_avi_private.h"
 
-DECLARE_DEMULTIPLEXER_METHODS;
-PREPARE_DEMULTIPLEXER_TEMPLATE;
+DECLARE_DEMULTIPLEXER_OLD_METHODS;
+PREPARE_DEMULTIPLEXER_OLD_TEMPLATE;
 
-Demultiplexer *
+Demultiplexer_old *
 demultiplexer_avi_create(void)
 {
-  Demultiplexer *demux;
+  Demultiplexer_old *demux;
   AVIInfo *info;
 
-  if ((demux = _demultiplexer_create()) == NULL)
+  if ((demux = _demultiplexer_old_create()) == NULL)
     return NULL;
-  memcpy(demux, &template, sizeof(Demultiplexer));
+  memcpy(demux, &template, sizeof(Demultiplexer_old));
 
   if ((info = calloc(1, sizeof(AVIInfo))) == NULL) {
-    _demultiplexer_destroy(demux);
+    _demultiplexer_old_destroy(demux);
     return NULL;
   }
 
@@ -90,7 +90,7 @@ tell_func(void *arg)
 }
 
 static int
-examine(Demultiplexer *demux)
+examine(Demultiplexer_old *demux)
 {
   AVIInfo *info = (AVIInfo *)demux->private_data;
   MainAVIHeader mah;
@@ -112,7 +112,7 @@ examine(Demultiplexer *demux)
   riff_file_set_func_tell(info->rf, tell_func);
   riff_file_set_func_arg(info->rf, (void *)info->st);
   if (!riff_file_open(info->rf)) {
-    debug_message_fnc("riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
+    //debug_message_fnc("riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
     goto error_destroy;
   }
   rc = riff_chunk_create();
@@ -345,7 +345,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
 static void *
 demux_main(void *arg)
 {
-  Demultiplexer *demux = (Demultiplexer *)arg;
+  Demultiplexer_old *demux = (Demultiplexer_old *)arg;
   AVIInfo *info = (AVIInfo *)demux->private_data;
   RIFF_Chunk *rc;
 
@@ -359,7 +359,7 @@ demux_main(void *arg)
 
   demux->running = 1;
   while (demux->running) {
-    DemuxedPacket *dp;
+    DemuxedPacket_old *dp;
     char *p;
     int nstream;
 
@@ -388,11 +388,11 @@ demux_main(void *arg)
 	if (!riff_file_read_data(info->rf, rc))
 	  break;
 	if (riff_chunk_get_size(rc) > 0) {
-	  if ((dp = malloc(sizeof(DemuxedPacket))) == NULL)
+	  if ((dp = malloc(sizeof(DemuxedPacket_old))) == NULL)
 	    fatal("%s: No enough memory.\n", __FUNCTION__);
 	  dp->size = riff_chunk_get_size(rc);
 	  dp->data = riff_chunk_get_data(rc);
-	  fifo_put(info->vstream, dp, demultiplexer_destroy_packet);
+	  fifo_put(info->vstream, dp, demultiplexer_old_destroy_packet);
 	}
       } else {
 	riff_file_skip_chunk_data(info->rf, rc);
@@ -403,11 +403,11 @@ demux_main(void *arg)
 	if (!riff_file_read_data(info->rf, rc))
 	  break;
 	if (riff_chunk_get_size(rc) > 0) {
-	  if ((dp = malloc(sizeof(DemuxedPacket))) == NULL)
+	  if ((dp = malloc(sizeof(DemuxedPacket_old))) == NULL)
 	    fatal("%s: No enough memory.\n", __FUNCTION__);
 	  dp->size = riff_chunk_get_size(rc);
 	  dp->data = riff_chunk_get_data(rc);
-	  fifo_put(info->astream, dp, demultiplexer_destroy_packet);
+	  fifo_put(info->astream, dp, demultiplexer_old_destroy_packet);
 	}
       } else {
 	riff_file_skip_chunk_data(info->rf, rc);
@@ -427,19 +427,19 @@ demux_main(void *arg)
 
   debug_message_fnc("EOF\n");
 
-  demultiplexer_set_eof(demux, 1);
+  demultiplexer_old_set_eof(demux, 1);
   demux->running = 0;
 
   return (void *)1;
 }
 
 static int
-start(Demultiplexer *demux)
+start(Demultiplexer_old *demux)
 {
   if (demux->running)
     return 0;
 
-  debug_message_fn(" demultiplexer_avi\n");
+  debug_message_fn(" demultiplexer_old_avi\n");
 
   pthread_create(&demux->thread, NULL, demux_main, demux);
 
@@ -447,25 +447,25 @@ start(Demultiplexer *demux)
 }
 
 static int
-stop(Demultiplexer *demux)
+stop(Demultiplexer_old *demux)
 {
   void *ret;
 
-  debug_message_fn(" demultiplexer_avi\n");
-
   demux->running = 0;
   if (demux->thread) {
+    debug_message_fn(" demultiplexer_old_avi\n");
+
     pthread_join(demux->thread, &ret);
     demux->thread = 0;
-  }
 
-  debug_message_fn(" demultiplexer_avi OK\n");
+    debug_message_fn(" demultiplexer_old_avi OK\n");
+  }
 
   return 1;
 }
 
 static int
-demux_rewind(Demultiplexer *demux)
+demux_rewind(Demultiplexer_old *demux)
 {
   AVIInfo *info = (AVIInfo *)demux->private_data;
 
@@ -475,7 +475,7 @@ demux_rewind(Demultiplexer *demux)
 }
 
 static void
-destroy(Demultiplexer *demux)
+destroy(Demultiplexer_old *demux)
 {
   AVIInfo *info = (AVIInfo *)demux->private_data;
 
@@ -489,5 +489,5 @@ destroy(Demultiplexer *demux)
       free(info->idx_length);
     free(info);
   }
-  _demultiplexer_destroy(demux);
+  _demultiplexer_old_destroy(demux);
 }
