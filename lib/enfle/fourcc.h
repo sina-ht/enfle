@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 14:18:14 2004.
- * $Id: fourcc.h,v 1.9 2004/02/21 07:49:52 sian Exp $
+ * Last Modified: Mon Mar 29 22:51:57 2004.
+ * $Id: fourcc.h,v 1.10 2004/03/31 14:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -150,8 +150,8 @@
 #define WAVEFORMAT_TAG_MP3         0x55
 #define WAVEFORMAT_TAG_Voxware     0x75
 #define WAVEFORMAT_TAG_Acelp       0x130
-#define WAVEFORMAT_TAG_DivX_WMA0   0x160
-#define WAVEFORMAT_TAG_DivX_WMA1   0x161
+#define WAVEFORMAT_TAG_DivX_WMAv1  0x160
+#define WAVEFORMAT_TAG_DivX_WMAv2  0x161
 #define WAVEFORMAT_TAG_IMC         0x401
 #define WAVEFORMAT_TAG_AC3         0x2000
 #define WAVEFORMAT_TAG_VORBIS      0xfffe
