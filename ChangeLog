@@ -1,4 +1,117 @@
-2002-05-06 Hiroshi Takekawa <sian@fennel.org>
+2002-08-03 Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/enfle/loader.c: Clear format_detail.
+
+	* lib/enfle/stream.c: Cleaned up.
+
+	* plugins/loader/Makefile.am: Added GIF loader plugin.
+
+	* plugins/loader/gif/*: New files.
+
+	* lib/X11/x11ximage.[ch], lib/enfle/effect-plugin.h,
+	lib/enfle/effect.[ch], lib/enfle/identify.c, lib/enfle/image.[ch],
+	lib/enfle/image_magnify.c, lib/enfle/loader-plugin.h,
+	lib/enfle/spi.c, lib/enfle/ui-extra.h, lib/enfle/video.h,
+	plugins/effect/gamma/*, plugins/effect/rotate/*,
+	plugins/loader/*/*, plugins/player/*/*, plugins/saver/*,
+	plugins/ui/convert/convert.c, plugins/ui/normal/normal.c,
+	plugins/ui/wallpaper/wallpaper.c, plugins/video/Xlib/Xlib.c: Image
+	object changes.  Effect plugin changes, including provision of UI
+	hooks.  Changed rendering related codes, including one-the-fly
+	effect.
+
+	* lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.[ch]: Static
+	plugin support.  Implemented add() method.  Added the global
+	plugin variable.
+
+	* lib/enfle/ui-action.h: New file.
+
+	* lib/enfle/archive.c: Plugged one memory leak.
+
+2002-08-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/archiver/tar/*, plugins/audio/*/*, src/Makefile.am,
+	src/enfle.c: Static plugin support.
+
+	* lib/utils/plugin.[ch]: Implemented plugin_create_from_static().
+
+	* acinclude.m4, configure.in: Static plugin enabler.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Support video
+	stream. Use fifo_emptify().
+
+	* lib/utils/fifo.[ch]: Added emptify() method.
+
+	* lib/utils/converter.c: Use *_message() macros.
+
+	* lib/X11/x11.h: Added XV_FORMAT_TO_FLAG(), XV_ABLE_TO_RENDER() macros.
+
+	* lib/X11/x11.c: Clean up.  Plugged one memory leak.
+
+	* common.h: Added err_*() macros.  More info for bug().
+
+2002-08-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/libconfig.c: Plugged one minor memory leak.
+
+	* lib/utils/hash.c: Use dlist's object destructor feature for Hash_key.
+
+	* lib/utils/fifo.c: Reduced FIFO_DEFAULT_MAXDATA from 1000 to 100.
+
+	* lib/utils/fifo.h: Added fifo_ndata() macro.
+
+	* lib/utils/dlist.[ch]: Introduced object destructor.
+
+2002-07-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/rgbparse.c: Plugged one memory leak.
+
+	* config.guess, config.sub: Upgrade.
+
+	* README, README.e: More documentation, clean up.
+
+	* Makefile.am: Build plugins before enfle itself.
+
+2002-06-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/memory.c: Use memalign().
+
+2002-06-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/demultiplexer/demultiplexer_avi.c: Cosmetic change.
+
+	* INSTALL, config.guess, config.sub, missing, mkinstalldirs:
+	Upgraded automake to 1.6.2.
+
+2002-06-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/ungif/ungif.c: Implemented _RESTOREPREVIOUS.
+
+2002-06-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c:
+	Added RV?? support. Deleted unnecessary resize() call.
+
+	* plugins/ui/wallpaper/wallpaper.c:
+	Adapted for an image_magnify() change.
+
+	* lib/X11/x11.c, lib/X11/x11.h, lib/X11/x11ximage.c:
+	Xv fix, hw_scale with more video cards. RV?? support.
+
+	* lib/enfle/image.c, lib/enfle/image.h, lib/enfle/image_magnify.c:
+	Added use_hw_scale arg. to image_magnify().
+
+	* plugins/video/Xlib/Xlib.c: More debug info.
+
+2002-05-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avifile/avifile.cpp: Adapted for AviFile-0.7.
+
+2002-05-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Check default include paths.
+
+2002-05-06  Hiroshi Takekawa <sian@fennel.org>
 
 	* lib/demultiplexer/demultiplexer_avi.c: Cosmetic change.
 
