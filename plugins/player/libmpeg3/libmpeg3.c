@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 16 04:36:21 2001.
- * $Id: libmpeg3.c,v 1.30 2001/06/15 19:48:37 sian Exp $
+ * Last Modified: Mon Jun 18 05:53:16 2001.
+ * $Id: libmpeg3.c,v 1.31 2001/06/17 20:54:42 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -47,10 +47,9 @@ typedef struct _libmpeg3_info {
   Image *p;
   AudioDevice *ad;
   unsigned char **lines;
-  unsigned char **y, **u, **v;
+  unsigned char *y, *u, *v;
   int eof;
-  int use_yuv;
-  int use_hw_scale;
+  int use_xv;
   int rendering_type;
   pthread_mutex_t update_mutex;
   pthread_cond_t update_cond;
@@ -79,7 +78,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.4.1",
+  description: "LibMPEG3 Player plugin version 0.5",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -133,11 +132,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   if (m->requested_type == _YUV420P || m->requested_type == _YVU420P) {
-    info->use_yuv = 1;
-    info->use_hw_scale = 1;
+    info->use_xv = 1;
   } else {
-    info->use_yuv = 0;
-    info->use_hw_scale = 0;
+    info->use_xv = 0;
   }
 
   /* XXX: can set how many CPUs you want to use. */
@@ -193,167 +190,108 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     m->framerate = mpeg3_frame_rate(info->file, info->nvstream);
     m->num_of_frames = mpeg3_video_frames(info->file, info->nvstream);
 
-    switch (vw->render_method) {
-      double s, ws, hs;
+    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
 
-    case _VIDEO_RENDER_NORMAL:
+    if (info->use_xv) {
       m->rendering_width  = m->width;
       m->rendering_height = m->height;
-      p->magnified.width  = m->width;
-      p->magnified.height = m->height;
-      break;
-    case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-      if (!info->use_hw_scale) {
-	m->rendering_width  = m->width  << 1;
-	m->rendering_height = m->height << 1;
-      } else {
-	m->rendering_width  = m->width;
-	m->rendering_height = m->height;
-      }
-      p->magnified.width  = m->width  << 1;
-      p->magnified.height = m->height << 1;
-      break;
-    case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
-      ws = (double)vw->full_width  / (double)m->width;
-      hs = (double)vw->full_height / (double)m->height;
-      s = (ws * m->height > vw->full_height) ? hs : ws;
-      if (!info->use_hw_scale) {
-	m->rendering_width  = s * m->width;
-	m->rendering_height = s * m->height;
-      } else {
-	m->rendering_width  = m->width;
-	m->rendering_height = m->height;
-      }
-      p->magnified.width  = s * m->width;
-      p->magnified.height = s * m->height;
-      break;
-    case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
-      ws = (double)vw->full_width  / (double)p->width;
-      hs = (double)vw->full_height / (double)p->height;
-      s = (ws * p->height > vw->full_height) ? ws : hs;
-      if (!info->use_hw_scale) {
-	m->rendering_width  = s * m->width;
-	m->rendering_height = s * m->height;
-      } else {
-	m->rendering_width  = m->width;
-	m->rendering_height = m->height;
-      }
-      p->magnified.width  = s * m->width;
-      p->magnified.height = s * m->height;
-      break;
-    default:
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-      p->magnified.width  = m->width;
-      p->magnified.height = m->height;
-      break;
-    }
-  }
-
-  show_message("video(%d streams): s (%d,%d) r (%d,%d) d (%d,%d) %f fps %d frames\n", info->nvstreams,
-	       m->width, m->height, m->rendering_width, m->rendering_height,
-	       p->magnified.width, p->magnified.height,
-	       m->framerate, m->num_of_frames);
-
-  p->width = m->rendering_width;
-  p->height = m->rendering_height;
-  p->type = m->requested_type;
-  if ((p->rendered.image = memory_create()) == NULL)
-    goto error;
-  memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
-
-  if (info->use_yuv) {
-    p->bits_per_pixel = 12;
-    p->bytes_per_line = p->width * 1.5;
-  } else {
-    switch (vw->bits_per_pixel) {
-    case 32:
-      switch (p->type) {
-      case _RGBA32:
-	info->rendering_type = MPEG3_RGBA8888;
-	break;
-      case _BGRA32:
-	info->rendering_type = MPEG3_BGRA8888;
-	break;
-      default:
-	show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
-	return PLAY_ERROR;
-      }
-      p->depth = 24;
-      p->bits_per_pixel = 32;
-      p->bytes_per_line = p->width * 4;
-      break;
-    case 24:
-      switch (p->type) {
-      case _RGB24:
-	info->rendering_type = MPEG3_RGB888;
-	break;
-      case _BGR24:
-	info->rendering_type = MPEG3_BGR888;
-	break;
-      default:
-	show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
-	return PLAY_ERROR;
-      }
-      p->depth = 24;
-      p->bits_per_pixel = 24;
-      p->bytes_per_line = p->width * 3;
-      break;
-    case 16:
-      switch (p->type) {
-      case _RGB_WITH_BITMASK:
-      case _BGR_WITH_BITMASK:
-	info->rendering_type = MPEG3_RGB565;
-	break;
-      default:
-	show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
-	return PLAY_ERROR;
-      }
-      p->depth = 16;
-      p->bits_per_pixel = 16;
-      p->bytes_per_line = p->width * 2;
-      break;
-    default:
-      show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
-      return PLAY_ERROR;
-    }
-  }
-
-  if (info->use_yuv) {
-    if ((info->y = calloc(m->rendering_height, sizeof(unsigned char *))) == NULL)
-      goto error;
-    if ((info->u = calloc(m->rendering_height, sizeof(unsigned char *))) == NULL)
-      goto error;
-    if ((info->v = calloc(m->rendering_height, sizeof(unsigned char *))) == NULL)
-      goto error;
-    if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
-      goto error;
-    if ((info->y[0] = malloc(p->bytes_per_line * p->height)) == NULL)
-      goto error;
-    if (p->type == _YUV420P) {
-      info->u[0] = info->y[0] + p->width * p->height;
-      info->v[0] = info->u[0] + ((p->width * p->height) >> 2);
-    } else if (p->type == _YVU420P) {
-      info->v[0] = info->y[0] + p->width * p->height;
-      info->u[0] = info->v[0] + ((p->width * p->height) >> 2);
     } else {
-      fatal(5, "Unsupport image type %s\n", image_type_to_string(p->type));
+      m->rendering_width  = p->magnified.width;
+      m->rendering_height = p->magnified.height;
     }
-    for (i = 1; i < p->height; i++) {
-      info->y[i] = info->y[0] + i * p->width;
-      info->u[i] = info->u[0] + i * (p->width >> 2);
-      info->v[i] = info->v[0] + i * (p->width >> 2);
+
+    show_message("video(%d streams): s (%d,%d) r (%d,%d) d (%d,%d) %f fps %d frames\n", info->nvstreams,
+		 m->width, m->height, m->rendering_width, m->rendering_height,
+		 p->magnified.width, p->magnified.height,
+		 m->framerate, m->num_of_frames);
+
+    p->width = m->rendering_width;
+    p->height = m->rendering_height;
+    p->type = m->requested_type;
+    if ((p->rendered.image = memory_create()) == NULL)
+      goto error;
+    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+
+    if (info->use_xv) {
+      p->bits_per_pixel = 12;
+      p->bytes_per_line = p->width * 1.5;
+
+      if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+	goto error;
+      if ((info->y = malloc(p->bytes_per_line * p->height)) == NULL)
+	goto error;
+      if (p->type == _YUV420P) {
+	info->u = info->y + p->width * p->height;
+	info->v = info->u + ((p->width * p->height) >> 2);
+      } else if (p->type == _YVU420P) {
+	info->v = info->y + p->width * p->height;
+	info->u = info->v + ((p->width * p->height) >> 2);
+      } else {
+	fatal(5, "Unsupport image type %s\n", image_type_to_string(p->type));
+      }
+    } else {
+      switch (vw->bits_per_pixel) {
+      case 32:
+	switch (p->type) {
+	case _RGBA32:
+	  info->rendering_type = MPEG3_RGBA8888;
+	  break;
+	case _BGRA32:
+	  info->rendering_type = MPEG3_BGRA8888;
+	  break;
+	default:
+	  show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+	  return PLAY_ERROR;
+	}
+	p->depth = 24;
+	p->bits_per_pixel = 32;
+	p->bytes_per_line = p->width * 4;
+	break;
+      case 24:
+	switch (p->type) {
+	case _RGB24:
+	  info->rendering_type = MPEG3_RGB888;
+	  break;
+	case _BGR24:
+	  info->rendering_type = MPEG3_BGR888;
+	  break;
+	default:
+	  show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+	  return PLAY_ERROR;
+	}
+	p->depth = 24;
+	p->bits_per_pixel = 24;
+	p->bytes_per_line = p->width * 3;
+	break;
+      case 16:
+	switch (p->type) {
+	case _RGB_WITH_BITMASK:
+	case _BGR_WITH_BITMASK:
+	  info->rendering_type = MPEG3_RGB565;
+	  break;
+	default:
+	  show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+	  return PLAY_ERROR;
+	}
+	p->depth = 16;
+	p->bits_per_pixel = 16;
+	p->bytes_per_line = p->width * 2;
+	break;
+      default:
+	show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+	return PLAY_ERROR;
+      }
+
+      if ((info->lines = calloc(p->height, sizeof(unsigned char *))) == NULL)
+	goto error;
+      /* extra 4 bytes are needed for MMX routine */
+      if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height + 4) == NULL)
+	goto error;
+      if ((info->lines[0] = malloc(p->bytes_per_line * p->height)) == NULL)
+	goto error;
+      for (i = 1; i < p->height; i++)
+	info->lines[i] = info->lines[0] + i * p->bytes_per_line;
     }
-  } else {
-    if ((info->lines = calloc(p->height, sizeof(unsigned char *))) == NULL)
-      goto error;
-    /* extra 4 bytes are needed for MMX routine */
-    if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height + 4) == NULL)
-      goto error;
-    if ((info->lines[0] = malloc(p->bytes_per_line * p->height)) == NULL)
-      goto error;
-    for (i = 1; i < p->height; i++)
-      info->lines[i] = info->lines[0] + i * p->bytes_per_line;
   }
 
   m->movie_private = (void *)info;
@@ -419,7 +357,7 @@ play_video(void *arg)
 
   debug_message(__FUNCTION__ "()\n");
 
-  if (info->use_yuv) {
+  if (info->use_xv) {
     while (m->status == _PLAY) {
       if (m->current_frame >= m->num_of_frames) {
 	info->eof = 1;
@@ -429,11 +367,11 @@ play_video(void *arg)
       pthread_mutex_lock(&info->update_mutex);
 
       decode_error =
-	(mpeg3_read_yuvframe(info->file, info->y[0], info->u[0], info->v[0],
+	(mpeg3_read_yuvframe(info->file, info->y, info->u, info->v,
 			  0, 0,
 			  m->width, m->height,
 			  info->nvstream) == -1) ? 0 : 1;
-      memcpy(memory_ptr(info->p->rendered.image), info->y[0], info->p->bytes_per_line * info->p->height);
+      memcpy(memory_ptr(info->p->rendered.image), info->y, info->p->bytes_per_line * info->p->height);
       pthread_cond_wait(&info->update_cond, &info->update_mutex);
       pthread_mutex_unlock(&info->update_mutex);
     }
@@ -674,11 +612,8 @@ unload_movie(Movie *m)
 	free(info->lines[0]);
       free(info->lines);
     }
-    if (info->y) {
-      if (info->y[0])
-	free(info->y[0]);
+    if (info->y)
       free(info->y);
-    }
     if (info->p)
       image_destroy(info->p);
 
