@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:13:17 2002.
- * $Id: demultiplexer_avi.c,v 1.16 2002/09/22 21:30:30 sian Exp $
+ * Last Modified: Sat Oct 19 11:23:12 2002.
+ * $Id: demultiplexer_avi.c,v 1.17 2002/11/06 14:10:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,7 +70,14 @@ seek_func(void *arg, unsigned int pos, RIFF_SeekWhence whence)
 {
   Stream *st = (Stream *)arg;
 
-  return stream_seek(st, pos, whence);
+  switch (whence) {
+  case _SEEK_SET:
+    return stream_seek(st, pos, _SET);
+  case _SEEK_CUR:
+    return stream_seek(st, pos, _CUR);
+  case _SEEK_END:
+    return stream_seek(st, pos, _END);
+  }
 }
 
 static int
@@ -375,7 +382,7 @@ demux_rewind(Demultiplexer *demux)
 
   if (demux->running)
     return 0;
-  return stream_seek(info->st, info->movi_start, _SEEK_SET);
+  return stream_seek(info->st, info->movi_start, _SET);
 }
 
 static void

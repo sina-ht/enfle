@@ -1,8 +1,8 @@
 /*
  * giflib.h -- GIF manipulation library header
  * (C)Copyright 1997,98 by Hiroshi Takekawa <t80679@hongo.ecc.u-tokyo.ac.jp>
- * Last Modified: Wed Jul 10 00:05:42 2002.
- * $Id: giflib.h,v 1.1 2002/08/03 05:10:16 sian Exp $
+ * Last Modified: Sat Oct 19 11:26:15 2002.
+ * $Id: giflib.h,v 1.2 2002/11/06 14:11:34 sian Exp $
  */
 
 #include "enfle/stream.h"
@@ -94,8 +94,8 @@ struct GIFImage {
 typedef struct GIFFileInfomation {
   int revision; /* 87 or 89 */
   int npics;
-  char *comment;
-  char *applcode;
+  unsigned char *comment;
+  unsigned char *applcode;
   char *err;
   void *pixels;
   GIF_sd *sd;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 23 06:31:37 2002.
- * $Id: jpeg.c,v 1.21 2002/09/22 21:31:57 sian Exp $
+ * Last Modified: Sat Oct 19 11:23:49 2002.
+ * $Id: jpeg.c,v 1.22 2002/11/06 14:11:55 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -386,7 +386,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   case JCS_YCbCr:
     {
       /* Convert to I420 */
-      char *y, *u, *v;
+      unsigned char *y, *u, *v;
       unsigned int w, h;
 
       w = ((image_width(p)  + 7) >> 3) << 3;

@@ -1,10 +1,10 @@
 /*
  * bz2.c -- bz2 streamer plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:28:43 2002.
- * $Id: bz2.c,v 1.5 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Sun Oct 13 15:24:37 2002.
+ * $Id: bz2.c,v 1.6 2002/11/06 14:12:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@
 
 DECLARE_STREAMER_PLUGIN_METHODS;
 
-#define STREAMER_BZ2_PLUGIN_DESCRIPTION "BZ2 Streamer plugin version 0.0.5"
+#define STREAMER_BZ2_PLUGIN_DESCRIPTION "BZ2 Streamer plugin version 0.0.6"
 
 static StreamerPlugin plugin = {
   type: ENFLE_PLUGIN_STREAMER,
@@ -114,14 +114,14 @@ bzseek_set(Stream *st, long pos)
 /* implementations */
 
 static int
-read(Stream *st, unsigned char *p, int size)
+__read(Stream *st, unsigned char *p, int size)
 {
   BZFILE *bzfile;
   int r, err;
 
   bzfile = (BZFILE *)st->data;
   if ((r = BZREAD(bzfile, p, size)) < 0) {
-    fprintf(stderr, "bz2 streamer plugin: read: %s\n", BZERROR(bzfile, &err));
+    err_message("bz2 streamer plugin: read: %s\n", BZERROR(bzfile, &err));
     return -1;
   }
   st->ptr_offset += r;
@@ -153,7 +153,7 @@ tell(Stream *st)
 }
 
 static int
-close(Stream *st)
+__close(Stream *st)
 {
   if (st->data) {
     BZCLOSE((BZFILE *)st->data);
@@ -201,10 +201,10 @@ DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
     return STREAM_NOT;
   st->data = (void *)bzfile;
   st->ptr_offset = 0;
-  st->read = read;
+  st->read = __read;
   st->seek = seek;
   st->tell = tell;
-  st->close = close;
+  st->close = __close;
 
   return STREAM_OK;
 }

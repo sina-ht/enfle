@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 22:23:44 2002.
- * $Id: Xlib.c,v 1.48 2002/08/18 13:28:35 sian Exp $
+ * Last Modified: Sat Oct 19 11:29:45 2002.
+ * $Id: Xlib.c,v 1.49 2002/11/06 14:12:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,7 +51,7 @@
 #define NORMAL_CURSOR XC_arrow
 
 static Cursor normal_cursor, wait_cursor, invisible_cursor;
-static unsigned char invisible_cursor_data[] = {
+static const char invisible_cursor_data[] = {
   0, 0, 0, 0, 0, 0, 0, 0
 };
 

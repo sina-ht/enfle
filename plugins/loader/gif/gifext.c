@@ -1,7 +1,7 @@
 /*
  * gifext.c -- parse GIF extension block
  * (C)Copyright 1998, 2002 by Hiroshi Takekawa
- * Last Modified: Wed Jul 10 20:26:45 2002.
+ * Last Modified: Sat Oct 19 11:26:47 2002.
  */
 
 #include "compat.h"
@@ -99,7 +99,7 @@ GIFParsePlainTextBlock(Stream *st, GIF_info *info)
 int
 GIFParseApplicationBlock(Stream *st, GIF_info *info)
 {
-  char authcode[3];
+  unsigned char authcode[3];
 
   debug_message_fn("() called\n");
 
@@ -108,7 +108,7 @@ GIFParseApplicationBlock(Stream *st, GIF_info *info)
     return PARSE_ERROR;
   }
 
-  if ((info->applcode = (char *)malloc(8 + 1)) == NULL) {
+  if ((info->applcode = (unsigned char *)malloc(8 + 1)) == NULL) {
     info->err = (char *)"No enough memory for application code";
     return PARSE_ERROR;
   }

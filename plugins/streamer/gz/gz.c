@@ -1,10 +1,10 @@
 /*
  * gz.c -- gz streamer plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:13:37 2002.
- * $Id: gz.c,v 1.9 2002/08/18 04:19:26 sian Exp $
+ * Last Modified: Sun Oct 13 15:24:20 2002.
+ * $Id: gz.c,v 1.10 2002/11/06 14:12:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -80,14 +80,14 @@ plugin_exit(void *p)
 /* implementations */
 
 static int
-_read(Stream *st, unsigned char *p, int size)
+__read(Stream *st, unsigned char *p, int size)
 {
   gzFile gzfile;
   int r, err;
 
   gzfile = (gzFile)st->data;
   if ((r = gzread(gzfile, p, size)) < 0) {
-    fprintf(stderr, "gz streamer plugin: read: %s\n", gzerror(gzfile, &err));
+    err_message("gz streamer plugin: read: %s\n", gzerror(gzfile, &err));
     return -1;
   }
 
@@ -118,7 +118,7 @@ tell(Stream *st)
 }
 
 static int
-_close(Stream *st)
+__close(Stream *st)
 {
   int f;
 
@@ -168,10 +168,10 @@ DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
   if ((gzfile = gzopen(filepath, "rb")) == NULL)
     return STREAM_NOT;
   st->data = (void *)gzfile;
-  st->read = _read;
+  st->read = __read;
   st->seek = seek;
   st->tell = tell;
-  st->close = _close;
+  st->close = __close;
 
   return STREAM_OK;
 }

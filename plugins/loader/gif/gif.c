@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 10 22:26:34 2002.
- * $Id: gif.c,v 1.1 2002/08/03 05:10:34 sian Exp $
+ * Last Modified: Sat Oct 19 11:24:26 2002.
+ * $Id: gif.c,v 1.2 2002/11/06 14:11:34 sian Exp $
  *
  * NOTE: This file does not include LZW code
  *
@@ -172,7 +172,7 @@ load_image(Image *p, Stream *st)
   } while (c == PARSE_OK);
 
   if (g_info->comment != NULL)
-    p->comment = strdup(g_info->comment);
+    p->comment = (unsigned char *)strdup(g_info->comment);
 
   if (c == PARSE_ERROR)
     err_message("gif loader: Parse error: %s at 0x%lX.\n", g_info->err, stream_tell(st));

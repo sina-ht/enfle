@@ -1,8 +1,8 @@
 /*
  * giflib.c -- GIF manipulation library
  * (C)Copyright 1997, 98, 99, 2002 by Hiroshi Takekawa
- * Last Modified: Thu Aug  8 07:19:25 2002.
- * $Id: giflib.c,v 1.2 2002/08/08 15:06:42 sian Exp $
+ * Last Modified: Sat Oct 19 11:24:46 2002.
+ * $Id: giflib.c,v 1.3 2002/11/06 14:11:34 sian Exp $
  *
  *  This is GIF manipulation library.
  *  This can read GIF file into raster memory image.
@@ -101,7 +101,7 @@ GIF_info *
 GIFReadSignature(Stream *st, int *c)
 {
   GIF_info *info;
-  char sig[3];
+  unsigned char sig[3];
 
   stream_read(st, sig, 3);
   if (memcmp(sig, "GIF", 3) != 0) {
