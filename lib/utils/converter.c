@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 13 01:09:20 2003.
- * $Id: converter.c,v 1.6 2003/09/12 17:17:23 sian Exp $
+ * Last Modified: Mon Sep 22 23:13:59 2003.
+ * $Id: converter.c,v 1.7 2003/09/22 14:14:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,7 +62,7 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
       return strlen(s);
     }
     perror("converter_convert");
-    return errno;
+    return -errno;
   }
 
   inptr = s;
@@ -89,7 +89,9 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
       break;
     }
     *outptr = '\0';
-    *d_r = strdup(s);
+    *d_r = NULL;
+    iconv_close(cd);
+    return -errno;
   }
 
   iconv_close(cd);
