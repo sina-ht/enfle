@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  2 11:08:55 2001.
- * $Id: libmpeg2.c,v 1.2 2001/02/02 16:40:24 sian Exp $
+ * Last Modified: Wed Feb  7 21:28:38 2001.
+ * $Id: libmpeg2.c,v 1.3 2001/02/07 17:32:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpeg2/mpeg2.h"
+#include "video_out.h"
+#include "video_out_internal.h"
 
 #define REQUIRE_STRING_H
 #include "compat.h"
@@ -88,6 +90,139 @@ plugin_exit(void *p)
 }
 
 /* for internal use */
+
+/* vo stuff start */
+
+/* prepare video_out_enfle */
+static LIBVO_EXTERN(enfle)
+
+static vo_info_t vo_info = 
+{
+  "Enfle player plugin output",
+  "enfle",
+  "Hiroshi Takekawa <sian@big.or.jp>",
+  "This output routines are dedicated to Enfle player plugin."
+};
+
+static uint32_t image_width, image_height;
+
+/*
+ * title: string for titlebar of window. May be disregarded if there
+ *        is no such thing as a window to your driver. Make a copy of
+ *        this string, if you need it.
+ * format: desired fourCC code to use for image buffers
+ * return: zero on successful initialization, non-zero on error.
+ */
+static uint32_t
+init(int width, int height, int fullscreen, char *title, uint32_t format)
+{
+  image_width = width;
+  image_height = height;
+  show_message(__FUNCTION__ ": %d x %d (%s): %s\n", width, height, format, title);
+  return 0;
+}
+
+static const vo_info_t*
+get_info(void)
+{
+  show_message(__FUNCTION__ "() called\n");
+  return &vo_info;
+}
+
+/*
+ * Update a section of the offscreen buffer. A "slice" is an area of
+ * the video image that is 16 rows of pixels at the width of the video
+ * image.  Position (0, 0) is the upper left corner of slice #0 (the
+ * first slice), and position (0, 15) is the lower right. The next
+ * slice, #1, is bounded by (0, 16) and (0, 31), and so on.
+ *
+ * Note that slices are not drawn directly to the screen, and should
+ * be buffered until your implementation of display_flip_page() (see
+ * below) is called.
+ *
+ * This may get called very rapidly, so the more efficient you can
+ * make your implementation of this function, the better.
+ *
+ * *src[]: see display_frame(), above. The data passed in this * array
+ *         is just what enough data to contain the * new slice, and
+ *         NOT the entire frame.
+ * slice_num: The index of the slice. Starts at 0, not 1.
+ * return: zero on successful rendering, non-zero on error.  The
+ *         program will probably respond to an error condition by
+ *         terminating.
+ */
+static uint32_t
+draw_slice(uint8_t *src[], int slice_num)
+{
+  show_message(__FUNCTION__ ": %d\n", slice_num);
+  return 0;
+}
+
+/*
+ * Draw the current image buffer to the screen. There may be several
+ * display_slice() calls before display_flip_page() is used. Note that
+ * display_frame does an implicit page flip, so you might or might not
+ * want to call this internally from your display_frame()
+ * implementation.
+ *
+ * This may get called very rapidly, so the more efficient you can
+ * make your implementation of this function, the better.
+ */
+static void
+flip_page(void)
+{
+  show_message(__FUNCTION__ "() called\n");
+}
+
+/*
+ * Display a new frame of the video to the screen. This may get called
+ * very rapidly, so the more efficient you can make your
+ * implementation of this function, the better.
+ *
+ * *src[]: An array with three elements. This is a YUV * stream, with
+ *         the Y plane in src[0], U in src[1], * and V in
+ *         src[2]. There is enough data for an image * that is (WxH)
+ *         pixels, where W and H are the width * and height parameters
+ *         that were previously passed * to display_init().  *
+ *         Information on the YUV format can be found at:
+ *         http://www.webartz.com/fourcc/fccyuv.htm#IYUV
+ *
+ * return: zero on successful rendering, non-zero on error.  The
+ *         program will probably respond to an error condition by
+ *         terminating.
+ */
+static uint32_t
+draw_frame(uint8_t *src[])
+{
+  show_message(__FUNCTION__ "() called\n");
+  return 0;
+}
+
+/*
+ * Allocate an image buffer. This may allow, for some drivers, some
+ * bonus acceleration (like AGP-based transfers, etc...). If nothing
+ * else, implementing this as a simple wrapper over malloc() is
+ * acceptable.  This memory must be system memory as it will be read
+ * often.  The image will have the format set when we init the
+ * display.
+ *
+ * return: NULL if unable to allocate, ptr to new surface
+ */
+static vo_image_buffer_t* 
+allocate_image_buffer()
+{
+  show_message(__FUNCTION__ "() called\n");
+  return allocate_image_buffer_common(image_height,image_width,0x32315659);
+}
+
+static void	
+free_image_buffer(vo_image_buffer_t* image)
+{
+  show_message(__FUNCTION__ "() called\n");
+  free_image_buffer_common(image);
+}
+
+/* vo stuff end */
 
 static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
