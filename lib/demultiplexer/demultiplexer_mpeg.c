@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:34:32 2001.
- * $Id: demultiplexer_mpeg.c,v 1.8 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jun 19 21:49:28 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.9 2001/06/19 14:23:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -361,6 +361,7 @@ demux_main(void *arg)
 
 	    write(info->a_fd, &c, 1);
 	    /* ?, flags, header_len */
+	    put_timestamp(info->a_fd, skip - 9 - buf[8]);
 	    write(info->a_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
 	  } else {
 	    unsigned char *p;
@@ -372,6 +373,7 @@ demux_main(void *arg)
 	      p += 2;
 	    }
 	    pts_dts_flag = (*p & 0xf0) >> 4;
+	    debug_message(__FUNCTION__ ": pd_flag(a) %d\n", pts_dts_flag);
 	    switch ((int)pts_dts_flag) {
 	    case 0:
 	      p++;
@@ -403,6 +405,7 @@ demux_main(void *arg)
 	      default:
 		break;
 	      }
+	      put_timestamp(info->a_fd, buf + skip - p);
 	      write(info->a_fd, p, buf + skip - p);
 	    }
 	  }
@@ -413,8 +416,9 @@ demux_main(void *arg)
 	  if ((buf[6] & 0xc0) == 0x80) {
 	    char c = 0xff;
 
-	    write(info->a_fd, &c, 1);
+	    write(info->v_fd, &c, 1);
 	    /* ?, flags, header_len */
+	    put_timestamp(info->v_fd, skip - 9 - buf[8]);
 	    write(info->v_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
 	  } else {
 	    unsigned char *p;
@@ -426,6 +430,7 @@ demux_main(void *arg)
 	      p += 2;
 	    }
 	    pts_dts_flag = (*p & 0xf0) >> 4;
+	    debug_message(__FUNCTION__ ": pd_flag(v) %d\n", pts_dts_flag);
 	    switch ((int)pts_dts_flag) {
 	    case 0:
 	      p++;
@@ -445,19 +450,20 @@ demux_main(void *arg)
 	      goto error;
 	    }
 	    if (p < buf + skip) {
-	      write(info->a_fd, &pts_dts_flag, 1);
+	      write(info->v_fd, &pts_dts_flag, 1);
 	      switch ((int)pts_dts_flag) {
 	      case 2:
-		put_timestamp(info->a_fd, pts);
+		put_timestamp(info->v_fd, pts);
 		break;
 	      case 3:
-		put_timestamp(info->a_fd, pts);
-		put_timestamp(info->a_fd, dts);
+		put_timestamp(info->v_fd, pts);
+		put_timestamp(info->v_fd, dts);
 		break;
 	      default:
 		break;
 	      }
-	      write(info->a_fd, p, buf + skip - p);
+	      put_timestamp(info->v_fd, buf + skip - p);
+	      write(info->v_fd, p, buf + skip - p);
 	    }
 	  }
 	}

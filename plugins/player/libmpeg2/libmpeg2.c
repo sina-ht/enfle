@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 22:56:52 2001.
- * $Id: libmpeg2.c,v 1.14 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 22:15:28 2001.
+ * $Id: libmpeg2.c,v 1.15 2001/06/19 14:23:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -114,6 +114,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     return PLAY_NOT;
   info->nastreams = demultiplexer_mpeg_naudios(info->demux);
   info->nvstreams = demultiplexer_mpeg_nvideos(info->demux);
+  info->nvstreams = 0;
 
   if (info->nastreams == 0 && info->nvstreams == 0)
     return PLAY_NOT;
@@ -154,6 +155,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->rendering_width = m->width;
     m->rendering_height = m->height;
     show_message("warning: This stream has no video stream.\n");
+    info->nvstream = -1;
+    demultiplexer_mpeg_set_video(info->demux, info->nvstream);
   } else {
     if ((info->nvstreams = demultiplexer_mpeg_nvideos(info->demux)) > 1) {
       show_message("There are %d video streams in this whole stream.\n", info->nvstreams);
@@ -302,13 +305,17 @@ play_video(void *arg)
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   unsigned char buf[MPEG_VIDEO_DECODE_BUFFER_SIZE];
+  unsigned long pts, dts, size;
   int read_size;
+  int buf_used = 0;
   int nframe_decoded;
+  int s;
 
   debug_message(__FUNCTION__ "()\n");
 
+  size = 0;
   while (m->status == _PLAY) {
-    if ((read_size = read(info->v_fd_in, buf, MPEG_VIDEO_DECODE_BUFFER_SIZE)) < 0) {
+    if ((read_size = read(info->v_fd_in, buf + buf_used, MPEG_VIDEO_DECODE_BUFFER_SIZE - buf_used)) < 0) {
 #if 0
       int errnum = errno;
 
@@ -325,27 +332,45 @@ play_video(void *arg)
       demultiplexer_set_eof(info->demux, 1);
       break;
     } else {
-      unsigned long pts, dts;
-      int s;
+      buf_used += read_size;
+      debug_message(__FUNCTION__ ": buf_used = %d\n", buf_used);
 
-      switch ((int)buf[0]) {
-      case 2:
-	pts = get_timestamp(buf + 1);
-	s = 5;
-	break;
-      case 3:
-	pts = get_timestamp(buf + 1);
-	dts = get_timestamp(buf + 5);
-	s = 9;
-	break;
-      default:
-	s = 1;
-	break;
+      if (size == 0) {
+	switch ((int)buf[0]) {
+	case 2:
+	  if (buf_used < 9)
+	    continue;
+	  pts = get_timestamp(buf + 1);
+	  dts = -1;
+	  size = get_timestamp(buf + 5);
+	  s = 9;
+	  break;
+	case 3:
+	  if (buf_used < 13)
+	    continue;
+	  pts = get_timestamp(buf + 1);
+	  dts = get_timestamp(buf + 5);
+	  size = get_timestamp(buf + 9);
+	  s = 13;
+	  break;
+	default:
+	  if (buf_used < 5)
+	    continue;
+	  pts = dts = -1;
+	  size = get_timestamp(buf + 1);
+	  s = 5;
+	  break;
+	}
+	debug_message(__FUNCTION__ ": size = %ld\n", size);
       }
-      //debug_message(__FUNCTION__ ": <decode %d bytes>", read_size);
+      if (buf_used < s + size)
+	continue;
       debug_message(__FUNCTION__ ": pts = %ld, dts = %ld\n", pts, dts);
-      nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, buf + s, buf + read_size - s);
-      //debug_message("</decode %d frames>\n", nframe_decoded);
+      nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, buf + s, buf + s + size);
+      buf_used -= s + size;
+      if (buf_used)
+	memmove(buf, buf + s + size, buf_used);
+      size = 0;
     }
   }
 
@@ -374,8 +399,12 @@ play_audio(void *arg)
   AudioDevice *ad;
   unsigned char input_buffer[MP3_READ_BUFFER_SIZE];
   unsigned char output_buffer[MP3_DECODE_BUFFER_SIZE];
-  int read_size, write_size, ret;
+  unsigned long pts, dts, size;
+  int read_size;
+  int buf_used = 0;
+  int write_size, ret;
   int param_is_set = 0;
+  int s;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -387,15 +416,48 @@ play_audio(void *arg)
   }
   info->ad = ad;
 
+  size = 0;
   while (m->status == _PLAY) {
-    if ((read_size = read(info->a_fd_in, input_buffer, MP3_READ_BUFFER_SIZE)) < 0)
+    if ((read_size = read(info->a_fd_in, input_buffer + buf_used, MP3_READ_BUFFER_SIZE - buf_used)) < 0)
       continue;
     else if (read_size == 0) {
       demultiplexer_set_eof(info->demux, 1);
       break;
     } else {
+      buf_used += read_size;
+      if (size == 0) {
+	switch ((int)input_buffer[0]) {
+	case 2:
+	  if (buf_used < 9)
+	    continue;
+	  pts = get_timestamp(input_buffer + 1);
+	  dts = -1;
+	  size = get_timestamp(input_buffer + 5);
+	  s = 9;
+	  break;
+	case 3:
+	  if (buf_used < 13)
+	    continue;
+	  pts = get_timestamp(input_buffer + 1);
+	  dts = get_timestamp(input_buffer + 5);
+	  size = get_timestamp(input_buffer + 9);
+	  s = 13;
+	  break;
+	default:
+	  if (buf_used < 5)
+	    continue;
+	  pts = dts = -1;
+	  size = get_timestamp(input_buffer + 1);
+	  s = 5;
+	  break;
+	}
+	debug_message(__FUNCTION__ ": size = %ld\n", size);
+      }
+      if (buf_used < s + size)
+	continue;
+      debug_message(__FUNCTION__ ": pts = %ld, dts = %ld\n", pts, dts);
       ret = decodeMP3(&info->mp,
-		      input_buffer, read_size,
+		      input_buffer + s, size,
 		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       if (!param_is_set) {
 	m->sampleformat = _AUDIO_FORMAT_S16_LE;
@@ -407,10 +469,15 @@ play_audio(void *arg)
       }
       while (ret == MP3_OK) {
 	m->ap->write_device(ad, output_buffer, write_size);
+	debug_message(__FUNCTION__ ": write %d\n", write_size);
 	ret = decodeMP3(&info->mp,
 			NULL, 0,
 			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       }
+      buf_used -= s + size;
+      if (buf_used)
+	memmove(input_buffer, input_buffer + s + size, buf_used);
+      size = 0;
     }
   }
 
