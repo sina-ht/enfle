@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon May  6 20:04:46 2002.
-dnl $Id: configure.in,v 1.111 2002/05/06 11:04:56 sian Exp $
+dnl Last Modified: Mon May 20 00:10:19 2002.
+dnl $Id: configure.in,v 1.112 2002/05/19 15:12:35 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20020506, sian@big.or.jp)
+AC_INIT(enfle, 20020518, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -50,7 +50,13 @@ AC_PROG_LIBTOOL
 dnl Checks for libraries.
 if test -d /usr/local/lib; then
   LDFLAGS="$LDFLAGS -L/usr/local/lib"
-  CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+  AC_MSG_CHECKING(if /usr/local/include has already been specified)
+  if echo | cpp -v 2>&1 | grep "/usr/local/include" > /dev/null; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no, added)
+    CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+  fi
 fi
 
 available_dlopen=no
