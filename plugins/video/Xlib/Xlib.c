@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 30 10:02:42 2001.
- * $Id: Xlib.c,v 1.31 2001/04/30 01:10:28 sian Exp $
+ * Last Modified: Wed May  2 00:44:12 2001.
+ * $Id: Xlib.c,v 1.32 2001/05/01 17:05:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -102,7 +102,8 @@ static int adjust_offset(VideoWindow *, int, int);
 static int render(VideoWindow *, Image *);
 static void update(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
 static void do_sync(VideoWindow *);
-static void do_sync_discard(VideoWindow *);
+static void discard_key_event(VideoWindow *);
+static void discard_button_event(VideoWindow *);
 static void destroy(void *);
 
 /* internal */
@@ -139,7 +140,8 @@ static VideoWindow template = {
   render: render,
   update: update,
   do_sync: do_sync,
-  do_sync_discard: do_sync_discard
+  discard_key_event: discard_key_event,
+  discard_button_event: discard_button_event
 };
 
 void *
@@ -1025,13 +1027,27 @@ do_sync(VideoWindow *vw)
 }
 
 static void
-do_sync_discard(VideoWindow *vw)
+discard_key_event(VideoWindow *vw)
 {
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
+  XEvent xev;
 
-  XSync(x11_display(x11), True);
+  while (XCheckWindowEvent(x11_display(x11), x11window_win(xw),
+			   KeyPressMask | KeyReleaseMask, &xev)) ;
+}
+
+static void
+discard_button_event(VideoWindow *vw)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+  XEvent xev;
+
+  while (XCheckWindowEvent(x11_display(x11), x11window_win(xw),
+			   ButtonPressMask | ButtonReleaseMask, &xev)) ;
 }
 
 static int

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr 24 19:49:26 2001.
- * $Id: video.h,v 1.13 2001/04/24 16:41:26 sian Exp $
+ * Last Modified: Wed May  2 00:43:13 2001.
+ * $Id: video.h,v 1.14 2001/05/01 17:05:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -152,7 +152,8 @@ struct _video_window {
   int (*render)(VideoWindow *, Image *);
   void (*update)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   void (*do_sync)(VideoWindow *);
-  void (*do_sync_discard)(VideoWindow *);
+  void (*discard_key_event)(VideoWindow *);
+  void (*discard_button_event)(VideoWindow *);
   int (*destroy)(VideoWindow *);
 };
 
@@ -172,7 +173,8 @@ struct _video_window {
 #define video_window_render(vw, p) (vw)->render((vw), (p))
 #define video_window_update(vw, x, y, w, h) (vw)->update((vw), (x), (y), (w), (h))
 #define video_window_sync(vw) (vw)->do_sync((vw))
-#define video_window_sync_discard(vw) (vw)->do_sync_discard((vw))
+#define video_window_discard_key_event(vw) (vw)->discard_key_event((vw))
+#define video_window_discard_button_event(vw) (vw)->discard_button_event((vw))
 #define video_window_destroy(vw) (vw)->destroy((vw))
 
 #endif
