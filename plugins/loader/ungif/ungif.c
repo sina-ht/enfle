@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 17:32:24 2000.
- * $Id: ungif.c,v 1.3 2000/10/09 20:23:43 sian Exp $
+ * Last Modified: Tue Oct 10 16:00:26 2000.
+ * $Id: ungif.c,v 1.4 2000/10/10 11:48:35 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -109,6 +109,7 @@ load_image(Image *p, Stream *st)
 
   size = GifFile->SWidth * sizeof(GifPixelType);
   if ((ScreenBuffer[0] = (GifRowType)calloc(sheight, size)) == NULL) {
+    free(ScreenBuffer);
     if (DGifCloseFile(GifFile) == GIF_ERROR)
       PrintGifError();
     return LOAD_ERROR;
