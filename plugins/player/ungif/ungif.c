@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 14 14:20:28 2002.
- * $Id: ungif.c,v 1.28 2002/03/14 18:43:30 sian Exp $
+ * Last Modified: Fri Jun 14 00:23:32 2002.
+ * $Id: ungif.c,v 1.29 2002/06/14 09:39:51 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -42,6 +42,8 @@
 typedef struct _ungif_info {
   GifFileType *gf;
   GifRowType *buffer;
+  unsigned char *prev_buffer;
+  unsigned int buffer_size;
   Image *p;
   unsigned int delay_time;
   unsigned int max_loop_count;
@@ -149,6 +151,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   if ((info->buffer[0] = (GifRowType)calloc(m->height, size)) == NULL) {
     return PLAY_ERROR;
   }
+  if ((info->prev_buffer = calloc(m->height, size)) == NULL) {
+    return PLAY_ERROR;
+  }
+  info->buffer_size = m->height * size;
 
   for (i = 1; i < m->height; i++)
     info->buffer[i] = info->buffer[0] + i * size;
@@ -271,6 +277,9 @@ play_main(Movie *m, VideoWindow *vw)
 
       //debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", l, t, w, h);
 
+      /* save previous image */
+      memcpy(info->prev_buffer, info->buffer[0], info->buffer_size);
+
       if (if_transparent) {
 	/* First, allocate memory */
 	if ((rows = calloc(h, sizeof(GifRowType *))) == NULL)
@@ -360,7 +369,7 @@ play_main(Movie *m, VideoWindow *vw)
 	user_input = extension[1] & 2;
 	image_disposal = (extension[1] & 0x1c) >> 2;
 	delay = extension[2] + (extension[3] << 8);
-	//debug_message("UNGIF: Graphics Extention: trans %d user_input %d disposal %d delay %d\n", transparent_index, user_input, image_disposal, delay);
+	//debug_message("UNGIF: Graphics Extention: trans %d(index %d) user_input %d disposal %d delay %d\n", if_transparent, transparent_index, user_input, image_disposal, delay);
 	break;
       case APPLICATION_EXT_FUNC_CODE:
 	debug_message("UNGIF: Got application extension: %c%c%c%c%c%c%c%c: %d bytes.\n",
@@ -408,8 +417,8 @@ play_main(Movie *m, VideoWindow *vw)
 	  break;
 	case APPLICATION_EXT_FUNC_CODE:
 	  if (reading_netscape_ext) {
-	    debug_message("UNGIF: The size of data sub-block is %d bytes.\n", extension[0]);
-	    debug_message("UNGIF: The first byte of the data sub-block is %X.\n", extension[1]);
+	    //debug_message("UNGIF: The size of data sub-block is %d bytes.\n", extension[0]);
+	    //debug_message("UNGIF: The first byte of the data sub-block is %X.\n", extension[1]);
 	    if ((extension[1] & 7) == 1) {
 	      info->max_loop_count = extension[2] | (extension[3] << 8);
 	      debug_message("UNGIF: Loop times specified: %d\n", info->max_loop_count);
@@ -440,9 +449,10 @@ play_main(Movie *m, VideoWindow *vw)
 
   if (image_disposal == _RESTOREBACKGROUND)
     memset(info->buffer[0], gf->SBackGroundColor, m->width * m->height);
-  if (image_disposal == _RESTOREPREVIOUS)
-    /* XXX: Restore previous image */
-    memset(info->buffer[0], gf->SBackGroundColor, m->width * m->height);
+  if (image_disposal == _RESTOREPREVIOUS) {
+    /* Restore previous image */
+    memcpy(info->buffer[0], info->prev_buffer, info->buffer_size);
+  }
 
   return PLAY_OK;
 }
@@ -508,6 +518,8 @@ unload_movie(Movie *m)
   UNGIF_info *info = (UNGIF_info *)m->movie_private;
 
   timer_stop(m->timer);
+  if (info->prev_buffer)
+    free(info->prev_buffer);
   if (info->buffer[0])
     free(info->buffer[0]);
   if (info->buffer)
