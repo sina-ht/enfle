@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 24 11:51:36 2001.
- * $Id: fifo.h,v 1.2 2001/06/24 15:43:35 sian Exp $
+ * Last Modified: Thu Sep 20 14:25:17 2001.
+ * $Id: fifo.h,v 1.3 2001/09/20 05:29:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,17 +28,13 @@
 #endif
 
 typedef void (*FIFO_destructor)(void *);
-typedef struct _fifo_data FIFO_data;
-struct _fifo_data {
-  FIFO_destructor destructor;
-  void *data;
-  struct _fifo_data *next;
-};
 
 typedef struct _fifo FIFO;
 struct _fifo {
 #ifdef USE_PTHREAD
   pthread_mutex_t lock;
+  pthread_cond_t put_ok_cond;
+  pthread_cond_t get_ok_cond;
 #endif
   unsigned int ndata;
   unsigned int maxdata;
@@ -46,15 +42,16 @@ struct _fifo {
   struct _fifo_data *last_put;
 
   int (*put)(FIFO *, void *, FIFO_destructor);
-  int (*get)(FIFO *, void **);
+  int (*get)(FIFO *, void **, FIFO_destructor *);
   int (*set_max)(FIFO *, unsigned int);
   void (*destroy)(FIFO *);
 };
 
 #define fifo_is_empty(f) ((f)->ndata == 0)
+#define fifo_is_full(f) ((f)->maxdata > 0 && (f)->ndata >= (f)->maxdata)
 
 #define fifo_put(f, d, dest) (f)->put((f), (d), (dest))
-#define fifo_get(f, d) (f)->get((f), (d))
+#define fifo_get(f, d, dest_r) (f)->get((f), (d), (dest_r))
 #define fifo_set_max(f, m) (f)->set_max((f), (m))
 #define fifo_destroy(f) (f)->destroy((f))
 

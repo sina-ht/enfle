@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 19 01:26:45 2001.
- * $Id: fifo.c,v 1.4 2001/09/19 00:37:15 sian Exp $
+ * Last Modified: Thu Sep 20 14:24:50 2001.
+ * $Id: fifo.c,v 1.5 2001/09/20 05:29:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,10 +27,17 @@
 #include "common.h"
 #include "fifo.h"
 
+typedef struct _fifo_data FIFO_data;
+struct _fifo_data {
+  FIFO_destructor destructor;
+  void *data;
+  struct _fifo_data *next;
+};
+
 #define FIFO_DEFAULT_MAXDATA 1000
 
 static int put(FIFO *, void *, FIFO_destructor);
-static int get(FIFO *, void **);
+static int get(FIFO *, void **, FIFO_destructor *);
 static int set_max(FIFO *, unsigned int);
 static void destroy(FIFO *);
 
@@ -72,10 +79,13 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
 
 #ifdef USE_PTHREAD
   pthread_mutex_lock(&f->lock);
-#endif
-
+  if (f->maxdata)
+    while (f->ndata >= f->maxdata)
+      pthread_cond_wait(&f->put_ok_cond, &f->lock);
+#else
   if (f->maxdata && f->ndata >= f->maxdata)
-    goto unlock_and_return;
+    return 0;
+#endif
 
   if ((fd = calloc(1, sizeof(FIFO_data))) == NULL)
     goto unlock_and_return;
@@ -95,6 +105,8 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
 
  unlock_and_return:
 #ifdef USE_PTHREAD
+  if (f->ndata > 0)
+    pthread_cond_signal(&f->get_ok_cond);
   pthread_mutex_unlock(&f->lock);
 #endif
 
@@ -102,19 +114,21 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
 }
 
 int
-get(FIFO *f, void **d_return)
+get(FIFO *f, void **d_return, FIFO_destructor *destructor_r)
 {
   FIFO_data *fd;
   int ret = 0;
 
 #ifdef USE_PTHREAD
   pthread_mutex_lock(&f->lock);
+  while (f->ndata == 0)
+    pthread_cond_wait(&f->get_ok_cond, &f->lock);
 #endif
-
   if ((fd = f->next_get) == NULL)
-    goto unlock_and_return;
+    return 0;
 
   *d_return = fd->data;
+  *destructor_r = fd->destructor;
   if ((f->next_get = fd->next) == NULL)
     f->last_put = NULL;
   free(fd);
@@ -122,8 +136,9 @@ get(FIFO *f, void **d_return)
 
   ret = 1;
 
- unlock_and_return:
 #ifdef USE_PTHREAD
+  if (f->maxdata && f->ndata < f->maxdata)
+    pthread_cond_signal(&f->put_ok_cond);
   pthread_mutex_unlock(&f->lock);
 #endif
 
