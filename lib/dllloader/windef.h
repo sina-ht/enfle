@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr  9 21:09:01 2004.
- * $Id: windef.h,v 1.12 2004/04/12 04:13:13 sian Exp $
+ * Last Modified: Sun Apr 18 11:53:58 2004.
+ * $Id: windef.h,v 1.13 2004/04/18 06:25:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,7 @@
 #define __stdcall __attribute__((__stdcall__))
 #define CALLBACK __stdcall
 #define PASCAL __stdcall
+#define STDCALL __stdcall
 
 #undef FALSE
 #define FALSE 0
@@ -37,6 +38,19 @@
 #define NULL  0
 
 #define CONST const
+
+#define NOERROR                         0L
+#define S_OK                            ((HRESULT)0L)
+#define S_FALSE                         ((HRESULT)1L)
+
+#define E_NOTIMPL                       0x80004001
+#define E_NOINTERFACE                   0x80004002
+#define E_POINTER                       0x80004003
+#define E_ABORT                         0x80004004
+#define E_FAIL                          0x80004005
+
+#define E_OUTOFMEMORY                   0x8007000E
+#define E_INVALIDARG                    0x80070057
 
 typedef unsigned short int WORD;
 typedef unsigned int DWORD;
@@ -117,6 +131,23 @@ typedef DWORD CALLBACK (*LPTHREAD_START_ROUTINE)(LPVOID);
 #define FILE_TYPE_CHAR          2
 #define FILE_TYPE_PIPE          3
 #define FILE_TYPE_REMOTE        32768
+
+/* event */
+
+#define STATUS_SUCCESS                   0x00000000
+#define STATUS_WAIT_0                    0x00000000
+#define STATUS_ABANDONED_WAIT_0          0x00000080
+#define STATUS_USER_APC                  0x000000C0
+#define STATUS_TIMEOUT                   0x00000102
+#define STATUS_PENDING                   0x00000103
+
+#define WAIT_FAILED             0xffffffff
+#define WAIT_OBJECT_0           0
+#define WAIT_ABANDONED          STATUS_ABANDONED_WAIT_0
+#define WAIT_ABANDONED_0        STATUS_ABANDONED_WAIT_0
+#define WAIT_IO_COMPLETION      STATUS_USER_APC
+#define WAIT_TIMEOUT            STATUS_TIMEOUT
+#define STILL_ACTIVE            STATUS_PENDING
 
 /* memory */
 
@@ -317,14 +348,20 @@ typedef struct _startupinfoa {
   HANDLE hStdError;       /* 40: */
 } STARTUPINFOA, *LPSTARTUPINFOA;
 
+#define PROCESSOR_ARCHITECTURE_INTEL    0
+#define PROCESSOR_INTEL_386           386
+#define PROCESSOR_INTEL_486           486
+#define PROCESSOR_INTEL_PENTIUM       586
+#define PROCESSOR_INTEL_860           860
+
 typedef struct _system_info {
   union {
     DWORD dwOemId; /* Obsolete field - do not use */
     struct {
       WORD wProcessorArchitecture;
       WORD wReserved;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
+    } s;
+  } u;
   DWORD  dwPageSize;
   LPVOID lpMinimumApplicationAddress;
   LPVOID lpMaximumApplicationAddress;
@@ -380,5 +417,13 @@ typedef struct _osversioninfoa {
   DWORD dwPlatformId;
   CHAR szCSDVersion[128];
 } OSVERSIONINFOA;
+
+typedef struct _rect {
+  short left;
+  short top;
+  short right;
+  short bottom;
+} RECT, *PRECT, *LPRECT;
+typedef const RECT *LPCRECT;
 
 #endif
