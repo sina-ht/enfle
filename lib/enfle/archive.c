@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 12 07:11:22 2001.
- * $Id: archive.c,v 1.9 2001/02/12 13:13:59 sian Exp $
+ * Last Modified: Mon Feb 19 17:43:28 2001.
+ * $Id: archive.c,v 1.10 2001/02/19 16:40:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,7 +38,7 @@
 static int read_directory(Archive *, char *, int);
 static void add(Archive *, char *, void *);
 static void *get(Archive *, char *);
-static void delete_path(Archive *, char *, int);
+static void delete_path(Archive *, char *);
 static char *iteration_start(Archive *);
 static char *iteration_next(Archive *);
 static char *iteration_prev(Archive *);
@@ -148,7 +148,7 @@ read_directory(Archive *arc, char *path, int depth)
   c = read_directory_recursively(dl, path, depth);
 #if 0
   if (arc->nfiles != c) {
-    fprintf(stderr, "BUG: arc->nfiles %d != %d read_directory_recursively()\n", arc->nfiles, c);
+    bug("arc->nfiles %d != %d read_directory_recursively()\n", arc->nfiles, c);
     return 0;
   }
 #endif
@@ -168,8 +168,10 @@ static void
 add(Archive *arc, char *path, void *reminder)
 {
   arc->nfiles++;
-  if (hash_define_str(arc->filehash, path, reminder) < 0)
-    fprintf(stderr, "archive.c: " __FUNCTION__ ": %s already in filehash.\n", path);
+  if (hash_define_str(arc->filehash, path, reminder) < 0) {
+    /* This is not always bug. But treats as bug so far. */
+    bug("archive.c: " __FUNCTION__ ": %s already in filehash.\n", path);
+  }
 }
 
 static void *
@@ -179,12 +181,20 @@ get(Archive *arc, char *path)
 }
 
 static void
-delete_path(Archive *arc, char *path, int dir)
+delete_path(Archive *arc, char *path)
 {
+  debug_message(__FUNCTION__ "()\n");
+
   arc->nfiles--;
-  arc->current = (dir == 1) ? dlist_prev(arc->current) : dlist_next(arc->current);
-  if (!hash_delete_str(arc->filehash, path, 1))
-    fprintf(stderr, "archive.c: delete: delete %s failed.\n", path);
+  if (arc->nfiles < 0) {
+    bug("archive.c: " __FUNCTION__ ": arc->nfiles = %d < 0\n", arc->nfiles);
+  }
+
+  arc->current = (arc->direction == 1) ? dlist_prev(arc->current) : dlist_next(arc->current);
+  if (!hash_delete_str(arc->filehash, path, 1)) {
+    /* This is not always, but probably bug. */
+    bug("archive.c: " __FUNCTION__ ": delete %s failed.\n", path);
+  }
 }
 
 static char *
@@ -265,8 +275,10 @@ iteration_delete(Archive *arc)
   Dlist *dl;
   dl = hash_get_keys(arc->filehash);
 
+  debug_message(__FUNCTION__ "()\n");
+
   if (arc->current != dlist_guard(dl))
-    delete_path(arc, hash_key_key(dlist_data(arc->current)), arc->direction);
+    delete_path(arc, hash_key_key(dlist_data(arc->current)));
 }
 
 static int
