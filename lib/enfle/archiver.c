@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Nov 12 00:06:58 2003.
- * $Id: archiver.c,v 1.14 2003/11/17 13:50:40 sian Exp $
+ * Last Modified: Tue Mar  9 23:12:54 2004.
+ * $Id: archiver.c,v 1.15 2004/03/09 14:16:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,18 +74,20 @@ archiver_identify(EnflePlugins *eps, Archive *a, Stream *st, Config *c)
     free(ext);
   }
 
-  pluginlist_iter(pl, k, kl, p) {
-    arp = plugin_get(p);
-    //debug_message("archiver: identify: try %s\n", (char *)k);
-    stream_rewind(st);
-    if (arp->identify(a, st, arp->archiver_private) == OPEN_OK) {
-      a->format = (char *)k;
-      pluginlist_move_to_top;
-      return 1;
+  if (config_get_boolean(c, "/enfle/plugins/archiver/scan_no_assoc", &res)) {
+    pluginlist_iter(pl, k, kl, p) {
+      arp = plugin_get(p);
+      //debug_message("archiver: identify: try %s\n", (char *)k);
+      stream_rewind(st);
+      if (arp->identify(a, st, arp->archiver_private) == OPEN_OK) {
+	a->format = (char *)k;
+	pluginlist_move_to_top;
+	return 1;
+      }
+      //debug_message("archiver: identify: %s: failed\n", (char *)k);
     }
-    //debug_message("archiver: identify: %s: failed\n", (char *)k);
+    pluginlist_iter_end;
   }
-  pluginlist_iter_end;
 
   return 0;
 }

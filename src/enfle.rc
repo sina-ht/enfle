@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Tue Mar  9 22:57:18 2004.
-; $Id: enfle.rc,v 1.42 2004/03/09 13:59:24 sian Exp $
+; Last Modified: Tue Mar  9 23:13:14 2004.
+; $Id: enfle.rc,v 1.43 2004/03/09 14:16:57 sian Exp $
 
 enfle {
   identify {
@@ -152,12 +152,16 @@ enfle {
       }
     }
     streamer {
+      ; To try all plugins for unknown extension, uncomment this.
+      ;scan_no_assoc = yes
       assoc {
 	bz2 := BZ2:.
         gz := GZ:.
       }
     }
     archiver {
+      ; To try all plugins for unknown extension, uncomment this.
+      ;scan_no_assoc = yes
       assoc {
         tar := TAR:.
       }
