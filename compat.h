@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 26 19:46:37 2000.
- * $Id: compat.h,v 1.2 2000/12/27 19:07:54 sian Exp $
+ * Last Modified: Mon Jan  8 19:51:06 2001.
+ * $Id: compat.h,v 1.3 2001/01/11 22:30:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 # ifndef CONFIG_H_INCLUDED
-#  include "config.h"
+#  include "enfle-config.h"
 #  define CONFIG_H_INCLUDED
 # endif
 #endif
