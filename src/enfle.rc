@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Feb 14 02:58:06 2004.
-; $Id: enfle.rc,v 1.37 2004/02/14 05:26:57 sian Exp $
+; Last Modified: Thu Feb 19 23:56:09 2004.
+; $Id: enfle.rc,v 1.38 2004/02/20 17:23:06 sian Exp $
 
 enfle {
   identify {
@@ -114,7 +114,9 @@ enfle {
     }
     demultiplexer {
       assoc {
-        avi := AVI:.
+        avi := AVI:OGG:.
+	ogg := OGG:.
+	ogm := OGG:.
         mpg := MPEG:.
         mpeg := MPEG:.
       }
@@ -142,27 +144,16 @@ enfle {
       ; Associate an extension with an appropriate plugin name.
       assoc {
 	asf := AviFile:.
-	avi := avcodec:.
-	;avi := avcodec:DivX:.
-        ;                   AviFile
+	;avi := AviFile:.
         gif := UNGIF:.
         m1v := MPEG_lib:.
         mng := MNG:.
         mp3 := Mpglib:.
-        mpeg := LibMPEG2:.
-        ;mpeg := .
-        mpg := LibMPEG2:.
-        ;mpg := .
-        ;               LibMPEG3:MPEG_lib
+        ;mpg := LibMPEG3:.
 	wmv := AviFile:.
       }
-      ; video only stream may be played by mpeg_lib.
-      ; system stream(including video and audio) will be played by libmpeg2 or 3.
-      ; mpeg_lib won't play all such streams.
       MPEG_lib/disabled = yes
-      ; libmpeg2 and libmpeg3 both can play mpeg movies.
-      ; You may choose one of these.
-      ;LibMPEG2/disabled = yes
+      ; libmpeg3 plugin is not maintained...
       LibMPEG3/disabled = yes
     }
     saver {
