@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 22:33:26 2001.
- * $Id: avifile.cpp,v 1.13 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 03:50:16 2001.
+ * $Id: avifile.cpp,v 1.14 2001/06/19 08:19:00 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -29,8 +29,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <pthread.h>
 
-#include <avifile.h>
+#include <avifile/avifile.h>
+#include <avifile/version.h>
 
 #include "common.h"
 
@@ -227,7 +229,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       show_message("SetDestFmt() failed.\n");
       goto error;
     }
+    stream->GetVideoFormatInfo(&info->bmih, sizeof(info->bmih));
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION >= 6) || (AVIFILE_MAJOR_VERSION > 0)
+    stream->GetVideoFormatInfo(&info->bmih, sizeof(info->bmih));
+#else
     stream->GetVideoFormatInfo(&info->bmih);
+#endif
+
     m->width  = info->bmih.biWidth;
     m->height = info->bmih.biHeight;
     info->frametime = (int)(stream->GetFrameTime() * 1000);
@@ -387,7 +395,11 @@ play_video(void *arg)
 
     info->stream->ReadFrame();
     info->ci = info->stream->GetFrame();
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION >= 6) || (AVIFILE_MAJOR_VERSION > 0)
+    memcpy(memory_ptr(info->p->rendered.image), info->ci->Data(), info->ci->Bpl() * info->ci->Height());
+#else
     memcpy(memory_ptr(info->p->rendered.image), info->ci->data(), info->ci->bpl() * info->ci->height());
+#endif
 
     info->ds = _DECODED;
     pthread_cond_signal(&info->decoded_cond);
@@ -613,24 +625,24 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   /* see if this avi is supported by avifile */
   rf = CreateIAviReadFile(st->path);
   if (!rf)
-    goto not;
+    goto not_avi;
   if (!rf->StreamCount())
-    goto not;
+    goto not_avi;
 
   if ((audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
     if ((result = audiostream->StartStreaming()) != 0)
-      goto not;
+      goto not_avi;
   }
 
   if ((stream = rf->GetStream(0, IAviReadStream::Video))) {
     if ((result = stream->StartStreaming()) != 0)
-      goto not;
+      goto not_avi;
   }
   delete rf;
 
   return PLAY_OK;
 
- not:
+ not_avi:
   debug_message("AviFile: identify: but not supported by avifile.\n");
   if (rf)
     delete rf;
