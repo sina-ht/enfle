@@ -1,3 +1,29 @@
+2001-04-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e: Updated documentation.
+
+	* configure.in: Added Gamma correction Effect plugin. Version up.
+
+	* plugins/ui/normal/normal.c: Implemented gamma correction
+	interface.
+
+	* plugins/effect/Makefile.am, plugins/effect/gamma/*: New Gamma
+	correction Effect plugin.
+
+	* configure.in: Added wallpaper plugin. Version up.
+
+	* README, README.e: Updated documentation.
+
+	* src/enfle.c: Added new option -w.
+
+	* plugins/video/Xlib/Xlib.c: Handling root window specially.
+
+	* plugins/ui/wallpaper/*: New Wallpaper UI plugin.
+
+	* plugins/ui/normal/normal.c: Cosmetic change.
+
+	* plugins/ui/Makefile.am: Added Wallpaper.
+
 2001-04-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.rc: More new configurations.
