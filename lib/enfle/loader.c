@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 20:29:12 2002.
- * $Id: loader.c,v 1.19 2002/02/08 11:30:53 sian Exp $
+ * Last Modified: Fri Feb  8 21:11:28 2002.
+ * $Id: loader.c,v 1.20 2002/02/08 12:15:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,7 +71,6 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
 	}
 	i++;
       }
-      misc_free_str_array(pluginnames);
     }
     free(ext);
   }
