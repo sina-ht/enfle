@@ -1,114 +1,110 @@
+2001-08-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* vmpm_decompose_escfirst.c: More efficient encoding.
+
+	* vmpm_decompose_esc.c: ESC estimation method A decomposer.
+
+	* vmpm_decompose_normal.c: Cosmetic change.
+
+	* Makefile.am, vmpm_decompose_escb.c: Added ESC estimation method
+	B decomposer.
+
 2001-07-31  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/Makefile.am: Added escfirst and esc.
+	* Makefile.am: Added escfirst and esc.
 
-	* plugins/saver/glic/arithmodel_order_zero.[ch]: Replacable
-	update_region().
+	* arithmodel_order_zero.[ch]: Replacable update_region().
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c: Renamed.
+	* vmpm_decompose_highlow.c: Renamed.
 
-	* plugins/saver/glic/vmpm_decompose_esc.c,
-	plugins/saver/glic/vmpm_decompose_escfirst.c: New files.
+	* vmpm_decompose_esc.c, vmpm_decompose_escfirst.c: New files.
 
 2001-07-17  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/arithmodel_order_zero.[ch],
-	plugins/saver/glic/vmpm_decompose_highlow.c,
-	plugins/saver/glic/vmpm_decompose_normal.c: Added ESCAPE_RUN.
+	* arithmodel_order_zero.[ch], vmpm_decompose_highlow.c,
+	vmpm_decompose_normal.c: Added ESCAPE_RUN.
 
 2001-07-11  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c: Fixed a stupid bug,
-	again.
+	* vmpm_decompose_highlow.c: Fixed a stupid bug, again.
 
 2001-07-11 Hiroshi Takekawa <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c: Fixed a stupid bug.
+	* vmpm_decompose_highlow.c: Fixed a stupid bug.
 
 2001-07-10  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c,
-	plugins/saver/glic/vmpm_decompose_normal.c: Encode from the level
-	where a match is found. Omit the higher part for Threshold-8.
+	* vmpm_decompose_highlow.c, vmpm_decompose_normal.c: Encode from
+	the level where a match is found. Omit the higher part for
+	Threshold-8.
 
-	* plugins/saver/glic/glic.c: Output header.
+	* glic.c: Output header.
 
 2001-07-02 Hiroshi Takekawa <sian@fennel.org>
 
-	* plugins/saver/glic/glic.c, plugins/saver/glic/vmpm.h,
-	plugins/saver/glic/vmpm_decompose_highlow.c,
-	plugins/saver/glic/vmpm_decompose_normal.c: Output statistical
-	information.
+	* glic.c, vmpm.h, vmpm_decompose_highlow.c,
+	vmpm_decompose_normal.c: Output statistical information.
 
-	* plugins/saver/glic/enfle.rc.additional: New configuration
-	is_stat.
+	* enfle.rc.additional: New configuration is_stat.
 
-	* plugins/saver/glic/Makefile.am: Added forgotten files...
+	* Makefile.am: Added forgotten files...
 
 2001-06-28  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c: Added filename to
-	output.
+	* vmpm_decompose_highlow.c: Added filename to output.
 
 2001-06-28 Hiroshi Takekawa <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c: Changed to print
-	out the encoded size of the higher-bit part.
+	* vmpm_decompose_highlow.c: Changed to print out the encoded size
+	of the higher-bit part.
 
-	* plugins/saver/glic/glic.c, plugins/saver/glic/predict.[ch]:
-	Clean up. Prepared to implement JPEG-LS predictor.
+	* glic.c, predict.[ch]: Clean up. Prepared to implement JPEG-LS
+	predictor.
 
-	* plugins/saver/glic/enfle.rc.additional: New file.
+	* enfle.rc.additional: New file.
 
 2001-06-19  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_token2.c: Fixed stupid bug.
+	* vmpm_decompose_token2.c: Fixed stupid bug.
 
 2001-06-03  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/predict.c: Implemented paeth predictor.
+	* predict.c: Implemented paeth predictor.
 
 2001-05-23  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/predict.c, plugins/saver/glic/predict.h,
-	plugins/saver/glic/scan.c, plugins/saver/glic/scan.h,
-	plugins/saver/glic/vmpm_decompose_highlow.c,
-	plugins/saver/glic/Makefile.am, plugins/saver/glic/floorlog2.c,
-	plugins/saver/glic/floorlog2.h, plugins/saver/glic/glic.c:
-	Implemented prediction.
+	* predict.[ch], scan.[ch], vmpm_decompose_highlow.c, Makefile.am,
+	floorlog2.[ch], glic.c: Implemented prediction.
 
 2001-05-04  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c: More efficient low
-	bits coding by conditioning with the corresponding higher bits.
+	* vmpm_decompose_highlow.c: More efficient low bits coding by
+	conditioning with the corresponding higher bits.
 
-	* plugins/saver/glic/glic.c: More strict scan_method
-	check. Changed nlowbits default from 2 to 4.
+	* glic.c: More strict scan_method check. Changed nlowbits default
+	from 2 to 4.
 
 2001-04-30  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/glic.c, plugins/saver/glic/vmpm.h,
-	plugins/saver/glic/vmpm_decompose_highlow.c: Parameter passing.
+	* glic.c, vmpm.h, vmpm_decompose_highlow.c: Parameter passing.
 
 2001-04-28  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c,
-	plugins/saver/glic/vmpm_decompose_normal.c: Bug fix.
+	* vmpm_decompose_highlow.c, vmpm_decompose_normal.c: Bug fix.
 
 2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/vmpm_decompose_highlow.c,
-	plugins/saver/glic/Makefile.am: Added new VMPM HighLow Decomposer.
+	* vmpm_decompose_highlow.c, Makefile.am: Added new VMPM HighLow
+	Decomposer.
 
 2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/glic.c: Fixed a parameter I of MPM(r,I).
+	* glic.c: Fixed a parameter I of MPM(r,I).
 
 2001-04-21  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/*: Added rcs Id header.
+	* *: Added rcs Id header.
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/*: Implemented new Saver: GLIC. This is for
-	my research only.
+	* *: Implemented new Saver: GLIC. This is for my research only.
