@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Aug 10 02:22:45 2001.
- * $Id: x11window.c,v 1.6 2001/08/09 17:33:20 sian Exp $
+ * Last Modified: Tue Aug 14 16:50:58 2001.
+ * $Id: x11window.c,v 1.7 2001/08/15 06:36:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -125,6 +125,7 @@ wait_mapped(X11Window *xw)
 static void
 destroy(X11Window *xw)
 {
-  x11_destroy_window(xw->x11, xw->win);
+  if (xw->win != x11_root(xw->x11))
+    x11_destroy_window(xw->x11, xw->win);
   free(xw);
 }
