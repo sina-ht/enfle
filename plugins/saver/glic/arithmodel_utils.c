@@ -1,8 +1,8 @@
 /*
  * arithmodel_utils.c -- Utility functions
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Apr  3 18:47:53 2001.
- * $Id: arithmodel_utils.c,v 1.1 2001/04/18 05:43:31 sian Exp $
+ * Last Modified: Mon Aug  6 02:14:50 2001.
+ * $Id: arithmodel_utils.c,v 1.2 2001/08/06 04:58:06 sian Exp $
  */
 
 #include "arithcoder.h"
@@ -140,6 +140,11 @@ arithmodel_encode_cbt(Arithmodel *am, unsigned int n, unsigned int nmax, Index b
 {
   int k = calc_num_of_figures(nmax + 1);
   unsigned int kn = (1 << k) - (nmax + 1);
+
+  if (n > nmax) {
+    fprintf(stderr, __FUNCTION__ ": n = %d > %d = nmax\n", n, nmax);
+    return -1;
+  }
 
   if (n < kn) {
     arithmodel_encode_bits(am, n, k - 1, bit0, bit1);
