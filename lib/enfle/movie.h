@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  4 22:35:02 2002.
- * $Id: movie.h,v 1.18 2002/03/04 20:22:42 sian Exp $
+ * Last Modified: Thu Mar  7 17:47:13 2002.
+ * $Id: movie.h,v 1.19 2002/03/07 15:17:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,6 +38,7 @@ typedef enum {
   _STOP,
   _PAUSE,
   _PLAY,
+  _RESIZING,
   _UNLOADED
 } MovieStatus;
 
@@ -85,6 +86,7 @@ struct _movie {
 #define movie_pause(m) (m)->pause_movie((m))
 #define movie_stop(m) (m)->stop((m))
 #define movie_unload(m) (m)->unload((m))
+#define movie_resize(m) (m)->status = _RESIZING
 #define movie_set_play_every_frame(m, f) (m)->set_play_every_frame((m), (f))
 #define movie_get_play_every_frame(m) (m)->get_play_every_frame((m))
 #define movie_destroy(m) (m)->destroy((m))

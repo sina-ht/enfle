@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 04:28:01 2002.
- * $Id: Xlib.c,v 1.44 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Fri Mar  8 00:07:03 2002.
+ * $Id: Xlib.c,v 1.45 2002/03/07 15:17:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,7 +48,10 @@
 #define WAIT_CURSOR XC_watch
 #define NORMAL_CURSOR XC_arrow
 
-static Cursor normal_cursor, wait_cursor;
+static Cursor normal_cursor, wait_cursor, invisible_cursor;
+static unsigned char invisible_cursor_data[] = {
+  0, 0, 0, 0, 0, 0, 0, 0
+};
 
 #include "Xlib.h"
 
@@ -173,6 +176,8 @@ open_video(void *data, Config *c)
 {
   Xlib_info *p;
   char *dsp = (char *)data;
+  Pixmap invisible_pixmap;
+  XColor black, dummy;
 
   if ((p = calloc(1, sizeof(Xlib_info))) == NULL)
     return NULL;
@@ -184,6 +189,10 @@ open_video(void *data, Config *c)
 
   wait_cursor = XCreateFontCursor(x11_display(p->x11), WAIT_CURSOR);
   normal_cursor = XCreateFontCursor(x11_display(p->x11), NORMAL_CURSOR);
+  invisible_pixmap = XCreateBitmapFromData(x11_display(p->x11), x11_root(p->x11), invisible_cursor_data, 8, 8);
+  XAllocNamedColor(x11_display(p->x11), DefaultColormapOfScreen(x11_sc(p->x11)), "black", &black, &dummy);
+  invisible_cursor = XCreatePixmapCursor(x11_display(p->x11), invisible_pixmap, invisible_pixmap, &black, &black, 0, 0);
+  XFreePixmap(x11_display(p->x11), invisible_pixmap);
 
   p->c = c;
   p->root = open_window(p, NULL, 0, 0);
@@ -594,12 +603,14 @@ set_event_mask(VideoWindow *vw, int mask)
   if (mask & ENFLE_KeyMask)
     x_mask |= (KeyPressMask | KeyReleaseMask);
   if (mask & ENFLE_PointerMask)
-    x_mask |= ButtonMotionMask;
+    x_mask |= PointerMotionMask;
   if (mask & ENFLE_WindowMask)
-    x_mask |= VisibilityChangeMask;
+    x_mask |= (EnterWindowMask | LeaveWindowMask);
 
   /* needs for wait_mapped() */
   x_mask |= StructureNotifyMask;
+
+  /* x_mask |= VisibilityChangeMask; */
 
   x11_lock(x11);
   x11window_set_event_mask(xw, x_mask);
@@ -773,6 +784,14 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 				 PointerMotionMask, &xev));
       ret = 1;
       break;
+    case EnterNotify:
+      ev->type = ENFLE_Event_EnterWindow;
+      ret = 1;
+      break;
+    case LeaveNotify:
+      ev->type = ENFLE_Event_LeaveWindow;
+      ret = 1;
+      break;
     case ConfigureNotify:
       {
 	XConfigureEvent *xcev = (XConfigureEvent *)&ev;
@@ -782,9 +801,11 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
       }
       ret = 1;
       break;
+#if 0
     case VisibilityNotify:
       ret = 0;
       break;
+#endif
     default:
       ret = 0;
       break;
@@ -819,9 +840,14 @@ set_cursor(VideoWindow *vw, VideoWindowCursor vc)
   switch (vc) {
   case _VIDEO_CURSOR_NORMAL:
     XDefineCursor(x11_display(x11), x11window_win(xw), normal_cursor);
+    XFlush(x11_display(x11));
     break;
   case _VIDEO_CURSOR_WAIT:
     XDefineCursor(x11_display(x11), x11window_win(xw), wait_cursor);
+    XFlush(x11_display(x11));
+    break;
+  case _VIDEO_CURSOR_INVISIBLE:
+    XDefineCursor(x11_display(x11), x11window_win(xw), invisible_cursor);
     XFlush(x11_display(x11));
     break;
   }
@@ -907,7 +933,7 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
       X11Window *p_xw = vw->parent->if_fullscreen ? p_xwi->full.xw : p_xwi->normal.xw;
 
       xwi->full.xw = x11window_create(x11, p_xw, vw->full_width, vw->full_height);
-      x11window_set_event_mask(xwi->full.xw, ExposureMask | ButtonPressMask | ButtonReleaseMask | ButtonMotionMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
+      x11window_set_event_mask(xwi->full.xw, ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask);
       xwi->full.pix = x11_create_pixmap(x11, x11window_win(xw), vw->render_width, vw->render_height, x11_depth(x11));
       xwi->full.gc = x11_create_gc(x11, xwi->full.pix, 0, 0);
       XSetFont(x11_display(x11), xwi->full.gc, xwi->caption_font);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:47:43 2002.
- * $Id: normal.c,v 1.61 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Fri Mar  8 00:07:34 2002.
+ * $Id: normal.c,v 1.62 2002/03/07 15:17:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,6 +32,8 @@
 
 #include "utils/libstring.h"
 #include "utils/misc.h"
+#include "utils/timer.h"
+#include "utils/timer_gettimeofday.h"
 #include "enfle/ui-plugin.h"
 #include "enfle/loader.h"
 #include "enfle/player.h"
@@ -99,6 +101,7 @@ typedef struct _main_loop {
   Image *original_p;
   Image *p;
   Movie *m;
+  Timer *timer;
   char *path;
   VideoButton pointed_button;
   unsigned int old_x, old_y;
@@ -357,17 +360,21 @@ main_loop_toggle_interpolate(MainLoop *ml)
 static int
 main_loop_magnify_main(MainLoop *ml)
 {
+  VideoWindow *vw = ml->vw;
   Image *p = ml->p;
+  Movie *m = ml->m;
 
   if (p) {
-    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
+    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 
-    magnify_if_requested(ml->vw, p);
-    video_window_resize(ml->vw, p->magnified.width, p->magnified.height);
-    video_window_set_offset(ml->vw, 0, 0);
-    video_window_render(ml->vw, p);
+    magnify_if_requested(vw, p);
+    video_window_resize(vw, p->magnified.width, p->magnified.height);
+    video_window_set_offset(vw, 0, 0);
+    video_window_render(vw, p);
 
-    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
+    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+  } else if (m) {
+    movie_resize(m);
   }
 
   return 1;
@@ -684,6 +691,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   ml.vw = vw;
   ml.m = m;
   ml.p = p;
+  ml.timer = enfle_timer_create(timer_gettimeofday());
   ml.st = st;
   ml.a = a;
   ml.path = path;
@@ -709,6 +717,11 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 
   ml.ret = MAIN_LOOP_DO_NOTHING;
   while (ml.ret == MAIN_LOOP_DO_NOTHING) {
+    if (timer_is_running(ml.timer) && timer_get(ml.timer) >= 2) {
+      /* Pointer is inside window and has been stopped 2seconds */
+      video_window_set_cursor(vw, _VIDEO_CURSOR_INVISIBLE);
+      timer_stop(ml.timer);
+    }
     if (video_window_dispatch_event(vw, &ml.ev)) {
       switch (ml.ev.type) {
       case ENFLE_Event_ButtonPressed:
@@ -727,6 +740,14 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 	break;
       case ENFLE_Event_PointerMoved:
 	main_loop_pointer_moved(&ml);
+	timer_start(ml.timer);
+	video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+	break;
+      case ENFLE_Event_EnterWindow:
+	timer_start(ml.timer);
+	break;
+      case ENFLE_Event_LeaveWindow:
+	timer_stop(ml.timer);
 	break;
       default:
 	break;
@@ -758,8 +779,11 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
     if (m) {
       switch (m->status) {
       case _PLAY:
+      case _RESIZING:
 	if (movie_play_main(m, vw) != PLAY_OK) {
 	  show_message_fnc("movie_play_main() failed.\n");
+	  if (ml.timer)
+	    timer_destroy(ml.timer);
 	  return MAIN_LOOP_NEXT;
 	}
 	break;
@@ -771,7 +795,11 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 	break;
       case _UNLOADED:
 	show_message("Movie has been already unloaded.\n");
+	if (ml.timer)
+	  timer_destroy(ml.timer);
 	return MAIN_LOOP_NEXT;
+      default:
+	break;
       }
       if (caption_to_be_set) {
 	set_caption_string(&ml);
@@ -782,6 +810,8 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 
   if (ml.original_p)
     image_destroy(ml.original_p);
+  if (ml.timer)
+    timer_destroy(ml.timer);
 
   return ml.ret;
 }
@@ -997,7 +1027,7 @@ ui_main(UIData *uidata)
 
   video_window_set_event_mask(vw,
 			      ENFLE_ExposureMask | ENFLE_ButtonMask |
-			      ENFLE_KeyMask | ENFLE_PointerMask); /* ENFLE_WindowMask */
+			      ENFLE_KeyMask | ENFLE_PointerMask | ENFLE_WindowMask);
 
   if ((render_method = config_get(c, "/enfle/plugins/ui/normal/render")) != NULL) {
     if (!strcasecmp(render_method, "normal")) {

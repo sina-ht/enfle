@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:42:46 2002.
- * $Id: video.h,v 1.19 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Thu Mar  7 23:29:57 2002.
+ * $Id: video.h,v 1.20 2002/03/07 15:17:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -73,6 +73,8 @@ typedef enum {
   ENFLE_Event_KeyPressed,
   ENFLE_Event_KeyReleased,
   ENFLE_Event_PointerMoved,
+  ENFLE_Event_EnterWindow,
+  ENFLE_Event_LeaveWindow,
   ENFLE_Event_WindowConfigured
 } VideoEventType;
 
@@ -118,7 +120,8 @@ typedef enum _videorendermethod {
 
 typedef enum _videowindowcursor {
   _VIDEO_CURSOR_NORMAL,
-  _VIDEO_CURSOR_WAIT
+  _VIDEO_CURSOR_WAIT,
+  _VIDEO_CURSOR_INVISIBLE
 } VideoWindowCursor;
 
 #define VIDEO_COLORSPACE_RGB (1 << 0)

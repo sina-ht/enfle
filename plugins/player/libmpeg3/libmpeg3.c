@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  4 22:34:31 2002.
- * $Id: libmpeg3.c,v 1.38 2002/03/04 20:22:42 sian Exp $
+ * Last Modified: Thu Mar  7 18:10:46 2002.
+ * $Id: libmpeg3.c,v 1.39 2002/03/07 15:17:50 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -481,6 +481,19 @@ play_main(Movie *m, VideoWindow *vw)
 
   switch (m->status) {
   case _PLAY:
+    break;
+  case _RESIZING:
+    video_window_resize(vw, m->rendering_width, m->rendering_height);
+    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+
+    if (info->use_xv) {
+      m->rendering_width  = m->width;
+      m->rendering_height = m->height;
+    } else {
+      m->rendering_width  = p->magnified.width;
+      m->rendering_height = p->magnified.height;
+    }
+    m->status = _PLAY;
     break;
   case _PAUSE:
   case _STOP:

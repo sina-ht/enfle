@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 04:17:28 2002.
- * $Id: libmpeg2.c,v 1.32 2002/03/06 19:31:31 sian Exp $
+ * Last Modified: Thu Mar  7 18:11:08 2002.
+ * $Id: libmpeg2.c,v 1.33 2002/03/07 15:17:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -489,6 +489,19 @@ play_main(Movie *m, VideoWindow *vw)
 
   switch (m->status) {
   case _PLAY:
+    break;
+  case _RESIZING:
+    video_window_resize(vw, m->rendering_width, m->rendering_height);
+    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+
+    if (info->use_xv) {
+      m->rendering_width  = m->width;
+      m->rendering_height = m->height;
+    } else {
+      m->rendering_width  = p->magnified.width;
+      m->rendering_height = p->magnified.height;
+    }
+    m->status = _PLAY;
     break;
   case _PAUSE:
   case _STOP:
