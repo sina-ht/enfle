@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 29 03:57:49 2001.
- * $Id: wallpaper.c,v 1.5 2001/07/29 00:41:05 sian Exp $
+ * Last Modified: Sat Oct 13 00:53:39 2001.
+ * $Id: wallpaper.c,v 1.6 2001/10/14 12:36:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -200,7 +200,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   if (!(path = archive_iteration_start(a)))
     return 1;
 
-  r = identify_file(eps, path, s, a);
+  r = identify_file(eps, path, s, a, c);
   switch (r) {
   case IDENTIFY_FILE_DIRECTORY:
     arc = archive_create(a);
