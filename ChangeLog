@@ -1,3 +1,18 @@
+2002-03-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
+	plugins/player/mpeg_lib/mpeg_lib.c,
+	plugins/player/mpglib/mpglib.c,
+	plugins/player/opendivx/opendivx.c, plugins/player/ungif/ungif.c:
+	Avoid switch warnings.
+
+	* Makefile.am: Include macros/ to a distribution.
+
+2002-03-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* NEWS: Updated NEWS.
+
 2002-03-07  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/movie.h, lib/enfle/video.h,
