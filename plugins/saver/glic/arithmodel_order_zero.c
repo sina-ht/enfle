@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 22:10:12 2001.
- * $Id: arithmodel_order_zero.c,v 1.6 2001/08/09 17:28:48 sian Exp $
+ * Last Modified: Wed Aug 15 18:06:57 2001.
+ * $Id: arithmodel_order_zero.c,v 1.7 2001/08/26 00:58:18 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,6 +40,25 @@ default_update_escape_freq(Arithmodel *_am, Index index)
     am->freq[i]++;
 
   return 1;
+}
+
+static void
+normalize_freq(Arithmodel *_am)
+{
+  Arithmodel_order_zero *am = (Arithmodel_order_zero *)_am;
+  int i;
+
+  if (am->freq[am->nsymbols - 1] >= FREQ_MAX) {
+    Freq cum, freq;
+
+    cum = (am->freq[0] + 1) >> 1;
+    for (i = 1; i < am->nsymbols; i++) {
+      freq = (am->freq[i] - am->freq[i - 1] + 1) >> 1;
+      am->freq[i - 1] = cum;
+      cum += freq;
+    }
+    am->freq[i - 1] = cum;
+  }
 }
 
 static void
@@ -236,17 +255,7 @@ update_freq(Arithmodel *_am, Index index)
       am->freq[i]++;
   }
 
-  if (am->freq[am->nsymbols - 1] == FREQ_MAX) {
-    Freq cum, freq;
-
-    cum = (am->freq[0] + 1) >> 1;
-    for (i = 1; i < am->nsymbols; i++) {
-      freq = (am->freq[i] - am->freq[i - 1] + 1) >> 1;
-      am->freq[i - 1] = cum;
-      cum += freq;
-    }
-    am->freq[i - 1] = cum;
-  }
+  normalize_freq(_am);
 }
 
 static int
