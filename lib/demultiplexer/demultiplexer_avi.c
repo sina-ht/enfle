@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 16 22:57:48 2003.
- * $Id: demultiplexer_avi.c,v 1.21 2003/12/16 16:55:23 sian Exp $
+ * Last Modified: Fri Dec 26 12:06:37 2003.
+ * $Id: demultiplexer_avi.c,v 1.22 2003/12/27 14:25:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -351,7 +351,7 @@ demux_main(void *arg)
 
     p = riff_chunk_get_name(rc);
     nstream = (p[0] - '0') * 10 + (p[1] - '0');
-    if (p[2] == 'd' && p[3] == 'c') {
+    if (p[2] == 'd' && (p[3] == 'c' || p[3] == 'b')) {
       /* video data */
       if (nstream == info->nvstream) {
 	if (!riff_file_read_data(info->rf, rc))
