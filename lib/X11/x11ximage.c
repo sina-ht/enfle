@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Oct  7 15:51:44 2001.
- * $Id: x11ximage.c,v 1.40 2001/10/07 17:35:26 sian Exp $
+ * Last Modified: Sat Oct 13 13:12:47 2001.
+ * $Id: x11ximage.c,v 1.41 2001/10/14 12:28:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -193,7 +193,9 @@ convert(X11XImage *xi, Image *p)
   case _YV12:
     //debug_message("Image provided in YV12.\n");
     if (xi->x11->xv->capable_format & XV_YV12_FLAG) {
-      t = XV_YV12;
+      /* XXX: hmm... */
+      //t = XV_YV12;
+      t = XV_I420;
       xi->use_xv = 1;
     } else {
       fatal(4, "Xv cannot display YV12...\n");
@@ -631,20 +633,20 @@ convert(X11XImage *xi, Image *p)
 		  xvimage->id, xvimage->width, xvimage->height,
 		  xvimage->data_size, xvimage->num_planes, xi->x11->xv->bits_per_pixel[xi->format_num]);
     debug_message(__FUNCTION__ ": XvImage:  pitch/offset: ");
-    for (i = 0; i < xvimage->num_planes; i++)
+    for (i = 0; i < (unsigned int)xvimage->num_planes; i++)
       debug_message("%d/%d ", xvimage->pitches[i], xvimage->offsets[i]);
     debug_message("\n");
 
     if (memory_alloc(p->rendered.image, xvimage->data_size) == NULL)
       fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
     if (xvimage->num_planes == 3) {
-      if (xvimage->pitches[0] == p->width &&
-	  xvimage->pitches[1] == p->width >> 1 &&
-	  xvimage->pitches[2] == p->width >> 1) {
+      if (xvimage->pitches[0] == (int)p->width &&
+	  xvimage->pitches[1] == (int)p->width >> 1 &&
+	  xvimage->pitches[2] == (int)p->width >> 1) {
 	debug_message(__FUNCTION__ ": XvImage:  pitch OK\n");
 	if (xvimage->offsets[0] == 0 &&
-	    xvimage->offsets[1] == p->width * p->height &&
-	    xvimage->offsets[2] == p->width * p->height + ((p->width * p->height) >> 2)) {
+	    xvimage->offsets[1] == (int)(p->width * p->height) &&
+	    xvimage->offsets[2] == (int)(p->width * p->height + ((p->width * p->height) >> 2))) {
 	  debug_message(__FUNCTION__ ": XvImage:  offset OK\n");
 	} else {
 	  fatal(4, __FUNCTION__ ": XvImage:  offset NG: %d %d %d <-> %d %d %d\n",
@@ -657,7 +659,7 @@ convert(X11XImage *xi, Image *p)
 	      p->width, p->width >> 1, p->width >> 1);
       }
     } else if (xvimage->num_planes == 1) {
-      if (xvimage->pitches[0] == p->width << 1) {
+      if (xvimage->pitches[0] == (int)p->width << 1) {
 	debug_message(__FUNCTION__ ": XvImage:  pitch OK\n");
 	if (xvimage->offsets[0] == 0) {
 	  debug_message(__FUNCTION__ ": XvImage:  offset OK\n");
