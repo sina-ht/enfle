@@ -1,3 +1,12 @@
+2001-10-10  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/kernel32.c: Added API(stub)s: MapViewOfFile,
+	MapViewOfFileEx, UnmapViewOfFile, CreateFileMappingA,
+	SetEndOfFile, lstrcmpiA, IsDBCSLeadByte.
+
+	* lib/dllloader/pe_image.c: Clean up LDT related code. Use
+	FirstThunk when OriginalFirstThunk is 0.
+
 2001-10-09  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, lib/utils/Makefile.am, lib/utils/converter.c:
