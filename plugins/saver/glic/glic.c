@@ -1,11 +1,12 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug 14 21:40:15 2001.
- * $Id: glic.c,v 1.12 2001/08/15 06:40:54 sian Exp $
+ * Last Modified: Mon Aug 20 19:06:01 2001.
+ * $Id: glic.c,v 1.13 2001/08/26 01:05:24 sian Exp $
  */
 
 #include <stdlib.h>
+#include <math.h>
 
 #include <sys/stat.h>
 #include <errno.h>
@@ -72,15 +73,15 @@ DEFINE_SAVER_PLUGIN_GET_EXT(c)
 DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 {
   VMPM vmpm;
-  unsigned char *s, *predicted;
+  unsigned char *predicted;
   unsigned int image_size;
   char *path;
   char *vmpm_path;
   char *predict_method, *decompose_method, *scan_method;
   PredictType predict_id;
-  int scan_id;
+  int scan_id, bitwise;
   int count, result;
-  int b;
+  int i, b;
 
   if (p->width != p->height) {
     show_message("width %d != %d height\n", p->width, p->height);
@@ -111,8 +112,11 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     return 0;
   }
 
-  image_size = p->width * p->height;
+  bitwise = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/bitwise", &result);
+  if (!result)
+    bitwise = 0;
 
+  image_size = p->width * p->height;
   vmpm_path = (char *)config_get(c, "/enfle/plugins/saver/glic/vmpm_path");
   decompose_method = (char *)config_get(c, "/enfle/plugins/saver/glic/decompose_method");
   predict_method = (char *)config_get(c, "/enfle/plugins/saver/glic/predict_method");
@@ -125,12 +129,18 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     vmpm.r = 2;
   vmpm.I = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/I", &result);
   if (!result || vmpm.I == 0) {
-    /* calculate the maximum value of I. */
-    unsigned int t;
+#if 0
+    unsigned int t, Imax;
 
-    for (vmpm.I = 0, t = image_size; t > 1; vmpm.I++)
+    /* calculate the maximum value of I. */
+    for (Imax = 0, t = image_size; t > 1; Imax++)
       t /= vmpm.r;
-    debug_message("glic: Max I = %d\n", vmpm.I);
+    debug_message("glic: Max I = %d\n", Imax);
+#endif
+
+    /* calculate the recommended value of I. */
+    vmpm.I = log(log(image_size) / log(vmpm.r)) / log(vmpm.r);
+    debug_message("glic: Recommended I = %d\n", vmpm.I);
   }
   vmpm.nlowbits = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/nlowbits", &result);
   if (!result)
@@ -159,7 +169,6 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   }
 
   vmpm.decomposer->init(&vmpm);
-  s = memory_ptr(p->image);
   if ((vmpm.buffer = malloc(image_size)) == NULL)
     memory_error(NULL, MEMORY_ERROR);
   vmpm.buffersize = image_size;
@@ -170,7 +179,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     show_message("Invalid prediction method: %s\n", predict_method);
     return 0;
   }
-  predicted = predict(s, p->width, p->height, predict_id);
+  predicted = predict(memory_ptr(p->image), p->width, p->height, predict_id);
 
   /* scanning */
   if ((scan_id = scan_get_id_by_name(scan_method)) == 0) {
@@ -179,6 +188,28 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   }
   scan(vmpm.buffer, predicted, p->width, p->height, scan_id);
   free(predicted);
+
+  if (bitwise) {
+    unsigned char *tmp;
+
+    if ((tmp = malloc(image_size)) == NULL)
+      memory_error(NULL, MEMORY_ERROR);
+    memcpy(tmp, vmpm.buffer, image_size);
+    free(vmpm.buffer);
+    image_size <<= 3;
+    if ((vmpm.buffer = malloc(image_size)) == NULL)
+      memory_error(NULL, MEMORY_ERROR);
+    /* Expand into bits. */
+    for (i = 0; i < p->width * p->height; i++) {
+      unsigned char c = tmp[i];
+      for (b = 0; b < 8; b++) {
+	vmpm.buffer[i * 8 + b] = (c & 0x80) ? 1 : 0;
+	c <<= 1;
+      }
+    }
+    vmpm.alphabetsize = 2;
+    vmpm.bits_per_symbol = 1;
+  }
 
   vmpm.bufferused = image_size;
   result = vmpm.decomposer->decompose(&vmpm, 0, vmpm.I, vmpm.bufferused);
