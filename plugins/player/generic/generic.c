@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  1 21:00:39 2004.
- * $Id: generic.c,v 1.16 2004/05/15 04:10:16 sian Exp $
+ * Last Modified: Wed Jun 16 01:15:49 2004.
+ * $Id: generic.c,v 1.17 2004/06/15 16:16:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   .type = ENFLE_PLUGIN_PLAYER,
   .name = "generic",
-  .description = "generic Player plugin version 0.2.1",
+  .description = "generic Player plugin version 0.3",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -339,7 +339,7 @@ static int
 get_audio_time(Movie *m, AudioDevice *ad)
 {
   if (ad && m->ap->bytes_written)
-    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
+    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels) + m->timer_offset;
   return (int)((double)m->current_sample * 1000 / m->samplerate);
 }
 
@@ -390,9 +390,10 @@ play_video(void *arg)
 	destructor(dp);
       dp = (DemuxedPacket *)data;
 
-#if 0
+#if defined(DEBUG) && 0
       {
 	unsigned long pts, dts, psec, pusec, dsec, dusec;
+
 	pts = dp->pts;
 	dts = dp->dts;
 	if (pts != -1) {
@@ -483,9 +484,28 @@ play_audio(void *arg)
 	p = dp->data;
 	remain = dp->size;
       }
-#if 0
-      else {
-	debug_message_fnc("Use remaining %d bytes\n", remain);
+
+#if 1
+      {
+	unsigned long pts, dts;
+	pts = dp->pts;
+	dts = dp->dts;
+	if (pts != -1) {
+	  if (!m->timer_offset_set) {
+	    m->timer_offset_set = 1;
+	    m->timer_offset = pts / 90;
+	    debug_message_fnc("timer_offset = %d\n", m->timer_offset);
+	  }
+#if defined(DEBUG) && 0
+	  {
+	    unsigned long psec, pusec, dsec, dusec;
+
+	    TS_TO_CLOCK(psec, pusec, pts, dp->ts_base);
+	    TS_TO_CLOCK(dsec, dusec, dts, dp->ts_base);
+	    debug_message_fnc("pts %ld.%ld dts %ld.%ld\n", psec, pusec, dsec, dusec);
+	  }
+#endif
+	}
       }
 #endif
 
