@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 22:19:43 2001.
- * $Id: demultiplexer_mpeg.c,v 1.11 2001/06/22 17:34:42 sian Exp $
+ * Last Modified: Sun Jun 24 10:55:49 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.12 2001/06/24 15:42:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,7 +70,7 @@ examine(Demultiplexer *demux)
 {
   MpegInfo *info = (MpegInfo *)demux->private_data;
   unsigned char *buf, id;
-  int read_total, read_size, used_size, skip;
+  int read_total, read_size, used_size, used_size_prev = 0, skip;
   int nvstream, nastream;
   int vstream, astream;
 
@@ -89,7 +89,8 @@ examine(Demultiplexer *demux)
 
   do {
     if (read_total < DEMULTIPLEXER_MPEG_DETERMINE_SIZE) {
-      if ((read_size = stream_read(info->st, buf + used_size, DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
+      if ((read_size = stream_read(info->st, buf + used_size,
+				   DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
 	show_message(__FUNCTION__ ": read error.\n");
 	goto error;
       }
@@ -97,13 +98,16 @@ examine(Demultiplexer *demux)
       read_total += read_size;
     }
 
-    if (read_total >= DEMULTIPLEXER_MPEG_DETERMINE_SIZE && used_size <= 12) {
-      if (info->ver == 0) {
-	debug_message(__FUNCTION__ ": determined as not MPEG.\n");
-	goto error;
-      } else {
-	break;
+    if (read_total >= DEMULTIPLEXER_MPEG_DETERMINE_SIZE) {
+      if (used_size <= 12 || used_size_prev == used_size) {
+	if (info->ver == 0) {
+	  debug_message(__FUNCTION__ ": determined as not MPEG.\n");
+	  goto error;
+	} else {
+	  break;
+	}
       }
+      used_size_prev = used_size;
     }
 
     if (buf[0]) {
@@ -208,7 +212,7 @@ examine(Demultiplexer *demux)
   return 0;
 }
 
-static unsigned long
+static inline unsigned long
 get_timestamp(unsigned char *p)
 {
   unsigned long t;
@@ -243,8 +247,8 @@ demux_main(void *arg)
   MpegInfo *info = (MpegInfo *)demux->private_data;
   MpegPacket *mp;
   unsigned char *buf, id;
-  int read_total, read_size, used_size, skip;
-  int nvstream, nastream;
+  int read_total, read_size, used_size, used_size_prev = 0, skip;
+  int nvstream = 0, nastream = 0;
   int v_or_a;
 
   if ((buf = malloc(DEMULTIPLEXER_MPEG_BUFFER_SIZE)) == NULL)
@@ -255,18 +259,19 @@ demux_main(void *arg)
   demux->running = 1;
 
   do {
-    if ((read_size = stream_read(info->st, buf + used_size, DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
+    if ((read_size = stream_read(info->st, buf + used_size,
+				 DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
       show_message(__FUNCTION__ ": read error.\n");
       goto error;
     }
+    used_size += read_size;
+    read_total += read_size;
     if (read_size == 0) {
-      if (used_size < 4) {
+      if (used_size <= 12 || used_size_prev == used_size) {
 	demultiplexer_set_eof(demux, 1);
 	break;
       }
-    } else {
-      used_size += read_size;
-      read_total += read_size;
+      used_size_prev = used_size;
     }
 
     if (buf[0]) {
@@ -360,7 +365,7 @@ demux_main(void *arg)
 	} else {
 	  unsigned char *p;
 	  int pts_dts_flag;
-	  unsigned long pts, dts;
+	  unsigned long pts = 0, dts = 0;
 
 	  for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
 	  if ((*p & 0xc0) == 0x40) {
