@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 14:31:53 2001.
- * $Id: demultiplexer_avi.c,v 1.5 2001/09/20 05:32:49 sian Exp $
+ * Last Modified: Sun Sep 23 16:20:17 2001.
+ * $Id: demultiplexer_avi.c,v 1.6 2001/09/23 17:12:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -160,7 +160,7 @@ examine(Demultiplexer *demux)
   info->sheight = mah.dwHeight;
   info->rate = mah.dwRate;
   info->length = mah.dwLength;
-  info->framerate = 1000000 / mah.dwMicroSecPerFrame;
+  info->framerate = 1000000.0 / mah.dwMicroSecPerFrame;
 
   for (i = 0; i < mah.dwStreams; i++) {
     _READ_CHUNK_HEADER(info->rf, rc);
