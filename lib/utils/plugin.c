@@ -1,10 +1,10 @@
 /*
  * plugin.c -- plugin interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 02:53:37 2002.
- * $Id: plugin.c,v 1.9 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Wed Jul 10 22:16:07 2002.
+ * $Id: plugin.c,v 1.10 2002/08/02 14:01:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,6 +55,23 @@ plugin_create(void)
   return p;
 }
 
+Plugin *
+plugin_create_from_static(void *(*plugin_entry)(void), void (*plugin_exit)(void *))
+{
+  Plugin *p = plugin_create();
+
+  if (!p)
+    return NULL;
+
+  p->handle = NULL;
+  p->filepath = NULL;
+  if (plugin_entry)
+    p->substance = plugin_entry();
+  p->substance_unload = plugin_exit;
+
+  return p;
+}
+
 static int
 load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbol)
 {
@@ -66,7 +83,7 @@ load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbo
   }
 
   if ((p->filepath = strdup(filepath)) == NULL)
-    fprintf(stderr, "No enough memory to keep a plugin filepath: %s\n", filepath);
+    err_message("No enough memory to keep a plugin filepath: %s\n", filepath);
 
   if (entry_symbol) {
     entry = (void *(*)(void))dlsym(p->handle, entry_symbol);

@@ -1,10 +1,10 @@
 /*
  * plugin.h -- plugin interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 06:00:40 2000.
- * $Id: plugin.h,v 1.2 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sun Jun 23 16:15:02 2002.
+ * $Id: plugin.h,v 1.3 2002/08/02 14:01:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,5 +43,6 @@ struct _plugin {
 #define plugin_destroy(p) (p)->destroy(p)
 
 Plugin *plugin_create(void);
+Plugin *plugin_create_from_static(void *(*)(void), void (*)(void *));
 
 #endif
