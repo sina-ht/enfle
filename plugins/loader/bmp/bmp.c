@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:30:53 2002.
- * $Id: bmp.c,v 1.10 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Sat May  4 23:23:23 2002.
+ * $Id: bmp.c,v 1.11 2002/05/04 14:36:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,6 +27,8 @@
 #include "compat.h"
 #include "common.h"
 
+#define UTILS_NEED_GET_LITTLE_UINT32
+#define UTILS_NEED_GET_LITTLE_UINT16
 #include "enfle/utils.h"
 #include "enfle/stream-utils.h"
 #include "enfle/loader-plugin.h"

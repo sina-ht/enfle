@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:07:15 2001.
- * $Id: demultiplexer_mpeg.c,v 1.20 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Sat May  4 23:21:51 2002.
+ * $Id: demultiplexer_mpeg.c,v 1.21 2002/05/04 14:36:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,6 +32,7 @@
 #endif
 
 #include "demultiplexer_mpeg.h"
+#define UTILS_NEED_GET_BIG_UINT16
 #include "enfle/utils.h"
 
 DECLARE_DEMULTIPLEXER_METHODS;

@@ -1,10 +1,10 @@
 /*
  * utils.h -- utility functions header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 26 00:56:14 2001.
- * $Id: utils.h,v 1.5 2001/07/29 00:38:59 sian Exp $
+ * Last Modified: Sat May  4 23:25:47 2002.
+ * $Id: utils.h,v 1.6 2002/05/04 14:36:00 sian Exp $
  *
  * Note: common.h should be included before including this header.
  *
@@ -25,6 +25,11 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#if !(defined(UTILS_NEED_GET_LITTLE_UINT32) || defined(UTILS_NEED_GET_LITTLE_UINT16) || defined(UTILS_NEED_GET_BIG_UINT32)    || defined(UTILS_NEED_GET_BIG_UINT16))
+#error No UTILS_NEED_* defined
+#endif
+
+#ifdef UTILS_NEED_GET_LITTLE_UINT32
 static inline unsigned int
 utils_get_little_uint32(unsigned char *p)
 {
@@ -37,7 +42,9 @@ utils_get_little_uint32(unsigned char *p)
   return *v;
 #endif
 }
+#endif
 
+#ifdef UTILS_NEED_GET_LITTLE_UINT16
 static inline unsigned short int
 utils_get_little_uint16(unsigned char *p)
 {
@@ -50,7 +57,9 @@ utils_get_little_uint16(unsigned char *p)
   return *v;
 #endif
 }
+#endif
 
+#ifdef UTILS_NEED_GET_BIG_UINT32
 static inline unsigned int
 utils_get_big_uint32(unsigned char *p)
 {
@@ -63,7 +72,9 @@ utils_get_big_uint32(unsigned char *p)
   return *v;
 #endif
 }
+#endif
 
+#ifdef UTILS_NEED_GET_BIG_UINT16
 static inline unsigned short int
 utils_get_big_uint16(unsigned char *p)
 {
@@ -76,5 +87,6 @@ utils_get_big_uint16(unsigned char *p)
   return *v;
 #endif
 }
+#endif
 
 #endif

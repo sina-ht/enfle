@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 04:23:09 2002.
- * $Id: pcx.c,v 1.5 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Sat May  4 23:23:51 2002.
+ * $Id: pcx.c,v 1.6 2002/05/04 14:35:59 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -30,6 +30,7 @@
 #include "common.h"
 
 #include "enfle/loader-plugin.h"
+#define UTILS_NEED_GET_LITTLE_UINT16
 #include "enfle/utils.h"
 
 //static const unsigned int types = (IMAGE_RGB24 | IMAGE_RGBA32 | IMAGE_GRAY | IMAGE_INDEX);
