@@ -3,8 +3,8 @@ dnl
 dnl (C)Copyright 1999-2003 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Dec  7 02:14:58 2003.
-dnl $Id: acinclude.m4,v 1.5 2003/12/07 04:23:52 sian Exp $
+dnl Last Modified: Sat Feb 21 18:11:10 2004.
+dnl $Id: acinclude.m4,v 1.6 2004/02/21 09:14:33 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -19,12 +19,12 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_DEFUN(ENFLE_APPEND, [ $1="$$1 $2" ])
-AC_DEFUN(ENFLE_PREPEND, [ $1="$2 $$1" ])
-AC_DEFUN(ENFLE_REMOVE, [ $1=`echo $$1 | sed "s%$2  *%%g"` ])
+AC_DEFUN([ENFLE_APPEND], [ $1="$$1 $2" ])
+AC_DEFUN([ENFLE_PREPEND], [ $1="$2 $$1" ])
+AC_DEFUN([ENFLE_REMOVE], [ $1=`echo $$1 | sed "s%$2  *%%g"` ])
 
 dnl ENFLE_PLUGIN_ENABLE(list, pluginname, type)
-AC_DEFUN(ENFLE_PLUGIN_ENABLE, [
+AC_DEFUN([ENFLE_PLUGIN_ENABLE], [
   pp=`echo $p | sed 's/^-//'`
   if test "$pp" = "$p"; then
     eval "count_$3=\`expr 0\$count_$3 + 1\`"
@@ -49,12 +49,12 @@ AC_DEFUN(ENFLE_PLUGIN_ENABLE, [
   fi
 ])
 
-AC_DEFUN(ENFLE_PLUGIN_DISABLE, [
+AC_DEFUN([ENFLE_PLUGIN_DISABLE], [
   ENFLE_REMOVE(Plugins, $1)dnl
 ])
 
 dnl ENFLE_PLUGIN_ENABLER(list, -static or not, type, tabs)
-AC_DEFUN(ENFLE_PLUGIN_ENABLER, [
+AC_DEFUN([ENFLE_PLUGIN_ENABLER], [
 AC_ARG_ENABLE($3$2,
     [  --enable-$3$2$4 Enable $3$2 plugins.],
     [ for p in $enableval; do
@@ -63,11 +63,11 @@ AC_ARG_ENABLE($3$2,
 ])
 
 dnl ENFLE_LINKED_PLUGIN_ENABLER(type, tabs)
-AC_DEFUN(ENFLE_LINKED_PLUGIN_ENABLER, [
+AC_DEFUN([ENFLE_LINKED_PLUGIN_ENABLER], [
   ENFLE_PLUGIN_ENABLER(Static_plugins, -static, $1, [$2])
 ])
 
-AC_DEFUN(ENFLE_REMOVE_DUP, [
+AC_DEFUN([ENFLE_REMOVE_DUP], [
   $1=`echo "$$1" | tr -s " " "\n" | sort | uniq | tr "\n" " " | sed 's/^ *//' | sed 's/ *$//'`
 ])
 
