@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Mar 21 10:36:07 2002.
-dnl $Id: configure.in,v 1.108 2002/03/21 01:36:15 sian Exp $
+dnl Last Modified: Sat Apr 27 22:01:04 2002.
+dnl $Id: configure.in,v 1.109 2002/04/27 13:02:31 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20020321, sian@big.or.jp)
+AC_INIT(enfle, 20020427, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -126,10 +126,19 @@ available_png=no
 if test "$available_zlib" = "yes"; then
   LIBADD_PNG=$LIBADD_ZLIB
   AC_CHECK_HEADER(png.h, [
-    AC_CHECK_LIB(png, png_get_IHDR, [
-      available_png=yes; LIBADD_PNG="$LIBADD_POW $LIBADD_PNG -lpng";
-    ], [], [$LIBADD_POW $LIBADD_ZLIB])
+   AC_DEFINE(HAVE_PNG_H, 1, [ Define if you have the <png.h> header file. ])
+   png_header_ok=yes
+  ], [
+   AC_CHECK_HEADER(libpng/png.h, [
+    AC_DEFINE(HAVE_LIBPNG_PNG_H, 1, [ Define if you have the <libpng/png.h> header file. ])
+    png_header_ok=yes
+   ], [ png_header_ok=no ])
   ])
+  if test png_header_ok = yes; then
+    AC_CHECK_LIB(png, png_get_IHDR, [
+        available_png=yes; LIBADD_PNG="$LIBADD_POW $LIBADD_PNG -lpng";
+      ], [], [$LIBADD_POW $LIBADD_ZLIB])
+  fi
 fi
 AM_CONDITIONAL(HAVE_PNG, test "$available_png" = "yes")
 AC_SUBST(LIBADD_PNG)
