@@ -1,3 +1,27 @@
+2001-08-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* vmpm_decompose_esc.c, vmpm_decompose_escb.c,
+	vmpm_decompose_escfirst.c, vmpm_decompose_highlow.c,
+	vmpm_decompose_highlow_rle.c, vmpm_decompose_normal.c,
+	vmpm_decompose_normal_rle.c: Cleaned up. Some improvements such as
+	skipping the first token.
+
+	* arithmodel_utils.c: Include stdio.h for fprintf.
+
+	* arithmodel_order_zero.[ch], vmpm_decompose_highlow.c: Adapted to
+	RLE.
+
+	* vmpm_decompose_esc.c: Cosmetic change.
+
+	* vmpm_decompose_normal.c: Cleaned up.
+
+	* predict.c, scan.c: Index bug fix.
+
+	* arithmodel_utils.c: Maximum check for CBT.
+
+	* vmpm_decompose_highlow_rle.c, vmpm_decompose_normal_rle.c: New
+	files.
+
 2001-08-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* vmpm_decompose_normal.c: Added some decoding code.
