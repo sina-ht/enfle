@@ -1,3 +1,10 @@
+2000-12-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/mng/mng.c: Cosmetic change.
+
+	* plugins/video/Xlib/Xlib.c: Cleaning up introducing
+	WindowResource struct.
+
 2000-11-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/mng/mng.c, plugins/ui/normal/normal.c: Cosmetic
