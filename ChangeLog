@@ -1,3 +1,34 @@
+2004-11-22  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+
+	* NEWS, README, configure.in: Version up.
+
+	* plugins/ui/normal/normal.c: Plugged one memory leak in
+	convert_path().
+
+2004-10-23  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+
+	* lib/avcodec/adpcm.c, lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bswap.h, lib/avcodec/common.h,
+	lib/avcodec/h261.c, lib/avcodec/h263dec.c, lib/avcodec/h264.c,
+	lib/avcodec/i386/cputest.c, lib/avcodec/i386/dsputil_mmx.c,
+	lib/avcodec/i386/dsputil_mmx_avg.h,
+	lib/avcodec/i386/dsputil_mmx_rnd.h, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/i386/mmx.h, lib/avcodec/i386/motion_est_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx_template.c,
+	lib/avcodec/imgconvert.c, lib/avcodec/indeo3.c,
+	lib/avcodec/motion_est.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/msmpeg4.c, lib/avcodec/ppc/dsputil_altivec.c,
+	lib/avcodec/ppc/dsputil_ppc.c, lib/avcodec/ra144.c,
+	lib/avcodec/ra288.c, lib/avcodec/resample.c,
+	lib/avcodec/resample2.c, lib/avcodec/utils.c: Updated.
+
+	* lib/avcodec/ppc/dsputil_h264_altivec.c,
+	lib/avcodec/ppc/dsputil_h264_template_altivec.c: New files.
+
+	* lib/mad/mad.h: mad.h is auto-generated.
+
 2004-10-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/Makefile.am, lib/avcodec/ac3.h,
