@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 10 22:15:41 2002.
- * $Id: jpeg.c,v 1.20 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Mon Sep 23 06:31:37 2002.
+ * $Id: jpeg.c,v 1.21 2002/09/22 21:31:57 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -44,7 +44,7 @@ static const unsigned int types = (IMAGE_I420 | IMAGE_RGB24);
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_JPEG_PLUGIN_DESCRIPTION "JPEG Loader plugin version 0.2.2"
+#define LOADER_JPEG_PLUGIN_DESCRIPTION "JPEG Loader plugin version 0.2.3"
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -390,13 +390,18 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       unsigned int w, h;
 
       w = ((image_width(p)  + 7) >> 3) << 3;
-      h = ((image_height(p) + 7) >> 3) << 3;
+      h = image_height(p);
 
-      if ((y = calloc(1, (w * h * 3) >> 1)) == NULL)
+      if (!image_rendered_image(p))
+	image_rendered_image(p) = memory_create();
+      if (vw)
+	memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
+      if ((y = memory_alloc(image_rendered_image(p), (w * h * 3) >> 1)) == NULL)
 	goto error_destroy_free;
       u = y + w * h;
       v = u + ((w * h) >> 2);
-      for (i = 0; i < image_height(p); i += 2)
+
+      for (i = 0; i < image_height(p); i += 2) {
 	for (j = 0; j < image_width(p); j += 2) {
 	  y[ i       *  w +        j      ] = d[( i      * image_width(p) + j    ) * 3    ];
 	  y[ i       *  w +        j + 1  ] = d[( i      * image_width(p) + j + 1) * 3    ];
@@ -405,17 +410,13 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 	  u[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * image_width(p) + j    ) * 3 + 1];
 	  v[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * image_width(p) + j    ) * 3 + 2];
 	}
-      if (!image_rendered_image(p))
-	image_rendered_image(p) = memory_create();
-      if (vw)
-	memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
-      if ((d = memory_alloc(image_rendered_image(p), (w * h * 3) >> 1)) == NULL)
-	goto error_destroy_free;
-      memcpy(d, y, (w * h * 3) >> 1);
-      free(y);
-      image_width(p) = w;
-      image_height(p) = h;
-      image_bpl(p) = image_width(p) * 1.5;
+      }
+
+      image_rendered_width(p) = w;
+      image_rendered_height(p) = h;
+      image_rendered_bpl(p) = (w * 3) >> 1;
+      memory_destroy(image_image(p));
+      image_image(p) = NULL;
       p->bits_per_pixel = 12;
       p->type = _I420;
     }
