@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  8 01:06:06 2001.
- * $Id: audio.h,v 1.3 2001/10/07 17:35:35 sian Exp $
+ * Last Modified: Thu Mar  7 03:44:48 2002.
+ * $Id: audio.h,v 1.4 2002/03/06 19:30:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,8 +46,11 @@ typedef struct _audio_device AudioDevice;
 struct _audio_device {
   void *private_data;
   Config *c;
+  int opened;
   int fd;
   AudioFormat format;
+  unsigned int bytes_written;
+  int bytes_per_sample;
   int channels;
   int speed;
 };
