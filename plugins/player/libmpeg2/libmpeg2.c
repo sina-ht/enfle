@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 14:22:09 2001.
- * $Id: libmpeg2.c,v 1.24 2001/09/20 05:31:08 sian Exp $
+ * Last Modified: Thu Sep 20 19:35:47 2001.
+ * $Id: libmpeg2.c,v 1.25 2001/09/20 10:37:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -311,16 +311,29 @@ get_ptr(unsigned char *p)
   return (unsigned char *)t;
 }
 
+//#define USE_TS
+#undef USE_TS
+
+#ifdef USE_TS
+#define TS_BASE 90000
+#define TS_TO_CLOCK(sec, usec, ts) \
+  sec  =  ts / TS_BASE; \
+  usec = (ts % TS_BASE) * (1000000 / TS_BASE);
+#endif
+
 static void *
 play_video(void *arg)
 {
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   void *data;
-  //unsigned long pts, dts, size;
+  unsigned int old_nframe;
   int nframe_decoded;
   MpegPacket *mp;
   FIFO_destructor destructor;
+#ifdef USE_TS
+  unsigned long pts, dts, size;
+#endif
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -329,11 +342,11 @@ play_video(void *arg)
       show_message(__FUNCTION__ ": fifo_get() failed.\n");
     } else {
       mp = (MpegPacket *)data;
-#if 0
+#ifdef USE_TS
       switch (mp->pts_dts_flag) {
       case 2:
 	pts = mp->pts;
-	dts = -1;
+	dts = pts;
 	size = mp->size;
 	break;
       case 3:
@@ -346,8 +359,21 @@ play_video(void *arg)
 	size = mp->size;
 	break;
       }
+#ifdef DEBUG
+      {
+	unsigned int psec, pusec, dsec, dusec;
+	if (pts != -1) {
+	  TS_TO_CLOCK(psec, pusec, pts);
+	  TS_TO_CLOCK(dsec, dusec, dts);
+	  debug_message(__FUNCTION__ ": pts %d.%d dts %d.%d\n", psec, pusec, dsec, dusec);
+	}
+      }
 #endif
+#endif
+      old_nframe = m->current_frame;
       nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, mp->data, mp->data + mp->size);
+      /* Be sure m->current_frame is right when dropping. */
+      m->current_frame = old_nframe + nframe_decoded;
       destructor(mp);
     }
   }
@@ -374,12 +400,14 @@ play_audio(void *arg)
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   AudioDevice *ad;
   unsigned char output_buffer[MP3_DECODE_BUFFER_SIZE];
-  //unsigned long pts, dts, size;
   int ret, write_size;
   int param_is_set = 0;
   void *data;
   MpegPacket *mp;
   FIFO_destructor destructor;
+#ifdef USE_TS
+  unsigned long pts, dts, size;
+#endif
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -395,7 +423,7 @@ play_audio(void *arg)
       show_message(__FUNCTION__ ": fifo_get() failed.\n");
     } else {
       mp = (MpegPacket *)data;
-#if 0
+#ifdef USE_TS
       switch (mp->pts_dts_flag) {
       case 2:
 	pts = mp->pts;
@@ -513,13 +541,13 @@ play_main(Movie *m, VideoWindow *vw)
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       if (!dropping) {
-	debug_message("drop on\n");
+	//debug_message("drop on\n");
 	dropping++;
       }
       mpeg2_drop(&info->mpeg2dec, 1);
     } else {
       if (dropping) {
-	debug_message("drop off\n");
+	//debug_message("drop off\n");
 	dropping--;
       }
       mpeg2_drop(&info->mpeg2dec, 0);
