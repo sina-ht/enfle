@@ -1,4 +1,26 @@
-2000-10-02  Hiroshi Takekawa  <sian@fennel.home>
+2000-10-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/player.[ch], lib/enfle/player-plugin.h, configure.in,
+	lib/enfle/Makefile.am, lib/enfle/ui-plugin.h, plugins/Makefile.am,
+	plugins/ui/Xlib/Xlib.c, src/enfle.c: Added very preliminary player
+	plugin implementation.
+
+	* plugins/loader/bmp/bmp.c (load_image): Make sure that image
+	object's variables are sanity.
+
+	* plugins/loader/jpeg/jpeg.c (load_image): Deleted erased
+	delay_usec using.
+
+	* plugins/loader/png/png.c (load_image): Make sure that image
+	object's variables are sanity.
+
+	* plugins/loader/ungif/ungif.c (load_image): Implemented extension
+	handling. UNGIF Loader now loads only 1 image.
+
+	* lib/enfle/image.h (Image): Added background_color,
+	transparent_color. Deleted delay_usec.
+
+2000-10-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Cosmetic change.
 
