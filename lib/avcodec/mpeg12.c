@@ -2340,7 +2340,9 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
 #endif
 
 	s->dsp.clear_blocks(s->block[0]);
-
+        if(!s->chroma_y_shift){
+            s->dsp.clear_blocks(s->block[6]);
+        }
         ret = mpeg_decode_mb(s, s->block);
         s->chroma_qscale= s->qscale;
 
@@ -2379,8 +2381,8 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
         }
 
         s->dest[0] += 16;
-        s->dest[1] += 8;
-        s->dest[2] += 8;
+        s->dest[1] += 16 >> s->chroma_x_shift;
+        s->dest[2] += 16 >> s->chroma_x_shift;
 
         MPV_decode_mb(s, s->block);
         
@@ -2790,8 +2792,6 @@ static int mpeg_decode_frame(AVCodecContext *avctx,
     AVFrame *picture = data;
     MpegEncContext *s2 = &s->mpeg_enc_ctx;
     dprintf("fill_buffer\n");
-
-    *data_size = 0;
 
     /* special case for last picture */
     if (buf_size == 0 && s2->low_delay==0 && s2->next_picture_ptr) {

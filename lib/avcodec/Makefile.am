@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat May 15 13:02:41 2004.
-# $Id: Makefile.am,v 1.15 2004/05/15 04:06:10 sian Exp $
+# Last Modified: Sat Jun 12 12:48:48 2004.
+# $Id: Makefile.am,v 1.16 2004/06/12 04:05:47 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -93,6 +93,7 @@ noinst_HEADERS = \
 	vp3data.h \
 	avcodec.h \
 	dvdata.h \
+	h261data.h \
 	h264data.h \
 	mpegaudio.h \
 	oggvorbis.h \
@@ -140,6 +141,7 @@ libavcodec_la_SOURCES = \
 	flicvideo.c \
 	g726.c \
 	golomb.c \
+	h261.c \
 	h263.c \
 	h263dec.c \
 	h264.c \

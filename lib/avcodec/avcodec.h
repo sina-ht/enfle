@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000408
 #define FFMPEG_VERSION         "0.4.8"
-#define LIBAVCODEC_BUILD       4714
+#define LIBAVCODEC_BUILD       4716
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -34,6 +34,7 @@ enum CodecID {
     CODEC_ID_MPEG1VIDEO,
     CODEC_ID_MPEG2VIDEO, /* prefered ID for MPEG Video 1 or 2 decoding */
     CODEC_ID_MPEG2VIDEO_XVMC,
+    CODEC_ID_H261,
     CODEC_ID_H263,
     CODEC_ID_RV10,
     CODEC_ID_RV20,
@@ -914,8 +915,8 @@ typedef struct AVCodecContext {
     void (*release_buffer)(struct AVCodecContext *c, AVFrame *pic);
 
     /**
-     * is 1 if the decoded stream contains b frames, 0 otherwise.
-     * - encoding: unused
+     * if 1 the stream has a 1 frame delay during decoding.
+     * - encoding: set by lavc
      * - decoding: set by lavc
      */
     int has_b_frames;
@@ -1250,6 +1251,7 @@ typedef struct AVCodecContext {
 #define FF_CMP_ZERO 7
 #define FF_CMP_VSAD 8
 #define FF_CMP_VSSE 9
+#define FF_CMP_NSSE 10
 #define FF_CMP_CHROMA 256
     
     /**
@@ -1589,11 +1591,18 @@ typedef struct AVCodecContext {
      int mb_threshold;
 
     /**
-     * 
+     * precision of the intra dc coefficient - 8.
      * - encoding: set by user
      * - decoding: unused
      */
      int intra_dc_precision;
+
+    /**
+     * noise vs. sse weight for the nsse comparsion function.
+     * - encoding: set by user
+     * - decoding: unused
+     */
+     int nsse_weight;
 } AVCodecContext;
 
 
@@ -1724,6 +1733,7 @@ extern AVCodec zlib_encoder;
 extern AVCodec svq1_encoder;
 
 extern AVCodec h263_decoder;
+extern AVCodec h261_decoder;
 extern AVCodec mpeg4_decoder;
 extern AVCodec msmpeg4v1_decoder;
 extern AVCodec msmpeg4v2_decoder;
@@ -1939,10 +1949,14 @@ AVFrame *avcodec_alloc_frame(void);
 
 int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic);
 void avcodec_default_release_buffer(AVCodecContext *s, AVFrame *pic);
+int avcodec_default_reget_buffer(AVCodecContext *s, AVFrame *pic);
+void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height);
+enum PixelFormat avcodec_default_get_format(struct AVCodecContext *s, const enum PixelFormat * fmt);
 
 int avcodec_thread_init(AVCodecContext *s, int thread_count);
 void avcodec_thread_free(AVCodecContext *s);
 int avcodec_thread_execute(AVCodecContext *s, int (*func)(AVCodecContext *c2, void *arg2),void **arg, int *ret, int count);
+int avcodec_default_execute(AVCodecContext *c, int (*func)(AVCodecContext *c2, void *arg2),void **arg, int *ret, int count);
 //FIXME func typedef
 
 /**
@@ -2086,6 +2100,7 @@ typedef struct AVCodecParserContext {
     /* private data */
     int64_t last_pts;
     int64_t last_dts;
+    int fetch_timestamp;
 
 #define AV_PARSER_PTS_NB 4
     int cur_frame_start_index;
@@ -2119,6 +2134,7 @@ void av_parser_close(AVCodecParserContext *s);
 
 extern AVCodecParser mpegvideo_parser;
 extern AVCodecParser mpeg4video_parser;
+extern AVCodecParser h261_parser;
 extern AVCodecParser h263_parser;
 extern AVCodecParser h264_parser;
 extern AVCodecParser mpegaudio_parser;
@@ -2152,7 +2168,12 @@ void img_copy(AVPicture *dst, const AVPicture *src,
 #define AV_LOG_INFO 1
 #define AV_LOG_DEBUG 2
 
+#ifdef __GNUC__
 extern void av_log(void*, int level, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+#else
+extern void av_log(void*, int level, const char *fmt, ...);
+#endif
+
 extern void av_vlog(void*, int level, const char *fmt, va_list);
 extern int av_log_get_level(void);
 extern void av_log_set_level(int);

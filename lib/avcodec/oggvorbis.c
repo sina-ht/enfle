@@ -60,7 +60,7 @@ static int oggvorbis_encode_init(AVCodecContext *avccontext) {
     vorbis_block_init(&context->vd, &context->vb) ;
 
     vorbis_comment_init(&context->vc);
-    vorbis_comment_add_tag(&context->vc, (char *)"encoder", (char *)LIBAVCODEC_IDENT) ;
+    vorbis_comment_add_tag(&context->vc, "encoder", LIBAVCODEC_IDENT) ;
 
     vorbis_analysis_headerout(&context->vd, &context->vc, &header,
                                 &header_comm, &header_code);
@@ -264,7 +264,6 @@ static int oggvorbis_decode_frame(AVCodecContext *avccontext,
  
     if(!buf_size){
     //FIXME flush
-        *data_size=0;
         return 0;
     }
     
