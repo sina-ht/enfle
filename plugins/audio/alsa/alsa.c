@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 22 01:12:42 2003.
- * $Id: alsa.c,v 1.8 2003/10/12 04:03:15 sian Exp $
+ * Last Modified: Thu Nov  6 22:57:22 2003.
+ * $Id: alsa.c,v 1.9 2003/11/17 13:52:44 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <errno.h>
+#define ALSA_PCM_NEW_HW_PARAMS_API
 #include <alsa/asoundlib.h>
 
 #define REQUIRE_UNISTD_H
@@ -45,7 +46,7 @@ static int close_device(AudioDevice *);
 static AudioPlugin plugin = {
   type: ENFLE_PLUGIN_AUDIO,
   name: "ALSA",
-  description: "ALSA Audio plugin version 0.1",
+  description: "ALSA Audio plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   open_device: open_device,
@@ -120,13 +121,14 @@ static int
 set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
 {
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
-  int r = 0, err, dir;
+  int r, err, dir;
   snd_pcm_format_t f;
   AudioFormat format = *format_p;
   snd_pcm_hw_params_t *hwparams;
   snd_pcm_sw_params_t *swparams;
   int ch = *ch_p;
   int rate = *rate_p;
+  unsigned int buffer, period;
 
   snd_pcm_hw_params_alloca(&hwparams);
   snd_pcm_sw_params_alloca(&swparams);
@@ -201,70 +203,65 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   *ch_p = ch;
 
   /* rate part */
-  if ((err = snd_pcm_hw_params_set_rate_near(alsa->fd, hwparams, rate, 0)) < 0) {
+  if ((err = snd_pcm_hw_params_set_rate_near(alsa->fd, hwparams, &rate, &dir)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_rate_near() failed.\n");
     return 0;
   }
-  *rate_p = r;
+  *rate_p = rate;
 
   /* buffer & period */
-  if ((err = snd_pcm_hw_params_set_buffer_time_near(alsa->fd, hwparams, 500000, 0)) < 0) {
+  buffer = 500000;
+  period = 500000 / 4;
+  if ((err = snd_pcm_hw_params_set_buffer_time_near(alsa->fd, hwparams, &buffer, &dir)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_buffer_near() failed.\n");
     return 0;
   }
-  alsa->buffer_size = snd_pcm_hw_params_get_buffer_size(hwparams);
-  if ((err = snd_pcm_hw_params_set_period_time_near(alsa->fd, hwparams, 500000 / 4, 0)) < 0) {
+  r = snd_pcm_hw_params_get_buffer_size(hwparams, &alsa->buffer_size);
+  if ((err = snd_pcm_hw_params_set_period_time_near(alsa->fd, hwparams, &period, &dir)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_period_near() failed.\n");
     return 0;
   }
-  alsa->period_size = snd_pcm_hw_params_get_period_size(hwparams, &dir);
+  r = snd_pcm_hw_params_get_period_size(hwparams, &alsa->period_size, &dir);
 
   if ((err = snd_pcm_hw_params(alsa->fd, hwparams)) < 0) {
     show_message_fnc("snd_pcm_hw_params() failed.\n");
     return 0;
   }
 
-  ad->channels = snd_pcm_hw_params_get_channels(hwparams);
-  ad->speed = snd_pcm_hw_params_get_rate(hwparams, NULL);
+  r = snd_pcm_hw_params_get_channels(hwparams, &ad->channels);
+  r = snd_pcm_hw_params_get_rate(hwparams, &ad->speed, &dir);
 
 #ifdef DEBUG
-  debug_message_fnc("format ");
-  switch (snd_pcm_hw_params_get_format(hwparams)) {
-  case SND_PCM_FORMAT_MU_LAW:    debug_message("MU_LAW "); break;
-  case SND_PCM_FORMAT_A_LAW:     debug_message("A_LAW "); break;
-  case SND_PCM_FORMAT_IMA_ADPCM: debug_message("ADPCM "); break;
-  case SND_PCM_FORMAT_U8:        debug_message("U8 "); break;
-  case SND_PCM_FORMAT_S8:        debug_message("S8 "); break;
-  case SND_PCM_FORMAT_U16_LE:    debug_message("U16LE "); break;
-  case SND_PCM_FORMAT_U16_BE:    debug_message("U16BE "); break;
-  case SND_PCM_FORMAT_S16_LE:    debug_message("S16LE "); break;
-  case SND_PCM_FORMAT_S16_BE:    debug_message("S16BE "); break;
-#if 0
-  case SND_PCM_FORMAT_U32_LE:    debug_message("U32LE "); break;
-  case SND_PCM_FORMAT_S32_BE:    debug_message("S32BE "); break;
-#endif
-  default:                       debug_message("UNKNOWN "); break;
-  }
+  {
+    snd_pcm_format_t form;
 
-  debug_message("%d ch %d Hz buffer %ld period %ld OK\n", ad->channels, ad->speed, alsa->buffer_size, alsa->period_size);
+    debug_message_fnc("format ");
+    r = snd_pcm_hw_params_get_format(hwparams, &form);
+    switch (form) {
+    case SND_PCM_FORMAT_MU_LAW:    debug_message("MU_LAW "); break;
+    case SND_PCM_FORMAT_A_LAW:     debug_message("A_LAW "); break;
+    case SND_PCM_FORMAT_IMA_ADPCM: debug_message("ADPCM "); break;
+    case SND_PCM_FORMAT_U8:        debug_message("U8 "); break;
+    case SND_PCM_FORMAT_S8:        debug_message("S8 "); break;
+    case SND_PCM_FORMAT_U16_LE:    debug_message("U16LE "); break;
+    case SND_PCM_FORMAT_U16_BE:    debug_message("U16BE "); break;
+    case SND_PCM_FORMAT_S16_LE:    debug_message("S16LE "); break;
+    case SND_PCM_FORMAT_S16_BE:    debug_message("S16BE "); break;
+#if 0
+    case SND_PCM_FORMAT_U32_LE:    debug_message("U32LE "); break;
+    case SND_PCM_FORMAT_S32_BE:    debug_message("S32BE "); break;
+#endif
+    default:                       debug_message("UNKNOWN "); break;
+    }
+
+    debug_message("%d ch %d Hz buffer %ld period %ld OK\n", ad->channels, ad->speed, alsa->buffer_size, alsa->period_size);
+  }
 #endif
 
   /* sw_params */
   if ((err = snd_pcm_sw_params_current(alsa->fd, swparams)) < 0) {
     show_message_fnc("snd_pcm_sw_params_any() failed.\n");
     return 0;
-  }
-  if ((err = snd_pcm_sw_params_set_start_threshold(alsa->fd, swparams, alsa->buffer_size)) < 0) {
-    show_message_fnc("snd_pcm_sw_params_set_start_threshold() failed.\n");
-    return 0;
-  }
-  if ((err = snd_pcm_sw_params_set_avail_min(alsa->fd, swparams, alsa->period_size)) < 0) {
-    show_message_fnc("snd_pcm_sw_params_set_avail_min() failed.\n");
-    return 0;
-  }
-  if ((err = snd_pcm_sw_params_set_xfer_align(alsa->fd, swparams, 1)) < 0) {
-    show_message_fnc("snd_pcm_sw_params_set_xfer_align() failed.\n");
-    return err;
   }
   if ((err = snd_pcm_sw_params(alsa->fd, swparams)) < 0) {
     show_message_fnc("snd_pcm_sw_params() failed.\n");
@@ -280,9 +277,9 @@ static int
 write_device(AudioDevice *ad, unsigned char *data, int size)
 {
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
-  ssize_t r;
-  int unit = snd_pcm_samples_to_bytes(alsa->fd, 1) * ad->channels;
-  ssize_t count = size / unit;
+  snd_pcm_sframes_t r;
+  ssize_t unit = snd_pcm_samples_to_bytes(alsa->fd, 1) * ad->channels;
+  snd_pcm_uframes_t count = size / unit;
 
   while (count > 0) {
     if ((r = snd_pcm_writei(alsa->fd, data, count)) == -EAGAIN) {
@@ -290,6 +287,18 @@ write_device(AudioDevice *ad, unsigned char *data, int size)
     } else if (r > 0) {
       count -= r;
       data += r * unit;
+    } else if (r == -EPIPE) {
+      debug_message_fnc("EPIPE: ");
+      if (snd_pcm_state(alsa->fd) == SND_PCM_STATE_XRUN) {
+	if ((r = snd_pcm_prepare(alsa->fd)) < 0) {
+	  debug_message("failed\n");
+	  warning_fnc("snd_pcm_prepare() failed.");
+	} else {
+	  debug_message("OK\n");
+	}
+      }
+    } else {
+      warning_fnc(" r = %d < 0...\n", (int)r);
     }
   }
   ad->bytes_written += size;
@@ -305,8 +314,11 @@ bytes_written(AudioDevice *ad)
   snd_pcm_sframes_t delay;
   snd_pcm_state_t state = snd_pcm_state(alsa->fd);
 
-  if (state == SND_PCM_STATE_OPEN || state == SND_PCM_STATE_SETUP)
+  if (state == SND_PCM_STATE_OPEN || state == SND_PCM_STATE_SETUP) {
+    if (state != SND_PCM_STATE_OPEN)
+      show_message_fnc("SND_PCM_STATE_SETUP\n");
     return -1;
+  }
 
   snd_pcm_status_alloca(&pcm_stat);
   snd_pcm_status(alsa->fd, pcm_stat);
