@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 01:46:17 2001.
- * $Id: libmpeg2_vo.c,v 1.2 2001/02/21 17:56:29 sian Exp $
+ * Last Modified: Fri Mar  2 21:23:38 2001.
+ * $Id: libmpeg2_vo.c,v 1.3 2001/03/02 18:40:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,8 @@ enfle_draw(vo_frame_t *frame)
   Movie *m = instance->m;
   Image *p = instance->p;
 
+  debug_message(__FUNCTION__ "()\n");
+
   m->render_frame(vw, m, p);
 }
 
@@ -52,6 +54,8 @@ enfle_alloc_frames(vo_instance_t *_instance, int width, int height, int frame_si
   int size;
   uint8_t *alloc;
   int i;
+
+  debug_message(__FUNCTION__ "()\n");
 
   instance = (enfle_instance_t *)_instance;
   instance->prediction_index = 1;
@@ -79,6 +83,8 @@ static void
 enfle_free_frames (vo_instance_t *_instance)
 {
   enfle_instance_t *instance;
+
+  debug_message(__FUNCTION__ "()\n");
 
   instance = (enfle_instance_t *)_instance;
   free(instance->frame_ptr[0]->base[0]);
