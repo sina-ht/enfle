@@ -2,9 +2,9 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-           (C) Copyright 1998-2003 by Hiroshi Takekawa.
+           (C) Copyright 1998-2004 by Hiroshi Takekawa.
 
-             Last Modified: Tue Mar  9 21:28:46 2004.
+             Last Modified: Mon Jun 21 22:52:46 2004.
 
 ***************************************************************************
 
@@ -94,30 +94,13 @@ See README.e if you don't read Japanese, but English.
   animated GIF
   mng
   mpeg (mpeg1, mpeg2)
-  avi,asf (avifile を利用)
-  avi,ogg,ogm (avcodec が対応している codec, vorbis)
-  DivX in AVI format supported by divx4linux
+  avi,asf,ogg,ogm (avcodec が対応している codec, vorbis, Windows DMO)
 
 各フォーマットへの対応はプラグインによって実装されております。画像の他
 に特殊なアーカイブ、 tar などの一般的なアーカイブ、圧縮された gz などのファ
 イルなどへの対応もプラグインによって実装されており、公開されている仕様
 を参考にすることにより (開発バージョンのドキュメントはまだなし) 、誰で
 もプラグインを作って拡張することが可能です。
-
-***************************************************************************
-
-GIF の decode には LZW の decode が必要ですが、 patent (特許) の問題が
-あるので、enfle のコード自体には LZW decoder は含まれておりません。
-decode には特許は及ばないというのが大方の見方ですが patent holder であ
-る Unisys が否定しているので一応含まないでおきます。 libungif を使う
-ungif プラグインが含まれていますが、 ungif プラグイン自体は LZW 関連の
-code を含んでいません。ただし、libungif の LZW code を使用できるかどう
-かとは別ですので、各自の責任において使用してください。 ungif plugin を
-利用するには、 configure 時に--with-ungif を明示的に指定する必要があり
-ます。特許が切れようとしています。特許が切れたら(日本では、2004. 6.20)
-GIF の plugin を配布に含めます。GIF plugin 自体は既に作成済です。
-
-***************************************************************************
 
 以下の plugin には library が別途必要です。動作するであろう version を書いて
 おきます。
@@ -194,10 +177,13 @@ configure スクリプトの指定できるオプションは、./configure --help で詳
 susie の plugin を使いたい場合には--enable-spi が必要です。
 ungif plugin を使いたい場合には--with-ungif が必要です。
 
-Susie の plugin はとりあえず/usr/(local/)lib/enfle/plugins/spis/など適
-当な検索される場所に置けばロードされます。ロードされても画像が読めない
-かもしれませんし、ロードすらされない可能性があります。どのプラグインが
-成功した/失敗したという情報をお待ちしております。
+Susie の plugin は spi/dir に指定したディレクトリに置けばロードされます。
+ロードされても画像が読めないかもしれませんし、ロードすらされない可能性
+があります。どのプラグインが成功した/失敗したという情報をお待ちしており
+ます。
+
+Windows DMO は dmo/dir に指定したディレクトリに置けばロードされます。
+wmv9dmod.dll を置いてください。運が良ければロードされます。
 
 
 4.コマンドライン

@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Sat Feb 21 18:07:39 2004.
+             Last Modified: Mon Jun 21 22:53:58 2004.
 
 ***************************************************************************
 
@@ -87,30 +87,16 @@ This software aims to view many pictures just clicking.  You can view
 various formatted pictures and movies with several effects.
 
  Formats you can view:
- BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, JPEG2000
- spi(highly unstable, any formats which (some of) susie plugins support)
- animated GIF
- mng
- mpeg(mpeg1, mpeg2)
- avi,asf(avifile uses Windows DLL)
- avi,ogg,ogm (codec supported by avcodec, vorbis)
- DivX in AVI format supported by divx4linux
+  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, JPEG2000
+  spi(highly unstable, any formats which (some of) susie plugins support)
+  animated GIF
+  mng
+  mpeg (mpeg1, mpeg2)
+  avi,asf,ogg,ogm (codec supported by avcodec, vorbis, Windows DMO)
 
 This software has plugin architecture.  You can write plugins to
 loader new formatted pictures and movies.  Also, you can read
 irregular files, such as tar, gz, bz2, and so on.
-
-***************************************************************************
-
-GIF decoder must perform LZW decompression.  Unfortunately, it's
-patented.  (Many think that patent doesn't cover decompression.  But
-Unisys won't permit).  So, this software never includes LZW
-decompression code, though I've written.  UNGIF plugin which uses
-libungif is included.  But, I'm not sure that usage of this library is
-legal.  It's up to you whether use this or not.  You must explicit
-pass --with-ungif option to configure script.  The patent is expiring.  After it is expired, I will release GIF plugin, which has already been created.
-
-***************************************************************************
 
 Some plugins use libraries which is not included in distribution.  You
 should install corresponding libraries to use them.
@@ -177,10 +163,14 @@ cannot/don't create shared object.
 If you'd like to enable susie plugin extension, add --enable-spi.
 If you'd like to enable libungif, add --with-ungif.
 
-Put Susie plugins on /usr/(local/)/lib/enfle/plugins/spis or such
-where plugins are searched.  It might be able to decode pictures, or
-might fail to decode, or even might fail to load.  Your mileage may
+Put Susie plugins on the directory specified by spi/dir in
+configuration file.  It might be able to decode pictures, or might
+fail to decode, or even might fail to load.  Your mileage may
 vary. Please inform me of your result.
+
+Put Windows DMO DLL on the directory specified by dmo/dir in
+configuration file.  It might be able to decode pictures, or might
+fail to decode, or even might fail to load...
 
 
 4. Command line
