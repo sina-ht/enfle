@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Feb  5 22:58:35 2004.
-# $Id: Makefile.am,v 1.1 2004/02/14 05:20:33 sian Exp $
+# Last Modified: Fri Mar 12 00:33:21 2004.
+# $Id: Makefile.am,v 1.2 2004/03/11 15:34:28 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -20,4 +20,4 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 loader_jasper_la_LDFLAGS = $(MORE_LDFLAGS) -module
 loader_jasper_la_CFLAGS = $(MORE_CFLAGS)
 loader_jasper_la_SOURCES = jasper.c
-loader_jasper_la_LIBADD = @LIBADD_JASPER@
+loader_jasper_la_LIBADD = @LIBADD_JASPER@ @LIBADD_JPEG@
