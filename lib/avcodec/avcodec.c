@@ -97,19 +97,21 @@ static void destroy_handle(private_handle_t* handle)
 int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 {
     AVCodecContext* ctx = handle;
+    private_handle_t** ph = (private_handle_t**)pout;
+
     switch (cmd)
     {
     case AVC_OPEN_BY_NAME:
 	{
             // pin  char* codec name
 	    private_handle_t* h = create_handle();
-	    (private_handle_t**)pout = h;
+	    *ph = h;
 	    if (!h)
 		return -ENOMEM;
 	    if (!h->avcodec)
 	    {
 		destroy_handle(h);
-		(private_handle_t**)pout = NULL;
+		*ph = NULL;
 		return -1;// better error
 	    }
             return 0;
@@ -118,14 +120,14 @@ int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 	{
             // pin  uint32_t codec fourcc
 	    private_handle_t* h = create_handle();
-	    (private_handle_t**)pout = h;
+	    *ph = h;
 	    if (!h)
 		return -ENOMEM;
 
 	    if (!h->avcodec)
 	    {
 		destroy_handle(h);
-		(private_handle_t**)pout = NULL;
+		*ph = NULL;
 		return -1;// better error
 	    }
             return 0;
@@ -134,14 +136,14 @@ int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 	{
             // pin  uint32_t codec fourcc
 	    private_handle_t* h = create_handle();
-	    (private_handle_t**)pout = h;
+	    *ph = h;
 	    if (!h)
 		return -ENOMEM;
 	    h->avcodec = avcodec_find_by_fcc((uint32_t) pin);
 	    if (!h->avcodec)
 	    {
 		destroy_handle(h);
-		(private_handle_t**)pout = NULL;
+		*ph = NULL;
 		return -1;// better error
 	    }
             return 0;
@@ -163,7 +165,10 @@ int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 	break;
 
     case AVC_GET_VERSION:
-        (int*) pout = 500;
+	{
+	    int *pi = (int*)pout;
+	    *pi = 500;
+	}
     default:
 	return -1;
 
