@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 16 03:23:31 2000.
- * $Id: timer.h,v 1.1 2000/10/16 19:24:33 sian Exp $
+ * Last Modified: Sun Oct 29 18:28:02 2000.
+ * $Id: timer.h,v 1.2 2000/10/29 18:09:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,7 +51,7 @@ struct _timer {
   Timer_t (*get_difference)(Timer *);
 };
 
-Timer *timer_create(Timer_impl *);
+Timer *enfle_timer_create(Timer_impl *);
 
 #define timer_destroy(t) (t)->destroy((t))
 #define timer_reset(t) (t)->reset((t))
