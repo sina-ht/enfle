@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 23 07:52:40 2000.
- * $Id: libmpeg3.c,v 1.14 2000/12/22 23:14:03 sian Exp $
+ * Last Modified: Sun Dec 24 04:28:27 2000.
+ * $Id: libmpeg3.c,v 1.15 2000/12/24 15:29:25 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -134,23 +134,19 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     if ((m->ap == NULL) || (info->ad = m->ap->open_device(NULL, m->c)) == NULL)
       show_message("Audio is not played.\n");
     else {
-      AudioFormat format;
-
-      show_message("Audio support is preliminary.\n");
-
       info->nastreams = mpeg3_total_astreams(info->file);
       /* XXX: stream should be selectable */
       info->nastream = 0;
 
-      format = _AUDIO_FORMAT_S16_LE;
+      m->sampleformat = _AUDIO_FORMAT_S16_LE;
       m->channels = mpeg3_audio_channels(info->file, info->nastream);
       m->samplerate = mpeg3_sample_rate(info->file, info->nastream);
       m->num_of_samples = mpeg3_audio_samples(info->file, info->nastream);
 
-      format = m->ap->set_format(info->ad, format);
-      m->channels = m->ap->set_channels(info->ad, m->channels);
-      m->samplerate = m->ap->set_speed(info->ad, m->samplerate);
-      show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, format, m->channels, m->samplerate, m->num_of_samples);
+      if (!m->ap->set_params(info->ad, &m->sampleformat, &m->channels, &m->samplerate))
+	show_message("Some params are set wrong.\n");
+
+      show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
     }
   } else {
     debug_message("No audio streams.\n");
