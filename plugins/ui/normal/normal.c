@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 17 22:26:04 2002.
- * $Id: normal.c,v 1.70 2002/11/06 14:12:37 sian Exp $
+ * Last Modified: Sat Nov 30 00:58:21 2002.
+ * $Id: normal.c,v 1.71 2002/11/29 15:59:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -167,6 +167,28 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
 }
 
 static void
+convert_cat(String *cap, char *s, Config *c)
+{
+  int res;
+
+  if (config_get_boolean(c, "/enfle/plugins/ui/normal/filename_code_conversion", &res)) {
+    char *from = config_get_str(c, "/enfle/plugins/ui/normal/filename_code_from");
+    char *to   = config_get_str(c, "/enfle/plugins/ui/normal/filename_code_to");
+
+    if (from && to) {
+      char *tmp;
+
+      res = converter_convert(s, &tmp, strlen(s), from, to);
+      string_cat(cap, tmp);
+      free(tmp);
+      return;
+    }
+  }
+
+  string_cat(cap, s);
+}
+
+static void
 set_caption_string(MainLoop *ml)
 {
   String *cap;
@@ -179,7 +201,7 @@ set_caption_string(MainLoop *ml)
     return;
 
   if ((template = config_get_str(ml->uidata->c, "/enfle/plugins/ui/normal/caption_template")) == NULL)
-    template = (char *)"%p %f %xx%y";
+    template = (char *)"%i/%I:%p %f %xx%y";
 
   i = 0;
   literal_mode = 0;
@@ -225,12 +247,18 @@ set_caption_string(MainLoop *ml)
       case 'F':
 	string_cat(cap, ml->p->format); break;
       case 'p':
-	string_cat(cap, ml->path); break;
+	convert_cat(cap, ml->path, ml->uidata->c); break;
       case 'P':
-	string_cat(cap, ml->a->path);
-	string_cat(cap, ml->path); break;
+	convert_cat(cap, ml->a->path, ml->uidata->c);
+	convert_cat(cap, ml->path, ml->uidata->c); break;
       case 'N':
 	string_cat(cap, PROGNAME); break;
+      case 'i':
+	string_catf(cap, "%d", archive_iteration_index(ml->a));
+	break;
+      case 'I':
+	string_catf(cap, "%d", archive_nfiles(ml->a));
+	break;
       default:
 	warning("Found an unknown format character %c.\n", template[i]);
 	string_ncat(cap, &template[i - 1], 2);
