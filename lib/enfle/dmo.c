@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 15:21:39 2004.
- * $Id: dmo.c,v 1.2 2004/04/18 06:29:23 sian Exp $
+ * Last Modified: Sun Apr 18 15:40:10 2004.
+ * $Id: dmo.c,v 1.3 2004/04/18 06:41:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -586,12 +586,12 @@ dmo_load(EnflePlugins *eps, char *path, PluginType *type_return)
   PluginList *pl;
   HRESULT res;
   GUID *rclsid = NULL;
-  struct IClassFactory *icf = NULL;
-  IUnknown *obj = NULL;
-  IMediaObject *mo = NULL;
+  struct IClassFactory *icf = NULL, **icf_r;
+  IUnknown *obj = NULL, **obj_r;
+  IMediaObject *mo = NULL, **mo_r;
   int i;
-  const char *desc;
-  enum codec_type type;
+  const char *desc = "";
+  enum codec_type type = _CODEC_UNKNOWN;
 
   for (i = 0; i < sizeof(CodecInfo) / sizeof(CodecInfo[0]); i++) {
     if (strcasecmp(CodecInfo[i].dll, misc_basename(path)) == 0) {
@@ -621,14 +621,16 @@ dmo_load(EnflePlugins *eps, char *path, PluginType *type_return)
   }
 
   debug_message_fnc("GetClassObject...\n");
-  if ((res = get_class_object(rclsid, &iid_icf, (void **)&icf)) != 0 || icf == NULL) {
+  icf_r = &icf;
+  if ((res = get_class_object(rclsid, &iid_icf, (void **)icf_r)) != 0 || icf == NULL) {
     err_message_fnc("GetClassObject failed.\n");
     goto error;
   }
   debug_message_fnc("GetClassObject OK.\n");
 
   debug_message_fnc("CreateInstance...\n");
-  res = icf->vt->CreateInstance(icf, 0, &iid_iunknown, (void **)&obj);
+  obj_r = &obj;
+  res = icf->vt->CreateInstance(icf, 0, &iid_iunknown, (void **)obj_r);
   icf->vt->Release((IUnknown *)icf);
   if (res != 0 || obj == NULL) {
     err_message("CreateInstance failed.\n");
@@ -637,20 +639,23 @@ dmo_load(EnflePlugins *eps, char *path, PluginType *type_return)
   debug_message_fnc("CreateInstance OK.\n");
 
   debug_message_fnc("QueryInterface...\n");
-  res = obj->vt->QueryInterface(obj, &iid_imo, (void **)&mo);
+  mo_r = &mo;
+  res = obj->vt->QueryInterface(obj, &iid_imo, (void **)mo_r);
 
   /* Query extra interfaces */
   if (res == 0) {
-    IMediaObjectInPlace *moip = NULL;
-    IDMOVideoOutputOptimizations *dmovoo = NULL;
+    IMediaObjectInPlace *moip = NULL, **moip_r;
+    IDMOVideoOutputOptimizations *dmovoo = NULL, **dmovoo_r;
 
-    HRESULT r = obj->vt->QueryInterface(obj, &iid_imoip, (void **)&moip);
+    moip_r = &moip;
+    HRESULT r = obj->vt->QueryInterface(obj, &iid_imoip, (void **)moip_r);
     if (r == 0 && moip != NULL) {
       show_message_fnc("DMO dll supports InPlace interface.  Not supported.\n");
       moip->vt->Release((IUnknown *)moip);
     }
 
-    r = obj->vt->QueryInterface(obj, &iid_idmovoo, (void **)&dmovoo);
+    dmovoo_r = &dmovoo;
+    r = obj->vt->QueryInterface(obj, &iid_idmovoo, (void **)dmovoo_r);
     if (r == 0 && dmovoo != NULL) {
       unsigned long flags;
 
