@@ -55,6 +55,7 @@ DECLARE_W32API(BOOL, GlobalUnlock, (HGLOBAL));
 DECLARE_W32API(VOID, GlobalMemoryStatus, (LPMEMORYSTATUS));
 DECLARE_W32API(LPVOID, VirtualAlloc, (LPVOID, DWORD, DWORD, DWORD));
 DECLARE_W32API(BOOL, VirtualFree, (LPVOID, DWORD, DWORD));
+DECLARE_W32API(DWORD, VirtualQuery, (LPCVOID, LPMEMORY_BASIC_INFORMATION, DWORD));
 /* heap related */
 DECLARE_W32API(HANDLE, HeapCreate, (DWORD, DWORD, DWORD));
 DECLARE_W32API(LPVOID, HeapAlloc, (HANDLE, DWORD, DWORD));
@@ -72,6 +73,7 @@ DECLARE_W32API(void, ExitProcess, (DWORD));
 /* thread related */
 DECLARE_W32API(HANDLE, GetCurrentThread, ());
 DECLARE_W32API(DWORD, GetCurrentThreadId, ());
+DECLARE_W32API(LCID, GetThreadLocale, ());
 /* thread local-variable related */
 DECLARE_W32API(DWORD, TlsAlloc, ());
 DECLARE_W32API(BOOL, TlsFree, (DWORD));
@@ -93,6 +95,7 @@ DECLARE_W32API(BOOL, FreeEnvironmentStringsA, (LPSTR));
 DECLARE_W32API(BOOL, FreeEnvironmentStringsW, (LPWSTR));
 DECLARE_W32API(VOID, GetStartupInfoA, (LPSTARTUPINFOA));
 /* codepage */
+DECLARE_W32API(INT, GetLocaleInfoA, (LCID, LCTYPE, LPSTR, INT));
 DECLARE_W32API(UINT, GetACP, ());
 DECLARE_W32API(UINT, GetOEMCP, ());
 DECLARE_W32API(BOOL, GetCPInfo, (UINT, LPCPINFO));
@@ -100,6 +103,7 @@ DECLARE_W32API(BOOL, GetStringTypeW, (DWORD, LPCWSTR, INT, LPWORD));
 DECLARE_W32API(INT, MultiByteToWideChar, (UINT, DWORD, LPCSTR, INT, LPWSTR, INT));
 DECLARE_W32API(INT, WideCharToMultiByte, (UINT, DWORD, LPCWSTR, INT, LPSTR, INT, LPCSTR, BOOL *));
 /* date and time */
+DECLARE_W32API(BOOL, EnumCalendarInfoA, (CALINFO_ENUMPROCA, LCID, CALID, CALTYPE));
 DECLARE_W32API(VOID, GetLocalTime, (LPSYSTEMTIME));
 /* miscellaneous */
 DECLARE_W32API(DWORD, GetLastError, ());
@@ -139,6 +143,7 @@ static Symbol_info symbol_infos[] = {
   { "GlobalMemoryStatus", GlobalMemoryStatus },
   { "VirtualAlloc", VirtualAlloc },
   { "VirtualFree", VirtualFree },
+  { "VirtualQuery", VirtualQuery },
   { "HeapCreate", HeapCreate },
   { "HeapAlloc", HeapAlloc },
   { "HeapReAlloc", HeapReAlloc },
@@ -152,6 +157,7 @@ static Symbol_info symbol_infos[] = {
   { "ExitProcess", ExitProcess },
   { "GetCurrentThread", GetCurrentThread },
   { "GetCurrentThreadId", GetCurrentThreadId },
+  { "GetThreadLocale", GetThreadLocale },
   { "TlsAlloc", TlsAlloc },
   { "TlsFree", TlsFree },
   { "TlsGetValue", TlsGetValue },
@@ -169,12 +175,14 @@ static Symbol_info symbol_infos[] = {
   { "FreeEnvironmentStringsA", FreeEnvironmentStringsA },
   { "FreeEnvironmentStringsW", FreeEnvironmentStringsW },
   { "GetStartupInfoA", GetStartupInfoA },
+  { "GetLocaleInfoA", GetLocaleInfoA },
   { "GetACP", GetACP },
   { "GetOEMCP", GetOEMCP },
   { "GetCPInfo", GetCPInfo },
   { "GetStringTypeW", GetStringTypeW },
   { "MultiByteToWideChar", MultiByteToWideChar },
   { "WideCharToMultiByte", WideCharToMultiByte },
+  { "EnumCalendarInfoA", EnumCalendarInfoA },
   { "GetLocalTime", GetLocalTime },
   { "GetLastError", GetLastError },
   { "GetVersion", GetVersion },
@@ -463,6 +471,12 @@ DEFINE_W32API(BOOL, VirtualFree,
   return TRUE;
 }
 
+DEFINE_W32API(DWORD, VirtualQuery, (LPCVOID p, LPMEMORY_BASIC_INFORMATION info, DWORD len))
+{
+  debug_message("VirtualQuery(%p size %d) called\n", p, len);
+  return sizeof(*info);
+}
+
 /* heap related */
 
 DEFINE_W32API(HANDLE, HeapCreate,
@@ -524,6 +538,8 @@ DEFINE_W32API(DWORD, GetProcessHeaps,
 DEFINE_W32API(INT, lstrlenA,
 	       (LPCSTR str))
 {
+  debug_message("lstrlenA(%s) called\n", str);
+
   if (str)
     return strlen(str);
   return 0;
@@ -532,7 +548,8 @@ DEFINE_W32API(INT, lstrlenA,
 DEFINE_W32API(LPSTR, lstrcpyA,
 	      (LPSTR dest, LPCSTR src))
 {
-  /* gee */
+  debug_message("lstrcpyA(%p, %s) called\n", dest, src);
+
   memcpy(dest, src, strlen(src) + 1);
   return dest;
 }
@@ -580,6 +597,13 @@ DEFINE_W32API(DWORD, GetCurrentThreadId,
 {
   debug_message("GetCurrentThreadId() called\n");
   return getpid();
+}
+
+DEFINE_W32API(LCID, GetThreadLocale,
+	      ())
+{
+  debug_message("GetThreadLocale() called\n");
+  return 0;
 }
 
 /* thread local-variable related */
@@ -718,6 +742,13 @@ DEFINE_W32API(VOID, GetStartupInfoA,
 
 /* codepage */
 
+DEFINE_W32API(INT, GetLocaleInfoA,
+	      (LCID id, LCTYPE type, LPSTR buf, INT len))
+{
+  debug_message("GetLocaleInfoA(%d, %d)\n", id, type);
+  return 0;
+}
+
 DEFINE_W32API(UINT, GetACP, ())
 {
   debug_message("GetACP() called\n");
@@ -817,14 +848,22 @@ DEFINE_W32API(INT, WideCharToMultiByte,
 
 /* date and time */
 
-DECLARE_W32API(VOID, GetLocalTime, (LPSYSTEMTIME t))
+DEFINE_W32API(BOOL, EnumCalendarInfoA,
+	      (CALINFO_ENUMPROCA proc, LCID id, CALID calid, CALTYPE caltype))
+{
+  return FALSE;
+}
+
+DEFINE_W32API(VOID, GetLocalTime,
+	      (LPSYSTEMTIME t))
 {
   debug_message("GetLocalTime() called\n");
 }
 
 /* miscellaneous */
 
-DEFINE_W32API(DWORD, GetLastError, ())
+DEFINE_W32API(DWORD, GetLastError,
+	      ())
 {
   debug_message("GetLastError() called\n");
   return 0;

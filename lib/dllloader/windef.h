@@ -18,6 +18,8 @@
 #undef NULL
 #define NULL  0
 
+#define CONST const
+
 typedef unsigned short int WORD;
 typedef unsigned int DWORD;
 typedef unsigned int UINT;
@@ -35,13 +37,17 @@ typedef WCHAR *LPWSTR;
 typedef const WCHAR *LPCWSTR;
 typedef BYTE *LPBYTE;
 typedef LONG LRESULT;
+typedef LONG LPARAM;
 typedef ULONG *ULONG_PTR;
 typedef VOID *LPVOID;
 typedef const VOID *LPCVOID;
 typedef VOID *HANDLE;
 typedef WORD *LPWORD;
 typedef DWORD *LPDWORD;
-typedef LRESULT CALLBACK (*FARPROC)();
+typedef DWORD LCID;
+typedef DWORD LCTYPE;
+typedef DWORD CALID;
+typedef DWORD CALTYPE;
 
 #define DECLARE_HANDLE(a) \
   typedef HANDLE a; \
@@ -52,9 +58,17 @@ DECLARE_HANDLE(HFILE);
 DECLARE_HANDLE(HINSTANCE);
 DECLARE_HANDLE(HLOCAL);
 DECLARE_HANDLE(HGLOBAL);
+DECLARE_HANDLE(HKEY);
 DECLARE_HANDLE(HWND);
 
 typedef HINSTANCE HMODULE;
+
+/* callbacks */
+
+typedef LRESULT CALLBACK (*FARPROC)();
+typedef BOOL CALLBACK (*WNDENUMPROC)(HWND, LPARAM);
+typedef BOOL CALLBACK (*DllEntryProc)(HMODULE, DWORD, LPVOID);
+typedef BOOL CALLBACK (*CALINFO_ENUMPROCA)(LPSTR);
 
 /* DLL */
 
@@ -62,8 +76,6 @@ typedef HINSTANCE HMODULE;
 #define DLL_PROCESS_ATTACH 1
 #define DLL_THREAD_ATTACH  2
 #define DLL_THREAD_DETACH  3
-
-typedef BOOL (*DllEntryProc)(HMODULE, DWORD, LPVOID);
 
 /* file handle */
 
@@ -127,6 +139,16 @@ typedef struct _memorystatus {
   DWORD dwAvailVirtual;
 } MEMORYSTATUS, *LPMEMORYSTATUS;
 
+typedef struct _memory_basic_information {
+  LPVOID BaseAddress;
+  LPVOID AllocationBase;
+  DWORD AllocationProtect;
+  DWORD RegionSize;
+  DWORD State;
+  DWORD Protect;
+  DWORD Type;
+} MEMORY_BASIC_INFORMATION,*LPMEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
+
 /* heap */
 
 #define HEAP_NO_SERIALIZE               0x00000001
@@ -141,6 +163,11 @@ typedef struct _memorystatus {
 #define HEAP_CREATE_ENABLE_TRACING      0x00020000
 /* This is taken from wine */
 #define HEAP_SHARED                     0x04000000  
+
+/* registry */
+
+typedef DWORD ACCESS_MASK;
+typedef ACCESS_MASK REGSAM;
 
 /* critical section */
 

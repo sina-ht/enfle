@@ -20,6 +20,7 @@
 #endif
 
 #include "pe_image.h"
+#include "misc.h"
 
 #include "w32api.h"
 #include "module.h"
@@ -27,7 +28,9 @@
 /* import dlls */
 #include "kernel32.h"
 #include "user32.h"
+#include "advapi32.h"
 #include "msvcrt.h"
+#include "borlndmm.h"
 
 #include "common.h"
 
@@ -71,13 +74,21 @@ get_dll_symbols(char *dllname)
   } name_to_func[] = {
     { "kernel32.dll", kernel32_get_export_symbols },
     { "user32.dll",   user32_get_export_symbols },
+    { "advapi32.dll", advapi32_get_export_symbols },
     { "msvcrt.dll",   msvcrt_get_export_symbols },
+    { "borlndmm.dll", borlndmm_get_export_symbols },
     { NULL, NULL }
   };
 
   for (i = 0; name_to_func[i].name != NULL; i++) {
-    if (strcasecmp(name_to_func[i].name, dllname) == 0)
+    char *trimmed = misc_trim_ext(name_to_func[i].name, "dll");
+
+    if (strcasecmp(name_to_func[i].name, dllname) == 0 ||
+	strcasecmp(trimmed, dllname) == 0) {
+      free(trimmed);
       return name_to_func[i].get_symbols();
+    }
+    free(trimmed);
   }
 
   return NULL;
@@ -252,7 +263,7 @@ load(PE_image *p, char *path)
     debug_message("loaded at %d.\n", p->sect_headers[i].VirtualAddress);
   }
 
-  /* list export symbols */
+  /* export symbols */
   debug_message("-- Exported Symbols\n");
   p->export_symbols = hash_create(1024);
   if (p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size) {
@@ -281,10 +292,10 @@ load(PE_image *p, char *path)
     }
     debug_message("\n");
     export_syminfo[i].name = NULL;
-    //module_register(NULL, export_syminfo);
+    module_register(misc_basename(path), export_syminfo);
   }
 
-  /* list import symbols */
+  /* import symbols */
   debug_message("-- Imported Symbols\n");
   if (p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size) {
     IMAGE_IMPORT_DESCRIPTOR *iid = (IMAGE_IMPORT_DESCRIPTOR *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress];
@@ -293,13 +304,13 @@ load(PE_image *p, char *path)
     int j;
     Symbol_info *syminfo;
 
-    /* list per DLL */
+    /* per DLL */
     for (i = 0; iid[i].u.OriginalFirstThunk; i++) {
       othunk = (IMAGE_THUNK_DATA *)(p->image + (int)iid[i].u.OriginalFirstThunk);
       thunk = (IMAGE_THUNK_DATA *)(p->image + (int)iid[i].FirstThunk);
 
       debug_message("Import DLL Name: %s\n", p->image + iid[i].Name);
-      /* list symbols in each DLL */
+      /* symbols in each DLL */
       for (j = 0; othunk[j].u1.AddressOfData; j++) {
 	iibn = (IMAGE_IMPORT_BY_NAME *)(p->image + (int)othunk[j].u1.AddressOfData);
 	/* import */
@@ -332,7 +343,6 @@ load(PE_image *p, char *path)
     IMAGE_BASE_RELOCATION *ibr = (IMAGE_BASE_RELOCATION *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress];
     int adjust = (int)(p->image - p->opt_header.ImageBase);
 
-    /* debug_message("adjust %08X\n", adjust); */
     while (ibr->VirtualAddress) {
       WORD *reloc = ibr->TypeOffset;
       int nrelocs = (ibr->SizeOfBlock - sizeof(DWORD) * 2) >> 1;
@@ -363,11 +373,14 @@ load(PE_image *p, char *path)
   if (!fs_installed)
     install_fs();
 
-  debug_message("-- Call entrypoint\n");
+  debug_message("-- Call InitDll\n");
   {
-    DllEntryProc DllMain = (DllEntryProc)(p->image + p->opt_header.AddressOfEntryPoint);
-    debug_message("DllMain %p\n", DllMain);
-    //DllMain((HMODULE)p->image, DLL_PROCESS_ATTACH, NULL);
+    DllEntryProc InitDll = (DllEntryProc)(p->image + p->opt_header.AddressOfEntryPoint);
+    int result;
+
+    debug_message("InitDll %p\n", InitDll);
+    if ((result = InitDll((HMODULE)p->image, DLL_PROCESS_ATTACH, NULL)) != 1)
+      show_message("InitDll returns %d\n", result);
   }
 
   debug_message("-- Load completed\n");

@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "module.h"
+#include "misc.h"
 
 #include "common.h"
 
@@ -59,7 +60,8 @@ module_delete(ModuleList *p)
   return 0;
 }
 
-static ModuleList *module_find(const char *filename)
+static ModuleList *
+module_find(const char *filename)
 {
   ModuleList *p = mod_list;
 
@@ -71,13 +73,17 @@ static ModuleList *module_find(const char *filename)
       p = p->prev;
     }
   } else {
-    while (strcasecmp(p->filename, filename)) {
-      if (p) {
-	p = p->prev;
-      } else {
-	break;
+    char *trimmed = misc_trim_ext(p->filename, "dll");
+
+    do {
+      if (strcasecmp(p->filename, filename) == 0 ||
+	  strcasecmp(trimmed, filename) == 0) {
+	free(trimmed);
+	return p;
       }
-    }
+      free(trimmed);
+      p = p->prev;
+    } while (p);
   }
 
   return p;
