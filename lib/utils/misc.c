@@ -1,10 +1,10 @@
 /*
  * misc.c -- miscellaneous routines
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 13 01:09:10 2001.
- * $Id: misc.c,v 1.6 2001/10/14 12:32:54 sian Exp $
+ * Last Modified: Fri Feb  8 02:09:04 2002.
+ * $Id: misc.c,v 1.7 2002/02/08 10:51:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,7 +25,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #include "common.h"
 
 #include "misc.h"
@@ -134,4 +133,94 @@ misc_canonical_pathname(char *pathname)
   }
 
   return p;
+}
+
+static int
+count_token(char *str, char delimiter)
+{
+  int count = 0;
+
+  while (*str != '\0')
+    if (*str++ == delimiter)
+      count++;
+
+  return count;
+}
+
+char **
+misc_str_split(char *str, char delimiter)
+{
+  int i, j, k, l;
+  int count;
+  char **ret;
+
+  if (str == NULL)
+    return NULL;
+
+  count = count_token(str, delimiter) + 1;
+  if  ((ret = calloc(count + 1, sizeof(char *))) == NULL)
+    return NULL;
+
+  k = 0;
+  for (i = 0; i < (int)strlen(str);) {
+    j = i;
+    while (str[i] != '\0' && str[i] != delimiter)
+      i++;
+    l = i - j;
+    i++;
+    if ((ret[k] = malloc(l + 1)) == NULL)
+      goto free_and_return;
+    if (l)
+      strncpy(ret[k], str + j, l);
+    ret[k++][l] = '\0';
+  }
+
+  if (k > count) {
+    warning_fnc("k > count\n");
+    //bug(2, "misc_str_split: k > count\n");
+    goto free_and_return;
+  }
+
+  for (; k < count; k++) {
+    if ((ret[k] = malloc(1)) == NULL)
+      goto free_and_return;
+    ret[k][0] = '\0';
+  }
+  ret[k] = NULL;
+
+  return ret;
+
+ free_and_return:
+  for (k-- ; k >= 0; k--)
+    free(ret[k]);
+  free(ret);
+  return NULL;
+}
+
+void
+misc_free_str_array(char **strs)
+{
+  int i = 0;
+
+  if (strs) {
+    while (strs[i] != NULL)
+      free(strs[i++]);
+    free(strs);
+  }
+}
+
+char *
+misc_str_tolower(char *str)
+{
+  char *ret = str;
+
+  if (str == NULL)
+    return NULL;
+
+  while (*str != '\0') {
+    *str = tolower(*str);
+    str++;
+  }
+
+  return ret;
 }

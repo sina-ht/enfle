@@ -1,10 +1,10 @@
 /*
  * misc.h -- miscellaneous routines header
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct 12 22:53:29 2001.
- * $Id: misc.h,v 1.5 2001/10/14 12:32:54 sian Exp $
+ * Last Modified: Fri Feb  8 02:11:50 2002.
+ * $Id: misc.h,v 1.6 2002/02/08 10:51:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,5 +28,8 @@ char *misc_get_ext(const char *, int);
 char *misc_trim_ext(const char *, const char *);
 char *misc_replace_ext(char *, char *);
 char *misc_canonical_pathname(char *);
+char **misc_str_split(char *, char);
+void misc_free_str_array(char **);
+char *misc_str_tolower(char *);
 
 #endif
