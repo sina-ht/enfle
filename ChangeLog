@@ -1,4 +1,30 @@
-2002-08-18 Hiroshi Takekawa <sian@fennel.org>
+2002-08-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11.c: Cosmetic changes.
+
+	* lib/utils/dlist.c, lib/utils/hash.c: Use bug_on().
+
+2002-08-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archiver.c, lib/enfle/enfle-plugins.c,
+	lib/enfle/identify.c, lib/enfle/loader.c, lib/enfle/player.c,
+	lib/enfle/spi.c, lib/enfle/stream.c, lib/enfle/streamer.c:
+	Cosmetic clean-ups.
+
+2002-08-18  Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/utils/pluginlist.[ch], lib/utils/plugin.[ch]: Discarded
+	OO-style coding.
+
+2002-08-18  Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/utils/libstring.[ch]: Discarded OO-style coding.
+
+	* lib/utils/libconfig.c: Deleted one debug_message_fnc().
+
+	* lib/utils/hash.c: Commented out one debug_message_fnc().
+
+2002-08-18  Hiroshi Takekawa <sian@fennel.org>
 
 	* plugins/video/Xlib/Xlib.c: Plugged one memory leak.
 
