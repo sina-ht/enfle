@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan  5 18:52:51 2004.
- * $Id: avcodec.c,v 1.8 2004/01/05 09:53:12 sian Exp $
+ * Last Modified: Mon Jan 12 06:40:33 2004.
+ * $Id: avcodec.c,v 1.9 2004/01/11 21:42:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -616,96 +616,72 @@ play_video(void *arg)
   void *data;
   AVIPacket *ap = NULL;
   FIFO_destructor destructor;
-  int offset, size, len = 0, got_picture;
+  int offset, size, len, got_picture;
 
   debug_message_fn("()\n");
 
+  offset = 0;
+  size = 0;
   while (m->status == _PLAY) {
-    if (m->current_frame >= m->num_of_frames) {
-      info->eof = 1;
+    if (size == 0) {
+      if (!fifo_get(info->vstream, &data, &destructor))
+	break;
+      if (ap)
+	destructor(ap);
+      if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL)
+	break;
+      offset = 0;
+      size = ap->size;
+    }
+    if (size <= 0)
+      break;
+
+    /* XXX: decode */
+    len = avcodec_decode_video(info->vcodec_ctx, info->vcodec_picture, &got_picture,
+			       ap->data + offset, size);
+    if (len < 0) {
+      warning_fnc("avcodec: avcodec_decode_video return %d\n", len);
       break;
     }
-    
-    /* XXX: decode */
-    offset = 0;
-    size = 0;
-    while (m->status == _PLAY) {
-      while (size <= 100000) { /* XXX: should read one frame... */
-	AVIPacket *ap2;
+    size -= len;
+    offset += len;
+    if (!got_picture)
+      continue;
 
-	if (!fifo_get(info->vstream, &data, &destructor)) {
-	  debug_message_fnc("fifo_get() failed (EOF?).\n");
-	  break;
-	}
-	if ((ap2 = (AVIPacket *)data) != NULL && ap2->data != NULL) {
-	  void *tmp = malloc(size + ap2->size);
-	  if (tmp == NULL) {
-	    debug_message_fnc("malloc() failed.\n");
-	    break;
-	  }
-	  if (size > 0)
-	    memcpy(tmp, ap->data + offset, size);
-	  memcpy(tmp + size, ap2->data, ap2->size);
-	  free(ap2->data);
-	  ap2->data = tmp;
-	  ap2->size += size;
-	  if (ap)
-	    destructor(ap);
-	  offset = 0;
-	  size = ap2->size;
-	  ap = ap2;
-	}
-      }
-      if (size <= 0)
-	break;
-
-      len = avcodec_decode_video(info->vcodec_ctx, info->vcodec_picture, &got_picture,
-				 ap->data + offset, size);
-      if (len < 0) {
-	warning_fnc("avcodec: avcodec_decode_video return %d\n", len);
-	break;
-      }
-
-      size -= len;
-      offset += len;
-
-      if (!got_picture)
-	continue;
-      m->current_frame++;
-      if (info->drop > 0) {
-	info->drop--;
-      } else {
-	pthread_mutex_lock(&info->update_mutex);
+    m->current_frame++;
+    if (info->drop > 0) {
+      info->drop--;
+    } else {
+      pthread_mutex_lock(&info->update_mutex);
 #if defined(USE_DR1)
-	if (info->vcodec_ctx->get_buffer == get_buffer) {
-	  struct pic_buf *pb;
-
-	  pb = (struct pic_buf *)(info->vcodec_picture->data[0] - sizeof(*pb));
-	  image_rendered_set_image(info->p, pb->mem);
-	} else
+      if (info->vcodec_ctx->get_buffer == get_buffer) {
+	struct pic_buf *pb;
+	
+	pb = (struct pic_buf *)(info->vcodec_picture->data[0] - sizeof(*pb));
+	image_rendered_set_image(info->p, pb->mem);
+      } else
 #endif
-	{
-	  int y;
+      {
+	int y;
 
-	  for (y = 0; y < m->height; y++) {
-	    memcpy(memory_ptr(image_rendered_image(info->p)) + m->width * y, info->vcodec_picture->data[0] + info->vcodec_picture->linesize[0] * y, m->width);
-	  }
-	  for (y = 0; y < m->height >> 1; y++) {
-	    memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height, info->vcodec_picture->data[1] + info->vcodec_picture->linesize[1] * y, m->width >> 1);
-	  }
-	  for (y = 0; y < m->height >> 1; y++) {
-	    memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), info->vcodec_picture->data[2] + info->vcodec_picture->linesize[2] * y, m->width >> 1);
-	  }
+	for (y = 0; y < m->height; y++) {
+	  memcpy(memory_ptr(image_rendered_image(info->p)) + m->width * y, info->vcodec_picture->data[0] + info->vcodec_picture->linesize[0] * y, m->width);
 	}
-	pthread_cond_wait(&info->update_cond, &info->update_mutex);
-	pthread_mutex_unlock(&info->update_mutex);
+	for (y = 0; y < m->height >> 1; y++) {
+	  memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height, info->vcodec_picture->data[1] + info->vcodec_picture->linesize[1] * y, m->width >> 1);
+	}
+	for (y = 0; y < m->height >> 1; y++) {
+	  memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), info->vcodec_picture->data[2] + info->vcodec_picture->linesize[2] * y, m->width >> 1);
+	}
       }
-    }
-    if (ap) {
-      destructor(ap);
-      ap = NULL;
+      if (m->status == _PLAY)
+	pthread_cond_wait(&info->update_cond, &info->update_mutex);
+      pthread_mutex_unlock(&info->update_mutex);
     }
   }
+
+  if (ap)
+    destructor(ap);
 
   debug_message_fn(" exiting.\n");
 
@@ -929,19 +905,12 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
-  if (info->demux)
-    demultiplexer_stop(info->demux);
   if (info->vstream)
-    fifo_destroy(info->vstream);
-  if (info->astream)
-    fifo_destroy(info->astream);
-
-  pthread_mutex_lock(&info->update_mutex);
-  pthread_cond_signal(&info->update_cond);
-  pthread_mutex_unlock(&info->update_mutex);
+    fifo_invalidate(info->vstream);
   if (info->video_thread) {
 #if defined(DEBUG)
     debug_message_fnc("waiting for joining (video).\n");
+    pthread_cond_signal(&info->update_cond);
     pthread_join(info->video_thread, &v);
     debug_message_fnc("joined (video).\n");
 #else
@@ -950,6 +919,8 @@ stop_movie(Movie *m)
     info->video_thread = 0;
   }
 
+  if (info->astream)
+    fifo_invalidate(info->astream);
   if (info->audio_thread) {
 #if defined(DEBUG)
     debug_message_fnc("waiting for joining (audio).\n");
@@ -959,6 +930,20 @@ stop_movie(Movie *m)
     pthread_cancel(info->audio_thread);
 #endif
     info->audio_thread = 0;
+  }
+
+  if (info->demux)
+    demultiplexer_stop(info->demux);
+
+  if (info->vstream) {
+    fifo_destroy(info->vstream);
+    info->vstream = NULL;
+    demultiplexer_avi_set_vst(info->demux, NULL);
+  }
+  if (info->astream) {
+    fifo_destroy(info->astream);
+    info->astream = NULL;
+    demultiplexer_avi_set_ast(info->demux, NULL);
   }
 
   /* XXX: decoder clean up */
