@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 19 16:42:57 2001.
- * $Id: enfle.c,v 1.42 2001/09/19 07:46:15 sian Exp $
+ * Last Modified: Fri Oct 12 01:01:54 2001.
+ * $Id: enfle.c,v 1.43 2001/10/11 16:28:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -132,7 +132,7 @@ check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
   result = 0;
   if (((tmp = config_get(c, string_get(s))) != NULL) &&
       !strcasecmp(tmp, "yes")) {
-    //printf("unload %s (disabled)\n", name);
+    debug_message("unload %s (disabled)\n", name);
     enfle_plugins_unload(eps, type, name);
     result = 1;
   }
