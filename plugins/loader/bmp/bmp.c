@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:52:09 2001.
- * $Id: bmp.c,v 1.8 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Thu Feb 14 02:19:20 2002.
+ * $Id: bmp.c,v 1.9 2002/02/13 18:02:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -116,7 +116,7 @@ load_image(Image *p, Stream *st)
     p->depth = p->bits_per_pixel;
     break;
   case 16:
-    fprintf(stderr, "bmp: read_header: bpp 16 detected.\n");
+    show_message("bmp: read_header: bpp 16 detected.\n");
     return 0;
   case 24:
     p->type = _BGR24;
@@ -127,7 +127,7 @@ load_image(Image *p, Stream *st)
     p->depth = 24;
     break;
   default:
-    fprintf(stderr, "bmp: read_header: unknown bpp %d detected.\n", p->bits_per_pixel);
+    show_message("bmp: read_header: unknown bpp %d detected.\n", p->bits_per_pixel);
     return 0;
   }
 
@@ -164,7 +164,7 @@ load_image(Image *p, Stream *st)
       pp -= p->bytes_per_line;
     }
   } else {
-    fprintf(stderr, "Compressed bitmap not yet supported.\n");
+    show_message("Compressed bitmap not yet supported.\n");
     return 0;
   }
 
