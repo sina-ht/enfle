@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 19:41:00 2001.
- * $Id: archive.c,v 1.22 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Wed Oct 10 21:46:23 2001.
+ * $Id: archive.c,v 1.23 2001/10/10 14:40:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -237,8 +237,7 @@ add(Archive *arc, char *path, void *reminder)
 
   arc->nfiles++;
   if (hash_define_str(arc->filehash, path, reminder) < 0) {
-    /* This is not always bug. But treats as bug so far. */
-    bug("archive.c: " __FUNCTION__ ": %s already in filehash.\n", path);
+    warning("archive.c: " __FUNCTION__ ": %s already in filehash.\n", path);
   }
 }
 
@@ -270,12 +269,12 @@ delete_path(Archive *arc, char *path)
 {
   arc->nfiles--;
   if (arc->nfiles < 0) {
-    bug("archive.c: " __FUNCTION__ ": arc->nfiles = %d < 0\n", arc->nfiles);
+    warning("archive.c: " __FUNCTION__ ": arc->nfiles = %d < 0\n", arc->nfiles);
   }
 
   if (!hash_delete_str(arc->filehash, path, 1)) {
     /* This is not always, but probably bug. */
-    bug("archive.c: " __FUNCTION__ ": failed to delete %s.\n", path);
+    warning("archive.c: " __FUNCTION__ ": failed to delete %s.\n", path);
   }
 }
 
