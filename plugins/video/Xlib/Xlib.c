@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr 24 22:48:52 2001.
- * $Id: Xlib.c,v 1.27 2001/04/24 16:46:02 sian Exp $
+ * Last Modified: Wed Apr 25 14:55:10 2001.
+ * $Id: Xlib.c,v 1.28 2001/04/25 16:11:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -110,7 +110,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.4.2",
+  description: "Xlib Video plugin version 0.4.3",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -210,10 +210,13 @@ close_video(void *data)
 }
 
 static void
-destroy(void *p)
+destroy(void *data)
 {
-  close_video(p);
-  free(p);
+  Xlib_info *p = (Xlib_info *)data;
+
+  destroy_window(p->root);
+  close_video(data);
+  free(data);
 }
 
 static void
@@ -812,6 +815,9 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
+  if (!vw->parent)
+    return 1;
+
   if (w == 0 || h == 0)
     return 0;
 
@@ -1050,8 +1056,10 @@ destroy_window(VideoWindow *vw)
   if (xwi->full.gc)
     x11_free_gc(x11, xwi->full.gc);
 
-  x11window_unmap(xw);
-  x11window_destroy(xw);
+  if (vw->parent) {
+    x11window_unmap(xw);
+    x11window_destroy(xw);
+  }
 
   free(xwi);
   free(vw);
