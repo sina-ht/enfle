@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.17 2004/01/30 12:40:48 sian Exp $
+# $Id: Makefile.am,v 1.18 2004/02/14 05:27:15 sian Exp $
 
 lib_LTLIBRARIES = libenfle.la
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
@@ -27,8 +27,9 @@ libenfle_la_SOURCES = \
 	image_magnify.c \
 	image.c image.h \
 	memory.c memory.h \
-	videodecoder.c videodecoder.h \
-	audiodecoder.c audiodecoder.h
+	videodecoder.c videodecoder.h videodecoder-plugin.h \
+	audiodecoder.c audiodecoder.h audiodecoder-plugin.h \
+	demultiplexer.c demultiplexer.h demultiplexer-plugin.h
 
 if USE_SPI
 libenfle_la_LIBADD = @LIBADD_DLOPEN@ $(top_builddir)/lib/utils/libenfleutils.la $(top_builddir)/lib/dllloader/libdllloader.la
