@@ -1,14 +1,23 @@
 /*
  * scan.h -- Scanning modules header
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Wed May 23 13:32:56 2001.
- * $Id: scan.h,v 1.1 2001/05/23 12:13:15 sian Exp $
+ * Last Modified: Mon Aug  6 00:37:57 2001.
+ * $Id: scan.h,v 1.2 2001/08/05 16:17:58 sian Exp $
  */
 
 #ifndef _SCAN_H
 #define _SCAN_H
 
-int scan_get_id_by_name(char *);
-int scan(unsigned char *, unsigned char *, int, int, int);
+typedef enum _scantype {
+  _SCAN_INVALID = 0,
+  _SCAN_NORMAL = 1,
+  _SCAN_QUAD,
+  _SCAN_HILBERT,
+  _SCAN_INVALID_END
+} ScanType;
+
+ScanType scan_get_id_by_name(char *);
+const char *scan_get_name_by_id(ScanType);
+int scan(unsigned char *, unsigned char *, int, int, ScanType);
 
 #endif

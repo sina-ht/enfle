@@ -1,8 +1,8 @@
 /*
  * predict.c -- Prediction modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Fri Jun 29 02:25:53 2001.
- * $Id: predict.c,v 1.3 2001/06/28 17:27:19 sian Exp $
+ * Last Modified: Mon Aug  6 00:37:34 2001.
+ * $Id: predict.c,v 1.4 2001/08/05 16:17:58 sian Exp $
  */
 
 #include <stdlib.h>
@@ -11,6 +11,33 @@
 #include "compat.h"
 
 #include "predict.h"
+
+struct predictor {
+  const char *name;
+  unsigned char *(*predictor)(unsigned char *, int, int);
+  PredictType id;
+};
+
+static unsigned char *predict_none(unsigned char *, int, int);
+static unsigned char *predict_sub(unsigned char *, int, int);
+static unsigned char *predict_sub2(unsigned char *, int, int);
+static unsigned char *predict_up(unsigned char *, int, int);
+static unsigned char *predict_avg(unsigned char *, int, int);
+static unsigned char *predict_avg2(unsigned char *, int, int);
+static unsigned char *predict_paeth(unsigned char *, int, int);
+static unsigned char *predict_jpegls(unsigned char *, int, int);
+
+static struct predictor predictors[] = {
+  { "none",   predict_none,   _PREDICT_NONE },
+  { "sub",    predict_sub,    _PREDICT_SUB },
+  { "sub2",   predict_sub2,   _PREDICT_SUB2 },
+  { "up",     predict_up,     _PREDICT_UP },
+  { "avg",    predict_avg,    _PREDICT_AVG },
+  { "avg2",   predict_avg2,   _PREDICT_AVG2 },
+  { "paeth",  predict_paeth,  _PREDICT_PAETH },
+  { "jpegls", predict_jpegls, _PREDICT_JPEGLS },
+  { NULL, NULL, _PREDICT_INVALID }
+};
 
 static unsigned char *
 predict_none(unsigned char *s, int w, int h)
@@ -198,46 +225,28 @@ predict_jpegls(unsigned char *s, int w, int h)
 PredictType
 predict_get_id_by_name(char *name)
 {
-  if (strcasecmp(name, "none") == 0 || strcasecmp(name, "no") == 0)
-    return _PREDICT_NONE;
-  if (strcasecmp(name, "sub") == 0)
-    return _PREDICT_SUB;
-  if (strcasecmp(name, "sub2") == 0)
-    return _PREDICT_SUB2;
-  if (strcasecmp(name, "up") == 0)
-    return _PREDICT_UP;
-  if (strcasecmp(name, "avg") == 0)
-    return _PREDICT_AVG;
-  if (strcasecmp(name, "avg2") == 0)
-    return _PREDICT_AVG2;
-  if (strcasecmp(name, "paeth") == 0)
-    return _PREDICT_PAETH;
-  if (strcasecmp(name, "jpegls") == 0 || strcasecmp(name, "jls") == 0)
-    return _PREDICT_JPEGLS;
+  int i;
+
+  for (i = 0; predictors[i].name; i++)
+    if (strcasecmp(predictors[i].name, name) == 0)
+      return predictors[i].id;
   return _PREDICT_INVALID;
+}
+
+const char *
+predict_get_name_by_id(PredictType id)
+{
+  if (id < 0 || id >= _PREDICT_INVALID_END)
+    return NULL;
+  return (char *)predictors[id].name;
 }
 
 unsigned char *
 predict(unsigned char *s, int w, int h, PredictType id)
 {
-  switch (id) {
-  case _PREDICT_NONE:
-    return predict_none(s, w, h);
-  case _PREDICT_SUB:
-    return predict_sub(s, w, h);
-  case _PREDICT_SUB2:
-    return predict_sub2(s, w, h);
-  case _PREDICT_UP:
-    return predict_up(s, w, h);
-  case _PREDICT_AVG:
-    return predict_avg(s, w, h);
-  case _PREDICT_AVG2:
-    return predict_avg2(s, w, h);
-  case _PREDICT_PAETH:
-    return predict_paeth(s, w, h);
-  case _PREDICT_JPEGLS:
-    return predict_jpegls(s, w, h);
-  default:
+  if (id < 0 || id >= _PREDICT_INVALID_END)
     return NULL;
-  }
+  if (predictors[id].predictor)
+    return predictors[id].predictor(s, w, h);
+  return NULL;
 }

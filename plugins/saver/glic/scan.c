@@ -1,8 +1,8 @@
 /*
  * scan.c -- Scanning modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Wed May 23 14:09:44 2001.
- * $Id: scan.c,v 1.1 2001/05/23 12:13:15 sian Exp $
+ * Last Modified: Mon Aug  6 00:39:34 2001.
+ * $Id: scan.c,v 1.2 2001/08/05 16:17:58 sian Exp $
  */
 
 #include <stdlib.h>
@@ -12,6 +12,29 @@
 
 #include "scan.h"
 #include "floorlog2.h"
+
+struct scanner {
+  const char *name;
+  void (*scanner)(unsigned char *, unsigned char *, int, int, int, int, int);
+  ScanType id;
+};
+
+static void scan_normal(unsigned char *, unsigned char *, int, int, int, int, int);
+static void scan_quad(unsigned char *, unsigned char *, int, int, int, int, int);
+static void scan_hilbert(unsigned char *, unsigned char *, int, int, int, int, int);
+
+static struct scanner scanners[] = {
+  { "normal",  scan_normal,  _SCAN_NORMAL },
+  { "quad",    scan_quad,    _SCAN_QUAD },
+  { "hilbert", scan_hilbert, _SCAN_HILBERT },
+  { NULL, NULL, _SCAN_INVALID_END }
+};
+
+static void
+scan_normal(unsigned char *d, unsigned char *s, int width, int w, int h, int x, int y)
+{
+  memcpy(d, s, width * h);
+}
 
 static void
 scan_quad(unsigned char *d, unsigned char *s, int width, int w, int h, int x, int y)
@@ -125,32 +148,36 @@ scan_hilbert(unsigned char *d, unsigned char *s, int width, int w, int h, int x,
     scan_hilbert_rs(d, s, width, w, h, x, y);
 }
 
-int
+/* methods */
+
+ScanType
 scan_get_id_by_name(char *name)
 {
-  if (strcasecmp(name, "normal") == 0)
-    return 1;
-  if (strcasecmp(name, "quad") == 0)
-    return 2;
-  if (strcasecmp(name, "hilbert") == 0)
-    return 3;
-  return 0;
+  int i;
+
+  for (i = 0; scanners[i].name; i++)
+    if (strcasecmp(scanners[i].name, name) == 0)
+      return scanners[i].id;
+  return _SCAN_INVALID;
+}
+
+const char *
+scan_get_name_by_id(ScanType id)
+{
+  if (id < 0 || id >= _SCAN_INVALID_END)
+    return NULL;
+  return scanners[id].name;
 }
 
 int
-scan(unsigned char *d, unsigned char *s, int width, int height, int id)
+scan(unsigned char *d, unsigned char *s, int width, int height, ScanType id)
 {
-  switch (id) {
-  case 1:
-    memcpy(d, s, width * height);
-    return 1;
-  case 2:
-    scan_quad(d, s, width, width, height, 0, 0);
-    return 1;
-  case 3:
-    scan_hilbert(d, s, width, width, height, 0, 0);
-    return 1;
-  default:
+  if (id < 0 || id >= _SCAN_INVALID_END)
     return 0;
+  if (scanners[id].scanner) {
+    scanners[id].scanner(d, s, width, width, height, 0, 0);
+    return 1;
   }
+
+  return 0;
 }
