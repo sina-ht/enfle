@@ -1,3 +1,13 @@
+2001-08-05 Hiroshi Takekawa <sian@fennel.org>
+
+	* vmpm_decompose_normal.c: Reimplement decoding.
+
+2001-08-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* vmpm_decompose_esc.c: ESC-others separate encoding.
+
+	* vmpm_decompose.c: path NULL check.
+
 2001-08-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* vmpm_decompose_escfirst.c: More efficient encoding.
