@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 01:48:46 2004.
- * $Id: mpeg.c,v 1.1 2004/02/14 05:22:15 sian Exp $
+ * Last Modified: Tue Feb 17 22:48:43 2004.
+ * $Id: mpeg.c,v 1.2 2004/02/20 17:18:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,6 +70,7 @@ ENFLE_PLUGIN_EXIT(demultiplexer_mpeg, p)
 /* demultiplexer plugin methods */
 
 #define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536
+#define DEMULTIPLEXER_MPEG_IDENTIFY_SIZE 4096
 #define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536*8
 
 /*
@@ -163,6 +164,7 @@ __examine(Demultiplexer *demux, int identify_only)
   int read_total, read_size, used_size, used_size_prev = 0, skip;
   int nvstream, nastream;
   int vstream, astream;
+  int maximum_size = identify_only ? DEMULTIPLEXER_MPEG_IDENTIFY_SIZE : DEMULTIPLEXER_MPEG_DETERMINE_SIZE;
 
   debug_message_fnc("%s\n", identify_only ? "identify" : "examine");
 
@@ -179,7 +181,7 @@ __examine(Demultiplexer *demux, int identify_only)
   read_total = 0;
 
   do {
-    if (read_total < DEMULTIPLEXER_MPEG_DETERMINE_SIZE) {
+    if (read_total < maximum_size) {
       if ((read_size = stream_read(demux->st, buf + used_size,
 				   DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
 	err_message_fnc("stream_read error.\n");
@@ -192,7 +194,7 @@ __examine(Demultiplexer *demux, int identify_only)
       read_total += read_size;
     }
 
-    if (read_total >= DEMULTIPLEXER_MPEG_DETERMINE_SIZE) {
+    if (read_total >= maximum_size) {
       if (used_size <= 12 || used_size_prev == used_size) {
 	if (info->ver == 0) {
 	  debug_message_fnc("Not determined as MPEG.\n");
