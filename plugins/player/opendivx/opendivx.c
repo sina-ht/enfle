@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 10:05:37 2001.
- * $Id: opendivx.c,v 1.11 2001/09/03 01:44:32 sian Exp $
+ * Last Modified: Mon Sep  3 11:00:24 2001.
+ * $Id: opendivx.c,v 1.12 2001/09/03 02:00:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #define LINUX
 #include <decore.h>
-#include "libavi.h"
 
 #include "common.h"
 
