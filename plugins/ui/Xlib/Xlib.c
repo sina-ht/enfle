@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 16 05:56:52 2000.
- * $Id: Xlib.c,v 1.9 2000/10/16 19:29:36 sian Exp $
+ * Last Modified: Tue Oct 17 05:22:32 2000.
+ * $Id: Xlib.c,v 1.10 2000/10/16 20:23:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -53,7 +53,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Xlib",
-  description: "Xlib UI plugin version 0.4",
+  description: "Xlib UI plugin version 0.4.1",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -308,6 +308,7 @@ main_loop(UIData *uidata, Movie *m, Image *p)
   return 0;
 }
 
+/* XXX: Such a routine as this should be out of ui plugin. */
 static int
 process_files_of_archive(UIData *uidata, Archive *a)
 {
@@ -330,6 +331,8 @@ process_files_of_archive(UIData *uidata, Archive *a)
   
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
+
+  /* XXX: This setting should be configurable. */
   movie_set_play_every_frame(m, 1);
 
   path = NULL;
@@ -368,6 +371,10 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	    continue;
 	  }
 	  dir = process_files_of_archive(uidata, arc);
+	  if (arc->nfiles == 0) {
+	    /* Now that deleted all paths in this archive, should be deleted wholly. */
+	    archive_iteration_delete(a);
+	  }
 	  archive_destroy(arc);
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
