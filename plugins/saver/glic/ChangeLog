@@ -1,4 +1,8 @@
-2001-05-23 Hiroshi Takekawa <sian@fennel.org>
+2001-06-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/predict.c: Implemented paeth predictor.
+
+2001-05-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/glic/predict.c, plugins/saver/glic/predict.h,
 	plugins/saver/glic/scan.c, plugins/saver/glic/scan.h,

@@ -1,3 +1,16 @@
+2001-06-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added --enable-warnings. Version up.
+
+	* src/enfle.rc, plugins/saver/png/png.c: Made able to choose more
+	various filter.
+
+	* plugins/player/avifile/avifile.cpp: Improved playback
+	performance.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Disable audio when audio
+	device cannot be opened.
+
 2001-05-23 Hiroshi Takekawa <sian@fennel.org>
 
 	* plugins/player/libmpeg3/libmpeg3.c: Cosmetic change.
