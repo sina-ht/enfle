@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug  6 01:08:57 2001.
- * $Id: normal.c,v 1.50 2001/08/05 16:17:24 sian Exp $
+ * Last Modified: Sat Aug 25 09:05:08 2001.
+ * $Id: normal.c,v 1.51 2001/08/26 00:55:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,9 @@
 
 #include <stdlib.h>
 
+/* Please ignore. */
+#undef ENABLE_GUI_GTK
+
 #define REQUIRE_UNISTD_H
 #define REQUIRE_STRING_H
 #include "compat.h"
@@ -37,13 +40,17 @@
 #include "enfle/streamer.h"
 #include "enfle/archiver.h"
 #include "enfle/identify.h"
+#ifdef ENABLE_GUI_GTK
+# include "eventnotifier.h"
+# include "gui_gtk.h"
+#endif
 
 static int ui_main(UIData *);
 
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.4.7",
+  description: "Normal UI plugin version 0.4.8",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -69,6 +76,35 @@ plugin_exit(void *p)
 
 /* for internal use */
 
+#define MAIN_LOOP_QUIT 0
+#define MAIN_LOOP_NEXT 1
+#define MAIN_LOOP_PREV -1
+#define MAIN_LOOP_NEXTARCHIVE 2
+#define MAIN_LOOP_PREVARCHIVE -2
+#define MAIN_LOOP_LAST 3
+#define MAIN_LOOP_FIRST -3
+#define MAIN_LOOP_DELETE_FROM_LIST 4
+#define MAIN_LOOP_DELETE_FILE 5
+#define MAIN_LOOP_DO_NOTHING 6
+
+typedef struct _main_loop {
+  UIData *uidata;
+  Archive *a;
+  Stream *st;
+  VideoWindow *vw;
+  VideoEventData ev;
+  VideoButton button;
+  VideoKey key;
+  Image *original_p;
+  Image *p;
+  Movie *m;
+  char *path;
+  int first_point;
+  unsigned int old_x, old_y;
+  int offset_x, offset_y;
+  int ret;
+} MainLoop;
+
 static void
 magnify_if_requested(VideoWindow *vw, Image *p)
 {
@@ -89,7 +125,6 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     p->rendered.height = p->magnified.height = p->height;
     break;
   case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     if (!use_hw_scale) {
       if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method))
 	show_message(__FUNCTION__ ": image_magnify() failed.\n");
@@ -97,33 +132,28 @@ magnify_if_requested(VideoWindow *vw, Image *p)
 	memory_destroy(p->rendered.image);
       p->rendered.image = memory_dup(p->magnified.image);
     }
-    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
     break;
   case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? hs : ws;
-    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     if (!use_hw_scale) {
       image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
       if (p->rendered.image)
 	memory_destroy(p->rendered.image);
       p->rendered.image = memory_dup(p->magnified.image);
     }
-    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
     break;
   case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? ws : hs;
-    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     if (!use_hw_scale) {
       image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
       if (p->rendered.image)
 	memory_destroy(p->rendered.image);
       p->rendered.image = memory_dup(p->magnified.image);
     }
-    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
     break;
   default:
     show_message(__FUNCTION__ ": invalid render_method %d\n", vw->render_method);
@@ -149,35 +179,6 @@ render_frame(VideoWindow *vw, Movie *m, Image *p)
   video_window_render(vw, p);
 
   return 1;
-}
-
-static void
-set_caption_string(VideoWindow *vw, char *path, char *format)
-{
-  String *cap;
-  char *pos;
-
-  if ((cap = string_create()) == NULL)
-    return;
-
-  pos = strdup("(%%4d,%%4d)");
-  string_set(cap, PROGNAME);
-  string_cat_ch(cap, vw->interpolate_method == _BILINEAR ? ')' : '>');
-  if (pos) {
-    snprintf(pos, strlen(pos) + 1, "(%4d,%4d)", vw->render_width, vw->render_height);
-    string_cat(cap, pos);
-    free(pos);
-  }
-  string_cat_ch(cap, ' ');
-  string_cat(cap, path);
-
-  string_cat_ch(cap, '(');
-  string_cat(cap, format);
-  string_cat_ch(cap, ')');
-
-  video_window_set_caption(vw, string_get(cap));
-
-  string_destroy(cap);
 }
 
 static int
@@ -212,32 +213,86 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
   return 1;
 }
 
-#define MAIN_LOOP_QUIT 0
-#define MAIN_LOOP_NEXT 1
-#define MAIN_LOOP_PREV -1
-#define MAIN_LOOP_NEXTARCHIVE 2
-#define MAIN_LOOP_PREVARCHIVE -2
-#define MAIN_LOOP_LAST 3
-#define MAIN_LOOP_FIRST -3
-#define MAIN_LOOP_DELETE_FROM_LIST 4
-#define MAIN_LOOP_DELETE_FILE 5
-#define MAIN_LOOP_DO_NOTHING 6
+static void
+set_caption_string(MainLoop *ml)
+{
+  String *cap;
+  VideoWindow *vw = ml->vw;
+  char *template;
+  int i;
+  int literal_start, literal_mode;
 
-typedef struct _main_loop {
-  UIData *uidata;
-  VideoWindow *vw;
-  VideoEventData ev;
-  VideoButton button;
-  VideoKey key;
-  Image *original_p;
-  Image *p;
-  Movie *m;
-  char *path;
-  int first_point;
-  unsigned int old_x, old_y;
-  int offset_x, offset_y;
-  int ret;
-} MainLoop;
+  if ((cap = string_create()) == NULL)
+    return;
+
+  if ((template = config_get_str(ml->uidata->c, "/enfle/plugins/ui/normal/caption_template")) == NULL)
+    template = (char *)"%p %f %xx%y";
+
+  i = 0;
+  literal_mode = 0;
+  literal_start = 0;
+  while (template[i]) {
+    if (template[i] != '%') {
+      if (literal_mode != 1) {
+	literal_start = i;
+	literal_mode = 1;
+      }
+    } else {
+      if (literal_mode == 1) {
+	string_ncat(cap, &template[literal_start], i - literal_start);
+	literal_mode = 0;
+      }
+      i++;
+      switch (template[i]) {
+      case '\0':
+	i--; break;
+      case '%':
+	string_cat_ch(cap, '%'); break;
+      case ')':
+      case '>':
+	string_cat_ch(cap, vw->interpolate_method == _BILINEAR ? ')' : '>'); break;
+      case 'x':
+	string_catf(cap, "%d", vw->render_width); break;
+      case 'y':
+	string_catf(cap, "%d", vw->render_height); break;
+      case 'f':
+	if (ml->p)
+	  string_cat(cap, (ml->p->format_detail != NULL) ? (unsigned char *)ml->p->format_detail : (unsigned char *)ml->p->format);
+	else if (ml->m)
+	  string_cat(cap, ml->m->format);
+	if (strcmp(ml->st->format, "FILE") != 0) {
+	  string_cat_ch(cap, '/');
+	  string_cat(cap, ml->st->format);
+	}
+	if (strcmp(ml->a->format, "NORMAL") != 0) {
+	  string_cat_ch(cap, '#');
+	  string_cat(cap, ml->a->format);
+	}
+	break;
+      case 'F':
+	string_cat(cap, ml->p->format); break;
+      case 'p':
+	string_cat(cap, ml->path); break;
+      case 'P':
+	string_cat(cap, ml->a->path);
+	string_cat(cap, ml->path); break;
+      case 'N':
+	string_cat(cap, PROGNAME); break;
+      default:
+	warning("Found an unknown format character %c.\n", template[i]);
+	string_ncat(cap, &template[i - 1], 2);
+	break;
+      }
+    }
+    i++;
+  }
+  if (literal_mode == 1)
+    string_ncat(cap, &template[literal_start], i - literal_start);
+
+  video_window_set_caption(vw, string_get(cap));
+
+  string_destroy(cap);
+}
 
 /* action handler */
 
@@ -279,9 +334,14 @@ main_loop_toggle_interpolate(MainLoop *ml)
     ml->vw->interpolate_method = _NOINTERPOLATE;
     break;
   }
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
+
   magnify_if_requested(ml->vw, ml->p);
   video_window_render(ml->vw, ml->p);
-  set_caption_string(ml->vw, ml->path, ml->p ? ml->p->format : ml->m->format);
+  set_caption_string(ml);
+
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
+
   return 1;
 }
 
@@ -291,11 +351,16 @@ main_loop_magnify_main(MainLoop *ml)
   Image *p = ml->p;
 
   if (p) {
+    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
+
     magnify_if_requested(ml->vw, p);
     video_window_resize(ml->vw, p->magnified.width, p->magnified.height);
     video_window_set_offset(ml->vw, 0, 0);
     video_window_render(ml->vw, p);
+
+    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
   }
+
   return 1;
 }
 static int
@@ -323,13 +388,19 @@ main_loop_magnify_double(MainLoop *ml)
 static int
 main_loop_save_main(MainLoop *ml, char *format)
 {
+  int result;
+
   video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
+
   if (!save_image(ml->p, ml->uidata, ml->path, format)) {
     show_message("save_image() (format %s) failed.\n", format);
-    return 0;
-  }
+    result = 0;
+  } else
+    result = 1;
+
   video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
-  return 1;
+
+  return result;
 }
 static int
 main_loop_save_png(MainLoop *ml)
@@ -344,9 +415,9 @@ main_loop_save(MainLoop *ml)
   if ((format = config_get(ml->uidata->c, "/enfle/plugins/ui/normal/save_format")) == NULL) {
     show_message("save_format is not specified.\n");
     return 0;
-  } else {
-    return main_loop_save_main(ml, format);
   }
+
+  return main_loop_save_main(ml, format);
 }
 
 static int
@@ -354,6 +425,9 @@ main_loop_rotate_main(MainLoop *ml, int f)
 {
   Image *old_p;
   UIData *uidata = ml->uidata;
+  int result;
+
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
 
   config_set_int(uidata->c, (char *)"/enfle/plugins/effect/rotate/function", f);
   if ((old_p = effect_call(uidata->eps, (char *)"Rotate", ml->p, uidata->c))) {
@@ -364,11 +438,15 @@ main_loop_rotate_main(MainLoop *ml, int f)
     magnify_if_requested(ml->vw, ml->p);
     video_window_set_offset(ml->vw, 0, 0);
     video_window_render(ml->vw, ml->p);
-    return 1;
+    result = 1;
   } else {
     show_message("Rotate effect failed.\n");
-    return 0;
+    result = 0;
   }
+
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
+
+  return result;
 }
 static int main_loop_rotate_right(MainLoop *ml) { return main_loop_rotate_main(ml, 1); }
 static int main_loop_rotate_left(MainLoop *ml) { return main_loop_rotate_main(ml, -1); }
@@ -379,6 +457,9 @@ static int
 main_loop_gamma_main(MainLoop *ml, int index)
 {
   UIData *uidata = ml->uidata;
+  int result;
+
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
 
   if (index == 3) {
     image_destroy(ml->p);
@@ -387,26 +468,27 @@ main_loop_gamma_main(MainLoop *ml, int index)
     video_window_resize(ml->vw, ml->p->magnified.width, ml->p->magnified.height);
     video_window_set_offset(ml->vw, 0, 0);
     video_window_render(ml->vw, ml->p);
-    return 1;
+    result = 1;
   } else {
     Image *old_p;
-    int result = 1;
 
     config_set_int(uidata->c, (char *)"/enfle/plugins/effect/gamma/index", index);
-    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
     if ((old_p = effect_call(uidata->eps, (char *)"Gamma", ml->p, uidata->c))) {
       if (old_p != ml->p)
 	image_destroy(old_p);
       magnify_if_requested(ml->vw, ml->p);
       video_window_set_offset(ml->vw, 0, 0);
       video_window_render(ml->vw, ml->p);
+      result = 1;
     } else {
       show_message("Gamma correction failed.\n");
       result = 0;
     }
-    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
-    return result;
   }
+
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
+
+  return result;
 }
 static int main_loop_gamma_1(MainLoop *ml) { return main_loop_gamma_main(ml, 0); }
 static int main_loop_gamma_2(MainLoop *ml) { return main_loop_gamma_main(ml, 1); }
@@ -562,7 +644,7 @@ main_loop_pointer_moved(MainLoop *ml)
 }
 
 static int
-main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
+main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archive *a, char *path, void *gui)
 {
   MainLoop ml;
 
@@ -573,6 +655,8 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
   ml.vw = vw;
   ml.m = m;
   ml.p = p;
+  ml.st = st;
+  ml.a = a;
   ml.path = path;
   ml.original_p = NULL;
 
@@ -583,16 +667,17 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
       vw->if_direct = 0;
     magnify_if_requested(vw, p);
     video_window_render(vw, p);
-    set_caption_string(vw, path, p->format);
+    set_caption_string(&ml);
     ml.original_p = image_dup(p);
   } else if (m) {
     vw->if_direct = 1;
     vw->render_width  = m->width;
     vw->render_height = m->height;
-    set_caption_string(vw, path, m->format);
+    set_caption_string(&ml);
   }
 
   video_window_set_offset(vw, 0, 0);
+  video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 
   ml.ret = MAIN_LOOP_DO_NOTHING;
   while (ml.ret == MAIN_LOOP_DO_NOTHING) {
@@ -619,6 +704,28 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	break;
       }
     }
+#ifdef ENABLE_GUI_GTK
+    {
+      GUI_Gtk *gui_gtk = (GUI_Gtk *)gui;
+
+      switch (eventnotifier_get(gui_gtk->en)) {
+      case _EVENT_NEXT:
+	main_loop_next(&ml);
+	break;
+      case _EVENT_PREV:
+	main_loop_prev(&ml);
+	break;
+      case _EVENT_NEXT_ARCHIVE:
+	main_loop_nextarchive(&ml);
+	break;
+      case _EVENT_PREV_ARCHIVE:
+	main_loop_prevarchive(&ml);
+	break;
+      default:
+	break;
+      }
+    }
+#endif
 
     if (m) {
       switch (m->status) {
@@ -648,7 +755,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 }
 
 static int
-process_files_of_archive(UIData *uidata, Archive *a)
+process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 {
   EnflePlugins *eps = uidata->eps;
   VideoWindow *vw = uidata->vw;
@@ -682,7 +789,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       case MAIN_LOOP_DELETE_FROM_LIST:
 	//debug_message("MAIN_LOOP_DELETE_FROM_LIST\n");
 	path = archive_iteration_delete(a);
-	ret = (archive_direction(a) == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	ret = MAIN_LOOP_NEXT;
 	break;
       case MAIN_LOOP_DELETE_FILE:
 	//debug_message("MAIN_LOOP_DELETE_FILE\n");
@@ -691,7 +798,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  show_message("DELETED: %s\n", s->path);
 	}
 	path = archive_iteration_delete(a);
-	ret = (archive_direction(a) == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	ret = MAIN_LOOP_NEXT;
 	break;
       case MAIN_LOOP_NEXT:
 	//debug_message("MAIN_LOOP_NEXT\n");
@@ -732,21 +839,21 @@ process_files_of_archive(UIData *uidata, Archive *a)
     if (!path)
       break;
 
-    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     r = identify_file(eps, path, s, a);
     switch (r) {
     case IDENTIFY_FILE_DIRECTORY:
       arc = archive_create(a);
       debug_message("Reading %s.\n", path);
-      video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
+
       if (!archive_read_directory(arc, path, 1)) {
+	show_message("Error in reading %s.\n", path);
 	archive_destroy(arc);
 	ret = MAIN_LOOP_DELETE_FROM_LIST;
 	continue;
       }
       (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
-      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      ret = process_files_of_archive(uidata, arc);
+      ret = process_files_of_archive(uidata, arc, gui);
       if (arc->nfiles == 0) {
 	/* Now that all paths are deleted in this archive, should be deleted wholly. */
 	ret = MAIN_LOOP_DELETE_FROM_LIST;
@@ -759,7 +866,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	debug_message("Archiver identified as %s\n", arc->format);
 	if (archiver_open(eps, arc, arc->format, s)) {
 	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
-	  ret = process_files_of_archive(uidata, arc);
+	  ret = process_files_of_archive(uidata, arc, gui);
 	  archive_destroy(arc);
 	  continue;
 	} else {
@@ -780,7 +887,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
       continue;
     }
 
-    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     r = identify_stream(eps, p, m, s, vw, c);
     switch (r) {
     case IDENTIFY_STREAM_MOVIE_FAILED:
@@ -803,14 +909,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	p->comment = NULL;
       }
 
-      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      ret = main_loop(uidata, vw, NULL, p, path);
+      ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
       memory_destroy(p->rendered.image);
       p->rendered.image = NULL;
       break;
     case IDENTIFY_STREAM_MOVIE:
-      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      ret = main_loop(uidata, vw, m, NULL, path);
+      ret = main_loop(uidata, vw, m, NULL, s, a, path, gui);
       movie_unload(m);
       break;
     default:
@@ -836,6 +940,10 @@ ui_main(UIData *uidata)
   Config *c = uidata->c;
   void *disp;
   char *render_method, *interpolate_method;
+#ifdef ENABLE_GUI_GTK
+  GUI_Gtk gui;
+  pthread_t gui_thread;
+#endif
 
   debug_message("Normal: " __FUNCTION__ "()\n");
 
@@ -877,7 +985,14 @@ ui_main(UIData *uidata)
     }
   }
 
-  process_files_of_archive(uidata, uidata->a);
+#ifdef ENABLE_GUI_GTK
+  gui.en = eventnotifier_create();
+  gui.uidata = uidata;
+  pthread_create(&gui_thread, NULL, gui_gtk_init, (void *)&gui);
+  process_files_of_archive(uidata, uidata->a, (void *)&gui);
+#else
+  process_files_of_archive(uidata, uidata->a, NULL);
+#endif
 
   video_window_destroy(vw);
   vp->close_video(disp);
