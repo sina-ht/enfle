@@ -24,6 +24,9 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include "compat.h"
+#include "common.h"
+
 #define VIDEO_OUT_NEED_VO_SETUP
 #include "video_out.h"
 #include "mpeg2.h"
@@ -95,7 +98,7 @@ static int parse_chunk (mpeg2dec_t * mpeg2dec, int code, uint8_t * buffer)
 	    vo_draw ((picture->picture_coding_type == B_TYPE) ?
 		     picture->current_frame :
 		     picture->forward_reference_frame);
-#ifdef ARCH_X86
+#ifdef __i386__
 	    if (config.flags & MM_ACCEL_X86_MMX)
 		emms ();
 #endif
@@ -131,7 +134,37 @@ static int parse_chunk (mpeg2dec_t * mpeg2dec, int code, uint8_t * buffer)
 		vo_get_frame (mpeg2dec->output,
 			      VO_PREDICTION_FLAG | VO_BOTH_FIELDS);
 	}
-	mpeg2dec->frame_rate_code = picture->frame_rate_code;	/* FIXME */
+
+	mpeg2dec->frame_rate_code = picture->frame_rate_code;
+	switch (mpeg2dec->frame_rate_code) {
+	case 1:
+	  mpeg2dec->frame_rate = 23.976;
+	  break;
+	case 2:
+	  mpeg2dec->frame_rate = 24.0;
+	  break;
+	case 3:
+	  mpeg2dec->frame_rate = 25.0;
+	  break;
+	case 4:
+	  mpeg2dec->frame_rate = 29.97;
+	  break;
+	case 5:
+	  mpeg2dec->frame_rate = 30.0;
+	  break;
+	case 6:
+	  mpeg2dec->frame_rate = 50.0;
+	  break;
+	case 7:
+	  mpeg2dec->frame_rate = 59.94;
+	  break;
+	case 8:
+	  mpeg2dec->frame_rate = 60.0;
+	  break;
+	default:
+	  fprintf(stderr, "invalid or unknown frame rate code: %d\n", mpeg2dec->frame_rate_code);
+	  break;
+	}
 	break;
 
     case 0xb5:	/* extension_start_code */
@@ -151,9 +184,9 @@ static int parse_chunk (mpeg2dec_t * mpeg2dec, int code, uint8_t * buffer)
 	if (!(mpeg2dec->in_slice)) {
 	    mpeg2dec->in_slice = 1;
 
-	    if (picture->second_field)
-		vo_field (picture->current_frame, picture->picture_structure);
-	    else {
+	    if (picture->second_field) {
+	      vo_field (picture->current_frame, picture->picture_structure);
+	    } else {
 		if (picture->picture_coding_type == B_TYPE)
 		    picture->current_frame =
 			vo_get_frame (mpeg2dec->output,
@@ -172,8 +205,7 @@ static int parse_chunk (mpeg2dec_t * mpeg2dec, int code, uint8_t * buffer)
 
 	if (!(mpeg2dec->drop_frame)) {
 	    slice_process (picture, code, buffer);
-
-#ifdef ARCH_X86
+#ifdef __i386__
 	    if (config.flags & MM_ACCEL_X86_MMX)
 		emms ();
 #endif

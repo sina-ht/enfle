@@ -62,7 +62,7 @@ static uint8_t clip_lut[1024];
 
 void idct_init (void)
 {
-#ifdef ARCH_X86
+#ifdef __i386__
     if (config.flags & MM_ACCEL_X86_MMXEXT) {
 	fprintf (stderr, "Using MMXEXT for IDCT transform\n");
 	idct_block_copy = idct_block_copy_mmxext;

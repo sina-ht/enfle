@@ -46,6 +46,7 @@ typedef struct mpeg2dec_s {
 
     /* ONLY for 0.2.0 release - will not stay there later */
     int frame_rate_code;
+    double frame_rate;
 } mpeg2dec_t ;
 
 

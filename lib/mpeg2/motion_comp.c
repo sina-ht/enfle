@@ -30,7 +30,7 @@ mc_functions_t mc_functions;
 void motion_comp_init (void)
 {
 
-#ifdef ARCH_X86
+#ifdef __i386__
     if (config.flags & MM_ACCEL_X86_MMXEXT) {
 	fprintf (stderr, "Using MMXEXT for motion compensation\n");
 	mc_functions = mc_functions_mmxext;

@@ -69,7 +69,7 @@ static void yuv2rgb_c (void * dst, uint8_t * py,
 void yuv2rgb_init (int bpp, int mode) 
 {
     yuv2rgb = NULL;
-#ifdef ARCH_X86
+#ifdef __i386__
     if ((yuv2rgb == NULL) && (vo_mm_accel & MM_ACCEL_X86_MMXEXT)) {
 	yuv2rgb = yuv2rgb_init_mmxext (bpp, mode);
 	if (yuv2rgb != NULL)

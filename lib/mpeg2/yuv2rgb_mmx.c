@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef ARCH_X86
+#ifdef __i386__
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef ARCH_X86
+#ifdef __i386__
 
 #include <inttypes.h>
 
@@ -51,7 +51,7 @@ mmx_t round4 = {0x0002000200020002LL};
  * unrolling will help
  */
 
-static inline void mmx_zero_reg ()
+static inline void mmx_zero_reg (void)
 {
     /* load 0 into mm0 */
     pxor_r2r (mm0, mm0);

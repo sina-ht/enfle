@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Mar  3 03:22:26 2001.
-# $Id: Makefile.am,v 1.4 2001/03/02 18:37:27 sian Exp $
+# Last Modified: Sat Mar  3 03:54:48 2001.
+# $Id: Makefile.am,v 1.5 2001/03/04 17:08:59 sian Exp $
 
-noinst_LTLIBRARIES = libenflempeg2.la
+noinst_LIBRARIES = libenflempeg2.a
 INCLUDES = -I$(top_srcdir)
 
-libenflempeg2_la_SOURCES = \
+libenflempeg2_a_SOURCES = \
 	decode.c \
 	header.c \
 	idct.c idct_mlib.c idct_mmx.c \
