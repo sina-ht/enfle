@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan  4 06:56:57 2001.
- * $Id: memory.c,v 1.4 2001/01/06 23:53:32 sian Exp $
+ * Last Modified: Mon Apr 16 21:13:12 2001.
+ * $Id: memory.c,v 1.5 2001/04/18 05:39:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,11 @@ static Memory *duplicate(Memory *, int);
 static void destroy(Memory *);
 
 static Memory template = {
+  ptr: NULL,
+  size: 0,
+  used: 0,
+  type: _UNKNOWN,
+  shmid: -1,
   request_type: request_type,
   allocate: allocate,
   set: set,
@@ -148,7 +153,7 @@ allocate(Memory *mem, unsigned int size)
   alignment = getpagesize();
   aligned_size = (size % alignment) ? ((size / alignment) + 1) * alignment : size;
 
-  /* debug_message("MEMORY: " __FUNCTION__ ": requested %d bytes (aligned %d bytes) as type %s\n", size, aligned_size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN")); */
+  //debug_message("MEMORY: " __FUNCTION__ ": requested %d bytes (aligned %d bytes) as type %s\n", size, aligned_size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN"));
 
   switch (mem->type) {
   case _NORMAL:
@@ -182,10 +187,12 @@ free_both(Memory *mem)
     if (mem->ptr)
       free(mem->ptr);
     break;
+#ifdef USE_SHM
   case _SHM:
     if (mem->ptr)
       shmdt(mem->ptr);
     break;
+#endif
   case _UNKNOWN:
     break;
   default:
