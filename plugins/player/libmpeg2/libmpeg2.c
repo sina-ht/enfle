@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 25 01:48:36 2001.
- * $Id: libmpeg2.c,v 1.19 2001/06/24 16:53:35 sian Exp $
+ * Last Modified: Thu Jul 26 02:24:45 2001.
+ * $Id: libmpeg2.c,v 1.20 2001/07/29 00:39:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -250,8 +250,7 @@ play(Movie *m)
   m->current_sample = 0;
   timer_start(m->timer);
   demultiplexer_set_eof(info->demux, 0);
-
-  stream_rewind(m->st);
+  demultiplexer_rewind(info->demux);
 
   if (m->has_video) {
     unsigned int accel;
