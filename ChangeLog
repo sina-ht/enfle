@@ -1,3 +1,9 @@
+2000-10-15  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+
+	* lib/X11/x11ximage.c: Improved rendering code.
+
+	* plugins/ui/Xlib/Xlib.c: Deleted unnecessary debugging message.
+
 2000-10-15  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11.[ch]: Added bits_per_pixel member. More
