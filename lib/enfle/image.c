@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  9 02:07:47 2000.
- * $Id: image.c,v 1.7 2000/12/10 13:19:34 sian Exp $
+ * Last Modified: Mon Apr 16 13:21:37 2001.
+ * $Id: image.c,v 1.8 2001/04/18 05:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,8 @@
 
 #include <stdlib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "image.h"
@@ -45,11 +47,13 @@ static const char *image_type_to_string_array[] = {
 };
 
 static Image *duplicate(Image *);
+static int compare(Image *, Image *);
 static int magnify(Image *, int, int, ImageInterpolateMethod);
 static void destroy(Image *);
 
 static Image template = {
   duplicate: duplicate,
+  compare: compare,
   magnify: magnify,
   destroy: destroy
 };
@@ -88,25 +92,36 @@ duplicate(Image *p)
   memcpy(new, p, sizeof(Image));
 
   if (p->rendered.image && (new->rendered.image = memory_dup_as_shm(p->rendered.image)) == NULL)
-      goto error;
+    goto error;
 
   if (p->magnified.image && (new->magnified.image = memory_dup(p->magnified.image)) == NULL)
-      goto error;
+    goto error;
 
   if (p->image && (new->image = memory_dup(p->image)) == NULL)
-      goto error;
+    goto error;
 
   if (p->mask && (new->mask = memory_dup(p->mask)) == NULL)
-      goto error;
+    goto error;
+
+  if (p->comment && (new->comment = strdup(p->comment)) == NULL)
+    goto error;
 
   if (p->next && (new->next = duplicate(p->next)) == NULL)
-      goto error;
+    goto error;
 
   return new;
 
  error:
   destroy(new);
   return NULL;
+}
+
+static int
+compare(Image *p, Image *p2)
+{
+  if (p->width != p2->width || p->height != p2->height || p->type != p2->type)
+    return 0;
+  return 1;
 }
 
 static int

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  2 11:29:26 2001.
- * $Id: image.h,v 1.9 2001/02/02 16:42:30 sian Exp $
+ * Last Modified: Mon Apr 16 10:36:10 2001.
+ * $Id: image.h,v 1.10 2001/04/18 05:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -101,11 +101,13 @@ struct _image {
   Image *next;
 
   Image *(*duplicate)(Image *);
+  int (*compare)(Image *, Image *);
   int (*magnify)(Image *, int, int, ImageInterpolateMethod);
   void (*destroy)(Image *);
 };
 
 #define image_dup(p) (p)->duplicate((p))
+#define image_compare(p, p2) (p)->compare((p), (p2))
 #define image_magnify(p, dw, dh, m) (p)->magnify((p), (dw), (dh), (m))
 #define image_destroy(p) (p)->destroy((p))
 
