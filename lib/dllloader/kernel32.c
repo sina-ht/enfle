@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:34:47 2001.
- * $Id: kernel32.c,v 1.20 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Tue Jan  1 23:59:43 2002.
+ * $Id: kernel32.c,v 1.21 2002/01/02 11:23:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-//#define MORE_DEBUG
+#define MORE_DEBUG
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -51,7 +51,7 @@
 #define more_debug_message_fn(format, args...)
 #else
 #define more_debug_message(format, args...) fprintf(stderr, format, ## args)
-#define more_debug_message_fn(format, args...) fprintf(stderr, "%s" format, __FUNCTION__, ## args)
+#define more_debug_message_fn(format, args...) fprintf(stderr, "%s", __FUNCTION__);fprintf(stderr, format, ## args)
 #endif
 
 /* file related */
@@ -769,7 +769,7 @@ DEFINE_W32API(LPVOID, VirtualAlloc,
     vmr->size = size;
     /* vmr->commited = NULL; vmr->next = vmr->prev = NULL; (calloc() do this) */
 
-    debug_message_fn(": reserve: %p\n", p);
+    debug_message_fnc("reserve: %p\n", p);
 
     return p;
   }
@@ -799,7 +799,7 @@ DEFINE_W32API(LPVOID, VirtualAlloc,
 	v->commited->address = ptr;
 	v->commited->size = size;
 
-	debug_message_fn(": commit: %p\n", ptr);
+	debug_message_fnc("commit: %p\n", ptr);
 
 	return ptr;
       }
@@ -807,7 +807,7 @@ DEFINE_W32API(LPVOID, VirtualAlloc,
     return NULL;
   }
 
-  debug_message_fn(": neither MEM_RESERVE nor MEM_COMMIT\n");
+  debug_message_fnc("neither MEM_RESERVE nor MEM_COMMIT\n");
   return NULL;
 }
 
@@ -861,7 +861,7 @@ DEFINE_W32API(BOOL, VirtualFree,
     return FALSE;
   }
 
-  debug_message_fn(": neither MEM_RELEASE nor MEM_DECOMMIT\n");
+  debug_message_fnc("neither MEM_RELEASE nor MEM_DECOMMIT\n");
   return FALSE;
 }
 
@@ -1040,7 +1040,7 @@ DEFINE_W32API(FARPROC, GetProcAddress,
   /* hashing should be used */
   for (i = 0; syminfo[i].name; i++)
     if (strcmp(syminfo[i].name, funcname) == 0) {
-      debug_message_fn(": resolve: %s -> %p\n", funcname, syminfo[i].value);
+      debug_message_fnc("resolve: %s -> %p\n", funcname, syminfo[i].value);
       return syminfo[i].value;
     }
 
