@@ -1,10 +1,10 @@
 /*
  * libmpeg3.c -- libmpeg3 player plugin, which exploits libmpeg3.
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan  8 12:35:34 2001.
- * $Id: libmpeg3.c,v 1.19 2001/01/11 22:31:31 sian Exp $
+ * Last Modified: Fri Jan 12 20:56:46 2001.
+ * $Id: libmpeg3.c,v 1.20 2001/01/12 13:19:37 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -33,6 +33,10 @@
 
 #include "common.h"
 
+#ifndef USE_PTHREAD
+#  error pthread is mandatory for libmpeg3 plugin
+#endif
+
 #include "utils/timer.h"
 #include "utils/timer_gettimeofday.h"
 #include "enfle/player-plugin.h"
@@ -43,17 +47,14 @@ typedef struct _libmpeg3_info {
   unsigned char **lines;
   int nvstreams;
   int nvstream;
+  int frametime;
   int rendering_type;
-#ifdef USE_PTHREAD
-  int updated;
+  pthread_mutex_t update_mutex;
+  pthread_cond_t update_cond;
   pthread_t video_thread;
-#endif
-  AudioDevice *ad;
+  pthread_t audio_thread;
   int nastreams;
   int nastream;
-#ifdef USE_PTHREAD
-  pthread_t audio_thread;
-#endif
 } LibMPEG3_info;
 
 static const unsigned int types =
@@ -69,7 +70,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.3.2",
+  description: "LibMPEG3 Player plugin version 0.3.3",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -112,6 +113,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
+  pthread_mutex_init(&info->update_mutex, NULL);
+  pthread_cond_init(&info->update_cond, NULL);
+
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
     show_message(__FUNCTION__ ": Cannot direct decoding...\n");
@@ -129,8 +133,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 
   if (mpeg3_has_audio(info->file)) {
-    if ((m->ap == NULL) || (info->ad = m->ap->open_device(NULL, m->c)) == NULL)
-      show_message("Audio is not played.\n");
+    if (m->ap == NULL) {
+      show_message("Audio not played.\n");
+      info->nastreams = -mpeg3_total_astreams(info->file);
+    }
     else {
       info->nastreams = mpeg3_total_astreams(info->file);
       /* XXX: stream should be selectable */
@@ -140,11 +146,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       m->channels = mpeg3_audio_channels(info->file, info->nastream);
       m->samplerate = mpeg3_sample_rate(info->file, info->nastream);
       m->num_of_samples = mpeg3_audio_samples(info->file, info->nastream);
-
-      if (!m->ap->set_params(info->ad, &m->sampleformat, &m->channels, &m->samplerate))
-	show_message("Some params are set wrong.\n");
-
-      show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
     }
   } else {
     debug_message("No audio streams.\n");
@@ -162,6 +163,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->height = mpeg3_video_height(info->file, info->nvstream);
   m->framerate = mpeg3_frame_rate(info->file, 0);
   m->num_of_frames = mpeg3_video_frames(info->file, 0);
+
+  info->frametime = 1000 / m->framerate;
 
   switch (vw->render_method) {
   case _VIDEO_RENDER_NORMAL:
@@ -268,10 +271,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   return PLAY_ERROR;
 }
 
-#ifdef USE_PTHREAD
 static void *play_video(void *);
 static void *play_audio(void *);
-#endif
 
 static PlayerStatus
 play(Movie *m)
@@ -292,21 +293,18 @@ play(Movie *m)
     return PLAY_ERROR;
   }
 
-  mpeg3_seek_percentage(info->file, 0);
-  m->current_frame = 1;
+  mpeg3_set_frame(info->file, 0, info->nvstream);
+  mpeg3_set_sample(info->file, 0, info->nastream);
+  m->current_frame = 0;
   m->current_sample = 0;
   timer_start(m->timer);
 
-#ifdef USE_PTHREAD
   pthread_create(&info->video_thread, NULL, play_video, m);
-  if (info->nastreams && info->ad)
+  if (info->nastreams > 0)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
-#endif
 
   return PLAY_OK;
 }
-
-#ifdef USE_PTHREAD
 
 static void *
 play_video(void *arg)
@@ -316,15 +314,15 @@ play_video(void *arg)
   int decode_error;
 
   while (m->status == _PLAY) {
-    if (info->updated == 0) {
-      decode_error =
-	(mpeg3_read_frame(info->file, info->lines,
-			  0, 0,
-			  m->width, m->height,
-			  m->rendering_width, m->rendering_height,
-			  info->rendering_type, info->nvstream) == -1) ? 0 : 1;
-      info->updated = 1;
-    }
+    pthread_mutex_lock(&info->update_mutex);
+    pthread_cond_wait(&info->update_cond, &info->update_mutex);
+    decode_error =
+      (mpeg3_read_frame(info->file, info->lines,
+			0, 0,
+			m->width, m->height,
+			m->rendering_width, m->rendering_height,
+			info->rendering_type, info->nvstream) == -1) ? 0 : 1;
+    pthread_mutex_unlock(&info->update_mutex);
   }
 
   pthread_exit((void *)PLAY_OK);
@@ -338,34 +336,45 @@ play_audio(void *arg)
 {
   Movie *m = arg;
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
-  short input_buffer[AUDIO_WRITE_SIZE];
-  short output_buffer[AUDIO_WRITE_SIZE];
+  AudioDevice *ad;
+  static short input_buffer[AUDIO_WRITE_SIZE];
+  static short output_buffer[AUDIO_WRITE_SIZE];
   int samples_to_read;
+  int i;
+
+  if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
+    show_message("Cannot open device\n");
+    pthread_exit((void *)PLAY_ERROR);
+  }
+
+  if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+    show_message("Some params are set wrong.\n");
+
+  show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
 
   samples_to_read = AUDIO_READ_SIZE;
 
   while (m->status == _PLAY) {
     if (m->current_sample >= m->num_of_samples) {
+      m->ap->close_device(ad);
       pthread_exit((void *)PLAY_OK);
     }
     if (m->num_of_samples < m->current_sample + samples_to_read)
       samples_to_read = m->num_of_samples - m->current_sample;
     mpeg3_read_audio(info->file, NULL, input_buffer, 0, samples_to_read, info->nastream);
     if (m->channels == 1) {
-      m->ap->write_device(info->ad, (unsigned char *)input_buffer, samples_to_read * sizeof(short));
+      m->ap->write_device(ad, (unsigned char *)input_buffer, samples_to_read * sizeof(short));
     } else {
-      int i;
-
       mpeg3_reread_audio(info->file, NULL, input_buffer + AUDIO_READ_SIZE, 1, samples_to_read, info->nastream);
       for (i = 0; i < samples_to_read; i++) {
 	output_buffer[i * 2    ] = input_buffer[i];
 	output_buffer[i * 2 + 1] = input_buffer[i + AUDIO_READ_SIZE];
       }
-      m->ap->write_device(info->ad, (unsigned char *)output_buffer, (samples_to_read << 1) * sizeof(short));
+      m->ap->write_device(ad, (unsigned char *)output_buffer, (samples_to_read << 1) * sizeof(short));
     }
     m->current_sample += samples_to_read;
   }
-
+  m->ap->close_device(ad);
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -374,11 +383,8 @@ play_main(Movie *m, VideoWindow *vw)
 {
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
   Image *p = info->p;
-  int frametime;
-#if 0
   int due_time;
   int time_elapsed;
-#endif
 
   switch (m->status) {
   case _PLAY:
@@ -392,117 +398,38 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  frametime = 1000 / m->framerate;
+  pthread_mutex_lock(&info->update_mutex);
 
-#if 0
   time_elapsed = timer_get_milli(m->timer);
-  due_time = m->current_frame * 1000 / m->framerate;
+  due_time = (m->current_frame + 1) * info->frametime;
 
-  //debug_message("v: %d %d\n", time_elapsed, due_time);
+  //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
 
   if (time_elapsed < due_time) {
     /* too fast to display, wait then render */
     m->pause_usec((due_time - time_elapsed) * 1000);
     m->render_frame(vw, m, p);
-    m->current_frame++;
-  } else if (time_elapsed > due_time + frametime) {
-    /* too late, drop this frame */
-    m->current_frame++;
+  } else if (time_elapsed > due_time + info->frametime) {
+    /* too late, drop several frames */
+    int ndrop = (time_elapsed / info->frametime) - m->current_frame;
+    //debug_message("drop %d frames ", ndrop);
+    mpeg3_drop_frames(info->file, ndrop, info->nvstream);
+    //debug_message("OK\n");
   } else {
     /* just in time to render */
     m->render_frame(vw, m, p);
-    m->current_frame++;
   }
-#else
-  if (info->updated) {
-    m->render_frame(vw, m, p);
-    m->current_frame++;
-    info->updated = 0;
-  }
-#endif
+
+  m->current_frame = mpeg3_get_frame(info->file, info->nvstream);
+
+  pthread_cond_signal(&info->update_cond);
+  pthread_mutex_unlock(&info->update_mutex);
 
   if (m->current_frame >= m->num_of_frames)
     stop_movie(m);
 
   return PLAY_OK;
 }
-
-#else
-
-/* non-thread version is far from complete */
-
-#define AUDIO_READ_SIZE 2048
-#define AUDIO_WRITE_SIZE 4096
-
-static PlayerStatus
-play_main(Movie *m, VideoWindow *vw)
-{
-  int decode_error;
-  LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
-  Image *p = info->p;
-  int dropframes;
-  float time_elapsed, fps;
-  short input_buffer[AUDIO_WRITE_SIZE];
-  short output_buffer[AUDIO_WRITE_SIZE];
-
-  switch (m->status) {
-  case _PLAY:
-    break;
-  case _PAUSE:
-  case _STOP:
-    return PLAY_OK;
-  case _UNLOADED:
-    return PLAY_ERROR;
-  default:
-    return PLAY_ERROR;
-  }
-
-  if (info->nastreams && info->ad) {
-    mpeg3_read_audio(info->file, NULL, input_buffer, 0, AUDIO_READ_SIZE, info->nastream);
-    if (m->channels == 1) {
-      m->ap->write_device(info->ad, (unsigned char *)input_buffer, AUDIO_READ_SIZE * sizeof(short));
-    } else {
-      int i;
-
-      mpeg3_reread_audio(info->file, NULL, input_buffer + AUDIO_READ_SIZE, 1, AUDIO_READ_SIZE, info->nastream);
-      for (i = 0; i < AUDIO_READ_SIZE; i++) {
-	output_buffer[i * 2    ] = input_buffer[i];
-	output_buffer[i * 2 + 1] = input_buffer[i + AUDIO_READ_SIZE];
-      }
-      m->ap->write_device(info->ad, (unsigned char *)output_buffer, AUDIO_WRITE_SIZE * sizeof(short));
-    }
-  }
-
-  time_elapsed = timer_get_milli(m->timer);
-  fps = m->current_frame * 1000 / time_elapsed;
-
-  debug_message("%3.2f fps\r", fps);
-
-  if (fps <= m->framerate) {
-    dropframes = m->framerate * time_elapsed / 1000 - m->current_frame;
-    if (dropframes && !movie_get_play_every_frame(m)) {
-      mpeg3_drop_frames(info->file, dropframes, info->nvstream);
-      m->current_frame += dropframes;
-
-      /* debug_message("\ndropped %d frame\n", dropframes); */
-    }
-  }
-
-  decode_error = (mpeg3_read_frame(info->file, info->lines,
-				   0, 0,
-				   m->width, m->height,
-				   m->rendering_width, m->rendering_height,
-				   info->rendering_type, info->nvstream) == -1) ? 0 : 1;
-
-  m->render_frame(vw, m, p);
-  m->current_frame++;
-
-  if (!decode_error || m->current_frame >= m->num_of_frames)
-    stop_movie(m);
-
-  return PLAY_OK;
-}
-#endif
 
 static PlayerStatus
 pause_movie(Movie *m)
@@ -528,9 +455,10 @@ pause_movie(Movie *m)
 static PlayerStatus
 stop_movie(Movie *m)
 {
-#ifdef USE_PTHREAD
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
-#endif
+  void *v, *a;
+
+  debug_message("LibMPEG3: " __FUNCTION__ "()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -546,18 +474,13 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
-#ifdef USE_PTHREAD
-  {
-    void *v, *a;
-
-    pthread_join(info->video_thread, &v);
-    info->video_thread = 0;
-    if (info->audio_thread) {
-      pthread_join(info->audio_thread, &a);
-      info->audio_thread = 0;
-    }
+  pthread_cond_signal(&info->update_cond);
+  pthread_join(info->video_thread, &v);
+  info->video_thread = 0;
+  if (info->audio_thread) {
+    pthread_join(info->audio_thread, &a);
+    info->audio_thread = 0;
   }
-#endif
 
   return PLAY_OK;
 }
@@ -575,10 +498,10 @@ unload_movie(Movie *m)
     if (info->p)
       image_destroy(info->p);
 
-    /* close */
     mpeg3_close(info->file);
-    if (info->ad)
-      m->ap->close_device(info->ad);
+
+    pthread_mutex_destroy(&info->update_mutex);
+    pthread_cond_destroy(&info->update_cond);
 
     free(info);
   }
