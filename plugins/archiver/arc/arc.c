@@ -4,8 +4,8 @@
  * Adapted for newer version by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 19 11:27:31 2002.
- * $Id: arc.c,v 1.2 2002/11/06 14:11:11 sian Exp $
+ * Last Modified: Sun Oct 12 06:42:39 2003.
+ * $Id: arc.c,v 1.3 2003/10/12 04:02:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -68,19 +68,18 @@ arc_open(Archive *arc, Stream *st, char *path)
   int file_size = 0, get_num, mem_size = 0;
   unsigned char *region, *read_pos;
   URL url;
+  char fullpath[strlen(arc->path) + strlen(path) + 1];
 
-  // debug_message_fnc("path: %s\n", path);
-
-  if (strchr(path, '#') != NULL) {
-    /* archive file */
-    url = url_arc_open(path);
-  } else {
+  if (strchr(path, '#') == NULL) {
     /* normal file */
-    url = url_open(path);
+    return OPEN_NOT;
   }
 
+  strcpy(fullpath, arc->path);
+  strcat(fullpath, path);
+  url = url_arc_open(fullpath);
   if(url == NULL){
-    err_message("Can't open: %s\n", path);
+    err_message("Can't open: %s\n", fullpath);
     return OPEN_NOT;
   }
 
@@ -98,7 +97,7 @@ arc_open(Archive *arc, Stream *st, char *path)
   url_close(url);
 
   st->path = strdup(path);
-  debug_message_fnc("%s\n", st->path);
+  //debug_message_fnc("OK: %s\n", st->path);
 
   return stream_make_memorystream(st, region, file_size);
 }
@@ -132,19 +131,30 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
   char *filesbuf[2];
   char **files;
   int i, nfiles = 1;
+  Dlist *dl;
+  Dlist_data *dd;
 
   filesbuf[0] = st->path;
   filesbuf[1] = NULL;
   files = expand_archive_names(&nfiles, filesbuf);
   if (files == NULL)
     return OPEN_NOT;
-  debug_message_fnc("path = %s\n",st->path);
+  //debug_message_fnc("path = %s\n",st->path);
 
+  dl = dlist_create();
   for (i = 0; i < nfiles; i++) {
-    debug_message_fnc("%d: %s\n", i, files[i]);
-    archive_add(a, files[i], strdup(files[i]));
+    char *base = files[i] + strlen(st->path);
+    //debug_message_fnc("%d: %s\n", i, base);
+    dlist_add_str(dl, base);
   }
   arc_list_free(files);
+
+  dlist_set_compfunc(dl, archive_key_compare);
+  dlist_sort(dl);
+  dlist_iter (dl, dd) {
+    archive_add(a, dlist_data(dd), strdup(dlist_data(dd)));
+  }
+  dlist_destroy(dl);
 
   a->path = strdup(st->path);
   a->st = stream_transfer(st);
