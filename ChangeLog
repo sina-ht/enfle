@@ -1,5 +1,28 @@
 2001-01-23  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/video/Xlib/Xlib.c, src/enfle.c: OK, XInitThreads() now
+	in Xlib.c, instead of enfle.c.
+
+	* plugins/player/opendivx/yuv2rgb.c: Fixed warning.
+
+	* plugins/player/avifile/Makefile.am, src/Makefile.am: Fixed
+	invalid CFLAGS addition. Use AM_* instead of +=.
+
+	* README: Added OpenDivX LICENSE description.
+
+	* OpenDivX-LICENSE: Added OpenDivX LICENSE description file.
+
+	* plugins/player/opendivx/libavi.c,
+	plugins/player/opendivx/libavi.h,
+	plugins/player/opendivx/libriff.c,
+	plugins/player/opendivx/libriff.h,
+	plugins/player/opendivx/opendivx.c,
+	plugins/player/opendivx/yuv2rgb.c: Added copyright description.
+
+	* lib/divxdecore/mp4_picture.c: Avoid warning.
+
+2001-01-23  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Deleted -Winline.
 
 	* plugins/player/opendivx/yuv2rgb.c: Cleanup.
