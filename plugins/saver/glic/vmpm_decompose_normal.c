@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Jul 16 19:14:38 2001.
- * $Id: vmpm_decompose_normal.c,v 1.7 2001/07/17 12:22:51 sian Exp $
+ * Last Modified: Thu Aug  2 15:22:28 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.8 2001/08/02 11:47:37 sian Exp $
  */
 
 #include <stdio.h>
@@ -207,7 +207,7 @@ encode(VMPM *vmpm)
 	  stat_message(vmpm, "%d ", tv);
 	}
 
-	arithmodel_encode(am, t->value - 1);
+	arithmodel_encode(am, tv);
       }
       stat_message(vmpm, "\n");
     }
