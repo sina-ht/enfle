@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 14 05:58:09 2001.
- * $Id: convert.c,v 1.1 2001/04/18 05:29:50 sian Exp $
+ * Last Modified: Fri Apr 20 16:25:51 2001.
+ * $Id: convert.c,v 1.2 2001/04/20 07:27:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -120,7 +120,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
   s = stream_create();
   p = image_create();
-  format = config_get(c, "/enfle/plugins/ui/convert/format");
+  format = config_get_str(c, "/enfle/plugins/ui/convert/format");
 
   path = NULL;
   dir = 1;
@@ -137,7 +137,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  break;
 	}
 	if (S_ISDIR(statbuf.st_mode)) {
-	  arc = archive_create();
+	  arc = archive_create(a);
 
 	  debug_message("reading %s\n", path);
 
@@ -175,7 +175,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	}
       }
 
-      arc = archive_create();
+      arc = archive_create(a);
       if (archiver_identify(ar, eps, arc, s)) {
 
 	debug_message("Archiver identified as %s\n", arc->format);
@@ -223,7 +223,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       {
-	char *ext = saver_get_ext(sv, eps, p->format, c);
+	char *ext = saver_get_ext(sv, eps, format, c);
 
 	save_image(uidata, p, format, path, ext);
 	free(ext);
