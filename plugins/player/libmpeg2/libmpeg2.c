@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar  5 05:21:21 2002.
- * $Id: libmpeg2.c,v 1.31 2002/03/04 20:25:43 sian Exp $
+ * Last Modified: Thu Mar  7 04:17:28 2002.
+ * $Id: libmpeg2.c,v 1.32 2002/03/06 19:31:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -513,8 +513,8 @@ play_main(Movie *m, VideoWindow *vw)
     }
   }
 
- if (info->to_render == 0)
-   return PLAY_OK;
+  if (info->to_render == 0)
+    return PLAY_OK;
 
   if (!info->if_initialized && m->width && m->height) {
     m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
