@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000-03 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Dec 23 20:04:53 2003.
-dnl $Id: configure.in,v 1.125 2003/12/23 11:05:01 sian Exp $
+dnl Last Modified: Fri Dec 26 12:08:50 2003.
+dnl $Id: configure.in,v 1.126 2003/12/27 14:28:22 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20031223, sian@big.or.jp)
+AC_INIT(enfle, 20031226, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -661,8 +661,8 @@ AC_CONFIG_FILES([
     plugins/saver/png/Makefile
 ])
 
-if test "$enable_private" = "yes"; then
-  AC_CONFIG_FILES([plugins/saver/glic/Makefile])
-fi
+dnl if test "$enable_private" = "yes"; then
+dnl   AC_CONFIG_FILES([plugins/saver/glic/Makefile])
+dnl fi
 
 AC_OUTPUT
