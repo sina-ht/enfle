@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  8 01:25:30 2003.
- * $Id: normal.c,v 1.74 2003/11/17 14:01:03 sian Exp $
+ * Last Modified: Tue Dec 23 19:23:02 2003.
+ * $Id: normal.c,v 1.75 2003/12/23 11:02:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -303,6 +303,29 @@ set_caption_string(MainLoop *ml)
   }
   if (literal_mode == 1)
     string_ncat(cap, &template[literal_start], i - literal_start);
+
+  /* XXX: dirty hack */
+  {
+    char *to = config_get_str(ml->uidata->c, "/enfle/plugins/ui/normal/filename_code_to");
+
+    if (to && strcasecmp(to, "EUC-JISX0213") == 0) {
+      unsigned char *p = string_get(cap);
+      int i, l = 0, len = strlen(p);
+
+      for (i = 0; i < len; i += l) {
+	if (*p == 0xa2 && *(p + 1) == 0xb2) {
+	  *p = 0xa1;
+	  *(p + 1) = 0xc1;
+	  l = 2;
+	} else {
+	  l = mblen(p, len - i);
+	  if (l <= 0)
+	    break;
+	}
+	p += l;
+      }
+    }
+  }
 
   video_window_set_caption(vw, string_get(cap));
 
