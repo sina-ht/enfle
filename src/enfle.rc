@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Fri May 11 20:30:24 2001.
-; $Id: enfle.rc,v 1.16 2001/05/12 02:30:39 sian Exp $
+; Last Modified: Wed May 23 21:11:38 2001.
+; $Id: enfle.rc,v 1.17 2001/05/23 12:14:31 sian Exp $
 
 enfle {
   plugins {
@@ -44,7 +44,7 @@ enfle {
 	; filter = {all/default/paeth_only/none}
 	;                        ^^-- This is correct, should not be transposed.
 	filter = all
-	; interlace = {yes/no} Note: interface increases a file size slightly.
+	; interlace = {yes/no} Note: interlace increases a file size slightly.
 	interlace = no
       }
       jpeg {
