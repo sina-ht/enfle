@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  9 03:22:28 2000.
- * $Id: image_magnify.c,v 1.3 2000/12/10 13:19:34 sian Exp $
+ * Last Modified: Tue Mar 20 05:47:43 2001.
+ * $Id: image_magnify.c,v 1.4 2001/03/19 21:12:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -193,6 +193,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
   if (dw >= w)
     if (dh >= h) {
       if (method == _BILINEAR) {
+#if 0
 	unsigned char *dd = d;
 	double dx, dy;
 	int yt;
@@ -224,6 +225,41 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	    }
 	  }
 	}
+#else
+	unsigned char *dd = d;
+	unsigned int dx, dy;
+	int yt;
+
+#define PRECISION 8
+#define PRECISION2 (PRECISION * 2)
+#define MIN_INT (1 << PRECISION)
+#define DECIMAL_MASK (MIN_INT - 1)
+
+	yt = (h - 1) * w;
+	for (y = 0; y < dh; y++) {
+	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
+	  t = y * h / dh * w;
+	  for (x = 0; x < dw; x++) {
+	    dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	    t3 = x * w / dw;
+
+	    if (t < yt) {
+	      /* bilinear interpolation */
+	      for (i = 0; i < 3; i++) 
+		*dd++ = (
+		  s[(t +      t3     ) * 4 + i] * (MIN_INT - dx) * (MIN_INT - dy) +
+		  s[(t +     (t3 + 1)) * 4 + i] *            dx  * (MIN_INT - dy) +
+		  s[(t + w +  t3     ) * 4 + i] * (MIN_INT - dx) *            dy  +
+		  s[(t + w + (t3 + 1)) * 4 + i] *            dx  *            dy ) >> PRECISION2;
+	    } else {
+	      for (i = 0; i < 3; i++) 
+		*dd++ = (
+		  s[(t     +  t3     ) * 4 + i] * (MIN_INT - dx) +
+		  s[(t     + (t3 + 1)) * 4 + i] *            dx ) >> PRECISION;
+	    }
+	  }
+	}
+#endif
       } else {
 	unsigned char *dd = d;
 	for (y = 0; y < dh; y++) {
