@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 23 20:03:49 2003.
- * $Id: avcodec.c,v 1.4 2003/12/23 11:04:31 sian Exp $
+ * Last Modified: Fri Dec 26 01:37:54 2003.
+ * $Id: avcodec.c,v 1.5 2003/12/27 14:27:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,9 +41,19 @@
 #include "utils/libstring.h"
 #include "enfle/fourcc.h"
 
+#if defined(DEBUG)
+#define USE_DR1
+#endif
+
+struct pic_buf {
+  int idx;
+  Memory *mem;
+  unsigned char data[0];
+};
+
 typedef struct __picture_buffer {
   Memory *base;
-  unsigned char * data[3];
+  struct pic_buf *pb;
   int linesize[3];
 } Picture_buffer;
 
@@ -121,6 +131,7 @@ ENFLE_PLUGIN_ENTRY(player_divx)
   /* avcodec initialization */
   avcodec_init();
   avcodec_register_all();
+  av_log_set_level(AV_LOG_INFO);
 
   return (void *)pp;
 }
@@ -418,6 +429,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   return PLAY_ERROR;
 }
 
+#if defined(USE_DR1)
 static int
 get_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 {
@@ -440,29 +452,35 @@ get_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 
   buf = &info->picture_buffer[info->picture_buffer_count];
   if (buf->base == NULL) {
-    int *cnt;
+    int datasize = image_bpl(info->p) * image_height(info->p);
+    int size = sizeof(struct pic_buf) + datasize;
+    struct pic_buf *pb;
 
-    buf->base = memory_create();
-    if (memory_alloc(buf->base, sizeof(int) + image_bpl(info->p) * image_height(info->p)) == NULL) {
-      err_message_fnc("No enough memory.\n");
-      return 0;
+    if ((buf->base = memory_create()) == NULL) {
+      err_message_fnc("No enough memory for Memory object buf->base.\n");
+      return -1;
     }
-    //memset(memory_ptr(image_rendered_image(p)), 128, image_bpl(p) * image_height(p));
 
-    cnt = (int *)memory_ptr(buf->base);
-    *cnt = info->picture_buffer_count;
-    buf->data[0] = memory_ptr(buf->base) + sizeof(int);
-    buf->data[1] = buf->data[0] + image_width(info->p) * image_height(info->p);
-    buf->data[2] = buf->data[1] + (image_width(info->p) >> 1) * (image_height(info->p) >> 1);
+    if ((pb = memory_alloc(buf->base, size)) == NULL) {
+      err_message_fnc("Cannot allocate %d bytes.  No enough memory for pic_buf.\n", size);
+      return -1;
+    }
+    pb->idx = info->picture_buffer_count;
+    pb->mem = buf->base;
+    memset(pb->data, 128, datasize);
 
+    buf->pb = pb;
     buf->linesize[0] = image_width(info->p);
     buf->linesize[1] = image_width(info->p) >> 1;
     buf->linesize[2] = image_width(info->p) >> 1;
   }
 
-  vcodec_picture->data[0] = buf->data[0];
-  vcodec_picture->data[1] = buf->data[1];
-  vcodec_picture->data[2] = buf->data[2];
+  vcodec_picture->base[0] = vcodec_picture->data[0] =
+    buf->pb->data;
+  vcodec_picture->base[1] = vcodec_picture->data[1] =
+    vcodec_picture->data[0] + image_width(info->p) * image_height(info->p);
+  vcodec_picture->base[2] = vcodec_picture->data[2] =
+    vcodec_picture->data[1] + (image_width(info->p) >> 1) * (image_height(info->p) >> 1);
   vcodec_picture->linesize[0] = buf->linesize[0];
   vcodec_picture->linesize[1] = buf->linesize[1];
   vcodec_picture->linesize[2] = buf->linesize[2];
@@ -474,20 +492,27 @@ get_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
   return 0;
 }
 
+static int
+reget_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
+{
+    if (vcodec_picture->data[0] == NULL) {
+        vcodec_picture->buffer_hints |= FF_BUFFER_HINTS_READABLE;
+        return vcodec_ctx->get_buffer(vcodec_ctx, vcodec_picture);
+    }
+
+    return 0;
+}
+
 static void
 release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 {
   avcodec_info *info = (avcodec_info *)vcodec_ctx->opaque;
+  struct pic_buf *pb;
   Picture_buffer *buf, *last, t;
-  int i;
 
-  for (i = 0; i < info->picture_buffer_count; i++) {
-    buf = &info->picture_buffer[info->picture_buffer_count];
-    if (buf->base && memory_ptr(buf->base) == vcodec_picture->data[0])
-      break;
-  }
-  info->picture_buffer_count--;
-  last = &info->picture_buffer[info->picture_buffer_count];
+  pb = (struct pic_buf *)(vcodec_picture->data[0] - sizeof(*pb));
+  buf = &info->picture_buffer[pb->idx];
+  last = &info->picture_buffer[--info->picture_buffer_count];
 
   t = *buf;
   *buf = *last;
@@ -497,6 +522,7 @@ release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
   vcodec_picture->data[1] = NULL;
   vcodec_picture->data[2] = NULL;
 }
+#endif
 
 static void *play_video(void *);
 static void *play_audio(void *);
@@ -551,16 +577,14 @@ play(Movie *m)
     if (info->vcodec_ctx->pix_fmt == PIX_FMT_YUV420P &&
 	info->vcodec->capabilities & CODEC_CAP_DR1) {
       info->vcodec_ctx->flags |= CODEC_FLAG_EMU_EDGE;
+#if defined(USE_DR1)
       info->vcodec_ctx->get_buffer = get_buffer;
-      info->vcodec_ctx->reget_buffer= get_buffer;
+      info->vcodec_ctx->reget_buffer = reget_buffer;
       info->vcodec_ctx->release_buffer = release_buffer;
-      show_message("DR1 direct rendering enabled.\n");
-#if 0
-      // XXX: direct rendering causes seg. fault...
-      info->vcodec_ctx->get_buffer = avcodec_default_get_buffer;
-      info->vcodec_ctx->reget_buffer = avcodec_default_reget_buffer;
-      info->vcodec_ctx->release_buffer = avcodec_default_release_buffer;
-      show_message("DR1 direct rendering disabled.\n");
+      show_message("avcodec: DR1 direct rendering enabled.\n");
+#else
+      // XXX: direct rendering causes dirty video output...
+      show_message("avcodec: DR1 direct rendering disabled.\n");
 #endif
     }
 
@@ -649,12 +673,15 @@ play_video(void *arg)
 	info->drop--;
       } else {
 	pthread_mutex_lock(&info->update_mutex);
+#if defined(USE_DR1)
 	if (info->vcodec_ctx->get_buffer == get_buffer) {
-	  int *cnt;
+	  struct pic_buf *pb;
 
-	  cnt = (int *)(info->vcodec_picture->data[0] - sizeof(int));
-	  image_rendered_set_image(info->p, info->picture_buffer[*cnt].base);
-	} else {
+	  pb = (struct pic_buf *)(info->vcodec_picture->data[0] - sizeof(*pb));
+	  image_rendered_set_image(info->p, pb->mem);
+	} else
+#endif
+	{
 	  int y;
 
 	  for (y = 0; y < m->height; y++) {
@@ -875,7 +902,9 @@ static PlayerStatus
 stop_movie(Movie *m)
 {
   avcodec_info *info = (avcodec_info *)m->movie_private;
+#if defined(DEBUG)
   void *v, *a;
+#endif
 
   debug_message_fn("()\n");
 
