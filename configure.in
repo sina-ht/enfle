@@ -1,12 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl NOTE: autoconf should be 2.49b or later (2.52 or later recommended).
-dnl       Older autoconf needs some modifications.
+dnl NOTE: autoconf should be 2.52 or later, automake 1.6 or later.
 dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Mar  7 04:32:25 2002.
-dnl $Id: configure.in,v 1.106 2002/03/06 19:32:37 sian Exp $
+dnl Last Modified: Thu Mar  7 17:13:27 2002.
+dnl $Id: configure.in,v 1.107 2002/03/07 08:28:31 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -24,7 +23,7 @@ dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 AC_INIT(enfle, 20020307, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
-AM_INIT_AUTOMAKE(enfle, 20020307)
+AM_INIT_AUTOMAKE
 AC_CANONICAL_HOST
 
 dnl Maintainer mode (could be uncommented for production release.)
@@ -279,17 +278,17 @@ AM_CONDITIONAL(HAVE_X11, test "$have_x" = "yes")
 
 dnl Checks for libraries which require X library.
 available_shm=no
-AC_CHECK_HEADER(sys/ipc.h,
-  AC_CHECK_HEADER(sys/shm.h,
-    AC_CHECK_HEADER(X11/extensions/XShm.h,
-      AC_CHECK_LIB(Xext, XShmCreateImage, [ available_shm=yes; LIBADD_SHM="-lXext"; ]))))
+AC_CHECK_HEADER(sys/ipc.h, [
+  AC_CHECK_HEADER(sys/shm.h, [
+    AC_CHECK_HEADER(X11/extensions/XShm.h, [
+      AC_CHECK_LIB(Xext, XShmCreateImage, [ available_shm=yes; LIBADD_SHM="-lXext"; ]) ], [], [#include <X11/Xlib.h>]) ]) ])
 dnl AM_CONDITIONAL(HAVE_SHM, test "$available_shm" = "yes")
 test "$available_shm" = "yes" && AC_DEFINE(USE_SHM,,[ Define if you have the MIT Shared Memory extension ])
 AC_SUBST(LIBADD_SHM)
 
 available_xv=no
-AC_CHECK_HEADER(X11/extensions/Xvlib.h,
-  AC_CHECK_LIB(Xv, XvQueryExtension, [ available_xv=yes; LIBADD_XV="-lXext -lXv"; ],, -lXext))
+AC_CHECK_HEADER(X11/extensions/Xvlib.h, [
+  AC_CHECK_LIB(Xv, XvQueryExtension, [ available_xv=yes; LIBADD_XV="-lXext -lXv"; ],, -lXext) ], [], [#include <X11/Xlib.h>])
 dnl AM_CONDITIONAL(HAVE_XV, test "$available_xv" = "yes")
 test "$available_xv" = "yes" && AC_DEFINE(USE_XV,,[ Define if you have the Xv extension ])
 AC_SUBST(LIBADD_XV)
@@ -323,7 +322,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([getpagesize gettimeofday memalign memset munmap pow select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr])
+AC_CHECK_FUNCS([getpagesize gettimeofday memalign memmove memset munmap pow select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr])
 
 dnl enable compatible function(s) if unavailable in system library.
 AM_CONDITIONAL(HAVE_FNMATCH, test $ac_cv_func_fnmatch_works = yes)
