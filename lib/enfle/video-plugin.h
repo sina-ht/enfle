@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 04:38:42 2000.
- * $Id: video-plugin.h,v 1.2 2000/11/04 17:31:58 sian Exp $
+ * Last Modified: Wed Dec 13 00:25:24 2000.
+ * $Id: video-plugin.h,v 1.3 2000/12/12 17:03:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,7 +31,7 @@ typedef struct _video_plugin {
 
   void *(*open_video)(void *);
   int (*close_video)(void *);
-  VideoWindow *(*open_window)(void *, unsigned int, unsigned int);
+  VideoWindow *(*open_window)(void *, Config *, unsigned int, unsigned int);
   void (*destroy)(void *);
 } VideoPlugin;
 
