@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Fri Apr 13 19:02:29 2001.
-; $Id: enfle.rc,v 1.12 2001/04/18 05:35:10 sian Exp $
+; Last Modified: Tue Apr 24 22:51:34 2001.
+; $Id: enfle.rc,v 1.13 2001/04/24 16:46:49 sian Exp $
 
 enfle {
   plugins {
@@ -9,6 +9,12 @@ enfle {
     ui {
       default = Normal
       normal {
+	; render = {normal|double|short|long}
+	render = normal
+	; magnify_interpolate = no/bilinear
+	magnify_interpolate = bilinear
+      }
+      wallpaper {
 	; render = {normal|double|short|long}
 	render = normal
 	; magnify_interpolate = no/bilinear
@@ -28,16 +34,30 @@ enfle {
     loader {
       spi/disabled = yes
     }
-    saver/glic/vmpm_path = ../plugins/saver/glic/.libs
-    saver/glic/decompose_method = Normal
-    saver/glic/scan_method = Quad
+    saver {
+      png {
+        compression_level = 9
+	; all/default/paeth_only/none
+	;              ^^-- This is correct, should not be transposed.
+	filter = all
+	; yes/no, note: interface increases a file size slightly.
+	interlace = no
+      }
+      glic {
+        vmpm_path = ../plugins/saver/glic/.libs
+        decompose_method = Normal
+        scan_method = Quad
+      }
+    }
     player {
+      ;; assoc is not implemented yet
       ;assoc {
       ;  .mpg = libmpeg3
       ;  .mpeg = libmpeg3
       ;  .mp3 = mpglib
       ;  .m1v = MPEG_lib
       ;}
+      ;
       ; video only stream may be played by mpeg_lib.
       ; in this case, if you'd like to use libmpeg3 instead of mpeg_lib,
       ; uncomment this.
