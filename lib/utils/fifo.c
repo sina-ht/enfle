@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 04:55:57 2002.
- * $Id: fifo.c,v 1.8 2002/03/06 19:56:41 sian Exp $
+ * Last Modified: Wed Jul 17 22:21:24 2002.
+ * $Id: fifo.c,v 1.9 2002/08/01 12:41:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,7 +34,7 @@ struct _fifo_data {
   struct _fifo_data *next;
 };
 
-#define FIFO_DEFAULT_MAXDATA 1000
+#define FIFO_DEFAULT_MAXDATA 100
 
 static int put(FIFO *, void *, FIFO_destructor);
 static int get(FIFO *, void **, FIFO_destructor *);
