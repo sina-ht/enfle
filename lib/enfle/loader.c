@@ -1,10 +1,10 @@
 /*
  * loader.c -- loader plugin interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:32:31 2001.
- * $Id: loader.c,v 1.13 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jul  3 20:25:41 2001.
+ * $Id: loader.c,v 1.14 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,41 +20,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#define REQUIRE_STRING_H
-#include "compat.h"
 #define REQUIRE_FATAL
 #include "common.h"
 
 #include "loader.h"
 #include "loader-plugin.h"
 
-static int identify(EnflePlugins *, Image *, Stream *, VideoWindow *, Config *);
-static LoaderStatus load_image(EnflePlugins *, char *, Image *, Stream *, VideoWindow *, Config *);
-
-static Loader template = {
-  identify: identify,
-  load_image: load_image
-};
-
-Loader *
-loader_create(void)
-{
-  Loader *l;
-
-  if ((l = (Loader *)calloc(1, sizeof(Loader))) == NULL)
-    return NULL;
-  memcpy(l, &template, sizeof(Loader));
-
-  return l;
-}
-
-/* methods */
-
-static int
-identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Config *c)
+int
+loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Config *c)
 {
   Dlist *dl;
   Dlist_data *dd;
@@ -87,8 +60,8 @@ identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Config *c)
   return 0;
 }
 
-static LoaderStatus
-load_image(EnflePlugins *eps, char *pluginname, Image *ip, Stream *st, VideoWindow *vw, Config *c)
+LoaderStatus
+loader_load(EnflePlugins *eps, char *pluginname, Image *ip, Stream *st, VideoWindow *vw, Config *c)
 {
   Plugin *p;
   LoaderPlugin *lp;

@@ -1,10 +1,10 @@
 /*
  * archiver.h -- archiver header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:52:10 2000.
- * $Id: archiver.h,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Tue Jul  3 20:23:08 2001.
+ * $Id: archiver.h,v 1.3 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,16 +28,7 @@
 #include "archive.h"
 #include "stream.h"
 
-typedef struct _archiver Archiver;
-struct _archiver {
-  int (*identify)(EnflePlugins *, Archive *, Stream *);
-  ArchiverStatus (*open)(EnflePlugins *, Archive *, char *, Stream *);
-};
-
-#define archiver_identify(ar, eps, a, s) (ar)->identify((eps), (a), (s))
-#define archiver_open(ar, eps, a, n, s) (ar)->open((eps), (a), (n), (s))
-#define archiver_destroy(ar) if ((ar)) free((ar))
-
-Archiver *archiver_create(void);
+int archiver_identify(EnflePlugins *, Archive *, Stream *);
+ArchiverStatus archiver_open(EnflePlugins *, Archive *, char *, Stream *);
 
 #endif

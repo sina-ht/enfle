@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 14 05:43:14 2001.
- * $Id: effect.h,v 1.1 2001/04/18 05:12:25 sian Exp $
+ * Last Modified: Tue Jul  3 20:24:46 2001.
+ * $Id: effect.h,v 1.2 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,14 +26,6 @@
 #include "enfle-plugins.h"
 #include "image.h"
 
-typedef struct _effect Effect;
-struct _effect {
-  Image *(*call)(EnflePlugins *, char *, Image *, void *);
-};
-
-#define effect_call(e, eps, n, i, d) (e)->call((eps), (n), (i), (d))
-#define effect_destroy(e) if ((e)) free((e))
-
-Effect *effect_create(void);
+Image *effect_call(EnflePlugins *, char *, Image *, void *);
 
 #endif

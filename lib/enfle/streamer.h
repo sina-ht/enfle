@@ -1,10 +1,10 @@
 /*
  * streamer.h -- streamer header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:52:30 2000.
- * $Id: streamer.h,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Tue Jul  3 20:19:10 2001.
+ * $Id: streamer.h,v 1.3 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,16 +26,7 @@
 #include "stream.h"
 #include "enfle-plugins.h"
 
-typedef struct _streamer Streamer;
-struct _streamer {
-  int (*identify)(EnflePlugins *, Stream *, char *);
-  int (*open)(EnflePlugins *, Stream *, char *, char *);
-};
-
-#define streamer_identify(st, eps, s, path) (st)->identify((eps), (s), (path))
-#define streamer_open(st, eps, s, n, path) (st)->open((eps), (s), (n), (path))
-#define streamer_destroy(st) if ((st)) free((st))
-
-Streamer *streamer_create(void);
+int streamer_identify(EnflePlugins *, Stream *, char *);
+int streamer_open(EnflePlugins *, Stream *, char *, char *);
 
 #endif

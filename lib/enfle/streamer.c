@@ -1,10 +1,10 @@
 /*
  * streamer.c -- streamer plugin interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb  5 02:54:27 2001.
- * $Id: streamer.c,v 1.6 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Tue Jul  3 20:28:01 2001.
+ * $Id: streamer.c,v 1.7 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,42 +20,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #define REQUIRE_FATAL
 #include "common.h"
 
 #include "streamer.h"
 #include "streamer-plugin.h"
 
-static int identify(EnflePlugins *, Stream *, char *);
-static int open(EnflePlugins *, Stream *, char *, char *);
-
-static Streamer template = {
-  identify: identify,
-  open: open
-};
-
-Streamer *
-streamer_create(void)
-{
-  Streamer *st;
-
-  if ((st = (Streamer *)calloc(1, sizeof(Streamer))) == NULL)
-    return NULL;
-  memcpy(st, &template, sizeof(Streamer));
-
-  return st;
-}
-
-/* methods */
-
-static int
-identify(EnflePlugins *eps, Stream *s, char *filepath)
+int
+streamer_identify(EnflePlugins *eps, Stream *s, char *filepath)
 {
   Dlist *dl;
   Dlist_data *dd;
@@ -83,8 +57,8 @@ identify(EnflePlugins *eps, Stream *s, char *filepath)
   return 0;
 }
 
-static int
-open(EnflePlugins *eps, Stream *s, char *pluginname, char *filepath)
+int
+streamer_open(EnflePlugins *eps, Stream *s, char *pluginname, char *filepath)
 {
   Plugin *p;
   StreamerPlugin *stp;

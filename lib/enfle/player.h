@@ -1,10 +1,10 @@
 /*
  * player.h -- player plugin interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:28:22 2001.
- * $Id: player.h,v 1.8 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jul  3 20:23:18 2001.
+ * $Id: player.h,v 1.9 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,23 +23,13 @@
 #ifndef _PLAYER_H
 #define _PLAYER_H
 
-typedef struct _player Player;
-
 #include "enfle-plugins.h"
 #include "stream.h"
 #include "movie.h"
 #include "video.h"
 #include "player-plugin.h"
 
-struct _player {
-  int (*identify)(EnflePlugins *, Movie *, Stream *, Config *);
-  PlayerStatus (*load_movie)(EnflePlugins *, VideoWindow *, char *, Movie *, Stream *, Config *);
-};
-
-#define player_identify(l, eps, p, s, c) (l)->identify((eps), (p), (s), (c))
-#define player_load_movie(l, eps, vw, n, p, s, c) (l)->load_movie((eps), (vw), (n), (p), (s), (c))
-#define player_destroy(p) if ((p)) free((p))
-
-Player *player_create(void);
+int player_identify(EnflePlugins *, Movie *, Stream *, Config *);
+PlayerStatus player_load(EnflePlugins *, VideoWindow *, char *, Movie *, Stream *, Config *);
 
 #endif

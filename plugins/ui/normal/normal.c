@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 05:18:25 2001.
- * $Id: normal.c,v 1.46 2001/06/19 08:19:49 sian Exp $
+ * Last Modified: Tue Jul  3 20:48:04 2001.
+ * $Id: normal.c,v 1.47 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,12 @@
 #include "utils/libstring.h"
 #include "utils/misc.h"
 #include "enfle/ui-plugin.h"
+#include "enfle/loader.h"
+#include "enfle/player.h"
+#include "enfle/saver.h"
+#include "enfle/effect.h"
+#include "enfle/streamer.h"
+#include "enfle/archiver.h"
 
 static int ui_main(UIData *);
 
@@ -184,7 +190,7 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
   char *ext;
   FILE *fp;
 
-  if ((ext = saver_get_ext(uidata->sv, uidata->eps, format, uidata->c)) == NULL)
+  if ((ext = saver_get_ext(uidata->eps, format, uidata->c)) == NULL)
     return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
     show_message(__FUNCTION__ ": No enough memory.\n");
@@ -197,7 +203,7 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
     return 0;
   }
 
-  if (!saver_save(uidata->sv, uidata->eps, format, p, fp, uidata->c, NULL)) {
+  if (!saver_save(uidata->eps, format, p, fp, uidata->c, NULL)) {
     show_message("Save failed.\n");
     fclose(fp);
     return 0;
@@ -353,7 +359,7 @@ main_loop_rotate_main(MainLoop *ml, int f)
   UIData *uidata = ml->uidata;
 
   config_set_int(uidata->c, (char *)"/enfle/plugins/effect/rotate/function", f);
-  if ((old_p = effect_call(uidata->ef, uidata->eps, (char *)"Rotate", ml->p, uidata->c))) {
+  if ((old_p = effect_call(uidata->eps, (char *)"Rotate", ml->p, uidata->c))) {
     if (old_p != ml->p) {
       image_destroy(old_p);
       video_window_resize(ml->vw, ml->p->width, ml->p->height);
@@ -391,7 +397,7 @@ main_loop_gamma_main(MainLoop *ml, int index)
 
     config_set_int(uidata->c, (char *)"/enfle/plugins/effect/gamma/index", index);
     video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
-    if ((old_p = effect_call(uidata->ef, uidata->eps, (char *)"Gamma", ml->p, uidata->c))) {
+    if ((old_p = effect_call(uidata->eps, (char *)"Gamma", ml->p, uidata->c))) {
       if (old_p != ml->p)
 	image_destroy(old_p);
       magnify_if_requested(ml->vw, ml->p);
@@ -648,10 +654,6 @@ static int
 process_files_of_archive(UIData *uidata, Archive *a)
 {
   EnflePlugins *eps = uidata->eps;
-  Loader *ld = uidata->ld;
-  Streamer *st = uidata->st;
-  Archiver *ar = uidata->ar;
-  Player *player = uidata->player;
   VideoWindow *vw = uidata->vw;
   Config *c = uidata->c;
   Archive *arc;
@@ -769,11 +771,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  continue;
 	}
 
-	if (streamer_identify(st, eps, s, path)) {
+	if (streamer_identify(eps, s, path)) {
 
 	  debug_message("Stream identified as %s\n", s->format);
 
-	  if (!streamer_open(st, eps, s, s->format, path)) {
+	  if (!streamer_open(eps, s, s->format, path)) {
 	    show_message("Stream %s [%s] cannot open\n", s->format, path);
 	    ret = MAIN_LOOP_DELETE_FROM_LIST;
 	    continue;
@@ -786,11 +788,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       arc = archive_create(a);
-      if (archiver_identify(ar, eps, arc, s)) {
+      if (archiver_identify(eps, arc, s)) {
 
 	debug_message("Archiver identified as %s\n", arc->format);
 
-	if (archiver_open(ar, eps, arc, arc->format, s)) {
+	if (archiver_open(eps, arc, arc->format, s)) {
 	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
 	  ret = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
@@ -810,7 +812,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
     f = LOAD_NOT;
     video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-    if (loader_identify(ld, eps, p, s, vw, c)) {
+    if (loader_identify(eps, p, s, vw, c)) {
 
 #ifdef DEBUG
       if (p->format_detail)
@@ -820,16 +822,16 @@ process_files_of_archive(UIData *uidata, Archive *a)
 #endif
 
       p->image = memory_create();
-      if ((f = loader_load_image(ld, eps, p->format, p, s, vw, c)) == LOAD_OK)
+      if ((f = loader_load(eps, p->format, p, s, vw, c)) == LOAD_OK)
 	stream_close(s);
     }
 
     if (f != LOAD_OK) {
-      if (player_identify(player, eps, m, s, c)) {
+      if (player_identify(eps, m, s, c)) {
 
 	debug_message("Movie identified as %s\n", m->format);
 
-	if ((f = player_load_movie(player, eps, vw, m->format, m, s, c)) != PLAY_OK) {
+	if ((f = player_load(eps, vw, m->format, m, s, c)) != PLAY_OK) {
 	  stream_close(s);
 	  show_message("%s load failed\n", path);
 	  ret = MAIN_LOOP_DELETE_FROM_LIST;

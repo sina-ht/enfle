@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:32:21 2001.
- * $Id: effect.c,v 1.2 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jul  3 20:24:58 2001.
+ * $Id: effect.c,v 1.3 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,8 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdlib.h>
-
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
@@ -29,26 +27,8 @@
 #include "effect.h"
 #include "effect-plugin.h"
 
-static Image *call(EnflePlugins *, char *, Image *, void *);
-
-static Effect template = {
-  call: call
-};
-
-Effect *
-effect_create(void)
-{
-  Effect *e;
-
-  if ((e = (Effect *)calloc(1, sizeof(Effect))) == NULL)
-    return NULL;
-  memcpy(e, &template, sizeof(Effect));
-
-  return e;
-}
-
-static Image *
-call(EnflePlugins *eps, char *pluginname, Image *src, void *params)
+Image *
+effect_call(EnflePlugins *eps, char *pluginname, Image *src, void *params)
 {
   Plugin *p;
   EffectPlugin *ep;

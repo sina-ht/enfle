@@ -1,10 +1,10 @@
 /*
  * loader.h -- loader plugin interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 20:23:48 2001.
- * $Id: loader.h,v 1.3 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jul  3 20:19:23 2001.
+ * $Id: loader.h,v 1.4 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,16 +29,7 @@
 #include "image.h"
 #include "video.h"
 
-typedef struct _loader Loader;
-struct _loader {
-  int (*identify)(EnflePlugins *, Image *, Stream *, VideoWindow *, Config *);
-  LoaderStatus (*load_image)(EnflePlugins *, char *, Image *, Stream *, VideoWindow *, Config *);
-};
-
-#define loader_identify(l, eps, p, s, vw, c) (l)->identify((eps), (p), (s), (vw), (c))
-#define loader_load_image(l, eps, n, p, s, vw, c) (l)->load_image((eps), (n), (p), (s), (vw), (c))
-#define loader_destroy(l) if ((l)) free((l))
-
-Loader *loader_create(void);
+int loader_identify(EnflePlugins *, Image *, Stream *, VideoWindow *, Config *);
+LoaderStatus loader_load(EnflePlugins *, char *, Image *, Stream *, VideoWindow *, Config *);
 
 #endif

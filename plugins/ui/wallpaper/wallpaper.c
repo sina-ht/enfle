@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:32:42 2001.
- * $Id: wallpaper.c,v 1.3 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jul  3 20:48:44 2001.
+ * $Id: wallpaper.c,v 1.4 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,10 @@
 #include "utils/libstring.h"
 #include "enfle/ui-plugin.h"
 #include "enfle/utils.h"
+#include "enfle/loader.h"
+#include "enfle/player.h"
+#include "enfle/streamer.h"
+#include "enfle/archiver.h"
 
 static int ui_main(UIData *);
 
@@ -177,10 +181,6 @@ static int
 process_files_of_archive(UIData *uidata, Archive *a)
 {
   EnflePlugins *eps = uidata->eps;
-  Loader *ld = uidata->ld;
-  Streamer *st = uidata->st;
-  Archiver *ar = uidata->ar;
-  Player *player = uidata->player;
   VideoWindow *vw = uidata->vw;
   Config *c = uidata->c;
   Archive *arc;
@@ -231,11 +231,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	return 0;
       }
 
-      if (streamer_identify(st, eps, s, path)) {
+      if (streamer_identify(eps, s, path)) {
 
 	debug_message("Stream identified as %s\n", s->format);
 
-	if (!streamer_open(st, eps, s, s->format, path)) {
+	if (!streamer_open(eps, s, s->format, path)) {
 	  show_message("Stream %s [%s] cannot open\n", s->format, path);
 	  return 0;
 	}
@@ -246,11 +246,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
     }
 
     arc = archive_create(a);
-    if (archiver_identify(ar, eps, arc, s)) {
+    if (archiver_identify(eps, arc, s)) {
 
       debug_message("Archiver identified as %s\n", arc->format);
 
-      if (archiver_open(ar, eps, arc, arc->format, s)) {
+      if (archiver_open(eps, arc, arc->format, s)) {
 	ret = process_files_of_archive(uidata, arc);
 	archive_destroy(arc);
 	return ret;
@@ -267,7 +267,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   }
 
   f = LOAD_NOT;
-  if (loader_identify(ld, eps, p, s, vw, c)) {
+  if (loader_identify(eps, p, s, vw, c)) {
 
 #ifdef DEBUG
     if (p->format_detail)
@@ -277,16 +277,16 @@ process_files_of_archive(UIData *uidata, Archive *a)
 #endif
 
     p->image = memory_create();
-    if ((f = loader_load_image(ld, eps, p->format, p, s, vw, c)) == LOAD_OK)
+    if ((f = loader_load(eps, p->format, p, s, vw, c)) == LOAD_OK)
       stream_close(s);
   }
 
   if (f != LOAD_OK) {
-    if (player_identify(player, eps, m, s, c)) {
+    if (player_identify(eps, m, s, c)) {
 
       debug_message("Movie identified as %s\n", m->format);
 
-      if ((f = player_load_movie(player, eps, vw, m->format, m, s, c)) != PLAY_OK) {
+      if ((f = player_load(eps, vw, m->format, m, s, c)) != PLAY_OK) {
 	stream_close(s);
 	show_message("%s load failed\n", path);
 	return 0;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jun 21 01:21:27 2001.
- * $Id: enfle.c,v 1.35 2001/06/22 17:46:48 sian Exp $
+ * Last Modified: Tue Jul  3 20:43:08 2001.
+ * $Id: enfle.c,v 1.36 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -236,7 +236,6 @@ main(int argc, char **argv)
   extern int optind;
   UIData uidata;
   EnflePlugins *eps;
-  UI *ui;
   Config *c;
   String *rcpath;
   int i, ch;
@@ -354,13 +353,6 @@ main(int argc, char **argv)
     config_set_str(c, (char *)"/enfle/plugins/ui/convert/format", format);
 
   eps = uidata.eps = enfle_plugins_create();
-  uidata.st = streamer_create();
-  ui = ui_create();
-  uidata.ld = loader_create();
-  uidata.sv = saver_create();
-  uidata.ef = effect_create();
-  uidata.ar = archiver_create();
-  uidata.player = player_create();
 
   if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
     plugin_path = (char *)ENFLE_PLUGINDIR;
@@ -422,19 +414,12 @@ main(int argc, char **argv)
   if ((uidata.vp = enfle_plugins_get(eps, ENFLE_PLUGIN_VIDEO, video_name)) == NULL) {
     fprintf(stderr, "No %s Video plugin\n", video_name);
   } else {
-    if (!ui_call(ui, eps, ui_name, &uidata))
+    if (!ui_call(eps, ui_name, &uidata))
       fprintf(stderr, "No UI %s or UI %s initialize failed\n", ui_name, ui_name);
   }
 
-  player_destroy(uidata.player);
   archive_destroy(uidata.a);
-  archiver_destroy(uidata.ar);
-  streamer_destroy(uidata.st);
   config_destroy(c);
-  loader_destroy(uidata.ef);
-  loader_destroy(uidata.sv);
-  loader_destroy(uidata.ld);
-  ui_destroy(ui);
   enfle_plugins_destroy(eps);
 
   return 0;

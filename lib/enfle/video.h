@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 17:27:08 2001.
- * $Id: video.h,v 1.16 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jul  3 20:41:00 2001.
+ * $Id: video.h,v 1.17 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,7 @@
 #ifndef _VIDEO_H
 #define _VIDEO_H
 
+#include "image.h"
 #include "utils/libconfig.h"
 
 typedef enum {

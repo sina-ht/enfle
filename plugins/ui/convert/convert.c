@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:59:15 2001.
- * $Id: convert.c,v 1.8 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jul  3 20:48:25 2001.
+ * $Id: convert.c,v 1.9 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,6 +36,10 @@
 #include "utils/libstring.h"
 #include "utils/misc.h"
 #include "enfle/ui-plugin.h"
+#include "enfle/loader.h"
+#include "enfle/saver.h"
+#include "enfle/streamer.h"
+#include "enfle/archiver.h"
 
 static int ui_main(UIData *);
 
@@ -72,13 +76,12 @@ static int
 save_image(UIData *uidata, Image *p, char *format, char *path)
 {
   EnflePlugins *eps = uidata->eps;
-  Saver *sv = uidata->sv;
   char *outpath;
   char *ext;
   FILE *fp;
   int fd;
 
-  if ((ext = saver_get_ext(uidata->sv, uidata->eps, format, uidata->c)) == NULL)
+  if ((ext = saver_get_ext(uidata->eps, format, uidata->c)) == NULL)
     return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
     show_message(__FUNCTION__ ": No enough memory.\n");
@@ -97,7 +100,7 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
     return 0;
   } else {
     config_set_str(uidata->c, (char *)"/enfle/plugins/ui/convert/source_path", outpath);
-    if (!saver_save(sv, eps, format, p, fp, uidata->c, NULL))
+    if (!saver_save(eps, format, p, fp, uidata->c, NULL))
       show_message("Save failed.\n");
     fclose(fp);
   }
@@ -111,9 +114,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
 {
   EnflePlugins *eps = uidata->eps;
   Config *c = uidata->c;
-  Loader *ld = uidata->ld;
-  Streamer *st = uidata->st;
-  Archiver *ar = uidata->ar;
   Archive *arc;
   Stream *s;
   Image *p;
@@ -160,11 +160,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  continue;
 	}
 
-	if (streamer_identify(st, eps, s, path)) {
+	if (streamer_identify(eps, s, path)) {
 
 	  debug_message("Stream identified as %s\n", s->format);
 
-	  if (!streamer_open(st, eps, s, s->format, path)) {
+	  if (!streamer_open(eps, s, s->format, path)) {
 	    show_message("Stream %s [%s] cannot open\n", s->format, path);
 	    continue;
 	  }
@@ -175,11 +175,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       arc = archive_create(a);
-      if (archiver_identify(ar, eps, arc, s)) {
+      if (archiver_identify(eps, arc, s)) {
 
 	debug_message("Archiver identified as %s\n", arc->format);
 
-	if (archiver_open(ar, eps, arc, arc->format, s)) {
+	if (archiver_open(eps, arc, arc->format, s)) {
 	  ret = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
 	  dir = 1;
@@ -196,12 +196,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
     f = LOAD_NOT;
     debug_message("Image identifying...\n");
-    if (loader_identify(ld, eps, p, s, NULL, c)) {
+    if (loader_identify(eps, p, s, NULL, c)) {
 
       debug_message("Image identified as %s\n", p->format);
 
       p->image = memory_create();
-      if ((f = loader_load_image(ld, eps, p->format, p, s, NULL, c)) == LOAD_OK)
+      if ((f = loader_load(eps, p->format, p, s, NULL, c)) == LOAD_OK)
 	stream_close(s);
     }
 

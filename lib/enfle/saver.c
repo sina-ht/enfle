@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:58:21 2001.
- * $Id: saver.c,v 1.2 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jul  3 20:25:48 2001.
+ * $Id: saver.c,v 1.3 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,37 +20,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdlib.h>
-
-#define REQUIRE_STRING_H
-#include "compat.h"
 #include "common.h"
 
 #include "saver.h"
 #include "saver-plugin.h"
 
-static int save(EnflePlugins *, char *, Image *, FILE *, Config *, void *);
-static char *get_ext(EnflePlugins *, char *, Config *);
-
-static Saver template = {
-  save: save,
-  get_ext: get_ext
-};
-
-Saver *
-saver_create(void)
-{
-  Saver *saver;
-
-  if ((saver = (Saver *)calloc(1, sizeof(Saver))) == NULL)
-    return NULL;
-  memcpy(saver, &template, sizeof(Saver));
-
-  return saver;
-}
-
-static int
-save(EnflePlugins *eps, char *pluginname, Image *src, FILE *fp, Config *c, void *params)
+int
+saver_save(EnflePlugins *eps, char *pluginname, Image *src, FILE *fp, Config *c, void *params)
 {
   Plugin *p;
   SaverPlugin *sp;
@@ -63,8 +39,8 @@ save(EnflePlugins *eps, char *pluginname, Image *src, FILE *fp, Config *c, void 
   return 0;
 }
 
-static char *
-get_ext(EnflePlugins *eps, char *pluginname, Config *c)
+char *
+saver_get_ext(EnflePlugins *eps, char *pluginname, Config *c)
 {
   Plugin *p;
   SaverPlugin *sp;

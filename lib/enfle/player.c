@@ -1,10 +1,10 @@
 /*
  * player.c -- player plugin interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:32:51 2001.
- * $Id: player.c,v 1.11 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jul  3 20:26:02 2001.
+ * $Id: player.c,v 1.12 2001/07/10 12:59:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,41 +20,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#define REQUIRE_STRING_H
-#include "compat.h"
 #define REQUIRE_FATAL
 #include "common.h"
 
 #include "stream.h"
 #include "player.h"
 
-static int identify(EnflePlugins *, Movie *, Stream *, Config *);
-static PlayerStatus load_movie(EnflePlugins *, VideoWindow *, char *, Movie *, Stream *, Config *);
-
-static Player template = {
-  identify: identify,
-  load_movie: load_movie
-};
-
-Player *
-player_create(void)
-{
-  Player *p;
-
-  if ((p = (Player *)calloc(1, sizeof(Player))) == NULL)
-    return NULL;
-  memcpy(p, &template, sizeof(Player));
-
-  return p;
-}
-
-/* methods */
-
-static int
-identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
+int
+player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
 {
   Dlist *dl;
   Dlist_data *dd;
@@ -83,8 +56,8 @@ identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
   return 0;
 }
 
-static PlayerStatus
-load_movie(EnflePlugins *eps, VideoWindow *vw, char *pluginname, Movie *m, Stream *st, Config *c)
+PlayerStatus
+player_load(EnflePlugins *eps, VideoWindow *vw, char *pluginname, Movie *m, Stream *st, Config *c)
 {
   Plugin *p;
   PlayerPlugin *pp;
