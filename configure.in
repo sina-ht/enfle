@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Jan 18 22:18:59 2001.
-dnl $Id: configure.in,v 1.39 2001/01/18 17:03:58 sian Exp $
+dnl Last Modified: Tue Jan 23 09:02:22 2001.
+dnl $Id: configure.in,v 1.40 2001/01/23 08:11:30 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010118)
+AM_INIT_AUTOMAKE(enfle, 20010123)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -117,6 +117,16 @@ if test "$available_pthread" = "yes"; then
 fi
 AM_CONDITIONAL(HAVE_LIBMPEG3, test "$available_libmpeg3" = "yes")
 AC_SUBST(LIBADD_LIBMPEG3)
+
+dnl available_opendivx=no
+dnl if test "$available_pthread" = "yes"; then
+dnl   AC_CHECK_HEADER(divx/decore.h, [
+dnl     AC_CHECK_LIB(divxdecore, decore, [
+dnl       available_opendivx=yes; LIBADD_LIBDIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD"; ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
+dnl fi
+dnl AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_opendivx" = "yes")
+LIBADD_DIVXDECORE="$LIBADD_POW $LIBADD_PTHREAD"
+AC_SUBST(LIBADD_DIVXDECORE)
 
 available_zlib=no
 AC_CHECK_HEADER(zlib.h, [
@@ -335,6 +345,7 @@ AC_CONFIG_FILES([
    lib/dllloader/Makefile
    lib/enfle/Makefile
    lib/X11/Makefile
+   lib/divxdecore/Makefile
   src/Makefile
   plugins/Makefile
    plugins/ui/Makefile
@@ -355,6 +366,7 @@ AC_CONFIG_FILES([
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
     plugins/player/avifile/Makefile
+    plugins/player/opendivx/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
    plugins/audio/Makefile
