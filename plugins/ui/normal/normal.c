@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 02:37:41 2001.
- * $Id: normal.c,v 1.41 2001/05/01 17:55:26 sian Exp $
+ * Last Modified: Wed May  2 03:27:58 2001.
+ * $Id: normal.c,v 1.42 2001/05/01 18:29:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -636,7 +636,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Image *p;
   Movie *m;
   char *path;
-  int f, dir, ret;
+  int f, ret;
   struct stat statbuf;
 
   s = stream_create();
@@ -653,49 +653,53 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
   path = NULL;
   ret = MAIN_LOOP_DO_NOTHING;
-  dir = 1;
   while (ret != MAIN_LOOP_QUIT) {
     if (path == NULL)
       path = archive_iteration_start(a);
     else {
       switch (ret) {
       case MAIN_LOOP_DELETE_FROM_LIST:
+	//debug_message("MAIN_LOOP_DELETE_FROM_LIST\n");
 	path = archive_iteration_delete(a);
-	ret = MAIN_LOOP_NEXT;
+	ret = (archive_direction(a) == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
 	break;
       case MAIN_LOOP_DELETE_FILE:
+	//debug_message("MAIN_LOOP_DELETE_FILE\n");
 	if (strcmp(a->format, "NORMAL") == 0) {
 	  unlink(s->path);
 	  show_message("DELETED: %s\n", s->path);
 	}
 	path = archive_iteration_delete(a);
-	ret = MAIN_LOOP_NEXT;
+	ret = (archive_direction(a) == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
 	break;
       case MAIN_LOOP_NEXT:
-	dir = 1;
+	//debug_message("MAIN_LOOP_NEXT\n");
 	path = archive_iteration_next(a);
 	break;
       case MAIN_LOOP_PREV:
-	dir = -1;
+	//debug_message("MAIN_LOOP_PREV\n");
 	path = archive_iteration_prev(a);
 	break;
       case MAIN_LOOP_NEXTARCHIVE:
+	//debug_message("MAIN_LOOP_NEXTARCHIVE\n");
 	path = NULL;
 	ret = MAIN_LOOP_NEXT;
 	break;
       case MAIN_LOOP_PREVARCHIVE:
+	//debug_message("MAIN_LOOP_PREVARCHIVE\n");
 	path = NULL;
 	ret = MAIN_LOOP_PREV;
 	break;
       case MAIN_LOOP_FIRST:
-	dir = 1;
+	//debug_message("MAIN_LOOP_FIRST\n");
 	path = archive_iteration_first(a);
 	break;
       case MAIN_LOOP_LAST:
-	dir = 1;
+	//debug_message("MAIN_LOOP_LAST\n");
 	path = archive_iteration_last(a);
 	break;
       case MAIN_LOOP_DO_NOTHING:
+	//debug_message("MAIN_LOOP_DO_NOTHING\n");
 	break;
       default:
 	show_message("*** " __FUNCTION__ "() returned unknown code %d\n", ret);
@@ -725,8 +729,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 	  if (!archive_read_directory(arc, path, 1)) {
 	    archive_destroy(arc);
-	    archive_iteration_delete(a);
-	    ret = MAIN_LOOP_NEXT;
+	    ret = MAIN_LOOP_DELETE_FROM_LIST;
 	    continue;
 	  }
 	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
@@ -734,15 +737,13 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  ret = process_files_of_archive(uidata, arc);
 	  if (arc->nfiles == 0) {
 	    /* Now that all paths are deleted in this archive, should be deleted wholly. */
-	    archive_iteration_delete(a);
-	    dir = 1;
+	    (void)archive_iteration_delete(a);
 	    ret = MAIN_LOOP_NEXT;
 	  }
 	  archive_destroy(arc);
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
-	  archive_iteration_delete(a);
-	  ret = MAIN_LOOP_NEXT;
+	  ret = MAIN_LOOP_DELETE_FROM_LIST;
 	  continue;
 	}
 
@@ -752,14 +753,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
 	  if (!streamer_open(st, eps, s, s->format, path)) {
 	    show_message("Stream %s [%s] cannot open\n", s->format, path);
-	    archive_iteration_delete(a);
-	    ret = MAIN_LOOP_NEXT;
+	    ret = MAIN_LOOP_DELETE_FROM_LIST;
 	    continue;
 	  }
 	} else if (!stream_make_filestream(s, path)) {
 	  show_message("Stream NORMAL [%s] cannot open\n", path);
-	  archive_iteration_delete(a);
-	  ret = MAIN_LOOP_NEXT;
+	  ret = MAIN_LOOP_DELETE_FROM_LIST;
 	  continue;
 	}
       }
@@ -773,18 +772,17 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
 	  ret = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
-	  dir = 1;
 	  continue;
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
-	  archive_iteration_delete(a);
+	  ret = MAIN_LOOP_DELETE_FROM_LIST;
+	  continue;
 	}
       }
       archive_destroy(arc);
     } else if (!archive_open(a, s, path)) {
       show_message("File %s in %s archive cannot open\n", path, a->format);
-      archive_iteration_delete(a);
-      ret = MAIN_LOOP_NEXT;
+      ret = MAIN_LOOP_DELETE_FROM_LIST;
       continue;
     }
 
@@ -812,15 +810,13 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	if ((f = player_load_movie(player, eps, vw, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
 	  show_message("%s load failed\n", path);
-	  archive_iteration_delete(a);
-	  ret = MAIN_LOOP_NEXT;
+	  ret = MAIN_LOOP_DELETE_FROM_LIST;
 	  continue;
 	}
       } else {
 	stream_close(s);
 	show_message("%s identification failed\n", path);
-	archive_iteration_delete(a);
-	ret = MAIN_LOOP_NEXT;
+	ret = MAIN_LOOP_DELETE_FROM_LIST;
 	continue;
       }
 
