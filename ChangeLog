@@ -1,3 +1,32 @@
+2000-11-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added -Werror to CFLAGS. Version up.
+
+	* plugins/video/Xlib/Xlib.c: Implemented fullscreen mode.
+
+	* src/enfle.c: Now we can disable spi plugins.
+
+	* lib/enfle/spi.c: Changed loader_identify().
+
+	* plugins/ui/normal/normal.c: No need to pass VideoPlugin. Use
+	video_window_*(). More UI.
+
+	* plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/ungif/ungif.c:
+	No need to pass VideoPlugin.
+
+	* lib/enfle/video.h, lib/enfle/video-plugin.h: Moved VideoWindow
+	codes from video-plugin.h to video.h.
+
+	* lib/enfle/movie.c, lib/enfle/movie.h, lib/enfle/player.c,
+	lib/enfle/player.h, lib/enfle/player-plugin.h: No need to pass
+	VideoPlugin.
+
+	* lib/X11/x11window.c, lib/X11/x11window.h: Added wait_mapped().
+
+	* lib/X11/x11.c, lib/X11/x11.h: More implementation. Fixed some
+	bugs.
+
 2000-11-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/enfle-plugins.c: Fixed unload() bug.
