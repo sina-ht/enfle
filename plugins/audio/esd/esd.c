@@ -1,10 +1,10 @@
 /*
  * esd.c -- EsounD Audio plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:31:23 2001.
- * $Id: esd.c,v 1.2 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Sun Jun 24 05:44:43 2001.
+ * $Id: esd.c,v 1.3 2001/06/24 15:41:50 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -28,6 +28,7 @@
 #include <esd.h>
 
 #define REQUIRE_UNISTD_H
+#define REQUIRE_STRING_H
 #include "compat.h"
 
 #include "common.h"
