@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 03:15:30 2001.
- * $Id: libmpeg2.c,v 1.8 2001/02/21 18:25:41 sian Exp $
+ * Last Modified: Thu Feb 22 18:24:04 2001.
+ * $Id: libmpeg2.c,v 1.9 2001/02/22 17:49:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,16 +36,16 @@
 #include "utils/timer.h"
 #include "enfle/player-plugin.h"
 #include "libmpeg2_vo.h"
+#include "mpeg2/mm_accel.h"
 #include "demultiplexer/demultiplexer_mpeg.h"
 
 typedef struct _libmpeg2_info {
   Image *p;
   AudioDevice *ad;
   Demultiplexer *demux;
+  mpeg2dec_t mpeg2dec;
   vo_instance_t *vo;
   int rendering_type;
-  pthread_mutex_t update_mutex;
-  pthread_cond_t update_cond;
   int nvstreams;
   int nvstream;
   int v_fd_in;
@@ -70,8 +70,8 @@ static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
-  name: "Libmpeg2",
-  description: "Libmpeg2 Player plugin version 0.1",
+  name: "LibMPEG2",
+  description: "LibMPEG2 Player plugin version 0.1",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -108,9 +108,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
-  pthread_mutex_init(&info->update_mutex, NULL);
-  pthread_cond_init(&info->update_cond, NULL);
-
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
     show_message(__FUNCTION__ ": Cannot direct decoding...\n");
@@ -122,9 +119,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   demultiplexer_mpeg_set_input(info->demux, st);
   if (!demultiplexer_examine(info->demux))
     return PLAY_NOT;
+  info->nastreams = demultiplexer_mpeg_naudios(info->demux);
+  info->nvstreams = demultiplexer_mpeg_nvideos(info->demux);
+
+  if (info->nastreams == 0 && info->nvstreams == 0)
+    return PLAY_NOT;
 
   m->has_audio = 0;
-  if (demultiplexer_mpeg_naudios(info->demux)) {
+  if (info->nastreams) {
     if (m->ap == NULL)
       show_message("Audio not played.\n");
     else {
@@ -143,7 +145,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 
   m->has_video = 1;
-  if (!demultiplexer_mpeg_nvideos(info->demux)) {
+  if (!info->nvstreams) {
     m->has_video = 0;
     m->width = 120;
     m->height = 80;
@@ -173,6 +175,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   if ((info->vo = vo_enfle_rgb_open(vw, m, p)) == NULL)
     goto error;
+  mpeg2_init(&info->mpeg2dec, mm_accel(), info->vo);
 
   switch (vw->bits_per_pixel) {
   case 32:
@@ -238,74 +241,64 @@ play(Movie *m)
   demultiplexer_set_eof(info->demux, 0);
 
   stream_rewind(m->st);
-  if (info->a_fd_in) {
-    close(info->a_fd_in);
-    info->a_fd_in = 0;
-  }
-  if (info->a_fd_out) {
-    close(info->a_fd_out);
-    info->a_fd_out = 0;
-  }
-  if (info->v_fd_in) {
-    close(info->v_fd_in);
-    info->v_fd_in = 0;
-  }
-  if (info->v_fd_out) {
-    close(info->v_fd_out);
-    info->v_fd_out = 0;
-  }
 
-    
   if (m->has_video) {
     if (pipe(fds) != 0)
       return PLAY_ERROR;
     info->v_fd_in = fds[0];
     info->v_fd_out = fds[1];
+    demultiplexer_mpeg_set_vfd(info->demux, info->v_fd_out);
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
+
+  m->has_audio = 0;
+  info->nastream = -1;
+  demultiplexer_mpeg_set_audio(info->demux, info->nastream);
   if (m->has_audio) {
     if (pipe(fds) != 0)
       return PLAY_ERROR;
     info->a_fd_in = fds[0];
     info->a_fd_out = fds[1];
+    demultiplexer_mpeg_set_afd(info->demux, info->a_fd_out);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
 
-  demultiplexer_mpeg_set_vfd(info->demux, info->v_fd_out);
-  demultiplexer_mpeg_set_afd(info->demux, info->a_fd_out);
   demultiplexer_start(info->demux);
 
   return PLAY_OK;
 }
+
+#define MPEG_VIDEO_DECODE_BUFFER_SIZE 8192
 
 static void *
 play_video(void *arg)
 {
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
+  unsigned char buf[MPEG_VIDEO_DECODE_BUFFER_SIZE];
+  int read_size;
+  int nframe_decoded;
 
   debug_message(__FUNCTION__ "()\n");
 
   while (m->status == _PLAY) {
-    if (m->current_frame >= m->num_of_frames) {
+    if ((read_size = read(info->v_fd_in, buf, MPEG_VIDEO_DECODE_BUFFER_SIZE)) < 0) {
       demultiplexer_set_eof(info->demux, 1);
       break;
     }
-
-    pthread_mutex_lock(&info->update_mutex);
-
-    /* decoding */
-
-    pthread_cond_wait(&info->update_cond, &info->update_mutex);
-    pthread_mutex_unlock(&info->update_mutex);
+    nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, buf, buf + read_size);
   }
 
   debug_message(__FUNCTION__ " exiting.\n");
+
+  close(info->v_fd_in);
   pthread_exit((void *)PLAY_OK);
 }
 
 #define AUDIO_READ_SIZE 2048
 #define AUDIO_WRITE_SIZE 4096
+
+#define MPEG_AUDIO_DECODE_BUFFER_SIZE 4096
 
 static void *
 play_audio(void *arg)
@@ -315,12 +308,14 @@ play_audio(void *arg)
   AudioDevice *ad;
   short input_buffer[AUDIO_WRITE_SIZE];
   short output_buffer[AUDIO_WRITE_SIZE];
+  //unsigned char buf[MPEG_AUDIO_DECODE_BUFFER_SIZE];
   int samples_to_read;
 
   debug_message(__FUNCTION__ "()\n");
 
   if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
     show_message("Cannot open device.\n");
+    close(info->a_fd_in);
     pthread_exit((void *)PLAY_ERROR);
   }
   info->ad = ad;
@@ -341,7 +336,7 @@ play_audio(void *arg)
     } else {
       int i;
 
-      /* read audio */
+      /* reread audio */
       for (i = 0; i < samples_to_read; i++) {
 	output_buffer[i * 2    ] = input_buffer[i];
 	output_buffer[i * 2 + 1] = input_buffer[i + AUDIO_READ_SIZE];
@@ -361,6 +356,7 @@ play_audio(void *arg)
 
   debug_message(__FUNCTION__ " exiting.\n");
 
+  close(info->a_fd_in);
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -376,7 +372,7 @@ static PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
-  Image *p = info->p;
+  //Image *p = info->p;
   int i = 0;
   int video_time, audio_time;
 
@@ -399,8 +395,6 @@ play_main(Movie *m, VideoWindow *vw)
 
   if (!m->has_video)
     return PLAY_OK;
-
-  pthread_mutex_lock(&info->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio) {
@@ -428,12 +422,6 @@ play_main(Movie *m, VideoWindow *vw)
       /* drop */
     }
   }
-
-  /* tell video thread to continue decoding */
-  pthread_cond_signal(&info->update_cond);
-  pthread_mutex_unlock(&info->update_mutex);
-
-  m->render_frame(vw, m, p);
 
   return PLAY_OK;
 }
@@ -483,9 +471,6 @@ stop_movie(Movie *m)
 
   demultiplexer_stop(info->demux);
 
-  pthread_mutex_lock(&info->update_mutex);
-  pthread_cond_signal(&info->update_cond);
-  pthread_mutex_unlock(&info->update_mutex);
   if (info->video_thread) {
     pthread_join(info->video_thread, &v);
     info->video_thread = 0;
@@ -507,13 +492,12 @@ unload_movie(Movie *m)
   debug_message(__FUNCTION__ "()\n");
 
   stop_movie(m);
+  mpeg2_close(&info->mpeg2dec);
+  vo_close(info->vo);
 
   if (info) {
     if (info->p)
       image_destroy(info->p);
-
-    pthread_mutex_destroy(&info->update_mutex);
-    pthread_cond_destroy(&info->update_cond);
 
     debug_message(__FUNCTION__ ": closing libmpeg2 file\n");
     /* close */
