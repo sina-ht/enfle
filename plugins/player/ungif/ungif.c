@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec  6 17:44:53 2000.
- * $Id: ungif.c,v 1.14 2000/12/06 15:07:47 sian Exp $
+ * Last Modified: Sat Dec  9 02:12:34 2000.
+ * $Id: ungif.c,v 1.15 2000/12/10 13:19:08 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -131,13 +131,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   p->next = NULL;
 
   if (m->direct_decode) {
-    p->rendered_image = memory_create();
-    //memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
-    if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
+    p->rendered.image = memory_create();
+    //memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+    if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
       return PLAY_ERROR;
   } else {
-    p->rendered_image = memory_create();
-    //memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    p->rendered.image = memory_create();
+    //memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
     p->image = memory_create();
     if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
       return PLAY_ERROR;
@@ -306,9 +306,9 @@ play_main(Movie *m, VideoWindow *vw)
       }
 
       if (m->direct_decode) {
-	if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
+	if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
 	  return PLAY_ERROR;
-	memcpy(memory_ptr(p->rendered_image), info->buffer[0], memory_used(p->rendered_image));
+	memcpy(memory_ptr(p->rendered.image), info->buffer[0], memory_used(p->rendered.image));
       } else {
 	if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
 	  return PLAY_ERROR;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec  5 22:02:43 2000.
- * $Id: libmpeg3.c,v 1.10 2000/12/05 15:06:44 sian Exp $
+ * Last Modified: Sat Dec  9 02:13:41 2000.
+ * $Id: libmpeg3.c,v 1.11 2000/12/10 13:19:08 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -137,9 +137,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   p->width = m->width;
   p->height = m->height;
   p->type = m->requested_type;
-  if ((p->rendered_image = memory_create()) == NULL)
+  if ((p->rendered.image = memory_create()) == NULL)
     goto error;
-  memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+  memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
 
   switch (vw->bits_per_pixel) {
   case 32:
@@ -201,11 +201,11 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   Bpp = vw->bits_per_pixel >> 3;
   /* extra 4 bytes are needed for MMX routine */
-  if (memory_alloc(p->rendered_image, m->width * m->height * Bpp + 4) == NULL)
+  if (memory_alloc(p->rendered.image, m->width * m->height * Bpp + 4) == NULL)
     goto error;
 
   for (i = 0; i < m->height; i++)
-    info->lines[i] = memory_ptr(p->rendered_image) + i * m->width * Bpp;
+    info->lines[i] = memory_ptr(p->rendered.image) + i * m->width * Bpp;
 
   m->movie_private = (void *)info;
   m->st = st;
@@ -231,7 +231,7 @@ get_screen(Movie *m)
 
   if (m->movie_private) {
     info = (LibMPEG3_info *)m->movie_private;
-    return memory_ptr(info->p->rendered_image);
+    return memory_ptr(info->p->rendered.image);
   }
 
   return NULL;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec  7 16:44:12 2000.
- * $Id: mng.c,v 1.10 2000/12/07 13:38:36 sian Exp $
+ * Last Modified: Sat Dec  9 02:14:06 2000.
+ * $Id: mng.c,v 1.11 2000/12/10 13:19:08 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -147,13 +147,13 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
   p->depth = 24;
   p->bytes_per_line = p->width * (p->bits_per_pixel >> 3);
   if (m->direct_decode) {
-    p->rendered_image = memory_create();
-    memory_request_type(p->rendered_image, video_window_preferred_memory_type(this->vw));
-    if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
+    p->rendered.image = memory_create();
+    memory_request_type(p->rendered.image, video_window_preferred_memory_type(this->vw));
+    if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
       return PLAY_ERROR;
   } else {
-    p->rendered_image = memory_create();
-    memory_request_type(p->rendered_image, video_window_preferred_memory_type(this->vw));
+    p->rendered.image = memory_create();
+    memory_request_type(p->rendered.image, video_window_preferred_memory_type(this->vw));
     p->image = memory_create();
     if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
       return PLAY_ERROR;
@@ -172,7 +172,7 @@ getcanvasline(mng_handle mng, mng_uint32 nthline)
   unsigned char *d;
 
   p = this->p;
-  d = memory_ptr(this->m->direct_decode ? p->rendered_image : p->image);
+  d = memory_ptr(this->m->direct_decode ? p->rendered.image : p->image);
 
   return (mng_ptr)&d[p->bytes_per_line * nthline];
 }

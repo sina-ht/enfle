@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec  5 21:52:57 2000.
- * $Id: mpeg_lib.c,v 1.9 2000/12/05 15:06:44 sian Exp $
+ * Last Modified: Sat Dec  9 02:13:17 2000.
+ * $Id: mpeg_lib.c,v 1.10 2000/12/10 13:19:08 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -123,13 +123,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   p->next = NULL;
 
   if (m->direct_decode) {
-    p->rendered_image = memory_create();
-    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
-    if (memory_alloc(p->rendered_image, m->height * m->width * 4) == NULL)
+    p->rendered.image = memory_create();
+    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+    if (memory_alloc(p->rendered.image, m->height * m->width * 4) == NULL)
       return PLAY_ERROR;
   } else {
-    p->rendered_image = memory_create();
-    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    p->rendered.image = memory_create();
+    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
     p->image = memory_create();
     if (memory_alloc(p->image, m->height * m->width * 4) == NULL)
       return PLAY_ERROR;
@@ -152,7 +152,7 @@ get_screen(Movie *m)
 
   if (m->movie_private) {
     info = (MPEG_lib_info *)m->movie_private;
-    return memory_ptr(m->direct_decode ? info->p->rendered_image : info->p->image);
+    return memory_ptr(m->direct_decode ? info->p->rendered.image : info->p->image);
   }
 
   return NULL;
@@ -195,7 +195,7 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  more_frame = GetMPEGFrame(memory_ptr(m->direct_decode ? p->rendered_image : p->image));
+  more_frame = GetMPEGFrame(memory_ptr(m->direct_decode ? p->rendered.image : p->image));
 
   m->current_frame++;
   m->render_frame(vw, m, p);
