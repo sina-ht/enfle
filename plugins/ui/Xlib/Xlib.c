@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 15 21:45:13 2000.
- * $Id: Xlib.c,v 1.8 2000/10/15 13:03:20 sian Exp $
+ * Last Modified: Mon Oct 16 05:56:52 2000.
+ * $Id: Xlib.c,v 1.9 2000/10/16 19:29:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -296,7 +296,7 @@ main_loop(UIData *uidata, Movie *m, Image *p)
 	break;
       case _STOP:
 	/* loop */
-	m->status = _PLAY;
+	movie_play(m);
 	break;
       case _UNLOADED:
 	show_message("Movie has been already unloaded.\n");
@@ -330,6 +330,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
+  movie_set_play_every_frame(m, 1);
 
   path = NULL;
   while (dir) {
@@ -486,6 +487,7 @@ ui_main(UIData *uidata)
     return 0;
   }
   uidata->screen->depth = x11_depth(x11);
+  uidata->screen->bits_per_pixel = x11_bpp(x11);
 
   if ((uidata->private = (void *)calloc(1, sizeof(Xlib_info))) == NULL) {
     show_message("ui_main: No enough memory\n");
