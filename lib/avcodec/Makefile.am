@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Feb 29 23:17:33 2004.
-# $Id: Makefile.am,v 1.11 2004/02/29 14:23:26 sian Exp $
+# Last Modified: Mon Mar  8 16:29:58 2004.
+# $Id: Makefile.am,v 1.12 2004/03/08 07:50:54 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -26,7 +26,7 @@ MMX_SRCS = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c \
 	i386/idct_mmx.c i386/motion_est_mmx.c \
-	i386/simple_idct_mmx.c i386/fft_sse.c
+	i386/simple_idct_mmx.c i386/fft_sse.c i386/vp3dsp_mmx.c
 else
 CFLAGS_POST = -Wno-unused
 MMX_SRCS =
@@ -184,6 +184,7 @@ libavcodec_la_SOURCES = \
 	vcr1.c \
 	vmdav.c \
 	vp3.c \
+	vp3dsp.c \
 	vqavideo.c \
 	wmadec.c \
 	xan.c \

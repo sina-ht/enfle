@@ -543,7 +543,7 @@ static int flac_decode_frame(AVCodecContext *avctx,
 {
     FLACContext *s = avctx->priv_data;
     int metadata_last, metadata_type, metadata_size;
-    int tmp = 0, i, j = 0, input_buf_size;
+    int tmp = 0, i, j = 0, input_buf_size = 0;
     int16_t *samples = data, *left, *right;
 
     *data_size = 0;

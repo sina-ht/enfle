@@ -2053,7 +2053,7 @@ static void render_fragments(Vp3DecodeContext *s,
     unsigned char *last_plane;
     unsigned char *golden_plane;
     int stride;
-    int motion_x, motion_y;
+    int motion_x = 0, motion_y = 0;
     int upper_motion_limit, lower_motion_limit;
     int motion_halfpel_index;
     uint8_t *motion_source;
