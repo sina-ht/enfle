@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Sep 20 00:29:04 2001.
- * $Id: x11ximage.c,v 1.37 2001/09/20 05:36:36 sian Exp $
+ * Last Modified: Fri Sep 21 01:55:37 2001.
+ * $Id: x11ximage.c,v 1.38 2001/09/21 02:21:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -711,14 +711,18 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (xi->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage) {
-	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, False);
-	XSync(x11_display(xi->x11), False);
+	if (xi->xvimage->width >= w && xi->xvimage->height >= h) {
+	  XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, False);
+	  XSync(x11_display(xi->x11), False);
+	}
       }
 #endif /* USE_XV */
     } else {
       if (xi->ximage) {
-	XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
-	XSync(x11_display(xi->x11), False);
+	if (xi->ximage->width >= w && xi->ximage->height >= h) {
+	  XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+	  XSync(x11_display(xi->x11), False);
+	}
       }
     }
 #else /* USE_PTHREAD */
@@ -726,14 +730,18 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (x11->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage) {
-	XSync(x11_display(xi->x11), False);
-	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, Faluse);
+	if (xi->xvimage->width >= w && xi->xvimage->height >= h) {
+	  XSync(x11_display(xi->x11), False);
+	  XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, Faluse);
+	}
       }
 #endif
     } else {
       if (xi->ximage) {
-	XSync(x11_display(xi->x11), False);
-	XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+	if (xi->ximage->width >= w && xi->ximage->height >= h) {
+	  XSync(x11_display(xi->x11), False);
+	  XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+	}
       }
     }
 #endif /* USE_PTHREAD */
@@ -742,11 +750,15 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (xi->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage)
-	XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h);
+	if (xi->xvimage->width >= w && xi->xvimage->height >= h) {
+	  XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h);
+	}
 #endif
     } else {
       if (xi->ximage)
-	XPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h);
+	if (xi->ximage->width >= w && xi->ximage->height >= h) {
+	  XPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h);
+	}
     }
 #ifdef USE_SHM
   }
@@ -766,20 +778,26 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
   if (xi->if_attached) {
 #ifdef USE_PTHREAD
     if (xi->xvimage) {
-      XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
-      XSync(x11_display(xi->x11), False);
+      if (xi->xvimage->width >= sw && xi->xvimage->height >= sh) {
+	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
+	XSync(x11_display(xi->x11), False);
+      }
     }
 #else /* USE_PTHREAD */
     /* delayed sync, intentionally. */
     if (xi->xvimage) {
-      XSync(x11_display(xi->x11), False);
-      XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
+      if (xi->xvimage->width >= sw && xi->xvimage->height >= sh) {
+	XSync(x11_display(xi->x11), False);
+	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
+      }
     }
 #endif /* USE_PTHREAD */
   } else {
 #endif /* USE_SHM */
     if (xi->xvimage)
-      XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
+      if (xi->xvimage->width >= sw && xi->xvimage->height >= sh) {
+	XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
+      }
 #ifdef USE_SHM
   }
 #endif
