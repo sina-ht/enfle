@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 19 21:05:06 2002.
- * $Id: streamer.c,v 1.11 2002/08/19 12:22:33 sian Exp $
+ * Last Modified: Wed Nov 12 00:07:08 2003.
+ * $Id: streamer.c,v 1.12 2003/11/17 13:50:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,6 +50,10 @@ streamer_identify(EnflePlugins *eps, Stream *st, char *filepath, Config *c)
       int i = 0;
 
       while ((pluginname = pluginnames[i])) {
+	if (strcmp(pluginname, ".") == 0) {
+	  debug_message_fnc("Failed, no further try.\n");
+	  return 0;
+	}
 	if ((p = pluginlist_get(pl, pluginname))) {
 	  stp = plugin_get(p);
 	  debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
