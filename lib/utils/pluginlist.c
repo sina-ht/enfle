@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 24 05:48:34 2000.
- * $Id: pluginlist.c,v 1.3 2000/12/24 15:28:33 sian Exp $
+ * Last Modified: Sun Feb  4 21:31:47 2001.
+ * $Id: pluginlist.c,v 1.4 2001/02/05 16:00:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -61,21 +61,21 @@ add(PluginList *pl, Plugin *p, const char *name)
     if ((pl->hash = hash_create(PLUGINLIST_HASH_SIZE)) == NULL)
       return 0;
 
-  return hash_set(pl->hash, (unsigned char *)name, p);
+  return hash_set_str(pl->hash, name, p);
 }
 
 static Plugin *
 get(PluginList *pl, char *name)
 {
   if (pl->hash)
-    return hash_lookup(pl->hash, name);
+    return hash_lookup_str(pl->hash, name);
   return NULL;
 }
 
 static int
 delete(PluginList *pl, char *name)
 {
-  return hash_delete(pl->hash, name, 0);
+  return hash_delete_str(pl->hash, name, 0);
 }
 
 static Dlist *
@@ -92,10 +92,10 @@ destroy(PluginList *pl)
   if (pl->hash) {
     Dlist *dl;
     Dlist_data *dd;
-    unsigned char *k;
+    Hash_key *hk;
     Plugin *p;
 
-    pluginlist_iter(pl, dl, dd, k, p)
+    pluginlist_iter(pl, dl, dd, hk, p)
       plugin_destroy(p);
     hash_destroy(pl->hash, 0);
   }

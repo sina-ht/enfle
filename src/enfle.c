@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 29 21:12:22 2001.
- * $Id: enfle.c,v 1.23 2001/01/29 15:11:35 sian Exp $
+ * Last Modified: Mon Feb  5 02:54:53 2001.
+ * $Id: enfle.c,v 1.24 2001/02/05 16:00:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -175,7 +175,7 @@ print_plugin_info(EnflePlugins *eps, int level)
       if (level >= 1)
 	printf("\n");
       dlist_iter(dl, dd) {
-	pluginname = dlist_data(dd);
+	pluginname = hash_key_key(dlist_data(dd));
 	if (level == 0) {
 	  printf(" %s", pluginname);
 	} else {
@@ -214,7 +214,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   path = archive_iteration_start(a);
   while (path) {
     ext = strrchr(path, '.');
-    if (ext && !strncmp(ext, ".so", 3)) {
+    if (ext && !strcasecmp(ext, ".so")) {
       PluginType type;
 
       if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
@@ -233,7 +233,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 	nplugins++;
 	nplugins -= check_and_unload(eps, c, type, name);
       }
-    } else if (!strcasecmp(ext, ".dll")
+    } else if (ext && !strcasecmp(ext, ".dll")
 	       //	       || !strcasecmp(ext, ".acm")
 	       ) {
       PluginType type;

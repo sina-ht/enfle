@@ -1,10 +1,10 @@
 /*
- * dlist.h -- double-linked list data structure
- * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
+ * dlist.h -- doubly linked list data structure
+ * (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 14 10:25:27 2001.
- * $Id: dlist.h,v 1.3 2001/01/14 15:20:13 sian Exp $
+ * Last Modified: Sun Feb  4 22:01:46 2001.
+ * $Id: dlist.h,v 1.4 2001/02/05 16:00:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,48 +23,55 @@
 #ifndef _DLIST_H_
 #define _DLIST_H_
 
+typedef struct _dlist Dlist;
 typedef struct _dlist_data {
   void *data;
+  Dlist *dl;
   struct _dlist_data *prev;
   struct _dlist_data *next;
 } Dlist_data;
 
 typedef int (*Dlist_compfunc)(const void *, const void *);
 
-typedef struct _dlist Dlist;
 struct _dlist {
-  int ndata;
-  Dlist_data *top;
-  Dlist_data *head;
   Dlist_compfunc cf;
+  int size;
+  Dlist_data *guard;
 
+  int (*attach)(Dlist *, Dlist_data *, Dlist_data *);
+  Dlist_data *(*insert)(Dlist *, Dlist_data *, void *);
   Dlist_data *(*add)(Dlist *, void *);
   Dlist_data *(*add_str)(Dlist *, char *);
+  int (*detach)(Dlist *, Dlist_data *);
   int (*delete_item)(Dlist *, Dlist_data *);
   int (*move_to_top)(Dlist *, Dlist_data *);
   void (*set_compfunc)(Dlist *, Dlist_compfunc);
   int (*do_sort)(Dlist *);
-  Dlist_data *(*get_top)(Dlist *);
-  Dlist_data *(*get_head)(Dlist *);
-  int (*get_datasize)(Dlist *);
-  int (*destroy)(Dlist *);
+  int (*destroy)(Dlist *, int);
 };
 
+#define dlist_attach(dl, d1, d2) (dl)->attach((dl), (d1), (d2))
+#define dlist_insert(dl, dd, d) (dl)->insert((dl), (dd), (d))
 #define dlist_add(dl, d) (dl)->add((dl), (d))
 #define dlist_add_str(dl, d) (dl)->add_str((dl), (d))
+#define dlist_detach(dl, dd) (dl)->detach((dl), (dd))
 #define dlist_delete(dl, dd) (dl)->delete_item((dl), (dd))
 #define dlist_move_to_top(dl, dd) (dl)->move_to_top((dl), (dd))
 #define dlist_set_compfunc(dl, cf) (dl)->set_compfunc((dl), (cf))
 #define dlist_sort(dl) (dl)->do_sort((dl))
-#define dlist_get_top(dl) (dl)->get_top((dl))
-#define dlist_get_head(dl) (dl)->get_head((dl))
-#define dlist_get_datasize(dl) (dl)->get_datasize((dl))
-#define dlist_destroy(dl) (dl)->destroy((dl))
+#define dlist_destroy(dl, f) (dl)->destroy((dl), (f))
 
+#define dlist_guard(dl) ((dl)->guard)
+#define dlist_top(dl) (dlist_next(dlist_guard(dl)))
+#define dlist_head(dl) (dlist_prev(dlist_guard(dl)))
+#define dlist_size(dl) ((dl)->size)
+
+#define dlist_dlist(dd) ((dd)->dl)
 #define dlist_next(dd) ((dd)->next)
 #define dlist_prev(dd) ((dd)->prev)
 #define dlist_data(dd) ((dd)->data)
-#define dlist_iter(dl,dd) for (dd = (dl)->get_top(dl); dd != NULL; dd = dlist_next((dd)))
+
+#define dlist_iter(dl,dd) for (dd = dlist_top(dl); dd != dlist_guard(dl); dd = dlist_next((dd)))
 
 Dlist *dlist_create(void);
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 21:57:55 2000.
- * $Id: loader.c,v 1.8 2000/12/30 07:19:56 sian Exp $
+ * Last Modified: Mon Feb  5 02:54:11 2001.
+ * $Id: loader.c,v 1.9 2001/02/05 16:00:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -65,7 +65,7 @@ identify(EnflePlugins *eps, Image *ip, Stream *st)
     LoaderPlugin *lp;
     char *pluginname;
 
-    pluginname = dlist_data(dd);
+    pluginname = hash_key_key(dlist_data(dd));
     if ((p = pluginlist_get(pl, pluginname)) == NULL)
       fatal(1, "BUG: %s loader plugin not found but in list.\n", pluginname);
     lp = plugin_get(p);

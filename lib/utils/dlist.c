@@ -1,10 +1,10 @@
 /*
  * dlist.c -- double-linked list data structure
- * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
+ * (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 14 10:55:30 2001.
- * $Id: dlist.c,v 1.5 2001/01/14 15:20:13 sian Exp $
+ * Last Modified: Sun Feb  4 22:02:00 2001.
+ * $Id: dlist.c,v 1.6 2001/02/05 16:00:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,167 +21,196 @@
  */
 
 #include <stdlib.h>
+#include <signal.h>
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #include "common.h"
-
 #include "dlist.h"
 
+static int attach(Dlist *, Dlist_data *, Dlist_data *);
+static Dlist_data *insert(Dlist *, Dlist_data *, void *);
 static Dlist_data *add(Dlist *, void *);
 static Dlist_data *add_str(Dlist *, char *);
+static int detach(Dlist *, Dlist_data *);
 static int delete_item(Dlist *, Dlist_data *);
 static int move_to_top(Dlist *, Dlist_data *);
 static void set_compfunc(Dlist *, Dlist_compfunc);
 static int do_sort(Dlist *);
-static Dlist_data *get_top(Dlist *);
-static Dlist_data *get_head(Dlist *);
-static int get_datasize(Dlist *);
-static int destroy(Dlist *);
+static int destroy(Dlist *, int);
 
-static Dlist dlist_template = {
-  ndata: 0,
-  top: NULL,
-  head: NULL,
+static Dlist template = {
+  attach: attach,
+  insert: insert,
   add: add,
   add_str: add_str,
+  detach: detach,
   delete_item: delete_item,
   move_to_top: move_to_top,
   set_compfunc: set_compfunc,
   do_sort: do_sort,
-  get_top: get_top,
-  get_head: get_head,
-  get_datasize: get_datasize,
   destroy: destroy
 };
+
+static Dlist_data *
+dlist_data_create(Dlist *dl)
+{
+  Dlist_data *dd;
+
+  if ((dd = calloc(1, sizeof(Dlist_data))) == NULL)
+    return NULL;
+  dd->dl = dl;
+
+  return dd;
+}
 
 Dlist *
 dlist_create(void)
 {
-  Dlist *p;
+  Dlist *dl;
 
-  if ((p = calloc(1, sizeof(Dlist))) == NULL)
-    return NULL;
+  if ((dl = calloc(1, sizeof(Dlist))) == NULL)
+    goto error;
+  memcpy(dl, &template, sizeof(Dlist));
 
-  memcpy(p, &dlist_template, sizeof(Dlist));
+  if ((dl->guard = dlist_data_create(dl)) == NULL)
+    goto error;
+  dlist_prev(dl->guard) = dl->guard;
+  dlist_next(dl->guard) = dl->guard;
 
-  return p;
+  return dl;
+
+ error:
+  if (dl)
+    free(dl);
+
+  return NULL;
 }
 
 static int
-destroy(Dlist *p)
+destroy(Dlist *dl, int f)
 {
-  Dlist_data *t, *tn;
+  Dlist_data *dd, *dd_n, *g;
 
-  for (t = p->top; t != NULL; t = tn) {
-    tn = t->next;
-    if (!delete_item(p, t))
-      return 0;
+  g = dlist_guard(dl);
+  dlist_next(dlist_prev(g)) = NULL;
+  dd_n = dlist_next(g);
+  free(g);
+  for (dd = dd_n; dd; dd = dd_n) {
+    dd_n = dlist_next(dd);
+    if (f && dlist_data(dd))
+      free(dlist_data(dd));
+    free(dd);
   }
-  free(p);
+  free(dl);
+
+  return 1;
+}
+
+static int
+attach(Dlist *dl, Dlist_data *inserted, Dlist_data *inserted_n)
+{
+  Dlist_data *inserted_p;
+
+  inserted_p = dlist_prev(inserted_n);
+
+  dlist_next(inserted_p) = inserted;
+  dlist_prev(inserted) = inserted_p;
+  dlist_next(inserted) = inserted_n;
+  dlist_prev(inserted_n) = inserted;
+
+  dlist_size(dl)++;
 
   return 1;
 }
 
 static Dlist_data *
-add(Dlist *p, void *d)
+insert(Dlist *dl, Dlist_data *inserted, void *d)
 {
-  Dlist_data *t;
+  Dlist_data *dd;
 
-  if ((t = (Dlist_data *)calloc(1, sizeof(Dlist_data))) == NULL)
-    return NULL;
-
-  t->data = d;
-
-  if (p->top == NULL)
-    p->top = t;
-  else {
-    p->head->next = t;
-    t->prev = p->head;
+  if (dlist_dlist(inserted) != dl) {
+    debug_message("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
+    raise(SIGABRT);
+    //return NULL;
   }
-  p->head = t;
-  p->ndata++;
 
-  return t;
+  if ((dd = dlist_data_create(dl)) == NULL)
+    return NULL;
+  dd->data = d;
+
+  attach(dl, dd, inserted);
+
+  return dd;
 }
 
 static Dlist_data *
-add_str(Dlist *p, char *str)
+add(Dlist *dl, void *d)
 {
-  Dlist_data *t;
+  return insert(dl, dlist_guard(dl), d);
+}
+
+static Dlist_data *
+add_str(Dlist *dl, char *str)
+{
+  char *new_str;
 
   if (str == NULL)
-    return 0;
-
-  if ((t = (Dlist_data *)calloc(1, sizeof(Dlist_data))) == NULL)
+    return NULL;
+  if ((new_str = strdup(str)) == NULL)
     return NULL;
 
-  if ((t->data = strdup(str)) == NULL) {
-    free(t);
-    return NULL;
-  }
-
-  if (p->top == NULL)
-    p->top = t;
-  else {
-    p->head->next = t;
-    t->prev = p->head;
-  }
-  p->head = t;
-  p->ndata++;
-
-  return t;
-}
-
-static void
-detach(Dlist *p, Dlist_data *t)
-{
-  if (t->prev == NULL && t->next == NULL)
-    p->top = p->head = NULL;
-  else {
-    if (t->prev)
-      t->prev->next = t->next;
-    else
-      p->top = t->next;
-
-    if (t->next)
-      t->next->prev = t->prev;
-    else 
-      p->head = t->prev;
-  }
+  return add(dl, (void *)new_str);
 }
 
 static int
-delete_item(Dlist *p, Dlist_data *t)
+detach(Dlist *dl, Dlist_data *dd)
 {
-  if (p == NULL || t == NULL)
+  Dlist_data *dd_p, *dd_n;
+
+  if (dlist_guard(dl) == dd)
     return 0;
 
-  detach(p, t);
+  dd_p = dlist_prev(dd);
+  dd_n = dlist_next(dd);
+  dlist_next(dd_p) = dd_n;
+  dlist_prev(dd_n) = dd_p;
 
-  if (t->data != NULL)
-    free(t->data);
-  free(t);
-  p->ndata--;
+  dlist_size(dl)--;
 
   return 1;
 }
 
 static int
-move_to_top(Dlist *p, Dlist_data *t)
+delete_item(Dlist *dl, Dlist_data *dd)
 {
-  if (p == NULL || t == NULL)
+  if (dl == NULL || dd == NULL)
     return 0;
-  if (p->top == t)
+  if (dlist_dlist(dd) != dl)
+    return 0;
+
+  if (!detach(dl, dd))
+    return 0;
+
+  if (dlist_data(dd))
+    free(dlist_data(dd));
+  free(dd);
+
+  return 1;
+}
+
+static int
+move_to_top(Dlist *dl, Dlist_data *dd)
+{
+  if (dlist_dlist(dd) != dl)
+    return 0;
+  if (dlist_top(dl) == dd)
     return 1;
 
-  detach(p, t);
+  if (!detach(dl, dd))
+    return 0;
 
-  t->prev = NULL;
-  p->top->prev = t;
-  t->next = p->top;
-  p->top = t;
+  attach(dl, dd, dlist_top(dl));
 
   return 1;
 }
@@ -215,41 +244,23 @@ do_sort(Dlist *dl)
   Dlist_data *t;
   void **tmp;
 
-  if (get_datasize(dl) <= 1)
+  if (dlist_size(dl) <= 1)
     return 1;
 
-  if ((tmp = calloc(get_datasize(dl), sizeof(void *))) == NULL)
+  if ((tmp = calloc(dlist_size(dl), sizeof(void *))) == NULL)
     return 0;
-  t = get_top(dl);
-  for (i = 0; i < get_datasize(dl); i++) {
+  t = dlist_top(dl);
+  for (i = 0; i < dlist_size(dl); i++) {
     tmp[i] = t->data;
     t = t->next;
   }
-  qsort(&tmp[0], get_datasize(dl), sizeof(void *), dl->cf);
-  t = get_top(dl);
-  for (i = 0; i < get_datasize(dl); i++) {
+  qsort(&tmp[0], dlist_size(dl), sizeof(void *), dl->cf);
+  t = dlist_top(dl);
+  for (i = 0; i < dlist_size(dl); i++) {
     t->data = tmp[i];
     t = t->next;
   }
   free(tmp);
 
   return 1;
-}
-
-static Dlist_data *
-get_top(Dlist *p)
-{
-  return p->top;
-}
-
-static Dlist_data *
-get_head(Dlist *p)
-{
-  return p->head;
-}
-
-static int
-get_datasize(Dlist *p)
-{
-  return p->ndata;
 }

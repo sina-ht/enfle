@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 21:56:18 2000.
- * $Id: libconfig.c,v 1.6 2000/12/30 07:19:56 sian Exp $
+ * Last Modified: Sun Feb  4 21:41:23 2001.
+ * $Id: libconfig.c,v 1.7 2001/02/05 16:00:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -164,7 +164,7 @@ set_internal(Config *c, String *config_path, char *path, char *remain)
     string_cat(value_path, path);
   }
 
-  f =  c->hash->set(c->hash, string_get(value_path), strdup(remain));
+  f = hash_set_str(c->hash, string_get(value_path), strdup(remain));
   string_destroy(value_path);
 
   return f;
@@ -276,13 +276,13 @@ save(Config *c, char *path)
 static void *
 get(Config *c, const char *path)
 {
-  return c->hash->lookup(c->hash, (unsigned char *)path);
+  return hash_lookup_str(c->hash, (unsigned char *)path);
 }
 
 static int
 set(Config *c, char *path, void *value)
 {
-  return c->hash->set(c->hash, path, value);
+  return hash_set_str(c->hash, path, value);
 }
 
 static void
