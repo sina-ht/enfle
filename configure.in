@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Mar 12 02:42:51 2001.
-dnl $Id: configure.in,v 1.55 2001/03/11 17:44:44 sian Exp $
+dnl Last Modified: Tue Mar 13 10:11:55 2001.
+dnl $Id: configure.in,v 1.56 2001/03/13 06:51:47 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010312)
+AM_INIT_AUTOMAKE(enfle, 20010313)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -245,7 +245,7 @@ dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_STAT
-AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h getopt.h)
+AC_CHECK_HEADERS([errno.h fcntl.h inttypes.h stddef.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h unistd.h])
 
 dnl Checks for X libraries.
 AC_PATH_XTRA
@@ -292,6 +292,7 @@ LIBS=$LIBS_BACKUP
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN
+AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
@@ -302,7 +303,8 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_STAT
-AC_CHECK_FUNCS([gettimeofday memalign select strdup strerror])
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([getpagesize gettimeofday memalign memset munmap pow select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr])
 
 dnl debug option
 AC_ARG_ENABLE(debug,
