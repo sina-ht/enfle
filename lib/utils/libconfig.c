@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:03:52 2002.
- * $Id: libconfig.c,v 1.23 2002/08/18 04:18:26 sian Exp $
+ * Last Modified: Sun Aug 18 22:13:33 2002.
+ * $Id: libconfig.c,v 1.24 2002/08/18 13:28:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -117,21 +117,6 @@ get_token(char *p)
   return t;
 }
 
-static char *
-remove_preceding_space(char *p)
-{
-  char *q, *t;
-
-  for (q = p; isspace((int)*q); q++) ;
-
-  if ((t = strdup(q)) == NULL)
-    return NULL;
-
-  free(p);
-
-  return t;
-}
-
 static int
 set_internal(Config *c, String *config_path, char *path, char *remain, int is_list)
 {
@@ -139,7 +124,7 @@ set_internal(Config *c, String *config_path, char *path, char *remain, int is_li
   int f;
 
   if ((value_path = string_dup(config_path)) == NULL)
-    fatal("libconfig: %s(): No enough memory.\n", __FUNCTION__);
+    fatal("libconfig: %s: No enough memory.\n", __FUNCTION__);
   if (path != NULL) {
     string_cat(value_path, "/");
     string_cat(value_path, (const char *)path);
@@ -152,18 +137,22 @@ set_internal(Config *c, String *config_path, char *path, char *remain, int is_li
       char *end, *quoted;
 
       if ((end = strrchr((const char *)remain, '"')) == NULL || remain == end)
-	fatal("libconfig: %s(): Non-terminated double quoted string.\n", __FUNCTION__);
+	fatal("libconfig: %s: Non-terminated double quoted string.\n", __FUNCTION__);
       if ((quoted = malloc(end - remain)) == NULL)
-	fatal("libconfig: %s(): No enough memory\n", __FUNCTION__);
+	fatal("libconfig: %s: No enough memory\n", __FUNCTION__);
       if (*(end + 1) != '\n' && *(end + 1) != '\0')
-	show_message("libconfig: %s(): Ignored trailing garbage: %s\n", __FUNCTION__, end + 1);
+	show_message("libconfig: %s: Ignored trailing garbage: %s\n", __FUNCTION__, end + 1);
       memcpy(quoted, remain + 1, end - remain - 1);
       quoted[end - remain - 1] = '\0';
       f = config_set_str(c, string_get(value_path), quoted);
     } else if (isdigit(*remain) || ((*remain == '+' || *remain == '-') && isdigit(*(remain + 1)))) {
       f = config_set_int(c, string_get(value_path), atoi(remain));
     } else {
-      f = config_set_str(c, string_get(value_path), strdup(remain));
+      char *p = strdup(remain);
+
+      if (!p)
+	fatal("libconfig: %s: No enough memory\n", __FUNCTION__);
+      f = config_set_str(c, string_get(value_path), p);
     }
   }
   string_destroy(value_path);
@@ -200,7 +189,7 @@ config_load(Config *c, const char *filepath)
     if (p[strlen(p) - 1] == '\n')
       p[strlen(p) - 1] = '\0';
 
-    p = remove_preceding_space(p);
+    p = misc_remove_preceding_space(p);
 
     switch ((int)p[0]) {
     case '\0':
@@ -236,8 +225,8 @@ config_load(Config *c, const char *filepath)
 	if (strlen(path) < strlen(p)) {
 	  op = get_token(p + strlen(path) + 1);
 	  remain = strdup(p + strlen(path) + 1 + strlen(op));
-	  op = remove_preceding_space(op);
-	  remain = remove_preceding_space(remain);
+	  op = misc_remove_preceding_space(op);
+	  remain = misc_remove_preceding_space(remain);
 	} else {
 	  op = strdup("");
 	  remain = strdup("");
@@ -263,7 +252,8 @@ config_load(Config *c, const char *filepath)
 	} else if (strcmp(op, ":=") == 0) {
 	  (void)set_internal(c, config_path, path, remain, 1);
 	} else if (strcmp(op, "=") == 0) {
-	  (void)set_internal(c, config_path, path, remain, 0);
+	  if (!set_internal(c, config_path, path, remain, 0))
+	    warning_fnc("set_internal(%s/%s, %s) failed\n", string_get(config_path), path, remain);
 	} else {
 	  show_message("Syntax error.\n");
 	  parse_error(p, config_path);
@@ -436,13 +426,25 @@ config_get_list(Config *c, const char *path, int *is_success)
   return *((char ***)(p + 4));
 }
 
+static void
+list_destroy(void *arg)
+{
+  char *p = (char *)arg;
+  char **list = *((char ***)(p + 4));
+
+  bug_on(*p != '\0' || memcmp(p + 1, "LST", 3));
+  show_message_fnc("OK\n");
+
+  misc_free_str_array(list);
+  free(p);
+}
+
 int
 config_set_list(Config *c, char *path, char *lstr)
 {
   char *p;
   char **list;
 
-  /* XXX: LEAK */
   if ((list = misc_str_split(lstr, ':')) == NULL)
     return 0;
   if ((p = setup_typed_data(c, path, "LST", sizeof(char ***))) == NULL) {
@@ -451,7 +453,7 @@ config_set_list(Config *c, char *path, char *lstr)
   }
   *((char ***)(p + 4)) = list;
 
-  return config_set(c, path, (void *)p);
+  return hash_set_object(c->hash, (void *)path, strlen(path) + 1, p, list_destroy);
 }
 
 void
