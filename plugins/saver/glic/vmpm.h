@@ -1,8 +1,8 @@
 /*
  * vmpm.h -- Implementation of a variation of MPM header
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Apr 30 01:00:38 2001.
- * $Id: vmpm.h,v 1.3 2001/04/30 01:09:08 sian Exp $
+ * Last Modified: Mon Jul  2 17:26:36 2001.
+ * $Id: vmpm.h,v 1.4 2001/07/02 11:32:00 sian Exp $
  */
 
 #ifndef _VMPM_H
@@ -33,6 +33,7 @@ struct _vmpm {
   char *outfilepath;
   FILE *infile;
   FILE *outfile;
+  FILE *statfile;
   unsigned char *buffer;
   unsigned int buffersize;
   unsigned int bufferused;
@@ -47,6 +48,6 @@ struct _vmpm {
   VMPMDecomposer *decomposer;
 };
 
-#define stat_message(v, format, args...) if ((v)->is_stat) fprintf(stderr, format, ## args)
+#define stat_message(v, format, args...) if ((v)->is_stat) fprintf((v)->statfile, format, ## args)
 
 #endif

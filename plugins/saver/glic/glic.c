@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Fri Jun 29 02:21:50 2001.
- * $Id: glic.c,v 1.8 2001/06/28 17:27:19 sian Exp $
+ * Last Modified: Mon Jul  2 17:58:40 2001.
+ * $Id: glic.c,v 1.9 2001/07/02 11:32:00 sian Exp $
  */
 
 #include <stdlib.h>
@@ -18,6 +18,7 @@
 
 #include "utils/libstring.h"
 #include "utils/libconfig.h"
+#include "utils/misc.h"
 #include "enfle/saver-plugin.h"
 
 #include "vmpm.h"
@@ -128,6 +129,14 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   vmpm.nlowbits = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/nlowbits", &result);
   if (!result)
     vmpm.nlowbits = 4;
+  if ((vmpm.is_stat = config_get_boolean(c, "/enfle/plugins/saver/glic/vmpm/is_stat", &result))) {
+    char *statfn = misc_replace_ext(vmpm.outfilepath, (char *)"stat");
+
+    if ((vmpm.statfile = fopen(statfn, "wb")) == NULL) {
+      perror(__FUNCTION__ ": Cannot open %s for writting");
+      return 0;
+    }
+  }
 
   debug_message("glic: (%d, %d) vmpm_path %s, decompose %s, predict %s, scan %s\n", vmpm.r, vmpm.I, vmpm_path, decompose_method, predict_method, scan_method);
 
@@ -171,6 +180,9 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   vmpm.decomposer->encode(&vmpm);
   debug_message("glic: encoded.\n");
   vmpm.decomposer->final(&vmpm);
+
+  if (vmpm.is_stat)
+    fclose(vmpm.statfile);
 
   return 1;
 }

@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Jun 19 02:02:39 2001.
- * $Id: vmpm_decompose_normal.c,v 1.4 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Mon Jul  2 17:45:42 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.5 2001/07/02 11:32:00 sian Exp $
  */
 
 #include <stdio.h>
@@ -162,14 +162,25 @@ encode(VMPM *vmpm)
   arithmodel_install_symbol(bin_am, 1);
 
   for (i = vmpm->I; i >= 1; i--) {
-    stat_message(vmpm, "level %d: %d\n", i, vmpm->token_index[i]);
+    int nsymbols = 0;
+
+    stat_message(vmpm, "Level %d (%d tokens): ", i, vmpm->token_index[i]);
     arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
     //arithmodel_order_zero_reset(am, 1, vmpm->token_index[i]);
     for (j = 0; j < vmpm->token_index[i]; j++) {
       Token *t = vmpm->token[i][j];
+      Token_value tv = t->value - 1;
+
+      if (nsymbols == tv) {
+	stat_message(vmpm, "e ");
+	nsymbols++;
+      } else {
+	stat_message(vmpm, "%d ", tv);
+      }
 
       arithmodel_encode(am, t->value - 1);
     }
+    stat_message(vmpm, "\n");
   }
 
   if ((symbol_to_index = malloc(vmpm->alphabetsize * sizeof(unsigned int))) == NULL)
@@ -178,7 +189,7 @@ encode(VMPM *vmpm)
 
   n = 0;
   arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
-  stat_message(vmpm, "level 0: %d\n", vmpm->token_index[0]);
+  stat_message(vmpm, "Level 0: %d\n", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
       arithmodel_encode(am, n);
@@ -224,7 +235,7 @@ decode(VMPM *vmpm)
 
   vmpm->token_index[vmpm->I] = vmpm->blocksize / ipow(vmpm->r, vmpm->I);
   for (i = vmpm->I; i >= 1; i--) {
-    stat_message(vmpm, "level %d: %d\n", i, vmpm->token_index[i]);
+    stat_message(vmpm, "Level %d: %d\n", i, vmpm->token_index[i]);
     vmpm->token_index[i - 1] = 0;
     if ((vmpm->tokens[i] = calloc(vmpm->token_index[i], sizeof(Token))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
@@ -249,7 +260,7 @@ decode(VMPM *vmpm)
     memory_error(NULL, MEMORY_ERROR);
 
   n = 0;
-  stat_message(vmpm, "level 0: %d\n", vmpm->token_index[0]);
+  stat_message(vmpm, "Level 0: %d\n", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     Index v;
 
