@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 24 00:02:53 2003.
- * $Id: archive.h,v 1.12 2003/10/12 04:07:40 sian Exp $
+ * Last Modified: Tue Feb  8 22:03:32 2005.
+ * $Id: archive.h,v 1.13 2005/03/06 03:26:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ struct _archive {
   void (*destroy)(Archive *);
 };
 
-#define ARCHIVE_FILEHASH_SIZE 4096
+#define ARCHIVE_FILEHASH_SIZE 16384
 
 #define archive_direction(a) (a)->direction
 #define archive_read_directory(a, p, d) (a)->read_directory((a), (p), (d))
