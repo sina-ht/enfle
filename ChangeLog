@@ -1,5 +1,24 @@
 2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
+	* compat.h: Avoid error when use libjpeg.
+
+	* config.guess, config.sub: Upgraded config.guess and config.sub.
+
+	* ltmain.sh: Upgraded libtool from 1.3d to 1.4.
+
+	* src/enfle.rc: More configuration.
+
+	* plugins/ui/normal/normal.c: Avoid warnings. More cursor
+	changes. Proper extension placement.
+
+	* plugins/saver/png/png.c: Avoid warnings. Don't do fclose().
+
+	* plugins/saver/Makefile.am, plugins/saver/jpeg/.cvsignore,
+	plugins/saver/jpeg/Makefile.am, plugins/saver/jpeg/jpeg.c: Added
+	new JPEG Saver plugin.
+
+2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
+
 	* README, README.e: Updated documentation.
 
 	* src/enfle.c: Plugins' basename check.
@@ -13,8 +32,6 @@
 	points.
 
 	* plugins/ui/convert/convert.c: Adapted to replace_ext() moving.
-
-	* plugins/saver/glic/glic.c: Fixed a parameter I of MPM(r,I).
 
 	* configure.in, plugins/saver/Makefile.am: Added --enable-private.
 
@@ -88,8 +105,6 @@
 
 2001-04-21  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/*: Added rcs Id header.
-
 	* plugins/ui/normal/normal.c: Fixed bug.
 
 	* plugins/ui/convert/convert.c: Avoid warning.
@@ -118,9 +133,6 @@
 	compat/fnmatch.h: Compatibility staff.
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
-
-	* plugins/saver/glic/*: Implemented new Saver: GLIC. This is for
-	my research only.
 
 	* configure.in: Added saver and effect.
 
