@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 12 06:41:34 2003.
- * $Id: normal.c,v 1.73 2003/10/12 04:05:56 sian Exp $
+ * Last Modified: Sat Nov  8 01:25:30 2003.
+ * $Id: normal.c,v 1.74 2003/11/17 14:01:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -90,6 +90,10 @@ ENFLE_PLUGIN_EXIT(ui_normal, p)
 #define MAIN_LOOP_DELETE_FROM_LIST_DIR 5
 #define MAIN_LOOP_DELETE_FILE 6
 #define MAIN_LOOP_DO_NOTHING 7
+#define MAIN_LOOP_NEXT5 8
+#define MAIN_LOOP_PREV5 -8
+#define MAIN_LOOP_NEXTARCHIVE5 9
+#define MAIN_LOOP_PREVARCHIVE5 -9
 
 typedef struct _main_loop {
   UIData *uidata;
@@ -178,7 +182,7 @@ convert_cat(String *cap, char *s, Config *c)
     char *from;
     int i = 0;
 
-    if (to) {
+    if (res && to) {
       while ((from = froms[i++])) {
 	char *tmp;
 
@@ -309,9 +313,13 @@ set_caption_string(MainLoop *ml)
 
 static int main_loop_quit(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_QUIT; return 1; }
 static int main_loop_next(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_NEXT; return 1; }
+static int main_loop_next5(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_NEXT5; return 1; }
 static int main_loop_nextarchive(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_NEXTARCHIVE; return 1; }
+static int main_loop_nextarchive5(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_NEXTARCHIVE5; return 1; }
 static int main_loop_prev(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_PREV; return 1; }
+static int main_loop_prev5(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_PREV5; return 1; }
 static int main_loop_prevarchive(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_PREVARCHIVE; return 1; }
+static int main_loop_prevarchive5(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_PREVARCHIVE5; return 1; }
 static int main_loop_last(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_LAST; return 1; }
 static int main_loop_first(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_FIRST; return 1; }
 static int main_loop_delete_file(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_DELETE_FILE; return 1; }
@@ -465,13 +473,27 @@ static UIAction built_in_actions[] = {
   { "next", main_loop_next, NULL, ENFLE_KEY_space, ENFLE_MOD_None, ENFLE_Button_None },
   { "next", main_loop_next, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_1 },
   { "next", main_loop_next, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_4 },
+  { "next5", main_loop_next5, NULL, ENFLE_KEY_n, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  { "next5", main_loop_next5, NULL, ENFLE_KEY_space, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  { "next5", main_loop_next5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_1 },
+  { "next5", main_loop_next5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_4 },
   { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_n, ENFLE_MOD_Shift, ENFLE_Button_None },
   { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_space, ENFLE_MOD_Shift, ENFLE_Button_None },
   { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_2 },
+  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_n, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_space, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_1 },
+  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_4 },
   { "prev", main_loop_prev, NULL, ENFLE_KEY_b, ENFLE_MOD_None, ENFLE_Button_None },
   { "prev", main_loop_prev, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_3 },
   { "prev", main_loop_prev, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_5 },
+  { "prev5", main_loop_prev5, NULL, ENFLE_KEY_b, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  { "prev5", main_loop_prev5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_3 },
+  { "prev5", main_loop_prev5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_5 },
   { "prev_archive", main_loop_prevarchive, NULL, ENFLE_KEY_b, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "prev_archive5", main_loop_prevarchive5, NULL, ENFLE_KEY_b, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "prev_archive5", main_loop_prevarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_3 },
+  { "prev_archive5", main_loop_prevarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_5 },
   { "delete_file", main_loop_delete_file, NULL, ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
   { "delete_from_list", main_loop_delete_from_list, NULL, ENFLE_KEY_d, ENFLE_MOD_None, ENFLE_Button_None },
   { "toggle_interpolate", main_loop_toggle_interpolate, NULL, ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None },
@@ -523,6 +545,7 @@ main_loop_do_action(MainLoop *ml, VideoKey key, VideoModifierKey modkey, VideoBu
     return 0;
   if (uia->group_id == 0) {
     /* Self action */
+    //debug_message_fnc("call %s\n", uia->name);
     result = uia->func((void *)ml);
   } else {
     /* Effect Plugin action */
@@ -740,6 +763,8 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   char *path, *tmp;
   int ret, res, r;
 
+  //debug_message_fnc("path = %s\n", a->path);
+
   s = stream_create();
   p = image_create();
   m = movie_create();
@@ -784,12 +809,14 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	ret = MAIN_LOOP_NEXT;
 	break;
       case MAIN_LOOP_NEXT:
-	//debug_message("MAIN_LOOP_NEXT\n");
+	//debug_message("MAIN_LOOP_NEXT: %s -> ", path);
 	path = archive_iteration_next(a);
+	//debug_message("%s\n", path);
 	break;
       case MAIN_LOOP_PREV:
-	//debug_message("MAIN_LOOP_PREV\n");
+	//debug_message("MAIN_LOOP_PREV: %s -> \n", path);
 	path = archive_iteration_prev(a);
+	//debug_message("%s\n", path);
 	break;
       case MAIN_LOOP_NEXTARCHIVE:
 	//debug_message("MAIN_LOOP_NEXTARCHIVE\n");
@@ -800,6 +827,36 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	//debug_message("MAIN_LOOP_PREVARCHIVE\n");
 	path = NULL;
 	ret = MAIN_LOOP_PREV;
+	break;
+      case MAIN_LOOP_NEXT5:
+	debug_message("MAIN_LOOP_NEXT5\n");
+	{
+	  int i = 0;
+	  for (i = 0; i < 5; i++) {
+	    path = archive_iteration_next(a);
+	    debug_message(" skip %s\n", path);
+	  }
+	}
+	break;
+      case MAIN_LOOP_PREV5:
+	debug_message("MAIN_LOOP_PREV5\n");
+	{
+	  int i = 0;
+	  for (i = 0; i < 5; i++) {
+	    path = archive_iteration_prev(a);
+	    debug_message(" skip %s\n", path);
+	  }
+	}
+	break;
+      case MAIN_LOOP_NEXTARCHIVE5:
+	debug_message("MAIN_LOOP_NEXTARCHIVE5\n");
+	path = NULL;
+	ret = MAIN_LOOP_NEXT5;
+	break;
+      case MAIN_LOOP_PREVARCHIVE5:
+	debug_message("MAIN_LOOP_PREVARCHIVE5\n");
+	path = NULL;
+	ret = MAIN_LOOP_PREV5;
 	break;
       case MAIN_LOOP_FIRST:
 	//debug_message("MAIN_LOOP_FIRST\n");
