@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 02:07:38 2000.
- * $Id: ui-plugin.h,v 1.2 2000/10/08 17:33:44 sian Exp $
+ * Last Modified: Thu Oct 12 19:09:30 2000.
+ * $Id: ui-plugin.h,v 1.3 2000/10/12 15:47:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,9 @@
 #ifndef _UI_PLUGIN_H
 #define _UI_PLUGIN_H
 
+typedef struct _ui_screen UIScreen;
+typedef struct _ui_data UIData;
+
 #include "enfle-plugin.h"
 #include "libconfig.h"
 #include "streamer.h"
@@ -30,14 +33,22 @@
 #include "archiver.h"
 #include "player.h"
 
-typedef struct _ui_data {
+struct _ui_screen {
+  unsigned int width, height;
+  int depth;
+  void *private;
+};
+
+struct _ui_data {
   Config *c;
   Streamer *st;
   Loader *ld;
   Archiver *ar;
   Player *player;
   Archive *a;
-} UIData;
+  UIScreen *screen;
+  void *private;
+};
 
 typedef struct _ui_plugin {
   ENFLE_PLUGIN_COMMON_DATA;

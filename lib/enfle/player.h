@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 15:34:51 2000.
- * $Id: player.h,v 1.2 2000/10/10 11:49:18 sian Exp $
+ * Last Modified: Thu Oct 12 19:18:03 2000.
+ * $Id: player.h,v 1.3 2000/10/12 15:47:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,19 +23,20 @@
 #ifndef _PLAYER_H
 #define _PLAYER_H
 
+typedef struct _player Player;
+
 #include "pluginlist.h"
 #include "stream.h"
 #include "movie.h"
 #include "player-plugin.h"
 
-typedef struct _player Player;
 struct _player {
   PluginList *pl;
 
   char *(*load)(Player *, Plugin *);
   int (*unload)(Player *, char *);
   int (*identify)(Player *, Movie *, Stream *);
-  PlayerStatus (*load_movie)(Player *, char *, Movie *, Stream *);
+  PlayerStatus (*load_movie)(Player *, UIData *, char *, Movie *, Stream *);
   void (*destroy)(Player *);
   Dlist *(*get_names)(Player *);
   unsigned char *(*get_description)(Player *, char *);
@@ -45,7 +46,7 @@ struct _player {
 #define player_load(l, p) (l)->load((l), (p))
 #define player_unload(l, n) (l)->unload((l), (n))
 #define player_identify(l, p, s) (l)->identify((l), (p), (s))
-#define player_load_movie(l, n, p, s) (l)->load_movie((l), (n), (p), (s))
+#define player_load_movie(l, u, n, p, s) (l)->load_movie((l), (u), (n), (p), (s))
 #define player_destroy(l) (l)->destroy((l))
 #define player_get_names(l) (l)->get_names((l))
 #define player_get_description(l, n) (l)->get_description((l), (n))

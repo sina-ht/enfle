@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 11 17:27:18 2000.
- * $Id: Xlib.c,v 1.5 2000/10/12 03:45:50 sian Exp $
+ * Last Modified: Thu Oct 12 20:43:43 2000.
+ * $Id: Xlib.c,v 1.6 2000/10/12 15:47:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,6 +44,8 @@ typedef struct {
   X11 *x11;
   X11Window *xw;
   XImage *ximage;
+  Pixmap pix;
+  GC gc;
 } Xlib_info;
 
 static int ui_main(UIData *);
@@ -51,7 +53,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Xlib",
-  description: "Xlib UI plugin version 0.3.4",
+  description: "Xlib UI plugin version 0.4",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -78,98 +80,99 @@ plugin_exit(void *p)
 /* for internal use */
 
 static int
-initialize_screen(Movie *m, int w, int h)
+initialize_screen(UIData *uidata, Movie *m, int w, int h)
 {
-  Xlib_info *info = (Xlib_info *)m->ui_private;
+  Xlib_info *info = (Xlib_info *)uidata->private;
+  UIScreen *screen = uidata->screen;
   int f;
 
+  screen->width = w;
+  screen->height = h;
+
+  /* CHECK */
+  if (screen->depth == 0) {
+    show_message("depth must be specified before initialize_screen().\n");
+    exit(1);
+  }
+
   f = x11window_resize(info->xw, w, h);
+
+  if (m != NULL) {
+    if (movie_get_screen(m) == NULL) {
+      show_message("screen must be allocated before initialize_screen().\n");
+      exit(1);
+    }
+    /* ximage is fixed size for movie */
+    info->ximage = x11_create_ximage(info->x11, x11_visual(info->x11), screen->depth,
+				     movie_get_screen(m), w, h, 8, 0);
+  }
+
+  /* Create pixmap for double buffering */
+  info->pix = x11_create_pixmap(info->x11, x11window_win(info->xw),
+				w, h, screen->depth);
+  info->gc = x11_create_gc(info->x11, info->pix, 0, 0);
   XFlush(x11_display(info->x11));
 
   return f;
 }
 
-static int
-render_frame(Movie *m, Image *p)
+static void
+update_screen(UIData *uidata, unsigned int left, unsigned int top, unsigned int w, unsigned int h)
 {
-  Xlib_info *info = (Xlib_info *)m->ui_private;
-  X11 *x11 = info->x11;
-  X11Window *xw = info->xw;
-  XImage *ximage = info->ximage;
-  Pixmap pix;
-  GC gc;
+  Xlib_info *info = (Xlib_info *)uidata->private;
 
-  x11ximage_convert_image(ximage, p);
+  XCopyArea(x11_display(info->x11), info->pix, x11window_win(info->xw), info->gc,
+	    left, top, w, h, left, top);
+}
 
-  pix = x11_create_pixmap(x11, x11window_win(xw), p->width, p->height, x11_depth(x11));
-  gc = x11_create_gc(x11, pix, 0, 0);
-  XPutImage(x11_display(x11), pix, gc, ximage, 0, 0, 0, 0, p->width, p->height);
+/* Must be passed whole screen in p. */
+static int
+render_frame(UIData *uidata, Movie *m, Image *p)
+{
+  Xlib_info *info = (Xlib_info *)uidata->private;
 
-  if (ximage->data != (char *)p->image)
+  /* CHECK */
+  if (p->width != m->width || p->height != m->height) {
+    show_message("render_frame: p(%d, %d) != m(%d, %d)\n", p->width, p->height, m->width, m->height);
+    exit(1);
+  }
+
+  x11ximage_convert_image(info->ximage, p);
+
+  XPutImage(x11_display(info->x11), info->pix, info->gc, info->ximage,
+	    0, 0, 0, 0, p->width, p->height);
+
+  if (info->ximage->data != (char *)p->image)
     free(p->image);
   p->image = NULL;
 
-  XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, 0, 0, p->width, p->height, p->left, p->top);
-  x11_free_pixmap(x11, pix);
-  XFlush(x11_display(x11));
+  update_screen(uidata, p->left, p->top, p->width, p->height);
+
+  XFlush(x11_display(info->x11));
 
   return 1;
 }
 
 static int
-play_movie(X11 *x11, X11Window *xw, Movie *m)
+render_image(UIData *uidata, Image *p)
 {
+  Xlib_info *info = (Xlib_info *)uidata->private;
+  UIScreen *screen = uidata->screen;
   XImage *ximage;
-  Xlib_info *info = (Xlib_info *)m->ui_private;
 
-  ximage = x11_create_ximage(x11, x11_visual(x11), x11_depth(x11), m->get_screen(m),
-			     m->width, m->height, 8, 0);
-  info->ximage = ximage;
-
-  do {
-    if (movie_play_main(m) != PLAY_OK) {
-      show_message("play_movie: Error\n");
-      return 0;
-    }
-  } while (m->status == _PLAY);
-
-  x11_destroy_ximage(ximage);
-
-  return 1;
-}
-
-static int
-show_image(X11 *x11, X11Window *xw, Image *p)
-{
-  XImage *ximage;
-  Pixmap pix;
-  GC gc;
-  int fd, ret, loop;
-  int pressed;
-  fd_set read_fds, write_fds, except_fds;
-  struct timeval timeout;
-  XEvent ev;
-
-  ximage = x11_create_ximage(x11, x11_visual(x11), x11_depth(x11), NULL,
+  ximage = x11_create_ximage(info->x11, x11_visual(info->x11), screen->depth, NULL,
 			     p->width, p->height, 8, 0);
 
   debug_message("type: %s", image_type_to_string(p->type));
   debug_message(" %s\n", p->alpha_enabled ? "with alpha enabled" : "without alpha");
 
-  /*
-   * convert image so that X can display it.
-   * So far, alpha channel will be ignored.
-   */
+  /* convert image so that X can display it. So far, alpha will be ignored. */
   x11ximage_convert_image(ximage, p);
 
   debug_message("converted type: %s\n", image_type_to_string(p->type));
   debug_message("x order %s\n", ximage->byte_order == MSBFirst ? "MSB" : "LSB");
 
-  x11window_resize(xw, p->width, p->height);
-
-  pix = x11_create_pixmap(x11, x11window_win(xw), p->width, p->height, x11_depth(x11));
-  gc = x11_create_gc(x11, pix, 0, 0);
-  XPutImage(x11_display(x11), pix, gc, ximage, 0, 0, 0, 0, p->width, p->height);
+  XPutImage(x11_display(info->x11), info->pix, info->gc, ximage, 0, 0, 0, 0, p->width, p->height);
 
   if (ximage->data != (char *)p->image)
     free(p->image);
@@ -178,7 +181,28 @@ show_image(X11 *x11, X11Window *xw, Image *p)
   x11_destroy_ximage(ximage);
   p->image = NULL;
 
-  XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, 0, 0, p->width, p->height, p->left, p->top);
+  update_screen(uidata, p->left, p->top, p->width, p->height);
+
+  return 1;
+}
+
+static int
+main_loop(UIData *uidata, Movie *m, Image *p)
+{
+  Xlib_info *info = (Xlib_info *)uidata->private;
+  X11 *x11 = info->x11;
+  X11Window *xw = info->xw;
+  int fd, ret, loop;
+  int pressed;
+  fd_set read_fds, write_fds, except_fds;
+  struct timeval timeout;
+  XEvent ev;
+
+  if (p) {
+    initialize_screen(uidata, NULL, p->width, p->height);
+    render_image(uidata, p);
+  }
+
   XSelectInput(x11_display(x11), x11window_win(xw), ExposureMask | ButtonPressMask | ButtonReleaseMask);
   XFlush(x11_display(x11));
 
@@ -218,12 +242,12 @@ show_image(X11 *x11, X11Window *xw, Image *p)
 				     ExposureMask, (XEvent *)xev));
 
           XClipBox(region, &rect);
-          XSetRegion(x11_display(x11), gc, region);
+          XSetRegion(x11_display(x11), info->gc, region);
 
-          XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, rect.x, rect.y, rect.width, rect.height, rect.x, rect.y);
+          update_screen(uidata, rect.x, rect.y, rect.width, rect.height);
 
           XSync(x11_display(x11), False);
-          XSetClipMask(x11_display(x11), gc, None);
+          XSetClipMask(x11_display(x11), info->gc, None);
           XDestroyRegion(region);
         }
         break;
@@ -259,13 +283,33 @@ show_image(X11 *x11, X11Window *xw, Image *p)
 	break;
       }
     }
+
+    if (m) {
+      switch (m->status) {
+      case _PLAY:
+	if (movie_play_main(m, uidata) != PLAY_OK) {
+	  show_message("play_movie: Error\n");
+	  return 0;
+	}
+	break;
+      case _PAUSE:
+	break;
+      case _STOP:
+	/* loop */
+	m->status = _PLAY;
+	break;
+      case _UNLOADED:
+	show_message("Movie has been already unloaded.\n");
+	break;
+      }
+    }
   }
 
   return 0;
 }
 
 static int
-process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
+process_files_of_archive(UIData *uidata, Archive *a)
 {
   Loader *ld = uidata->ld;
   Streamer *st = uidata->st;
@@ -275,7 +319,6 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
   Stream *s;
   Image *p;
   Movie *m;
-  Xlib_info *info;
   char *path;
   int f;
   int dir = 1;
@@ -287,13 +330,6 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
   
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
-  if ((m->ui_private = calloc(1, sizeof(Xlib_info))) == NULL) {
-    dir = 0;
-  }
-
-  info = (Xlib_info *)m->ui_private;
-  info->x11 = x11;
-  info->xw = xw;
 
   path = NULL;
   while (dir) {
@@ -330,7 +366,7 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 	    archive_iteration_delete(a);
 	    continue;
 	  }
-	  dir = process_files_of_archive(uidata, x11, xw, arc);
+	  dir = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
@@ -360,7 +396,7 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 	debug_message("Archiver identified as %s\n", a->format);
 
 	if (archiver_open(ar, arc, arc->format, s)) {
-	  dir = process_files_of_archive(uidata, x11, xw, arc);
+	  dir = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
 	  continue;
 	} else {
@@ -389,7 +425,7 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 
 	debug_message("Movie(Animation) identified as %s\n", m->format);
 
-	if ((f = player_load_movie(player, m->format, m, s)) != PLAY_OK) {
+	if ((f = player_load_movie(player, uidata, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
 	  show_message("%s play failed\n", path);
 	  archive_iteration_delete(a);
@@ -402,7 +438,7 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 	continue;
       }
 
-      dir = play_movie(x11, xw, m);
+      dir = main_loop(uidata, m, NULL);
       movie_unload(m);
     } else {
 
@@ -414,7 +450,7 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 	p->comment = NULL;
       }
 
-      dir = show_image(x11, xw, p);
+      dir = main_loop(uidata, NULL, p);
     }
   }
 
@@ -432,6 +468,7 @@ ui_main(UIData *uidata)
 {
   X11 *x11;
   X11Window *xw;
+  Xlib_info *info;
 
   x11 = x11_create();
 
@@ -444,7 +481,30 @@ ui_main(UIData *uidata)
   x11window_storename(xw, PROGNAME " version " VERSION);
   x11window_map(xw);
 
-  process_files_of_archive(uidata, x11, xw, uidata->a);
+  if ((uidata->screen = (UIScreen *)calloc(1, sizeof(UIScreen))) == NULL) {
+    show_message("ui_main: No enough memory\n");
+    return 0;
+  }
+  uidata->screen->depth = x11_depth(x11);
+
+  if ((uidata->private = (void *)calloc(1, sizeof(Xlib_info))) == NULL) {
+    show_message("ui_main: No enough memory\n");
+    return 0;
+  }
+  info = (Xlib_info *)uidata->private;
+  info->x11 = x11;
+  info->xw = xw;
+
+  process_files_of_archive(uidata, uidata->a);
+
+  if (info->ximage)
+    x11_destroy_ximage(info->ximage);
+  if (info->pix)
+    x11_free_pixmap(x11, info->pix);
+  if (info->gc)
+    x11_free_gc(x11, info->gc);
+
+  free(info);
 
   x11window_unmap(xw);
   x11window_destroy(xw);

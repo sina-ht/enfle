@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 17:30:46 2000.
- * $Id: movie.h,v 1.2 2000/10/10 11:49:18 sian Exp $
+ * Last Modified: Thu Oct 12 19:21:45 2000.
+ * $Id: movie.h,v 1.3 2000/10/12 15:47:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,8 +23,11 @@
 #ifndef _MOVIE_H
 #define _MOVIE_H
 
+typedef struct _movie Movie;
+
 #include "image.h"
 #include "stream.h"
+#include "ui-plugin.h"
 
 typedef enum {
   _STOP,
@@ -33,19 +36,17 @@ typedef enum {
   _UNLOADED
 } MovieStatus;
 
-typedef struct _movie Movie;
 struct _movie {
   Stream *st;
   MovieStatus status;
-  void *ui_private;
   void *movie_private;
   int width, height;
   int nthframe;
   char *format;
 
   /* These are callback functions which may or should be provided by UI. */
-  int (*initialize_screen)(Movie *, int, int);
-  int (*render_frame)(Movie *, Image *);
+  int (*initialize_screen)(UIData *, Movie *, int, int);
+  int (*render_frame)(UIData *, Movie *, Image *);
   int (*pause_usec)(unsigned int);
 
   /* This is a method. */
@@ -55,14 +56,15 @@ struct _movie {
   /* These are implemented by movie plugin. */
   void *(*get_screen)(Movie *);
   int (*play)(Movie *);
-  int (*play_main)(Movie *);
+  int (*play_main)(Movie *, UIData *);
   int (*pause_movie)(Movie *);
   int (*stop)(Movie *);
   void (*unload_movie)(Movie *);
 };
 
+#define movie_get_screen(m) (m)->get_screen((m))
 #define movie_play(m) (m)->play((m))
-#define movie_play_main(m) (m)->play_main((m))
+#define movie_play_main(m, u) (m)->play_main((m), (u))
 #define movie_pause(m) (m)->pause_movie((m))
 #define movie_stop(m) (m)->stop((m))
 #define movie_unload(m) (m)->unload((m))

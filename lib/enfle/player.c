@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 16:09:43 2000.
- * $Id: player.c,v 1.2 2000/10/10 11:49:18 sian Exp $
+ * Last Modified: Thu Oct 12 19:18:29 2000.
+ * $Id: player.c,v 1.3 2000/10/12 15:47:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,7 +31,7 @@
 static char *load(Player *, Plugin *);
 static int unload(Player *, char *);
 static int identify(Player *, Movie *, Stream *);
-static PlayerStatus load_movie(Player *, char *, Movie *, Stream *);
+static PlayerStatus load_movie(Player *, UIData *, char *, Movie *, Stream *);
 static void destroy(Player *);
 static Dlist *get_names(Player *);
 static unsigned char *get_description(Player *, char *);
@@ -127,7 +127,7 @@ identify(Player *l, Movie *mp, Stream *st)
 }
 
 static PlayerStatus
-load_movie(Player *l, char *pluginname, Movie *m, Stream *st)
+load_movie(Player *l, UIData *uidata, char *pluginname, Movie *m, Stream *st)
 {
   Plugin *p;
   PlayerPlugin *pp;
@@ -137,7 +137,7 @@ load_movie(Player *l, char *pluginname, Movie *m, Stream *st)
   pp = plugin_get(p);
 
   stream_rewind(st);
-  return pp->load(m, st);
+  return pp->load(uidata, m, st);
 }
 
 static void
