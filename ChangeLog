@@ -1,5 +1,12 @@
 2002-02-08  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/loader.c, lib/enfle/player.c: Deleted
+	misc_free_str_array().
+
+	* lib/utils/libconfig.c: Forgot to set_list()...
+
+2002-02-08  Hiroshi Takekawa  <sian@fennel.org>
+
 	* src/enfle.rc: libconfig can now treat colon separated list by := .
 
 	* lib/enfle/loader.c, lib/enfle/player.c: Use config_get_list(),
