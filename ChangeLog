@@ -1,3 +1,8 @@
+2002-03-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* INSTALL, config.guess, config.sub, configure.in, install-sh,
+	missing, mkinstalldirs: Upgraded to autoconf-2.52i, automake-1.6.
+
 2002-03-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/fifo.c: Forgot to unlock()...
