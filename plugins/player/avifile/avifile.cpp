@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 14:54:28 2001.
- * $Id: avifile.cpp,v 1.18 2001/09/03 06:48:15 sian Exp $
+ * Last Modified: Fri Sep  7 13:39:57 2001.
+ * $Id: avifile.cpp,v 1.19 2001/09/07 04:41:24 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -26,6 +26,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -33,8 +34,8 @@
 
 #include <avifile/avifile.h>
 #include <avifile/version.h>
-/* in avifile/aviplay.h */
-double GetAvifileVersion();
+// only for GetAvifileVersion()...
+#include <avifile/aviplay.h>
 
 #include "common.h"
 
@@ -76,6 +77,7 @@ typedef struct _avifile_info {
   pthread_t audio_thread;
   pthread_mutex_t decoding_state_mutex;
   DecodingState ds;
+  int skip;
   pthread_cond_t decoding_cond;
   pthread_cond_t decoded_cond;
 } AviFile_info;
@@ -153,8 +155,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   rf = info->rf = CreateIAviReadFile(st->path);
   if (!rf)
     goto error;
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
+  if (!rf->StreamCount() || rf->GetHeader(&info->hdr, sizeof(info->hdr)))
+#else
   if (!rf->StreamCount() || rf->GetFileHeader(&info->hdr))
+#endif
     goto error;
+
   m->num_of_frames = info->hdr.dwTotalFrames;
 
   m->has_video = 0;
@@ -164,17 +171,17 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       show_message("Audio plugin is not available.\n");
     else {
       if ((result = audiostream->StartStreaming()) != 0) {
-	show_message("audio: StartStream() failed.\n");
-	goto error;
+	debug_message("audio stream: StartStream() failed.\n");
+      } else {
+	debug_message("Get output format.\n");
+	audiostream->GetOutputFormat(&info->owf, sizeof info->owf);
+	m->sampleformat = _AUDIO_FORMAT_S16_LE;
+	m->channels = info->owf.nChannels;
+	m->samplerate = info->owf.nSamplesPerSec;
+	//m->num_of_samples = info->owf.nSamplesPerSec * len;
+	show_message("audio: format(%d, %d bits per sample): %d ch rate %d kHz\n", m->sampleformat, info->owf.wBitsPerSample, m->channels, m->samplerate);
+	m->has_audio = 1;
       }
-      debug_message("Get output format.\n");
-      audiostream->GetOutputFormat(&info->owf, sizeof info->owf);
-      m->sampleformat = _AUDIO_FORMAT_S16_LE;
-      m->channels = info->owf.nChannels;
-      m->samplerate = info->owf.nSamplesPerSec;
-      //m->num_of_samples = info->owf.nSamplesPerSec * len;
-      show_message("audio: format(%d, %d bits per sample): %d ch rate %d kHz\n", m->sampleformat, info->owf.wBitsPerSample, m->channels, m->samplerate);
-      m->has_audio = 1;
     }
   } else {
     show_message("AviFile: No audio.\n");
@@ -377,7 +384,6 @@ play(Movie *m)
     m->current_sample = 0;
   }
   info->eof = 0;
-  timer_start(m->timer);
 
   info->ds = _DECODING;
   if (m->has_video)
@@ -407,7 +413,12 @@ play_video(void *arg)
       break;
     }
 
-    info->stream->ReadFrame();
+    do {
+      info->stream->ReadFrame();
+      if (info->skip)
+	info->skip--;
+    } while (info->skip);
+
     info->ci = info->stream->GetFrame();
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
     memcpy(memory_ptr(info->p->rendered.image), info->ci->Data(), info->ci->Bpl() * info->ci->Height());
@@ -478,7 +489,6 @@ play_main(Movie *m, VideoWindow *vw)
   Image *p = info->p;
   int due_time;
   int time_elapsed;
-  int skip;
 
   switch (m->status) {
   case _PLAY:
@@ -497,14 +507,18 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
   }
 
-  time_elapsed = (int)timer_get_milli(m->timer);
   m->current_frame = info->stream->GetPos();
+
+  if (m->current_frame == 0) {
+    timer_start(m->timer);
+    time_elapsed = 0;
+  } else
+    time_elapsed = (int)timer_get_milli(m->timer);
+
   due_time = (int)(info->stream->GetTime() * 1000);
   //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
 
   if (info->ci) {
-    skip = 0;
-
     pthread_mutex_lock(&info->decoding_state_mutex);
     while (info->ds != _DECODED)
       pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
@@ -517,15 +531,16 @@ play_main(Movie *m, VideoWindow *vw)
     }
 
     /* skip if delayed */
-    if (due_time < timer_get_milli(m->timer) - info->frametime)
-      skip = 1;
+    if (due_time < timer_get_milli(m->timer) - info->frametime) {
+      info->skip = (int)((timer_get_milli(m->timer) - due_time) / info->frametime) + 1;
+      debug_message("Drop %d frames.\n", info->skip);
+    }
 
     info->ds = _DECODING;
     pthread_cond_signal(&info->decoding_cond);
     pthread_mutex_unlock(&info->decoding_state_mutex);
 
-    if (!skip)
-      m->render_frame(vw, m, p);
+    m->render_frame(vw, m, p);
   }
 
   return PLAY_OK;
@@ -647,8 +662,9 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     goto not_avi;
 
   if ((audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
+    debug_message("AviFile: identify: Got audio stream.\n");
     if ((result = audiostream->StartStreaming()) != 0)
-      goto not_avi;
+      show_message("AviFile: identify: Audio stream not played.\n");
   }
 
   if ((stream = rf->GetStream(0, IAviReadStream::Video))) {
