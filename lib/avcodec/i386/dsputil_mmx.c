@@ -178,7 +178,7 @@ static const uint64_t ff_pb_FC __attribute__ ((aligned(8))) = 0xFCFCFCFCFCFCFCFC
 #ifdef CONFIG_ENCODERS
 static void get_pixels_mmx(DCTELEM *block, const uint8_t *pixels, int line_size)
 {
-    __asm __volatile(
+    asm volatile(
         "movl $-128, %%eax	\n\t"
         "pxor %%mm7, %%mm7	\n\t"
         ".balign 16		\n\t"
@@ -206,7 +206,7 @@ static void get_pixels_mmx(DCTELEM *block, const uint8_t *pixels, int line_size)
 
 static inline void diff_pixels_mmx(DCTELEM *block, const uint8_t *s1, const uint8_t *s2, int stride)
 {
-    __asm __volatile(
+    asm volatile(
         "pxor %%mm7, %%mm7	\n\t"
         "movl $-128, %%eax	\n\t"
         ".balign 16		\n\t"
@@ -449,7 +449,7 @@ static int pix_sum16_mmx(uint8_t * pix, int line_size){
 
 static void add_bytes_mmx(uint8_t *dst, uint8_t *src, int w){
     int i=0;
-    __asm __volatile(
+    asm volatile(
         "1:				\n\t"
         "movq  (%1, %0), %%mm0		\n\t"
         "movq  (%2, %0), %%mm1		\n\t"
@@ -543,7 +543,7 @@ static void add_bytes_mmx(uint8_t *dst, uint8_t *src, int w){
 static void h263_v_loop_filter_mmx(uint8_t *src, int stride, int qscale){
     const int strength= ff_h263_loop_filter_strength[qscale];
 
-    __asm __volatile(
+    asm volatile(
     
         H263_LOOP_FILTER
         
@@ -560,7 +560,7 @@ static void h263_v_loop_filter_mmx(uint8_t *src, int stride, int qscale){
 }
 
 static inline void transpose4x4(uint8_t *dst, uint8_t *src, int dst_stride, int src_stride){
-    __asm __volatile( //FIXME could save 1 instruction if done as 8x4 ...
+    asm volatile( //FIXME could save 1 instruction if done as 8x4 ...
         "movd  %4, %%mm0		\n\t"
         "movd  %5, %%mm1		\n\t"
         "movd  %6, %%mm2		\n\t"
@@ -597,7 +597,7 @@ static void h263_h_loop_filter_mmx(uint8_t *src, int stride, int qscale){
 
     transpose4x4(btemp  , src           , 8, stride);
     transpose4x4(btemp+4, src + 4*stride, 8, stride);
-    __asm __volatile(
+    asm volatile(
         H263_LOOP_FILTER // 5 3 4 6
         
         : "+m" (temp[0]),
@@ -607,7 +607,7 @@ static void h263_h_loop_filter_mmx(uint8_t *src, int stride, int qscale){
         : "g" (2*strength), "m"(ff_pb_FC)
     );
 
-    __asm __volatile(
+    asm volatile(
         "movq %%mm5, %%mm1		\n\t"
         "movq %%mm4, %%mm0		\n\t"
         "punpcklbw %%mm3, %%mm5		\n\t"
@@ -646,7 +646,7 @@ static void h263_h_loop_filter_mmx(uint8_t *src, int stride, int qscale){
 #ifdef CONFIG_ENCODERS
 static int pix_norm1_mmx(uint8_t *pix, int line_size) {
     int tmp;
-  __asm __volatile (
+  asm volatile (
       "movl $16,%%ecx\n"
       "pxor %%mm0,%%mm0\n"
       "pxor %%mm7,%%mm7\n"
@@ -687,10 +687,10 @@ static int pix_norm1_mmx(uint8_t *pix, int line_size) {
     return tmp;
 }
 
-static int sse16_mmx(void *v, uint8_t * pix1, uint8_t * pix2, int line_size) {
+static int sse16_mmx(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int h) {
     int tmp;
-  __asm __volatile (
-      "movl $16,%%ecx\n"
+  asm volatile (
+      "movl %4,%%ecx\n"
       "pxor %%mm0,%%mm0\n"	/* mm0 = 0 */
       "pxor %%mm7,%%mm7\n"	/* mm7 holds the sum */
       "1:\n"
@@ -741,13 +741,15 @@ static int sse16_mmx(void *v, uint8_t * pix1, uint8_t * pix2, int line_size) {
       "psrlq $32, %%mm7\n"	/* shift hi dword to lo */
       "paddd %%mm7,%%mm1\n"
       "movd %%mm1,%2\n"
-      : "+r" (pix1), "+r" (pix2), "=r"(tmp) : "r" (line_size) : "%ecx");
+      : "+r" (pix1), "+r" (pix2), "=r"(tmp) 
+      : "r" (line_size) , "m" (h)
+      : "%ecx");
     return tmp;
 }
 
 static void diff_bytes_mmx(uint8_t *dst, uint8_t *src1, uint8_t *src2, int w){
     int i=0;
-    __asm __volatile(
+    asm volatile(
         "1:				\n\t"
         "movq  (%2, %0), %%mm0		\n\t"
         "movq  (%1, %0), %%mm1		\n\t"
@@ -771,7 +773,7 @@ static void sub_hfyu_median_prediction_mmx2(uint8_t *dst, uint8_t *src1, uint8_t
     int i=0;
     uint8_t l, lt;
 
-    __asm __volatile(
+    asm volatile(
         "1:				\n\t"
         "movq  -1(%1, %0), %%mm0	\n\t" // LT
         "movq  (%1, %0), %%mm1		\n\t" // T
@@ -866,13 +868,15 @@ static void sub_hfyu_median_prediction_mmx2(uint8_t *dst, uint8_t *src1, uint8_t
         "movq "#c", "#o"+32(%1)		\n\t"\
         "movq "#d", "#o"+48(%1)		\n\t"\
 
-static int hadamard8_diff_mmx(void *s, uint8_t *src1, uint8_t *src2, int stride){
+static int hadamard8_diff_mmx(void *s, uint8_t *src1, uint8_t *src2, int stride, int h){
     uint64_t temp[16] __align8;
     int sum=0;
+    
+    assert(h==8);
 
     diff_pixels_mmx((DCTELEM*)temp, src1, src2, stride);
 
-    __asm __volatile(
+    asm volatile(
         LOAD4(0 , %%mm0, %%mm1, %%mm2, %%mm3)
         LOAD4(64, %%mm4, %%mm5, %%mm6, %%mm7)
         
@@ -951,13 +955,15 @@ static int hadamard8_diff_mmx(void *s, uint8_t *src1, uint8_t *src2, int stride)
     return sum&0xFFFF;
 }
 
-static int hadamard8_diff_mmx2(void *s, uint8_t *src1, uint8_t *src2, int stride){
+static int hadamard8_diff_mmx2(void *s, uint8_t *src1, uint8_t *src2, int stride, int h){
     uint64_t temp[16] __align8;
     int sum=0;
+    
+    assert(h==8);
 
     diff_pixels_mmx((DCTELEM*)temp, src1, src2, stride);
 
-    __asm __volatile(
+    asm volatile(
         LOAD4(0 , %%mm0, %%mm1, %%mm2, %%mm3)
         LOAD4(64, %%mm4, %%mm5, %%mm6, %%mm7)
         
@@ -1037,8 +1043,8 @@ static int hadamard8_diff_mmx2(void *s, uint8_t *src1, uint8_t *src2, int stride
 }
 
 
-WARPER88_1616(hadamard8_diff_mmx, hadamard8_diff16_mmx)
-WARPER88_1616(hadamard8_diff_mmx2, hadamard8_diff16_mmx2)
+WARPER8_16_SQ(hadamard8_diff_mmx, hadamard8_diff16_mmx)
+WARPER8_16_SQ(hadamard8_diff_mmx2, hadamard8_diff16_mmx2)
 #endif //CONFIG_ENCODERS
 
 #define put_no_rnd_pixels8_mmx(a,b,c,d) put_pixels8_mmx(a,b,c,d)
@@ -1069,7 +1075,7 @@ WARPER88_1616(hadamard8_diff_mmx2, hadamard8_diff16_mmx2)
 static void OPNAME ## mpeg4_qpel16_h_lowpass_mmx2(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h){\
     uint64_t temp;\
 \
-    __asm __volatile(\
+    asm volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq  (%0), %%mm0		\n\t" /* ABCDEFGH */\
@@ -1208,7 +1214,7 @@ static void OPNAME ## mpeg4_qpel16_h_lowpass_3dnow(uint8_t *dst, uint8_t *src, i
         temp[13]= (src[13]+src[14])*20 - (src[12]+src[15])*6 + (src[11]+src[16])*3 - (src[10]+src[16]);\
         temp[14]= (src[14]+src[15])*20 - (src[13]+src[16])*6 + (src[12]+src[16])*3 - (src[11]+src[15]);\
         temp[15]= (src[15]+src[16])*20 - (src[14]+src[16])*6 + (src[13]+src[15])*3 - (src[12]+src[14]);\
-        __asm __volatile(\
+        asm volatile(\
             "movq (%0), %%mm0		\n\t"\
             "movq 8(%0), %%mm1		\n\t"\
             "paddw %2, %%mm0		\n\t"\
@@ -1236,7 +1242,7 @@ static void OPNAME ## mpeg4_qpel16_h_lowpass_3dnow(uint8_t *dst, uint8_t *src, i
 static void OPNAME ## mpeg4_qpel8_h_lowpass_mmx2(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h){\
     uint64_t temp;\
 \
-    __asm __volatile(\
+    asm volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq  (%0), %%mm0		\n\t" /* ABCDEFGH */\
@@ -1313,7 +1319,7 @@ static void OPNAME ## mpeg4_qpel8_h_lowpass_3dnow(uint8_t *dst, uint8_t *src, in
         temp[ 5]= (src[ 5]+src[ 6])*20 - (src[ 4]+src[ 7])*6 + (src[ 3]+src[ 8])*3 - (src[ 2]+src[ 8]);\
         temp[ 6]= (src[ 6]+src[ 7])*20 - (src[ 5]+src[ 8])*6 + (src[ 4]+src[ 8])*3 - (src[ 3]+src[ 7]);\
         temp[ 7]= (src[ 7]+src[ 8])*20 - (src[ 6]+src[ 8])*6 + (src[ 5]+src[ 7])*3 - (src[ 4]+src[ 6]);\
-        __asm __volatile(\
+        asm volatile(\
             "movq (%0), %%mm0		\n\t"\
             "movq 8(%0), %%mm1		\n\t"\
             "paddw %2, %%mm0		\n\t"\
@@ -1338,7 +1344,7 @@ static void OPNAME ## mpeg4_qpel16_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src,
     int count= 17;\
 \
     /*FIXME unroll */\
-    __asm __volatile(\
+    asm volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\
@@ -1366,7 +1372,7 @@ static void OPNAME ## mpeg4_qpel16_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src,
     count=4;\
     \
 /*FIXME reorder for speed */\
-    __asm __volatile(\
+    asm volatile(\
         /*"pxor %%mm7, %%mm7		\n\t"*/\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\
@@ -1416,7 +1422,7 @@ static void OPNAME ## mpeg4_qpel8_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src, 
     int count= 9;\
 \
     /*FIXME unroll */\
-    __asm __volatile(\
+    asm volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\
@@ -1438,7 +1444,7 @@ static void OPNAME ## mpeg4_qpel8_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src, 
     count=2;\
     \
 /*FIXME reorder for speed */\
-    __asm __volatile(\
+    asm volatile(\
         /*"pxor %%mm7, %%mm7		\n\t"*/\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\

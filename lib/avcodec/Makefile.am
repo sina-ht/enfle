@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Tue Dec 30 03:49:43 2003.
-# $Id: Makefile.am,v 1.1 2003/12/29 19:28:35 sian Exp $
+# Last Modified: Mon Jan  5 00:50:06 2004.
+# $Id: Makefile.am,v 1.2 2004/01/05 09:51:43 sian Exp $
 
 noinst_LTLIBRARIES = libavcodec.la
 EXTRA_DIST = \
@@ -18,7 +18,7 @@ DEFS = -DHAVE_AV_CONFIG_H
 if USE_MMX
 DEFS += -DHAVE_MMX -Dasm=__asm -Dvolatile=__volatile
 # We want many registers... so you must omit frame pointer.
-CFLAGS_POST = -Wno-unused -O2 -fomit-frame-pointer
+CFLAGS_POST = -Wno-unused -O4 -ffast-math -fomit-frame-pointer
 MMX_SRCS = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c \
@@ -106,7 +106,8 @@ noinst_HEADERS = \
 	ra288.h \
 	svq1_vlc.h
 
-#	a52dec.c	ac3dec.c	faad.c
+#	a52dec.c	ac3dec.c	ac3enc.c
+#	amr.c		faac.c		faad.c
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -129,6 +130,7 @@ libavcodec_la_SOURCES = \
 	fdctref.c \
 	fft.c \
 	ffv1.c \
+	flicvideo.c \
 	golomb.c \
 	h263.c \
 	h263dec.c \
@@ -155,6 +157,7 @@ libavcodec_la_SOURCES = \
 	msmpeg4.c \
 	msrle.c \
 	msvideo1.c \
+	oggvorbis.c \
 	opts.c \
 	parser.c \
 	pcm.c \
@@ -173,8 +176,10 @@ libavcodec_la_SOURCES = \
 	truemotion1.c \
 	utils.c \
 	vcr1.c \
+	vmdav.c \
 	vp3.c \
 	vqavideo.c \
 	wmadec.c \
 	xan.c \
+	xvmcvideo.c \
 	$(MMX_SRCS)

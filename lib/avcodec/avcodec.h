@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000408
 #define FFMPEG_VERSION         "0.4.8"
-#define LIBAVCODEC_BUILD       4697
+#define LIBAVCODEC_BUILD       4698
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -89,6 +89,8 @@ enum CodecID {
     CODEC_ID_SMC,
     CODEC_ID_FLIC,
     CODEC_ID_TRUEMOTION1,
+    CODEC_ID_VMDVIDEO,
+    CODEC_ID_VMDAUDIO,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE,
@@ -263,7 +265,9 @@ static const __attribute__((unused)) int Motion_Est_QTab[] =
 #define CODEC_FLAG_H263P_AIV      0x00000008 ///< H263 Alternative inter vlc
 #define CODEC_FLAG_OBMC           0x00000001 ///< OBMC
 #define CODEC_FLAG_LOOP_FILTER    0x00000800 ///< loop filter
-#define CODEC_FLAG_H263P_SLICE_STRUCT 0x10000000 
+#define CODEC_FLAG_H263P_SLICE_STRUCT 0x10000000
+#define CODEC_FLAG_INTERLACED_ME  0x20000000 ///< interlaced motion estimation
+#define CODEC_FLAG_SVCD_SCAN_OFFSET 0x40000000 ///< will reserve space for SVCD scan offset user data
 /* Unsupported options :
  * 		Syntax Arithmetic coding (SAC)
  * 		Reference Picture Selection
@@ -1133,7 +1137,7 @@ typedef struct AVCodecContext {
 #define FF_DEBUG_MB_TYPE   8
 #define FF_DEBUG_QP        16
 #define FF_DEBUG_MV        32
-#define FF_DEBUG_VIS_MV    0x00000040
+//#define FF_DEBUG_VIS_MV    0x00000040
 #define FF_DEBUG_SKIP      0x00000080
 #define FF_DEBUG_STARTCODE 0x00000100
 #define FF_DEBUG_PTS       0x00000200
@@ -1143,6 +1147,16 @@ typedef struct AVCodecContext {
 #define FF_DEBUG_VIS_QP    0x00002000
 #define FF_DEBUG_VIS_MB_TYPE 0x00004000
     
+    /**
+     * debug.
+     * - encoding: set by user.
+     * - decoding: set by user.
+     */
+    int debug_mv;
+#define FF_DEBUG_VIS_MV_P_FOR  0x00000001 //visualize forward predicted MVs of P frames
+#define FF_DEBUG_VIS_MV_B_FOR  0x00000002 //visualize forward predicted MVs of B frames
+#define FF_DEBUG_VIS_MV_B_BACK 0x00000004 //visualize backward predicted MVs of B frames
+
     /**
      * error.
      * - encoding: set by lavc if flags&CODEC_FLAG_PSNR
@@ -1651,6 +1665,8 @@ extern AVCodec idcin_decoder;
 extern AVCodec eightbps_decoder;
 extern AVCodec smc_decoder;
 extern AVCodec flic_decoder;
+extern AVCodec vmdvideo_decoder;
+extern AVCodec vmdaudio_decoder;
 extern AVCodec truemotion1_decoder;
 extern AVCodec ra_144_decoder;
 extern AVCodec ra_288_decoder;
@@ -1794,7 +1810,6 @@ AVCodecContext *avcodec_alloc_context(void);
 AVFrame *avcodec_alloc_frame(void);
 
 int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic);
-int avcodec_default_reget_buffer(AVCodecContext *s, AVFrame *pic);
 void avcodec_default_release_buffer(AVCodecContext *s, AVFrame *pic);
 void avcodec_default_free_buffers(AVCodecContext *s);
 
