@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Original decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Aug  3 18:37:06 2001.
- * $Id: vmpm_decompose_normal.c,v 1.9 2001/08/05 06:03:02 sian Exp $
+ * Last Modified: Mon Aug  6 00:40:48 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.10 2001/08/05 16:19:37 sian Exp $
  */
 
 #include <stdio.h>
@@ -10,7 +10,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-#define REQUIRE_FATAL
 #include "common.h"
 
 #include "vmpm.h"
@@ -186,7 +185,7 @@ encode(VMPM *vmpm)
     }
   }
       
-  fprintf(vmpm->outfile, "%c", i);
+  fputc(i, vmpm->outfile);
   if (match_found) {
     for (; i >= 1; i--) {
       int nsymbols = 0;
@@ -268,16 +267,17 @@ decode(VMPM *vmpm)
   bin_am = arithmodel_order_zero_create(0, 0);
   arithmodel_decode_init(bin_am, ac);
 
-  vmpm->token_index[vmpm->I] = vmpm->blocksize / ipow(vmpm->r, vmpm->I);
-  for (i = vmpm->I; i >= 1; i--) {
+  i = fgetc(vmpm->outfile);
+  vmpm->token_index[i] = vmpm->blocksize / ipow(vmpm->r, i);
+  for (; i >= 1; i--) {
     unsigned int tmp;
 
-    stat_message(vmpm, "D:Level %d: %d\n", i, vmpm->token_index[i]);
     arithmodel_order_zero_reset(bin_am, 0, 0);
     arithmodel_install_symbol(bin_am, 1);
     arithmodel_install_symbol(bin_am, 1);
-    arithmodel_decode_cbt(bin_am, vmpm->token_index[i], &tmp, 0, 1);
+    arithmodel_decode_cbt(bin_am, &tmp, vmpm->token_index[i], 0, 1);
     vmpm->newtoken[i] = tmp + 1;
+    stat_message(vmpm, "D:Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
     vmpm->token_index[i - 1] = 0;
     if ((vmpm->tokens[i] = calloc(vmpm->token_index[i], sizeof(Token))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
@@ -286,15 +286,19 @@ decode(VMPM *vmpm)
       Index index;
 
       arithmodel_decode(am, &index);
-      vmpm->tokens[i][j].value++;
+      vmpm->tokens[i][j].value = index + 1;
       if (vmpm->tokens[i][j].value > vmpm->token_index[i - 1]) {
-	if (vmpm->tokens[i][j].value == vmpm->token_index[i - 1] + 1)
+	if (vmpm->tokens[i][j].value == vmpm->token_index[i - 1] + 1) {
+	  stat_message(vmpm, "e ");
 	  vmpm->token_index[i - 1]++;
-	else
+	} else
 	  generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);
+      } else {
+	stat_message(vmpm, "%d ", index);
       }
     }
     vmpm->token_index[i - 1] *= vmpm->r;
+    stat_message(vmpm, "\n");
   }
 
   if ((index_to_symbol = calloc(vmpm->alphabetsize, sizeof(unsigned int))) == NULL)
@@ -305,17 +309,20 @@ decode(VMPM *vmpm)
   arithmodel_order_zero_reset(bin_am, 0, 0);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
-  stat_message(vmpm, "D:Level 0: %d\n", vmpm->token_index[0]);
+  stat_message(vmpm, "D:Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     Index v;
 
     if (arithmodel_decode(am, &v) == 2) {
+      stat_message(vmpm, "e ");
       arithmodel_decode_bits(bin_am, &vmpm->tokens[0][j].value, vmpm->bits_per_symbol, 0, 1);
       index_to_symbol[n++] = vmpm->tokens[0][j].value;
     } else {
       vmpm->tokens[0][j].value = index_to_symbol[v];
+      stat_message(vmpm, "%d ", v);
     }
   }
+  stat_message(vmpm, "\n");
   free(index_to_symbol);
 
   arithcoder_decode_final(ac);
