@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 10 00:56:58 2004.
- * $Id: libmpeg2.c,v 1.44 2004/01/09 15:59:22 sian Exp $
+ * Last Modified: Sun Jan 11 00:37:26 2004.
+ * $Id: libmpeg2.c,v 1.45 2004/01/11 21:42:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -268,7 +268,7 @@ play(Movie *m)
   if (m->has_video) {
     if ((info->vstream = fifo_create()) == NULL)
       return PLAY_ERROR;
-    fifo_set_max(info->vstream, 512);
+    fifo_set_max(info->vstream, 2048);
     demultiplexer_mpeg_set_vst(info->demux, info->vstream);
     info->mpeg2dec = mpeg2_init();
     pthread_create(&info->video_thread, NULL, play_video, m);
@@ -278,7 +278,7 @@ play(Movie *m)
     m->has_audio = 1;
     if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
-    fifo_set_max(info->astream, 64);
+    fifo_set_max(info->astream, 128);
     demultiplexer_mpeg_set_ast(info->demux, info->astream);
     InitMP3(&info->mp);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
@@ -603,9 +603,14 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
 
   if (demultiplexer_get_eof(info->demux)) {
-    if (info->astream && fifo_is_empty(info->astream))
+    if (info->astream && fifo_is_empty(info->astream)) {
       /* Audio existed, but over. */
+#if defined(DEBUG)
+      if (m->has_audio != 2)
+	debug_message_fnc("Audio over.  Using normal timer instead of audio timer.\n");
+#endif
       m->has_audio = 2;
+    }
     if ((!info->vstream || fifo_is_empty(info->vstream)) &&
 	(!info->astream || fifo_is_empty(info->astream))) {
       stop_movie(m);
