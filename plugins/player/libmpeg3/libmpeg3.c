@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 16 03:48:08 2001.
- * $Id: libmpeg3.c,v 1.29 2001/06/15 18:49:21 sian Exp $
+ * Last Modified: Sat Jun 16 04:36:21 2001.
+ * $Id: libmpeg3.c,v 1.30 2001/06/15 19:48:37 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -210,8 +210,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 	m->rendering_width  = m->width;
 	m->rendering_height = m->height;
       }
-      m->display_width  = m->width  << 1;
-      m->display_height = m->height << 1;
+      p->magnified.width  = m->width  << 1;
+      p->magnified.height = m->height << 1;
       break;
     case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
       ws = (double)vw->full_width  / (double)m->width;
@@ -224,8 +224,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 	m->rendering_width  = m->width;
 	m->rendering_height = m->height;
       }
-      m->display_width  = s * m->width;
-      m->display_height = s * m->height;
+      p->magnified.width  = s * m->width;
+      p->magnified.height = s * m->height;
       break;
     case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
       ws = (double)vw->full_width  / (double)p->width;
@@ -238,14 +238,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 	m->rendering_width  = m->width;
 	m->rendering_height = m->height;
       }
-      m->display_width  = s * m->width;
-      m->display_height = s * m->height;
+      p->magnified.width  = s * m->width;
+      p->magnified.height = s * m->height;
       break;
     default:
       m->rendering_width  = m->width;
       m->rendering_height = m->height;
-      m->display_width  = m->width;
-      m->display_height = m->height;
+      p->magnified.width  = m->width;
+      p->magnified.height = m->height;
       break;
     }
   }
