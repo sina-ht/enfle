@@ -1,8 +1,8 @@
 /*
  * bitstream.c -- bitwise I/O stream
  * (C)Copyright 2000 by Hiroshi Takekawa
- * Last Modified: Wed Aug 15 17:07:14 2001.
- * $Id: bitstream.c,v 1.3 2001/08/26 00:58:55 sian Exp $
+ * Last Modified: Tue Aug 28 10:45:44 2001.
+ * $Id: bitstream.c,v 1.4 2001/08/28 06:37:15 sian Exp $
  */
 
 #include <stdlib.h>
@@ -70,8 +70,6 @@ flush_buffer(BitStream *bs)
   int to_write, written;
 
   to_write = (bs->buffer_left + 7) >> 3;
-  if (!to_write)
-    fprintf(stderr, __FUNCTION__ ": BUG!\n");
   if ((written = fwrite(&bs->buffer, 1, to_write, bs->fp)) != to_write)
     return 0;
 
@@ -183,7 +181,7 @@ putbits(BitStream *bs, unsigned int bits, int n)
 	 ((1 << (BUFFER_BITS - bs->buffer_left)) - 1));
       n -= (BUFFER_BITS - bs->buffer_left);
       bits &= (1 << n) - 1;
-      //bs->buffer_left = BUFFER_BITS;
+      bs->buffer_left = BUFFER_BITS;
       if (!flush_buffer(bs))
 	return 0;
     }
