@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:59:02 2001.
- * $Id: spi.c,v 1.15 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Wed Oct 10 23:35:42 2001.
+ * $Id: spi.c,v 1.16 2001/10/10 14:41:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -106,7 +106,7 @@ loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
 
   memset(buf, 0, 2048);
   stream_read(st, buf, 2048);
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message(__FUNCTION__ ": %s: using %s\n", st->path, sl->pe->filepath);
 #if 0
   if ((err = sl->is_supported(st->path, (DWORD)buf)) != SPI_SUCCESS)
     return LOAD_ERROR;
@@ -125,10 +125,10 @@ loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
       debug_message("Invalid depth %d\n", info.colorDepth);
       return LOAD_ERROR;
     }
-    debug_message("(%ld, %ld) depth %d\n", info.width, info.height, info.colorDepth);
+    debug_message(__FUNCTION__ ": (%ld, %ld) depth %d\n", info.width, info.height, info.colorDepth);
     return LOAD_OK;
   }
-  debug_message(__FUNCTION__ ": %s\n", spi_errormsg[err]);
+  debug_message(__FUNCTION__ ": Susie plugin error: %s: %s\n", st->path, spi_errormsg[err]);
 
   return LOAD_ERROR;
 #else
@@ -153,12 +153,27 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
   debug_message(__FUNCTION__ "() called\n");
   if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image,
 			 susie_loader_progress_callback, 0)) == SPI_SUCCESS) {
-    p->type = _BGR24;
+    p->depth = p->bits_per_pixel = bih->biBitCount;
     p->width = bih->biWidth;
     p->height = bih->biHeight;
-    p->depth = p->bits_per_pixel = bih->biBitCount;
-    p->bytes_per_line = p->width * 3;
-    bpl = (p->bytes_per_line + 3) & ~3;
+    switch (p->depth) {
+    case 8:
+      p->type = _INDEX;
+      p->bytes_per_line = p->width;
+      bpl = (p->bytes_per_line + 3) & ~3;
+      for (i = 0; i < 256; i++) {
+	p->colormap[i][0] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 2);
+	p->colormap[i][1] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 1);
+	p->colormap[i][2] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 0);
+      }
+      break;
+    case 24:
+    default: /* XXX */
+      p->type = _BGR24;
+      p->bytes_per_line = p->width * 3;
+      bpl = (p->bytes_per_line + 3) & ~3;
+      break;
+    }
 
     if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
       free(image);
@@ -184,7 +199,7 @@ archiver_identify(Archive *a, Stream *st, void *priv)
   SusieArchiver *sa = priv;
   unsigned char buffer[2048];
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message(__FUNCTION__ ": %s: using %s\n", st->path, sa->pe->filepath);
 
   memset(buffer, 0, 2048);
   stream_read(st, buffer, 2048);
@@ -198,7 +213,8 @@ archiver_identify(Archive *a, Stream *st, void *priv)
 static int PASCAL
 susie_archive_progress_callback(int nNum, int nDenom, long lData)
 {
-    return 0;
+  debug_message(__FUNCTION__ ": %d/%d\n", nNum, nDenom);
+  return 0;
 }
 
 static int
@@ -212,11 +228,15 @@ susie_archive_open(Archive *a, Stream *st, char *path)
   if ((sai = (Susie_archiver_info *)archive_get(a, path)) == NULL)
     return 0;
 
-  if ((sai->get_file(a->st->path, sai->position, (LPSTR)&dest, 0x100,
+  debug_message(__FUNCTION__ ": get_file: %s(%ld)\n", path, sai->position);
+
+  if ((sai->get_file(a->st->path, sai->position, (LPSTR)&dest, 0x100 /* disk to memory */,
 		     susie_archive_progress_callback, 0)) != SPI_SUCCESS) {
     show_message(__FUNCTION__ ": GetFile() failed.\n");
     return 0;
   }
+
+  debug_message(__FUNCTION__ ": GetFile() succeeded.\n");
 
   return stream_make_memorystream(st, dest, sai->filesize);
 }
@@ -238,7 +258,8 @@ archiver_open(Archive *a, Stream *st, void *priv)
   fileInfo *info;
 
   if ((err = sa->get_archive_info(st->path, 0, 0, (HLOCAL *)&info)) != SPI_SUCCESS) {
-    show_message(__FUNCTION__ ": %s: %s\n", st->path, spi_errormsg[err]);
+    show_message(__FUNCTION__ ": Susie plugin error: %s: %s\n", st->path, spi_errormsg[err]);
+    debug_message(__FUNCTION__ ": Susie plugin error: %s: %s(%d)\n", st->path, spi_errormsg[err], err);
     return OPEN_ERROR;
   }
 
@@ -251,8 +272,11 @@ archiver_open(Archive *a, Stream *st, void *priv)
     sai->get_file = sa->get_file;
     sai->position = info[i].position;
     sai->filesize = info[i].filesize;
+    debug_message(__FUNCTION__ ": %ld: %s (%ld bytes)\n", sai->position, info[i].filename, sai->filesize);
     archive_add(a, info[i].filename, (void *)sai);
   }
+
+  debug_message(__FUNCTION__ ": %d files found\n", i);
 
   free(info);
 
