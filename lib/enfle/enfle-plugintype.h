@@ -1,10 +1,10 @@
 /*
  * enfle-plugintype.h -- enfle plugin type definition
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 02:17:37 2004.
- * $Id: enfle-plugintype.h,v 1.6 2004/01/30 12:40:48 sian Exp $
+ * Last Modified: Tue Feb 10 00:50:00 2004.
+ * $Id: enfle-plugintype.h,v 1.7 2004/02/14 05:30:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,6 +36,7 @@ typedef enum {
   ENFLE_PLUGIN_EFFECT,
   ENFLE_PLUGIN_AUDIODECODER,
   ENFLE_PLUGIN_VIDEODECODER,
+  ENFLE_PLUGIN_DEMULTIPLEXER,
   ENFLE_PLUGIN_END
 } PluginType;
 
