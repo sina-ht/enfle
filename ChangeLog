@@ -1,3 +1,40 @@
+2004-02-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added ogg, vorbis support.
+
+	* common.h: Updated copyright year.
+
+	* plugins/player/generic/generic.c: Cleaned up.
+
+	* src/enfle.rc: More configs.
+
+	* plugins/videodecoder/divx/Makefile.am: Check libdivxdecore
+	presence.
+
+	* plugins/video/Xlib/Xlib.c: Plugged memory leaks.
+
+	* lib/j2k/t1.c, lib/j2k/tcd.c: Eliminate warnings.
+
+	* lib/enfle/fourcc.h, lib/enfle/audiodecoder.c: Added vorbis
+	codec.
+
+	* lib/enfle/archive.c: Plugged a memory leak.
+
+	* plugins/demultiplexer/mpeg/mpeg.c: More smaller check size for
+	identifying.
+
+	* plugins/audiodecoder/Makefile.am: Added vorbis audiodecoder
+	plugin.
+
+	* plugins/demultiplexer/Makefile.am: Added ogg demultiplexer
+	plugin.
+
+	* plugins/demultiplexer/ogg/*: ogg demultiplexer plugin.
+
+	* plugins/audiodecoder/vorbis/*: vorbis audiodecoder plugin.
+
+	* lib/avcodec/*: Updated.
+
 2004-02-14  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added demultiplexer plugin, jasper detection code.
