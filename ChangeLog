@@ -1,3 +1,33 @@
+2001-01-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archive.c: Do sort().
+
+	* lib/enfle/movie.h: Added unsigned to several variable
+	declarations.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Reverted to old playback
+	method.
+
+	* plugins/player/avifile/avifile.cpp: Implemented audio playing.
+
+	* lib/utils/dlist.c, lib/utils/dlist.h: Implemented sort().
+
+	* lib/enfle/video.h, plugins/video/Xlib/Xlib.c: Introduce sync()
+	method to video plugin.
+
+2001-01-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Adapted for autumake-1.4b.
+
+	* plugins/player/avifile/avifile.cpp: Give up using AviPlayer
+	class. Instead, use aviread routines per se.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Improved playback.
+
+	* plugins/audio/oss/oss.c: Fixed invalid return value.
+
+	* lib/enfle/audio-plugin.h: Fixed include path.
+
 2001-01-11  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Renamed configuration file.
