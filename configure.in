@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Dec 19 01:58:13 2000.
-dnl $Id: configure.in,v 1.24 2000/12/18 17:02:23 sian Exp $
+dnl Last Modified: Sat Dec 23 06:39:22 2000.
+dnl $Id: configure.in,v 1.25 2000/12/22 23:14:27 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@ AM_CONFIG_HEADER(config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20001219)
+AM_INIT_AUTOMAKE(enfle, 20001223)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -87,7 +87,12 @@ AM_CONDITIONAL(HAVE_MPEG_LIB, test "$available_mpeg_lib" = "yes")
 AC_SUBST(LIBADD_MPEG_LIB)
 
 available_pthread=no
-AC_CHECK_LIB(pthread, pthread_create, [ available_pthread=yes; LIBADD_PTHREAD=-lpthread; ])
+AC_CHECK_HEADER(pthread.h, [
+  AC_CHECK_LIB(pthread, pthread_create, [ available_pthread=yes; LIBADD_PTHREAD=-lpthread; ])
+  ])
+test "$available_pthread" = "yes" && AC_DEFINE(USE_PTHREAD,,[ Define if you have libpthread ])
+AM_CONDITIONAL(HAVE_PTHREAD, test "$available_pthread" = "yes")
+AC_SUBST(LIBADD_PTHREAD)
 
 available_libmpeg3=no
 if test "$available_pthread" = "yes"; then
