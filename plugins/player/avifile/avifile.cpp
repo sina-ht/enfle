@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 19 01:04:21 2001.
- * $Id: avifile.cpp,v 1.23 2001/09/19 00:36:38 sian Exp $
+ * Last Modified: Thu Sep 20 01:09:12 2001.
+ * $Id: avifile.cpp,v 1.24 2001/09/20 05:30:27 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -58,11 +58,6 @@ extern "C" {
 #include "utils/libstring.h"
 }
 
-typedef enum _decoding_state {
-  _DECODING,
-  _DECODED
-} DecodingState;
-
 typedef struct _avifile_info {
   int eof;
   int frametime;
@@ -78,11 +73,9 @@ typedef struct _avifile_info {
   WAVEFORMATEX owf;
   pthread_t video_thread;
   pthread_t audio_thread;
-  pthread_mutex_t decoding_state_mutex;
-  DecodingState ds;
+  pthread_mutex_t update_mutex;
+  pthread_cond_t update_cond;
   int skip;
-  pthread_cond_t decoding_cond;
-  pthread_cond_t decoded_cond;
 } AviFile_info;
 
 static const unsigned int types =
@@ -157,9 +150,8 @@ info_create(Movie *m)
     info = (AviFile_info *)m->movie_private;
   }
 
-  pthread_mutex_init(&info->decoding_state_mutex, NULL);
-  pthread_cond_init(&info->decoding_cond, NULL);
-  pthread_cond_init(&info->decoded_cond, NULL);
+  pthread_mutex_init(&info->update_mutex, NULL);
+  pthread_cond_init(&info->update_cond, NULL);
 
   return info;
 }
@@ -411,20 +403,15 @@ play(Movie *m)
   }
   info->eof = 0;
 
-  info->ds = _DECODING;
   if (m->has_video)
     pthread_create(&info->video_thread, NULL, play_video, m);
   if (m->has_audio)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
 
-  pthread_mutex_lock(&info->decoding_state_mutex);
-  while (info->ds != _DECODED)
-    pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
-  pthread_mutex_unlock(&info->decoding_state_mutex);
-  if (info->ci)
-    debug_message("OK\n");
-  else
-    debug_message("NG\n");
+  pthread_mutex_lock(&info->update_mutex);
+  pthread_mutex_unlock(&info->update_mutex);
+
+  debug_message(info->ci ? "OK\n" : "NG\n");
 
   return PLAY_OK;
 }
@@ -438,21 +425,16 @@ play_video(void *arg)
   debug_message("AviFile: play_video()\n");
 
   while (m->status == _PLAY) {
-    pthread_mutex_lock(&info->decoding_state_mutex);
-    while (info->ds != _DECODING)
-      pthread_cond_wait(&info->decoding_cond, &info->decoding_state_mutex);
-
     if (info->stream->Eof()) {
       info->eof = 1;
-      pthread_mutex_unlock(&info->decoding_state_mutex);
       break;
     }
 
-    do {
+    pthread_mutex_lock(&info->update_mutex);
+
+    for (; info->skip; info->skip--)
       info->stream->ReadFrame();
-      if (info->skip)
-	info->skip--;
-    } while (info->skip);
+    info->stream->ReadFrame();
 
     info->ci = info->stream->GetFrame();
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
@@ -460,10 +442,8 @@ play_video(void *arg)
 #else
     memcpy(memory_ptr(info->p->rendered.image), info->ci->data(), info->ci->bpl() * info->ci->height());
 #endif
-
-    info->ds = _DECODED;
-    pthread_cond_signal(&info->decoded_cond);
-    pthread_mutex_unlock(&info->decoding_state_mutex);
+    pthread_cond_wait(&info->update_cond, &info->update_mutex);
+    pthread_mutex_unlock(&info->update_mutex);
   }
 
   debug_message("AviFile: play_video() exit\n");
@@ -523,7 +503,6 @@ play_main(Movie *m, VideoWindow *vw)
   AviFile_info *info = (AviFile_info *)m->movie_private;
   Image *p = info->p;
   int due_time;
-  int time_elapsed;
 
   switch (m->status) {
   case _PLAY:
@@ -548,29 +527,28 @@ play_main(Movie *m, VideoWindow *vw)
     timer_start(m->timer);
 
   due_time = (int)(info->stream->GetTime() * 1000);
-  //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
+  //debug_message("v: %d %d (%d frame)\n", timer_get_milli(m->timer), due_time, m->current_frame);
 
-  pthread_mutex_lock(&info->decoding_state_mutex);
-  while (info->ds != _DECODED)
-    pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
+  pthread_mutex_lock(&info->update_mutex);
 
-  time_elapsed = (int)timer_get_milli(m->timer);
   /* if too fast to display, wait before render */
-  if (time_elapsed < due_time) {
+  if (timer_get_milli(m->timer) < due_time) {
     int wait_time = (int)((due_time - timer_get_milli(m->timer)) * 1000);
 
     if (wait_time > 0) {
       //debug_message("wait %d usec.\n", wait_time);
       m->pause_usec(wait_time);
     }
-  } else if (due_time < timer_get_milli(m->timer) - info->frametime) {
+  } else {
     info->skip = (int)((timer_get_milli(m->timer) - due_time) / info->frametime);
-    debug_message("Drop %d frames.\n", info->skip);
+#ifdef DEBUG
+    if (info->skip > 0)
+      debug_message("Drop %d frames.\n", info->skip);
+#endif
   }
 
-  info->ds = _DECODING;
-  pthread_cond_signal(&info->decoding_cond);
-  pthread_mutex_unlock(&info->decoding_state_mutex);
+  pthread_cond_signal(&info->update_cond);
+  pthread_mutex_unlock(&info->update_mutex);
 
   m->render_frame(vw, m, p);
 
@@ -624,10 +602,9 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
-  pthread_mutex_lock(&info->decoding_state_mutex);
-  info->ds = _DECODING;
-  pthread_cond_signal(&info->decoding_cond);
-  pthread_mutex_unlock(&info->decoding_state_mutex);
+  pthread_mutex_lock(&info->update_mutex);
+  pthread_cond_signal(&info->update_cond);
+  pthread_mutex_unlock(&info->update_mutex);
   if (info->video_thread) {
     pthread_join(info->video_thread, &v);
     info->video_thread = 0;
@@ -660,9 +637,8 @@ unload_movie(Movie *m)
       delete info->rf;
     if (info->p)
       image_destroy(info->p);
-    pthread_mutex_destroy(&info->decoding_state_mutex);
-    pthread_cond_destroy(&info->decoding_cond);
-    pthread_cond_destroy(&info->decoded_cond);
+    pthread_mutex_destroy(&info->update_mutex);
+    pthread_cond_destroy(&info->update_cond);
     free(info);
   }
 }
