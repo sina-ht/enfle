@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 19 21:04:16 2002.
- * $Id: stream.c,v 1.7 2002/08/19 12:22:33 sian Exp $
+ * Last Modified: Sun Oct  6 01:38:31 2002.
+ * $Id: stream.c,v 1.8 2002/10/05 17:18:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -263,6 +263,14 @@ memorystream_close(Stream *s)
     free(s->buffer);
     s->buffer = NULL;
   }
+  if (s->path) {
+    free(s->path);
+    s->path = NULL;
+  }
+  if (s->format) {
+    free(s->format);
+    s->format = NULL;
+  }
 
   return 1;
 }
@@ -276,8 +284,16 @@ fdstream_close(Stream *s)
     free(s->buffer);
     s->buffer = NULL;
   }
+  if (s->path) {
+    free(s->path);
+    s->path = NULL;
+  }
+  if (s->format) {
+    free(s->format);
+    s->format = NULL;
+  }
 
-  f =  (close((int)s->data) == 0) ? 1 : 0;
+  f = (close((int)s->data) == 0) ? 1 : 0;
   s->data = NULL;
 
   return f;
@@ -288,6 +304,14 @@ filestream_close(Stream *s)
 {
   int f;
 
+  if (s->path) {
+    free(s->path);
+    s->path = NULL;
+  }
+  if (s->format) {
+    free(s->format);
+    s->format = NULL;
+  }
   if (s->data == NULL)
     return 1;
 
