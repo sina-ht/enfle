@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4738
+#define LIBAVCODEC_BUILD       4745
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -104,7 +104,7 @@ enum CodecID {
     CODEC_ID_RV40,
     CODEC_ID_VC9,
     CODEC_ID_WMV3,
-    
+    CODEC_ID_LOCO,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -130,6 +130,7 @@ enum CodecID {
     CODEC_ID_ADPCM_EA,
     CODEC_ID_ADPCM_G726,
     CODEC_ID_ADPCM_CT,
+    CODEC_ID_ADPCM_SWF,
 
     /* AMR */
     CODEC_ID_AMR_NB= 0x12000,
@@ -162,9 +163,14 @@ enum CodecID {
     CODEC_ID_SONIC_LS,
     CODEC_ID_FLAC,
     CODEC_ID_MP3ADU,
+    CODEC_ID_MP3ON4,
+    CODEC_ID_SHORTEN,
+    
+    CODEC_ID_OGGTHEORA= 0x16000, 
     
     CODEC_ID_MPEG2TS= 0x20000, /* _FAKE_ codec to indicate a raw MPEG2 transport
                          stream (only used by libavformat) */
+    CODEC_ID_ALAC,
 };
 
 /* CODEC_ID_MP3LAME is absolete */
@@ -224,6 +230,9 @@ enum PixelFormat {
 /* currently unused, may be used if 24/32 bits samples ever supported */
 enum SampleFormat {
     SAMPLE_FMT_S16 = 0,         ///< signed 16 bits 
+    SAMPLE_FMT_S32,             ///< signed 32 bits 
+    SAMPLE_FMT_FLT,             ///< float
+    SAMPLE_FMT_DBL,             ///< double
 };
 
 /* in bytes */
@@ -318,6 +327,7 @@ extern int motion_estimation_method;
 #define CODEC_FLAG_CLOSED_GOP     0x80000000
 #define CODEC_FLAG2_FAST          0x00000001 ///< allow non spec compliant speedup tricks
 #define CODEC_FLAG2_STRICT_GOP    0x00000002 ///< strictly enforce GOP size
+#define CODEC_FLAG2_NO_OUTPUT     0x00000004 ///< skip bitstream encoding
 
 /* Unsupported options :
  * 		Syntax Arithmetic coding (SAC)
@@ -734,10 +744,7 @@ typedef struct AVCodecContext {
 
     /**
      * pixel format, see PIX_FMT_xxx.
-     * - encoding: FIXME: used by ffmpeg to decide whether an pix_fmt
-     *                    conversion is in order. This only works for
-     *                    codecs with one supported pix_fmt, we should
-     *                    do something for a generic case as well.
+     * - encoding: set by user.
      * - decoding: set by lavc.
      */
     enum PixelFormat pix_fmt;
@@ -769,7 +776,13 @@ typedef struct AVCodecContext {
     /* audio only */
     int sample_rate; ///< samples per sec 
     int channels;
-    int sample_fmt;  ///< sample format, currenly unused 
+
+    /**
+     * audio sample format.
+     * - encoding: set by user.
+     * - decoding: set by lavc.
+     */
+    enum SampleFormat sample_fmt;  ///< sample format, currenly unused 
 
     /* the following data should not be initialized */
     int frame_size;     ///< in samples, initialized when calling 'init' 
@@ -853,8 +866,10 @@ typedef struct AVCodecContext {
     /* The RTP callcack: This function is called  */
     /* every time the encoder as a packet to send */
     /* Depends on the encoder if the data starts  */
-    /* with a Start Code (it should) H.263 does   */
-    void (*rtp_callback)(struct AVCodecContext *avctx, void *data, int size, int packet_number); 
+    /* with a Start Code (it should) H.263 does.  */
+    /* mb_nb contains the number of macroblocks   */
+    /* encoded in the RTP payload                 */
+    void (*rtp_callback)(struct AVCodecContext *avctx, void *data, int size, int mb_nb); 
 
     /* statistics, used for 2-pass encoding */
     int mv_bits;
@@ -1268,14 +1283,14 @@ typedef struct AVCodecContext {
     
     /**
      * minimum MB quantizer.
-     * - encoding: set by user.
+     * - encoding: unused
      * - decoding: unused
      */
     int mb_qmin;
 
     /**
      * maximum MB quantizer.
-     * - encoding: set by user.
+     * - encoding: unused
      * - decoding: unused
      */
     int mb_qmax;
@@ -1742,6 +1757,28 @@ typedef struct AVCodecContext {
      * - decoding: unused
      */
     int frame_skip_cmp;
+
+    /**
+     * border processing masking. raises the quantizer for mbs on the borders
+     * of the picture.
+     * - encoding: set by user
+     * - decoding: unused
+     */
+    float border_masking;
+
+    /**
+     * minimum MB lagrange multipler.
+     * - encoding: set by user.
+     * - decoding: unused
+     */
+    int mb_lmin;
+
+    /**
+     * maximum MB lagrange multipler.
+     * - encoding: set by user.
+     * - decoding: unused
+     */
+    int mb_lmax;
 } AVCodecContext;
 
 
@@ -1844,6 +1881,7 @@ extern AVCodec ac3_encoder;
 extern AVCodec mp2_encoder;
 extern AVCodec mp3lame_encoder;
 extern AVCodec oggvorbis_encoder;
+extern AVCodec oggtheora_encoder;
 extern AVCodec faac_encoder;
 extern AVCodec xvid_encoder;
 extern AVCodec mpeg1video_encoder;
@@ -1915,11 +1953,13 @@ extern AVCodec png_decoder;
 extern AVCodec mp2_decoder;
 extern AVCodec mp3_decoder;
 extern AVCodec mp3adu_decoder;
+extern AVCodec mp3on4_decoder;
 extern AVCodec mace3_decoder;
 extern AVCodec mace6_decoder;
 extern AVCodec huffyuv_decoder;
 extern AVCodec ffvhuff_decoder;
 extern AVCodec oggvorbis_decoder;
+extern AVCodec oggtheora_decoder;
 extern AVCodec cyuv_decoder;
 extern AVCodec h264_decoder;
 extern AVCodec indeo3_decoder;
@@ -1970,6 +2010,9 @@ extern AVCodec ulti_decoder;
 extern AVCodec qdraw_decoder;
 extern AVCodec xl_decoder;
 extern AVCodec qpeg_decoder;
+extern AVCodec shorten_decoder;
+extern AVCodec loco_decoder;
+extern AVCodec alac_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -2000,6 +2043,7 @@ PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
 PCM_CODEC(CODEC_ID_ADPCM_EA, adpcm_ea);
 PCM_CODEC(CODEC_ID_ADPCM_G726, adpcm_g726);
 PCM_CODEC(CODEC_ID_ADPCM_CT, adpcm_ct);
+PCM_CODEC(CODEC_ID_ADPCM_SWF, adpcm_swf);
 
 #undef PCM_CODEC
 
@@ -2161,6 +2205,8 @@ int avcodec_close(AVCodecContext *avctx);
 void avcodec_register_all(void);
 
 void avcodec_flush_buffers(AVCodecContext *avctx);
+
+void avcodec_default_free_buffers(AVCodecContext *s);
 
 /* misc usefull functions */
 

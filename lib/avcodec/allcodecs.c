@@ -45,9 +45,13 @@ void avcodec_register_all(void)
 #ifdef CONFIG_MP3LAME
     register_avcodec(&mp3lame_encoder);
 #endif
-#ifdef CONFIG_VORBIS
+#ifdef CONFIG_LIBVORBIS
     register_avcodec(&oggvorbis_encoder);
     register_avcodec(&oggvorbis_decoder);
+#endif
+#ifdef CONFIG_LIBTHEORA
+    register_avcodec(&oggtheora_encoder);
+    register_avcodec(&oggtheora_decoder);
 #endif
 #ifdef CONFIG_FAAC
     register_avcodec(&faac_encoder);
@@ -57,7 +61,6 @@ void avcodec_register_all(void)
 #endif
     register_avcodec(&mpeg1video_encoder);
 //    register_avcodec(&h264_encoder);
-#ifdef CONFIG_RISKY
     register_avcodec(&mpeg2video_encoder);
     register_avcodec(&h261_encoder);
     register_avcodec(&h263_encoder);
@@ -72,7 +75,6 @@ void avcodec_register_all(void)
     register_avcodec(&wmv1_encoder);
     register_avcodec(&wmv2_encoder);
     register_avcodec(&svq1_encoder);
-#endif
     register_avcodec(&mjpeg_encoder);
     register_avcodec(&ljpeg_encoder);
 #ifdef CONFIG_ZLIB
@@ -99,7 +101,6 @@ void avcodec_register_all(void)
 
     /* decoders */
 #ifdef CONFIG_DECODERS
-#ifdef CONFIG_RISKY
     register_avcodec(&h263_decoder);
     register_avcodec(&h261_decoder);
     register_avcodec(&mpeg4_decoder);
@@ -124,10 +125,10 @@ void avcodec_register_all(void)
     register_avcodec(&qdraw_decoder);
     register_avcodec(&xl_decoder);
     register_avcodec(&qpeg_decoder);
+    register_avcodec(&loco_decoder);
 #ifdef CONFIG_FAAD
     register_avcodec(&aac_decoder);
     register_avcodec(&mpeg4aac_decoder);
-#endif
 #endif
     register_avcodec(&mpeg1video_decoder);
     register_avcodec(&mpeg2video_decoder);
@@ -145,6 +146,7 @@ void avcodec_register_all(void)
     register_avcodec(&mp2_decoder);
     register_avcodec(&mp3_decoder);
     register_avcodec(&mp3adu_decoder);
+    register_avcodec(&mp3on4_decoder);
     register_avcodec(&mace3_decoder);
     register_avcodec(&mace6_decoder);
     register_avcodec(&huffyuv_decoder);
@@ -193,6 +195,8 @@ void avcodec_register_all(void)
     register_avcodec(&sol_dpcm_decoder);
     register_avcodec(&qtrle_decoder);
     register_avcodec(&flac_decoder);
+    register_avcodec(&shorten_decoder);
+    register_avcodec(&alac_decoder);
 #endif /* CONFIG_DECODERS */
 
 #ifdef AMR_NB
@@ -244,6 +248,7 @@ PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
 PCM_CODEC(CODEC_ID_ADPCM_EA, adpcm_ea);
 PCM_CODEC(CODEC_ID_ADPCM_G726, adpcm_g726);
 PCM_CODEC(CODEC_ID_ADPCM_CT, adpcm_ct);
+PCM_CODEC(CODEC_ID_ADPCM_SWF, adpcm_swf);
 
 #undef PCM_CODEC
 

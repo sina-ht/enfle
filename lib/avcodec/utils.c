@@ -430,8 +430,8 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->bit_rate_tolerance= s->bit_rate*10;
     s->qmin= 2;
     s->qmax= 31;
-    s->mb_qmin= 2;
-    s->mb_qmax= 31;
+    s->mb_lmin= FF_QP2LAMBDA * 2;
+    s->mb_lmax= FF_QP2LAMBDA * 31;
     s->rc_eq= "tex^qComp";
     s->qcompress= 0.5;
     s->max_qdiff= 3;
@@ -483,6 +483,7 @@ void avcodec_get_frame_defaults(AVFrame *pic){
     memset(pic, 0, sizeof(AVFrame));
 
     pic->pts= AV_NOPTS_VALUE;
+    pic->key_frame= 1;
 }
 
 /**
@@ -670,18 +671,6 @@ AVCodec *avcodec_find_decoder_by_name(const char *name)
     p = first_avcodec;
     while (p) {
         if (p->decode != NULL && strcmp(name,p->name) == 0)
-            return p;
-        p = p->next;
-    }
-    return NULL;
-}
-
-static AVCodec *avcodec_find(enum CodecID id)
-{
-    AVCodec *p;
-    p = first_avcodec;
-    while (p) {
-        if (p->id == id)
             return p;
         p = p->next;
     }

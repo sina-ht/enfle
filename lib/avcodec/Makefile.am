@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Dec 30 21:29:34 2004.
-# $Id: Makefile.am,v 1.22 2004/12/30 12:30:25 sian Exp $
+# Last Modified: Sun Mar  6 14:10:58 2005.
+# $Id: Makefile.am,v 1.23 2005/03/06 05:20:20 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -113,7 +113,8 @@ noinst_HEADERS = \
 	svq1_vlc.h \
 	integer.h \
 	ulti_cb.h \
-	rangecoder.h
+	rangecoder.h \
+	vc9data.h
 
 #	a52dec.c	ac3dec.c	ac3enc.c
 #	amr.c		faac.c		faad.c
@@ -126,6 +127,7 @@ libavcodec_la_SOURCES = \
 	8bps.c \
 	adpcm.c \
 	adx.c \
+	alac.c \
 	allcodecs.c \
 	asv1.c \
 	bitstream.c \
@@ -162,6 +164,7 @@ libavcodec_la_SOURCES = \
 	jfdctint.c \
 	jrevdct.c \
 	lcl.c \
+	loco.c \
 	mace.c \
 	mdct.c \
 	mem.c \
@@ -195,6 +198,7 @@ libavcodec_la_SOURCES = \
 	roqvideo.c \
 	rpza.c \
 	rv10.c \
+	shorten.c \
 	simple_idct.c \
 	smc.c \
 	snow.c \
@@ -204,6 +208,7 @@ libavcodec_la_SOURCES = \
 	tscc.c \
 	ulti.c \
 	utils.c \
+	vc9.c \
 	vcr1.c \
 	vmdav.c \
 	vp3.c \
