@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:46:03 2000.
- * $Id: ui-extra.h,v 1.2 2000/10/20 18:13:39 sian Exp $
+ * Last Modified: Mon Dec 18 23:28:47 2000.
+ * $Id: ui-extra.h,v 1.3 2000/12/18 17:00:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,7 @@ struct _ui_data {
   Config *c;
   EnflePlugins *eps;
   VideoPlugin *vp;
+  AudioPlugin *ap;
   VideoWindow *vw;
   Streamer *st;
   Loader *ld;
