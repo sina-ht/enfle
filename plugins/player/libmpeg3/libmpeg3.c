@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Mar  4 04:34:23 2001.
- * $Id: libmpeg3.c,v 1.26 2001/03/04 17:09:31 sian Exp $
+ * Last Modified: Sat May 19 11:32:58 2001.
+ * $Id: libmpeg3.c,v 1.27 2001/05/23 12:18:09 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -126,7 +126,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   /* can set how many CPUs you want to use. */
   /* mpeg3_set_cpus(info->file, 2); */
-  /* mpeg3_set_mmx(info->file, 1); */
+  mpeg3_set_mmx(info->file, 1);
 
   m->has_audio = 0;
   if (mpeg3_has_audio(info->file)) {
@@ -142,7 +142,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       m->samplerate = mpeg3_sample_rate(info->file, info->nastream);
       m->num_of_samples = mpeg3_audio_samples(info->file, info->nastream);
 
-      show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
+      show_message("audio(%d streams): format(%d): %d ch %d Hz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
@@ -160,7 +160,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     m->num_of_frames = 1;
     m->rendering_width = m->width;
     m->rendering_height = m->height;
-    show_message("warning: This stream has no video stream.\n");
+    show_message("This stream has no video stream.\n");
   } else {
     if ((info->nvstreams = mpeg3_total_vstreams(info->file)) > 1) {
       show_message("There are %d video streams in this whole stream.\n", info->nvstreams);
@@ -191,9 +191,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     }
   }
 
-  debug_message("video(%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n", info->nvstreams,
-		m->width, m->height, m->rendering_width, m->rendering_height,
-		m->framerate, m->num_of_frames);
+  show_message("video(%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n", info->nvstreams,
+	       m->width, m->height, m->rendering_width, m->rendering_height,
+	       m->framerate, m->num_of_frames);
 
   p = info->p = image_create();
   p->width = m->rendering_width;
@@ -378,6 +378,8 @@ play_audio(void *arg)
   if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
     show_message("Some params are set wrong.\n");
 
+  show_message("audio device configured: %d ch %d Hz\n", m->channels, m->samplerate);
+
   samples_to_read = AUDIO_READ_SIZE;
 
   while (m->status == _PLAY) {
@@ -418,8 +420,8 @@ static int
 get_audio_time(Movie *m, AudioDevice *ad)
 {
   if (ad && m->ap->bytes_written)
-    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
-  return (int)((double)m->current_sample * 1000 / m->samplerate);
+    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500.0 / m->channels);
+  return (int)((double)m->current_sample * 1000.0 / m->samplerate);
 }
 
 static PlayerStatus
