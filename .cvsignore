@@ -7,6 +7,7 @@ Makefile.in
 config.cache
 config.guess
 config.h
+enfle-config.h.in
 config.log
 config.status
 config.sub
