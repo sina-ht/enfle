@@ -1,3 +1,17 @@
+2001-08-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Preserve p->image.
+
+	* lib/enfle/identify.c: p->image is preserved when p->image is
+	non-NULL.
+
+2001-08-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Fixed NULL freeing bug.
+
+	* plugins/video/Xlib/Xlib.c: Fixed the bug which draws the ghost
+	in switching to full screen.
+
 2001-07-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/convert/convert.c, plugins/ui/normal/normal.c,
@@ -155,15 +169,10 @@
 	lib/utils/timer.c, lib/utils/timer_gettimeofday.c,
 	plugins/audio/oss/oss.c, plugins/loader/bmp/bmp.c,
 	plugins/loader/pcx/pcx.c, plugins/loader/ungif/ungif.c,
-	plugins/player/ungif/ungif.c, plugins/saver/glic/bitstream.c,
-	plugins/saver/glic/glic.c,
-	plugins/saver/glic/vmpm_decompose_normal.c,
-	plugins/saver/glic/vmpm_decompose_token.c,
-	plugins/saver/glic/vmpm_decompose_token2.c,
-	plugins/saver/glic/vmpm_error.c, plugins/saver/glic/vmpm_hash.c,
-	plugins/saver/jpeg/jpeg.c, plugins/saver/png/png.c,
-	plugins/streamer/gz/gz.c, plugins/ui/convert/convert.c: Avoid
-	gcc-3.0 warnings. Saver plugin API change.
+	plugins/player/ungif/ungif.c, plugins/saver/jpeg/jpeg.c,
+	plugins/saver/png/png.c, plugins/streamer/gz/gz.c,
+	plugins/ui/convert/convert.c: Avoid gcc-3.0 warnings. Saver plugin
+	API change.
 
 2001-06-18  Hiroshi Takekawa  <sian@fennel.org>
 
