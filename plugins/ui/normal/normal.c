@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 13 01:49:49 2000.
- * $Id: normal.c,v 1.12 2000/12/12 17:04:36 sian Exp $
+ * Last Modified: Thu Dec 14 21:07:11 2000.
+ * $Id: normal.c,v 1.13 2000/12/14 16:06:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,7 +39,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.3.1",
+  description: "Normal UI plugin version 0.3.2",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -64,30 +64,6 @@ plugin_exit(void *p)
 }
 
 /* for internal use */
-
-static int
-initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
-{
-  video_window_resize(vw, w, h);
-
-  return 1;
-}
-
-static int
-render_frame(VideoWindow *vw, Movie *m, Image *p)
-{
-#if 0
-  /* CHECK */
-  if (p->width != m->width || p->height != m->height) {
-    show_message(__FUNCTION__ ": p(%d, %d) != m(%d, %d)\n", p->width, p->height, m->width, m->height);
-    exit(1);
-  }
-#endif
-
-  video_window_render(vw, p);
-
-  return 1;
-}
 
 static void
 magnify_if_requested(VideoWindow *vw, Image *p)
@@ -139,7 +115,52 @@ magnify_if_requested(VideoWindow *vw, Image *p)
 }
 
 static int
-main_loop(VideoWindow *vw, Movie *m, Image *p)
+initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
+{
+  video_window_resize(vw, w, h);
+
+  return 1;
+}
+
+static int
+render_frame(VideoWindow *vw, Movie *m, Image *p)
+{
+  video_window_render(vw, p);
+
+  return 1;
+}
+
+static void
+set_caption_string(VideoWindow *vw, char *path, char *format)
+{
+  String *cap;
+  char *pos;
+
+  if ((cap = string_create()) == NULL)
+    return;
+
+  pos = strdup("(%%4d,%%4d)");
+  string_set(cap, PROGNAME);
+  string_cat_ch(cap, vw->interpolate_method == _BILINEAR ? ')' : '>');
+  if (pos) {
+    snprintf(pos, strlen(pos) + 1, "(%4d,%4d)", vw->render_width, vw->render_height);
+    string_cat(cap, pos);
+    free(pos);
+  }
+  string_cat_ch(cap, ' ');
+  string_cat(cap, path);
+
+  string_cat_ch(cap, '(');
+  string_cat(cap, format);
+  string_cat_ch(cap, ')');
+
+  video_window_set_caption(vw, string_get(cap));
+
+  string_destroy(cap);
+}
+
+static int
+main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
 {
   VideoEventData ev;
   int loop = 1;
@@ -207,6 +228,7 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
 	      }
 	      magnify_if_requested(vw, p);
 	      video_window_render(vw, p);
+	      set_caption_string(vw, path, p ? p->format : m->format);
 	    }
 	    break;
 	  case ENFLE_KEY_m:
@@ -227,9 +249,11 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
 	    default:
 	      break;
 	    }
-	    magnify_if_requested(vw, p);
-	    video_window_resize(vw, p->magnified.width, p->magnified.height);
-	    video_window_render(vw, p);
+	    if (p) {
+	      magnify_if_requested(vw, p);
+	      video_window_resize(vw, p->magnified.width, p->magnified.height);
+	      video_window_render(vw, p);
+	    }
 	    break;
 	  default:
 	    break;
@@ -279,7 +303,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Stream *s;
   Image *p;
   Movie *m;
-  String *cap;
   char *path;
   int f;
   int dir = 1;
@@ -288,7 +311,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
   s = stream_create();
   p = image_create();
   m = movie_create();
-  cap = string_create();
 
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
@@ -408,18 +430,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	continue;
       }
 
-      string_set(cap, PROGNAME ": ");
-      string_cat(cap, path);
-      string_cat_ch(cap, '(');
-      string_cat(cap, m->format);
-      string_cat_ch(cap, ')');
+      vw->render_width  = m->rendering_width;
+      vw->render_height = m->rendering_height;
 
-      vw->render_width  = m->width;
-      vw->render_height = m->height;
+      set_caption_string(vw, path, m->format);
 
-      video_window_set_caption(vw, string_get(cap));
-
-      dir = main_loop(vw, m, NULL);
+      dir = main_loop(vw, m, NULL, path);
       movie_unload(m);
     } else {
 
@@ -431,18 +447,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	p->comment = NULL;
       }
 
-      string_set(cap, PROGNAME ": ");
-      string_cat(cap, path);
-      string_cat_ch(cap, '(');
-      string_cat(cap, p->format);
-      string_cat_ch(cap, ')');
-
       vw->render_width  = p->width;
       vw->render_height = p->height;
 
-      video_window_set_caption(vw, string_get(cap));
+      set_caption_string(vw, path, p->format);
 
-      dir = main_loop(vw, NULL, p);
+      dir = main_loop(vw, NULL, p, path);
       memory_destroy(p->rendered.image);
       p->rendered.image = NULL;
       memory_destroy(p->image);
@@ -450,7 +460,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
     }
   }
 
-  string_destroy(cap);
   movie_destroy(m);
   image_destroy(p);
   stream_destroy(s);
