@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 05:32:17 2001.
- * $Id: avifile.cpp,v 1.11 2001/06/17 20:56:31 sian Exp $
+ * Last Modified: Mon Jun 18 12:56:32 2001.
+ * $Id: avifile.cpp,v 1.12 2001/06/18 04:03:19 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -231,6 +231,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 		  m->framerate, m->num_of_frames);
   } else {
     show_message("AviFile: No video.\n");
+    m->rendering_width  = 120;
+    m->rendering_height = 80;
+    m->requested_type = _RGB24;
   }
 
   p->width = m->rendering_width;
@@ -356,14 +359,17 @@ play_video(void *arg)
     pthread_mutex_lock(&info->decoding_state_mutex);
     while (info->ds != _DECODING)
       pthread_cond_wait(&info->decoding_cond, &info->decoding_state_mutex);
+
     if (info->stream->Eof()) {
       info->eof = 1;
       pthread_mutex_unlock(&info->decoding_state_mutex);
       break;
     }
+
     info->stream->ReadFrame();
     info->ci = info->stream->GetFrame();
     memcpy(memory_ptr(info->p->rendered.image), info->ci->data(), info->ci->bpl() * info->ci->height());
+
     info->ds = _DECODED;
     pthread_cond_signal(&info->decoded_cond);
     pthread_mutex_unlock(&info->decoding_state_mutex);
@@ -427,6 +433,7 @@ play_main(Movie *m, VideoWindow *vw)
   Image *p = info->p;
   int due_time;
   int time_elapsed;
+  int skip;
 
   switch (m->status) {
   case _PLAY:
@@ -451,30 +458,29 @@ play_main(Movie *m, VideoWindow *vw)
   //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
 
   if (info->ci) {
+    skip = 0;
+
     pthread_mutex_lock(&info->decoding_state_mutex);
     while (info->ds != _DECODED)
       pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
 
     /* if too fast to display, wait before render */
-    if (time_elapsed < due_time)
-      m->pause_usec((due_time - time_elapsed) * 1000);
+    if (time_elapsed < due_time) {
+      int wait_time = (int)((due_time - timer_get_milli(m->timer)) * 1000);
+      if (wait_time > 0)
+	m->pause_usec(wait_time);
+    }
 
     /* skip if delayed */
-    while (info->stream->GetTime() * 1000 < timer_get_milli(m->timer) - info->frametime) {
-      info->ds = _DECODING;
-      pthread_cond_signal(&info->decoding_cond);
-      pthread_mutex_unlock(&info->decoding_state_mutex);
-      pthread_mutex_lock(&info->decoding_state_mutex);
-      while (info->ds != _DECODED)
-	pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
-      pthread_mutex_unlock(&info->decoding_state_mutex);
-    }
+    if (due_time < timer_get_milli(m->timer) - info->frametime)
+      skip = 1;
 
     info->ds = _DECODING;
     pthread_cond_signal(&info->decoding_cond);
     pthread_mutex_unlock(&info->decoding_state_mutex);
 
-    m->render_frame(vw, m, p);
+    if (!skip)
+      m->render_frame(vw, m, p);
   }
 
   return PLAY_OK;
