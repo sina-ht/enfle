@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan 20 22:30:50 2004.
- * $Id: divx.c,v 1.5 2004/01/24 07:08:30 sian Exp $
+ * Last Modified: Wed Jan 28 22:21:27 2004.
+ * $Id: divx.c,v 1.6 2004/01/30 12:41:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,16 +22,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#define LINUX
-#include <decore.h>
 
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
-
-#if DECORE_VERSION < 20021112
-#  error DECORE_VERSION should be newer than or equal to 20021112
-#endif
 
 #ifndef USE_PTHREAD
 #  error pthread is mandatory for divx plugin
@@ -40,32 +34,32 @@
 #include <pthread.h>
 
 #include "enfle/player-plugin.h"
-#include "demultiplexer/demultiplexer_avi.h"
+#include "enfle/videodecoder.h"
 #include "enfle/audiodecoder.h"
-#include "utils/libstring.h"
+#include "demultiplexer/demultiplexer_avi.h"
 #include "enfle/fourcc.h"
 
 typedef struct _divx_info {
-  Config *c;
-  Demultiplexer *demux;
-  void *dec_handle;
-  DEC_FRAME dec_frame;
+  EnflePlugins *eps;
   Image *p;
+  Config *c;
   AudioDevice *ad;
-  FIFO *vstream, *astream;
   AudioDecoder *adec;
-  int input_format;
-  uint32_t biCompression;
-  uint16_t biBitCount;
+  VideoDecoder *vdec;
+  Demultiplexer *demux;
+  int to_skip;
   int use_xv;
-  int drop;
-  pthread_mutex_t update_mutex;
-  pthread_cond_t update_cond;
+  // int if_initialized;
+  int input_format;
+  int biCompression;
+  short biBitCount;
   int nvstreams;
   int nvstream;
+  FIFO *vstream;
   pthread_t video_thread;
   int nastreams;
   int nastream;
+  FIFO *astream;
   pthread_t audio_thread;
 } DivX_info;
 
@@ -81,12 +75,10 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
-#define PLAYER_DIVX_PLUGIN_DESCRIPTION "DivX Player plugin version 0.2"
-
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "DivX",
-  description: NULL,
+  description: "DivX Player plugin version 0.3",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -95,33 +87,45 @@ static PlayerPlugin plugin = {
 ENFLE_PLUGIN_ENTRY(player_divx)
 {
   PlayerPlugin *pp;
-  String *s;
 
   if ((pp = (PlayerPlugin *)calloc(1, sizeof(PlayerPlugin))) == NULL)
     return NULL;
   memcpy(pp, &plugin, sizeof(PlayerPlugin));
-  s = string_create();
-  string_set(s, (const char *)PLAYER_DIVX_PLUGIN_DESCRIPTION);
-  string_catf(s, (const char *)" with libdivxdecore %d", DECORE_VERSION);
-  pp->description = (const unsigned char *)strdup((const char *)string_get(s));
-  string_destroy(s);
 
   return (void *)pp;
 }
 
 ENFLE_PLUGIN_EXIT(player_divx, p)
 {
-  PlayerPlugin *pp = p;
-
-  if (pp->description)
-    free((void *)pp->description);
   free(p);
+}
+
+/* XXX: dirty... */
+int
+divx_get_input_format(Movie *m)
+{
+  DivX_info *info = (DivX_info *)m->movie_private;
+  return info->input_format;
+}
+
+int
+divx_get_biCompression(Movie *m)
+{
+  DivX_info *info = (DivX_info *)m->movie_private;
+  return info->biCompression;
+}
+
+short
+divx_get_biBitCount(Movie *m)
+{
+  DivX_info *info = (DivX_info *)m->movie_private;
+  return info->biBitCount;
 }
 
 /* for internal use */
 
 static PlayerStatus
-load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
+load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 {
   DivX_info *info = (DivX_info *)m->movie_private;
   AVIInfo *aviinfo;
@@ -137,10 +141,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   }
   aviinfo = demultiplexer_avi_info(info->demux);
 
+  info->eps = eps;
   info->c = c;
-
-  pthread_mutex_init(&info->update_mutex, NULL);
-  pthread_cond_init(&info->update_cond, NULL);
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
@@ -375,31 +377,10 @@ play(Movie *m)
   demultiplexer_rewind(info->demux);
 
   if (m->has_video) {
-    DEC_INIT dec_init;
-    DivXBitmapInfoHeader bih;
-    int inst, quality;
-
     if ((info->vstream = fifo_create()) == NULL)
       return PLAY_ERROR;
     fifo_set_max(info->vstream, 8192);
     demultiplexer_avi_set_vst(info->demux, info->vstream);
-
-    memset(&dec_init, 0, sizeof(dec_init));
-    dec_init.codec_version = info->input_format;
-    dec_init.smooth_playback = 0;
-    decore(&info->dec_handle, DEC_OPT_INIT, &dec_init, NULL);
-
-    inst = DEC_ADJ_POSTPROCESSING | DEC_ADJ_SET;
-    quality = 0; // 0-60
-    decore(info->dec_handle, DEC_OPT_ADJUST, &inst, &quality);
-
-    bih.biCompression = info->biCompression;
-    bih.biBitCount = info->biBitCount;
-    bih.biSize = sizeof(DivXBitmapInfoHeader);
-    bih.biWidth = m->width;
-    bih.biHeight = m->height;
-    decore(info->dec_handle, DEC_OPT_SETOUT, &bih, NULL);
-
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
 
@@ -422,70 +403,73 @@ play_video(void *arg)
 {
   Movie *m = arg;
   DivX_info *info = (DivX_info *)m->movie_private;
+  VideoDecoderStatus vds;
   void *data;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
-  int res;
+  int used;
+#ifdef USE_TS
+  unsigned long pts, dts, size;
+#if defined(DEBUG)
+  unsigned int psec, pusec, dsec, dusec;
+#endif
+#endif
 
   debug_message_fn("()\n");
 
-  while (m->status == _PLAY) {
-    if (!fifo_get(info->vstream, &data, &destructor))
-      break;
-    if ((dp = (DemuxedPacket *)data) == NULL || dp->data == NULL)
-      break;
-
-    pthread_mutex_lock(&info->update_mutex);
-    info->dec_frame.length = dp->size;
-    info->dec_frame.bitstream = dp->data;
-    info->dec_frame.bmp = memory_ptr(image_rendered_image(info->p));
-    info->dec_frame.render_flag = 1;
-    info->dec_frame.stride = 0;
-    if ((res = decore(info->dec_handle, DEC_OPT_FRAME, &info->dec_frame, NULL)) != DEC_OK) {
-      if (res == DEC_BAD_FORMAT) {
-	err_message("OPT_FRAME returns DEC_BAD_FORMAT\n");
-	pthread_mutex_unlock(&info->update_mutex);
-	m->has_video = 0;
-	pthread_mutex_unlock(&info->update_mutex);
-	break;
-      } else {
-	err_message("OPT_FRAME returns %d\n", res);
-	pthread_mutex_unlock(&info->update_mutex);
-	m->has_video = 0;
-	pthread_mutex_unlock(&info->update_mutex);
-	break;
-      }
-    }
-
-    destructor(dp);
-    m->current_frame++;
-
-    for (; info->drop; info->drop--) {
-      if (!fifo_get(info->vstream, &data, &destructor)) {
-	break;
-      } else {
-	if ((dp = (DemuxedPacket *)data) == NULL || dp->data == NULL) {
-	  pthread_mutex_unlock(&info->update_mutex);
-	  break;
-	}
-	info->dec_frame.length = dp->size;
-	info->dec_frame.bitstream = dp->data;
-	info->dec_frame.bmp = memory_ptr(image_rendered_image(info->p));
-	info->dec_frame.render_flag = 0; /* drop */
-	info->dec_frame.stride = 0;
-	decore(info->dec_handle, DEC_OPT_FRAME, &info->dec_frame, NULL);
-	destructor(dp);
-	m->current_frame++;
-      }
-    }
-    if (m->status == _PLAY)
-      pthread_cond_wait(&info->update_cond, &info->update_mutex);
-    pthread_mutex_unlock(&info->update_mutex);
+  info->vdec = videodecoder_create(info->eps, "divx");
+  if (info->vdec == NULL) {
+    warning_fnc("divx videodecoder plugin not found.\n");
+    return (void *)VD_ERROR;
+  }
+  if (!videodecoder_setup(info->vdec, m, info->p, m->width, m->height)) {
+    err_message_fnc("videodecoder_setup() failed.\n");
+    return (void *)VD_ERROR;
   }
 
-  debug_message_fn(" exiting.\n");
+  vds = VD_OK;
+  while (m->status == _PLAY) {
+    while (m->status == _PLAY && vds == VD_OK)
+      vds = videodecoder_decode(info->vdec, m, info->p, NULL, 0, NULL);
+    if (vds == VD_NEED_MORE_DATA) {
+      if (!fifo_get(info->vstream, &data, &destructor)) {
+	debug_message_fnc("fifo_get() failed.\n");
+	goto quit;
+      }
+      if (dp)
+	destructor(dp);
+      dp = (DemuxedPacket *)data;
+#if defined(USE_TS)
+      pts = dp->pts;
+      dts = dp->dts;
+#if defined(DEBUG)
+      if (pts != -1) {
+	TS_TO_CLOCK(psec, pusec, pts);
+	TS_TO_CLOCK(dsec, dusec, dts);
+	debug_message_fnc("pts %d.%d dts %d.%d flag(%d)\n", psec, pusec, dsec, dusec, dp->pts_dts_flag);
+      }
+#endif
+#endif
+      vds = videodecoder_decode(info->vdec, m, info->p, dp->data, dp->size, &used);
+      if (used != dp->size)
+	warning_fnc("videodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
+    } else {
+      err_message_fnc("videodecoder_decode returned %d\n", vds);
+      break;
+    }
+  }
 
-  return (void *)PLAY_OK;
+ quit:
+  if (dp)
+    destructor(dp);
+
+  debug_message_fnc("videodecoder_destroy() ");
+  videodecoder_destroy(info->vdec);
+  debug_message("OK\n");
+
+  debug_message_fnc("exit\n");
+
+  return (void *)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
 }
 
 #define MP3_DECODE_BUFFER_SIZE 16384
@@ -505,9 +489,12 @@ play_audio(void *arg)
   debug_message_fn("()\n");
 
   // XXX: should be selectable
-  //info->adec = audiodecoder_mpglib_init();
-  info->adec = audiodecoder_mad_init();
-
+  //info->adec = audiodecoder_create(info->eps, "mpglib");
+  info->adec = audiodecoder_create(info->eps, "mad");
+  if (info->adec == NULL) {
+    err_message("mad audiodecoder plugin not found. Audio disabled.\n");
+    return (void *)PLAY_OK;
+  }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");
     return (void *)PLAY_OK;
@@ -613,7 +600,7 @@ play_main(Movie *m, VideoWindow *vw)
     }
   }
 
-  pthread_mutex_lock(&info->update_mutex);
+  pthread_mutex_lock(&info->vdec->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
@@ -628,7 +615,7 @@ play_main(Movie *m, VideoWindow *vw)
     i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
-      info->drop = i;
+      info->to_skip = i;
     }
   } else {
     /* if too fast to display, wait before render */
@@ -638,13 +625,13 @@ play_main(Movie *m, VideoWindow *vw)
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
-      info->drop = i;
+      info->to_skip = i;
     }
   }
 
   /* tell video thread to continue decoding */
-  pthread_cond_signal(&info->update_cond);
-  pthread_mutex_unlock(&info->update_mutex);
+  pthread_cond_signal(&info->vdec->update_cond);
+  pthread_mutex_unlock(&info->vdec->update_mutex);
 
   m->render_frame(vw, m, p);
 
@@ -703,8 +690,9 @@ stop_movie(Movie *m)
   if (info->vstream)
     fifo_invalidate(info->vstream);
   if (info->video_thread) {
+    info->vdec->to_render = 0;
     debug_message_fnc("waiting for joining (video).\n");
-    pthread_cond_signal(&info->update_cond);
+    pthread_cond_signal(&info->vdec->update_cond);
     pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
     debug_message_fnc("joined (video).\n");
@@ -736,9 +724,6 @@ stop_movie(Movie *m)
     demultiplexer_avi_set_ast(info->demux, NULL);
   }
 
-  decore(info->dec_handle, DEC_OPT_RELEASE, NULL, NULL);
-  info->dec_handle = NULL;
-
   debug_message_fn("() OK\n");
 
   return PLAY_OK;
@@ -758,9 +743,6 @@ unload_movie(Movie *m)
       image_destroy(info->p);
     if (info->demux)
       demultiplexer_destroy(info->demux);
-    pthread_mutex_destroy(&info->update_mutex);
-    pthread_cond_destroy(&info->update_cond);
-
     free(info);
     m->movie_private = NULL;
   }
@@ -770,7 +752,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 {
   DivX_info *info = (DivX_info *)m->movie_private;
   AVIInfo *aviinfo;
@@ -832,7 +814,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   return PLAY_OK;
 }
 
-DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, eps)
 {
   debug_message("DivX: %s()\n", __FUNCTION__);
 
@@ -852,5 +834,5 @@ DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, m, st, c);
+  return load_movie(vw, m, st, c, eps);
 }

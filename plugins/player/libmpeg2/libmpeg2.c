@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan 20 22:29:04 2004.
- * $Id: libmpeg2.c,v 1.49 2004/01/24 07:08:30 sian Exp $
+ * Last Modified: Wed Jan 28 22:02:20 2004.
+ * $Id: libmpeg2.c,v 1.50 2004/01/30 12:41:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,15 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <inttypes.h>
-
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
 #include "compat.h"
@@ -41,10 +32,9 @@
 #include <pthread.h>
 
 #include "enfle/player-plugin.h"
-#include "mpeg2/mpeg2.h"
+#include "enfle/videodecoder.h"
 #include "enfle/audiodecoder.h"
 #include "demultiplexer/demultiplexer_mpeg.h"
-#include "utils/fifo.h"
 
 static const unsigned int types =
   (IMAGE_I420 |
@@ -59,19 +49,16 @@ static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
 typedef struct _libmpeg2_info {
-  VideoWindow *vw;
+  EnflePlugins *eps;
   Image *p;
   Config *c;
   AudioDevice *ad;
   AudioDecoder *adec;
-  mpeg2dec_t *mpeg2dec;
+  VideoDecoder *vdec;
   Demultiplexer *demux;
-  int to_render;
   int to_skip;
   int use_xv;
   int if_initialized;
-  pthread_mutex_t update_mutex;
-  pthread_cond_t update_cond;
   int nvstreams;
   int nvstream;
   FIFO *vstream;
@@ -85,7 +72,7 @@ typedef struct _libmpeg2_info {
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.4 with integrated libmpeg2(mpeg2dec-0.4.0)",
+  description: "LibMPEG2 Player plugin version 0.5",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -110,7 +97,7 @@ ENFLE_PLUGIN_EXIT(player_libmpeg2, p)
 /* for internal use */
 
 static PlayerStatus
-load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
+load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 {
   Libmpeg2_info *info;
   Image *p;
@@ -120,11 +107,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     return PLAY_ERROR;
   }
 
-  info->vw = vw;
+  info->eps = eps;
   info->c = c;
-
-  pthread_mutex_init(&info->update_mutex, NULL);
-  pthread_cond_init(&info->update_cond, NULL);
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
@@ -273,7 +257,6 @@ play(Movie *m)
       return PLAY_ERROR;
     fifo_set_max(info->vstream, 2048);
     demultiplexer_mpeg_set_vst(info->demux, info->vstream);
-    info->mpeg2dec = mpeg2_init();
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
 
@@ -299,33 +282,6 @@ get_audio_time(Movie *m, AudioDevice *ad)
   return (int)((double)m->current_sample * 1000 / m->samplerate);
 }
 
-#if 0
-static inline unsigned long
-get_timestamp(unsigned char *p)
-{
-  unsigned long t;
-
-  t = (((((p[0] << 8) | p[1]) << 8) | p[2]) << 8) | p[3];
-
-  return t;
-}
-
-static inline unsigned char *
-get_ptr(unsigned char *p)
-{
-  unsigned long t;
-
-  /* XXX: should be much more portable */
-#ifdef WORDS_BIGENDIAN
-  t = (((((p[0] << 8) | p[1]) << 8) | p[2]) << 8) | p[3];
-#else
-  t = (((((p[3] << 8) | p[2]) << 8) | p[1]) << 8) | p[0];
-#endif
-
-  return (unsigned char *)t;
-}
-#endif
-
 //#define USE_TS
 #undef USE_TS
 
@@ -341,113 +297,54 @@ play_video(void *arg)
 {
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
+  VideoDecoderStatus vds;
   void *data;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
-  mpeg2_state_t state;
-  const mpeg2_info_t *mpeg2dec_info;
-  const mpeg2_sequence_t *seq;
-  int size;
+  int used;
 #ifdef USE_TS
   unsigned long pts, dts, size;
+#if defined(DEBUG)
+  unsigned int psec, pusec, dsec, dusec;
+#endif
 #endif
 
   debug_message_fn("()\n");
 
+  info->vdec = videodecoder_create(info->eps, "libmpeg2");
+  if (info->vdec == NULL) {
+    warning_fnc("libmpeg2 videodecoder plugin not found.\n");
+    return (void *)VD_ERROR;
+  }
+
+  vds = VD_OK;
   while (m->status == _PLAY) {
-    state = mpeg2_parse(info->mpeg2dec);
-    mpeg2dec_info = mpeg2_info(info->mpeg2dec);
-    seq = mpeg2dec_info->sequence;
-    switch (state) {
-    case STATE_BUFFER:
+    while (m->status == _PLAY && vds == VD_OK)
+      vds = videodecoder_decode(info->vdec, m, info->p, NULL, 0, NULL);
+    if (vds == VD_NEED_MORE_DATA) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
 	goto quit;
-      } else {
-	if (dp)
-	  destructor(dp);
-	dp = (DemuxedPacket *)data;
-#ifdef USE_TS
-	switch (dp->pts_dts_flag) {
-	case 2:
-	  pts = dp->pts;
-	  dts = pts;
-	  size = dp->size;
-	  break;
-	case 3:
-	  pts = dp->pts;
-	  dts = dp->dts;
-	  size = dp->size;
-	  break;
-	default:
-	  pts = dts = -1;
-	  size = dp->size;
-	  break;
-	}
-#ifdef DEBUG
-	{
-	  unsigned int psec, pusec, dsec, dusec;
-	  if (pts != -1) {
-	    TS_TO_CLOCK(psec, pusec, pts);
-	    TS_TO_CLOCK(dsec, dusec, dts);
-	    debug_message_fnc("pts %d.%d dts %d.%d\n", psec, pusec, dsec, dusec);
-	  }
-	}
+      }
+      if (dp)
+	destructor(dp);
+      dp = (DemuxedPacket *)data;
+#if defined(USE_TS)
+      pts = dp->pts;
+      dts = dp->dts;
+#if defined(DEBUG)
+      if (pts != -1) {
+	TS_TO_CLOCK(psec, pusec, pts);
+	TS_TO_CLOCK(dsec, dusec, dts);
+	debug_message_fnc("pts %d.%d dts %d.%d flag(%d)\n", psec, pusec, dsec, dusec, dp->pts_dts_flag);
+      }
 #endif
 #endif
-	mpeg2_buffer(info->mpeg2dec, dp->data, dp->data + dp->size);
-	/* dp->data should not be freed until all data in dp->data is used. */
-      }
-      break;
-    case STATE_SEQUENCE:
-      size = seq->width * seq->height + seq->chroma_width * seq->chroma_height * 2;
-      if (m->width == 0) {
-	m->width = seq->width;
-	m->height = seq->height;
-	m->framerate = 27000000.0 / seq->frame_period;
-	show_message_fnc("(%d, %d) fps %2.5f\n", m->width, m->height, m->framerate);
-	if (memory_alloc(image_rendered_image(info->p), size * 2) == NULL) {
-	  show_message_fnc("No enough memory (%d bytes) for rendered image.\n", size);
-	  goto err;
-	}
-      }
-      break;
-    case STATE_SLICE:
-    case STATE_END:
-    case STATE_INVALID_END:
-#if 0
-      if (state == STATE_SLICE)
-	debug_message_fnc("STATE_SLICE\n");
-      else if (state == STATE_END)
-	debug_message_fnc("STATE_END\n");
-      else
-	debug_message_fnc("STATE_INVALID_END\n");
-#endif
-      if (mpeg2dec_info->display_fbuf) {
-	pthread_mutex_lock(&info->update_mutex);
-	memcpy(memory_ptr(image_rendered_image(info->p)), mpeg2dec_info->display_fbuf->buf[0], seq->width * seq->height);
-	memcpy(memory_ptr(image_rendered_image(info->p)) + seq->width * seq->height, mpeg2dec_info->display_fbuf->buf[1], seq->chroma_width * seq->chroma_height);
-	memcpy(memory_ptr(image_rendered_image(info->p)) + seq->width * seq->height + seq->chroma_width * seq->chroma_height, mpeg2dec_info->display_fbuf->buf[2], seq->chroma_width * seq->chroma_height);
-	info->to_render++;
-	m->current_frame++;
-	while (m->status == _PLAY && info->to_render > 0)
-	  pthread_cond_wait(&info->update_cond, &info->update_mutex);
-	pthread_mutex_unlock(&info->update_mutex);
-      }
-      /* XXX: skip */
-      //mpeg2_skip(info->mpeg2dec, info->to_skip);
-      break;
-    case STATE_SEQUENCE_REPEATED:
-    case STATE_GOP:
-    case STATE_PICTURE:
-    case STATE_SLICE_1ST:
-    case STATE_PICTURE_2ND:
-      break;
-    case STATE_INVALID:
-      warning_fnc("STATE_INVALID: invalid stream passed.\n");
-      break;
-    default:
-      debug_message_fnc("STATE_***UNKNOWN***\n");
+      vds = videodecoder_decode(info->vdec, m, info->p, dp->data, dp->size, &used);
+      if (used != dp->size)
+	warning_fnc("videodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
+    } else {
+      err_message_fnc("videodecoder_decode returned %d\n", vds);
       break;
     }
   }
@@ -456,22 +353,13 @@ play_video(void *arg)
   if (dp)
     destructor(dp);
 
-  debug_message_fnc("mpeg2_close() ");
-  mpeg2_close(info->mpeg2dec);
+  debug_message_fnc("videodecoder_destroy() ");
+  videodecoder_destroy(info->vdec);
   debug_message("OK\n");
 
   debug_message_fnc("exit\n");
 
-  return (void *)PLAY_OK;
-
- err:
-  debug_message_fnc("mpeg2_close() ");
-  mpeg2_close(info->mpeg2dec);
-  debug_message("OK\n");
-
-  debug_message_fnc("exit (on error)\n");
-
-  return (void *)PLAY_ERROR;
+  return (void *)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
 }
 
 static void *
@@ -492,9 +380,12 @@ play_audio(void *arg)
   debug_message_fn("()\n");
 
   // XXX: should be selectable
-  //info->adec = audiodecoder_mpglib_init();
-  info->adec = audiodecoder_mad_init();
-
+  //info->adec = audiodecoder_create(info->eps, "mpglib");
+  info->adec = audiodecoder_create(info->eps, "mad");
+  if (info->adec == NULL) {
+    err_message("mad audiodecoder plugin not found. Audio disabled.\n");
+    return (void *)PLAY_OK;
+  }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");
     return (void *)PLAY_OK;
@@ -619,7 +510,7 @@ play_main(Movie *m, VideoWindow *vw)
     }
   }
 
-  if (info->to_render == 0)
+  if (info->vdec->to_render == 0)
     return PLAY_OK;
 
   if (!info->if_initialized && m->width && m->height) {
@@ -640,7 +531,7 @@ play_main(Movie *m, VideoWindow *vw)
     info->if_initialized++;
   }
 
-  pthread_mutex_lock(&info->update_mutex);
+  pthread_mutex_lock(&info->vdec->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
@@ -652,7 +543,6 @@ play_main(Movie *m, VideoWindow *vw)
       audio_time = get_audio_time(m, info->ad);
 
     m->render_frame(vw, m, p);
-    info->to_render--;
 
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
   } else {
@@ -662,10 +552,11 @@ play_main(Movie *m, VideoWindow *vw)
     while (video_time > timer_get_milli(m->timer)) ;
 
     m->render_frame(vw, m, p);
-    info->to_render--;
 
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
   }
+
+  info->vdec->to_render--;
 
   /* skip if delayed */
   if (i > 0) {
@@ -674,9 +565,9 @@ play_main(Movie *m, VideoWindow *vw)
   }
 
   /* tell video thread to continue decoding */
-  if (info->to_render == 0)
-    pthread_cond_signal(&info->update_cond);
-  pthread_mutex_unlock(&info->update_mutex);
+  if (info->vdec->to_render == 0)
+    pthread_cond_signal(&info->vdec->update_cond);
+  pthread_mutex_unlock(&info->vdec->update_mutex);
 
   return PLAY_OK;
 }
@@ -731,9 +622,9 @@ stop_movie(Movie *m)
   if (info->vstream)
     fifo_invalidate(info->vstream);
   if (info->video_thread) {
-    info->to_render = 0;
+    info->vdec->to_render = 0;
     debug_message_fnc("waiting for joining (video).\n");
-    pthread_cond_signal(&info->update_cond);
+    pthread_cond_signal(&info->vdec->update_cond);
     pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
     debug_message_fnc("joined (video).\n");
@@ -784,8 +675,6 @@ unload_movie(Movie *m)
       image_destroy(info->p);
     if (info->demux)
       demultiplexer_destroy(info->demux);
-    pthread_mutex_destroy(&info->update_mutex);
-    pthread_cond_destroy(&info->update_cond);
 
     free(info);
     m->movie_private = NULL;
@@ -794,7 +683,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 {
   unsigned char buf[3];
 
@@ -806,7 +695,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   return PLAY_OK;
 }
 
-DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, eps)
 {
   debug_message("libmpeg2 player: load() called\n");
 
@@ -826,5 +715,5 @@ DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, m, st, c);
+  return load_movie(vw, m, st, c, eps);
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 21 01:32:54 2004.
- * $Id: avcodec.c,v 1.14 2004/01/24 07:08:30 sian Exp $
+ * Last Modified: Wed Jan 28 22:21:00 2004.
+ * $Id: avcodec.c,v 1.15 2004/01/30 12:41:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,61 +34,32 @@
 #include <pthread.h>
 
 #include "enfle/player-plugin.h"
-#include "demultiplexer/demultiplexer_avi.h"
 #include "avcodec/avcodec.h"
 #include "enfle/audiodecoder.h"
-#include "utils/libstring.h"
+#include "enfle/videodecoder.h"
+#include "demultiplexer/demultiplexer_avi.h"
 #include "enfle/fourcc.h"
 
-#if defined(DEBUG)
-//#define USE_DR1
-#endif
-
-#if defined(USE_DR1)
-struct pic_buf {
-  int idx;
-  Memory *mem;
-  unsigned char data[0];
-};
-
-typedef struct __picture_buffer {
-  Memory *base;
-  struct pic_buf *pb;
-  int linesize[3];
-} Picture_buffer;
-
-#define N_PICTURE_BUFFER 32
-#endif
-
 typedef struct __avcodec_info {
-  Config *c;
-  Demultiplexer *demux;
+  EnflePlugins *eps;
   Image *p;
+  Config *c;
   AudioDevice *ad;
-  FIFO *vstream, *astream;
   AudioDecoder *adec;
-  AVCodec *vcodec;
+  VideoDecoder *vdec;
+  Demultiplexer *demux;
+  int to_skip;
+  int use_xv;
+  // int if_initialized;
   enum CodecID vcodec_id;
   const char *vcodec_name;
-  AVCodecContext *vcodec_ctx;
-  AVFrame *vcodec_picture;
-#if defined(USE_DR1)
-  Picture_buffer picture_buffer[N_PICTURE_BUFFER];
-  int picture_buffer_count;
-#endif
-  AVCodec *acodec;
-  AVCodecContext *acodec_ctx;
-  enum CodecID acodec_id;
-  const char *acodec_name;
-  int use_xv;
-  int drop;
-  pthread_mutex_t update_mutex;
-  pthread_cond_t update_cond;
   int nvstreams;
   int nvstream;
+  FIFO *vstream;
   pthread_t video_thread;
   int nastreams;
   int nastream;
+  FIFO *astream;
   pthread_t audio_thread;
 } avcodec_info;
 
@@ -105,12 +76,10 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
-#define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.5"
-
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "avcodec",
-  description: NULL,
+  description: "avcodec Player plugin version 0.7",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -119,45 +88,38 @@ static PlayerPlugin plugin = {
 ENFLE_PLUGIN_ENTRY(player_divx)
 {
   PlayerPlugin *pp;
-  String *s;
 
   if ((pp = (PlayerPlugin *)calloc(1, sizeof(PlayerPlugin))) == NULL)
     return NULL;
   memcpy(pp, &plugin, sizeof(PlayerPlugin));
-  s = string_create();
-  string_set(s, (const char *)PLAYER_AVCODEC_PLUGIN_DESCRIPTION);
-  string_catf(s, (const char *)" with " LIBAVCODEC_IDENT);
-  pp->description = (const unsigned char *)strdup((const char *)string_get(s));
-  string_destroy(s);
-
-  /* avcodec initialization */
-  avcodec_init();
-  avcodec_register_all();
-  av_log_set_level(AV_LOG_INFO);
 
   return (void *)pp;
 }
 
 ENFLE_PLUGIN_EXIT(player_divx, p)
 {
-  PlayerPlugin *pp = p;
-
-  if (pp->description)
-    free((void *)pp->description);
   free(p);
+}
+
+/* XXX: dirty... */
+enum CodecID
+avcodec_get_vcodec_id(Movie *m)
+{
+  avcodec_info *info = (avcodec_info *)m->movie_private;
+  return info->vcodec_id;
 }
 
 /* for internal use */
 
 static PlayerStatus
-load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
+load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 {
   avcodec_info *info = (avcodec_info *)m->movie_private;
   AVIInfo *aviinfo;
   Image *p;
 
   if (!info) {
-    identify(m, st, c, NULL);
+    identify(m, st, c, eps);
     info = (avcodec_info *)m->movie_private;
     if (!info) {
       err_message("avcodec: %s: No enough memory.\n", __FUNCTION__);
@@ -167,9 +129,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   aviinfo = demultiplexer_avi_info(info->demux);
 
   info->c = c;
-
-  pthread_mutex_init(&info->update_mutex, NULL);
-  pthread_cond_init(&info->update_cond, NULL);
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
@@ -317,7 +276,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       m->movie_private = NULL;
       return PLAY_NOT;
     }
-    if ((info->vcodec = avcodec_find_decoder(info->vcodec_id)) == NULL) {
+    if (avcodec_find_decoder(info->vcodec_id) == NULL) {
       show_message("avcodec %s not found\n", info->vcodec_name);
       demultiplexer_destroy(info->demux);
       free(info);
@@ -425,101 +384,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   return PLAY_ERROR;
 }
 
-#if defined(USE_DR1)
-static int
-get_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
-{
-  avcodec_info *info = (avcodec_info *)vcodec_ctx->opaque;
-  int width, height;
-  Picture_buffer *buf;
-
-  /* alignment */
-  width  = (vcodec_ctx->width  + 15) & ~15;
-  height = (vcodec_ctx->height + 15) & ~15;
-
-  if (vcodec_ctx->pix_fmt != PIX_FMT_YUV420P ||
-      width != vcodec_ctx->width || height != vcodec_ctx->height) {
-    debug_message_fnc("avcodec: unsupported frame format, DR1 disabled.\n");
-    info->vcodec_ctx->get_buffer = avcodec_default_get_buffer;
-    info->vcodec_ctx->reget_buffer = avcodec_default_reget_buffer;
-    info->vcodec_ctx->release_buffer = avcodec_default_release_buffer;
-    return avcodec_default_get_buffer(vcodec_ctx, vcodec_picture);
-  }
-
-  buf = &info->picture_buffer[info->picture_buffer_count];
-  if (buf->base == NULL) {
-    int datasize = image_bpl(info->p) * image_height(info->p);
-    int size = sizeof(struct pic_buf) + datasize;
-    struct pic_buf *pb;
-
-    if ((buf->base = memory_create()) == NULL) {
-      err_message_fnc("No enough memory for Memory object buf->base.\n");
-      return -1;
-    }
-
-    if ((pb = memory_alloc(buf->base, size)) == NULL) {
-      err_message_fnc("Cannot allocate %d bytes.  No enough memory for pic_buf.\n", size);
-      return -1;
-    }
-    pb->idx = info->picture_buffer_count;
-    pb->mem = buf->base;
-    memset(pb->data, 128, datasize);
-
-    buf->pb = pb;
-    buf->linesize[0] = image_width(info->p);
-    buf->linesize[1] = image_width(info->p) >> 1;
-    buf->linesize[2] = image_width(info->p) >> 1;
-  }
-
-  vcodec_picture->base[0] = vcodec_picture->data[0] =
-    buf->pb->data;
-  vcodec_picture->base[1] = vcodec_picture->data[1] =
-    vcodec_picture->data[0] + image_width(info->p) * image_height(info->p);
-  vcodec_picture->base[2] = vcodec_picture->data[2] =
-    vcodec_picture->data[1] + (image_width(info->p) >> 1) * (image_height(info->p) >> 1);
-  vcodec_picture->linesize[0] = buf->linesize[0];
-  vcodec_picture->linesize[1] = buf->linesize[1];
-  vcodec_picture->linesize[2] = buf->linesize[2];
-
-  vcodec_picture->age = 256 * 256 * 256 * 64;
-  vcodec_picture->type = FF_BUFFER_TYPE_USER;
-  info->picture_buffer_count++;
-
-  return 0;
-}
-
-static int
-reget_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
-{
-    if (vcodec_picture->data[0] == NULL) {
-        vcodec_picture->buffer_hints |= FF_BUFFER_HINTS_READABLE;
-        return vcodec_ctx->get_buffer(vcodec_ctx, vcodec_picture);
-    }
-
-    return 0;
-}
-
-static void
-release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
-{
-  avcodec_info *info = (avcodec_info *)vcodec_ctx->opaque;
-  struct pic_buf *pb;
-  Picture_buffer *buf, *last, t;
-
-  pb = (struct pic_buf *)(vcodec_picture->data[0] - sizeof(*pb));
-  buf = &info->picture_buffer[pb->idx];
-  last = &info->picture_buffer[--info->picture_buffer_count];
-
-  t = *buf;
-  *buf = *last;
-  *last = t;
-
-  vcodec_picture->data[0] = NULL;
-  vcodec_picture->data[1] = NULL;
-  vcodec_picture->data[2] = NULL;
-}
-#endif
-
 static void *play_video(void *);
 static void *play_audio(void *);
 
@@ -557,43 +421,6 @@ play(Movie *m)
       return PLAY_ERROR;
     fifo_set_max(info->vstream, 8192);
     demultiplexer_avi_set_vst(info->demux, info->vstream);
-
-    /* XXX: decoder initialize */
-    info->vcodec_ctx = avcodec_alloc_context();
-    //info->vcodec_ctx->error_resilience = 3;
-    info->vcodec_ctx->width = m->width;
-    info->vcodec_ctx->height = m->height;
-    info->vcodec_ctx->pix_fmt = -1;
-    info->vcodec_ctx->opaque = info;
-    if ((info->vcodec_picture = avcodec_alloc_frame()) == NULL) {
-      err_message_fnc("avcodec_alloc_frame() failed.\n");
-      return PLAY_ERROR;
-    }
-    if (info->vcodec->capabilities & CODEC_CAP_TRUNCATED)
-      info->vcodec_ctx->flags |= CODEC_FLAG_TRUNCATED;
-#if defined(USE_DR1)
-    if (info->vcodec->capabilities & CODEC_CAP_DR1)
-      info->vcodec_ctx->flags |= CODEC_FLAG_EMU_EDGE;
-#endif
-    if (avcodec_open(info->vcodec_ctx, info->vcodec) < 0) {
-      show_message("avcodec_open() failed.\n");
-      free(info->vcodec_ctx);
-      free(info->vcodec_picture);
-      return PLAY_ERROR;
-    }
-    if (info->vcodec_ctx->pix_fmt == PIX_FMT_YUV420P &&
-	info->vcodec->capabilities & CODEC_CAP_DR1) {
-#if defined(USE_DR1)
-      info->vcodec_ctx->get_buffer = get_buffer;
-      info->vcodec_ctx->reget_buffer = reget_buffer;
-      info->vcodec_ctx->release_buffer = release_buffer;
-      show_message("avcodec: DR1 direct rendering enabled.\n");
-#else
-      // XXX: direct rendering causes dirty video output...
-      show_message("avcodec: DR1 direct rendering disabled.\n");
-#endif
-    }
-
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
 
@@ -611,82 +438,96 @@ play(Movie *m)
   return PLAY_OK;
 }
 
+static int
+get_audio_time(Movie *m, AudioDevice *ad)
+{
+  if (ad && m->ap->bytes_written)
+    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
+  return (int)((double)m->current_sample * 1000 / m->samplerate);
+}
+
+//#define USE_TS
+#undef USE_TS
+
+#ifdef USE_TS
+#define TS_BASE 90000
+#define TS_TO_CLOCK(sec, usec, ts) \
+  sec  =  ts / TS_BASE; \
+  usec = (ts % TS_BASE) * (1000000 / TS_BASE);
+#endif
+
 static void *
 play_video(void *arg)
 {
   Movie *m = arg;
   avcodec_info *info = (avcodec_info *)m->movie_private;
+  VideoDecoderStatus vds;
   void *data;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
-  int offset, size, len, got_picture;
+  int used;
+#ifdef USE_TS
+  unsigned long pts, dts, size;
+#if defined(DEBUG)
+  unsigned int psec, pusec, dsec, dusec;
+#endif
+#endif
 
   debug_message_fn("()\n");
 
-  offset = 0;
-  size = 0;
+  info->vdec = videodecoder_create(info->eps, "avcodec");
+  if (info->vdec == NULL) {
+    warning_fnc("avcodec videodecoder plugin not found.\n");
+    return (void *)VD_ERROR;
+  }
+  if (!videodecoder_setup(info->vdec, m, info->p, m->width, m->height)) {
+    err_message_fnc("videodecoder_setup() failed.\n");
+    return (void *)VD_ERROR;
+  }
+
+  vds = VD_OK;
   while (m->status == _PLAY) {
-    if (size <= 0) {
-      if (!fifo_get(info->vstream, &data, &destructor))
-	break;
+    while (m->status == _PLAY && vds == VD_OK)
+      vds = videodecoder_decode(info->vdec, m, info->p, NULL, 0, NULL);
+    if (vds == VD_NEED_MORE_DATA) {
+      if (!fifo_get(info->vstream, &data, &destructor)) {
+	debug_message_fnc("fifo_get() failed.\n");
+	goto quit;
+      }
       if (dp)
 	destructor(dp);
-      if ((dp = (DemuxedPacket *)data) == NULL || dp->data == NULL)
-	break;
-      offset = 0;
-      size = dp->size;
-    }
-
-    /* XXX: decode */
-    len = avcodec_decode_video(info->vcodec_ctx, info->vcodec_picture, &got_picture,
-			       dp->data + offset, size);
-    if (len < 0) {
-      warning_fnc("avcodec: avcodec_decode_video return %d\n", len);
-      break;
-    }
-    size -= len;
-    offset += len;
-    if (!got_picture)
-      continue;
-
-    m->current_frame++;
-    if (info->drop > 0) {
-      info->drop--;
-    } else {
-      pthread_mutex_lock(&info->update_mutex);
-#if defined(USE_DR1)
-      if (info->vcodec_ctx->get_buffer == get_buffer) {
-	struct pic_buf *pb;
-	
-	pb = (struct pic_buf *)(info->vcodec_picture->data[0] - sizeof(*pb));
-	image_rendered_set_image(info->p, pb->mem);
-      } else
-#endif
-      {
-	int y;
-
-	for (y = 0; y < m->height; y++) {
-	  memcpy(memory_ptr(image_rendered_image(info->p)) + m->width * y, info->vcodec_picture->data[0] + info->vcodec_picture->linesize[0] * y, m->width);
-	}
-	for (y = 0; y < m->height >> 1; y++) {
-	  memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height, info->vcodec_picture->data[1] + info->vcodec_picture->linesize[1] * y, m->width >> 1);
-	}
-	for (y = 0; y < m->height >> 1; y++) {
-	  memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), info->vcodec_picture->data[2] + info->vcodec_picture->linesize[2] * y, m->width >> 1);
-	}
+      dp = (DemuxedPacket *)data;
+#if defined(USE_TS)
+      pts = dp->pts;
+      dts = dp->dts;
+#if defined(DEBUG)
+      if (pts != -1) {
+	TS_TO_CLOCK(psec, pusec, pts);
+	TS_TO_CLOCK(dsec, dusec, dts);
+	debug_message_fnc("pts %d.%d dts %d.%d flag(%d)\n", psec, pusec, dsec, dusec, dp->pts_dts_flag);
       }
-      if (m->status == _PLAY)
-	pthread_cond_wait(&info->update_cond, &info->update_mutex);
-      pthread_mutex_unlock(&info->update_mutex);
+#endif
+#endif
+      vds = videodecoder_decode(info->vdec, m, info->p, dp->data, dp->size, &used);
+      if (used != dp->size)
+	warning_fnc("videodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
+    } else {
+      err_message_fnc("videodecoder_decode returned %d\n", vds);
+      break;
     }
   }
 
+ quit:
   if (dp)
     destructor(dp);
 
-  debug_message_fn(" exiting.\n");
+  debug_message_fnc("videodecoder_destroy() ");
+  videodecoder_destroy(info->vdec);
+  debug_message("OK\n");
 
-  return (void *)PLAY_OK;
+  debug_message_fnc("exit\n");
+
+  return (void *)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
 }
 
 static void *
@@ -704,9 +545,12 @@ play_audio(void *arg)
   debug_message_fn("()\n");
 
   // XXX: should be selectable
-  //info->adec = audiodecoder_mpglib_init();
-  info->adec = audiodecoder_mad_init();
-
+  //info->adec = audiodecoder_create(info->eps, "mpglib");
+  info->adec = audiodecoder_create(info->eps, "mad");
+  if (info->adec == NULL) {
+    err_message("mad audiodecoder plugin not found. Audio disabled.\n");
+    return (void *)PLAY_OK;
+  }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");
     return (void *)PLAY_OK;
@@ -715,12 +559,10 @@ play_audio(void *arg)
 
   while (m->status == _PLAY) {
     if (!dp || dp->size == used) {
-      debug_message_fnc("getting\n");
       if (!fifo_get(info->astream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
 	break;
       }
-      debug_message_fnc("got\n");
       if (dp)
 	destructor(dp);
       dp = (DemuxedPacket *)data;
@@ -756,14 +598,6 @@ play_audio(void *arg)
   debug_message("OK. exit.\n");
 
   return (void *)PLAY_OK;
-}
-
-static int
-get_audio_time(Movie *m, AudioDevice *ad)
-{
-  if (ad && m->ap->bytes_written)
-    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
-  return (int)((double)m->current_sample * 1000 / m->samplerate);
 }
 
 static PlayerStatus
@@ -819,7 +653,13 @@ play_main(Movie *m, VideoWindow *vw)
     }
   }
 
-  pthread_mutex_lock(&info->update_mutex);
+  if (info->vdec == NULL)
+    return PLAY_OK;
+
+  if (info->vdec->to_render == 0)
+    return PLAY_OK;
+
+  pthread_mutex_lock(&info->vdec->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
@@ -828,7 +668,7 @@ play_main(Movie *m, VideoWindow *vw)
 
     /* if too fast to display, wait before render */
     while (video_time > audio_time) {
-      if (timer_get_milli(m->timer) > video_time + 3 * 1000 / m->framerate) {
+      if (timer_get_milli(m->timer) > video_time + 10 * 1000 / m->framerate) {
 	warning_fnc("might have bad audio: %d (r: %d v: %d a: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time, audio_time);
 	break;
       }
@@ -839,7 +679,7 @@ play_main(Movie *m, VideoWindow *vw)
     i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       //debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
-      info->drop = i;
+      info->to_skip = i;
     }
   } else {
     //debug_message("%d (r: %d v: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time);
@@ -851,16 +691,18 @@ play_main(Movie *m, VideoWindow *vw)
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       //debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
-      info->drop = i;
+      info->to_skip = i;
     }
 #endif
   }
 
-  /* tell video thread to continue decoding */
-  pthread_cond_signal(&info->update_cond);
-  pthread_mutex_unlock(&info->update_mutex);
-
   m->render_frame(vw, m, p);
+  info->vdec->to_render--;
+
+  /* tell video thread to continue decoding */
+  if (info->vdec->to_render == 0)
+    pthread_cond_signal(&info->vdec->update_cond);
+  pthread_mutex_unlock(&info->vdec->update_mutex);
 
   return PLAY_OK;
 }
@@ -917,8 +759,9 @@ stop_movie(Movie *m)
   if (info->vstream)
     fifo_invalidate(info->vstream);
   if (info->video_thread) {
+    info->vdec->to_render = 0;
     debug_message_fnc("waiting for joining (video).\n");
-    pthread_cond_signal(&info->update_cond);
+    pthread_cond_signal(&info->vdec->update_cond);
     pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
     debug_message_fnc("joined (video).\n");
@@ -950,14 +793,6 @@ stop_movie(Movie *m)
     demultiplexer_avi_set_ast(info->demux, NULL);
   }
 
-  /* XXX: decoder clean up */
-  if (info->vcodec_ctx) {
-    avcodec_close(info->vcodec_ctx);
-    free(info->vcodec_ctx);
-  }
-  if (info->vcodec_picture)
-    free(info->vcodec_picture);
-
   debug_message_fn("() OK\n");
 
   return PLAY_OK;
@@ -977,20 +812,6 @@ unload_movie(Movie *m)
       image_destroy(info->p);
     if (info->demux)
       demultiplexer_destroy(info->demux);
-    pthread_mutex_destroy(&info->update_mutex);
-    pthread_cond_destroy(&info->update_cond);
-
-#if defined(USE_DR1)
-    /* free picture_buffer */
-    {
-      int i;
-      for (i = 0; i < info->picture_buffer_count; i++) {
-	if (info->picture_buffer[i].base)
-	  memory_destroy(info->picture_buffer[i].base);
-      }
-    }
-#endif
-
     free(info);
     m->movie_private = NULL;
   }
@@ -1000,7 +821,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 {
   avcodec_info *info = (avcodec_info *)m->movie_private;
   AVIInfo *aviinfo;
@@ -1013,6 +834,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     m->movie_private = (void *)info;
   }
 
+  info->eps = eps;
   info->demux = demultiplexer_avi_create();
   demultiplexer_avi_set_input(info->demux, st);
   if (!demultiplexer_examine(info->demux)) {
@@ -1115,7 +937,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   return PLAY_OK;
 }
 
-DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, eps)
 {
   debug_message("avcodec: %s()\n", __FUNCTION__);
 
@@ -1135,5 +957,5 @@ DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, m, st, c);
+  return load_movie(vw, m, st, c, eps);
 }
