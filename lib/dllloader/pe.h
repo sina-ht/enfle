@@ -1,10 +1,10 @@
 /*
  * pe.h
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:02:08 2001.
- * $Id: pe.h,v 1.5 2001/09/29 18:02:56 sian Exp $
+ * Last Modified: Sun Sep 30 06:22:21 2001.
+ * $Id: pe.h,v 1.6 2001/10/05 04:06:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -164,3 +164,17 @@ typedef struct _image_base_relocation {
   DWORD SizeOfBlock;
   WORD TypeOffset[1];
 } IMAGE_BASE_RELOCATION;
+
+typedef struct _image_resource_directory {
+  DWORD Characteristics;
+  DWORD TimeDateStamp;
+  WORD MajorVersion;
+  WORD MinorVersion;
+  WORD NumberOfNamedEntries;
+  WORD NumberOfIdEntries;
+} IMAGE_RESOURCE_DIRECTORY, *PIMAGE_RESOURCE_DIRECTORY;
+
+typedef struct _image_resource_directory_entry {
+  DWORD Id;
+  DWORD OffsetToData;
+} IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;
