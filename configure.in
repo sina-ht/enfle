@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Mar 20 06:32:17 2001.
-dnl $Id: configure.in,v 1.58 2001/03/19 21:34:12 sian Exp $
+dnl Last Modified: Sat Apr 14 05:21:25 2001.
+dnl $Id: configure.in,v 1.59 2001/04/18 05:41:56 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010320)
+AM_INIT_AUTOMAKE(enfle, 20010414)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -329,7 +329,9 @@ dnl plugin directory path
 enfle_plugindir=${libdir}/enfle/plugins
 enfle_archiver_plugindir=${enfle_plugindir}/archiver
 enfle_audio_plugindir=${enfle_plugindir}/audio
+enfle_effect_plugindir=${enfle_plugindir}/effect
 enfle_loader_plugindir=${enfle_plugindir}/loader
+enfle_saver_plugindir=${enfle_plugindir}/saver
 enfle_player_plugindir=${enfle_plugindir}/player
 enfle_streamer_plugindir=${enfle_plugindir}/streamer
 enfle_ui_plugindir=${enfle_plugindir}/ui
@@ -337,7 +339,9 @@ enfle_video_plugindir=${enfle_plugindir}/video
 AC_SUBST(enfle_plugindir)
 AC_SUBST(enfle_archiver_plugindir)
 AC_SUBST(enfle_audio_plugindir)
+AC_SUBST(enfle_effect_plugindir)
 AC_SUBST(enfle_loader_plugindir)
+AC_SUBST(enfle_saver_plugindir)
 AC_SUBST(enfle_player_plugindir)
 AC_SUBST(enfle_streamer_plugindir)
 AC_SUBST(enfle_ui_plugindir)
@@ -354,13 +358,16 @@ AC_CONFIG_FILES([
  Makefile
   lib/Makefile
    lib/X11/Makefile
+   lib/demultiplexer/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
+   lib/mpeg2/Makefile
    lib/mpglib/Makefile
    lib/utils/Makefile
   src/Makefile
   plugins/Makefile
    plugins/ui/Makefile
+    plugins/ui/convert/Makefile
     plugins/ui/normal/Makefile
    plugins/streamer/Makefile
     plugins/streamer/bz2/Makefile
@@ -370,11 +377,13 @@ AC_CONFIG_FILES([
     plugins/loader/jpeg/Makefile
     plugins/loader/pcx/Makefile
     plugins/loader/png/Makefile
+    plugins/loader/pnm/Makefile
     plugins/loader/ungif/Makefile
    plugins/archiver/Makefile
     plugins/archiver/tar/Makefile
    plugins/player/Makefile
     plugins/player/avifile/Makefile
+    plugins/player/libmpeg2/Makefile
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
     plugins/player/mpeg_lib/Makefile
@@ -385,5 +394,10 @@ AC_CONFIG_FILES([
    plugins/audio/Makefile
     plugins/audio/esd/Makefile
     plugins/audio/oss/Makefile
+   plugins/effect/Makefile
+    plugins/effect/rotate/Makefile
+   plugins/saver/Makefile
+    plugins/saver/png/Makefile
+    plugins/saver/glic/Makefile
 ])
 AC_OUTPUT

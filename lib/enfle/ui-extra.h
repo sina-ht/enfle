@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb  7 22:42:00 2001.
- * $Id: ui-extra.h,v 1.5 2001/02/07 17:35:31 sian Exp $
+ * Last Modified: Wed Apr 11 14:57:00 2001.
+ * $Id: ui-extra.h,v 1.6 2001/04/18 05:37:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,6 +29,8 @@ typedef struct _ui_data UIData;
 #include "enfle-plugins.h"
 #include "streamer.h"
 #include "loader.h"
+#include "saver.h"
+#include "effect.h"
 #include "archiver.h"
 #include "player-extra.h"
 #include "player.h"
@@ -44,6 +46,8 @@ struct _ui_data {
   VideoWindow *vw;
   Streamer *st;
   Loader *ld;
+  Saver *sv;
+  Effect *ef;
   Archiver *ar;
   Player *player;
   Archive *a;
