@@ -1,10 +1,11 @@
 ; enfle.rc
-; Last Modified: Tue Dec 19 00:25:11 2000.
-; $Id: enfle.rc,v 1.9 2000/12/18 17:01:49 sian Exp $
+; Last Modified: Thu Dec 28 08:13:14 2000.
+; $Id: enfle.rc,v 1.10 2000/12/27 23:26:44 sian Exp $
 
 enfle {
   plugins {
-    dir = ../plugins
+    ; to use in build tree, override default path
+    ;dir = ../plugins
     ui {
       default = Normal
       normal {
@@ -19,10 +20,15 @@ enfle {
       caption_font = a14
     }
     audio {
-      default = oss
+      default = OSS
       oss/device_path = /dev/dsp
     }
     spi/disabled = yes
-    player/MPEG_lib/disabled = yes
+    ; video only stream may be played by mpeg_lib.
+    ; in this case, if you'd like to use libmpeg3 instead of mpeg_lib,
+    ; uncomment this.
+    ; system stream(including video and audio) will be played by libmpeg3.
+    ; mpeg_lib won't play all such streams.
+    ;player/MPEG_lib/disabled = yes
   }
 }
