@@ -1,3 +1,32 @@
+2001-09-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* NEWS: Updated NEWS.
+
+	* lib/enfle/archive.[ch], plugins/ui/normal/normal.c: Iteration
+	direction is disregarded only in deletion.
+
+	* plugins/loader/jpeg/jpeg.c, plugins/loader/png/png.c: Deleted
+	useless debug_message().
+
+	* configure.in: Check bzlibVersion() instead of bzopen().
+
+	* plugins/player/ungif/ungif.c: Expose librarys' name and
+	version. Parse application extension. Obey Netscape's loop count
+	extension.
+
+	* plugins/loader/jpeg/jpeg.c, plugins/loader/png/png.c,
+	plugins/loader/ungif/ungif.c, plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/mng/mng.c, plugins/player/mpglib/mpglib.c,
+	plugins/player/opendivx/opendivx.c, plugins/streamer/bz2/bz2.[ch],
+	plugins/streamer/gz/gz.c: Expose librarys' name and version.
+
+	* lib/enfle/streamer-plugin.h: Added DEFINE and DECLARE macros.
+
+2001-09-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/jpeg/jpeg.c, lib/enfle/identify.c: Deleted a
+	debug_message().
+
 2001-08-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* libconfig.c: Accept sign for integers.
