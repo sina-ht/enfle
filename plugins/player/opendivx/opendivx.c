@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 14:19:38 2001.
- * $Id: opendivx.c,v 1.14 2001/09/20 05:31:15 sian Exp $
+ * Last Modified: Sun Sep 23 16:08:43 2001.
+ * $Id: opendivx.c,v 1.15 2001/09/23 17:13:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -400,6 +400,7 @@ play_video(void *arg)
 	} else {
 	  if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
 	    info->eof = 1;
+	    pthread_mutex_unlock(&info->update_mutex);
 	    break;
 	  }
 	  info->dec_frame.length = ap->size;
@@ -520,8 +521,6 @@ play_main(Movie *m, VideoWindow *vw)
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio) {
     audio_time = get_audio_time(m, info->ad);
-    //debug_message("v: %d a=%d (%d frame)\n", (int)timer_get_milli(m->timer), audio_time, m->current_frame);
-
     /* if too fast to display, wait before render */
     while (video_time > audio_time)
       audio_time = get_audio_time(m, info->ad);
@@ -529,7 +528,7 @@ play_main(Movie *m, VideoWindow *vw)
     /* skip if delayed */
     i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
-      debug_message("dropped %d frames\n", i);
+      debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
       info->drop = i;
     }
   } else {
@@ -539,7 +538,7 @@ play_main(Movie *m, VideoWindow *vw)
     /* skip if delayed */
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
-      debug_message("dropped %d frames\n", i);
+      debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
       info->drop = i;
     }
   }
