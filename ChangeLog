@@ -1,5 +1,17 @@
 2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/player/Makefile.am: LibMPEG2 is now not experimental.
+
+	* NEWS: Updated NEWS.
+
+	* README, README.e: Updated documentations.
+
+	* configure.in: LibMPEG2 is now not experimental.
+
+	* src/enfle.rc: More configuration samples.
+
+2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
+
 	* plugins/player/libmpeg2/libmpeg2.c: Change timing issues. play()
 	now initialize codecs.
 
