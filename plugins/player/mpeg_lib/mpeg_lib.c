@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 11 17:28:58 2000.
- * $Id: mpeg_lib.c,v 1.1 2000/10/12 03:45:29 sian Exp $
+ * Last Modified: Thu Oct 12 21:09:03 2000.
+ * $Id: mpeg_lib.c,v 1.2 2000/10/12 15:43:47 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -37,14 +37,15 @@ typedef struct _mpeg_lib_info {
 } MPEG_lib_info;
 
 static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(Movie *, Stream *);
+static PlayerStatus load(UIData *, Movie *, Stream *);
 
 static PlayerStatus pause_movie(Movie *);
+static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "MPEG_lib",
-  description: "MPEG_lib Player plugin version 0.1",
+  description: "MPEG_lib Player plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -79,8 +80,16 @@ mpeg_lib_input_func(void *d, unsigned char *p, int s)
   return stream_read(st, p, s);
 }
 
+static void
+mpeg_lib_rewind_func(void *d)
+{
+  Stream *st = (Stream *)d;
+
+  stream_rewind(st);
+}
+
 static PlayerStatus
-load_movie(Movie *m, Stream *st)
+load_movie(UIData *uidata, Movie *m, Stream *st)
 {
   MPEG_lib_info *info;
 
@@ -102,12 +111,12 @@ load_movie(Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
-  m->initialize_screen(m, m->width, m->height);
-
-  m->st = st;
   m->movie_private = (void *)info;
+  m->st = st;
   m->status = _PLAY;
   m->nthframe = 0;
+
+  m->initialize_screen(uidata, m, m->width, m->height);
 
   return PLAY_OK;
 }
@@ -144,7 +153,7 @@ play(Movie *m)
 }
 
 static PlayerStatus
-play_main(Movie *m)
+play_main(Movie *m, UIData *uidata)
 {
   int more_frame;
   MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
@@ -180,12 +189,12 @@ play_main(Movie *m)
 
   m->nthframe++;
 
-  m->render_frame(m, p);
+  m->render_frame(uidata, m, p);
 
   image_destroy(p);
 
   if (!more_frame)
-    m->status = _STOP;
+    stop_movie(m);
 
   return PLAY_OK;
 
@@ -217,6 +226,8 @@ pause_movie(Movie *m)
 static PlayerStatus
 stop_movie(Movie *m)
 {
+  MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
+
   switch (m->status) {
   case _PLAY:
     m->status = _STOP;
@@ -231,6 +242,9 @@ stop_movie(Movie *m)
   }
 
   /* stop */
+  RewindMPEGStream(m->st, &info->img, mpeg_lib_rewind_func);
+  m->nthframe = 0;
+
   return PLAY_ERROR;
 }
 
@@ -271,7 +285,7 @@ identify(Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load(Movie *m, Stream *st)
+load(UIData *uidata, Movie *m, Stream *st)
 {
   debug_message("mpeg_lib player: load() called\n");
 
@@ -292,5 +306,5 @@ load(Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(m, st);
+  return load_movie(uidata, m, st);
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 11 16:40:30 2000.
- * $Id: ungif.c,v 1.5 2000/10/12 03:46:24 sian Exp $
+ * Last Modified: Thu Oct 12 20:47:33 2000.
+ * $Id: ungif.c,v 1.6 2000/10/12 15:43:47 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -35,6 +35,7 @@
 
 #include "common.h"
 
+#include "stream.h"
 #include "player-plugin.h"
 
 typedef struct _ungif_info {
@@ -50,9 +51,10 @@ typedef enum {
 } Disposal;
 
 static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(Movie *, Stream *);
+static PlayerStatus load(UIData *, Movie *, Stream *);
 
 static PlayerStatus pause_movie(Movie *);
+static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
@@ -93,7 +95,7 @@ ungif_input_func(GifFileType *GifFile, GifByteType *p, int s)
 }
 
 static PlayerStatus
-load_movie(Movie *m, Stream *st)
+load_movie(UIData *uidata, Movie *m, Stream *st)
 {
   int i, size;
   UNGIF_info *info;
@@ -125,12 +127,12 @@ load_movie(Movie *m, Stream *st)
     info->buffer[i] = info->buffer[0] + i * size;
   memset(info->buffer[0], info->gf->SBackGroundColor, m->height * size);
 
-  m->initialize_screen(m, m->width, m->height);
-
-  m->st = st;
   m->movie_private = (void *)info;
+  m->st = st;
   m->status = _PLAY;
   m->nthframe = 0;
+
+  m->initialize_screen(uidata, m, m->width, m->height);
 
   return PLAY_OK;
 }
@@ -167,7 +169,7 @@ play(Movie *m)
 }
 
 static PlayerStatus
-play_main(Movie *m)
+play_main(Movie *m, UIData *uidata)
 {
   int i, j, extcode, image_loaded = 0;
   int if_transparent = 0, transparent_index = 0, delay = 0, image_disposal = 0;
@@ -350,14 +352,14 @@ play_main(Movie *m)
       break;
     case TERMINATE_RECORD_TYPE:
       image_destroy(p);
-      m->status = _STOP;
+      stop_movie(m);
       return PLAY_OK;
     default:
       break;
     }
   } while (!image_loaded);
 
-  m->render_frame(m, p);
+  m->render_frame(uidata, m, p);
   if (delay)
     m->pause_usec(delay * 10000);
 
@@ -396,6 +398,8 @@ pause_movie(Movie *m)
 static PlayerStatus
 stop_movie(Movie *m)
 {
+  UNGIF_info *info = (UNGIF_info *)m->movie_private;
+
   switch (m->status) {
   case _PLAY:
     m->status = _STOP;
@@ -410,7 +414,20 @@ stop_movie(Movie *m)
   }
 
   /* stop */
-  return PLAY_ERROR;
+  if (DGifCloseFile(info->gf) == GIF_ERROR) {
+    PrintGifError();
+    return PLAY_ERROR;
+  }
+
+  stream_rewind(m->st);
+  if ((info->gf = DGifOpen(m->st, ungif_input_func)) == NULL) {
+    PrintGifError();
+    return PLAY_ERROR;
+  }
+
+  m->nthframe = 0;
+
+  return PLAY_OK;
 }
 
 static void
@@ -457,7 +474,7 @@ identify(Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load(Movie *m, Stream *st)
+load(UIData *uidata, Movie *m, Stream *st)
 {
   debug_message("ungif player: load() called\n");
 
@@ -478,5 +495,5 @@ load(Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(m, st);
+  return load_movie(uidata, m, st);
 }

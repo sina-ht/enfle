@@ -1,13 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Sep 22 13:26:08 2000.
-# $Id: Makefile.am,v 1.1 2000/10/08 17:46:42 sian Exp $
+# Last Modified: Thu Oct 12 19:13:29 2000.
+# $Id: Makefile.am,v 1.2 2000/10/12 15:43:47 sian Exp $
 
 if HAVE_UNGIF
 lib_LTLIBRARIES = player_ungif.la
 endif
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib/enfle
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib/enfle -I$(top_srcdir)/lib/utils
 
 player_ungif_la_LDFLAGS = -module
 player_ungif_la_SOURCES = ungif.c
