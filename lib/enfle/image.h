@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 21:06:22 2000.
- * $Id: image.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  9 01:35:54 2000.
+ * $Id: image.h,v 1.2 2000/10/08 17:22:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,7 +45,6 @@ typedef enum {
   _BILINEAR
 } ImageInterpolateMethod;
 
-#if 0
 typedef struct _image_color {
   unsigned char red;
   unsigned char green;
@@ -53,7 +52,6 @@ typedef struct _image_color {
   unsigned char gray;
   unsigned char index;
 } ImageColor;
-#endif
 
 typedef struct _image Image;
 struct _image {
@@ -66,6 +64,8 @@ struct _image {
   unsigned char *comment;
   char *format;
   ImageType type;
+  ImageColor background_color;
+  ImageColor transparent_color;
   int alpha_enabled;
   int depth;
   int bits_per_pixel;
@@ -73,7 +73,6 @@ struct _image {
   int ncolors;
   unsigned char colormap[256][3];
   unsigned long red_mask, green_mask, blue_mask;
-  int delay_usec;
   Image *next;
 
   Image *(*dup)(Image *);
