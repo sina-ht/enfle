@@ -1,5 +1,11 @@
 2001-01-23  Hiroshi Takekawa  <sian@fennel.org>
 
+	* configure.in: Deleted -Winline.
+
+	* plugins/player/opendivx/yuv2rgb.c: Cleanup.
+
+2001-01-23  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Added OpenDivX.
 
 	* lib/Makefile.am: Added OpenDivX decore.
