@@ -1,3 +1,20 @@
+2001-03-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e: Updated documentations.
+
+	* plugins/player/avifile/avifile.cpp: Fixed the bug which causes
+	segmentation fault in playing a video-only stream.
+
+2001-03-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Uncommented AC_PROG_GCC_TRADITIONAL. Version up.
+
+	* plugins/player/avifile/avifile.cpp: Fixed the bug which causes
+	'already unloaded' abortion.
+
+	* lib/enfle/image_magnify.c: Implemented fixed-point bilinear
+	interpolation.
+
 2001-03-16  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Fixed more bugs.
