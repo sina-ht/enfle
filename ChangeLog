@@ -1,3 +1,28 @@
+2004-02-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: libmad on-tree-build fix.  Version up.
+
+	* plugins/ui/normal/normal.c: Fixed MAIN_LOOP_NEXT5 and
+	MAIN_LOOP_PREV5 bug.
+
+	* plugins/demultiplexer/mpeg/mpeg.c: Suppress annoying messages.
+
+	* lib/mad/Makefile.am: On-tree-build fix.
+
+	* lib/enfle/identify.c: Replaced m->format with m->player_name.
+
+2004-02-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* compat.h: No need libcompat.
+
+	* acinclude.m4: Fixed automake-1.8's underquote warnings.
+
+	* configure.in: No need libcompat.  Removed deprecated codes.
+
+	* README, README.e: More documentation.
+
+	* Makefile.am, lib/utils/Makefile.am: No need libcompat.
+
 2004-02-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added raw.
