@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 23 15:35:52 2001.
- * $Id: avifile.cpp,v 1.17 2001/06/24 15:42:57 sian Exp $
+ * Last Modified: Mon Sep  3 14:54:28 2001.
+ * $Id: avifile.cpp,v 1.18 2001/09/03 06:48:15 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -33,6 +33,8 @@
 
 #include <avifile/avifile.h>
 #include <avifile/version.h>
+/* in avifile/aviplay.h */
+double GetAvifileVersion();
 
 #include "common.h"
 
@@ -49,6 +51,7 @@
 extern "C" {
 #include "enfle/memory.h"
 #include "enfle/player-plugin.h"
+#include "utils/libstring.h"
 }
 
 typedef enum _decoding_state {
@@ -88,10 +91,12 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
+#define PLAYER_AVIFILE_PLUGIN_DESCRIPTION "AviFile Player plugin version 0.5"
+
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "AviFile",
-  description: (const unsigned char *)"AviFile Player plugin version 0.5",
+  description: NULL,
   author: (const unsigned char *)"Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -102,10 +107,17 @@ void *
 plugin_entry(void)
 {
   PlayerPlugin *pp;
+  String *s;
 
   if ((pp = (PlayerPlugin *)calloc(1, sizeof(PlayerPlugin))) == NULL)
     return NULL;
   memcpy(pp, &plugin, sizeof(PlayerPlugin));
+  s = string_create();
+  string_set(s, (const unsigned char *)PLAYER_AVIFILE_PLUGIN_DESCRIPTION);
+  /* The version string is fetched dynamically, not statically compiled-in. */
+  string_catf(s, (const unsigned char *)" with avifile %g", GetAvifileVersion());
+  pp->description = (const unsigned char *)strdup((const char *)string_get(s));
+  string_destroy(s);
 
   return (void *)pp;
 }
@@ -113,9 +125,15 @@ plugin_entry(void)
 void
 plugin_exit(void *p)
 {
-  free(p);
+  PlayerPlugin *pp = (PlayerPlugin *)p;
+
+  if (pp->description)
+    free((unsigned char *)pp->description);
+  free(pp);
 }
 }
+
+#undef PLAYER_AVIFILE_PLUGIN_DESCRIPTION
 
 /* for internal use */
 
