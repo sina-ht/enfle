@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  6 01:14:09 2002.
- * $Id: normal.c,v 1.69 2002/10/05 17:18:43 sian Exp $
+ * Last Modified: Thu Oct 17 22:26:04 2002.
+ * $Id: normal.c,v 1.70 2002/11/06 14:12:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -415,7 +415,7 @@ static UIAction built_in_actions[] = {
   { "prev", main_loop_prev, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_5 },
   { "prev_archive", main_loop_prevarchive, NULL, ENFLE_KEY_b, ENFLE_MOD_Shift, ENFLE_Button_None },
   { "delete_file", main_loop_delete_file, NULL, ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "delete_from_list", main_loop_delete_from_list, NULL, ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "delete_from_list", main_loop_delete_from_list, NULL, ENFLE_KEY_d, ENFLE_MOD_None, ENFLE_Button_None },
   { "toggle_interpolate", main_loop_toggle_interpolate, NULL, ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None },
   { "save_png", main_loop_save_png, NULL, ENFLE_KEY_s, ENFLE_MOD_Ctrl, ENFLE_Button_None },
   { "save", main_loop_save, NULL, ENFLE_KEY_s, ENFLE_MOD_Alt, ENFLE_Button_None },
@@ -714,8 +714,13 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       case MAIN_LOOP_DELETE_FILE:
 	//debug_message("MAIN_LOOP_DELETE_FILE\n");
 	if (strcmp(a->format, "NORMAL") == 0) {
-	  unlink(s->path);
-	  show_message("DELETED: %s\n", s->path);
+	  char *fullpath = archive_getpathname(a, path);
+
+	  if (fullpath) {
+	    unlink(fullpath);
+	    show_message("DELETED: %s\n", fullpath);
+	    free(fullpath);
+	  }
 	}
 	path = archive_delete(a, 1);
 	ret = MAIN_LOOP_NEXT;
