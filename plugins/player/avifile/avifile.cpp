@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 21:42:28 2001.
- * $Id: avifile.cpp,v 1.16 2001/06/22 16:54:11 sian Exp $
+ * Last Modified: Sat Jun 23 15:35:52 2001.
+ * $Id: avifile.cpp,v 1.17 2001/06/24 15:42:57 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -560,7 +560,10 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
+  pthread_mutex_lock(&info->decoding_state_mutex);
+  info->ds = _DECODING;
   pthread_cond_signal(&info->decoding_cond);
+  pthread_mutex_unlock(&info->decoding_state_mutex);
   if (info->video_thread) {
     pthread_join(info->video_thread, &v);
     info->video_thread = 0;
