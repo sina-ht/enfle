@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:09:41 2001.
- * $Id: jpeg.c,v 1.13 2001/09/02 05:47:04 sian Exp $
+ * Last Modified: Sun Sep  2 15:05:38 2001.
+ * $Id: jpeg.c,v 1.14 2001/09/02 06:19:24 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -250,7 +250,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   if ((cinfo = calloc(1, sizeof(struct jpeg_decompress_struct))) == NULL)
     return LOAD_ERROR;
 
-  debug_message("jpeg loader: load() called\n");
+  //debug_message("jpeg loader: load() called\n");
 
 #ifdef IDENTIFY_BEFORE_LOAD
   {
@@ -316,7 +316,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     goto error_destroy_free;
   }
 
-  debug_message("Ok.\n");
+  //debug_message("Ok.\n");
 
   /* loading... */
   while (cinfo->output_scanline < p->height) {

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:11:54 2001.
- * $Id: png.c,v 1.7 2001/09/02 05:47:04 sian Exp $
+ * Last Modified: Sun Sep  2 15:05:53 2001.
+ * $Id: png.c,v 1.8 2001/09/02 06:19:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -151,7 +151,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   png_bytep trans;
 #endif
 
-  debug_message("png loader: load() called\n");
+  //debug_message("png loader: load() called\n");
 
 #ifdef IDENTIFY_BEFORE_LOAD
   {
