@@ -1,3 +1,14 @@
+2000-12-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11ximage.c: Changed implementation to use ximage's
+	bytes_per_line, because shm-ximage doesn't accept changes of its
+	parameters after creation.
+
+	* plugins/player/ungif/ungif.c, plugins/ui/normal/normal.c,
+	lib/enfle/image.c, plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mng/mng.c, plugins/player/mpeg_lib/mpeg_lib.c: More
+	speed improvements.
+
 2000-12-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.c, lib/enfle/image.[ch], lib/enfle/movie.h,
