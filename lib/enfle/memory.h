@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 13 19:55:14 2000.
- * $Id: memory.h,v 1.2 2000/12/14 16:03:47 sian Exp $
+ * Last Modified: Thu Jan  4 06:56:47 2001.
+ * $Id: memory.h,v 1.3 2001/01/06 23:53:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,6 +45,7 @@ struct _memory {
 
   MemoryType (*request_type)(Memory *, MemoryType);
   unsigned char *(*allocate)(Memory *, unsigned int);
+  int (*set)(Memory *, void *, MemoryType, unsigned int, unsigned int);
   int (*free_both)(Memory *);
   Memory *(*duplicate)(Memory *, int);
   void (*destroy)(Memory *);
@@ -52,6 +53,7 @@ struct _memory {
 
 #define memory_request_type(p, t) (p)->request_type((p), (t))
 #define memory_alloc(p, s) (p)->allocate((p), (s))
+#define memory_set(p, pt, t, s, u) (p)->set((p), (pt), (t), (s), (u))
 #define memory_free(p) (p)->free_both((p))
 #define memory_dup(p) (p)->duplicate((p), 0)
 #define memory_dup_as_shm(p) (p)->duplicate((p), 1)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 13 01:58:33 2000.
- * $Id: memory.c,v 1.3 2000/12/12 17:03:27 sian Exp $
+ * Last Modified: Thu Jan  4 06:56:57 2001.
+ * $Id: memory.c,v 1.4 2001/01/06 23:53:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@ static unsigned char *alloc_shm(Memory *, unsigned int);
 
 static MemoryType request_type(Memory *, MemoryType);
 static unsigned char *allocate(Memory *, unsigned int);
+static int set(Memory *, void *, MemoryType, unsigned int, unsigned int);
 static int free_both(Memory *);
 static Memory *duplicate(Memory *, int);
 static void destroy(Memory *);
@@ -41,6 +42,7 @@ static void destroy(Memory *);
 static Memory template = {
   request_type: request_type,
   allocate: allocate,
+  set: set,
   free_both: free_both,
   duplicate: duplicate,
   destroy: destroy
@@ -157,6 +159,17 @@ allocate(Memory *mem, unsigned int size)
     break;
   }
   return NULL;
+}
+
+static int
+set(Memory *mem, void *ptr, MemoryType type, unsigned int size, unsigned int used)
+{
+  mem->ptr = ptr;
+  mem->type = type;
+  mem->size = size;
+  mem->used = used;
+
+  return 1;
 }
 
 static int
