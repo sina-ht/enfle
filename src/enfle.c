@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 29 22:14:20 2004.
- * $Id: enfle.c,v 1.64 2004/03/31 14:42:14 sian Exp $
+ * Last Modified: Wed Apr  7 23:52:47 2004.
+ * $Id: enfle.c,v 1.65 2004/04/12 04:15:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,6 +48,10 @@
 #include "enfle/player.h"
 #ifdef USE_SPI
 #  include "enfle/spi.h"
+#endif
+
+#ifdef USE_DMO
+#  include "enfle/dmo.h"
 #endif
 
 #include "getopt-support.h"
@@ -95,6 +99,9 @@ usage(void)
 #endif
 #ifdef USE_SPI
     "spi "
+#endif
+#ifdef USE_DMO
+    "dmo "
 #endif
 #ifdef __INTEL_COMPILER
     "icc "
@@ -229,6 +236,49 @@ scan_and_load_spi_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
       if (!strcasecmp(ext, ".spi")) {
 	if ((name = spi_load(eps, fullpath, &type)) == NULL) {
 	  warning("spi_load %s failed.\n", fullpath);
+	} else {
+	  nplugins++;
+	  nplugins -= check_and_unload(eps, c, type, name);
+	}
+      }
+    }
+    free(fullpath);
+    path = archive_iteration_next(a);
+  }
+  archive_destroy(a);
+
+  return nplugins;
+}
+#endif
+
+#if defined(USE_DMO)
+static int
+scan_and_load_dmo_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
+{
+  Archive *a;
+  PluginType type;
+  char *fullpath, *path, *ext = NULL, *base_name, *name;
+  int nplugins = 0;
+  int tmp, result;
+
+  tmp = config_get_boolean(c, "/enfle/plugins/dmo/disabled", &result);
+  if (result > 0 && tmp)
+    return 0;
+  else if (result < 0) {
+    warning("Invalid string in dmo/disable.  dmo disabled.\n");
+    return 0;
+  }
+
+  a = archive_create(ARCHIVE_ROOT);
+  archive_read_directory(a, plugin_path, 0);
+  path = archive_iteration_start(a);
+  while (path) {
+    base_name = misc_basename(path);
+    fullpath = archive_getpathname(a, path);
+    if ((ext = strrchr(path, '.'))) {
+      if (!strcasecmp(ext, ".dll")) {
+	if ((name = dmo_load(eps, fullpath, &type)) == NULL) {
+	  warning("dmo_load %s failed.\n", fullpath);
 	} else {
 	  nplugins++;
 	  nplugins -= check_and_unload(eps, c, type, name);
@@ -486,6 +536,16 @@ main(int argc, char **argv)
     if ((spi_plugin_path = config_get_str(c, "/enfle/plugins/spi/dir")) != NULL) {
       if (!scan_and_load_spi_plugins(eps, c, spi_plugin_path)) {
 	show_message("spi requested, but no spi plugins loaded from %s.\n", spi_plugin_path);
+      }
+    }
+  }
+#endif
+#if defined(USE_DMO)
+  {
+    char *dmo_plugin_path;
+    if ((dmo_plugin_path = config_get_str(c, "/enfle/plugins/dmo/dir")) != NULL) {
+      if (!scan_and_load_dmo_plugins(eps, c, dmo_plugin_path)) {
+	show_message("dmo requested, but no dmo plugins loaded from %s.\n", dmo_plugin_path);
       }
     }
   }
