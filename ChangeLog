@@ -1,3 +1,31 @@
+2002-08-08  Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/utils/dlist.[ch], lib/utils/hash.[ch]: Discarded OO-style
+	coding.
+
+	* plugins/loader/gif/gifimage.c, plugins/loader/gif/giflib.c:
+	Remove warnings.
+
+	* plugins/ui/normal/normal.c: Fixed typo.
+
+2002-08-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archive.c: Clean up.
+
+	* lib/enfle/archiver.c, lib/enfle/loader.c, lib/enfle/player.c,
+	lib/enfle/streamer.c: Use pluginlist_iter.
+
+	* lib/utils/pluginlist.c: Adapted to redefined pluginlist_iter.
+
+	* lib/utils/pluginlist.h: Deleted pluginlist_list, which is
+	replaced with pluginlist_get_names.  Redefine pluginlist_iter.
+
+	* lib/utils/hash.[ch]: Move private #define's.  Redefine hash_iter
+	to hide dlist.
+	
+	* lib/utils/dlist.[ch]: Make dlist_guard() and dlist_dlist()
+	private.
+
 2002-08-04  Hiroshi Takekawa <sian@fennel.org>
 
 	* lib/enfle/Makefile.am, plugins/player/avifile/Makefile.am: Added
