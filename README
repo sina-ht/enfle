@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Wed Jan 24 06:52:57 2001.
+     Last Modified: Thu Jan 25 13:08:46 2001.
 
  This file is part of Enfle.
 
@@ -25,9 +25,22 @@
  ATTENTION: GPL version 2 only. You cannot apply any later
  version. This situation may change.
 
- This archive contains libdivxdecore from OpenDivX. OpenDivX player
+ This software is based in part on the work of the Independent JPEG Group
+
+ The Graphics Interchange Format(c) is
+ the Copyright property of CompuServe Incorporated.
+ GIF(sm) is a Service Mark property of CompuServe Incorporated.
+
+ This product includes software developed by or derived from software
+ developed by Project Mayo.
+
+ In effect, only libdivxdecore is derived from software developed by
+ Project Mayo. OpenDivX plugin uses the library, but all other portions
+ of this software does not.
+
+ This archive contains libdivxdecore from Project Mayo. OpenDivX player
  plugin uses libdivxdecore and is released as a "Larger Work" under
- that license. Consistant with that license, OpenDivX plugin is
+ that license. Consistent with that license, OpenDivX plugin is
  released under the GNU General Public License. The OpenDivX license
  can be found at OpenDivX-LICENSE in source tree, or
  http://www.projectmayo.com/opendivx/docs.php.
@@ -36,12 +49,6 @@
 
 
 Sorry Japanese only. Are there any volunteers for translation?
-
-This software is based in part on the work of the Independent JPEG Group
-
-The Graphics Interchange Format(c) is
-the Copyright property of CompuServe Incorporated.
-GIF(sm) is a Service Mark property of CompuServe Incorporated.
 
 
 1.はじめに

@@ -3,7 +3,9 @@ Hash: SHA1
 
 DivX Open License 
 ================= 
-Version 1.01
+Version 2.0
+
+This version of the DivX Open License supercedes any prior versions.
 
 Copyright (C) 2001 Project Mayo. Everyone is permitted to copy and
 distribute verbatim copies of this license document, but changing it
@@ -27,31 +29,18 @@ object file or linked library.  "Encoded Content" shall mean any
 multimedia content encoded as output of the Codec, even if that Codec
 is integrated into a Larger Work.
 
-Permission is granted to you to use the Codec for any personal,
-non-commercial purpose, and to copy it, alter it and redistribute it,
-subject to the following:
+Permission is granted to you to use the Codec for any purpose, and to
+copy it, alter it and redistribute it, subject to the following:
 
-1. You may use the Codec (and any Larger Work created by you) to
-create Encoded Content, and may use, copy, distribute, display and
-transmit that Encoded Content, provided that Encoded Content may not
-be used for direct commercialization, without written permission of
-Project Mayo.  For the purposes of this License, direct
-commercialization includes uses where the Encoded Content is a
-primary or substantial product, regardless of the means of revenue
-generation (including, but not limited to direct pay, subscription,
-and advertising subsidization).  Direct commercialization does not
-include personal or promotional use or uses where the Encoded Content
-is a peripheral element of a larger product.
-
-2. You may modify your copy or copies of the Codec or any portion of
+1. You may modify your copy or copies of the Codec or any portion of
 it, provided that you cause the modified files to carry prominent
 notices stating that you changed the files and the date of any such
 change.
 
-3. You may copy, distribute, display and transmit the Codec's source
+2. You may copy, distribute, display and transmit the Codec's source
 code, in any medium, subject to the following:
 
-a. You conspicuously and appropriately publish on each copy an
+a. You must conspicuously and appropriately publish on each copy an
 appropriate copyright notice and disclaimer of warranty; keep intact
 all the notices that refer to this License and to the absence of any
 warranty; and give any other recipients of the Codec a copy of this
@@ -76,33 +65,40 @@ the Codec subject to these terms and conditions.  You may not impose
 any further restrictions on the recipients' exercise of the rights
 granted herein.
 
-4. You may copy and distribute the Codec in object code or executable
-form under the terms of Sections 3, provided that you also accompany
-it with the complete machine-readable source code, or information
-about where the source code can be obtained.
+3. You may copy and distribute the Codec in object code or executable
+form under the terms of Section 2, provided that you also accompany
+it with the complete machine-readable source code, or make such
+source-code freely and publicly available.
 
-5. You may incorporate the Codec into a Larger Work and distribute
+4. You may incorporate the Codec into a Larger Work and distribute
 that Larger Work under terms of your choice, provided that:
 
 a. The terms permit modification of the work for the customer's own
 use and reverse engineering for debugging such modifications.
 
-b. The terms are consistent with the limitations on use described in
-Section 1.
-
-c. You include an acknowledgement in a location viewable to users of
+b. You include an acknowledgement in a location viewable to users of
 a distribution of a Larger Work as follows:  "This product includes
 software developed by or derived from software developed by Project
 Mayo."
 
-6. Any Codec or Larger Works created by you must conform to the
-MPEG-4 Video Standard.
+5. Any Codec or Larger Works created by you must conform to the
+MPEG-4 Video Standard, however modules of the Codec that do not
+derive from MoMuSys can be used and incorporated into a non-MPEG-4
+conforming work that otherwise complies with this license.
 
-7. You must receive prior express written permission from Project
-Mayo before you use the names "DivX;-)" or "DivX" (or any names
-incorporating those names) or the file extensions ".divx" or ".div"
-to promote or endorse products derived from the Codec, including, but
-not limited to Larger Works.
+6. Except as provided in section 7 below, you must receive prior
+express written permission from Project Mayo before you use the names
+"DivX;-)" or "DivX" (or any names incorporating those names) or the
+file extensions ".divx" or ".div" to promote or endorse any products
+derived from the Codec, including, but not limited to Larger Works.
+
+7. You must prominently display the "Encoded in DivX" logo on the
+package of any Encoded Content (be that package physical or digital)
+in a manner immediately visible to viewers when the means for such
+display are reasonably available.  You must also include the "Encoded
+in DivX" video logo at the beginning of any Encoded Content and use
+the ".divx" file extension in any Encoded Content when the means for
+such inclusion are reasonably available.
 
 8. The Codec contains copyrighted materials that are proprietary to
 Project Mayo, and no rights are granted to you except as expressly
@@ -131,7 +127,7 @@ POSSIBILITY OF SUCH DAMAGE.
 -----BEGIN PGP SIGNATURE-----
 Version: PGPfreeware 6.5.8 for non-commercial use <http://www.pgp.com>
 
-iQA/AwUBOmyQBrXDfJUTzjUTEQIdbACbBMJ/Nf5EPOopYHOPfXrXjTOnNfAAoLuG
-8wkE81EwFRWAnpNHT1DUN/x2
-=KTMR
+iQA/AwUBOm9RCrXDfJUTzjUTEQIB/ACgknWT8A0WIq2/B8ObW9y+D8+WP98AoMLq
+WR2K/wPBov1PQZnxnEaBq9PA
+=2hHO
 -----END PGP SIGNATURE-----
