@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  1 19:31:40 2004.
- * $Id: libmpeg2.c,v 1.8 2004/05/15 04:10:16 sian Exp $
+ * Last Modified: Wed Jun 16 01:13:33 2004.
+ * $Id: libmpeg2.c,v 1.9 2004/06/15 16:15:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@ DECLARE_VIDEODECODER_PLUGIN_METHODS;
 static VideoDecoderPlugin plugin = {
   .type = ENFLE_PLUGIN_VIDEODECODER,
   .name = "LibMPEG2",
-  .description = "libmpeg2 Video Decoder plugin version 0.1 with integrated libmpeg2(mpeg2dec-0.4.0)",
+  .description = "libmpeg2 Video Decoder plugin version 0.2 with integrated libmpeg2(mpeg2dec-0.4.0)",
   .author = "Hiroshi Takekawa",
 
   .query = query,
@@ -118,17 +118,15 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
       memcpy(memory_ptr(image_rendered_image(p)) + seq->width * seq->height + seq->chroma_width * seq->chroma_height, mpeg2dec_info->display_fbuf->buf[2], seq->chroma_width * seq->chroma_height);
       vdec->to_render++;
       m->current_frame++;
-#if 1
-      vdec->ts_base = 1000;
-      vdec->pts = m->current_frame * 1000 / m->framerate;
-#else
+      //vdec->ts_base = 1000;
+      //vdec->pts = m->current_frame * 1000 / m->framerate;
       {
 	const mpeg2_picture_t *mpeg2_pic = mpeg2dec_info->display_picture;
 	vdec->ts_base = 0;
 	if (mpeg2_pic) {
 	  vdec->ts_base = dp->ts_base;
 	  vdec->pts = mpeg2_pic->tag;
-#if defined(DEBUG)
+#if defined(DEBUG) && 0
 	  debug_message_fnc("pts %d, dts %d, type ", mpeg2_pic->tag, mpeg2_pic->tag2);
 	  switch (mpeg2_pic->flags & PIC_MASK_CODING_TYPE) {
 	  case 1: debug_message("I\n"); break;
@@ -140,7 +138,6 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 #endif
 	}
       }
-#endif
       while (m->status == _PLAY && vdec->to_render > 0)
 	pthread_cond_wait(&vdec->update_cond, &vdec->update_mutex);
       pthread_mutex_unlock(&vdec->update_mutex);
