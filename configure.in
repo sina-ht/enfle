@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Nov  5 02:27:49 2000.
-dnl $Id: configure.in,v 1.15 2000/11/04 17:34:44 sian Exp $
+dnl Last Modified: Sat Nov 11 05:35:03 2000.
+dnl $Id: configure.in,v 1.16 2000/11/14 00:53:52 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -195,7 +195,7 @@ dnl with dmalloc
 AM_WITH_DMALLOC
 
 dnl more CFLAGS
-CFLAGS="$CFLAGS -Werror"
+CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Winline -Wwrite-strings"
 
 AC_OUTPUT(
  Makefile
