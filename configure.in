@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000-03 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed Feb  5 23:58:04 2003.
-dnl $Id: configure.in,v 1.121 2003/02/05 15:23:35 sian Exp $
+dnl Last Modified: Sun Nov 16 22:46:07 2003.
+dnl $Id: configure.in,v 1.122 2003/11/17 14:01:47 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20030205, sian@big.or.jp)
+AC_INIT(enfle, 20031116, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -169,18 +169,32 @@ fi
 AM_CONDITIONAL(HAVE_LIBMPEG3, test "$available_libmpeg3" = "yes")
 AC_SUBST(LIBADD_LIBMPEG3)
 
-available_opendivx=no
+dnl available_opendivx=no
+dnl if test "$available_pthread" = "yes"; then
+dnl   AC_CHECK_HEADER(decore.h, [
+dnl     AC_CHECK_LIB(divxdecore, decore, [
+dnl       available_opendivx=yes;
+dnl       LIBADD_DIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD";
+dnl     ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
+dnl fi
+dnl if test "$available_opendivx" != "yes"; then
+dnl   ENFLE_PLUGIN_DISABLE(player/opendivx)
+dnl fi
+dnl AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_opendivx" = "yes")
+dnl AC_SUBST(LIBADD_DIVXDECORE)
+
+available_divx=no
 if test "$available_pthread" = "yes"; then
   AC_CHECK_HEADER(decore.h, [
     AC_CHECK_LIB(divxdecore, decore, [
-      available_opendivx=yes;
+      available_divx=yes;
       LIBADD_DIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD";
     ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
 fi
-if test "$available_opendivx" != "yes"; then
-  ENFLE_PLUGIN_DISABLE(player/opendivx)
+if test "$available_divx" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(player/divx)
 fi
-AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_opendivx" = "yes")
+AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_divx" = "yes")
 AC_SUBST(LIBADD_DIVXDECORE)
 
 available_zlib=no
@@ -573,15 +587,16 @@ AM_WITH_DMALLOCTH
 
 dnl do not put this line at earlier position to avoid confusing configure script.
 if test "$CC" = "gcc"; then
-  CFLAGS_warn="-Wall -Wno-trigraphs"
+  CFLAGS_warn="-Wall -Wno-trigraphs -D_GNU_SOURCE=1"
   if test "`uname -s`" = "SunOS"; then
     dnl Supress insignificant warnings
     CFLAGS="$CFLAGS_warn -Wno-implicit-int -pipe $CFLAGS"
   else
-    test "$enable_debug" = "yes" && CFLAGS="-std=c9x -D_GNU_SOURCE=1 $CFLAGS"
+    test "$enable_debug" = "yes" && CFLAGS="-std=c9x $CFLAGS"
     CFLAGS="$CFLAGS_warn -pipe $CFLAGS"
   fi
-  test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+  test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Wwrite-strings"
+  CFLAGS="$CFLAGS \$(CFLAGS_POST)"
 fi
 
 dnl -std=c9x prefers __inline__
@@ -592,6 +607,7 @@ AC_CONFIG_FILES([
   compat/Makefile
   lib/Makefile
    lib/X11/Makefile
+   lib/avcodec/Makefile
    lib/demultiplexer/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
@@ -621,13 +637,14 @@ AC_CONFIG_FILES([
     plugins/archiver/tar/Makefile
     plugins/archiver/arc/Makefile
    plugins/player/Makefile
+    plugins/player/avcodec/Makefile
     plugins/player/avifile/Makefile
     plugins/player/libmpeg2/Makefile
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
     plugins/player/mpeg_lib/Makefile
     plugins/player/mpglib/Makefile
-    plugins/player/opendivx/Makefile
+    plugins/player/divx/Makefile
     plugins/player/ungif/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
