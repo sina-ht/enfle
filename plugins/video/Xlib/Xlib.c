@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 23 18:58:46 2003.
- * $Id: Xlib.c,v 1.54 2003/12/23 11:03:07 sian Exp $
+ * Last Modified: Fri Jan  2 22:11:02 2004.
+ * $Id: Xlib.c,v 1.55 2004/01/03 10:32:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -1341,7 +1341,8 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
   }
 
   image_data_copy(p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK);
-  x11ximage_convert(xwi->xi, p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK);
+  //x11ximage_convert(xwi->xi, p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK);
+  x11ximage_convert(xwi->xi, p, IMAGE_INDEX_WORK, IMAGE_INDEX_RENDERED);
 
   vw->render_width  = dw;
   vw->render_height = dh;
