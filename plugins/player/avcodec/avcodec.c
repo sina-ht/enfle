@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 30 14:46:54 2003.
- * $Id: avcodec.c,v 1.2 2003/11/30 05:51:23 sian Exp $
+ * Last Modified: Wed Dec 17 01:45:57 2003.
+ * $Id: avcodec.c,v 1.3 2003/12/16 16:53:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -83,7 +83,7 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
-#define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.1"
+#define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.2"
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
@@ -214,6 +214,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     case FCC_viv1:
       info->vcodec_id = CODEC_ID_H263P; info->vcodec_name = "h263p"; break;
     case FCC_DIVX: // invalid_asf
+    case FCC_divx: // invalid_asf
     case FCC_DX50: // invalid_asf
     case FCC_XVID: // invalid_asf
     case FCC_MP4S:
@@ -538,9 +539,9 @@ play_video(void *arg)
   Movie *m = arg;
   avcodec_info *info = (avcodec_info *)m->movie_private;
   void *data;
-  AVIPacket *ap;
+  AVIPacket *ap = NULL;
   FIFO_destructor destructor;
-  int offset, size, len, got_picture;
+  int offset, size, len = 0, got_picture;
 
   debug_message_fn("()\n");
 
@@ -550,19 +551,39 @@ play_video(void *arg)
       break;
     }
     
-    if (!fifo_get(info->vstream, &data, &destructor)) {
-      debug_message_fnc("fifo_get() failed.\n");
-      break;
-    }
-
-    if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
-      info->eof = 1;
-      break;
-    }
     /* XXX: decode */
     offset = 0;
-    size = ap->size;
-    while (m->status == _PLAY && size > 0) {
+    size = 0;
+    while (m->status == _PLAY) {
+      while (size <= 100000) { /* XXX: should read one frame... */
+	AVIPacket *ap2;
+
+	if (!fifo_get(info->vstream, &data, &destructor)) {
+	  debug_message_fnc("fifo_get() failed (EOF?).\n");
+	  break;
+	}
+	if ((ap2 = (AVIPacket *)data) != NULL && ap2->data != NULL) {
+	  void *tmp = malloc(size + ap2->size);
+	  if (tmp == NULL) {
+	    debug_message_fnc("malloc() failed.\n");
+	    break;
+	  }
+	  if (size > 0)
+	    memcpy(tmp, ap->data + offset, size);
+	  memcpy(tmp + size, ap2->data, ap2->size);
+	  free(ap2->data);
+	  ap2->data = tmp;
+	  ap2->size += size;
+	  if (ap)
+	    destructor(ap);
+	  offset = 0;
+	  size = ap2->size;
+	  ap = ap2;
+	}
+      }
+      if (size <= 0)
+	break;
+
       len = avcodec_decode_video(info->vcodec_ctx, info->vcodec_picture, &got_picture,
 				 ap->data + offset, size);
       if (len < 0) {
@@ -573,31 +594,32 @@ play_video(void *arg)
       size -= len;
       offset += len;
 
-      if (got_picture) {
-	m->current_frame++;
-	if (info->drop > 0) {
-	  info->drop--;
-	} else {
-	  pthread_mutex_lock(&info->update_mutex);
-	  if (info->vcodec_ctx->get_buffer != get_buffer) {
-	    int y;
+      if (!got_picture)
+	continue;
+      m->current_frame++;
+      if (info->drop > 0) {
+	info->drop--;
+      } else {
+	pthread_mutex_lock(&info->update_mutex);
+	if (info->vcodec_ctx->get_buffer != get_buffer) {
+	  int y;
 
-	    for (y = 0; y < m->height; y++) {
-	      memcpy(memory_ptr(image_rendered_image(info->p)) + m->width * y, info->vcodec_picture->data[0] + info->vcodec_picture->linesize[0] * y, m->width);
-	    }
-	    for (y = 0; y < m->height >> 1; y++) {
-	      memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height, info->vcodec_picture->data[1] + info->vcodec_picture->linesize[1] * y, m->width >> 1);
-	    }
-	    for (y = 0; y < m->height >> 1; y++) {
-	      memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), info->vcodec_picture->data[2] + info->vcodec_picture->linesize[2] * y, m->width >> 1);
-	    }
+	  for (y = 0; y < m->height; y++) {
+	    memcpy(memory_ptr(image_rendered_image(info->p)) + m->width * y, info->vcodec_picture->data[0] + info->vcodec_picture->linesize[0] * y, m->width);
 	  }
-	  pthread_cond_wait(&info->update_cond, &info->update_mutex);
-	  pthread_mutex_unlock(&info->update_mutex);
+	  for (y = 0; y < m->height >> 1; y++) {
+	    memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height, info->vcodec_picture->data[1] + info->vcodec_picture->linesize[1] * y, m->width >> 1);
+	  }
+	  for (y = 0; y < m->height >> 1; y++) {
+	    memcpy(memory_ptr(image_rendered_image(info->p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), info->vcodec_picture->data[2] + info->vcodec_picture->linesize[2] * y, m->width >> 1);
+	  }
 	}
+	pthread_cond_wait(&info->update_cond, &info->update_mutex);
+	pthread_mutex_unlock(&info->update_mutex);
       }
     }
-    destructor(ap);
+    if (ap)
+      destructor(ap);
   }
 
   debug_message_fn(" exiting.\n");
@@ -911,6 +933,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_U263:
     case FCC_viv1:
     case FCC_DIVX:
+    case FCC_divx:
     case FCC_DX50:
     case FCC_XVID:
     case FCC_MP4S:
@@ -969,7 +992,11 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_wham:
       break;
     default:
-	debug_message_fnc("Not identified as any avcodec supported format: %08X\n", aviinfo->vhandler);
+	debug_message_fnc("Video [%c%c%c%c](%08X) was not identified as any avcodec supported format.\n",        aviinfo->vhandler        & 0xff,
+	      (aviinfo->vhandler >>  8) & 0xff,
+	      (aviinfo->vhandler >> 16) & 0xff,
+	      (aviinfo->vhandler >> 24) & 0xff,
+			  aviinfo->vhandler);
 	demultiplexer_destroy(info->demux);
       free(info);
       m->movie_private = NULL;
