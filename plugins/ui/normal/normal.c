@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Mar 11 21:53:45 2001.
- * $Id: normal.c,v 1.27 2001/03/11 17:42:36 sian Exp $
+ * Last Modified: Tue Mar 13 15:48:46 2001.
+ * $Id: normal.c,v 1.28 2001/03/13 06:50:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -374,7 +374,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   movie_set_play_every_frame(m, 0);
 
   path = NULL;
-  ret = MAIN_LOOP_DO_NOTHING;
+  ret = MAIN_LOOP_NEXT;
   dir = 1;
   while (ret != MAIN_LOOP_QUIT) {
     if (path == NULL)
@@ -436,7 +436,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  if (!archive_read_directory(arc, path, 1)) {
 	    archive_destroy(arc);
 	    archive_iteration_delete(a);
-	    path = archive_iteration(a);
 	    continue;
 	  }
 	  video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
@@ -450,7 +449,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
 	  archive_iteration_delete(a);
-	  path = archive_iteration(a);
 	  continue;
 	}
 
@@ -461,13 +459,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  if (!streamer_open(st, eps, s, s->format, path)) {
 	    show_message("Stream %s [%s] cannot open\n", s->format, path);
 	    archive_iteration_delete(a);
-	    path = archive_iteration(a);
 	    continue;
 	  }
 	} else if (!stream_make_filestream(s, path)) {
 	  show_message("Stream NORMAL [%s] cannot open\n", path);
 	  archive_iteration_delete(a);
-	  path = archive_iteration(a);
 	  continue;
 	}
       }
@@ -485,14 +481,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
 	  archive_iteration_delete(a);
-	  path = archive_iteration(a);
 	}
       }
       archive_destroy(arc);
     } else if (!archive_open(a, s, path)) {
       show_message("File %s in %s archive cannot open\n", path, a->format);
       archive_iteration_delete(a);
-      path = archive_iteration(a);
       continue;
     }
 
@@ -516,14 +510,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  stream_close(s);
 	  show_message("%s load failed\n", path);
 	  archive_iteration_delete(a);
-	  path = archive_iteration(a);
 	  continue;
 	}
       } else {
 	stream_close(s);
 	show_message("%s identification failed\n", path);
 	archive_iteration_delete(a);
-	path = archive_iteration(a);
 	continue;
       }
 
