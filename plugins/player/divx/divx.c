@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 16 03:33:31 2003.
- * $Id: divx.c,v 1.1 2003/11/17 13:56:33 sian Exp $
+ * Last Modified: Wed Dec 17 01:53:53 2003.
+ * $Id: divx.c,v 1.2 2003/12/16 16:53:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -807,6 +807,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
       debug_message_fnc("Identified as DivX ;-) 3.11\n");
       break;
     case FCC_DIVX:
+    case FCC_divx:
       info->input_format = 412;
       debug_message_fnc("Identified as DivX 4\n");
       break;
@@ -823,6 +824,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 			aviinfo->vhandler);
       demultiplexer_destroy(info->demux);
       free(info);
+      m->movie_private = NULL;
       return PLAY_NOT;
     }
   }
