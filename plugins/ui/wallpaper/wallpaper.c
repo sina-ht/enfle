@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 18:12:07 2001.
- * $Id: wallpaper.c,v 1.2 2001/04/27 01:06:07 sian Exp $
+ * Last Modified: Mon Jun 18 21:32:42 2001.
+ * $Id: wallpaper.c,v 1.3 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -182,6 +182,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Archiver *ar = uidata->ar;
   Player *player = uidata->player;
   VideoWindow *vw = uidata->vw;
+  Config *c = uidata->c;
   Archive *arc;
   Stream *s;
   Image *p;
@@ -192,7 +193,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
   s = stream_create();
   p = image_create();
-  m = movie_create(uidata->c);
+  m = movie_create();
 
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
@@ -266,7 +267,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   }
 
   f = LOAD_NOT;
-  if (loader_identify(ld, eps, p, s)) {
+  if (loader_identify(ld, eps, p, s, vw, c)) {
 
 #ifdef DEBUG
     if (p->format_detail)
@@ -276,16 +277,16 @@ process_files_of_archive(UIData *uidata, Archive *a)
 #endif
 
     p->image = memory_create();
-    if ((f = loader_load_image(ld, eps, p->format, p, s)) == LOAD_OK)
+    if ((f = loader_load_image(ld, eps, p->format, p, s, vw, c)) == LOAD_OK)
       stream_close(s);
   }
 
   if (f != LOAD_OK) {
-    if (player_identify(player, eps, m, s)) {
+    if (player_identify(player, eps, m, s, c)) {
 
       debug_message("Movie identified as %s\n", m->format);
 
-      if ((f = player_load_movie(player, eps, vw, m->format, m, s)) != PLAY_OK) {
+      if ((f = player_load_movie(player, eps, vw, m->format, m, s, c)) != PLAY_OK) {
 	stream_close(s);
 	show_message("%s load failed\n", path);
 	return 0;

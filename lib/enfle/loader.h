@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:52:46 2000.
- * $Id: loader.h,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Mon Jun 18 20:23:48 2001.
+ * $Id: loader.h,v 1.3 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,15 +27,16 @@
 #include "loader-extra.h"
 #include "stream.h"
 #include "image.h"
+#include "video.h"
 
 typedef struct _loader Loader;
 struct _loader {
-  int (*identify)(EnflePlugins *, Image *, Stream *);
-  LoaderStatus (*load_image)(EnflePlugins *, char *, Image *, Stream *);
+  int (*identify)(EnflePlugins *, Image *, Stream *, VideoWindow *, Config *);
+  LoaderStatus (*load_image)(EnflePlugins *, char *, Image *, Stream *, VideoWindow *, Config *);
 };
 
-#define loader_identify(l, eps, p, s) (l)->identify((eps), (p), (s))
-#define loader_load_image(l, eps, n, p, s) (l)->load_image((eps), (n), (p), (s))
+#define loader_identify(l, eps, p, s, vw, c) (l)->identify((eps), (p), (s), (vw), (c))
+#define loader_load_image(l, eps, n, p, s, vw, c) (l)->load_image((eps), (n), (p), (s), (vw), (c))
 #define loader_destroy(l) if ((l)) free((l))
 
 Loader *loader_create(void);

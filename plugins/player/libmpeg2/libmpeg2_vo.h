@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  5 01:01:08 2001.
- * $Id: libmpeg2_vo.h,v 1.4 2001/03/04 17:10:41 sian Exp $
+ * Last Modified: Mon Jun 18 22:54:27 2001.
+ * $Id: libmpeg2_vo.h,v 1.5 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,6 +55,7 @@ typedef struct _enfle_instance_t {
 typedef struct _libmpeg2_info {
   VideoWindow *vw;
   Image *p;
+  Config *c;
   AudioDevice *ad;
   struct mpstr mp;
   mpeg2dec_t mpeg2dec;

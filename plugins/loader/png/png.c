@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:28:12 2001.
- * $Id: png.c,v 1.5 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Mon Jun 18 21:08:27 2001.
+ * $Id: png.c,v 1.6 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,6 +35,8 @@
 #endif
 
 #define DISPLAY_GAMMA 2.20
+
+//static const unsigned int types = (IMAGE_RGB24 | IMAGE_RGBA32 | IMAGE_GRAY | IMAGE_GRAY_ALPHA | IMAGE_INDEX);
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
@@ -101,7 +103,7 @@ warning_handler(png_structp png_ptr, png_const_charp warning_msg)
 
 #define PNG_BYTES_TO_CHECK 4
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
   char buf[PNG_BYTES_TO_CHECK];
 
@@ -116,7 +118,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   png_structp png_ptr;
   png_infop info_ptr;
@@ -139,7 +141,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
   {
     LoaderStatus status;
 
-    if ((status = identify(p, st, priv)) != LOAD_OK)
+    if ((status = identify(p, st, vw, c, priv)) != LOAD_OK)
       return status;
   }
 #endif

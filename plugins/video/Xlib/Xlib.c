@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 05:44:55 2001.
- * $Id: Xlib.c,v 1.34 2001/06/17 20:55:45 sian Exp $
+ * Last Modified: Mon Jun 18 23:16:07 2001.
+ * $Id: Xlib.c,v 1.35 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -454,24 +454,44 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
 
 #ifdef USE_XV
   /* YUV support for Xv extension */
-  if (types & IMAGE_YUV422) {
-    debug_message(__FUNCTION__ ": decoder can provide image in YUV422 format.\n");
-    if  (xv->capable_format & XV_YUY2_PACKED_FLAG) {
-      debug_message(__FUNCTION__ ": Xv can display YUV422 format image, good.\n");
+  if (types & IMAGE_YUY2) {
+    debug_message(__FUNCTION__ ": decoder can provide image in YUY2 format.\n");
+    if (xv->capable_format & XV_YUY2_FLAG) {
+      debug_message(__FUNCTION__ ": Xv can display YUY2 format image, good.\n");
       *direct_decode = 1;
-      return xv->prefer_msb[XV_YUY2_PACKED] ? _YUV422 : _YVU422;
+      return _YUY2;
     } else {
-      debug_message(__FUNCTION__ ": Xv cannot display YUV422 format image, bad luck.\n");
+      debug_message(__FUNCTION__ ": Xv cannot display YUY2 format image.\n");
     }
   }
-  if (types & IMAGE_YUV420_PLANAR) {
-    debug_message(__FUNCTION__ ": decoder can provide image in YUV420P format.\n");
-    if  (xv->capable_format & XV_YV12_PLANAR_FLAG) {
-      debug_message(__FUNCTION__ ": Xv can display YUV420P format image, good.\n");
+  if (types & IMAGE_YV12) {
+    debug_message(__FUNCTION__ ": decoder can provide image in YV12 format.\n");
+    if  (xv->capable_format & XV_YV12_FLAG) {
+      debug_message(__FUNCTION__ ": Xv can display YV12 format image, good.\n");
       *direct_decode = 1;
-      return xv->prefer_msb[XV_YV12_PLANAR] ? _YUV420P : _YVU420P;
+      return _YV12;
     } else {
-      debug_message(__FUNCTION__ ": Xv cannot display YUV420P format image, bad luck.\n");
+      debug_message(__FUNCTION__ ": Xv cannot display YV12 format image.\n");
+    }
+  }
+  if (types & IMAGE_I420) {
+    debug_message(__FUNCTION__ ": decoder can provide image in I420 format.\n");
+    if  (xv->capable_format & XV_I420_FLAG) {
+      debug_message(__FUNCTION__ ": Xv can display I420 format image, good.\n");
+      *direct_decode = 1;
+      return _I420;
+    } else {
+      debug_message(__FUNCTION__ ": Xv cannot display I420 format image.\n");
+    }
+  }
+  if (types & IMAGE_UYVY) {
+    debug_message(__FUNCTION__ ": decoder can provide image in UYVY format.\n");
+    if  (xv->capable_format & XV_UYVY_FLAG) {
+      debug_message(__FUNCTION__ ": Xv can display UYVY format image, good.\n");
+      *direct_decode = 1;
+      return _UYVY;
+    } else {
+      debug_message(__FUNCTION__ ": Xv cannot display UYVY format image.\n");
     }
   }
 #endif
@@ -517,10 +537,10 @@ calc_magnified_size(VideoWindow *vw, unsigned int sw, unsigned int sh,
 {
   double s, ws, hs;
   unsigned int fw, fh;
-#ifdef USE_XV
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
+#ifdef USE_XV
   X11Xv *xv = &x11->xv;
 #endif
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 16 19:41:22 2001.
- * $Id: pnm.c,v 1.1 2001/04/18 05:27:12 sian Exp $
+ * Last Modified: Mon Jun 18 20:17:51 2001.
+ * $Id: pnm.c,v 1.2 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,8 @@ typedef struct _pnmdata {
   int maxval;
   PNMencode encode;
 } PNMdata;
+
+//static const unsigned int types = (IMAGE_BITMAP_MSBFirst | IMAGE_GRAY | IMAGE_RGB24 | IMAGE_INDEX);
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
@@ -271,7 +273,7 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
   PNMdata pnmdata;
 
@@ -284,7 +286,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   PNMdata pnmdata;
   int i, j, x, y;

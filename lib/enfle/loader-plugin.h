@@ -1,10 +1,10 @@
 /*
  * loader-plugin.h -- loader plugin interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 03:18:15 2000.
- * $Id: loader-plugin.h,v 1.3 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Mon Jun 18 21:01:25 2001.
+ * $Id: loader-plugin.h,v 1.4 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,26 +26,28 @@
 #include "enfle-plugin.h"
 #include "stream.h"
 #include "image.h"
+#include "video.h"
+#include "utils/libconfig.h"
 #include "loader-extra.h"
 
 typedef struct _loader_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
   void *private;
 
-  LoaderStatus (*identify)(Image *, Stream *, void *);
-  LoaderStatus (*load)(Image *, Stream *, void *);
+  LoaderStatus (*identify)(Image *, Stream *, VideoWindow *, Config *, void *);
+  LoaderStatus (*load)(Image *, Stream *, VideoWindow *, Config *, void *);
 } LoaderPlugin;
 
 #define DECLARE_LOADER_PLUGIN_METHODS \
- static LoaderStatus identify(Image *, Stream *, void *); \
- static LoaderStatus load(Image *, Stream *, void *)
+ static LoaderStatus identify(Image *, Stream *, VideoWindow *, Config *, void *); \
+ static LoaderStatus load(Image *, Stream *, VideoWindow *, Config *, void *)
 
-#define DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv) \
+#define DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv) \
  static LoaderStatus \
- identify(Image * ## p ## , Stream * ## st ## , void * ## priv ##)
-#define DEFINE_LOADER_PLUGIN_LOAD(p, st, priv) \
+ identify(Image * ## p ## , Stream * ## st ## , VideoWindow * ## vw ##, Config * ## c ##, void * ## priv ##)
+#define DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv) \
  static LoaderStatus \
- load(Image * ## p ## , Stream * ## st ## , void * ## priv ##)
+ load(Image * ## p ## , Stream * ## st ## , VideoWindow * ## vw ##, Config * ## c ##, void * ## priv ##)
 
 ENFLE_PLUGIN_ENTRIES;
 

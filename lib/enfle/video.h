@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 05:35:57 2001.
- * $Id: video.h,v 1.15 2001/06/17 20:46:36 sian Exp $
+ * Last Modified: Mon Jun 18 17:27:08 2001.
+ * $Id: video.h,v 1.16 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -120,6 +120,9 @@ typedef enum _videowindowcursor {
   _VIDEO_CURSOR_WAIT
 } VideoWindowCursor;
 
+#define VIDEO_COLORSPACE_RGB (1 << 0)
+#define VIDEO_COLORSPACE_YUV (1 << 1)
+
 typedef struct _video_window VideoWindow;
 struct _video_window {
   Config *c;
@@ -132,6 +135,7 @@ struct _video_window {
   int offset_x, offset_y;
   int depth, bits_per_pixel;
   int if_fullscreen, if_direct, if_caption, prefer_msb;
+  unsigned int displayable_colorspace;
   unsigned char *caption;
   VideoRenderMethod render_method;
   ImageInterpolateMethod interpolate_method;
@@ -157,6 +161,11 @@ struct _video_window {
   void (*discard_button_event)(VideoWindow *);
   int (*destroy)(VideoWindow *);
 };
+
+#define video_window_get_rgb(vw) ((vw)->displayable_colorspace & VIDEO_COLORSPACE_RGB)
+#define video_window_get_yuv(vw) ((vw)->displayable_colorspace & VIDEO_COLORSPACE_YUV)
+#define video_window_set_rgb(vw) (vw)->displayable_colorspace |= VIDEO_COLORSPACE_RGB
+#define video_window_set_yuv(vw) (vw)->displayable_colorspace |= VIDEO_COLORSPACE_YUV
 
 #define video_window_preferred_memory_type(vw) (vw)->preferred_memory_type((vw))
 #define video_window_request_type(vw, types, ddp) (vw)->request_type((vw), (types), (ddp))

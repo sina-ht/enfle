@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jun 14 01:27:13 2001.
- * $Id: libmpeg2.c,v 1.13 2001/06/13 18:16:53 sian Exp $
+ * Last Modified: Mon Jun 18 22:56:52 2001.
+ * $Id: libmpeg2.c,v 1.14 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,8 +48,7 @@
 static const unsigned int types =
   (IMAGE_RGBA32 | IMAGE_BGRA32 | IMAGE_RGB24 | IMAGE_BGR24 | IMAGE_BGR_WITH_BITMASK);
 
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
@@ -85,7 +84,7 @@ plugin_exit(void *p)
 /* for internal use */
 
 static PlayerStatus
-load_movie(VideoWindow *vw, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
   Libmpeg2_info *info;
   Image *p;
@@ -97,6 +96,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 
   info->vw = vw;
+  info->c = c;
 
   pthread_mutex_init(&info->update_mutex, NULL);
   pthread_cond_init(&info->update_cond, NULL);
@@ -379,7 +379,7 @@ play_audio(void *arg)
 
   debug_message(__FUNCTION__ "()\n");
 
-  if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
+  if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
     ExitMP3(&info->mp);
     close(info->a_fd_in);
@@ -589,8 +589,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   unsigned char buf[3];
 
@@ -602,8 +601,7 @@ identify(Movie *m, Stream *st)
   return PLAY_OK;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   debug_message("libmpeg2 player: load() called\n");
 
@@ -611,7 +609,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
     stream_rewind(st);
   }
@@ -623,5 +621,5 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, m, st);
+  return load_movie(vw, m, st, c);
 }

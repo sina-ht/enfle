@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 15 05:03:40 2001.
- * $Id: spi.c,v 1.12 2001/01/14 20:07:20 sian Exp $
+ * Last Modified: Mon Jun 18 20:29:32 2001.
+ * $Id: spi.c,v 1.13 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,8 +46,8 @@
 #define REQUIRE_FATAL
 #include "common.h"
 
-static LoaderStatus loader_identify(Image *, Stream *, void *);
-static LoaderStatus loader_load(Image *, Stream *, void *);
+static LoaderStatus loader_identify(Image *, Stream *, VideoWindow *, Config *, void *);
+static LoaderStatus loader_load(Image *, Stream *, VideoWindow *, Config *, void *);
 static ArchiverStatus archiver_identify(Archive *, Stream *, void *);
 static ArchiverStatus archiver_open(Archive *, Stream *, void *);
 
@@ -85,7 +85,7 @@ static ArchiverPlugin archiver_template = {
 };
 
 static LoaderStatus
-loader_identify(Image *p, Stream *st, void *priv)
+loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
 {
   SusieLoader *sl = priv;
 #if 1
@@ -133,7 +133,7 @@ susie_loader_progress_callback(int nNum, int nDenom, long lData)
 }
 
 static LoaderStatus
-loader_load(Image *p, Stream *st, void *priv)
+loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
 {
   SusieLoader *sl = priv;
   unsigned char *image, *d;

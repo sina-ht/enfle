@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  2 14:09:20 2001.
- * $Id: pcx.c,v 1.1 2001/02/02 16:41:21 sian Exp $
+ * Last Modified: Mon Jun 18 21:13:24 2001.
+ * $Id: pcx.c,v 1.2 2001/06/18 16:23:47 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -29,6 +29,8 @@
 
 #include "enfle/loader-plugin.h"
 #include "enfle/utils.h"
+
+//static const unsigned int types = (IMAGE_RGB24 | IMAGE_RGBA32 | IMAGE_GRAY | IMAGE_INDEX);
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
@@ -62,7 +64,7 @@ plugin_exit(void *p)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
   char buf[128];
   int xmax, ymax, xmin, ymin;
@@ -138,7 +140,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
 {
   int i, j, k, l;
   int nplanes, ppl;
@@ -152,7 +154,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
   {
     LoaderStatus status;
 
-    if ((status = identify(p, st, priv)) != LOAD_OK)
+    if ((status = identify(p, st, vw, config, priv)) != LOAD_OK)
       return status;
     stream_rewind(st);
   }

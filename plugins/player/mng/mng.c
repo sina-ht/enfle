@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  7 21:12:15 2001.
- * $Id: mng.c,v 1.14 2001/01/11 22:31:31 sian Exp $
+ * Last Modified: Mon Jun 18 21:46:14 2001.
+ * $Id: mng.c,v 1.15 2001/06/18 16:23:47 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -41,8 +41,7 @@ typedef struct {
 
 static const unsigned types = (IMAGE_ARGB32 | IMAGE_BGRA32);
 
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
@@ -381,8 +380,7 @@ unload_movie(Movie *m)
 
 static unsigned char mng_sig[] = { 0x8a, 'M', 'N', 'G' };
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   unsigned char buf[4];
 
@@ -394,8 +392,7 @@ identify(Movie *m, Stream *st)
   return PLAY_OK;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   debug_message("mng player: load() called\n");
 
@@ -403,7 +400,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
     stream_rewind(st);
   }

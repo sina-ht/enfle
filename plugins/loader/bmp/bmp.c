@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:29:00 2001.
- * $Id: bmp.c,v 1.5 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Mon Jun 18 21:09:38 2001.
+ * $Id: bmp.c,v 1.6 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,8 @@
 #include "enfle/utils.h"
 #include "enfle/stream-utils.h"
 #include "enfle/loader-plugin.h"
+
+//static const unsigned int types = (IMAGE_BGRA32 | IMAGE_BGR24 | IMAGE_INDEX | IMAGE_BITMAP_MSBFirst);
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
@@ -170,7 +172,7 @@ load_image(Image *p, Stream *st)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
   char buf[2];
 
@@ -183,14 +185,14 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   LoaderStatus status;
 
   debug_message("bmp loader: load() called\n");
 
   /* identify() must be called() */
-  if ((status = identify(p, st, priv)) != LOAD_OK)
+  if ((status = identify(p, st, vw, c, priv)) != LOAD_OK)
     return status;
 
   if (!load_image(p, st))

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri May 11 20:31:33 2001.
- * $Id: normal.c,v 1.44 2001/05/12 02:30:39 sian Exp $
+ * Last Modified: Mon Jun 18 21:32:05 2001.
+ * $Id: normal.c,v 1.45 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -637,6 +637,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Archiver *ar = uidata->ar;
   Player *player = uidata->player;
   VideoWindow *vw = uidata->vw;
+  Config *c = uidata->c;
   Archive *arc;
   Stream *s;
   Image *p;
@@ -647,7 +648,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
   s = stream_create();
   p = image_create();
-  m = movie_create(uidata->c);
+  m = movie_create();
 
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
@@ -793,7 +794,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
     f = LOAD_NOT;
     video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-    if (loader_identify(ld, eps, p, s)) {
+    if (loader_identify(ld, eps, p, s, vw, c)) {
 
 #ifdef DEBUG
       if (p->format_detail)
@@ -803,16 +804,16 @@ process_files_of_archive(UIData *uidata, Archive *a)
 #endif
 
       p->image = memory_create();
-      if ((f = loader_load_image(ld, eps, p->format, p, s)) == LOAD_OK)
+      if ((f = loader_load_image(ld, eps, p->format, p, s, vw, c)) == LOAD_OK)
 	stream_close(s);
     }
 
     if (f != LOAD_OK) {
-      if (player_identify(player, eps, m, s)) {
+      if (player_identify(player, eps, m, s, c)) {
 
 	debug_message("Movie identified as %s\n", m->format);
 
-	if ((f = player_load_movie(player, eps, vw, m->format, m, s)) != PLAY_OK) {
+	if ((f = player_load_movie(player, eps, vw, m->format, m, s, c)) != PLAY_OK) {
 	  stream_close(s);
 	  show_message("%s load failed\n", path);
 	  ret = MAIN_LOOP_DELETE_FROM_LIST;

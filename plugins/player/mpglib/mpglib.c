@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 29 23:58:07 2001.
- * $Id: mpglib.c,v 1.1 2001/01/29 15:10:31 sian Exp $
+ * Last Modified: Mon Jun 18 22:45:56 2001.
+ * $Id: mpglib.c,v 1.2 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,7 @@
 typedef struct _mpglib_info {
   struct mpstr mp;
   Image *p;
+  Config *c;
   unsigned char *input_buffer, *output_buffer;
   unsigned int pos;
   int eof;
@@ -48,8 +49,7 @@ typedef struct _mpglib_info {
 static const unsigned int types =
   (IMAGE_RGBA32 | IMAGE_BGRA32 | IMAGE_RGB24 | IMAGE_BGR24 | IMAGE_BGR_WITH_BITMASK);
 
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
@@ -88,7 +88,7 @@ plugin_exit(void *p)
 #define MP3_DECODE_BUFFER_SIZE 8192
 
 static PlayerStatus
-load_movie(VideoWindow *vw, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
   Mpglib_info *info;
   Image *p;
@@ -103,6 +103,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     goto error;
   if ((info->output_buffer = malloc(MP3_DECODE_BUFFER_SIZE)) == NULL)
     goto error;
+  info->c = c;
 
   InitMP3(&info->mp);
 
@@ -230,7 +231,7 @@ play_audio(void *arg)
 
   debug_message(__FUNCTION__ "()\n");
 
-  if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
+  if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
     pthread_exit((void *)PLAY_ERROR);
   }
@@ -367,16 +368,14 @@ unload_movie(Movie *m)
 
 /* methods */
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   if (strlen(st->path) >= 4 && !strcasecmp(st->path + strlen(st->path) - 4, ".mp3"))
     return PLAY_OK;
   return PLAY_NOT;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   debug_message("mpglib player: load() called\n");
 
@@ -384,7 +383,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
   }
 #endif
@@ -395,5 +394,5 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, m, st);
+  return load_movie(vw, m, st, c);
 }

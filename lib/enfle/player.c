@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb  5 02:55:16 2001.
- * $Id: player.c,v 1.9 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Mon Jun 18 21:29:46 2001.
+ * $Id: player.c,v 1.10 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,8 +29,8 @@
 #include "stream.h"
 #include "player.h"
 
-static int identify(EnflePlugins *, Movie *, Stream *);
-static PlayerStatus load_movie(EnflePlugins *, VideoWindow *, char *, Movie *, Stream *);
+static int identify(EnflePlugins *, Movie *, Stream *, Config *);
+static PlayerStatus load_movie(EnflePlugins *, VideoWindow *, char *, Movie *, Stream *, Config *);
 
 static Player template = {
   identify: identify,
@@ -52,7 +52,7 @@ player_create(void)
 /* methods */
 
 static int
-identify(EnflePlugins *eps, Movie *m, Stream *st)
+identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
 {
   Dlist *dl;
   Dlist_data *dd;
@@ -71,7 +71,7 @@ identify(EnflePlugins *eps, Movie *m, Stream *st)
     lp = plugin_get(p);
 
     stream_rewind(st);
-    if (lp->identify(m, st) == PLAY_OK) {
+    if (lp->identify(m, st, c, NULL) == PLAY_OK) {
       m->format = pluginname;
       dlist_move_to_top(dl, dd);
       return 1;
@@ -82,7 +82,7 @@ identify(EnflePlugins *eps, Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load_movie(EnflePlugins *eps, VideoWindow *vw, char *pluginname, Movie *m, Stream *st)
+load_movie(EnflePlugins *eps, VideoWindow *vw, char *pluginname, Movie *m, Stream *st, Config *c)
 {
   Plugin *p;
   PlayerPlugin *pp;
@@ -92,5 +92,5 @@ load_movie(EnflePlugins *eps, VideoWindow *vw, char *pluginname, Movie *m, Strea
   pp = plugin_get(p);
 
   stream_rewind(st);
-  return pp->load(vw, m, st);
+  return pp->load(vw, m, st, c, NULL);
 }

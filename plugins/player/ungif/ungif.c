@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  7 21:12:28 2001.
- * $Id: ungif.c,v 1.18 2001/01/11 22:31:31 sian Exp $
+ * Last Modified: Mon Jun 18 21:36:06 2001.
+ * $Id: ungif.c,v 1.19 2001/06/18 16:23:47 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -52,8 +52,7 @@ typedef enum {
 
 static const unsigned int types = IMAGE_INDEX;
 
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
@@ -454,8 +453,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   char buf[3];
 
@@ -478,8 +476,7 @@ identify(Movie *m, Stream *st)
   return PLAY_OK;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   debug_message("ungif player: load() called\n");
 
@@ -487,7 +484,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
     stream_rewind(st);
   }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 05:53:16 2001.
- * $Id: libmpeg3.c,v 1.31 2001/06/17 20:54:42 sian Exp $
+ * Last Modified: Mon Jun 18 21:43:48 2001.
+ * $Id: libmpeg3.c,v 1.32 2001/06/18 16:23:47 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -45,6 +45,7 @@
 typedef struct _libmpeg3_info {
   mpeg3_t *file;
   Image *p;
+  Config *c;
   AudioDevice *ad;
   unsigned char **lines;
   unsigned char *y, *u, *v;
@@ -62,14 +63,12 @@ typedef struct _libmpeg3_info {
 } LibMPEG3_info;
 
 static const unsigned int types =
-  (IMAGE_YUV420_PLANAR |
-   IMAGE_YVU420_PLANAR |
+  (IMAGE_I420 |
    IMAGE_RGBA32 | IMAGE_BGRA32 |
    IMAGE_RGB24 | IMAGE_BGR24 |
    IMAGE_BGR_WITH_BITMASK);
 
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
@@ -105,7 +104,7 @@ plugin_exit(void *p)
 /* for internal use */
 
 static PlayerStatus
-load_movie(VideoWindow *vw, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
   LibMPEG3_info *info;
   Image *p;
@@ -120,6 +119,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     free(info);
     return PLAY_ERROR;
   }
+  info->c = c;
 
   pthread_mutex_init(&info->update_mutex, NULL);
   pthread_cond_init(&info->update_cond, NULL);
@@ -131,7 +131,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
   debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
-  if (m->requested_type == _YUV420P || m->requested_type == _YVU420P) {
+  if (m->requested_type == _I420 || m->requested_type == _YV12) {
     info->use_xv = 1;
   } else {
     info->use_xv = 0;
@@ -220,10 +220,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 	goto error;
       if ((info->y = malloc(p->bytes_per_line * p->height)) == NULL)
 	goto error;
-      if (p->type == _YUV420P) {
+      if (p->type == _I420) {
 	info->u = info->y + p->width * p->height;
 	info->v = info->u + ((p->width * p->height) >> 2);
-      } else if (p->type == _YVU420P) {
+      } else if (p->type == _YV12) {
 	info->v = info->y + p->width * p->height;
 	info->u = info->v + ((p->width * p->height) >> 2);
       } else {
@@ -415,7 +415,7 @@ play_audio(void *arg)
 
   debug_message(__FUNCTION__ "()\n");
 
-  if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
+  if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
     m->has_audio = 0;
     pthread_exit((void *)PLAY_ERROR);
@@ -632,8 +632,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   if (st->path) {
     if (strlen(st->path) >= 4 && !strcasecmp(st->path + strlen(st->path) - 4, ".mp3"))
@@ -644,8 +643,7 @@ identify(Movie *m, Stream *st)
   return PLAY_NOT;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   debug_message("libmpeg3 player: load() called\n");
 
@@ -653,7 +651,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
     stream_rewind(st);
   }
@@ -665,5 +663,5 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, m, st);
+  return load_movie(vw, m, st, c);
 }

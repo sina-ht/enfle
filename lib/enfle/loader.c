@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 02:59:21 2001.
- * $Id: loader.c,v 1.11 2001/05/01 18:28:37 sian Exp $
+ * Last Modified: Mon Jun 18 20:24:20 2001.
+ * $Id: loader.c,v 1.12 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,8 +29,8 @@
 #include "loader.h"
 #include "loader-plugin.h"
 
-static int identify(EnflePlugins *, Image *, Stream *);
-static LoaderStatus load_image(EnflePlugins *, char *, Image *, Stream *);
+static int identify(EnflePlugins *, Image *, Stream *, VideoWindow *, Config *);
+static LoaderStatus load_image(EnflePlugins *, char *, Image *, Stream *, VideoWindow *, Config *);
 
 static Loader template = {
   identify: identify,
@@ -52,7 +52,7 @@ loader_create(void)
 /* methods */
 
 static int
-identify(EnflePlugins *eps, Image *ip, Stream *st)
+identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Config *c)
 {
   Dlist *dl;
   Dlist_data *dd;
@@ -75,7 +75,7 @@ identify(EnflePlugins *eps, Image *ip, Stream *st)
 
     //debug_message("loader: identify: try %s\n", pluginname);
 
-    if (lp->identify(ip, st, lp->private) == LOAD_OK) {
+    if (lp->identify(ip, st, vw, c, lp->private) == LOAD_OK) {
       ip->format = pluginname;
       dlist_move_to_top(dl, dd);
       return 1;
@@ -86,7 +86,7 @@ identify(EnflePlugins *eps, Image *ip, Stream *st)
 }
 
 static LoaderStatus
-load_image(EnflePlugins *eps, char *pluginname, Image *ip, Stream *st)
+load_image(EnflePlugins *eps, char *pluginname, Image *ip, Stream *st, VideoWindow *vw, Config *c)
 {
   Plugin *p;
   LoaderPlugin *lp;
@@ -97,5 +97,5 @@ load_image(EnflePlugins *eps, char *pluginname, Image *ip, Stream *st)
 
   ip->format_detail = NULL;
   stream_rewind(st);
-  return lp->load(ip, st, lp->private);
+  return lp->load(ip, st, vw, c, lp->private);
 }

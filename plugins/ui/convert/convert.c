@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May 22 17:50:28 2001.
- * $Id: convert.c,v 1.6 2001/05/23 12:14:02 sian Exp $
+ * Last Modified: Mon Jun 18 20:58:24 2001.
+ * $Id: convert.c,v 1.7 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -196,12 +196,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
     f = LOAD_NOT;
     debug_message("Image identifying...\n");
-    if (loader_identify(ld, eps, p, s)) {
+    if (loader_identify(ld, eps, p, s, NULL, c)) {
 
       debug_message("Image identified as %s\n", p->format);
 
       p->image = memory_create();
-      if ((f = loader_load_image(ld, eps, p->format, p, s)) == LOAD_OK)
+      if ((f = loader_load_image(ld, eps, p->format, p, s, NULL, c)) == LOAD_OK)
 	stream_close(s);
     }
 

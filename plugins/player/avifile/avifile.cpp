@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 12:56:32 2001.
- * $Id: avifile.cpp,v 1.12 2001/06/18 04:03:19 sian Exp $
+ * Last Modified: Mon Jun 18 22:33:26 2001.
+ * $Id: avifile.cpp,v 1.13 2001/06/18 16:23:47 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -41,6 +41,9 @@
 #define FCC(a,b,c,d) ((((((d << 8) | c) << 8) | b) << 8) | a)
 #define FCC_YUY2 FCC('Y', 'U', 'Y', '2')
 #define FCC_YV12 FCC('Y', 'V', '1', '2')
+#define FCC_IYUV FCC('I', 'Y', 'U', 'V')
+//#define FCC_I420 FCC('I', '4', '2', '0')
+#define FCC_UYVY FCC('U', 'Y', 'V', 'Y')
 
 extern "C" {
 #include "enfle/memory.h"
@@ -57,6 +60,7 @@ typedef struct _avifile_info {
   int frametime;
   int use_xv;
   Image *p;
+  Config *c;
   CImage *ci;
   IAviReadFile *rf;
   IAviReadStream *stream;
@@ -76,8 +80,7 @@ static const unsigned int types =
   (IMAGE_RGBA32 | IMAGE_BGRA32 | IMAGE_RGB24 | IMAGE_BGR24 | IMAGE_BGR_WITH_BITMASK);
 
 extern "C" {
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 }
 
 static PlayerStatus play(Movie *);
@@ -171,15 +174,23 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
     IVideoDecoder::CAPS caps = stream->GetDecoder()->GetCapabilities();
     if (caps & IVideoDecoder::CAP_YUY2) {
-      debug_message("Good, YUV422 available.\n");
-      tmp_types |= IMAGE_YUV422;
+      debug_message("Good, YUY2 available.\n");
+      tmp_types |= IMAGE_YUY2;
     }
     if (caps & IVideoDecoder::CAP_YV12) {
-      debug_message("Good, YUV420P available.\n");
-      tmp_types |= IMAGE_YUV420_PLANAR;
+      debug_message("Good, YV12 available.\n");
+      tmp_types |= IMAGE_YV12;
+    }
+    if (caps & IVideoDecoder::CAP_IYUV) {
+      debug_message("Good, IYUV(I420) available.\n");
+      tmp_types |= IMAGE_I420;
+    }
+    if (caps & IVideoDecoder::CAP_UYVY) {
+      debug_message("Good, UYVY available.\n");
+      tmp_types |= IMAGE_UYVY;
     }
     if (types == tmp_types)
-      debug_message("YUV422, YUV420P not available, using RGB.\n");
+      debug_message("Neither YUY2, YV12, I420, nor UYUV is available, using RGB.\n");
     m->requested_type = video_window_request_type(vw, tmp_types, &m->direct_decode);
     debug_message("AviFile: requested type: %s direct\n", image_type_to_string(m->requested_type));
     if (!m->direct_decode) {
@@ -187,16 +198,24 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       goto error;
     }
     switch (m->requested_type) {
-    case _YUV422:
-    case _YVU422:
+    case _YUY2:
       debug_message("SetDestFmt(0, FCC_YUY2);\n");
       result = stream->GetDecoder()->SetDestFmt(0, FCC_YUY2);
       info->use_xv = 1;
       break;
-    case _YUV420P:
-    case _YVU420P:
+    case _YV12:
       debug_message("SetDestFmt(0, FCC_YV12);\n");
       result = stream->GetDecoder()->SetDestFmt(0, FCC_YV12);
+      info->use_xv = 1;
+      break;
+    case _I420:
+      debug_message("SetDestFmt(0, FCC_IYUV);\n");
+      result = stream->GetDecoder()->SetDestFmt(0, FCC_IYUV);
+      info->use_xv = 1;
+      break;
+    case _UYVY:
+      debug_message("SetDestFmt(0, FCC_UYVY);\n");
+      result = stream->GetDecoder()->SetDestFmt(0, FCC_UYVY);
       info->use_xv = 1;
       break;
     default:
@@ -245,13 +264,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   if (info->use_xv) {
     switch (p->type) {
-    case _YUV422:
-    case _YVU422:
+    case _YUY2:
+    case _UYVY:
       p->bits_per_pixel = 16;
       p->bytes_per_line = p->width << 1;
       break;
-    case _YUV420P:
-    case _YVU420P:
+    case _YV12:
+    case _I420:
       p->bits_per_pixel = 12;
       p->bytes_per_line = p->width * 3 / 2;
       break;
@@ -394,7 +413,7 @@ play_audio(void *arg)
 
   debug_message("AviFile: play_audio()\n");
 
-  if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
+  if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
     pthread_exit((void *)PLAY_ERROR);
   }
@@ -571,8 +590,7 @@ unload_movie(Movie *m)
 
 extern "C" {
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   unsigned char buf[16];
   IAviReadFile *rf;
@@ -619,8 +637,7 @@ identify(Movie *m, Stream *st)
   return PLAY_NOT;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   AviFile_info *info;
 
@@ -630,7 +647,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
     stream_rewind(st);
   }
@@ -646,6 +663,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
     show_message("AviFile: load: No enough memory.\n");
     return PLAY_ERROR;
   }
+  info->c = c;
   m->movie_private = (void *)info;
 
   return load_movie(vw, m, st);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan  4 05:48:49 2001.
- * $Id: player-plugin.h,v 1.8 2001/01/06 23:54:33 sian Exp $
+ * Last Modified: Mon Jun 18 21:38:12 2001.
+ * $Id: player-plugin.h,v 1.9 2001/06/18 16:23:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,9 +33,20 @@
 typedef struct _player_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
 
-  PlayerStatus (*identify)(Movie *, Stream *);
-  PlayerStatus (*load)(VideoWindow *, Movie *, Stream *);
+  PlayerStatus (*identify)(Movie *, Stream *, Config *, void *);
+  PlayerStatus (*load)(VideoWindow *, Movie *, Stream *, Config *, void *);
 } PlayerPlugin;
+
+#define DECLARE_PLAYER_PLUGIN_METHODS \
+ static PlayerStatus identify(Movie *, Stream *, Config *, void *); \
+ static PlayerStatus load(VideoWindow *, Movie *, Stream *, Config *, void *)
+
+#define DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv) \
+ static PlayerStatus \
+ identify(Movie * ## m ## , Stream * ## st ## , Config * ## c ## , void * ## priv ##)
+#define DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv) \
+ static PlayerStatus \
+ load(VideoWindow * ## vw ## , Movie * ## m ## , Stream * ## st ## , Config * ## c ## , void * ## priv ##)
 
 ENFLE_PLUGIN_ENTRIES;
 

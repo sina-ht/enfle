@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  7 21:11:53 2001.
- * $Id: mpeg_lib.c,v 1.16 2001/01/11 22:31:31 sian Exp $
+ * Last Modified: Mon Jun 18 21:41:11 2001.
+ * $Id: mpeg_lib.c,v 1.17 2001/06/18 16:23:47 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -38,8 +38,7 @@ typedef struct _mpeg_lib_info {
 
 static const unsigned int types = IMAGE_RGBA32;
 
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
@@ -257,8 +256,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   char buf[4];
   static unsigned char video_stream_header[]  = { 0x00, 0x00, 0x01, 0xb3 };
@@ -277,8 +275,7 @@ identify(Movie *m, Stream *st)
   return PLAY_NOT;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   debug_message("mpeg_lib player: load() called\n");
 
@@ -286,7 +283,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
     stream_rewind(st);
   }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 26 00:49:31 2001.
- * $Id: jpeg.c,v 1.6 2001/03/25 15:51:01 sian Exp $
+ * Last Modified: Mon Jun 18 21:07:09 2001.
+ * $Id: jpeg.c,v 1.7 2001/06/18 16:23:47 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -37,6 +37,8 @@
 #  error BITS_IN_JSAMPLE must be 8
 #endif
 
+static const unsigned int types = (IMAGE_I420 | IMAGE_RGB24);
+
 DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
@@ -68,7 +70,6 @@ plugin_exit(void *p)
 }
 
 /* jpeg data source functions */
-
 typedef struct {
   struct jpeg_source_mgr pub;  /* public fields */
   Stream *st;                  /* source stream */
@@ -181,7 +182,7 @@ my_error_exit (j_common_ptr cinfo)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
   unsigned char buf[16];
   static unsigned char id[] = { 0xff, 0xd8 };
@@ -202,11 +203,13 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   struct jpeg_decompress_struct *cinfo;
   struct my_error_mgr jerr;
   JSAMPROW buffer[1]; /* output row buffer */
+  ImageType requested_type;
+  int direct_decode;
   int i, j;
   unsigned char *d;
 
@@ -219,7 +222,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
   {
     LoaderStatus status;
 
-    if ((status = identify(p, st, priv)) != LOAD_OK)
+    if ((status = identify(p, st, vw, c, priv)) != LOAD_OK)
       return status;
     stream_rewind(st);
   }
@@ -239,6 +242,12 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
   jpeg_create_decompress(cinfo);
   attach_stream_src(cinfo, st);
   (void)jpeg_read_header(cinfo, TRUE);
+
+  if (vw) {
+    requested_type = video_window_request_type(vw, types, &direct_decode);
+    if (requested_type == _I420)
+      cinfo->out_color_space = JCS_YCbCr;
+  }
 
   jpeg_calc_output_dimensions(cinfo);
 
@@ -279,12 +288,14 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
     (void)jpeg_read_scanlines(cinfo, buffer, 1);
   }
 
-  if (cinfo->out_color_space == JCS_GRAYSCALE) {
+  p->bits_per_pixel = cinfo->output_components << 3;
+  switch (cinfo->out_color_space) {
+  case JCS_GRAYSCALE:
     p->type = _GRAY;
     p->depth = 8;
-    p->bits_per_pixel = 8;
     p->ncolors = 256;
-  } else {
+    break;
+  case JCS_RGB:
     /* Copy colormap. Because jpeg_finish_decompress will release colormap memory */
     if (cinfo->quantize_colors == TRUE) {
       if (cinfo->out_color_components == 1)
@@ -297,13 +308,35 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
             p->colormap[j][i] = cinfo->colormap[i][j];
       p->type = _INDEX;
       p->depth = 8;
-      p->bits_per_pixel = 8;
       p->ncolors = cinfo->actual_number_of_colors;
     } else {
       p->type = _RGB24;
       p->depth = 24;
-      p->bits_per_pixel = cinfo->output_components << 3;
     }
+    break;
+  case JCS_YCbCr:
+    {
+      /* Convert to I420 */
+      char *y, *u, *v;
+
+      if ((y = malloc(p->width * p->height + ((p->width * p->height) >> 1))) == NULL)
+	goto error_destroy_free;
+      u = y + p->width * p->height;
+      v = u + ((p->width * p->height) >> 2);
+      for (i = 0; i < p->height; i += 2)
+	for (j = 0; j < p->width; j += 2) {
+	  y[ i       *  p->width +        j      ] = d[( i      * p->width + j    ) * 3    ];
+	  y[ i       *  p->width +        j + 1  ] = d[( i      * p->width + j + 1) * 3    ];
+	  y[(i + 1)  *  p->width +        j      ] = d[((i + 1) * p->width + j    ) * 3    ];
+	  y[(i + 1)  *  p->width +        j + 1  ] = d[((i + 1) * p->width + j + 1) * 3    ];
+	  u[(i >> 1) * (p->width >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 1];
+	  v[(i >> 1) * (p->width >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 2];
+	}
+      p->type = _I420;
+    }
+    break;
+  default:
+    break;
   }
 
   p->next = NULL;
