@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 15:04:16 2001.
- * $Id: normal.c,v 1.52 2001/09/02 06:22:35 sian Exp $
+ * Last Modified: Fri Sep 21 02:05:38 2001.
+ * $Id: normal.c,v 1.53 2001/09/21 02:58:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -648,6 +648,7 @@ static int
 main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archive *a, char *path, void *gui)
 {
   MainLoop ml;
+  int caption_to_be_set = 0;
 
   memset(&ml, 0, sizeof(ml));
   ml.button = ENFLE_Button_None;
@@ -669,12 +670,11 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
     magnify_if_requested(vw, p);
     video_window_render(vw, p);
     set_caption_string(&ml);
+    caption_to_be_set = 0;
     ml.original_p = image_dup(p);
   } else if (m) {
     vw->if_direct = 1;
-    vw->render_width  = m->width;
-    vw->render_height = m->height;
-    set_caption_string(&ml);
+    caption_to_be_set = 1;
   }
 
   video_window_set_offset(vw, 0, 0);
@@ -745,6 +745,10 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
       case _UNLOADED:
 	show_message("Movie has been already unloaded.\n");
 	return MAIN_LOOP_NEXT;
+      }
+      if (caption_to_be_set) {
+	set_caption_string(&ml);
+	caption_to_be_set = 0;
       }
     }
   }
