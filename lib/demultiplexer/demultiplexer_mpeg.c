@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Dec 26 12:37:36 2003.
- * $Id: demultiplexer_mpeg.c,v 1.26 2003/12/27 14:25:43 sian Exp $
+ * Last Modified: Fri Jan  2 21:46:42 2004.
+ * $Id: demultiplexer_mpeg.c,v 1.27 2004/01/03 10:28:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -188,7 +188,7 @@ examine(Demultiplexer *demux)
       break;
     case MPEG_PADDING:
       skip = 6 + utils_get_big_uint16(buf + 4);
-      debug_message_fnc("MPEG_PADDING, skip %d bytes\n", skip);
+      //debug_message_fnc("MPEG_PADDING, skip %d bytes\n", skip);
       if (used_size < skip)
 	continue;
       break;
@@ -216,13 +216,14 @@ examine(Demultiplexer *demux)
 	  vstream |= 1 << nvstream;
 	  info->nvstreams++;
 	}
-      } else if (id < 0xb9 && id > 0xb0) {
-	debug_message("Looks like video stream.\n");
+      } else if (id < 0xb9) {
+	debug_message_fnc("Looks like video stream.\n");
 	vstream = 1;
-	info->nvstreams++;
+	info->nvstreams = 1;
+	info->ver = 3;
+	goto end;
       } else {
-	debug_message("Unknown id %02X %d bytes\n", id, skip - 6);
-	goto error;
+	debug_message_fnc("Unknown id %02X %d bytes\n", id, skip - 6);
       }
       break;
     }
@@ -230,8 +231,8 @@ examine(Demultiplexer *demux)
     used_size -= skip;
   } while (1);
 
-  debug_message_fnc("OK\n");
  end:
+  debug_message_fnc("OK\n");
   free(buf);
   return 1;
 
@@ -305,6 +306,19 @@ demux_main(void *arg)
       }
     }
 
+    if (info->ver == 3) {
+      /* Video stream */
+      skip = used_size;
+      mp = malloc(sizeof(MpegPacket));
+      mp->pts_dts_flag = 0xff;
+      mp->size = skip;
+      mp->data = malloc(mp->size);
+      memcpy(mp->data, buf, mp->size);
+      fifo_put(info->vstream, mp, mpeg_packet_destructor);
+      used_size = 0;
+      continue;
+    }
+
     if (buf[0]) {
       memcpy(buf, buf + 1, used_size - 1);
       used_size--;
@@ -362,7 +376,7 @@ demux_main(void *arg)
       }
       debug_message_fnc("MPEG_RESERVED_STREAM1\n");
       break;
-    case MPEG_PRIVATE_STREAM1: /* AC3? */
+    case MPEG_PRIVATE_STREAM1: /* AC3 */
       skip = 6 + utils_get_big_uint16(buf + 4);
       if (used_size < skip) {
 	CONTINUE_IF_RUNNING;
@@ -417,7 +431,7 @@ demux_main(void *arg)
 	    /* buffer scale, buffer size */
 	    p += 2;
 	  }
-	  pts_dts_flag = (*p & 0xf0) >> 4;
+	  pts_dts_flag = *p >> 4;
 	  switch (pts_dts_flag) {
 	  case 0:
 	    p++;
@@ -425,12 +439,15 @@ demux_main(void *arg)
 	  case 2:
 	    /* presentation time stamp */
 	    pts = get_timestamp(p);
+	    dts = pts;
 	    p += 5;
+	    //debug_message_fnc("pts: %ld\n", pts);
 	    break;
 	  case 3:
 	    /* presentation time stamp, decoding time stamp */
 	    pts = get_timestamp(p);
 	    dts = get_timestamp(p + 5);
+	    //debug_message_fnc("pts: %ld   dts: %ld\n", pts, dts);
 	    p += 10;
 	    break;
 	  default:
@@ -450,14 +467,17 @@ demux_main(void *arg)
       } else if (!v_or_a) {
 	if (id < 0xb9) {
 	  /* Video stream */
+	  debug_message_fnc("identified as video stream.  Put data in raw.\n");
+	  skip = used_size;
 	  mp = malloc(sizeof(MpegPacket));
 	  mp->pts_dts_flag = 0xff;
 	  mp->size = skip;
 	  mp->data = malloc(mp->size);
 	  memcpy(mp->data, buf, mp->size);
 	  fifo_put(info->vstream, mp, mpeg_packet_destructor);
+	  info->ver = 3;
 	} else {
-	  debug_message("Unknown id %02X %d bytes\n", id, skip - 6);
+	  debug_message_fnc("Unknown id %02X %d bytes\n", id, skip - 6);
 	}
       }
       break;
