@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 25 14:58:06 2001.
- * $Id: wallpaper.c,v 1.1 2001/04/25 06:44:36 sian Exp $
+ * Last Modified: Thu Apr 26 18:12:07 2001.
+ * $Id: wallpaper.c,v 1.2 2001/04/27 01:06:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -148,9 +148,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
     vw->if_direct = 1;
     vw->render_width  = m->width;
     vw->render_height = m->height;
-  }
 
-  if (m) {
     while (loop) {
       switch (m->status) {
       case _PLAY:
