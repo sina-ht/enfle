@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 31 14:51:34 2004.
- * $Id: movie.h,v 1.20 2004/02/02 16:38:50 sian Exp $
+ * Last Modified: Sat Feb 14 02:28:52 2004.
+ * $Id: movie.h,v 1.21 2004/02/14 05:31:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,8 +28,12 @@ typedef struct _movie Movie;
 #include "utils/libconfig.h"
 #include "image.h"
 #include "player-extra.h"
+#include "demultiplexer.h"
+#include "fourcc.h"
 #include "video-plugin.h"
+#include "videodecoder.h"
 #include "audio-plugin.h"
+#include "audiodecoder.h"
 #include "stream.h"
 #include "utils/timer.h"
 #include "utils/timer_gettimeofday.h"
@@ -43,23 +47,34 @@ typedef enum {
 } MovieStatus;
 
 struct _movie {
+  void *movie_private;
   Stream *st;
-  AudioPlugin *ap;
   MovieStatus status;
   ImageType requested_type;
   Timer *timer;
-  void *movie_private;
+  Demultiplexer *demux;
+
+  int has_video;
   int width, height;
   int rendering_width, rendering_height;
-  int has_video;
   unsigned int current_frame, num_of_frames;
   float framerate;
   int direct_decode;
+  unsigned int v_fourcc;
+  const char *v_codec_name;
+  VideoDecoder *vdec;
+  unsigned int out_fourcc;
+  int out_bitcount;
+
   int has_audio;
   unsigned int current_sample, num_of_samples;
   AudioFormat sampleformat, sampleformat_actual;
   int channels, channels_actual, samplerate, samplerate_actual;
-  char *format;
+  char *player_name, *format;
+  unsigned int a_fourcc;
+  const char *a_codec_name;
+  AudioDecoder *adec;
+  AudioPlugin *ap;
 
   /* These are callback functions which may or should be provided by UI. */
   int (*initialize_screen)(VideoWindow *, Movie *, int, int);
