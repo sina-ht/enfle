@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 21:57:41 2000.
- * $Id: spi.c,v 1.9 2000/12/30 07:19:56 sian Exp $
+ * Last Modified: Sat Jan  6 01:18:18 2001.
+ * $Id: spi.c,v 1.10 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,16 +20,25 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#ifdef HAVE_CONFIG_H
+# ifndef CONFIG_H_INCLUDED
+#  include "config.h"
+#  define CONFIG_H_INCLUDED
+# endif
+#endif
+
+#ifdef USE_SPI
+
 #include <stdlib.h>
 
-#include "pe_image.h"
+#include "dllloader/pe_image.h"
 #include "spi-private.h"
 #include "spi.h"
 #include "loader-plugin.h"
 #include "loader-extra.h"
 #include "archiver-plugin.h"
 #include "archiver-extra.h"
-#include "misc.h"
+#include "utils/misc.h"
 
 #define REQUIRE_STRING_H
 #include "compat.h"
@@ -419,3 +428,5 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
 
   return NULL;
 }
+
+#endif

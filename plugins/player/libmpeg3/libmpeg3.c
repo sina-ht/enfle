@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan  3 17:44:44 2001.
- * $Id: libmpeg3.c,v 1.17 2001/01/03 08:48:26 sian Exp $
+ * Last Modified: Sat Jan  6 01:29:55 2001.
+ * $Id: libmpeg3.c,v 1.18 2001/01/06 23:56:06 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -33,9 +33,9 @@
 
 #include "common.h"
 
-#include "timer.h"
-#include "timer_gettimeofday.h"
-#include "player-plugin.h"
+#include "utils/timer.h"
+#include "utils/timer_gettimeofday.h"
+#include "enfle/player-plugin.h"
 
 typedef struct _libmpeg3_info {
   mpeg3_t *file;

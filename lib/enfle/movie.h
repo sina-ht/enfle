@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 24 04:28:01 2000.
- * $Id: movie.h,v 1.11 2000/12/24 15:28:19 sian Exp $
+ * Last Modified: Sat Jan  6 01:14:42 2001.
+ * $Id: movie.h,v 1.12 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,13 +25,14 @@
 
 typedef struct _movie Movie;
 
-#include "libconfig.h"
+#include "utils/libconfig.h"
 #include "image.h"
+#include "player-extra.h"
 #include "video-plugin.h"
 #include "audio-plugin.h"
 #include "stream.h"
-#include "timer.h"
-#include "timer_gettimeofday.h"
+#include "utils/timer.h"
+#include "utils/timer_gettimeofday.h"
 
 typedef enum {
   _STOP,
@@ -72,10 +73,10 @@ struct _movie {
 
   /* These are implemented by movie plugin. */
   void *(*get_screen)(Movie *);
-  int (*play)(Movie *);
-  int (*play_main)(Movie *, VideoWindow *);
-  int (*pause_movie)(Movie *);
-  int (*stop)(Movie *);
+  PlayerStatus (*play)(Movie *);
+  PlayerStatus (*play_main)(Movie *, VideoWindow *);
+  PlayerStatus (*pause_movie)(Movie *);
+  PlayerStatus (*stop)(Movie *);
   void (*unload_movie)(Movie *);
 };
 

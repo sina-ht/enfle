@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan  3 17:44:51 2001.
- * $Id: mpeg_lib.c,v 1.14 2001/01/03 08:48:26 sian Exp $
+ * Last Modified: Sat Jan  6 01:29:38 2001.
+ * $Id: mpeg_lib.c,v 1.15 2001/01/06 23:56:06 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -29,7 +29,7 @@
 
 #include "common.h"
 
-#include "player-plugin.h"
+#include "enfle/player-plugin.h"
 
 typedef struct _mpeg_lib_info {
   Image *p;

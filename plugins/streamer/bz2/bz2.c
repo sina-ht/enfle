@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 05:50:44 2000.
- * $Id: bz2.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Jan  6 01:27:47 2001.
+ * $Id: bz2.c,v 1.2 2001/01/06 23:56:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,7 +27,7 @@
 
 #include "common.h"
 
-#include "streamer-plugin.h"
+#include "enfle/streamer-plugin.h"
 
 #include "bz2.h"
 

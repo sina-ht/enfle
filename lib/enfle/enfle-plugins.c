@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 00:11:44 2000.
- * $Id: enfle-plugins.c,v 1.5 2000/12/03 08:37:14 sian Exp $
+ * Last Modified: Sat Jan  6 01:12:58 2001.
+ * $Id: enfle-plugins.c,v 1.6 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  2 23:05:21 2000.
- * $Id: png.c,v 1.4 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Sat Jan  6 01:28:12 2001.
+ * $Id: png.c,v 1.5 2001/01/06 23:56:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,7 +27,7 @@
 
 #include "common.h"
 
-#include "loader-plugin.h"
+#include "enfle/loader-plugin.h"
 
 /* png_jmpbuf() macro is not defined prior to libpng-1.0.6. */
 #ifndef png_jmpbuf

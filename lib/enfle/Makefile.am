@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.9 2000/12/27 19:04:17 sian Exp $
+# $Id: Makefile.am,v 1.10 2001/01/06 23:55:25 sian Exp $
 
 lib_LTLIBRARIES = libenfle.la
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib/utils -I$(top_srcdir)/lib/dllloader
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 libenfle_la_SOURCES = \
 	enfle-plugins.c enfle-plugins.h \
@@ -24,4 +24,9 @@ libenfle_la_SOURCES = \
 	image_magnify.c \
 	image.c image.h \
 	memory.c memory.h
+
+if USE_SPI
 libenfle_la_LIBADD = $(top_builddir)/lib/utils/libenfleutils.la $(top_builddir)/lib/dllloader/libdllloader.la
+else
+libenfle_la_LIBADD = $(top_builddir)/lib/utils/libenfleutils.la
+endif

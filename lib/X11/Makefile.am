@@ -1,10 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Dec  3 14:00:36 2000.
-# $Id: Makefile.am,v 1.2 2000/12/03 08:40:03 sian Exp $
+# Last Modified: Sat Jan  6 01:11:18 2001.
+# $Id: Makefile.am,v 1.3 2001/01/06 23:51:55 sian Exp $
 
 noinst_LTLIBRARIES = libenfleX11.la
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib/enfle
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 sources = \
 	x11.c x11.h \

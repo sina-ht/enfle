@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 03:22:03 2000.
- * $Id: tar.c,v 1.2 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Sat Jan  6 01:29:14 2001.
+ * $Id: tar.c,v 1.3 2001/01/06 23:56:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,7 +27,7 @@
 
 #include "common.h"
 
-#include "archiver-plugin.h"
+#include "enfle/archiver-plugin.h"
 
 #include "_tar.h"
 

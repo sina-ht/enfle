@@ -3,7 +3,7 @@
  */
 
 #include <sys/time.h>
-#include "windef.h"
+#include "dllloader/windef.h"
 
 typedef struct _picture_info {
   long left, top;   /* 画像を展開する位置 */

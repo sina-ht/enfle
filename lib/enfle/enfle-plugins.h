@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 08:02:35 2000.
- * $Id: enfle-plugins.h,v 1.2 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sat Jan  6 01:13:10 2001.
+ * $Id: enfle-plugins.h,v 1.3 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,7 +23,7 @@
 #ifndef _ENFLE_PLUGINS_H
 #define _ENFLE_PLUGINS_H
 
-#include "pluginlist.h"
+#include "utils/pluginlist.h"
 #include "enfle-plugintype.h"
 
 typedef struct _enfle_plugins EnflePlugins;

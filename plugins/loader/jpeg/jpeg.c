@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  2 23:05:02 2000.
- * $Id: jpeg.c,v 1.4 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Sat Jan  6 01:28:17 2001.
+ * $Id: jpeg.c,v 1.5 2001/01/06 23:56:06 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -31,7 +31,7 @@
 
 #include "common.h"
 
-#include "loader-plugin.h"
+#include "enfle/loader-plugin.h"
 
 #if BITS_IN_JSAMPLE != 8
 #  error BITS_IN_JSAMPLE must be 8

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 24 06:14:45 2000.
- * $Id: esd.c,v 1.1 2000/12/24 15:14:50 sian Exp $
+ * Last Modified: Sat Jan  6 01:31:23 2001.
+ * $Id: esd.c,v 1.2 2001/01/06 23:56:06 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -32,7 +32,7 @@
 
 #include "common.h"
 
-#include "audio-plugin.h"
+#include "enfle/audio-plugin.h"
 
 static AudioDevice *open_device(void *, Config *);
 static int set_params(AudioDevice *, AudioFormat *, int *, int *);

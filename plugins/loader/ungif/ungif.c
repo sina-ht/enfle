@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan  3 15:36:01 2001.
- * $Id: ungif.c,v 1.8 2001/01/03 06:41:15 sian Exp $
+ * Last Modified: Sat Jan  6 01:28:06 2001.
+ * $Id: ungif.c,v 1.9 2001/01/06 23:56:06 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -35,7 +35,7 @@
 
 #include "common.h"
 
-#include "loader-plugin.h"
+#include "enfle/loader-plugin.h"
 
 DECLARE_LOADER_PLUGIN_METHODS;
 

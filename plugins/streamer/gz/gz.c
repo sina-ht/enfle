@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 21:59:58 2000.
- * $Id: gz.c,v 1.3 2000/12/30 07:19:56 sian Exp $
+ * Last Modified: Sat Jan  6 01:27:30 2001.
+ * $Id: gz.c,v 1.4 2001/01/06 23:56:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,7 +28,7 @@
 #define REQUIRE_FATAL
 #include "common.h"
 
-#include "streamer-plugin.h"
+#include "enfle/streamer-plugin.h"
 
 static StreamerStatus identify(Stream *, char *);
 static StreamerStatus open(Stream *, char *);

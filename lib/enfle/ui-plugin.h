@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:46:39 2000.
- * $Id: ui-plugin.h,v 1.6 2000/10/20 18:13:39 sian Exp $
+ * Last Modified: Sat Jan  6 01:14:51 2001.
+ * $Id: ui-plugin.h,v 1.7 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,7 +25,7 @@
 
 #include "ui-extra.h"
 #include "enfle-plugin.h"
-#include "libconfig.h"
+#include "utils/libconfig.h"
 #include "streamer.h"
 #include "loader.h"
 #include "archiver.h"

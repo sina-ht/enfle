@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 14 20:56:02 2000.
- * $Id: mng.c,v 1.12 2000/12/14 16:06:14 sian Exp $
+ * Last Modified: Sat Jan  6 01:29:45 2001.
+ * $Id: mng.c,v 1.13 2001/01/06 23:56:06 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -28,8 +28,7 @@
 
 #include "common.h"
 
-#include "stream.h"
-#include "player-plugin.h"
+#include "enfle/player-plugin.h"
 
 typedef struct {
   mng_handle mng;

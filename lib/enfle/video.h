@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan  3 15:39:45 2001.
- * $Id: video.h,v 1.8 2001/01/03 06:42:05 sian Exp $
+ * Last Modified: Sat Jan  6 01:14:13 2001.
+ * $Id: video.h,v 1.9 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,7 +23,7 @@
 #ifndef _VIDEO_H
 #define _VIDEO_H
 
-#include "libconfig.h"
+#include "utils/libconfig.h"
 
 typedef enum {
   ENFLE_KEY_Unknown,
@@ -65,6 +65,7 @@ typedef enum {
 #define ENFLE_WindowMask   16
 
 typedef enum {
+  ENFLE_Event_None,
   ENFLE_Event_Exposure,
   ENFLE_Event_ButtonPressed,
   ENFLE_Event_ButtonReleased,
@@ -117,7 +118,7 @@ typedef enum _videorendermethod {
 typedef struct _video_window VideoWindow;
 struct _video_window {
   Config *c;
-  void *private;
+  void *private_data;
   unsigned int x, y;
   unsigned int width, height;
   unsigned int full_width, full_height;

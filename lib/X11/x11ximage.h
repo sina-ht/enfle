@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Dec  3 15:22:14 2000.
- * $Id: x11ximage.h,v 1.2 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Sat Jan  6 01:18:46 2001.
+ * $Id: x11ximage.h,v 1.3 2001/01/06 23:51:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,7 +23,7 @@
 #ifndef _X11XIMAGE_H
 #define _X11XIMAGE_H
 
-#include "image.h"
+#include "enfle/image.h"
 #include "x11.h"
 #ifdef USE_SHM
 #include <X11/extensions/XShm.h>

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 14 20:57:04 2000.
- * $Id: ungif.c,v 1.16 2000/12/14 16:06:14 sian Exp $
+ * Last Modified: Sat Jan  6 01:29:30 2001.
+ * $Id: ungif.c,v 1.17 2001/01/06 23:56:06 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -35,8 +35,7 @@
 
 #include "common.h"
 
-#include "stream.h"
-#include "player-plugin.h"
+#include "enfle/player-plugin.h"
 
 typedef struct _ungif_info {
   GifFileType *gf;

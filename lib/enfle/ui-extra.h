@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 18 23:28:47 2000.
- * $Id: ui-extra.h,v 1.3 2000/12/18 17:00:24 sian Exp $
+ * Last Modified: Sat Jan  6 01:13:47 2001.
+ * $Id: ui-extra.h,v 1.4 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,11 +25,12 @@
 
 typedef struct _ui_data UIData;
 
-#include "libconfig.h"
+#include "utils/libconfig.h"
 #include "enfle-plugins.h"
 #include "streamer.h"
 #include "loader.h"
 #include "archiver.h"
+#include "player-extra.h"
 #include "player.h"
 #include "archive.h"
 #include "video.h"

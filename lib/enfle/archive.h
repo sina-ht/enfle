@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 29 07:15:09 2000.
- * $Id: archive.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Jan  6 01:13:27 2001.
+ * $Id: archive.h,v 1.2 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,7 +23,7 @@
 #ifndef _ARCHIVE_H
 #define _ARCHIVE_H
 
-#include "hash.h"
+#include "utils/hash.h"
 #include "stream.h"
 
 typedef struct _archive Archive;

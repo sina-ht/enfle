@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 19 00:22:48 2000.
- * $Id: audio.h,v 1.1 2000/12/18 16:58:59 sian Exp $
+ * Last Modified: Sat Jan  6 01:14:26 2001.
+ * $Id: audio.h,v 1.2 2001/01/06 23:55:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,10 +20,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#ifndef _AUDIO_H
-#define _AUDIO_H
+#ifndef _ENFLE_AUDIO_H
+#define _ENFLE_AUDIO_H
 
-#include "libconfig.h"
+#include "utils/libconfig.h"
 
 typedef enum {
   _AUDIO_FORMAT_UNSET = 0,
