@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan  2 10:55:15 2004.
- * $Id: stream.c,v 1.10 2004/01/03 10:29:26 sian Exp $
+ * Last Modified: Mon Jan 19 21:08:57 2004.
+ * $Id: stream.c,v 1.11 2004/01/19 13:15:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -117,7 +117,7 @@ static int
 dummy_read(Stream *s, unsigned char *p, int size)
 {
   warning_fnc("This function only fills the buffer with 0.\n");
-  memcpy(s, 0, size);
+  memset(p, 0, size);
   return size;
 }
 
