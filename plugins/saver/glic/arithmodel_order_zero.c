@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Aug  1 00:41:01 2001.
- * $Id: arithmodel_order_zero.c,v 1.3 2001/07/31 20:25:57 sian Exp $
+ * Last Modified: Mon Aug  6 02:36:36 2001.
+ * $Id: arithmodel_order_zero.c,v 1.4 2001/08/06 04:59:38 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -147,10 +147,7 @@ init(Arithmodel *_am, int eof_freq, int escape_freq)
     install_symbol(_am, escape_freq);
   }
   am->start_symbol = am->nsymbols;
-
-#ifdef ESCAPE_RUN
   am->escape_run = 0;
-#endif
 
   return 1;
 }
@@ -239,11 +236,11 @@ encode_bulk(Arithmodel *_am, Index index)
 
   if (am->nsymbols == index) {
     if (IS_ESCAPE_INSTALLED(am)) {
-#ifdef ESCAPE_RUN
-      am->escape_run++;
-#else
-      encode_bulk(_am, am->escape_symbol);
-#endif
+      if (am->escape_encoded_with_rle) {
+	am->escape_run++;
+      } else {
+	encode_bulk(_am, am->escape_symbol);
+      }
       install_symbol(_am, 1);
       return 2;
     } else {
@@ -251,15 +248,13 @@ encode_bulk(Arithmodel *_am, Index index)
     }
   }
 
-#ifdef ESCAPE_RUN
-  if (am->escape_run) {
+  if (am->escape_encoded_with_rle && am->escape_run) {
     int run = am->escape_run;
 
     am->escape_run = 0;
     encode_bulk(_am, am->escape_symbol);
     arithmodel_encode_delta(am->bin_am, run, 0, 1);
   }
-#endif
 
   am->update_region(_am, index);
   arithcoder_encode_renormalize(am->ac);

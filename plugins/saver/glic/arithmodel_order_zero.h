@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.h -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Aug  1 01:11:19 2001.
- * $Id: arithmodel_order_zero.h,v 1.3 2001/07/31 20:25:57 sian Exp $
+ * Last Modified: Mon Aug  6 02:35:49 2001.
+ * $Id: arithmodel_order_zero.h,v 1.4 2001/08/06 04:59:38 sian Exp $
  */
 
 #ifndef _ARITHMODEL_ORDER_ZERO_H
@@ -10,8 +10,6 @@
 
 typedef unsigned int _Freq;
 typedef struct _arithmodel_order_zero Arithmodel_order_zero;
-
-#undef ESCAPE_RUN
 
 struct _arithmodel_order_zero {
   ARITHMODEL_BASE_VARIABLES;
@@ -28,10 +26,9 @@ struct _arithmodel_order_zero {
   int initial_escape_freq;
   Index escape_symbol;
   Index start_symbol;
-#ifdef ESCAPE_RUN
+  int escape_encoded_with_rle;
   int escape_run;
   Arithmodel *bin_am;
-#endif
   _Freq *freq;
 };
 

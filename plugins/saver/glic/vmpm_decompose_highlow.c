@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Aug  1 03:00:36 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.13 2001/07/31 20:25:25 sian Exp $
+ * Last Modified: Mon Aug  6 02:40:09 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.14 2001/08/06 04:59:38 sian Exp $
  */
 
 #include <stdio.h>
@@ -192,7 +192,7 @@ encode(VMPM *vmpm)
   arithcoder_encode_init(ac, vmpm->outfile);
 
   if (vmpm->nlowbits < 8) {
-    am = arithmodel_order_zero_create(1, 1);
+    am = arithmodel_order_zero_create(0, 1);
 
     arithmodel_encode_init(am, ac);
     arithmodel_order_zero_set_update_escape_freq(am, update_escape_freq);
@@ -201,12 +201,6 @@ encode(VMPM *vmpm)
     arithmodel_encode_init(bin_am, ac);
     arithmodel_install_symbol(bin_am, 1);
     arithmodel_install_symbol(bin_am, 1);
-#ifdef ESCAPE_RUN
-    {
-      Arithmodel_order_zero *am_oz = (Arithmodel_order_zero *)am;
-      am_oz->bin_am = bin_am;
-    }
-#endif
 
     match_found = 0;
     for (i = vmpm->I; i >= 1; i--) {
