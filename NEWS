@@ -1,6 +1,32 @@
-NEWS  Last Modified: Fri Mar  8 11:29:31 2002.
+NEWS  Last Modified: Tue Dec 30 03:21:15 2003.
 
 THIS IS A DEVELOPING RELEASE.
+
+20031230:
+ Meta:
+  Upgraded autoconf to 2.59.
+  Upgraded automake to 1.8.
+ General:
+  Better support for static plugins, especially --enable-all-static.
+  Archive filename sort.
+  Better filename code conversion, filename displaying.
+  '.' support in assoc for stopping identify() call.
+  demultiplexer (avi, mpg) improvements.
+  Reduced dead-locks in stopping movie.
+ Plugins:
+  divx player:
+   Replaced opendivx plugin with divx plugin.
+  avcodec player:
+   Integrated libavcodec, and made avcodec plugin.
+  alsa audio:
+   Use ALSA_PCM_NEW_HW_PARAMS_API.
+   EPIPE recovery.
+  normal UI:
+    next5, prev5, nextarchive5, prevarchive5 command.
+  tar archiver:
+   archive magic check.
+  png saver:
+   bug fix.
 
 20020307:
  Upgraded autoconf to 2.52i.
