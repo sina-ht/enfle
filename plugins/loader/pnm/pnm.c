@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:50:59 2001.
- * $Id: pnm.c,v 1.3 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 20:31:53 2001.
+ * $Id: pnm.c,v 1.4 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -81,7 +81,7 @@ get_token(Stream *st)
 {
   static char *line = NULL;
   static int last = 0;
-  static int index = 0;
+  static int i = 0;
   int start, len;
   char *ret;
 
@@ -90,11 +90,11 @@ get_token(Stream *st)
       free(line);
     line = NULL;
     last = 0;
-    index = 0;
+    i = 0;
     return NULL;
   }
 
-  if (index >= last) {
+  if (i >= last) {
     for (;;) {
       if (line)
 	free(line);
@@ -110,24 +110,24 @@ get_token(Stream *st)
     /* No line should be longer than 70 characters (ppm(5)), check with some room. */
     if ((last = strlen(line)) > 80)
       return NULL;
-    index = 0;
+    i = 0;
   }
 
-  while (index < last && isspace(line[index]))
-    index++;
+  while (i < last && isspace(line[i]))
+    i++;
 
-  start = index;
-  while (index < last && !isspace(line[index]))
-    index++;
-  len = index - start;
+  start = i;
+  while (i < last && !isspace(line[i]))
+    i++;
+  len = i - start;
 
   if ((ret = malloc(len + 1)) == NULL)
     return NULL;
   strncpy(ret, line + start, len);
   ret[len] = '\0';
 
-  while (index < last && isspace(line[index]))
-    index++;
+  while (i < last && isspace(line[i]))
+    i++;
 
   return ret;
 }

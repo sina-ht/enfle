@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_recur.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Sep 18 13:43:17 2001.
- * $Id: vmpm_decompose_recur.c,v 1.4 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 20:48:39 2001.
+ * $Id: vmpm_decompose_recur.c,v 1.5 2001/09/21 11:53:28 sian Exp $
  */
 
 #include <stdio.h>
@@ -293,9 +293,9 @@ decode(VMPM *vmpm)
     //arithmodel_order_zero_reset(am, 0, vmpm->newtoken[i]);
     arithmodel_order_zero_reset(am, 0, vmpm->token_index[i] >> 2);
     for (j = 0; j < vmpm->token_index[i]; j++) {
-      Index index;
+      Index idx;
 
-      arithmodel_decode(am, &index);
+      arithmodel_decode(am, &idx);
       vmpm->tokens[i][j].value++;
       if (vmpm->tokens[i][j].value > vmpm->token_index[i - 1]) {
 	if (vmpm->tokens[i][j].value == vmpm->token_index[i - 1] + 1)

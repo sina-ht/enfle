@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:04:03 2001.
- * $Id: kernel32.c,v 1.13 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 19:35:03 2001.
+ * $Id: kernel32.c,v 1.14 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -236,7 +236,7 @@ static Symbol_info symbol_infos[] = {
 /* file related */
 
 DEFINE_W32API(HANDLE, CreateFileA,
-	      (LPCSTR filename, DWORD access, DWORD sharing,
+	      (LPCSTR filename, DWORD _access, DWORD sharing,
 	       LPSECURITY_ATTRIBUTES sa, DWORD creation,
 	       DWORD attributes, HANDLE template))
 {
@@ -252,10 +252,10 @@ DEFINE_W32API(HANDLE, CreateFileA,
 DEFINE_W32API(HFILE, _lopen,
 	      (LPCSTR path, INT mode))
 {
-  DWORD access = 0, sharing = 0;
+  DWORD _access = 0, sharing = 0;
 
   debug_message(__FUNCTION__ "(%s, %d) called\n", path, mode);
-  return CreateFileA(path, access, sharing, NULL, OPEN_EXISTING, 0, (HANDLE)-1);
+  return CreateFileA(path, _access, sharing, NULL, OPEN_EXISTING, 0, (HANDLE)-1);
 }
 
 DEFINE_W32API(BOOL, ReadFile,
@@ -844,29 +844,29 @@ DEFINE_W32API(DWORD, TlsAlloc,
 }
 
 DEFINE_W32API(BOOL, TlsFree,
-	      (DWORD index))
+	      (DWORD i))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", (void *)index);
-  w32api_mem_free((void *)index);
+  debug_message(__FUNCTION__ "(%p) called\n", (void *)i);
+  w32api_mem_free((void *)i);
   return TRUE;
 }
 
 DEFINE_W32API(LPVOID, TlsGetValue,
-	      (DWORD index))
+	      (DWORD i))
 {
-  void **p = (void **)index;
+  void **p = (void **)i;
 
-  debug_message(__FUNCTION__ "(%p) called\n", (void *)index);
+  debug_message(__FUNCTION__ "(%p) called\n", (void *)i);
 
   return *p;
 }
 
 DEFINE_W32API(BOOL, TlsSetValue,
-	      (DWORD index, LPVOID value))
+	      (DWORD i, LPVOID value))
 {
-  void **p = (void **)index;
+  void **p = (void **)i;
 
-  debug_message(__FUNCTION__ "(%p, %p) called ", (void *)index, value);
+  debug_message(__FUNCTION__ "(%p, %p) called ", (void *)i, value);
 
   *p = value;
 

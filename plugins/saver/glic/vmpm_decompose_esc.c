@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_esc.c -- ESC estimatation method A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Sep 18 13:45:35 2001.
- * $Id: vmpm_decompose_esc.c,v 1.12 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 20:42:08 2001.
+ * $Id: vmpm_decompose_esc.c,v 1.13 2001/09/21 11:53:29 sian Exp $
  */
 
 #include <stdio.h>
@@ -123,7 +123,7 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 }
 
 static int
-update_escape_freq(Arithmodel *_am, Index index)
+update_escape_freq(Arithmodel *_am, Index i)
 {
   /* No increment */
   return 0;
@@ -279,9 +279,9 @@ decode(VMPM *vmpm)
     //arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
     arithmodel_order_zero_reset(am, 1, vmpm->token_index[i] >> 2);
     for (j = 0; j < vmpm->token_index[i]; j++) {
-      Index index;
+      Index idx;
 
-      arithmodel_decode(am, &index);
+      arithmodel_decode(am, &idx);
       vmpm->tokens[i][j].value++;
       if (vmpm->tokens[i][j].value > vmpm->token_index[i - 1]) {
 	if (vmpm->tokens[i][j].value == vmpm->token_index[i - 1] + 1)

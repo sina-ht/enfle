@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:53:02 2001.
- * $Id: timer_gettimeofday.c,v 1.4 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 19:30:35 2001.
+ * $Id: timer_gettimeofday.c,v 1.5 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -100,40 +100,40 @@ get_time(void)
 static void
 start(Timer *timer)
 {
-  struct time_data *time = (struct time_data *)timer->impl->impl_data;
+  struct time_data *t = (struct time_data *)timer->impl->impl_data;
 
-  time->base = get_time();
+  t->base = get_time();
 }
 
 static void
 pause(Timer *timer)
 {
-  struct time_data *time = (struct time_data *)timer->impl->impl_data;
+  struct time_data *t = (struct time_data *)timer->impl->impl_data;
 
-  time->now = get_time();
+  t->now = get_time();
 }
 
 static void
 restart(Timer *timer)
 {
-  struct time_data *time = (struct time_data *)timer->impl->impl_data;
+  struct time_data *t = (struct time_data *)timer->impl->impl_data;
 
-  time->base = get_time();
+  t->base = get_time();
 }
 
 static void
 stop(Timer *timer)
 {
-  struct time_data *time = (struct time_data *)timer->impl->impl_data;
+  struct time_data *t = (struct time_data *)timer->impl->impl_data;
 
-  time->now = get_time();
+  t->now = get_time();
 }
 
 static Timer_t
 get_micro(Timer *timer)
 {
-  struct time_data *time = (struct time_data *)timer->impl->impl_data;
+  struct time_data *t = (struct time_data *)timer->impl->impl_data;
 
   /* If Timer_t is double, this is correct. */
-  return (Timer_t)(time->now - time->base);
+  return (Timer_t)(t->now - t->base);
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 02:20:33 2001.
- * $Id: libconfig.c,v 1.15 2001/09/21 02:57:15 sian Exp $
+ * Last Modified: Fri Sep 21 19:31:24 2001.
+ * $Id: libconfig.c,v 1.16 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -246,11 +246,11 @@ load(Config *c, const char *filepath)
     case '#':
       /* special directives */
       if (strncasecmp(&p[1], "include", 7) == 0) {
-	char *filepath;
+	char *path;
 
-	filepath = get_token(p + 8);
-	load(c, filepath);
-	free(filepath);
+	path = get_token(p + 8);
+	load(c, path);
+	free(path);
       } else {
 	show_message("Unknown directive\n");
 	parse_error(p, config_path);

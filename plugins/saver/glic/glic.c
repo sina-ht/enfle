@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Tue Sep 18 13:46:52 2001.
- * $Id: glic.c,v 1.22 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 20:37:12 2001.
+ * $Id: glic.c,v 1.23 2001/09/21 11:53:29 sian Exp $
  */
 
 #include <stdlib.h>
@@ -252,12 +252,12 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   rewind(vmpm.outfile);
   {
     char tmp[256];
-    int c;
+    int ch;
 
     fgets(tmp, 256, vmpm.outfile);
     stat_message(&vmpm, "D:Header: %s", tmp);
-    if ((c = fgetc(vmpm.outfile)) != 0x1a) {
-      stat_message(&vmpm, "Invalid character after the header: %c\n", c);
+    if ((ch = fgetc(vmpm.outfile)) != 0x1a) {
+      stat_message(&vmpm, "Invalid character after the header: %c\n", ch);
       debug_message("glic: check failed.\n");
     } else {
       int t, r;

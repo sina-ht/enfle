@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Sep 18 13:44:49 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.11 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 20:41:34 2001.
+ * $Id: vmpm_decompose_escfirst.c,v 1.12 2001/09/21 11:53:29 sian Exp $
  */
 
 #include <stdio.h>
@@ -123,7 +123,7 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 }
 
 static int
-update_escape_freq(Arithmodel *_am, Index index)
+update_escape_freq(Arithmodel *_am, Index i)
 {
   /* No increment */
   return 0;
@@ -307,10 +307,10 @@ decode(VMPM *vmpm)
     arithmodel_install_symbol(bin_am, 1);
     arithmodel_install_symbol(bin_am, 1);
     for (j = 0; j < vmpm->token_index[i]; j++) {
-      Index index;
+      Index idx;
 
-      arithmodel_decode(bin_am, &index);
-      if (index) {
+      arithmodel_decode(bin_am, &idx);
+      if (idx) {
 	nsymbols++;
 	vmpm->token[i][j]->value = nsymbols;
       } else {

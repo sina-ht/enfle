@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escc.c -- ESC estimation method C decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Sep 18 13:44:59 2001.
- * $Id: vmpm_decompose_escc.c,v 1.5 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 20:42:52 2001.
+ * $Id: vmpm_decompose_escc.c,v 1.6 2001/09/21 11:53:29 sian Exp $
  */
 
 #include <stdio.h>
@@ -278,10 +278,10 @@ decode(VMPM *vmpm)
     arithmodel_order_zero_reset(am, 0, 1);
     vmpm->tokens[i][0].value = 1;
     for (j = 1; j < vmpm->token_index[i]; j++) {
-      Index index;
+      Index idx;
 
-      arithmodel_decode(am, &index);
-      vmpm->tokens[i][j].value = index + 1;
+      arithmodel_decode(am, &idx);
+      vmpm->tokens[i][j].value = idx + 1;
       if (vmpm->tokens[i][j].value > vmpm->token_index[i - 1]) {
 	if (vmpm->tokens[i][j].value == vmpm->token_index[i - 1] + 1) {
 	  stat_message(vmpm, "e ");
@@ -289,7 +289,7 @@ decode(VMPM *vmpm)
 	} else
 	  generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);
       } else {
-	stat_message(vmpm, "%d ", index);
+	stat_message(vmpm, "%d ", idx);
       }
     }
     vmpm->token_index[i - 1] *= vmpm->r;

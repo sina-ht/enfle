@@ -198,28 +198,28 @@ void init_layer3(int down_sample_sblimit)
    }
    bdf = bi->shortDiff+3;
    for(cb=3;cb<13;cb++) {
-     int l = (*bdf++) >> 1;
+     int _l = (*bdf++) >> 1;
      for(lwin=0;lwin<3;lwin++) {
-       *mp++ = l;
+       *mp++ = _l;
        *mp++ = i + lwin;
        *mp++ = lwin;
        *mp++ = cb;
      }
-     i += 6*l;
+     i += 6*_l;
    }
    mapend[j][0] = mp;
 
    mp = map[j][1] = mapbuf1[j];
    bdf = bi->shortDiff+0;
    for(i=0,cb=0;cb<13;cb++) {
-     int l = (*bdf++) >> 1;
+     int _l = (*bdf++) >> 1;
      for(lwin=0;lwin<3;lwin++) {
-       *mp++ = l;
+       *mp++ = _l;
        *mp++ = i + lwin;
        *mp++ = lwin;
        *mp++ = cb;
      }
-     i += 6*l;
+     i += 6*_l;
    }
    mapend[j][1] = mp;
 
@@ -1379,23 +1379,23 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac,
 {
       real (*xr)[SBLIMIT*SSLIMIT] = (real (*)[SBLIMIT*SSLIMIT] ) xr_buf;
       struct bandInfoStruct *bi = &bandInfo[sfreq];
-      real *tab1,*tab2;
+      real *table1,*table2;
 
       if(lsf) {
         int p = gr_info->scalefac_compress & 0x1;
 	    if(ms_stereo) {
-          tab1 = pow1_2[p]; tab2 = pow2_2[p];
+          table1 = pow1_2[p]; table2 = pow2_2[p];
         }
         else {
-          tab1 = pow1_1[p]; tab2 = pow2_1[p];
+          table1 = pow1_1[p]; table2 = pow2_1[p];
         }
       }
       else {
         if(ms_stereo) {
-          tab1 = tan1_2; tab2 = tan2_2;
+          table1 = tan1_2; table2 = tan2_2;
         }
         else {
-          tab1 = tan1_1; tab2 = tan2_1;
+          table1 = tan1_1; table2 = tan2_1;
         }
       }
 
@@ -1419,7 +1419,7 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac,
                real t1,t2;
                sb = bi->shortDiff[sfb];
                idx = bi->shortIdx[sfb] + lwin;
-               t1 = tab1[is_p]; t2 = tab2[is_p];
+               t1 = table1[is_p]; t2 = table2[is_p];
                for (; sb > 0; sb--,idx+=3)
                {
                  real v = xr[0][idx];
@@ -1443,7 +1443,7 @@ maybe still wrong??? (copy 12 to 13?) */
            if(is_p != 7)
            {
              real t1,t2;
-             t1 = tab1[is_p]; t2 = tab2[is_p];
+             t1 = table1[is_p]; t2 = table2[is_p];
              for ( ; sb > 0; sb--,idx+=3 )
              {  
                real v = xr[0][idx];
@@ -1467,7 +1467,7 @@ maybe still wrong??? (copy 12 to 13?) */
              int is_p = scalefac[sfb]; /* scale: 0-15 */
              if(is_p != 7) {
                real t1,t2;
-               t1 = tab1[is_p]; t2 = tab2[is_p];
+               t1 = table1[is_p]; t2 = table2[is_p];
                for ( ; sb > 0; sb--,idx++)
                {
                  real v = xr[0][idx];
@@ -1490,7 +1490,7 @@ maybe still wrong??? (copy 12 to 13?) */
           is_p = scalefac[sfb]; /* scale: 0-15 */
           if(is_p != 7) {
             real t1,t2;
-            t1 = tab1[is_p]; t2 = tab2[is_p];
+            t1 = table1[is_p]; t2 = table2[is_p];
             for ( ; sb > 0; sb--,idx++)
             {
                real v = xr[0][idx];
@@ -1506,7 +1506,7 @@ maybe still wrong??? (copy 12 to 13?) */
         if(is_p != 7)
         {
           int sb;
-          real t1 = tab1[is_p],t2 = tab2[is_p]; 
+          real t1 = table1[is_p],t2 = table2[is_p]; 
 
           for ( sb = bi->longDiff[21]; sb > 0; sb--,idx++ )
           {

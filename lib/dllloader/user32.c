@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:31:26 2001.
- * $Id: user32.c,v 1.6 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Fri Sep 21 19:36:37 2001.
+ * $Id: user32.c,v 1.7 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,9 +71,9 @@ DEFINE_W32API(INT, LoadStringA, (HINSTANCE handle, UINT id, LPSTR buffer, INT le
   return 0;
 }
 
-DEFINE_W32API(INT, GetSystemMetrics, (INT index))
+DEFINE_W32API(INT, GetSystemMetrics, (INT i))
 {
-  debug_message("GetSystemMetrics(%d) called\n", index);
+  debug_message("GetSystemMetrics(%d) called\n", i);
   return 0;
 }
 

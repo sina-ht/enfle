@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 02:05:38 2001.
- * $Id: normal.c,v 1.53 2001/09/21 02:58:25 sian Exp $
+ * Last Modified: Fri Sep 21 20:01:02 2001.
+ * $Id: normal.c,v 1.54 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -455,14 +455,14 @@ static int main_loop_flip_vertical(MainLoop *ml) { return main_loop_rotate_main(
 static int main_loop_flip_horizontal(MainLoop *ml) { return main_loop_rotate_main(ml, -2); }
 
 static int
-main_loop_gamma_main(MainLoop *ml, int index)
+main_loop_gamma_main(MainLoop *ml, int i)
 {
   UIData *uidata = ml->uidata;
   int result;
 
   video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
 
-  if (index == 3) {
+  if (i == 3) {
     image_destroy(ml->p);
     ml->p = image_dup(ml->original_p);
     magnify_if_requested(ml->vw, ml->p);
@@ -473,7 +473,7 @@ main_loop_gamma_main(MainLoop *ml, int index)
   } else {
     Image *old_p;
 
-    config_set_int(uidata->c, (char *)"/enfle/plugins/effect/gamma/index", index);
+    config_set_int(uidata->c, (char *)"/enfle/plugins/effect/gamma/index", i);
     if ((old_p = effect_call(uidata->eps, (char *)"Gamma", ml->p, uidata->c))) {
       if (old_p != ml->p)
 	image_destroy(old_p);

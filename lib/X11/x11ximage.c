@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Sep 21 01:55:37 2001.
- * $Id: x11ximage.c,v 1.38 2001/09/21 02:21:23 sian Exp $
+ * Last Modified: Fri Sep 21 19:50:22 2001.
+ * $Id: x11ximage.c,v 1.39 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -118,17 +118,17 @@ void
 bgra32to16_generic(unsigned char *dest, unsigned char *s, unsigned int w, unsigned int h, unsigned int bpl, unsigned int bpl_s)
 {
   unsigned int i, j, pix;
-  unsigned char *dd;
+  unsigned char *d;
 
   for (j = 0; j < h; j++) {
-    dd = dest + j * bpl;
+    d = dest + j * bpl;
     for (i = 0; i < w; i++) {
       pix =
 	((s[i * 4 + 2] & 0xf8) << 8) |
 	((s[i * 4 + 1] & 0xfc) << 3) |
 	((s[i * 4 + 0] & 0xf8) >> 3);
-      *dd++ = pix & 0xff;
-      *dd++ = pix >> 8;
+      *d++ = pix & 0xff;
+      *d++ = pix >> 8;
     }
     s += bpl_s;
   }
@@ -157,7 +157,7 @@ convert(X11XImage *xi, Image *p)
 #ifdef USE_SHM
   int to_be_attached = 0;
 #endif
-  unsigned char *dest = NULL, *dd, *s;
+  unsigned char *dest = NULL, *d, *s;
   XImage *ximage = NULL;
 #ifdef USE_XV
   XvImage *xvimage = NULL;
@@ -326,16 +326,16 @@ convert(X11XImage *xi, Image *p)
   /* _BITMAP_* -> _INDEX */
   if (p->type == _BITMAP_LSBFirst || p->type == _BITMAP_MSBFirst) {
     Memory *m;
-    unsigned char *s, *d, b;
+    unsigned char *ss, *dd, b;
     int k, obpl, remain;
 
     m = memory_dup(p->image);
-    s = memory_ptr(m);
+    ss = memory_ptr(m);
     obpl = p->bytes_per_line;
     p->bytes_per_line = p->width;
     p->depth = p->bits_per_pixel = 8;
     p->ncolors = 2;
-    if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
+    if ((dd = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
       fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
     p->colormap[0][0] = p->colormap[0][1] = p->colormap[0][2] = 255;
     p->colormap[1][0] = p->colormap[1][1] = p->colormap[1][2] = 0;
@@ -344,38 +344,38 @@ convert(X11XImage *xi, Image *p)
     if (p->type == _BITMAP_LSBFirst) {
       for (j = 0; j < p->height; j++) {
 	for (i = 0; i < (p->width >> 3); i++) {
-	  b = s[i];
+	  b = ss[i];
 	  for (k = 8; k > 0; k--) {
-	    *d++ = b & 1;
+	    *dd++ = b & 1;
 	    b >>= 1;
 	  }
 	}
 	if (remain) {
-	  b = s[i];
+	  b = ss[i];
 	  for (k = remain; k > 0; k--) {
-	    *d++ = b & 1;
+	    *dd++ = b & 1;
 	    b >>= 1;
 	  }
 	}
-	s += obpl;
+	ss += obpl;
       }
     } else {
       for (j = 0; j < p->height; j++) {
 	for (i = 0; i < (p->width >> 3); i++) {
-	  b = s[i];
+	  b = ss[i];
 	  for (k = 8; k > 0; k--) {
-	    *d++ = (b & 0x80) ? 1 : 0;
+	    *dd++ = (b & 0x80) ? 1 : 0;
 	    b <<= 1;
 	  }
 	}
 	if (remain) {
-	  b = s[i];
+	  b = ss[i];
 	  for (k = remain; k > 0; k--) {
-	    *d++ = (b & 0x80) ? 1 : 0;
+	    *dd++ = (b & 0x80) ? 1 : 0;
 	    b <<= 1;
 	  }
 	}
-	s += obpl;
+	ss += obpl;
       }
     }
     p->type = _INDEX;
@@ -405,77 +405,77 @@ convert(X11XImage *xi, Image *p)
 	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
 	  fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
 
-	dd = dest = memory_ptr(p->rendered.image);
+	dest = memory_ptr(p->rendered.image);
 	s = memory_ptr(to_be_rendered);
 
 	ximage->byte_order = LSBFirst;
 	switch (p->type) {
 	case _BGR24:
 	  for (j = 0; j < h; j++) {
-	    dd = dest + j * ximage->bytes_per_line;
+	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w; i++) {
 	      pix =
 		((s[i * 3 + 2] & 0xf8) << 8) |
 		((s[i * 3 + 1] & 0xfc) << 3) |
 		((s[i * 3    ] & 0xf8) >> 3);
-	      *dd++ = pix & 0xff;
-	      *dd++ = pix >> 8;
+	      *d++ = pix & 0xff;
+	      *d++ = pix >> 8;
 	    }
 	    s += bytes_per_line_s;
 	  }
 	  break;
 	case _RGB24:
 	  for (j = 0; j < h; j++) {
-	    dd = dest + j * ximage->bytes_per_line;
+	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w; i++) {
 	      pix =
 		((s[i * 3    ] & 0xf8) << 8) |
 		((s[i * 3 + 1] & 0xfc) << 3) |
 		((s[i * 3 + 2] & 0xf8) >> 3);
-	      *dd++ = pix & 0xff;
-	      *dd++ = pix >> 8;
+	      *d++ = pix & 0xff;
+	      *d++ = pix >> 8;
 	    }
 	    s += bytes_per_line_s;
 	  }
 	  break;
 	case _RGBA32:
 	  for (j = 0; j < h; j++) {
-	    dd = dest + j * ximage->bytes_per_line;
+	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w; i++) {
 	      pix =
 		((s[i * 4    ] & 0xf8) << 8) |
 		((s[i * 4 + 1] & 0xfc) << 3) |
 		((s[i * 4 + 2] & 0xf8) >> 3);
-	      *dd++ = pix & 0xff;
-	      *dd++ = pix >> 8;
+	      *d++ = pix & 0xff;
+	      *d++ = pix >> 8;
 	    }
 	    s += bytes_per_line_s;
 	  }
 	  break;
 	case _ABGR32:
 	  for (j = 0; j < h; j++) {
-	    dd = dest + j * ximage->bytes_per_line;
+	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w; i++) {
 	      pix =
 		((s[i * 4 + 3] & 0xf8) << 8) |
 		((s[i * 4 + 2] & 0xfc) << 3) |
 		((s[i * 4 + 1] & 0xf8) >> 3);
-	      *dd++ = pix & 0xff;
-	      *dd++ = pix >> 8;
+	      *d++ = pix & 0xff;
+	      *d++ = pix >> 8;
 	    }
 	    s += bytes_per_line_s;
 	  }
 	  break;
 	case _ARGB32:
 	  for (j = 0; j < h; j++) {
-	    dd = dest + j * ximage->bytes_per_line;
+	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w; i++) {
 	      pix =
 		((s[i * 4 + 1] & 0xf8) << 8) |
 		((s[i * 4 + 2] & 0xfc) << 3) |
 		((s[i * 4 + 3] & 0xf8) >> 3);
-	      *dd++ = pix & 0xff;
-	      *dd++ = pix >> 8;
+	      *d++ = pix & 0xff;
+	      *d++ = pix >> 8;
 	    }
 	    s += bytes_per_line_s;
 	  }
@@ -488,15 +488,15 @@ convert(X11XImage *xi, Image *p)
 	    unsigned char *pal;
 
 	    for (j = 0; j < h; j++) {
-	      dd = dest + j * ximage->bytes_per_line;
+	      d = dest + j * ximage->bytes_per_line;
 	      for (i = 0; i < w; i++) {
 		pal = p->colormap[s[i]];
 		pix =
 		  ((pal[0] & 0xf8) << 8) |
 		  ((pal[1] & 0xfc) << 3) |
 		  ((pal[2] & 0xf8) >> 3);
-		*dd++ = pix & 0xff;
-		*dd++ = pix >> 8;
+		*d++ = pix & 0xff;
+		*d++ = pix >> 8;
 	      }
 	      s += bytes_per_line_s;
 	    }
@@ -525,17 +525,17 @@ convert(X11XImage *xi, Image *p)
 	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
 	  fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
 
-	dd = dest = memory_ptr(p->rendered.image);
+	dest = memory_ptr(p->rendered.image);
 	s = memory_ptr(to_be_rendered);
 	ximage->byte_order = LSBFirst;
 	switch (p->type) {
 	case _INDEX:
 	  for (j = 0; j < h; j++) {
-	    dd = dest + j * ximage->bytes_per_line;
+	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w; i++) {
-	      *dd++ = p->colormap[s[i]][2];
-	      *dd++ = p->colormap[s[i]][1];
-	      *dd++ = p->colormap[s[i]][0];
+	      *d++ = p->colormap[s[i]][2];
+	      *d++ = p->colormap[s[i]][1];
+	      *d++ = p->colormap[s[i]][0];
 	    }
 	    s += bytes_per_line_s;
 	  }
@@ -600,15 +600,14 @@ convert(X11XImage *xi, Image *p)
 
 	  dest = memory_ptr(p->rendered.image);
 	  s = memory_ptr(to_be_rendered);
-	  dd = dest;
 	  ximage->byte_order = LSBFirst;
 	  for (j = 0; j < h; j++) {
-	    dd = dest + j * ximage->bytes_per_line;
+	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w; i++) {
-	      *dd++ = p->colormap[s[i]][2];
-	      *dd++ = p->colormap[s[i]][1];
-	      *dd++ = p->colormap[s[i]][0];
-	      dd++;
+	      *d++ = p->colormap[s[i]][2];
+	      *d++ = p->colormap[s[i]][1];
+	      *d++ = p->colormap[s[i]][0];
+	      d++;
 	    }
 	    s += bytes_per_line_s;
 	  }
@@ -625,8 +624,6 @@ convert(X11XImage *xi, Image *p)
     }
   } else {
 #if defined(USE_XV)
-    int i;
-
     xvimage = xi->xvimage;
     i = 0;
 #if 0
@@ -711,7 +708,7 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (xi->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage) {
-	if (xi->xvimage->width >= w && xi->xvimage->height >= h) {
+	if (xi->xvimage->width >= (int)w && xi->xvimage->height >= (int)h) {
 	  XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, False);
 	  XSync(x11_display(xi->x11), False);
 	}
@@ -719,7 +716,7 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
 #endif /* USE_XV */
     } else {
       if (xi->ximage) {
-	if (xi->ximage->width >= w && xi->ximage->height >= h) {
+	if (xi->ximage->width >= (int)w && xi->ximage->height >= (int)h) {
 	  XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
 	  XSync(x11_display(xi->x11), False);
 	}
@@ -730,7 +727,7 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (x11->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage) {
-	if (xi->xvimage->width >= w && xi->xvimage->height >= h) {
+	if (xi->xvimage->width >= (int)w && xi->xvimage->height >= (int)h) {
 	  XSync(x11_display(xi->x11), False);
 	  XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, Faluse);
 	}
@@ -738,7 +735,7 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
 #endif
     } else {
       if (xi->ximage) {
-	if (xi->ximage->width >= w && xi->ximage->height >= h) {
+	if (xi->ximage->width >= (int)w && xi->ximage->height >= (int)h) {
 	  XSync(x11_display(xi->x11), False);
 	  XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
 	}
@@ -750,13 +747,13 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (xi->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage)
-	if (xi->xvimage->width >= w && xi->xvimage->height >= h) {
+	if (xi->xvimage->width >= (int)w && xi->xvimage->height >= (int)h) {
 	  XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h);
 	}
 #endif
     } else {
       if (xi->ximage)
-	if (xi->ximage->width >= w && xi->ximage->height >= h) {
+	if (xi->ximage->width >= (int)w && xi->ximage->height >= (int)h) {
 	  XPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h);
 	}
     }
@@ -778,7 +775,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
   if (xi->if_attached) {
 #ifdef USE_PTHREAD
     if (xi->xvimage) {
-      if (xi->xvimage->width >= sw && xi->xvimage->height >= sh) {
+      if (xi->xvimage->width >= (int)sw && xi->xvimage->height >= (int)sh) {
 	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
 	XSync(x11_display(xi->x11), False);
       }
@@ -786,7 +783,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
 #else /* USE_PTHREAD */
     /* delayed sync, intentionally. */
     if (xi->xvimage) {
-      if (xi->xvimage->width >= sw && xi->xvimage->height >= sh) {
+      if (xi->xvimage->width >= (int)sw && xi->xvimage->height >= (int)sh) {
 	XSync(x11_display(xi->x11), False);
 	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
       }
@@ -795,7 +792,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
   } else {
 #endif /* USE_SHM */
     if (xi->xvimage)
-      if (xi->xvimage->width >= sw && xi->xvimage->height >= sh) {
+      if (xi->xvimage->width >= (int)sw && xi->xvimage->height >= (int)sh) {
 	XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
       }
 #ifdef USE_SHM

@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:54:48 2001.
- * $Id: hash.c,v 1.7 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 19:32:03 2001.
+ * $Id: hash.c,v 1.8 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -198,21 +198,21 @@ set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int))
 static int
 define(Hash *h, void *k, unsigned int len, void *d)
 {
-  unsigned int index;
+  unsigned int i;
   Hash_key *hk;
 
-  index = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
-  if (h->data[index]->key != NULL && h->data[index]->key != (Dlist_data *)-1)
+  i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
+  if (h->data[i]->key != NULL && h->data[i]->key != (Dlist_data *)-1)
     return -1; /* already registered */
 
   if ((hk = hash_key_create(k, len)) == NULL)
     return 0;
-  if ((h->data[index]->key = h->keys->add(h->keys, hk)) == NULL) {
+  if ((h->data[i]->key = h->keys->add(h->keys, hk)) == NULL) {
     free(hk);
     return 0;
   }
 
-  h->data[index]->datum = d;
+  h->data[i]->datum = d;
 
   return 1;
 }
@@ -220,20 +220,20 @@ define(Hash *h, void *k, unsigned int len, void *d)
 static int
 set(Hash *h, void *k, unsigned int len, void *d)
 {
-  unsigned int index;
+  unsigned int i;
   Hash_key *hk;
 
-  index = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
-  if (h->data[index]->key == NULL || h->data[index]->key == (Dlist_data *)-1) {
+  i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
+  if (h->data[i]->key == NULL || h->data[i]->key == (Dlist_data *)-1) {
     if ((hk = hash_key_create(k, len)) == NULL)
       return 0;
-    if ((h->data[index]->key = h->keys->add(h->keys, hk)) == NULL) {
+    if ((h->data[i]->key = h->keys->add(h->keys, hk)) == NULL) {
       free(hk);
       return 0;
     }
   }
 
-  h->data[index]->datum = d;
+  h->data[i]->datum = d;
 
   return 1;
 }
@@ -256,17 +256,17 @@ get_key_size(Hash *h)
 static void *
 lookup(Hash *h, void *k, unsigned int len)
 {
-  unsigned int index;
+  unsigned int i;
 
-  index = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
+  i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
 
-  return (h->data[index]->key == NULL) ? NULL : h->data[index]->datum;
+  return (h->data[i]->key == NULL) ? NULL : h->data[i]->datum;
 }
 
 static int
-destroy_datum(Hash *h, int index, int f)
+destroy_datum(Hash *h, int i, int f)
 {
-  Hash_data *d = h->data[index];
+  Hash_data *d = h->data[i];
 
   if (d->key == (Dlist_data *)-1)
     return 0;
@@ -284,12 +284,12 @@ destroy_datum(Hash *h, int index, int f)
 static int
 delete_key(Hash *h, void *k, unsigned int len, int f)
 {
-  int index = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
+  int i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
 
-  if (h->data[index]->key == NULL)
+  if (h->data[i]->key == NULL)
     return 0;
 
-  if (!destroy_datum(h, index, f))
+  if (!destroy_datum(h, i, f))
     return 0;
 
   return 1;

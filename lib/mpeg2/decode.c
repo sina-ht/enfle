@@ -37,14 +37,14 @@
 
 mpeg2_config_t config;
 
-void mpeg2_init (mpeg2dec_t * mpeg2dec, uint32_t mm_accel,
+void mpeg2_init (mpeg2dec_t * mpeg2dec, uint32_t _mm_accel,
 		 vo_instance_t * output)
 {
     static int do_init = 1;
 
     if (do_init) {
 	do_init = 0;
-	config.flags = mm_accel;
+	config.flags = _mm_accel;
 	idct_init ();
 	motion_comp_init ();
     }

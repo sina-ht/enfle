@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 22:39:45 2001.
- * $Id: gamma.c,v 1.2 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 20:47:15 2001.
+ * $Id: gamma.c,v 1.3 2001/09/21 11:51:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -79,12 +79,12 @@ plugin_exit(void *p)
  */
 
 void
-calc_gamma(unsigned char g[256], int gamma)
+calc_gamma(unsigned char g[256], int gamma_value)
 {
   static unsigned int log_table[510];
   int i, j;
 
-  if (gamma == 0) {
+  if (gamma_value == 0) {
     /* initialize */
     double f;
 
@@ -96,7 +96,7 @@ calc_gamma(unsigned char g[256], int gamma)
     j = 1;
     for (i = 1; i <= 255; i++) {
       unsigned int k;
-      k = (log_table[i << 1] >> GAMMA_ACCURACY) * gamma;
+      k = (log_table[i << 1] >> GAMMA_ACCURACY) * gamma_value;
       while (log_table[j] > k)
 	j++;
       g[i] = j >> 1;
@@ -123,22 +123,22 @@ effect(Image *p, void *params)
 {
   Config *c = (Config *)params;
   Image *save;
-  int index, result;
+  int idx, result;
   unsigned int i;
   unsigned char g[256];
   double gammas[7] = { 2.2, 1.7, 1.45, 1.0, 1 / 1.45, 1 / 1.7, 1 / 2.2 };
   unsigned char *s, *d;
 
-  index = config_get_int(c, "/enfle/plugins/effect/gamma/index", &result);
+  idx = config_get_int(c, "/enfle/plugins/effect/gamma/index", &result);
   if (!result)
     return NULL;
-  if (index < 0 || index > 6)
+  if (idx < 0 || idx > 6)
     return NULL;
 
   if ((save = image_dup(p)) == NULL)
     return NULL;
 
-  calc_gamma(g, gammas[index] * (1 << GAMMA_ACCURACY));
+  calc_gamma(g, gammas[idx] * (1 << GAMMA_ACCURACY));
 
   s = memory_ptr(save->image);
   d = memory_ptr(p->image);
