@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 21:52:51 2001.
- * $Id: demultiplexer.h,v 1.1 2001/02/20 13:54:20 sian Exp $
+ * Last Modified: Wed Feb 21 00:13:37 2001.
+ * $Id: demultiplexer.h,v 1.2 2001/02/20 15:16:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@ struct _demultiplexer {
 
   pthread_t thread;
   int running;
+  int eof;
   void *private_data;
 };
 
@@ -52,6 +53,9 @@ struct _demultiplexer {
   }
 
 Demultiplexer *demultiplexer_create(void);
+
+#define demultiplex_set_eof(de, f) (de)->eof = (f)
+#define demultiplex_get_eof(de) (de)->eof
 
 #define demultiplex_examine(de) (de)->examine((de))
 #define demultiplex_start(de) (de)->start((de))

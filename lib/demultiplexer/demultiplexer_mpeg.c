@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 21:53:35 2001.
- * $Id: demultiplexer_mpeg.c,v 1.1 2001/02/20 13:54:20 sian Exp $
+ * Last Modified: Tue Feb 20 23:04:51 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.2 2001/02/20 15:16:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,7 +31,7 @@
 #include "utils.h"
 
 #ifndef USE_PTHREAD
-#  error pthread is mandatory for libmpeg2 plugin
+#  error pthread is mandatory for demultiplexer_mpeg
 #endif
 
 typedef struct _mpeg_info {
@@ -227,8 +227,8 @@ demux_main(void *arg)
       goto error;
     }
     if (read_size == 0) {
-      if (used_size < 4)
-	break;
+      demux->eof = 1;
+      break;
     } else {
       used_size += read_size;
       read_total += read_size;

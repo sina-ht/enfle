@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 21:59:01 2001.
- * $Id: libmpeg2.c,v 1.5 2001/02/20 13:54:59 sian Exp $
+ * Last Modified: Wed Feb 21 00:14:50 2001.
+ * $Id: libmpeg2.c,v 1.6 2001/02/20 15:16:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+
 #include "video_out.h"
 #include "video_out_internal.h"
 #include "yuv2rgb.h"
@@ -42,7 +43,8 @@
 typedef struct _libmpeg2_info {
   Image *p;
   AudioDevice *ad;
-  int eof;
+  Demultiplexer *demux;
+  vo_instance_t *vo;
   int rendering_type;
   pthread_mutex_t update_mutex;
   pthread_cond_t update_cond;
@@ -115,21 +117,25 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
   debug_message("Libmpeg2: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
+  info->demux = demultiplxer_mpeg_create();
+  demultiplexer_mpeg_set_input(info->demux, st);
+  if (!demultiplexer_examine(info->demux))
+    return PLAY_NOT;
+
+  if ((info->vo = vo_enfle_rgb_open(vw->bits_per_pixel)) == NULL)
+    goto error;
+
   m->has_audio = 0;
-  if (mpeg3_has_audio(info->file)) {
+  if (demultiplexer_mpeg_naudios(info->demux)) {
     if (m->ap == NULL)
       show_message("Audio not played.\n");
     else {
-      info->nastreams = mpeg3_total_astreams(info->file);
+      info->nastreams = demultiplexer_mpeg_naudios(info->demux);
       /* XXX: stream should be selectable */
       info->nastream = 0;
+      demultiplexer_mpeg_set_audio(info->demux, info->nastream);
 
-      m->sampleformat = _AUDIO_FORMAT_S16_LE;
-      m->channels = mpeg3_audio_channels(info->file, info->nastream);
-      m->samplerate = mpeg3_sample_rate(info->file, info->nastream);
-      m->num_of_samples = mpeg3_audio_samples(info->file, info->nastream);
-
-      show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
+      show_message("audio(%d streams)\n", info->nastreams);
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
@@ -139,7 +145,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 
   m->has_video = 1;
-  if (!mpeg3_has_video(info->file)) {
+  if (!demultiplexer_mpeg_nvideos(info->demux)) {
     m->has_video = 0;
     m->width = 120;
     m->height = 80;
@@ -149,42 +155,19 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     m->rendering_height = m->height;
     show_message("warning: This stream has no video stream.\n");
   } else {
-    if ((info->nvstreams = mpeg3_total_vstreams(info->file)) > 1) {
+    if ((info->nvstreams = demultiplexer_mpeg_nvideos(info->demux)) > 1) {
       show_message("There are %d video streams in this whole stream.\n", info->nvstreams);
       show_message("Only the first video stream will be played(so far). Sorry.\n");
     }
 
     /* XXX: stream should be selectable */
     info->nvstream = 0;
-
-    m->width = mpeg3_video_width(info->file, info->nvstream);
-    m->height = mpeg3_video_height(info->file, info->nvstream);
-    m->framerate = mpeg3_frame_rate(info->file, info->nvstream);
-    m->num_of_frames = mpeg3_video_frames(info->file, info->nvstream);
-
-    switch (vw->render_method) {
-    case _VIDEO_RENDER_NORMAL:
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-      break;
-    case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-      m->rendering_width  = m->width  << 1;
-      m->rendering_height = m->height << 1;
-      break;
-    default:
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-      break;
-    }
+    demultiplexer_mpeg_set_audio(info->demux, info->nvstream);
   }
 
-  debug_message("video(%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n", info->nvstreams,
-		m->width, m->height, m->rendering_width, m->rendering_height,
-		m->framerate, m->num_of_frames);
+  debug_message("video(%d streams)\n", info->nvstreams);
 
   p = info->p = image_create();
-  p->width = m->rendering_width;
-  p->height = m->rendering_height;
   p->type = m->requested_type;
   if ((p->rendered.image = memory_create()) == NULL)
     goto error;
@@ -192,80 +175,33 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   switch (vw->bits_per_pixel) {
   case 32:
-    switch (p->type) {
-    case _RGBA32:
-      info->rendering_type = MPEG3_RGBA8888;
-      break;
-    case _BGRA32:
-      info->rendering_type = MPEG3_BGRA8888;
-      break;
-    default:
-      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
-      return PLAY_ERROR;
-    }
     p->depth = 24;
     p->bits_per_pixel = 32;
-    p->bytes_per_line = p->width * 4;
     break;
   case 24:
-    switch (p->type) {
-    case _RGB24:
-      info->rendering_type = MPEG3_RGB888;
-      break;
-    case _BGR24:
-      info->rendering_type = MPEG3_BGR888;
-      break;
-    default:
-      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
-      return PLAY_ERROR;
-    }
     p->depth = 24;
     p->bits_per_pixel = 24;
-    p->bytes_per_line = p->width * 3;
     break;
   case 16:
-    switch (p->type) {
-    case _RGB_WITH_BITMASK:
-    case _BGR_WITH_BITMASK:
-      info->rendering_type = MPEG3_RGB565;
-      break;
-    default:
-      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
-      return PLAY_ERROR;
-    }
     p->depth = 16;
     p->bits_per_pixel = 16;
-    p->bytes_per_line = p->width * 2;
     break;
   default:
     show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
     return PLAY_ERROR;
   }
 
-  if ((info->lines = calloc(m->rendering_height, sizeof(unsigned char *))) == NULL)
-    goto error;
-
-  /* extra 4 bytes are needed for MMX routine */
-  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height + 4) == NULL)
-    goto error;
-
-  if ((info->lines[0] = malloc(p->bytes_per_line * p->height)) == NULL)
-    goto error;
-
-  for (i = 1; i < m->rendering_height; i++)
-    info->lines[i] = info->lines[0] + i * p->bytes_per_line;
-
   m->movie_private = (void *)info;
   m->st = st;
   m->status = _STOP;
-
-  m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
   play(m);
 
   return PLAY_OK;
 
  error:
+  if (info->demux)
+    demultiplexer_destroy(info->demux);
   free(info);
   return PLAY_ERROR;
 }
@@ -294,12 +230,13 @@ play(Movie *m)
     return PLAY_ERROR;
   }
 
-  mpeg3_set_frame(info->file, 0, info->nastream);
-  mpeg3_set_sample(info->file, 0, info->nvstream);
   m->current_frame = 0;
   m->current_sample = 0;
   timer_start(m->timer);
-  info->eof = 0;
+  demultiplex_set_eof(info->demux, 0);
+
+  stream_rewind(st);
+  demultiplexer_start(info->demux);
 
   if (m->has_video)
     pthread_create(&info->video_thread, NULL, play_video, m);
@@ -320,7 +257,7 @@ play_video(void *arg)
 
   while (m->status == _PLAY) {
     if (m->current_frame >= m->num_of_frames) {
-      info->eof = 1;
+      demultiplex_set_eof(info->demux, 1);
       break;
     }
 
@@ -429,7 +366,7 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  if (info->eof) {
+  if (demultiplex_get_eof(info->demux)) {
     stop_movie(m);
     return PLAY_OK;
   }
@@ -519,6 +456,8 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
+  demultiplexer_stop(info->demux);
+
   pthread_mutex_lock(&info->update_mutex);
   pthread_cond_signal(&info->update_cond);
   pthread_mutex_unlock(&info->update_mutex);
@@ -568,13 +507,14 @@ unload_movie(Movie *m)
 static PlayerStatus
 identify(Movie *m, Stream *st)
 {
-  if (st->path) {
-    if (strlen(st->path) >= 4 && !strcasecmp(st->path + strlen(st->path) - 4, ".mp3"))
-      return PLAY_NOT;
-    return mpeg3_check_sig(st->path) ? PLAY_OK : PLAY_NOT;
-  }
+  unsigned char buf[3];
 
-  return PLAY_NOT;
+  if (stream_read(st, buf, 3) != 3)
+    return PLAY_NOT;
+  if (buf[0] || buf[1] || buf[2] != 1)
+    return PLAY_NOT;
+
+  return PLAY_OK;
 }
 
 static PlayerStatus

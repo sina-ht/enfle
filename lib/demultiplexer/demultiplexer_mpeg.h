@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 21:50:56 2001.
- * $Id: demultiplexer_mpeg.h,v 1.1 2001/02/20 13:54:20 sian Exp $
+ * Last Modified: Wed Feb 21 00:15:26 2001.
+ * $Id: demultiplexer_mpeg.h,v 1.2 2001/02/20 15:16:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,8 @@
 Demultiplexer *demultiplexer_mpeg_create(void);
 
 #define demultiplexer_mpeg_set_input(de, st) (de)->info->st = (st)
+#define demultiplexer_mpeg_set_vfd(de, vfd) (de)->info->v_fd = (vfd)
+#define demultiplexer_mpeg_set_afd(de, afd) (de)->info->a_fd = (afd)
 #define demultiplexer_mpeg_nvideos(de) (de)->info->nvstreams
 #define demultiplexer_mpeg_naudios(de) (de)->info->nastreams
 #define demultiplexer_mpeg_set_video(de, nv) (de)->info->nvstream = (nv)
