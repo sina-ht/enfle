@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Fri Feb  8 02:19:54 2002.
-; $Id: enfle.rc,v 1.26 2002/02/08 10:53:54 sian Exp $
+; Last Modified: Fri Feb  8 20:25:20 2002.
+; $Id: enfle.rc,v 1.27 2002/02/08 11:31:31 sian Exp $
 
 enfle {
   identify {
@@ -90,11 +90,11 @@ enfle {
       spi/disabled = yes
       ; Associate an extension with an appropriate plugin name.
       assoc {
-	jpg = JPEG
-	jpeg = JPEG
-	gif = UNGIF
-	png = PNG
-	bmp = BMP
+	jpg := JPEG
+	jpeg := JPEG
+	gif := UNGIF
+	png := PNG
+	bmp := BMP
       }
     }
     saver {
@@ -125,14 +125,14 @@ enfle {
       loadmethod = scan_all
       ; Associate an extension with an appropriate plugin name.
       assoc {
-        gif = UNGIF
-        mng = MNG
-        mpg = LibMPEG2:LibMPEG3:MPEG_lib
-        mpeg = LibMPEG2:LibMPEG3:MPEG_lib
-        m1v = MPEG_lib
-        mp3 = Mpglib
-	avi = AviFile:OpenDivX
-	asf = AviFile
+        gif := UNGIF
+        mng := MNG
+        mpg := LibMPEG2:LibMPEG3:MPEG_lib
+        mpeg := LibMPEG2:LibMPEG3:MPEG_lib
+        m1v := MPEG_lib
+        mp3 := Mpglib
+	avi := AviFile:OpenDivX
+	asf := AviFile
       }
       ; video only stream may be played by mpeg_lib.
       ; system stream(including video and audio) will be played by libmpeg3.
