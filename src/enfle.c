@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  3 04:27:58 2000.
- * $Id: enfle.c,v 1.10 2000/11/02 19:34:25 sian Exp $
+ * Last Modified: Fri Nov  3 04:47:45 2000.
+ * $Id: enfle.c,v 1.11 2000/11/02 19:56:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -112,6 +112,27 @@ gen_optstring(Option opt[])
   return optstr;
 }
   
+static void
+check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
+{
+  String *s = string_create();
+  char *tmp;
+
+  string_set(s, "/enfle/plugins/");
+  string_cat(s, enfle_plugin_type_to_name(type));
+  string_cat_ch(s, '/');
+  string_cat(s, name);
+  string_cat_ch(s, '/');
+  string_cat(s, "disabled");
+
+  if (((tmp = config_get(c, string_get(s))) != NULL) &&
+      !strcasecmp(tmp, "yes")) {
+    printf("unload %s (disabled)\n", name);
+    enfle_plugins_unload(eps, type, name);
+  }
+  string_destroy(s);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -191,24 +212,7 @@ main(int argc, char **argv)
       printf("%s by %s\n",
 	     enfle_plugins_get_description(eps, type, name),
 	     enfle_plugins_get_author(eps, type, name));
-      {
-	String *s = string_create();
-	char *tmp;
-
-	string_set(s, "/enfle/plugins/");
-	string_cat(s, enfle_plugin_type_to_name(type));
-	string_cat_ch(s, '/');
-	string_cat(s, name);
-	string_cat_ch(s, '/');
-	string_cat(s, "disabled");
-
-	if (((tmp = config_get(c, string_get(s))) != NULL) &&
-	    !strcasecmp(tmp, "yes")) {
-	  enfle_plugins_unload(eps, type, name);
-	  printf("unload %s (disabled)\n", name);
-	}
-	string_destroy(s);
-      }
+      check_and_unload(eps, c, type, name);
     } else if (!strcasecmp(ext, ".spi")) {
       PluginType type;
 
@@ -216,8 +220,9 @@ main(int argc, char **argv)
 	fprintf(stderr, "spi_load %s failed.\n", path);
 	return 1;
       }
-      printf("SPI: %s\n",
+      printf("%s(SPI) %s\n", name,
 	     enfle_plugins_get_description(eps, type, name));
+      check_and_unload(eps, c, type, name);
     }
     path = archive_iteration_next(a);
   }
