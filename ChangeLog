@@ -1,5 +1,9 @@
 2004-02-29  Hiroshi Takekawa  <sian@fennel.org>
 
+	* NEWS: Added NEWS.
+
+	* src/enfle.rc: Added more configs.
+
 	* lib/avcodec/Makefile.am: Removed mp3lameaudio.c.
 
 2004-02-28  Hiroshi Takekawa  <sian@fennel.org>
