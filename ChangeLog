@@ -1,5 +1,15 @@
 2002-02-13  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/image_magnify.c: Added canonicalize() to remove
+	paddings at the end of each line. Fixed the long-standing bug in
+	bpp 32 magnification code.
+
+	* plugins/loader/bmp/bmp.c: Use show_message().
+
+	* src/enfle.rc: Fixed typo.
+
+2002-02-13  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/image_magnify.c: Interger arithmetic for bpp 24, and
 	clean up.
 
