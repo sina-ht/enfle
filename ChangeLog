@@ -1,3 +1,19 @@
+2001-02-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* compat.h: Added memalign().
+
+	* lib/enfle/stream-utils.[ch]: Added 16bit staffs.
+
+	* lib/mpeg2/video_out.c: Deleted unused code.
+
+	* plugins/player/libmpeg2/Makefile.am,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.c,
+	plugins/player/libmpeg2/libmpeg2_vo.h: More coding.
+
+	* configure.in, lib/Makefile.am, lib/demultiplexer/*: Added
+	demultiplexer.
+
 2001-02-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Fixed bad key response bug.
