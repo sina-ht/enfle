@@ -2,8 +2,6 @@
  * kernel32.c -- implementation of routines in kernel32.dll
  */
 
-#include <unistd.h>
-
 #define W32API_REQUEST_MEM_ALLOC
 #define W32API_REQUEST_MEM_REALLOC
 #define W32API_REQUEST_MEM_FREE
@@ -12,6 +10,9 @@
 #include "module.h"
 
 #include "kernel32.h"
+
+#define REQUIRE_UNISTD_H
+#include "compat.h"
 
 #include "common.h"
 
@@ -508,6 +509,7 @@ DEFINE_W32API(BOOL, HeapFree,
 {
   more_debug_message("HeapFree(%p, %X, %p) called\n", handle, flags, ptr);
   w32api_mem_free(ptr);
+
   return TRUE;
 }
 
@@ -551,6 +553,7 @@ DEFINE_W32API(LPSTR, lstrcpyA,
   debug_message("lstrcpyA(%p, %s) called\n", dest, src);
 
   memcpy(dest, src, strlen(src) + 1);
+
   return dest;
 }
 
