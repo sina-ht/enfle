@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 22 01:14:13 2003.
- * $Id: oss.c,v 1.12 2003/10/12 04:03:15 sian Exp $
+ * Last Modified: Sun Nov 30 14:50:42 2003.
+ * $Id: oss.c,v 1.13 2003/11/30 05:51:38 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -237,7 +237,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     return 0;
   }
 
-  debug_message_fnc("set to %d\n", c);
+  debug_message_fnc("set to %d ch\n", c);
 
   *ch_p = c;
 
@@ -250,7 +250,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     return 0;
   }
 
-  debug_message_fnc("set to %d\n", r);
+  debug_message_fnc("set to %d Hz\n", r);
 
   *rate_p = r;
 
