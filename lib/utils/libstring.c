@@ -1,10 +1,10 @@
 /*
  * libstring.c -- String manipulation library
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:01:56 2002.
- * $Id: libstring.c,v 1.9 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Sun Aug 18 23:23:13 2002.
+ * $Id: libstring.c,v 1.10 2002/08/18 14:26:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,42 +25,9 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #include "common.h"
 
 #include "libstring.h"
-
-static char *get(String *);
-static unsigned int length(String *);
-static int set(String *, const char *);
-static int copy(String *, String *);
-static int cat_ch(String *, char);
-static int ncat(String *, const char *, unsigned int);
-static int cat(String *, const char *);
-static int catf(String *, const char *, ...);
-static int append(String *, String *);
-static void shrink(String *, unsigned int);
-static String *dup(String *);
-static void destroy(String *);
-
-String string_template = {
-  len: 0,
-  buffer_size: 0,
-  buffer: NULL,
-
-  get: get,
-  length: length,
-  set: set,
-  copy: copy,
-  cat_ch: cat_ch,
-  ncat: ncat,
-  cat: cat,
-  catf: catf,
-  shrink: shrink,
-  append: append,
-  dup: dup,
-  destroy: destroy
-};
 
 String *
 string_create(void)
@@ -69,8 +36,6 @@ string_create(void)
 
   if ((s = calloc(1, sizeof(String))) == NULL)
     return NULL;
-
-  memcpy(s, &string_template, sizeof(String));
 
   return s;
 }
@@ -133,24 +98,11 @@ buffer_increase(String *s, unsigned int size)
 
 /* methods */
 
-static char *
-get(String *s)
+int
+string_set(String *s, const char *p)
 {
-  return string_buffer(s);
-}
+  unsigned int l = strlen(p);
 
-static unsigned int
-length(String *s)
-{
-  return string_length(s);
-}
-
-static int
-set(String *s, const char *p)
-{
-  unsigned int l;
-
-  l = strlen(p);
   if (!str_alloc(s, l))
     return 0;
   strcpy(string_buffer(s), p);
@@ -159,8 +111,8 @@ set(String *s, const char *p)
   return 1;
 }
 
-static int
-copy(String *s1, String *s2)
+int
+string_copy(String *s1, String *s2)
 {
   if (!str_alloc(s1, string_length(s2)))
     return 0;
@@ -170,8 +122,8 @@ copy(String *s1, String *s2)
   return 1;
 }
 
-static int
-cat_ch(String *s, char c)
+int
+string_cat_ch(String *s, char c)
 {
   if (!buffer_increase(s, 1))
     return 0;
@@ -182,8 +134,8 @@ cat_ch(String *s, char c)
   return 1;
 }
 
-static int
-ncat(String *s, const char *p, unsigned int l)
+int
+string_ncat(String *s, const char *p, unsigned int l)
 {
   if (l > strlen(p))
     l = strlen(p);
@@ -195,20 +147,20 @@ ncat(String *s, const char *p, unsigned int l)
   return 1;
 }
 
-static int
-cat(String *s, const char *p)
+int
+string_cat(String *s, const char *p)
 {
-  return ncat(s, p, strlen(p));
+  return string_ncat(s, p, strlen(p));
 }
 
-static int
-catf(String *s, const char *format, ...)
+int
+string_catf(String *s, const char *format, ...)
 {
   va_list args;
   char *p, *tmp;
-  int n, size, result;
+  int n, result;
+  int size = 100;
 
-  size = 100;
   if ((p = malloc(size)) == NULL)
     return 0;
 
@@ -228,14 +180,14 @@ catf(String *s, const char *format, ...)
     p = tmp;
   }
 
-  result = cat(s, p);
+  result = string_cat(s, p);
   free(p);
 
   return result;
 }
 
-static int
-append(String *s1, String *s2)
+int
+string_append(String *s1, String *s2)
 {
   if (!buffer_increase(s1, string_length(s2)))
     return 0;
@@ -245,8 +197,8 @@ append(String *s1, String *s2)
   return 1;
 }
 
-static void
-shrink(String *s, unsigned int l)
+void
+string_shrink(String *s, unsigned int l)
 {
   if (string_length(s) <= l)
     return;
@@ -254,23 +206,23 @@ shrink(String *s, unsigned int l)
   string_buffer(s)[l] = '\0';
 }
 
-static String *
-dup(String *s)
+String *
+string_dup(String *s)
 {
   String *new;
 
   if ((new = string_create()) == NULL)
     return NULL;
-  if (!set(new, string_buffer(s))) {
-    destroy(new);
+  if (!string_set(new, string_buffer(s))) {
+    string_destroy(new);
     return NULL;
   }
 
   return new;
 }
 
-static void
-destroy(String *s)
+void
+string_destroy(String *s)
 {
   buffer_free(s);
   free(s);
