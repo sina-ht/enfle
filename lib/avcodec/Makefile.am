@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Wed Jan 28 01:44:53 2004.
-# $Id: Makefile.am,v 1.7 2004/01/30 12:35:11 sian Exp $
+# Last Modified: Tue Feb  3 01:20:04 2004.
+# $Id: Makefile.am,v 1.8 2004/02/02 16:37:29 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -103,7 +103,6 @@ noinst_HEADERS = \
 	ra144.h \
 	svq1_cb.h \
 	cabac.h \
-	fastmemcpy.h \
 	indeo3data.h \
 	mpegaudiotab.h \
 	ra288.h \

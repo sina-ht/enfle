@@ -2032,7 +2032,9 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
 
 #ifdef CONFIG_ENCODERS
         if(dct_algo==FF_DCT_AUTO || dct_algo==FF_DCT_MMX){
-            if(mm_flags & MM_MMXEXT){
+            if(mm_flags & MM_SSE2){
+                c->fdct = ff_fdct_sse2;
+	    }else if(mm_flags & MM_MMXEXT){
                 c->fdct = ff_fdct_mmx2;
             }else{
                 c->fdct = ff_fdct_mmx;
@@ -2156,7 +2158,9 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
                 c->put_no_rnd_pixels_tab[1][2] = put_no_rnd_pixels8_y2_mmx2;
                 c->avg_pixels_tab[0][3] = avg_pixels16_xy2_mmx2;
                 c->avg_pixels_tab[1][3] = avg_pixels8_xy2_mmx2;
+#ifdef CONFIG_ENCODERS
                 c->vsad[0] = vsad16_mmx2;
+#endif //CONFIG_ENCODERS
             }
 
 #if 1
