@@ -1,5 +1,13 @@
 2001-09-23  Hiroshi Takekawa  <sian@fennel.org>
 
+	* NEWS: Updated NEWS.
+
+	* lib/demultiplexer/libriff.c, lib/utils/cpucaps.c,
+	plugins/saver/glic/arithmodel_order_zero.c,
+	plugins/saver/glic/expand.c: Avoid more warnings.
+
+2001-09-23  Hiroshi Takekawa  <sian@fennel.org>
+
 	* plugins/player/opendivx/opendivx.c: Added needed unlock(). More
 	debug messages.
 
@@ -20,7 +28,7 @@
 
 2001-09-21  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in: Added more warning options. Version up.
+	* configure.in: Added more warning options.
 
 	* lib/X11/x11ximage.c, lib/dllloader/kernel32.c,
 	lib/dllloader/user32.c, lib/enfle/archive.c, lib/mpeg2/decode.c,
@@ -28,9 +36,6 @@
 	lib/utils/timer_gettimeofday.c, plugins/effect/gamma/gamma.c,
 	plugins/loader/pnm/pnm.c, plugins/ui/normal/normal.c: Avoid more
 	warnings.
-
-	* plugins/saver/glic/arithmodel_order_zero.c: Fixed subtracting
-	start_symbol from index twice.
 
 2001-09-21  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -176,7 +181,7 @@
 	InterlockedExchangeAdd(), InterlockedIncrement(),
 	InterlockedDecrement(), GetEnvironmentVariableA().
 
-	* lib/dllloader/pe_image.c: Use __FUNCTIN__.
+	* lib/dllloader/pe_image.c: Use __FUNCTION__.
 
 	* lib/dllloader/windef.h: Added PLONG, LPLONG.
 

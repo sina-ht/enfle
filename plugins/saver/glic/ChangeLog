@@ -1,3 +1,7 @@
+2001-09-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* arithmodel_order_zero.c, expand.c: Avoid more warnings.
+
 2001-09-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* glic.c, vmpm_decompose_esc.c, vmpm_decompose_escb.c,
