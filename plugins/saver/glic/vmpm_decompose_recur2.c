@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_recur2.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep  6 12:25:54 2001.
- * $Id: vmpm_decompose_recur2.c,v 1.1 2001/09/07 04:57:04 sian Exp $
+ * Last Modified: Sat Sep  8 14:34:48 2001.
+ * $Id: vmpm_decompose_recur2.c,v 1.2 2001/09/10 00:03:36 sian Exp $
  */
 
 #include <stdio.h>
@@ -122,50 +122,61 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
   return ntokens * token_length;
 }
 
+static inline int
+calc_highest_level(VMPM *vmpm, int pos)
+{
+  int i;
+  unsigned int r;
+
+  for (i = 1, r = vmpm->r; i < vmpm->I; i++, r *= vmpm->r)
+    if (pos % r)
+      return i - 1;
+  return i;
+}
+
 static int
 encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel *level_am,
 		   unsigned int *s_to_i, int i, int j, unsigned int pos)
 {
   unsigned int len;
-  int k;
-  Token_value tv;
 
-  tv = vmpm->token[i][j]->value - 1;
-  if (arithmodel_order_zero_nsymbols(ams[i]) > tv) {
-    /* Found. Encode at this level. */
-    stat_message(vmpm, "(%d,%d)", i, tv);
-    arithmodel_encode(level_am, i);
-    arithmodel_encode(ams[i], tv);
-    len = ipow(vmpm->r, i);
-  } else if (arithmodel_order_zero_nsymbols(ams[i]) == tv) {
-    /* Not found. Encode at lower level. */
-    arithmodel_install_symbol(ams[i], 1);
-    if (i == 1) {
-      unsigned int nsymbols;
+  if (i == 0) {
+    unsigned int nsymbols;
+    /* Reach the lowest level. */
 
-      /* Reached the lowest level. Encode at this level. */
-      arithmodel_encode(level_am, 0);
-      stat_message(vmpm, "(0)");
-      len = vmpm->r;
-      for (k = tv * vmpm->r; k < (tv + 1) * vmpm->r; k++) {
-	nsymbols = arithmodel_order_zero_nsymbols(ams[0]);
-	if (s_to_i[(int)vmpm->token[0][k]] == (unsigned int)-1) {
-	  arithmodel_encode(ams[0], nsymbols);
-	  s_to_i[(int)vmpm->token[0][k]] = nsymbols;
-	  arithmodel_encode_bits(bin_am, (int)vmpm->token[0][k], vmpm->bits_per_symbol, 0, 1);
-	} else {
-	  arithmodel_encode(ams[0], s_to_i[(int)vmpm->token[0][k]]);
-	}
-	stat_message(vmpm, " %d", (int)vmpm->token[0][k]);
-      }
+    arithmodel_order_zero_encode_with_range(level_am, i, 0, calc_highest_level(vmpm, pos));
+    nsymbols = arithmodel_order_zero_nsymbols(ams[0]);
+    if (s_to_i[(int)vmpm->token[0][j]] == (unsigned int)-1) {
+      arithmodel_encode(ams[0], nsymbols);
+      s_to_i[(int)vmpm->token[0][j]] = nsymbols;
+      arithmodel_encode_bits(bin_am, (int)vmpm->token[0][j], vmpm->bits_per_symbol, 0, 1);
     } else {
+      arithmodel_encode(ams[0], s_to_i[(int)vmpm->token[0][j]]);
+    }
+    stat_message(vmpm, " %d", (int)vmpm->token[0][j]);
+    len = 1;
+  } else {
+    Token_value tv;
+
+    tv = vmpm->token[i][j]->value - 1;
+    if (arithmodel_order_zero_nsymbols(ams[i]) > tv) {
+      /* Found. Encode at this level. */
+      stat_message(vmpm, "(%d,%d)", i, tv);
+      arithmodel_order_zero_encode_with_range(level_am, i, 0, calc_highest_level(vmpm, pos));
+      arithmodel_encode(ams[i], tv);
+      len = ipow(vmpm->r, i);
+    } else if (arithmodel_order_zero_nsymbols(ams[i]) == tv) {
+      int k;
+
+      /* Not found. Encode at lower level. */
+      arithmodel_install_symbol(ams[i], 1);
       len = 0;
       for (k = 0; k < vmpm->r; k++)
 	len += encode_recursively(vmpm, ams, bin_am, level_am, s_to_i, i - 1, tv * vmpm->r + k, pos + len);
       return len;
+    } else {
+      fatal(254, "nsymbols = %d < %d = tv\n", arithmodel_order_zero_nsymbols(ams[i]), tv);
     }
-  } else {
-    fatal(254, "nsymbols = %d < %d = tv\n", arithmodel_order_zero_nsymbols(ams[i]), tv);
   }
 
   if (pos + len >= ipow(vmpm->r, arithmodel_order_zero_nsymbols(level_am)) &&
