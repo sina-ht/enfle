@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 20:27:00 2001.
- * $Id: video.h,v 1.11 2001/02/05 15:58:18 sian Exp $
+ * Last Modified: Tue Feb 20 02:18:06 2001.
+ * $Id: video.h,v 1.12 2001/02/19 17:21:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -150,6 +150,7 @@ struct _video_window {
   int (*render)(VideoWindow *, Image *);
   void (*update)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   void (*do_sync)(VideoWindow *);
+  void (*do_sync_discard)(VideoWindow *);
   int (*destroy)(VideoWindow *);
 };
 
@@ -168,6 +169,7 @@ struct _video_window {
 #define video_window_render(vw, p) (vw)->render((vw), (p))
 #define video_window_update(vw, x, y, w, h) (vw)->update((vw), (x), (y), (w), (h))
 #define video_window_sync(vw) (vw)->do_sync((vw))
+#define video_window_sync_discard(vw) (vw)->do_sync_discard((vw))
 #define video_window_destroy(vw) (vw)->destroy((vw))
 
 #endif
