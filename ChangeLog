@@ -1,3 +1,7 @@
+2004-02-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am: Removed mp3lameaudio.c.
+
 2004-02-28  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added -pthread for FreeBSD.  Version up.
