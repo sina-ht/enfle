@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr 26 14:33:56 2001.
- * $Id: glic.c,v 1.3 2001/04/27 01:02:34 sian Exp $
+ * Last Modified: Mon Apr 30 03:45:35 2001.
+ * $Id: glic.c,v 1.4 2001/04/30 01:09:08 sian Exp $
  */
 
 #include <stdlib.h>
@@ -82,17 +82,50 @@ DEFINE_SAVER_PLUGIN_GET_EXT(c)
   return strdup("glic");
 }
 
+static int
+count_bits(unsigned int n)
+{
+  int i;
+
+  if (n == 0)
+    return -1;
+  else
+    i = 0;
+
+  while ((n >>= 1))
+    i++;
+  return i;
+}
+
 DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
 {
   Config *c = (Config *)params;
   VMPM vmpm;
   unsigned char *s;
   unsigned int image_size;
+  char *path;
   char *vmpm_path;
   char *decompose_method, *scan_method;
   int count, result;
+  int b;
 
-  debug_message("glic: save (%s) (%d, %d) called.\n", image_type_to_string(p->type), p->width, p->height);
+  b = count_bits(p->width);
+  if ((1 << b) != p->width) {
+    show_message("width %d is not a power of 2.\n", p->width);
+    return 0;
+  }
+  b = count_bits(p->height);
+  if ((1 << b) != p->height) {
+    show_message("height %d is not a power of 2.\n", p->height);
+    return 0;
+  }
+
+  if ((path = config_get_str(c, "/enfle/plugins/ui/convert/source_path")) == NULL) {
+    show_message("Caller did not set source_path.\n");
+    return 0;
+  }
+
+  debug_message("glic: save %s (%s) (%d, %d) called.\n", path, image_type_to_string(p->type), p->width, p->height);
 
   if (p->type != _INDEX && p->type != _GRAY) {
     show_message("glic: _INDEX or _GRAY expected.\n");
@@ -105,11 +138,19 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
   decompose_method = (char *)config_get(c, "/enfle/plugins/saver/glic/decompose_method");
   scan_method = (char *)config_get(c, "/enfle/plugins/saver/glic/scan_method");
   memset(&vmpm, 0, sizeof(vmpm));
-  vmpm.r = 4;
-  vmpm.I = 4;
+  vmpm.outfilepath = strdup(path);
   vmpm.outfile = fp;
+  vmpm.r = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/r", &result);
+  if (!result)
+    vmpm.r = 2;
+  vmpm.I = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/I", &result);
+  if (!result)
+    vmpm.I = 4;
+  vmpm.nlowbits = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/nlowbits", &result);
+  if (!result)
+    vmpm.nlowbits = 2;
 
-  debug_message("glic: vmpm_path %s, decompose method %s, scan method %s\n", vmpm_path, decompose_method, scan_method);
+  debug_message("glic: (%d, %d) vmpm_path %s, decompose method %s, scan method %s\n", vmpm.r, vmpm.I, vmpm_path, decompose_method, scan_method);
 
   if ((count = decomposer_scan_and_load(&vmpm, vmpm_path)) == 0) {
     show_message("glic: No decomposer.\n");

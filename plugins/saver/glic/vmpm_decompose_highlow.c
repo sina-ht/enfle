@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- High-Low decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 27 20:01:01 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.2 2001/04/28 12:56:10 sian Exp $
+ * Last Modified: Mon Apr 30 01:01:21 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.3 2001/04/30 01:09:08 sian Exp $
  */
 
 #include <stdio.h>
@@ -13,8 +13,7 @@
 #define REQUIRE_STRING_H
 #include "compat.h"
 
-#define LOW_BITS 2
-#define LOW_MASK ((1 << LOW_BITS) - 1)
+#define LOW_MASK(n) ((1 << n) - 1)
 
 #include "vmpm.h"
 #include "vmpm_hash.h"
@@ -147,15 +146,15 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
   if ((d->buffer_low = malloc(blocksize)) == NULL)
     return 0;
 
-  vmpm->bits_per_symbol = (8 - LOW_BITS);
+  vmpm->bits_per_symbol = (8 - vmpm->nlowbits);
   vmpm->alphabetsize = 1 << vmpm->bits_per_symbol;
 
   for (i = 0; i < blocksize; i++) {
     unsigned char c;
 
     c = vmpm->buffer[i];
-    d->buffer_low[i] = c & LOW_MASK;
-    vmpm->buffer[i] = c >> LOW_BITS;
+    d->buffer_low[i] = c & LOW_MASK(vmpm->nlowbits);
+    vmpm->buffer[i] = c >> vmpm->nlowbits;
   }
 
   return decompose_recur(vmpm, offset, level, blocksize);
@@ -235,9 +234,18 @@ encode(VMPM *vmpm)
   arithmodel_destroy(am);
   arithcoder_destroy(ac);
 
-  low_fp = fopen("low.dat", "wb");
-  fwrite(d->buffer_low, 1, vmpm->bufferused, low_fp);
-  fclose(low_fp);
+  {
+    char *path;
+
+    if ((path = malloc(strlen(vmpm->outfilepath) + 4 + 1)) == NULL)
+      return;
+    strcpy(path, vmpm->outfilepath);
+    strcat(path, ".low");
+    low_fp = fopen(path, "wb");
+    fwrite(d->buffer_low, 1, vmpm->bufferused, low_fp);
+    fclose(low_fp);
+    free(path);
+  }
 
   free(d->buffer_low);
   d->buffer_low = NULL;
