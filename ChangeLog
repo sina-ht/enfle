@@ -1,3 +1,21 @@
+2000-10-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/libstring.c: Fixed bug.
+
+	* lib/enfle/archiver.c, lib/enfle/archiver-plugin.h,
+	lib/enfle/enfle-plugin.c, lib/enfle/enfle-plugin.h,
+	lib/enfle/enfle-plugintype.h, lib/enfle/loader.c,
+	lib/enfle/loader-plugin.h, lib/enfle/Makefile.am,
+	plugins/archiver/tar/tar.c, plugins/loader/bmp/bmp.c,
+	plugins/loader/jpeg/jpeg.c, plugins/loader/png/png.c,
+	plugins/loader/ungif/ungif.c, src/enfle.c: Susie plugin support.
+
+	* lib/Makefile.am: Added dllloader.
+
+	* lib/dllloader/*, lib/enfle/spi.c, lib/enfle/spi.h,
+	lib/enfle/spi-private.h: Susie related dllloader and spi-to-enfle
+	bridge.
+
 2000-10-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added new plugins.
