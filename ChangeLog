@@ -1,3 +1,32 @@
+2001-09-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/mpglib/Makefile.am: Moved out main.c.
+
+	* lib/utils/Makefile.am: Compile fifo.c even if thread support is
+	not available.
+
+	* lib/X11/bgra32to16_mmx.s, lib/X11/x11.[ch],
+	lib/X11/x11ximage.[ch], lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/libriff.c, lib/dllloader/kernel32.c,
+	lib/dllloader/pe.h, lib/dllloader/pe_image.c, lib/enfle/archive.h,
+	lib/enfle/archiver-plugin.h, lib/enfle/archiver.c,
+	lib/enfle/image.[ch], lib/enfle/loader-plugin.h,
+	lib/enfle/loader.c, lib/enfle/spi.c, lib/enfle/stream.c,
+	lib/mpeg2/idct.c, lib/mpeg2/stats.c, lib/mpglib/layer3.c,
+	lib/utils/fifo.c, lib/utils/hash.[ch], lib/utils/libconfig.c,
+	lib/utils/libstring.[ch], lib/utils/pluginlist.c,
+	lib/utils/timer.[ch], lib/utils/timer_gettimeofday.c,
+	lib/utils/timer_impl.h, plugins/archiver/tar/tar.c,
+	plugins/effect/gamma/gamma.c, plugins/loader/bmp/bmp.c,
+	plugins/loader/jpeg/jpeg.c, plugins/loader/pcx/pcx.c,
+	plugins/loader/png/png.c, plugins/loader/pnm/pnm.c,
+	plugins/loader/ungif/ungif.c, plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mng/mng.c, plugins/player/ungif/ungif.c,
+	plugins/saver/png/png.c, plugins/video/Xlib/Xlib.c, src/enfle.c:
+	Fixed signed-unsigned issues, using -W option. Many cosmetic
+	changes and cleanups. Bug fixes.
+
 2001-09-16  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.[ch]: Cleaning and polishing up.
