@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 19:56:04 2001.
- * $Id: libmpeg2_vo.h,v 1.6 2001/06/22 17:34:43 sian Exp $
+ * Last Modified: Sat Jun 23 06:04:44 2001.
+ * $Id: libmpeg2_vo.h,v 1.7 2001/06/24 15:44:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,6 +49,7 @@ typedef struct _enfle_instance_t {
   Image *p;
   int image_size;
   int rgbstride;
+  int yuvstride;
   int width;
   int height;
 } enfle_instance_t;
@@ -64,6 +65,7 @@ typedef struct _libmpeg2_info {
   vo_instance_t *vo;
   int rendering_type;
   int to_render;
+  int use_xv;
   int if_initialized;
   pthread_mutex_t update_mutex;
   pthread_cond_t update_cond;
@@ -78,5 +80,6 @@ typedef struct _libmpeg2_info {
 } Libmpeg2_info;
 
 vo_instance_t *vo_enfle_rgb_open(VideoWindow *, Movie *, Image *);
+vo_instance_t *vo_enfle_yuv_open(VideoWindow *, Movie *, Image *);
 
 #endif

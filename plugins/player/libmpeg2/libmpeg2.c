@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 22:19:36 2001.
- * $Id: libmpeg2.c,v 1.17 2001/06/22 17:34:43 sian Exp $
+ * Last Modified: Sun Jun 24 11:49:57 2001.
+ * $Id: libmpeg2.c,v 1.18 2001/06/24 15:44:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,7 +46,10 @@
 #include "mpeg2/mm_accel.h"
 
 static const unsigned int types =
-  (IMAGE_RGBA32 | IMAGE_BGRA32 | IMAGE_RGB24 | IMAGE_BGR24 | IMAGE_BGR_WITH_BITMASK);
+  (IMAGE_I420 |
+   IMAGE_RGBA32 | IMAGE_BGRA32 |
+   IMAGE_RGB24 | IMAGE_BGR24 |
+   IMAGE_BGR_WITH_BITMASK);
 
 DECLARE_PLAYER_PLUGIN_METHODS;
 
@@ -57,7 +60,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.1",
+  description: "LibMPEG2 Player plugin version 0.2",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -108,6 +111,12 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   }
   debug_message("LibMPEG2: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
+  if (m->requested_type == _I420) {
+    info->use_xv = 1;
+  } else {
+    info->use_xv = 0;
+  }
+
   info->demux = demultiplexer_mpeg_create();
   demultiplexer_mpeg_set_input(info->demux, st);
   if (!demultiplexer_examine(info->demux))
@@ -130,6 +139,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       demultiplexer_mpeg_set_audio(info->demux, info->nastream);
 
       show_message("audio(%d streams)\n", info->nastreams);
+
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
@@ -167,32 +177,42 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     info->nvstream = 0;
     demultiplexer_mpeg_set_video(info->demux, info->nvstream);
 
-    if ((info->vo = vo_enfle_rgb_open(vw, m, p)) == NULL)
-      goto error;
+    show_message("video(%d streams)\n", info->nvstreams);
+
+    if (info->use_xv) {
+      if ((info->vo = vo_enfle_yuv_open(vw, m, p)) == NULL)
+	goto error;
+    } else {
+      if ((info->vo = vo_enfle_rgb_open(vw, m, p)) == NULL)
+	goto error;
+    }
 
     accel = mm_accel();
     vo_accel(accel);
     mpeg2_init(&info->mpeg2dec, accel, info->vo);
   }
 
-  debug_message("video(%d streams)\n", info->nvstreams);
-
-  switch (vw->bits_per_pixel) {
-  case 32:
-    p->depth = 24;
-    p->bits_per_pixel = 32;
-    break;
-  case 24:
-    p->depth = 24;
-    p->bits_per_pixel = 24;
-    break;
-  case 16:
-    p->depth = 16;
-    p->bits_per_pixel = 16;
-    break;
-  default:
-    show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
-    return PLAY_ERROR;
+  if (info->use_xv) {
+    p->bits_per_pixel = 12;
+    p->bytes_per_line = p->width * 1.5;
+  } else {
+    switch (vw->bits_per_pixel) {
+    case 32:
+      p->depth = 24;
+      p->bits_per_pixel = 32;
+      break;
+    case 24:
+      p->depth = 24;
+      p->bits_per_pixel = 24;
+      break;
+    case 16:
+      p->depth = 16;
+      p->bits_per_pixel = 16;
+      break;
+    default:
+      show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+      return PLAY_ERROR;
+    }
   }
 
   m->movie_private = (void *)info;
@@ -242,6 +262,7 @@ play(Movie *m)
   if (m->has_video) {
     if ((info->vstream = fifo_create()) == NULL)
       return PLAY_ERROR;
+    //fifo_set_max(info->vstream, 2000);
     demultiplexer_mpeg_set_vst(info->demux, info->vstream);
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
@@ -249,6 +270,7 @@ play(Movie *m)
   if (m->has_audio) {
     if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
+    //fifo_set_max(info->vstream, 2000);
     demultiplexer_mpeg_set_ast(info->demux, info->astream);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
@@ -431,7 +453,7 @@ play_main(Movie *m, VideoWindow *vw)
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   Image *p = info->p;
   int i;
-  int video_time, audio_time, frame_time;
+  int video_time, audio_time;
 
   switch (m->status) {
   case _PLAY:
@@ -445,25 +467,34 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  if (demultiplexer_get_eof(info->demux)) {
-    stop_movie(m);
-    return PLAY_OK;
-  }
-
   if (!m->has_video || info->to_render == 0)
     return PLAY_OK;
 
+  if (demultiplexer_get_eof(info->demux)) {
+    if ((!info->vstream || fifo_is_empty(info->vstream)) &&
+	(!info->astream || fifo_is_empty(info->astream))) {
+      stop_movie(m);
+      return PLAY_OK;
+    }
+  }
+
   if (!info->if_initialized && m->width && m->height) {
     m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
+    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+
+    if (info->use_xv) {
+      m->rendering_width  = m->width;
+      m->rendering_height = m->height;
+    } else {
+      m->rendering_width  = p->magnified.width;
+      m->rendering_height = p->magnified.height;
+    }
     info->if_initialized++;
   }
 
   pthread_mutex_lock(&info->update_mutex);
 
-  frame_time = 1000 / m->framerate;
-  //video_time = (m->current_frame - 1) * 1000 / m->framerate;
-  //video_time = (m->current_frame - 1) * frame_time;
-  video_time = m->current_frame * frame_time;
+  video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio) {
     audio_time = get_audio_time(m, info->ad);
     // debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);

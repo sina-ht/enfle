@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 20 05:22:51 2001.
- * $Id: libmpeg2_vo.c,v 1.5 2001/06/19 20:50:34 sian Exp $
+ * Last Modified: Sun Jun 24 11:09:46 2001.
+ * $Id: libmpeg2_vo.c,v 1.6 2001/06/24 15:44:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,6 +31,8 @@
 #include "enfle/movie.h"
 #include "libmpeg2_vo.h"
 
+/* RGB */
+
 static void
 enfle_draw(vo_frame_t *_frame)
 {
@@ -40,12 +42,12 @@ enfle_draw(vo_frame_t *_frame)
   Image *p = instance->p;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
 
-  //debug_message(__FUNCTION__ "()\n");
-
   if (m->status == _PLAY) {
-    if ((int)m->framerate == 0 && info->mpeg2dec.frame_rate > 0)
+    if ((int)m->framerate == 0 && info->mpeg2dec.frame_rate > 0) {
       m->framerate = info->mpeg2dec.frame_rate;
-      
+      show_message("(%d, %d) fps %2.5f\n", m->width, m->height, m->framerate);
+    }
+
     pthread_mutex_lock(&info->update_mutex);
     memcpy(memory_ptr(p->rendered.image), frame->rgb_ptr_base, instance->image_size);
     info->to_render++;
@@ -230,6 +232,138 @@ vo_enfle_rgb_open(VideoWindow *vw, Movie *m, Image *p)
   instance->vo.setup = enfle_rgb_setup;
   instance->vo.close = enfle_free_frames;
   instance->vo.get_frame = rgb_get_frame;
+  instance->m = m;
+  instance->p = p;
+
+  return (vo_instance_t *)instance;
+}
+
+/* YUV */
+
+static void
+enfle_yuv_draw(vo_frame_t *_frame)
+{
+  enfle_frame_t *frame = (enfle_frame_t *)_frame;
+  enfle_instance_t *instance = (enfle_instance_t *)frame->vo.instance;
+  Movie *m = instance->m;
+  Image *p = instance->p;
+  Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
+
+  if (m->status == _PLAY) {
+    if ((int)m->framerate == 0 && info->mpeg2dec.frame_rate > 0) {
+      m->framerate = info->mpeg2dec.frame_rate;
+      show_message("(%d, %d) fps %2.5f\n", m->width, m->height, m->framerate);
+    }
+
+    pthread_mutex_lock(&info->update_mutex);
+    memcpy(memory_ptr(p->rendered.image), frame->vo.base[0], instance->image_size);
+    info->to_render++;
+    m->current_frame++;
+    while (info->to_render > 0)
+      pthread_cond_wait(&info->update_cond, &info->update_mutex);
+    pthread_mutex_unlock(&info->update_mutex);
+  }
+}
+
+static int
+enfle_yuv_alloc_frames(vo_instance_t *_instance, int width, int height, int frame_size,
+		   void (*draw)(vo_frame_t *))
+{
+  enfle_instance_t *instance;
+  int size;
+  uint8_t *alloc;
+  int i;
+
+  debug_message(__FUNCTION__ "(%d, %d) ", width, height);
+
+  instance = (enfle_instance_t *)_instance;
+  instance->prediction_index = 1;
+  size = (width * height) >> 2;
+  if ((alloc = memalign(16, 18 * size)) == NULL) {
+    debug_message("ERROR\n");
+    return 1;
+  }
+
+  for (i = 0; i < 3; i++) {
+    instance->frame_ptr[i] = (vo_frame_t *)(instance->frame + i);
+    instance->frame[i].vo.base[0] = alloc;
+    instance->frame[i].vo.base[1] = alloc + 4 * size;
+    instance->frame[i].vo.base[2] = alloc + 5 * size;
+    instance->frame[i].vo.copy = NULL;
+    instance->frame[i].vo.field = NULL;
+    instance->frame[i].vo.draw = draw;
+    instance->frame[i].vo.instance = (vo_instance_t *)instance;
+    alloc += 6 * size;
+  }
+
+  debug_message("OK\n");
+
+  return 0;
+}
+
+static vo_frame_t *
+yuv_get_frame (vo_instance_t *_instance, int flags)
+{
+  enfle_instance_t *instance;
+  enfle_frame_t *frame;
+
+  instance = (enfle_instance_t *)_instance;
+  frame = (enfle_frame_t *)enfle_get_frame((vo_instance_t *)instance, flags);
+
+  return (vo_frame_t *)frame;
+}
+
+static int
+enfle_yuv_setup(vo_instance_t *_instance, int width, int height)
+{
+  enfle_instance_t *instance;
+  Libmpeg2_info *info;
+  VideoWindow *vw;
+  Movie *m;
+  Image *p;
+
+  debug_message(__FUNCTION__ ": (%d, %d)\n", width, height);
+
+  instance = (enfle_instance_t *)_instance;
+  m = instance->m;
+  info = (Libmpeg2_info *)m->movie_private;
+  vw = info->vw;
+  p = info->p;
+
+  m->width  = instance->width  = width;
+  m->height = instance->height = height;
+  m->rendering_width  = m->width;
+  m->rendering_height = m->height;
+  p->width  = m->rendering_width;
+  p->height = m->rendering_height;
+  p->bytes_per_line = (p->width * 3) >> 1;
+  instance->rgbstride = (p->width * vw->bits_per_pixel) >> 3;
+  instance->yuvstride = p->width;
+  instance->image_size = p->bytes_per_line * p->height;
+
+  debug_message(__FUNCTION__ ": allocating %d bytes\n", p->bytes_per_line * p->height);
+  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+    return 0;
+
+  debug_message("video: (%d,%d) -> (%d,%d)\n",
+		m->width, m->height, m->rendering_width, m->rendering_height);
+
+  return enfle_yuv_alloc_frames((vo_instance_t *)instance,
+			    p->width, p->height, sizeof(enfle_frame_t),
+			    enfle_yuv_draw);
+}
+
+vo_instance_t *
+vo_enfle_yuv_open(VideoWindow *vw, Movie *m, Image *p)
+{
+  enfle_instance_t *instance;
+
+  if ((instance = malloc(sizeof(enfle_instance_t))) == NULL)
+    return NULL;
+
+  instance->vo.setup = enfle_yuv_setup;
+  instance->vo.close = enfle_free_frames;
+  instance->vo.get_frame = yuv_get_frame;
   instance->m = m;
   instance->p = p;
 
