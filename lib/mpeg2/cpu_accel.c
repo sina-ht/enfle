@@ -19,6 +19,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "compat.h"
+#include "common.h"
+
 #include <inttypes.h>
 
 #include "mm_accel.h"
@@ -31,20 +34,15 @@ static uint32_t x86_accel (void)
     uint32_t caps;
 
 #define cpuid(op,eax,ebx,ecx,edx)	\
-    __asm__ __volatile__ (              \
-           "pushl %%ebx\n\t"            \
-           "movl %%esi, %%ebx\n\t"      \
-           "cpuid\n\t"			\
-           "popl %%ebx"                 \
+    asm ("cpuid"			\
 	 : "=a" (eax),			\
-	   "=S" (ebx),			\
+	   "=b" (ebx),			\
 	   "=c" (ecx),			\
 	   "=d" (edx)			\
 	 : "a" (op)			\
 	 : "cc")
 
-    __asm__ __volatile__ (
-         "pushfl\n\t"
+    asm ("pushfl\n\t"
 	 "popl %0\n\t"
 	 "movl %0,%1\n\t"
 	 "xorl $0x200000,%0\n\t"
@@ -53,7 +51,7 @@ static uint32_t x86_accel (void)
 	 "pushfl\n\t"
 	 "popl %0"
          : "=a" (eax),
-	   "=c" (ebx)
+	   "=b" (ebx)
 	 :
 	 : "cc");
 
