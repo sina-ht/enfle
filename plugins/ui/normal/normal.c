@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar 17 06:03:32 2001.
- * $Id: normal.c,v 1.29 2001/03/16 22:45:40 sian Exp $
+ * Last Modified: Mon Apr 16 21:11:04 2001.
+ * $Id: normal.c,v 1.30 2001/04/18 05:33:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,6 +33,7 @@
 
 #include "utils/libstring.h"
 #include "enfle/ui-plugin.h"
+#include "enfle/utils.h"
 
 static int ui_main(UIData *);
 
@@ -159,6 +160,34 @@ set_caption_string(VideoWindow *vw, char *path, char *format)
   string_destroy(cap);
 }
 
+static int
+save_image(Image *p, UIData *uidata, char *path, char *format)
+{
+  char *outpath;
+  FILE *fp;
+
+  if ((outpath = replace_ext(path, format)) == NULL) {
+    show_message(__FUNCTION__ ": No enough memory.\n");
+    return 0;
+  }
+
+  if ((fp = fopen(outpath, "wb")) == NULL) {
+    show_message(__FUNCTION__ ": Cannot open %s for writing.\n", outpath);
+    return 0;
+  }
+
+  if (!saver_save(uidata->sv, uidata->eps, format, p, fp, uidata->c)) {
+    show_message("Save failed.\n");
+    fclose(fp);
+    return 0;
+  }
+
+  fclose(fp);
+  free(outpath);
+
+  return 1;
+}
+
 #define MAIN_LOOP_QUIT 0
 #define MAIN_LOOP_NEXT 1
 #define MAIN_LOOP_PREV -1
@@ -175,6 +204,9 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
   int loop = 1;
   VideoButton button = ENFLE_Button_None;
   VideoKey key = ENFLE_KEY_Unknown;
+  EnflePlugins *eps = uidata->eps;
+  Config *c = uidata->c;
+  Effect *ef = uidata->ef;
   unsigned int old_x = 0, old_y = 0;
   int first_point = 1;
   int offset_x, offset_y;
@@ -259,6 +291,17 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	      magnify_if_requested(vw, p);
 	      video_window_render(vw, p);
 	      set_caption_string(vw, path, p ? p->format : m->format);
+	    } else if (ev.key.modkey & ENFLE_MOD_Ctrl) {
+	      if (!save_image(p, uidata, path, (char *)"PNG"))
+		show_message("save_image() failed.\n");
+	    } else if (ev.key.modkey & ENFLE_MOD_Alt) {
+	      char *format;
+
+	      if ((format = config_get(c, "/enfle/plugins/ui/normal/save_format")) == NULL)
+		show_message("save_format is not specified.\n");
+	      else
+		if (!save_image(p, uidata, path, format))
+		  show_message("save_image() failed.\n");
 	    }
 	    break;
 	  case ENFLE_KEY_m:
@@ -282,13 +325,51 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	    if (p) {
 	      magnify_if_requested(vw, p);
 	      video_window_resize(vw, p->magnified.width, p->magnified.height);
-	      video_window_render(vw, p);
 	      video_window_set_offset(vw, 0, 0);
+	      video_window_render(vw, p);
 	    }
 	    break;
 	  case ENFLE_KEY_w:
 	    if (p) 
 	      vp->set_wallpaper(uidata->disp, p);
+	    break;
+	  case ENFLE_KEY_l:
+	  case ENFLE_KEY_r:
+	  case ENFLE_KEY_v:
+	  case ENFLE_KEY_h:
+	    if (p) {
+	      Image *old_p;
+	      int f;
+
+	      switch (ev.key.key) {
+	      case ENFLE_KEY_r:
+		f = 1;
+		break;
+	      case ENFLE_KEY_l:
+		f = -1;
+		break;
+	      case ENFLE_KEY_v:
+		f = 2;
+		break;
+	      case ENFLE_KEY_h:
+		f = -2;
+		break;
+	      default:
+		f = 0;
+		break;
+	      }
+	      config_set_int(c, (char *)"/enfle/plugins/effect/rotate/function", f);
+	      if ((old_p = effect_call(ef, eps, (char *)"Rotate", p, c))) {
+		if (old_p != p) {
+		  image_destroy(old_p);
+		  video_window_resize(vw, p->width, p->height);
+		}
+		magnify_if_requested(vw, p);
+		video_window_set_offset(vw, 0, 0);
+		video_window_render(vw, p);
+	      } else
+		show_message("Rotate effect failed.\n");
+	    }
 	    break;
 	  default:
 	    break;
@@ -388,7 +469,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       case MAIN_LOOP_DELETE_FILE:
 	if (strcmp(a->format, "NORMAL") == 0) {
 	  unlink(s->path);
-	  fprintf(stderr, "DELETED: %s\n", s->path);
+	  show_message("DELETED: %s\n", s->path);
 	}
 	archive_iteration_delete(a);
 	ret = (dir == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
@@ -414,10 +495,10 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
     }
 
-    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-
     if (!path)
       break;
+
+    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 
     if (strcmp(a->format, "NORMAL") == 0) {
       if (strcmp(path, "-") == 0) {
@@ -447,6 +528,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  }
 	  archive_destroy(arc);
 	  dir = 1;
+	  ret = MAIN_LOOP_NEXT;
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
 	  archive_iteration_delete(a);
@@ -499,7 +581,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
     video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     if (loader_identify(ld, eps, p, s)) {
 
-      debug_message("Image identified as %s\n", p->format);
+#ifdef DEBUG
+      if (p->format_detail)
+	debug_message("Image identified as %s: %s\n", p->format, p->format_detail);
+      else
+	debug_message("Image identified as %s\n", p->format);
+#endif
 
       p->image = memory_create();
       if ((f = loader_load_image(ld, eps, p->format, p, s)) == LOAD_OK)
@@ -534,7 +621,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
 
       if (p->comment) {
-	show_message("comment:\n%s\n", p->comment);
+	show_message("comment: %s\n", p->comment);
 	free(p->comment);
 	p->comment = NULL;
       }
