@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 12 13:40:04 2001.
- * $Id: utils.h,v 1.4 2001/04/18 05:38:20 sian Exp $
+ * Last Modified: Thu Jul 26 00:56:14 2001.
+ * $Id: utils.h,v 1.5 2001/07/29 00:38:59 sian Exp $
  *
  * Note: common.h should be included before including this header.
  *
@@ -76,7 +76,5 @@ utils_get_big_uint16(unsigned char *p)
   return *v;
 #endif
 }
-
-char *replace_ext(char *, char *);
 
 #endif
