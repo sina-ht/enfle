@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Tue Feb 20 01:39:15 2001.
-# $Id: Makefile.am,v 1.2 2001/02/19 16:39:11 sian Exp $
+# Last Modified: Thu Feb 22 18:06:28 2001.
+# $Id: Makefile.am,v 1.3 2001/02/22 17:48:18 sian Exp $
 
 #AM_CFLAGS =
 
@@ -18,6 +18,7 @@ libenflempeg2_la_SOURCES = \
 	stats.c \
 	vlc.h \
 	yuv2rgb.c yuv2rgb.h yuv2rgb_mlib.c yuv2rgb_mmx.c \
-	video_out.c video_out.h video_out_internal.h
+	video_out.c video_out.h video_out_internal.h \
+	cpu_accel.c
 
 #libenflempeg2_la_LIBADD = -lm
