@@ -3009,7 +3009,7 @@ void ff_mpeg4_init_partitions(MpegEncContext *s)
     uint8_t *start= pbBufPtr(&s->pb);
     uint8_t *end= s->pb.buf_end;
     int size= end - start;
-    int pb_size = (((int)start + size/3)&(~3)) - (int)start;
+    int pb_size = (((long)start + size/3)&(~3)) - (long)start;
     int tex_size= (size - 2*pb_size)&(~3);
     
     set_put_bits_buffer_size(&s->pb, pb_size);
@@ -4580,7 +4580,7 @@ retry:
                 memset(block, 0, sizeof(DCTELEM)*64);
                 goto retry;
             }
-            av_log(s->avctx, AV_LOG_ERROR, "run overflow at %dx%d\n", s->mb_x, s->mb_y);
+            av_log(s->avctx, AV_LOG_ERROR, "run overflow at %dx%d i:%d\n", s->mb_x, s->mb_y, s->mb_intra);
             return -1;
         }
         j = scan_table[i];
@@ -5923,6 +5923,13 @@ int ff_mpeg4_decode_picture_header(MpegEncContext * s, GetBitContext *gb)
 
     /* search next start code */
     align_get_bits(gb);
+
+    if(s->avctx->codec_tag == ff_get_fourcc("WV1F") && show_bits(gb, 24) == 0x575630){
+        skip_bits(gb, 24);
+        if(get_bits(gb, 8) == 0xF0)
+            return decode_vop_header(s, gb);
+    }
+
     startcode = 0xff;
     for(;;) {
         v = get_bits(gb, 8);
@@ -6108,7 +6115,7 @@ int flv_h263_decode_picture_header(MpegEncContext *s)
         width = height = 0;
         break;
     }
-    if ((width == 0) || (height == 0))
+    if(avcodec_check_dimensions(s->avctx, width, height))
         return -1;
     s->width = width;
     s->height = height;
@@ -6134,7 +6141,7 @@ int flv_h263_decode_picture_header(MpegEncContext *s)
 
     if(s->avctx->debug & FF_DEBUG_PICT_INFO){
         av_log(s->avctx, AV_LOG_DEBUG, "%c esc_type:%d, qp:%d num:%d\n",
-               av_get_pict_type_char(s->pict_type), s->h263_flv-1, s->qscale, s->picture_number);
+               s->dropable ? 'D' : av_get_pict_type_char(s->pict_type), s->h263_flv-1, s->qscale, s->picture_number);
     }
     
     s->y_dc_scale_table=
