@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 12 20:43:43 2000.
- * $Id: Xlib.c,v 1.6 2000/10/12 15:47:02 sian Exp $
+ * Last Modified: Sat Oct 14 05:25:03 2000.
+ * $Id: Xlib.c,v 1.7 2000/10/15 07:47:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -104,7 +104,7 @@ initialize_screen(UIData *uidata, Movie *m, int w, int h)
     }
     /* ximage is fixed size for movie */
     info->ximage = x11_create_ximage(info->x11, x11_visual(info->x11), screen->depth,
-				     movie_get_screen(m), w, h, 8, 0);
+				     NULL, w, h, 8, 0);
   }
 
   /* Create pixmap for double buffering */
@@ -130,6 +130,7 @@ static int
 render_frame(UIData *uidata, Movie *m, Image *p)
 {
   Xlib_info *info = (Xlib_info *)uidata->private;
+  XImage *ximage = info->ximage;
 
   /* CHECK */
   if (p->width != m->width || p->height != m->height) {
@@ -137,14 +138,14 @@ render_frame(UIData *uidata, Movie *m, Image *p)
     exit(1);
   }
 
-  x11ximage_convert_image(info->ximage, p);
+  x11ximage_convert_image(ximage, p);
 
-  XPutImage(x11_display(info->x11), info->pix, info->gc, info->ximage,
+  XPutImage(x11_display(info->x11), info->pix, info->gc, ximage,
 	    0, 0, 0, 0, p->width, p->height);
 
-  if (info->ximage->data != (char *)p->image)
-    free(p->image);
-  p->image = NULL;
+  if (ximage->data != (char *)p->image)
+    free(ximage->data);
+  ximage->data = NULL;
 
   update_screen(uidata, p->left, p->top, p->width, p->height);
 
@@ -176,10 +177,10 @@ render_image(UIData *uidata, Image *p)
 
   if (ximage->data != (char *)p->image)
     free(p->image);
+  p->image = NULL;
   free(ximage->data);
   ximage->data = NULL;
   x11_destroy_ximage(ximage);
-  p->image = NULL;
 
   update_screen(uidata, p->left, p->top, p->width, p->height);
 
@@ -427,7 +428,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
 	if ((f = player_load_movie(player, uidata, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
-	  show_message("%s play failed\n", path);
+	  show_message("%s load failed\n", path);
 	  archive_iteration_delete(a);
 	  continue;
 	}
