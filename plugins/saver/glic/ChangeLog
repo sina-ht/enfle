@@ -1,3 +1,20 @@
+2001-08-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* vmpm_decompose_esc.c, vmpm_decompose_escb.c,
+	vmpm_decompose_escc.c, vmpm_decompose_escfirst.c,
+	vmpm_decompose_highlow.c, vmpm_decompose_highlow_esc.c,
+	vmpm_decompose_highlow_escb.c, vmpm_decompose_highlow_rle.c,
+	vmpm_decompose_normal.c, vmpm_decompose_normal_rle.c: Cleaned up.
+
+	* glic.c: Apply setlinebuf() to statfile.
+
+	* arithmodel_order_zero.h: New macro:
+	arithmodel_order_zero_nsymbols().
+
+	* Makefile.am: Added Recur decomposer.
+
+	* vmpm_decompose_recur.c: New file.
+
 2001-08-26  Hiroshi Takekawa  <sian@fennel.org>
 
 	* Makefile.am: Added two new decomposers.
