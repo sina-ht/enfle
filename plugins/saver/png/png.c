@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:57:28 2001.
- * $Id: png.c,v 1.6 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Sun Aug 26 09:14:54 2001.
+ * $Id: png.c,v 1.7 2001/08/26 00:53:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -144,10 +144,13 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   }
 
   b = config_get_boolean(c, "/enfle/plugins/saver/png/filter", &result);
-  if (result)
+  if (result > 0)
     interlace_flag = b ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
-  else
+  else {
+    if (result < 0)
+      warning("Invalid string in png/filter.\n");
     interlace_flag = PNG_INTERLACE_NONE;
+  }
 
   /* set up the output control. */
   png_init_io(png_ptr, fp);
