@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 06:00:55 2000.
- * $Id: plugin.c,v 1.7 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Wed Sep 12 20:51:26 2001.
+ * $Id: plugin.c,v 1.8 2001/09/13 12:23:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,7 +60,7 @@ load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbo
 {
   void *(*entry)(void) = NULL;
 
-  if ((p->handle = dlopen(filepath, RTLD_LAZY)) == NULL) {
+  if ((p->handle = dlopen(filepath, RTLD_LAZY | RTLD_GLOBAL)) == NULL) {
     p->err = (char *)dlerror();
     return 0;
   }
