@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:36:45 2002.
- * $Id: mpglib.c,v 1.6 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Mon Mar  4 22:32:59 2002.
+ * $Id: mpglib.c,v 1.7 2002/03/04 20:25:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,7 +58,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "Mpglib",
-  description: "Mpglib Player plugin version 0.1 with integrated mpglib",
+  description: "Mpglib Player plugin version 0.1.1 with integrated mpglib",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -206,6 +206,7 @@ play(Movie *m)
     return PLAY_ERROR;
   }
 
+  stream_rewind(m->st);
   InitMP3(&info->mp);
 
   m->current_frame = 0;
@@ -234,7 +235,10 @@ play_audio(void *arg)
     pthread_exit((void *)PLAY_ERROR);
   }
 
-  if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+  m->sampleformat_actual = m->sampleformat;
+  m->channels_actual = m->channels;
+  m->samplerate_actual = m->samplerate;
+  if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
     show_message("Some params are set wrong.\n");
 
   while (m->status == _PLAY) {

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:37:38 2002.
- * $Id: libmpeg2.c,v 1.30 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Tue Mar  5 05:21:21 2002.
+ * $Id: libmpeg2.c,v 1.31 2002/03/04 20:25:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -264,6 +264,7 @@ play(Movie *m)
   }
 
   if (m->has_audio) {
+    m->has_audio = 1;
     if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
     //fifo_set_max(info->vstream, 2000);
@@ -446,7 +447,10 @@ play_audio(void *arg)
 	m->sampleformat = _AUDIO_FORMAT_S16_LE;
 	m->channels = info->mp.fr.stereo;
 	m->samplerate = freqs[info->mp.fr.sampling_frequency];
-	if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+	m->sampleformat_actual = m->sampleformat;
+	m->channels_actual = m->channels;
+	m->samplerate_actual = m->samplerate;
+	if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
 	  show_message("Some params are set wrong.\n");
 	param_is_set++;
       }
