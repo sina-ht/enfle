@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 06:03:35 2000.
- * $Id: archive.c,v 1.3 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Tue Nov 14 10:58:24 2000.
+ * $Id: archive.c,v 1.4 2000/11/20 12:55:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,9 +22,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 
+#define REQUIRE_UNISTD_H
 #define REQUIRE_STRING_H
 #define REQUIRE_DIRENT_H
 #include "compat.h"
