@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar 20 14:56:10 2002.
- * $Id: demultiplexer_avi.c,v 1.11 2002/03/21 01:32:19 sian Exp $
+ * Last Modified: Sat May  4 23:26:32 2002.
+ * $Id: demultiplexer_avi.c,v 1.12 2002/05/04 14:34:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,7 +34,6 @@
 
 #include "demultiplexer_avi.h"
 #include "demultiplexer_avi_private.h"
-#include "enfle/utils.h"
 
 DECLARE_DEMULTIPLEXER_METHODS;
 PREPARE_DEMULTIPLEXER_TEMPLATE;

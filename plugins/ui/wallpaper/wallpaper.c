@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar  8 15:55:19 2002.
- * $Id: wallpaper.c,v 1.9 2002/04/27 12:59:50 sian Exp $
+ * Last Modified: Sat May  4 23:26:46 2002.
+ * $Id: wallpaper.c,v 1.10 2002/05/04 14:34:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,7 +30,6 @@
 
 #include "utils/libstring.h"
 #include "enfle/ui-plugin.h"
-#include "enfle/utils.h"
 #include "enfle/loader.h"
 #include "enfle/player.h"
 #include "enfle/streamer.h"
