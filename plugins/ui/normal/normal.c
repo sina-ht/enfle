@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 18 15:38:09 2000.
- * $Id: normal.c,v 1.5 2000/11/20 12:57:41 sian Exp $
+ * Last Modified: Mon Nov 27 17:25:18 2000.
+ * $Id: normal.c,v 1.6 2000/11/27 14:42:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -93,7 +93,6 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
   int loop = 1;
   VideoButton button = ENFLE_Button_None;
   VideoKey key = ENFLE_KEY_Unknown;
-
 
   if (p) {
     video_window_resize(vw, p->width, p->height);

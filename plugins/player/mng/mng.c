@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Nov 21 05:52:18 2000.
- * $Id: mng.c,v 1.2 2000/11/27 02:55:39 sian Exp $
+ * Last Modified: Mon Nov 27 17:36:57 2000.
+ * $Id: mng.c,v 1.3 2000/11/27 14:43:10 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -31,17 +31,11 @@
 #include "stream.h"
 #include "player-plugin.h"
 
-#ifndef TRUE
-#  define TRUE 1
-#  define FALSE 0
-#endif
-
 typedef struct {
   mng_handle mng;
   VideoWindow *vw;
   Movie *m;
   Image *p;
-  int npics;
   int rc;
   unsigned int delay;
 } MNG_info;
@@ -128,7 +122,7 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
   Movie *m = this->m;
   Image *p;
 
-  m->width = width;
+  m->width  = width;
   m->height = height;
   m->initialize_screen(this->vw, m, m->width, m->height);
 
@@ -171,8 +165,7 @@ refresh(mng_handle mng, mng_uint32 left, mng_uint32 top,
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
 
   debug_message(__FUNCTION__ ": (%d,%d)-(%d,%d)\n",
-		left, top,
-		left + width - 1, top + height - 1);
+		left, top, left + width - 1, top + height - 1);
 
   this->m->render_frame(this->vw, this->m, this->p);
 
@@ -346,7 +339,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   this->vw = vw;
   this->m = m;
-  this->npics = 0;
 
   this->mng = mng_initialize((mng_ptr)this, memalloc, memfree, NULL);
   if (mng_setcb_openstream    (this->mng, openstream   )) err++;
