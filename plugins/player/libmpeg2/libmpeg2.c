@@ -1,10 +1,10 @@
 /*
  * libmpeg2.c -- libmpeg2 player plugin, which exploits libmpeg2.
- * (C)Copyright 2000-2003 by Hiroshi Takekawa
+ * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan  5 18:54:18 2004.
- * $Id: libmpeg2.c,v 1.43 2004/01/05 09:54:49 sian Exp $
+ * Last Modified: Sat Jan 10 00:56:58 2004.
+ * $Id: libmpeg2.c,v 1.44 2004/01/09 15:59:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,7 +86,7 @@ typedef struct _libmpeg2_info {
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.1 with integrated libmpeg2(mpeg2dec-0.4.0)",
+  description: "LibMPEG2 Player plugin version 0.2 with integrated libmpeg2(mpeg2dec-0.4.0)",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -268,7 +268,7 @@ play(Movie *m)
   if (m->has_video) {
     if ((info->vstream = fifo_create()) == NULL)
       return PLAY_ERROR;
-    fifo_set_max(info->vstream, 256);
+    fifo_set_max(info->vstream, 512);
     demultiplexer_mpeg_set_vst(info->demux, info->vstream);
     info->mpeg2dec = mpeg2_init();
     pthread_create(&info->video_thread, NULL, play_video, m);
@@ -428,7 +428,7 @@ play_video(void *arg)
 	memcpy(memory_ptr(image_rendered_image(info->p)) + seq->width * seq->height + seq->chroma_width * seq->chroma_height, mpeg2dec_info->display_fbuf->buf[2], seq->chroma_width * seq->chroma_height);
 	info->to_render++;
 	m->current_frame++;
-	while (info->to_render > 0)
+	while (m->status == _PLAY && info->to_render > 0)
 	  pthread_cond_wait(&info->update_cond, &info->update_mutex);
 	pthread_mutex_unlock(&info->update_mutex);
       }
