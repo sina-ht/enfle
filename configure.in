@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Nov 11 05:35:03 2000.
-dnl $Id: configure.in,v 1.16 2000/11/14 00:53:52 sian Exp $
+dnl Last Modified: Sat Nov 18 13:11:54 2000.
+dnl $Id: configure.in,v 1.17 2000/11/20 12:58:30 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@ AM_CONFIG_HEADER(config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20001105)
+AM_INIT_AUTOMAKE(enfle, 20001118)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -118,6 +118,17 @@ fi
 AM_CONDITIONAL(HAVE_PNG, test "$available_png" = "yes")
 AC_SUBST(LIBADD_PNG)
 
+available_mng=no
+if test "$available_zlib" = "yes" -a "$available_jpeg" = "yes"; then
+  LIBADD_MNG="-lz -ljpeg"
+  AC_CHECK_HEADER(libmng.h, [
+    AC_CHECK_LIB(mng, mng_initialize, [ available_mng=yes; LIBADD_MNG="$LIBADD_MNG -lmng"; ], [], $LIBADD_MNG )])
+else
+  echo "*** mng requires libz and libjpeg"
+fi
+AM_CONDITIONAL(HAVE_MNG, test "$available_mng" = "yes")
+AC_SUBST(LIBADD_MNG)
+
 available_bzlib=no
 AC_CHECK_HEADER(bzlib.h, [
   dnl It appears that autoconf 2.49a's AC_CHECK_LIB cannot have 'else' part... 
@@ -153,6 +164,14 @@ AC_CHECK_HEADERS(sys/time.h unistd.h getopt.h)
 
 dnl Checks for X libraries.
 AC_PATH_XTRA
+if test "$x_includes" = ""; then
+  # last resort
+  x_includes="/usr/X11R6/include"
+fi
+if test "$X_LIBS" = ""; then
+  # last resort
+  X_LIBS="-L/usr/X11R6/lib"
+fi
 CPPFLAGS="$CPPFLAGS -I$x_includes"
 LDFLAGS="$LDFLAGS $X_LIBS"
 
@@ -222,6 +241,7 @@ AC_OUTPUT(
     plugins/player/ungif/Makefile
     plugins/player/mpeg_lib/Makefile
     plugins/player/libmpeg3/Makefile
+    plugins/player/mng/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
 )
