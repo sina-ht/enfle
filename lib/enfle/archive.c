@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Nov  5 22:44:20 2003.
- * $Id: archive.c,v 1.34 2003/11/08 06:14:16 sian Exp $
+ * Last Modified: Sun Feb 15 20:57:49 2004.
+ * $Id: archive.c,v 1.35 2004/02/20 17:19:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -169,6 +169,7 @@ read_directory(Archive *arc, char *path, int depth)
   Dlist_data *dd;
 
   if (strlen(arc->path) == 0) {
+    free(arc->path);
     if ((arc->path = misc_canonical_pathname(path)) == NULL)
       return 0;
     dl = dlist_create();
