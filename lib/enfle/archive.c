@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 21 04:44:53 2001.
- * $Id: archive.c,v 1.14 2001/04/21 07:26:13 sian Exp $
+ * Last Modified: Thu Apr 26 17:42:39 2001.
+ * $Id: archive.c,v 1.15 2001/04/27 01:00:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,7 +22,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include <sys/stat.h>
 
 #define REQUIRE_FNMATCH_H
@@ -36,6 +35,7 @@
 #include "common.h"
 
 #include "archive.h"
+#include "utils/misc.h"
 
 static int read_directory(Archive *, char *, int);
 static void set_fnmatch(Archive *, char *, Archive_fnmatch);
@@ -180,11 +180,9 @@ add(Archive *arc, char *path, void *reminder)
 {
   if (arc->pattern) {
     int result = 0;
-    char *base_copy, *base_name;
+    char *base_name;
 
-    base_copy = strdup(path);
-    base_name = basename(base_copy);
-
+    base_name = misc_basename(path);
     switch (arc->fnmatch) {
     case _ARCHIVE_FNMATCH_ALL:
       result = 1;
@@ -207,7 +205,6 @@ add(Archive *arc, char *path, void *reminder)
       break;
     }
 
-    free(base_copy);
     if (!result)
       return;
   }
