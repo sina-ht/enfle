@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 13 01:03:10 2001.
- * $Id: normal.c,v 1.55 2001/10/14 12:37:18 sian Exp $
+ * Last Modified: Sun Oct 28 03:28:14 2001.
+ * $Id: normal.c,v 1.56 2001/10/27 18:47:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,7 +50,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.4.8",
+  description: "Normal UI plugin version 0.5",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -100,8 +100,9 @@ typedef struct _main_loop {
   Image *p;
   Movie *m;
   char *path;
-  int first_point;
+  VideoButton pointed_button;
   unsigned int old_x, old_y;
+  unsigned int lx, uy, rx, dy;
   int offset_x, offset_y;
   int ret;
 } MainLoop;
@@ -308,6 +309,13 @@ static int main_loop_delete_file(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FILE
 static int main_loop_delete_from_list(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FROM_LIST; return 1;}
 
 static int
+main_loop_erase_rectangle(MainLoop *ml)
+{
+  video_window_erase_rect(ml->vw);
+  return 1;
+}
+
+static int
 main_loop_toggle_fullscreen_mode(MainLoop *ml)
 {
   video_window_set_fullscreen_mode(ml->vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
@@ -505,8 +513,17 @@ static int
 main_loop_button_pressed(MainLoop *ml)
 {
   ml->button = ml->ev.button.button;
-  if (ml->button == ENFLE_Button_1)
-    ml->first_point = 1;
+  switch (ml->button) {
+  case ENFLE_Button_1:
+  case ENFLE_Button_3:
+    ml->pointed_button = ml->button;
+    ml->lx = ml->old_x = ml->ev.pointer.x;
+    ml->uy = ml->old_y = ml->ev.pointer.y;
+    break;
+  default:
+    break;
+  }
+
   return 1;
 }
 
@@ -590,6 +607,8 @@ main_loop_key_released(MainLoop *ml)
 	return main_loop_magnify_double(ml);
       break;
       return 1;
+    case ENFLE_KEY_c:
+      return main_loop_erase_rectangle(ml);
     case ENFLE_KEY_w:
       return main_loop_set_wallpaper(ml);
     case ENFLE_KEY_l:
@@ -624,23 +643,31 @@ main_loop_key_released(MainLoop *ml)
 static int
 main_loop_pointer_moved(MainLoop *ml)
 {
-  if (ml->ev.pointer.button & ENFLE_Button_1) {
-    if (ml->first_point) {
-      ml->old_x = ml->ev.pointer.x;
-      ml->old_y = ml->ev.pointer.y;
-      ml->first_point = 0;
-    } else {
-      ml->offset_x = ml->ev.pointer.x - ml->old_x;
-      ml->offset_y = ml->ev.pointer.y - ml->old_y;
-      ml->old_x = ml->ev.pointer.x;
-      ml->old_y = ml->ev.pointer.y;
-
-      if (ml->offset_x != 0 || ml->offset_y != 0) {
-	ml->button = ENFLE_Button_None;
-	video_window_adjust_offset(ml->vw, ml->offset_x, ml->offset_y);
-      }
+  switch (ml->pointed_button) {
+  case ENFLE_Button_1:
+    if (!(ml->ev.pointer.button & ENFLE_Button_1))
+      break;
+    ml->offset_x = ml->ev.pointer.x - ml->old_x;
+    ml->offset_y = ml->ev.pointer.y - ml->old_y;
+    ml->old_x = ml->ev.pointer.x;
+    ml->old_y = ml->ev.pointer.y;
+    if (ml->offset_x != 0 || ml->offset_y != 0) {
+      ml->button = ENFLE_Button_None;
+      video_window_adjust_offset(ml->vw, ml->offset_x, ml->offset_y);
     }
+    break;
+  case ENFLE_Button_3:
+    if (!(ml->ev.pointer.button & ENFLE_Button_3))
+      break;
+    ml->rx = ml->ev.pointer.x;
+    ml->dy = ml->ev.pointer.y;
+    video_window_draw_rect(ml->vw, ml->lx, ml->uy, ml->rx, ml->dy);
+    ml->button = ENFLE_Button_None;
+    break;
+  default:
+    break;
   }
+
   return 1;
 }
 
