@@ -1,5 +1,12 @@
 2001-01-14  Hiroshi Takekawa  <sian@fennel.org>
 
+	* README: More documentation.
+
+	* plugins/ui/normal/normal.c, plugins/video/Xlib/Xlib.c:
+	Support wheel mouse.
+
+2001-01-14  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/archive.c: Do sort().
 
 	* lib/enfle/movie.h: Added unsigned to several variable
