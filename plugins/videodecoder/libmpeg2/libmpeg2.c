@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 16 01:13:33 2004.
- * $Id: libmpeg2.c,v 1.9 2004/06/15 16:15:02 sian Exp $
+ * Last Modified: Mon Jun 21 21:59:45 2004.
+ * $Id: libmpeg2.c,v 1.10 2004/06/21 13:47:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -125,17 +125,25 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 	vdec->ts_base = 0;
 	if (mpeg2_pic) {
 	  vdec->ts_base = dp->ts_base;
-	  vdec->pts = mpeg2_pic->tag;
+	  if (mpeg2_pic->tag) {
+	    vdec->prev_pts = vdec->pts;
+	    vdec->pts = mpeg2_pic->tag;
 #if defined(DEBUG) && 0
-	  debug_message_fnc("pts %d, dts %d, type ", mpeg2_pic->tag, mpeg2_pic->tag2);
-	  switch (mpeg2_pic->flags & PIC_MASK_CODING_TYPE) {
-	  case 1: debug_message("I\n"); break;
-	  case 2: debug_message("P\n"); break;
-	  case 3: debug_message("B\n"); break;
-	  case 4: debug_message("D\n"); break;
-	  default: debug_message("?\n"); break;
-	  }
+	    debug_message_fnc("pts %d, dts %d, type ", mpeg2_pic->tag, mpeg2_pic->tag2);
+	    switch (mpeg2_pic->flags & PIC_MASK_CODING_TYPE) {
+	    case 1: debug_message("I\n"); break;
+	    case 2: debug_message("P\n"); break;
+	    case 3: debug_message("B\n"); break;
+	    case 4: debug_message("D\n"); break;
+	    default: debug_message("?\n"); break;
+	    }
 #endif
+	  } else {
+	    int next_pts = vdec->pts + (vdec->pts - vdec->prev_pts);
+
+	    vdec->prev_pts = vdec->pts;
+	    vdec->pts = next_pts;
+	  }
 	}
       }
       while (m->status == _PLAY && vdec->to_render > 0)
