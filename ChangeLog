@@ -1,5 +1,16 @@
 2000-12-03  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c:
+	Use prefer_msb to improve performance.
+
+	* plugins/video/Xlib/Xlib.c, lib/enfle/video.h: Added prefer_msb.
+
+	* lib/X11/x11ximage.c: Cleanup.
+
+	* lib/X11/x11.c, lib/X11/x11.h: Added prefer_msb.
+
+2000-12-03  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/X11/x11ximage.[ch], lib/enfle/image.[ch],
 	lib/enfle/image_magnify.c, lib/enfle/loader.c, lib/enfle/spi.c,
 	lib/enfle/video.h, plugins/loader/bmp/bmp.c,
