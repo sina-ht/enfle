@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- High-Low decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Jun 29 02:22:42 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.6 2001/06/28 17:28:03 sian Exp $
+ * Last Modified: Fri Jun 29 04:23:37 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.7 2001/06/28 19:32:01 sian Exp $
  */
 
 #include <stdio.h>
@@ -234,7 +234,7 @@ encode(VMPM *vmpm)
   arithmodel_destroy(bin_am);
   arithmodel_destroy(am);
 
-  show_message("GLIC: Higher part: %ld bytes\n", ftell(vmpm->outfile));
+  show_message("GLIC: Higher part: %ld bytes (%s)\n", ftell(vmpm->outfile), vmpm->outfilepath);
 
   if ((low_ams = calloc(1 << (8 - vmpm->nlowbits), sizeof(Arithmodel *))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
