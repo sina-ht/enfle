@@ -1,6 +1,19 @@
-NEWS  Last Modified: Mon Sep 24 02:36:15 2001.
+NEWS  Last Modified: Fri Mar  8 11:29:31 2002.
 
 THIS IS A DEVELOPING RELEASE.
+
+20020307:
+ Upgraded autoconf to 2.52i.
+ Upgraded automake to 1.6.
+ Eliminate gcc-3.0.4 warnings.
+ Assoc feature, which associates a filename extension to corresponding plugins.
+ Faster bpp 24 image magnification, utilizing integer arithmetic.
+ Intel C++ Compiler (icc) support
+ New Loader plugins: XBM and XPM.
+ New Audio plugin: ALSA
+ Now ALSA and EsoundD besides OSS are synchronizable with video.
+ Fixed many movie related bugs, especially freezing on quitting.
+ Invisible cursor feature.
 
 20010923:
  Upgraded libtool to 1.4.2.
