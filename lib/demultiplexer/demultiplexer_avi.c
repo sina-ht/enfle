@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Dec 26 12:06:37 2003.
- * $Id: demultiplexer_avi.c,v 1.22 2003/12/27 14:25:25 sian Exp $
+ * Last Modified: Tue Dec 30 04:13:09 2003.
+ * $Id: demultiplexer_avi.c,v 1.23 2003/12/29 19:27:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -156,8 +156,13 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	debug_message_fnc("EOF\n");
 	break;
       }
-      show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
-      goto error_free;
+      if (riff_file_get_err(info->rf) == _RIFF_ERR_PREMATURE_CHUNK) {
+	warning_fnc("Premature chunk detected.  Could go wrong.\n");
+	break;
+      } else {
+	show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
+	goto error_free;
+      }
     }
     switch (rc->fourcc) {
     case FCC_JUNK:
@@ -285,7 +290,17 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	riff_file_skip_chunk_data(info->rf, rc);
 	break;
       }
+      break;
+    default:
+      debug_message_fnc("Got chunk '%s'... not handled\n", riff_chunk_get_name(rc));
+      riff_file_skip_chunk_data(info->rf, rc);
+      break;
     }
+  }
+
+  if (info->movi_start == 0) {
+    show_message_fnc("'movi' chunk not found.\n");
+    goto error_free;
   }
 
   free(rc);
