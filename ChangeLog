@@ -1,3 +1,30 @@
+2004-02-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added raw.
+
+	* src/enfle.rc: Added configuration for raw.
+
+	* plugins/ui/normal/normal.c: Cleaned up.  No more movie loop.
+
+	* lib/enfle/videodecoder-plugin.h, lib/enfle/videodecoder.c,
+	lib/enfle/videodecoder.h, plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: Added query().
+
+	* plugins/videodecoder/Makefile.am: Added raw.
+
+	* plugins/player/generic/generic.c: Use videodecoder_query().
+
+	* plugins/loader/jasper/jasper.c: Fixed format typo.
+
+	* plugins/demultiplexer/avi/avi.c: Fail safe.
+
+	* lib/enfle/fourcc.h: More fourccs.
+
+	* lib/X11/x11ximage.c: Fixed compile error without USE_SHM.
+
+	* plugins/videodecoder/raw/: raw videodecoder plugin.
+
 2004-02-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added ogg, vorbis support.
