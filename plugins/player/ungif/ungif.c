@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 08:38:17 2001.
- * $Id: ungif.c,v 1.21 2001/08/25 21:09:25 sian Exp $
+ * Last Modified: Sun Sep  2 14:45:00 2001.
+ * $Id: ungif.c,v 1.22 2001/09/02 05:48:10 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -47,6 +47,8 @@ typedef struct _ungif_info {
   Image *p;
   Timer *timer;
   unsigned int delay_time;
+  unsigned int max_loop_count;
+  unsigned int loop_count;
 } UNGIF_info;
 
 typedef enum {
@@ -66,7 +68,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "UNGIF",
-  description: "UNGIF Player plugin version 0.3",
+  description: "UNGIF Player plugin version 0.4 with libungif",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -177,6 +179,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 static PlayerStatus
 play(Movie *m)
 {
+  UNGIF_info *info = (UNGIF_info *)m->movie_private;
+
   switch (m->status) {
   case _PLAY:
     return PLAY_OK;
@@ -184,8 +188,19 @@ play(Movie *m)
     return pause_movie(m);
   case _STOP:
     m->status = _PLAY;
-    return PLAY_OK;
+    break;
   case _UNLOADED:
+    return PLAY_ERROR;
+  }
+
+  m->current_frame = 0;
+
+  if (info->max_loop_count && info->loop_count >= info->max_loop_count)
+    return PLAY_OK;
+
+  stream_rewind(m->st);
+  if ((info->gf = DGifOpen(m->st, ungif_input_func)) == NULL) {
+    PrintGifError();
     return PLAY_ERROR;
   }
 
@@ -196,7 +211,8 @@ static PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
   int i, j, extcode, image_loaded = 0;
-  int if_transparent = 0, transparent_index = 0, delay = 0, image_disposal = 0;
+  int if_transparent = 0, transparent_index = 0, delay = 0, image_disposal = 0, user_input = 0;
+  int reading_netscape_ext;
   int l, t, w, h;
   static int ioffset[] = { 0, 4, 2, 1 };
   static int ijumps[] = { 8, 8, 4, 2 };
@@ -219,6 +235,9 @@ play_main(Movie *m, VideoWindow *vw)
   default:
     return PLAY_ERROR;
   }
+
+  if (!info->gf)
+    return PLAY_OK;
 
   if (timer_status(info->timer) == _TIMER_RUNNING &&
       timer_get_micro(info->timer) < info->delay_time)
@@ -255,7 +274,7 @@ play_main(Movie *m, VideoWindow *vw)
       w = gf->Image.Width;
       h = gf->Image.Height;
 
-      debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", l, t, w, h);
+      //debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", l, t, w, h);
 
       if (if_transparent) {
 	/* First, allocate memory */
@@ -322,16 +341,17 @@ play_main(Movie *m, VideoWindow *vw)
       if (DGifGetExtension(gf, &extcode, &extension) == GIF_ERROR)
 	return PLAY_ERROR;
 
+      reading_netscape_ext = 0;
       switch (extcode) {
       case COMMENT_EXT_FUNC_CODE:
-	debug_message("comment: ");
+	//debug_message("comment: ");
 	if ((p->comment = malloc(extension[0] + 1)) == NULL) {
-	  debug_message("(abandoned)\n");
+	  //debug_message("(abandoned)\n");
 	  show_message("No enough memory for comment. Try to continue.\n");
 	} else {
 	  memcpy(p->comment, &extension[1], extension[0]);
 	  p->comment[extension[0]] = '\0';
-	  debug_message("%s\n", p->comment);
+	  //debug_message("%s\n", p->comment);
 	}
 	break;
       case GRAPHICS_EXT_FUNC_CODE:
@@ -342,10 +362,32 @@ play_main(Movie *m, VideoWindow *vw)
 	  if_transparent = 0;
 	  transparent_index = -1;
 	}
+	user_input = extension[1] & 2;
 	image_disposal = (extension[1] & 0x1c) >> 2;
 	delay = extension[2] + (extension[3] << 8);
 	break;
+      case APPLICATION_EXT_FUNC_CODE:
+	debug_message("UNGIF: Got application extension: %c%c%c%c%c%c%c%c: %d bytes.\n",
+		      extension[1], extension[2], extension[3], extension[4],
+		      extension[5], extension[6], extension[7], extension[8],
+		      extension[0]);
+	if (memcmp(extension + 1, "NETSCAPE", 8) == 0) {
+	  if (extension[0] != 11) {
+	    debug_message("UNGIF: Netscape extension found, but the size of the block is %d bytes(should be 11 bytes), ignored.\n", extension[0]);
+	    break;
+	  }
+	  debug_message("UNGIF: Authentication code %c%c%c.\n", extension[9], extension[10], extension[11]);
+	  if (memcmp(extension + 9, "2.0", 3) != 0) {
+	    debug_message("UNGIF: Netscape extension found, but the authenication code is not known, ignored.\n");
+	    break;
+	  }
+	  reading_netscape_ext = 1;
+	} else {
+	  debug_message("UNGIF: Unknown extension, ignored.\n");
+	}
+	break;
       default:
+	debug_message("UNGIF: extension %X ignored.\n", extcode);
 	break;
       }
 
@@ -368,12 +410,27 @@ play_main(Movie *m, VideoWindow *vw)
 	    }
 	  }
 	  break;
+	case APPLICATION_EXT_FUNC_CODE:
+	  if (reading_netscape_ext) {
+	    debug_message("UNGIF: The size of data sub-block is %d bytes.\n", extension[0]);
+	    debug_message("UNGIF: The first byte of the data sub-block is %X.\n", extension[1]);
+	    if ((extension[1] & 7) == 1) {
+	      info->max_loop_count = extension[2] | (extension[3] << 8);
+	      debug_message("UNGIF: Loop times specified: %d\n", info->max_loop_count);
+	    } else {
+	      debug_message("UNGIF: Unknown, ignored.\n");
+	    }
+	  }
+	  break;
 	default:
 	  break;
 	}
       }
       break;
     case TERMINATE_RECORD_TYPE:
+      info->loop_count++;
+      if (info->max_loop_count)
+	debug_message("UNGIF: loop %d/%d\n", info->loop_count, info->max_loop_count);
       stop_movie(m);
       return PLAY_OK;
     default:
@@ -428,19 +485,14 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
-  /* stop */
-  if (DGifCloseFile(info->gf) == GIF_ERROR) {
-    PrintGifError();
-    return PLAY_ERROR;
+  if (info->gf) {
+    /* stop */
+    if (DGifCloseFile(info->gf) == GIF_ERROR) {
+      PrintGifError();
+      return PLAY_ERROR;
+    }
+    info->gf = NULL;
   }
-
-  stream_rewind(m->st);
-  if ((info->gf = DGifOpen(m->st, ungif_input_func)) == NULL) {
-    PrintGifError();
-    return PLAY_ERROR;
-  }
-
-  m->current_frame = 0;
 
   return PLAY_OK;
 }
@@ -457,7 +509,7 @@ unload_movie(Movie *m)
   if (info->p)
     image_destroy(info->p);
 
-  if (DGifCloseFile(info->gf) == GIF_ERROR) {
+  if (info->gf && DGifCloseFile(info->gf) == GIF_ERROR) {
     PrintGifError();
   }
 
