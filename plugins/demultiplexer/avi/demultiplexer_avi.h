@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 12 23:39:29 2004.
- * $Id: demultiplexer_avi.h,v 1.1 2004/02/14 05:22:04 sian Exp $
+ * Last Modified: Tue Apr  6 00:03:36 2004.
+ * $Id: demultiplexer_avi.h,v 1.2 2004/04/05 15:51:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -52,7 +52,12 @@ typedef struct _avi_info {
   /* From BITMAPINFOHEADER */
   unsigned int width, height, num_of_frames;
   /* From WAVEFORMATEX */
-  unsigned int nchannels, samples_per_sec, num_of_samples;
+  unsigned int nchannels, samples_per_sec, avg_bytes_per_sec, block_align;
+  /* Extra */
+  void *video_extradata;
+  int video_extradata_size;
+  void *audio_extradata;
+  int audio_extradata_size;
   /* From AVIINDEXENTRY */
   unsigned int *idx_offset;
   unsigned int *idx_length;

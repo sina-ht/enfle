@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar 31 21:30:42 2004.
- * $Id: avi.c,v 1.5 2004/03/31 14:35:49 sian Exp $
+ * Last Modified: Tue Apr  6 00:31:20 2004.
+ * $Id: avi.c,v 1.6 2004/04/05 15:51:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -98,6 +98,10 @@ destroy(Demultiplexer *demux)
   if (info) {
     if (info->rf)
       riff_file_destroy(info->rf);
+    if (info->video_extradata)
+      free(info->video_extradata);
+    if (info->audio_extradata)
+      free(info->audio_extradata);
     if (info->idx_offset)
       free(info->idx_offset);
     if (info->idx_length)
@@ -170,9 +174,14 @@ DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c, priv)
   m->channels = info->nchannels;
   m->samplerate = info->samples_per_sec;
   m->num_of_frames = info->num_of_frames;
-  m->num_of_samples = info->num_of_samples;
+  m->block_align = info->block_align;
+  m->bitrate = info->avg_bytes_per_sec * 8;
   m->v_fourcc = info->vhandler;
   m->a_fourcc = info->ahandler;
+  m->video_extradata = info->video_extradata;
+  m->video_extradata_size = info->video_extradata_size;
+  m->audio_extradata = info->audio_extradata;
+  m->audio_extradata_size = info->audio_extradata_size;
 
   return demux;
 }
@@ -377,6 +386,9 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	    info->vhandler = ash.fccHandler;
 	    if (info->vhandler == 0)
 	      debug_message_fnc("strh fccHandler == 0\n");
+	    if (ash.dwScale != 0)
+	      info->framerate = (double)ash.dwRate / (double)ash.dwScale;
+	    debug_message_fnc("rate %d / %d scale = %f\n", ash.dwRate, ash.dwScale, info->framerate);
 	    info->num_of_frames = ash.dwLength;
 	  } else if (ash.fccType == FCC_auds) {
 	    /* XXX: First stream only */
@@ -408,6 +420,17 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	      }
 	      info->width = bih.biWidth;
 	      info->height = bih.biHeight;
+	      if (info->video_extradata && info->video_extradata_size != riff_chunk_get_size(rc) - sizeof(BITMAPINFOHEADER)) {
+		free(info->video_extradata);
+		info->video_extradata = NULL;
+	      }
+	      info->video_extradata_size = riff_chunk_get_size(rc) - sizeof(BITMAPINFOHEADER);
+	      if (info->video_extradata_size > 0) {
+		debug_message_fnc("video_extradata %d bytes\n", info->video_extradata_size);
+		if (info->video_extradata == NULL)
+		  info->video_extradata = malloc(info->video_extradata_size);
+		memcpy(info->video_extradata, riff_chunk_get_data(rc) + sizeof(BITMAPINFOHEADER), info->video_extradata_size);
+	      }
 	    }
 	    demux->nvstreams++;
 	  } else if (ash.fccType == FCC_auds) {
@@ -420,7 +443,19 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	      }
 	      info->nchannels = wfx.nChannels;
 	      info->samples_per_sec = wfx.nSamplesPerSec;
-	      info->num_of_samples = wfx.cbSize;
+	      info->block_align = wfx.nBlockAlign;
+	      info->avg_bytes_per_sec = wfx.nAvgBytesPerSec;
+	      if (info->audio_extradata && info->audio_extradata_size != riff_chunk_get_size(rc) - sizeof(WAVEFORMATEX)) {
+		free(info->audio_extradata);
+		info->audio_extradata = NULL;
+	      }
+	      info->audio_extradata_size = riff_chunk_get_size(rc) - sizeof(WAVEFORMATEX);
+	      if (info->audio_extradata_size > 0) {
+		debug_message_fnc("audio_extradata %d bytes\n", info->audio_extradata_size);
+		if (info->audio_extradata == NULL)
+		  info->audio_extradata = malloc(info->audio_extradata_size);
+		memcpy(info->audio_extradata, riff_chunk_get_data(rc) + sizeof(WAVEFORMATEX), info->audio_extradata_size);
+	      }
 	    }
 	    demux->nastreams++;
 	  }

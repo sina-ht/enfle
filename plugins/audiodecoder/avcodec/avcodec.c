@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar 31 23:13:09 2004.
- * $Id: avcodec.c,v 1.1 2004/03/31 14:29:31 sian Exp $
+ * Last Modified: Tue Apr  6 00:36:31 2004.
+ * $Id: avcodec.c,v 1.2 2004/04/05 15:51:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -98,7 +98,7 @@ static AudioDecoderStatus
 decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsigned int len, unsigned int *used_r)
 {
   struct audiodecoder_avcodec *adm = (struct audiodecoder_avcodec *)adec->opaque;
-  int l, out_len;
+  int l, out_len = 0;
 
   if (adm->size <= 0) {
     if (buf == NULL)
@@ -107,12 +107,13 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     adm->offset = 0;
     adm->size = len;
     *used_r = len;
+    //debug_message_fnc("avcodec audio: feed %d bytes\n", adm->size);
   }
 
   l = avcodec_decode_audio(adm->acodec_ctx, adm->outbuf, &out_len,
 			   adm->buf + adm->offset, adm->size);
   if (l < 0) {
-    warning_fnc("avcodec: avcodec_decode_audio return %d\n", len);
+    warning_fnc("avcodec: avcodec_decode_audio return %d\n", l);
     return AD_ERROR;
   }
 
@@ -127,11 +128,11 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     /* Set up audio device. */
     m->sampleformat = _AUDIO_FORMAT_S16_LE;
 
-    debug_message_fnc("avcodec: from acodec_ctx    %d ch %d Hz %d kbps\n", adm->acodec_ctx->channels, adm->acodec_ctx->sample_rate, adm->acodec_ctx->bit_rate);
+    debug_message_fnc("avcodec: from acodec_ctx    %d ch %d Hz %d kbps\n", adm->acodec_ctx->channels, adm->acodec_ctx->sample_rate, adm->acodec_ctx->bit_rate / 1024);
     debug_message_fnc("avcodec: from demultiplexer %d ch %d Hz\n", m->channels, m->samplerate);
     m->channels = m->channels == 0 ? adm->acodec_ctx->channels : m->channels;
     m->samplerate = m->samplerate == 0 ? adm->acodec_ctx->sample_rate : m->samplerate;
-    debug_message_fnc("avcodec: (%d format) %d ch %d Hz %d kbps\n", m->sampleformat, m->channels, m->samplerate, adm->acodec_ctx->bit_rate);
+    debug_message_fnc("avcodec: (%d format) %d ch %d Hz %d kbps\n", m->sampleformat, m->channels, m->samplerate, adm->acodec_ctx->bit_rate / 1024);
     m->sampleformat_actual = m->sampleformat;
     m->channels_actual = m->channels;
     m->samplerate_actual = m->samplerate;
@@ -164,7 +165,7 @@ destroy(AudioDecoder *adec)
 }
 
 static int
-setup(AudioDecoder *adec)
+setup(AudioDecoder *adec, Movie *m)
 {
   struct audiodecoder_avcodec *adm = (struct audiodecoder_avcodec *)adec->opaque;
 
@@ -172,12 +173,17 @@ setup(AudioDecoder *adec)
     warning_fnc("avcodec %s not found\n", adm->acodec_name);
     return 0;
   }
-  debug_message_fnc("avcodec audio: %s found: ctx %p codec %p\n", adm->acodec_name, adm->acodec_ctx, adm->acodec);
+  debug_message_fnc("avcodec: from demultiplexer %d ch %d Hz %d kbps align %d extra %d bytes\n", m->channels, m->samplerate, m->bitrate / 1024, m->block_align, m->audio_extradata_size);
+  adm->acodec_ctx->channels = m->channels;
+  adm->acodec_ctx->sample_rate = m->samplerate;
+  adm->acodec_ctx->bit_rate = m->bitrate;
+  adm->acodec_ctx->block_align = m->block_align;
+  adm->acodec_ctx->extradata = m->audio_extradata;
+  adm->acodec_ctx->extradata_size = m->audio_extradata_size;
   if (avcodec_open(adm->acodec_ctx, adm->acodec) < 0) {
     warning_fnc("avcodec_open() failed.\n");
     return 0;
   }
-  debug_message_fnc("avcodec audio: %s opened\n", adm->acodec_name);
 
   return 1;
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 02:28:52 2004.
- * $Id: movie.h,v 1.21 2004/02/14 05:31:41 sian Exp $
+ * Last Modified: Tue Apr  6 00:04:31 2004.
+ * $Id: movie.h,v 1.22 2004/04/05 15:51:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -53,6 +53,7 @@ struct _movie {
   ImageType requested_type;
   Timer *timer;
   Demultiplexer *demux;
+  int bitrate;
 
   int has_video;
   int width, height;
@@ -65,6 +66,8 @@ struct _movie {
   VideoDecoder *vdec;
   unsigned int out_fourcc;
   int out_bitcount;
+  void *video_extradata;
+  int video_extradata_size;
 
   int has_audio;
   unsigned int current_sample, num_of_samples;
@@ -75,6 +78,9 @@ struct _movie {
   const char *a_codec_name;
   AudioDecoder *adec;
   AudioPlugin *ap;
+  int block_align;
+  void *audio_extradata;
+  int audio_extradata_size;
 
   /* These are callback functions which may or should be provided by UI. */
   int (*initialize_screen)(VideoWindow *, Movie *, int, int);
