@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 02:20:43 2001.
- * $Id: Xlib.c,v 1.25 2001/02/19 17:22:57 sian Exp $
+ * Last Modified: Mon Mar  5 00:56:40 2001.
+ * $Id: Xlib.c,v 1.26 2001/03/04 17:11:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -147,6 +147,8 @@ plugin_entry(void)
 #ifdef USE_PTHREAD
   if (!XInitThreads())
     show_message("XInitThreads() failed\n");
+  else
+    debug_message("XInitThreads() OK\n");
 #endif
 
   return (void *)vp;
@@ -781,12 +783,11 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   if (w == vw->width && h == vw->height)
     return 1;
 
-  do_sync_discard(vw);
-
   if (!vw->if_fullscreen) {
     int x, y;
 
     x11window_get_position(xw, &vw->x, &vw->y);
+
     x = vw->x;
     y = vw->y;
     if (x + w > vw->full_width)
