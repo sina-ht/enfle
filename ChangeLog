@@ -1,5 +1,10 @@
 2000-10-09  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/player/Makefile.am, plugins/player/ungif/Makefile.am,
+	plugins/player/ungif/ungif.c: New ungif player plugin.
+
+	* aclocal.m4: Deleted auto-generated aclocal.m4.
+
 	* lib/enfle/player.[ch], lib/enfle/player-plugin.h, configure.in,
 	lib/enfle/Makefile.am, lib/enfle/ui-plugin.h, plugins/Makefile.am,
 	plugins/ui/Xlib/Xlib.c, src/enfle.c: Added very preliminary player
