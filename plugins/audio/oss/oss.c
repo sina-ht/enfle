@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:31:15 2001.
- * $Id: oss.c,v 1.5 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Fri Jan 12 22:16:59 2001.
+ * $Id: oss.c,v 1.6 2001/01/12 13:19:04 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -84,8 +84,6 @@ plugin_exit(void *p)
 {
   free(p);
 }
-
-/* for internal use */
 
 /* audio plugin methods */
 
@@ -170,7 +168,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     show_message(__FUNCTION__ ": in setting format as %d(to ioctl %d).\n", format, f);
     perror("OSS");
     ad->format = _AUDIO_FORMAT_UNSET;
-    return _AUDIO_FORMAT_UNSET;
+    return 0;
   }
 
   switch (f) {
