@@ -1,5 +1,19 @@
 2000-10-17  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/archiver.c, lib/enfle/archiver-extra.h,
+	lib/enfle/archiver.h, lib/enfle/archiver-plugin.h,
+	lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.c,
+	lib/enfle/enfle-plugins.h, lib/enfle/enfle-plugintype.h,
+	lib/enfle/loader.c, lib/enfle/loader-extra.h, lib/enfle/loader.h,
+	lib/enfle/loader-plugin.h, lib/enfle/Makefile.am,
+	lib/enfle/player.c, lib/enfle/player.h, lib/enfle/player-plugin.h,
+	lib/enfle/streamer.c, lib/enfle/streamer.h, lib/enfle/ui.c,
+	lib/enfle/ui-extra.h, lib/enfle/ui.h, lib/enfle/ui-plugin.h,
+	plugins/ui/Xlib/Xlib.c, src/enfle.c: New enfle plugin
+	implementation.
+
+2000-10-17  Hiroshi Takekawa  <sian@fennel.org>
+
 	* plugins/ui/Xlib/Xlib.c (process_files_of_archive): Deleting path
 	when processed archive returned with empty.
 
