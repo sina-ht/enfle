@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Oct 15 20:23:14 2000.
- * $Id: x11ximage.c,v 1.3 2000/10/15 12:29:17 sian Exp $
+ * Last Modified: Sun Oct 15 22:01:20 2000.
+ * $Id: x11ximage.c,v 1.4 2000/10/15 13:03:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -185,6 +185,12 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	  }
 	}
 	break;
+      case _RGBA32:
+      case _BGRA32:
+      case _ARGB32:
+      case _ABGR32:
+	show_message("render image [type %s] is not implemented yet.\n", image_type_to_string(p->type));
+	break;
       default:
 	show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
 	break;
@@ -197,16 +203,25 @@ x11ximage_convert_image(XImage *ximage, Image *p)
     {
       int i;
 
-      if (p->type == _RGBA32 || p->type == _ARGB32 || p->type == _RGB24) {
+      bytes_per_line = p->bytes_per_line;
+      bits_per_pixel = 32;
+      /* Don't use switch() */
+      if (p->type == _RGB24) {
 	ximage->byte_order = MSBFirst;
-	if (p->type == _RGBA32)
-	  memcpy(p->image + 1, p->image, p->image_size - 1);
+	bits_per_pixel = 24;
 	dest = p->image;
 	break;
-      } else if (p->type == _ABGR32 || p->type == _BGRA32 || p->type == _BGR24) {
+      } else if (p->type == _BGR24) {
 	ximage->byte_order = LSBFirst;
-	if (p->type == _ABGR32)
-	  memcpy(p->image, p->image + 1, p->image_size - 1);
+	bits_per_pixel = 24;
+	dest = p->image;
+	break;
+      } else if (p->type == _ARGB32) {
+	ximage->byte_order = MSBFirst;
+	dest = p->image;
+	break;
+      } else if (p->type == _BGRA32) {
+	ximage->byte_order = LSBFirst;
 	dest = p->image;
 	break;
       }
@@ -216,10 +231,19 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	exit(-2);
       }
 
-      dd = dest;
-      ximage->byte_order = LSBFirst;
+      bytes_per_line = p->width * 4;
       switch (p->type) {
+      case _RGBA32:
+	ximage->byte_order = MSBFirst;
+	memcpy(dest + 1, p->image, p->image_size - 1);
+	break;
+      case _ABGR32:
+	ximage->byte_order = LSBFirst;
+	memcpy(dest, p->image + 1, p->image_size - 1);
+	break;
       case _INDEX:
+	dd = dest;
+	ximage->byte_order = LSBFirst;
 	for (i = 0; i < p->width * p->height; i++) {
 	  *dd++ = p->colormap[p->image[i]][2];
 	  *dd++ = p->colormap[p->image[i]][1];
@@ -231,8 +255,6 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
 	break;
       }
-      bits_per_pixel = 32;
-      bytes_per_line = p->width * 4;
     }
     break;
   default:
