@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:54:34 2001.
- * $Id: libconfig.c,v 1.14 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Fri Sep 21 02:20:33 2001.
+ * $Id: libconfig.c,v 1.15 2001/09/21 02:57:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -238,8 +238,10 @@ load(Config *c, const char *filepath)
     case ';':
       break;
     case '/':
-      if (p[1] != '/')
+      if (p[1] != '/') {
+	show_message("Missing '/'\n");
 	parse_error(p, config_path);
+      }
       break;
     case '#':
       /* special directives */
@@ -249,8 +251,10 @@ load(Config *c, const char *filepath)
 	filepath = get_token(p + 8);
 	load(c, filepath);
 	free(filepath);
-      } else
+      } else {
+	show_message("Unknown directive\n");
 	parse_error(p, config_path);
+      }
       break;
     default:
       /* normal */
@@ -280,13 +284,17 @@ load(Config *c, const char *filepath)
 	} else if (strcmp(op, "}") == 0) {
 	  unsigned char *pos;
 
-	  if ((pos = strrchr(string_get(config_path), '/')) == NULL)
+	  if ((pos = strrchr(string_get(config_path), '/')) == NULL) {
+	    show_message("Missing '/'.\n");
 	    parse_error(p, config_path);
+	  }
 	  string_shrink(config_path, pos - string_get(config_path));
 	} else if (strcmp(op, "=") == 0) {
 	  (void)set_internal(c, config_path, path, remain);
-	} else
+	} else {
+	  show_message("Syntax error.\n");
 	  parse_error(p, config_path);
+	}
 	free(path);
 	free(op);
 	free(remain);
