@@ -1966,8 +1966,8 @@ static int mpeg_decode_postinit(AVCodecContext *avctx){
 
     if (
     	(s1->mpeg_enc_ctx_allocated == 0)|| 
-        avctx->width  != s->width ||
-        avctx->height != s->height||
+        avctx->coded_width  != s->width ||
+        avctx->coded_height != s->height||
 //      s1->save_aspect_info != avctx->aspect_ratio_info||
         0)
     {
@@ -1979,8 +1979,7 @@ static int mpeg_decode_postinit(AVCodecContext *avctx){
 	if( (s->width == 0 )||(s->height == 0))
 	    return -2;
 
-        avctx->width = s->width;
-        avctx->height = s->height;
+        avcodec_set_dimensions(avctx, s->width, s->height);
         avctx->bit_rate = s->bit_rate;
         s1->save_aspect_info = s->aspect_ratio_info;
 
@@ -2409,6 +2408,7 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
     AVCodecContext *avctx= s->avctx;
     int ret;
     const int field_pic= s->picture_structure != PICT_FRAME;
+    const int lowres= s->avctx->lowres;
 
     s->resync_mb_x=
     s->resync_mb_y= -1;
@@ -2518,15 +2518,16 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
             }
         }
 
-        s->dest[0] += 16;
-        s->dest[1] += 16 >> s->chroma_x_shift;
-        s->dest[2] += 16 >> s->chroma_x_shift;
+        s->dest[0] += 16 >> lowres;
+        s->dest[1] += 16 >> (s->chroma_x_shift + lowres);
+        s->dest[2] += 16 >> (s->chroma_x_shift + lowres);
 
         MPV_decode_mb(s, s->block);
         
         if (++s->mb_x >= s->mb_width) {
+            const int mb_size= 16>>s->avctx->lowres;
 
-            ff_draw_horiz_band(s, 16*s->mb_y, 16);
+            ff_draw_horiz_band(s, mb_size*s->mb_y, mb_size);
 
             s->mb_x = 0;
             s->mb_y++;
@@ -2774,8 +2775,8 @@ static int vcr2_init_sequence(AVCodecContext *avctx)
     if (s1->mpeg_enc_ctx_allocated) {
         MPV_common_end(s);
     }
-    s->width = avctx->width;
-    s->height = avctx->height;
+    s->width  = avctx->coded_width;
+    s->height = avctx->coded_height;
     avctx->has_b_frames= 0; //true?
     s->low_delay= 1;
 

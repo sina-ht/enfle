@@ -118,8 +118,8 @@ static int h261_decode_init(AVCodecContext *avctx){
     MPV_decode_defaults(s);
     s->avctx = avctx;
 
-    s->width = s->avctx->width;
-    s->height = s->avctx->height;
+    s->width  = s->avctx->coded_width;
+    s->height = s->avctx->coded_height;
     s->codec_id = s->avctx->codec->id;
 
     s->out_format = FMT_H261;
@@ -715,15 +715,14 @@ retry:
         return -1;
     }
 
-    if (s->width != avctx->width || s->height != avctx->height){
+    if (s->width != avctx->coded_width || s->height != avctx->coded_height){
         ParseContext pc= s->parse_context; //FIXME move these demuxng hack to avformat
         s->parse_context.buffer=0;
         MPV_common_end(s);
         s->parse_context= pc;
     }
     if (!s->context_initialized) {
-        avctx->width = s->width;
-        avctx->height = s->height;
+        avcodec_set_dimensions(avctx, s->width, s->height);
 
         goto retry;
     }

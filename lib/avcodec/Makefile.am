@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Sep 18 17:12:03 2004.
-# $Id: Makefile.am,v 1.20 2004/09/18 08:14:51 sian Exp $
+# Last Modified: Sat Oct  2 22:52:32 2004.
+# $Id: Makefile.am,v 1.21 2004/10/02 13:53:04 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -125,7 +125,6 @@ libavcodec_la_SOURCES = \
 	adx.c \
 	allcodecs.c \
 	asv1.c \
-	avcodec.c \
 	cabac.c \
 	cinepak.c \
 	cljr.c \
@@ -148,6 +147,7 @@ libavcodec_la_SOURCES = \
 	h263.c \
 	h263dec.c \
 	h264.c \
+	h264idct.c \
 	huffyuv.c \
 	idcinvideo.c \
 	imgconvert.c \
@@ -176,6 +176,7 @@ libavcodec_la_SOURCES = \
 	parser.c \
 	pcm.c \
 	pthread.c \
+	qdrw.c \
 	qtrle.c \
 	ra144.c \
 	ra288.c \

@@ -297,8 +297,9 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
             break;
         case SEQ_START_CODE:
             if (bytes_left >= 4) {
-                pc->width = avctx->width = (buf[0] << 4) | (buf[1] >> 4);
-                pc->height = avctx->height = ((buf[1] & 0x0f) << 8) | buf[2];
+                pc->width  = (buf[0] << 4) | (buf[1] >> 4);
+                pc->height = ((buf[1] & 0x0f) << 8) | buf[2];
+                avcodec_set_dimensions(avctx, pc->width, pc->height);
                 frame_rate_index = buf[3] & 0xf;
                 pc->frame_rate = avctx->frame_rate = frame_rate_tab[frame_rate_index];
                 avctx->frame_rate_base = MPEG1_FRAME_RATE_BASE;
@@ -318,8 +319,9 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
                         frame_rate_ext_d = (buf[5] & 0x1f);
                         pc->progressive_sequence = buf[1] & (1 << 3);
 
-                        avctx->width = pc->width | (horiz_size_ext << 12);
-                        avctx->height = pc->height | (vert_size_ext << 12);
+                        pc->width  |=(horiz_size_ext << 12);
+                        pc->height |=( vert_size_ext << 12);
+                        avcodec_set_dimensions(avctx, pc->width, pc->height);
                         avctx->frame_rate = pc->frame_rate * (frame_rate_ext_n + 1);
                         avctx->frame_rate_base = MPEG1_FRAME_RATE_BASE * (frame_rate_ext_d + 1);
                         avctx->codec_id = CODEC_ID_MPEG2VIDEO;
@@ -437,8 +439,7 @@ static int av_mpeg4_decode_header(AVCodecParserContext *s1,
     init_get_bits(gb, buf, 8 * buf_size);
     ret = ff_mpeg4_decode_picture_header(s, gb);
     if (s->width) {
-        avctx->width = s->width;
-        avctx->height = s->height;
+        avcodec_set_dimensions(avctx, s->width, s->height);
     }
     pc->first_picture = 0;
     return ret;

@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4721
+#define LIBAVCODEC_BUILD       4725
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -103,6 +103,7 @@ enum CodecID {
     CODEC_ID_SNOW,
     CODEC_ID_TSCC,
     CODEC_ID_ULTI,
+    CODEC_ID_QDRAW,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE,
@@ -140,6 +141,7 @@ enum CodecID {
     CODEC_ID_ROQ_DPCM,
     CODEC_ID_INTERPLAY_DPCM,
     CODEC_ID_XAN_DPCM,
+    CODEC_ID_SOL_DPCM,
     
     CODEC_ID_FLAC,
     
@@ -228,6 +230,14 @@ enum Motion_Est_ID {
     ME_PHODS,
     ME_EPZS,
     ME_X1
+};
+
+enum AVRounding {
+    AV_ROUND_ZERO     = 0, ///< round toward zero
+    AV_ROUND_INF      = 1, ///< round away from zero
+    AV_ROUND_DOWN     = 2, ///< round toward -infinity
+    AV_ROUND_UP       = 3, ///< round toward +infinity
+    AV_ROUND_NEAR_INF = 5, ///< round to nearest and halfway cases away from zero
 };
 
 typedef struct RcOverride{
@@ -669,9 +679,11 @@ typedef struct AVCodecContext {
     int frame_rate;
     
     /**
-     * width / height.
+     * picture width / height.
      * - encoding: MUST be set by user. 
-     * - decoding: set by user if known, codec should override / dynamically change if needed
+     * - decoding: set by lavc.
+     * Note, for compatibility its possible to set this instead of 
+     * coded_width/height before decoding
      */
     int width, height;
     
@@ -1103,6 +1115,7 @@ typedef struct AVCodecContext {
 #define FF_IDCT_ALTIVEC      8
 #define FF_IDCT_SH4          9
 #define FF_IDCT_SIMPLEARM    10
+#define FF_IDCT_H264         11
 
     /**
      * slice count.
@@ -1648,6 +1661,21 @@ typedef struct AVCodecContext {
      */
      int level;
 #define FF_LEVEL_UNKNOWN -99
+
+    /**
+     * low resolution decoding. 1-> 1/2 size, 2->1/4 size
+     * - encoding: unused
+     * - decoding: set by user
+     */
+     int lowres;
+
+    /**
+     * bistream width / height. may be different from width/height if lowres
+     * or other things are used
+     * - encoding: unused
+     * - decoding: set by user before init if known, codec should override / dynamically change if needed
+     */
+    int coded_width, coded_height;
 } AVCodecContext;
 
 
@@ -1852,11 +1880,13 @@ extern AVCodec ra_288_decoder;
 extern AVCodec roq_dpcm_decoder;
 extern AVCodec interplay_dpcm_decoder;
 extern AVCodec xan_dpcm_decoder;
+extern AVCodec sol_dpcm_decoder;
 extern AVCodec sonic_decoder;
 extern AVCodec qtrle_decoder;
 extern AVCodec flac_decoder;
 extern AVCodec tscc_decoder;
 extern AVCodec ulti_decoder;
+extern AVCodec qdraw_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -1957,6 +1987,7 @@ int avpicture_layout(const AVPicture* src, int pix_fmt, int width, int height,
 int avpicture_get_size(int pix_fmt, int width, int height);
 void avcodec_get_chroma_sub_sample(int pix_fmt, int *h_shift, int *v_shift);
 const char *avcodec_get_pix_fmt_name(int pix_fmt);
+void avcodec_set_dimensions(AVCodecContext *s, int width, int height);
 enum PixelFormat avcodec_get_pix_fmt(const char* name);
 
 #define FF_LOSS_RESOLUTION  0x0001 /* loss due to resolution change */
@@ -2061,87 +2092,16 @@ char av_get_pict_type_char(int pict_type);
 int av_reduce(int *dst_nom, int *dst_den, int64_t nom, int64_t den, int64_t max);
 
 /**
- * rescale a 64bit integer.
+ * rescale a 64bit integer with rounding to nearest.
  * a simple a*b/c isnt possible as it can overflow
  */
 int64_t av_rescale(int64_t a, int64_t b, int64_t c);
 
-
 /**
- * Interface for 0.5.0 version
- *
- * do not even think about it's usage for this moment
+ * rescale a 64bit integer with specified rounding.
+ * a simple a*b/c isnt possible as it can overflow
  */
-
-typedef struct {
-    /// compressed size used from given memory buffer
-    int size;
-    /// I/P/B frame type
-    int frame_type;
-} avc_enc_result_t;
-
-/**
- * Commands
- * order can't be changed - once it was defined
- */
-typedef enum {
-    // general commands
-    AVC_OPEN_BY_NAME = 0xACA000,
-    AVC_OPEN_BY_CODEC_ID,
-    AVC_OPEN_BY_FOURCC,
-    AVC_CLOSE,
-
-    AVC_FLUSH,
-    // pin - struct { uint8_t* src, uint_t src_size }
-    // pout - struct { AVPicture* img, consumed_bytes,
-    AVC_DECODE,
-    // pin - struct { AVPicture* img, uint8_t* dest, uint_t dest_size }
-    // pout - uint_t used_from_dest_size
-    AVC_ENCODE, 
-
-    // query/get video commands
-    AVC_GET_VERSION = 0xACB000,
-    AVC_GET_WIDTH,
-    AVC_GET_HEIGHT,
-    AVC_GET_DELAY,
-    AVC_GET_QUANT_TABLE,
-    // ...
-
-    // query/get audio commands
-    AVC_GET_FRAME_SIZE = 0xABC000,
-
-    // maybe define some simple structure which
-    // might be passed to the user - but they can't
-    // contain any codec specific parts and these
-    // calls are usualy necessary only few times
-
-    // set video commands
-    AVC_SET_WIDTH = 0xACD000,
-    AVC_SET_HEIGHT,
-
-    // set video encoding commands
-    AVC_SET_FRAME_RATE = 0xACD800,
-    AVC_SET_QUALITY,
-    AVC_SET_HURRY_UP,
-
-    // set audio commands
-    AVC_SET_SAMPLE_RATE = 0xACE000,
-    AVC_SET_CHANNELS,
-
-} avc_cmd_t;
-
-/**
- * \param handle  allocated private structure by libavcodec
- *                for initialization pass NULL - will be returned pout
- *                user is supposed to know nothing about its structure
- * \param cmd     type of operation to be performed
- * \param pint    input parameter
- * \param pout    output parameter
- *
- * \returns  command status - eventually for query command it might return
- * integer resulting value
- */
-int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout);
+int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding);
 
 /* frame parsing */
 typedef struct AVCodecParserContext {
