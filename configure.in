@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Oct  5 23:32:51 2002.
-dnl $Id: configure.in,v 1.119 2002/10/05 17:19:23 sian Exp $
+dnl Last Modified: Sat Nov 30 01:02:53 2002.
+dnl $Id: configure.in,v 1.120 2002/11/29 16:03:00 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20021005, sian@big.or.jp)
+AC_INIT(enfle, 20021130, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -279,6 +279,7 @@ available_libarc=no
 AC_CHECK_HEADER(libarc/arc.h, [
   AC_CHECK_LIB(arc, url_arc_open, [
     available_libarc=yes; LIBADD_LIBARC="-larc";
+    AC_DEFINE(USE_LIBARC, 1, [Define if you have libarc and want to use it.])
   ])
 ])
 AM_CONDITIONAL(HAVE_LIBARC, test "$available_libarc" = "yes")
