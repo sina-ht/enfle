@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 04:31:36 2000.
- * $Id: ungif.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  9 01:57:56 2000.
+ * $Id: ungif.c,v 1.2 2000/10/08 17:25:38 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -43,7 +43,7 @@ static LoaderStatus load(Image *, Stream *);
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "UNGIF",
-  description: "UNGIF Loader plugin version 0.1",
+  description: "UNGIF Loader plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -78,7 +78,7 @@ ungif_input_func(GifFileType *GifFile, GifByteType *p, int s)
   return stream_read(st, p, s);
 }
 
-static int
+static LoaderStatus
 load_image(Image *p, Stream *st)
 {
   int i, j, size, sheight, row, col, extcode;
@@ -89,12 +89,13 @@ load_image(Image *p, Stream *st)
   GifRowType *ScreenBuffer;
   GifFileType *GifFile;
   ColorMapObject *ColorMap;
+  int image_loaded = 0;
 
   if ((GifFile = DGifOpen(st, ungif_input_func)) == NULL) {
-#if 1
+#if DEBUG
     PrintGifError();
 #endif
-    return 0;
+    return LOAD_ERROR;
   }
 
   sheight = GifFile->SHeight;
@@ -103,37 +104,44 @@ load_image(Image *p, Stream *st)
        calloc(sheight, sizeof(GifRowType *))) == NULL) {
     if (DGifCloseFile(GifFile) == GIF_ERROR)
       PrintGifError();
-    return 0;
+    return LOAD_ERROR;
   }
 
   size = GifFile->SWidth * sizeof(GifPixelType);
   if ((ScreenBuffer[0] = (GifRowType)calloc(sheight, size)) == NULL) {
     if (DGifCloseFile(GifFile) == GIF_ERROR)
       PrintGifError();
-    return 0;
+    return LOAD_ERROR;
   }
   for (i = 1; i < sheight; i++)
     ScreenBuffer[i] = ScreenBuffer[0] + i * size;
-  memset(ScreenBuffer[0], sheight * size, GifFile->SBackGroundColor);
+  memset(ScreenBuffer[0], GifFile->SBackGroundColor, sheight * size);
+  p->background_color.index = GifFile->SBackGroundColor;
 
   do {
-
-    debug_message("GetRecordType ");
-
     if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
       PrintGifError();
 #if 0
       DGifCloseFile(GifFile);
       free(ScreenBuffer[0]);
       free(ScreenBuffer);
-      return 0;
+      return LOAD_ERROR;
 #endif
     }
 
-    debug_message("done.\n");
-
     switch (RecordType) {
     case IMAGE_DESC_RECORD_TYPE:
+      if (image_loaded) {
+	debug_message("GIF contains Multiple images. (maybe animated?)\n");
+	DGifCloseFile(GifFile);
+	free(ScreenBuffer[0]);
+	free(ScreenBuffer);
+
+	/* This GIF should be treated by player plugin. */
+	return LOAD_NOT;
+      }
+      image_loaded++;
+
       if (DGifGetImageDesc(GifFile) == GIF_ERROR)
 	goto error;
       p->top = row = GifFile->Image.Top;
@@ -158,9 +166,54 @@ load_image(Image *p, Stream *st)
     case EXTENSION_RECORD_TYPE:
       if (DGifGetExtension(GifFile, &extcode, &Extension) == GIF_ERROR)
 	goto error;
-      while (Extension != NULL) {
+
+      switch (extcode) {
+      case COMMENT_EXT_FUNC_CODE:
+	debug_message("comment: ");
+	if ((p->comment = malloc(Extension[0] + 1)) == NULL) {
+	  show_message("No enough memory for comment. Try to continue.\n");
+	  debug_message("(abandoned)\n");
+	} else {
+	  memcpy(p->comment, &Extension[1], Extension[0]);
+	  p->comment[Extension[0]] = '\0';
+	  debug_message("%s\n", p->comment);
+	}
+	break;
+      case GRAPHICS_EXT_FUNC_CODE:
+	if (Extension[1] & 1) {
+	  p->alpha_enabled = 1;
+	  p->mask = NULL; /* to be auto-generated */
+	  p->transparent_color.index = Extension[4];
+	}
+	/* ignore image disposal and delay in this loader plugin */
+	break;
+      default:
+	break;
+      }
+
+      for (;;) {
 	if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR)
 	  goto error;
+
+	if (Extension == NULL)
+	  break;
+
+	switch (extcode) {
+	case COMMENT_EXT_FUNC_CODE:
+	  {
+	    unsigned char *tmp;
+
+	    if ((tmp = realloc(p->comment, strlen(p->comment) + Extension[0] + 1)) == NULL) {
+	      show_message("No enough memory for comment(append). Truncated.\n");
+	    } else {
+	      memcpy(tmp + strlen(tmp), &Extension[1], Extension[0]);
+	      p->comment = tmp;
+	    }
+	  }
+	  break;
+	default:
+	  break;
+	}
       }
       break;
     default:
@@ -184,18 +237,18 @@ load_image(Image *p, Stream *st)
   p->depth = 8;
   p->bits_per_pixel = 8;
   p->bytes_per_line = p->width;
+  p->next = NULL;
   p->image_size = p->bytes_per_line * p->height;
   if ((p->image = calloc(1, p->image_size)) == NULL)
     goto error_after_closed;
 
   for (i = 0; i < p->height; i++)
-    for (j = 0; j < p->width; j++)
-      p->image[i * p->width + j] = ScreenBuffer[p->top + i][p->left + j];
+    memcpy(&p->image[i * p->width], ScreenBuffer[p->top + i], p->width * sizeof(GifPixelType));
 
   free(ScreenBuffer[0]);
   free(ScreenBuffer);
 
-  return 1;
+  return LOAD_OK;
 
  error:
   PrintGifError();
@@ -204,7 +257,7 @@ load_image(Image *p, Stream *st)
   free(ScreenBuffer[0]);
   free(ScreenBuffer);
 
-  return 0;
+  return LOAD_ERROR;
 }
 
 /* methods */
@@ -246,8 +299,5 @@ load(Image *p, Stream *st)
   }
 #endif
 
-  if (!load_image(p, st))
-    return LOAD_ERROR;
-
-  return LOAD_OK;
+  return load_image(p, st);
 }
