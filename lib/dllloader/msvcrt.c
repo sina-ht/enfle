@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:20:24 2002.
- * $Id: msvcrt.c,v 1.5 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Fri Apr 16 01:02:06 2004.
+ * $Id: msvcrt.c,v 1.6 2004/04/18 06:24:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -105,7 +105,7 @@ msvcrt_malloc(int size)
   void *p;
 
   p = w32api_mem_alloc(size);
-  debug_message("malloc(%d) -> %p\n", size, p);
+  //debug_message("malloc(%d) -> %p\n", size, p);
 
   return p;
 }
@@ -116,7 +116,7 @@ msvcrt_new(int size)
   void *p;
 
   p = w32api_mem_alloc(size);
-  debug_message("new(%d) -> %p\n", size, p);
+  //debug_message("new(%d) -> %p\n", size, p);
 
   return p;
 }
@@ -124,17 +124,17 @@ msvcrt_new(int size)
 static void
 msvcrt_free(void *p)
 {
-  debug_message("free(%p) called: ", p);
+  //debug_message("free(%p) called: ", p);
   w32api_mem_free(p);
-  debug_message("freed.\n");
+  //debug_message("freed.\n");
 }
 
 static void
 msvcrt_delete(void *p)
 {
-  debug_message("delete(%p) called: ", p);
+  //debug_message("delete(%p) called: ", p);
   w32api_mem_free(p);
-  debug_message("deleted.\n");
+  //debug_message("deleted.\n");
 }
 
 /* unimplemened */
