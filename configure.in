@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Jan 18 01:36:24 2001.
-dnl $Id: configure.in,v 1.38 2001/01/17 17:12:38 sian Exp $
+dnl Last Modified: Thu Jan 18 22:18:59 2001.
+dnl $Id: configure.in,v 1.39 2001/01/18 17:03:58 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010117)
+AM_INIT_AUTOMAKE(enfle, 20010118)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -64,9 +64,10 @@ if test -d /usr/local/lib; then
 fi
 
 available_dlopen=no
-AC_CHECK_LIB(dl, dlopen, [ available_dlopen=yes; LIBS="-ldl $LIBS"; ], [
+AC_CHECK_LIB(dl, dlopen, [ available_dlopen=yes; LIBADD_DLOPEN="-ldl"; ], [
   AC_CHECK_LIB(c, dlopen, [ available_dlopen=yes; ]) ])
 AM_CONDITIONAL(HAVE_DLOPEN, test "$available_dlopen" = "yes")
+AC_SUBST(LIBADD_DLOPEN)
 
 available_jpeg=no
 AC_CHECK_HEADER(jpeglib.h, [
@@ -94,18 +95,20 @@ fi
 AM_CONDITIONAL(HAVE_PTHREAD, test "$available_pthread" = "yes")
 AC_SUBST(LIBADD_PTHREAD)
 
+dnl need checking?
+dnl available_pow=no
+dnl AC_CHECK_HEADER(math.h, [
+dnl   AC_CHECK_LIB(m, pow, [ available_pow=yes; LIBADD_POW=-lm; ]) ])
+available_pow=yes
+LIBADD_POW=-lm
+
 available_libmpeg3=no
 dnl Some libmpeg3 needs -lm
 if test "$available_pthread" = "yes"; then
   AC_CHECK_HEADER(mpeg3/libmpeg3.h, [
     AC_CHECK_LIB(mpeg3, mpeg3_open, [
-      available_libmpeg3=yes; LIBADD_LIBMPEG3="-lmpeg3 $LIBADD_PTHREAD";
-    ], [
-      AC_CHECK_LIB(m, pow)
-      AC_CHECK_LIB(mpeg3, mpeg3_open, [
-        available_libmpeg3=yes; LIBADD_LIBMPEG3="-lm -lmpeg3 $LIBADD_PTHREAD";
-      ], $LIBADD_PTHREAD)
-    ], $LIBADD_PTHREAD)
+      available_libmpeg3=yes; LIBADD_LIBMPEG3="$LIBADD_POW -lmpeg3 $LIBADD_PTHREAD";
+    ], [], [$LIBADD_POW $LIBADD_PTHREAD])
   ], [
     AC_CHECK_HEADER(libmpeg3.h, [
       AC_MSG_WARN([*** please put libmpeg3 headers in include/mpeg3/.])
@@ -124,16 +127,11 @@ AC_SUBST(LIBADD_ZLIB)
 available_png=no
 dnl Some libpng needs -lm
 if test "$available_zlib" = "yes"; then
-  LIBADD_PNG=-lz
+  LIBADD_PNG=$LIBADD_ZLIB
   AC_CHECK_HEADER(png.h, [
     AC_CHECK_LIB(png, png_get_IHDR, [
-      available_png=yes; LIBADD_PNG="$LIBADD_PNG -lpng";
-    ], [
-      AC_CHECK_LIB(m, pow)
-      AC_CHECK_LIB(png, png_get_IHDR, [
-         available_png=yes; LIBADD_PNG="$LIBADD_PNG -lm -lpng";
-      ])
-    ])
+      available_png=yes; LIBADD_PNG="$LIBADD_POW $LIBADD_PNG -lpng";
+    ], [], [$LIBADD_POW $LIBADD_ZLIB])
   ])
 fi
 AM_CONDITIONAL(HAVE_PNG, test "$available_png" = "yes")
