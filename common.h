@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov 22 00:35:07 2002.
- * $Id: common.h,v 1.28 2003/02/05 15:20:24 sian Exp $
+ * Last Modified: Mon Nov 10 01:48:25 2003.
+ * $Id: common.h,v 1.29 2003/11/17 13:23:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,11 @@
 #  undef HAVE_STDDEF_H
 #endif
 
+#include <signal.h>
+#if defined(inline)
+#undef inline
+#endif
+
 /* If compat.h didn't include, include config.h here. */
 #ifdef HAVE_CONFIG_H
 # ifndef CONFIG_H_INCLUDED
@@ -45,6 +50,7 @@
 #define err_message_fn(format, args...) fprintf(stderr, "Error: %s" format, __FUNCTION__ , ## args)
 #define err_message_fnc(format, args...) fprintf(stderr, "Error: %s: " format, __FUNCTION__ , ## args)
 
+#if !defined(unlikely)
 #if __GNUC__ == 2 && __GNUC_MINOR__ < 96
 #define likely(x)   (x)
 #define unlikely(x) (x)
@@ -52,8 +58,8 @@
 #define likely(x)   __builtin_expect((x), 1)
 #define unlikely(x) __builtin_expect((x), 0)
 #endif
+#endif
 
-#include <signal.h>
 #define __fatal(msg, format, args...) \
   do {fprintf(stderr, "%s" format, msg, ## args); raise(SIGABRT); exit(1);} while (0)
 #define fatal(format, args...) __fatal(PACKAGE " FATAL ERROR: ", format, ## args)
