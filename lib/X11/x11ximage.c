@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Jun 16 03:06:08 2001.
- * $Id: x11ximage.c,v 1.22 2001/06/15 18:45:41 sian Exp $
+ * Last Modified: Sat Jun 16 04:39:07 2001.
+ * $Id: x11ximage.c,v 1.23 2001/06/15 19:48:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -92,9 +92,9 @@ convert(X11XImage *xi, Image *p)
   int to_be_attached = 0;
 #endif
   unsigned char *dest = NULL, *dd, *s;
-  XImage *ximage;
+  XImage *ximage = NULL;
 #ifdef USE_XV
-  XvImage *xvimage;
+  XvImage *xvimage = NULL;
 #endif
   Memory *to_be_rendered;
   unsigned int w, h;
