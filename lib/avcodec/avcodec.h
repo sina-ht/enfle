@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000408
 #define FFMPEG_VERSION         "0.4.8"
-#define LIBAVCODEC_BUILD       4713
+#define LIBAVCODEC_BUILD       4714
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -792,7 +792,7 @@ typedef struct AVCodecContext {
     /* every time the encoder as a packet to send */
     /* Depends on the encoder if the data starts  */
     /* with a Start Code (it should) H.263 does   */
-    void (*rtp_callback)(void *data, int size, int packet_number); 
+    void (*rtp_callback)(struct AVCodecContext *avctx, void *data, int size, int packet_number); 
 
     /* statistics, used for 2-pass encoding */
     int mv_bits;
@@ -897,7 +897,8 @@ typedef struct AVCodecContext {
     /**
      * called at the beginning of each frame to get a buffer for it.
      * if pic.reference is set then the frame will be read later by lavc
-     * width and height should be rounded up to the next multiple of 16
+     * avcodec_align_dimensions() should be used to find the required width and
+     * height, as they normally need to be rounded up to the next multiple of 16
      * - encoding: unused
      * - decoding: set by lavc, user can override
      */
@@ -2158,6 +2159,7 @@ extern void av_log_set_level(int);
 extern void av_log_set_callback(void (*)(void*, int, const char*, va_list));
 
 /* endian macros */
+#if !defined(BE_16) || !defined(BE_32) || !defined(LE_16) || !defined(LE_32)
 #define BE_16(x)  ((((uint8_t*)(x))[0] << 8) | ((uint8_t*)(x))[1])
 #define BE_32(x)  ((((uint8_t*)(x))[0] << 24) | \
                    (((uint8_t*)(x))[1] << 16) | \
@@ -2168,6 +2170,7 @@ extern void av_log_set_callback(void (*)(void*, int, const char*, va_list));
                    (((uint8_t*)(x))[2] << 16) | \
                    (((uint8_t*)(x))[1] << 8) | \
                     ((uint8_t*)(x))[0])
+#endif
 
 #ifdef __cplusplus
 }
