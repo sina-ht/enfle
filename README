@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Fri Feb  2 01:04:11 2001.
+     Last Modified: Fri Feb  2 14:22:59 2001.
 
  This file is part of Enfle.
 
@@ -72,10 +72,11 @@ Sorry Japanese only. Are there any volunteers for translation?
 ダです。動画にも対応しています。
 
  対応フォーマット
+ BMP
  GIF
  JPEG
+ PCX
  PNG
- BMP
  spi(unstable, any formats which (some of) susie plugins support)
  animated GIF
  mng
@@ -125,14 +126,16 @@ Linux(2.4.0-test8 w/ glibc-2.1)
 Linux(2.4.0-test11 w/ glibc-2.2)
 FreeBSD-4.1R
 
+同じ/他の環境下で試された方は結果を御報告ください。
+
 私のメインの開発環境は2001/01/15現在 以下の通りです。
 
-Kernel: Linux-2.4.0
+Kernel: Linux-2.4.1
 CPU: Celeron/366 (running at 550)
 X server: XFree86-4.0.2
 Video: Matrox MillenniumII/AGP 8M
 Compiler: gcc version 2.95.2 19991024 (release)
-libc: glibc-2.2
+libc: glibc-2.2.1
 
 
 3.コンパイル

@@ -1,11 +1,11 @@
-***************************************************
+*************************************************************************
 
      Simple Plugin-based Graphic Loader Enfle
 			*** DEVELOPING VERSION ***
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Fri Feb  2 01:04:33 2001.
+     Last Modified: Fri Feb  2 15:02:33 2001.
 
  This file is part of Enfle.
 
@@ -25,7 +25,7 @@
  ATTENTION: GPL version 2 only. You cannot apply any later
  version. This situation may change.
 
-***************************************************
+**************************************************************************
 
  This software is based in part on the work of the Independent JPEG Group
 
@@ -63,16 +63,20 @@
 
 OK, legal part is over. The rest is fun.
 
+BTW, my English is rather bad. Are there any volunteers for correction?
+
+
 1. Blurb
 
 This software aims to view many pictures just clicking. You can view
 various formatted pictures and movies.
 
  Formats you can view:
+ BMP
  GIF
  JPEG
+ PCX
  PNG
- BMP
  spi(unstable, any formats which (some of) susie plugins support)
  animated GIF
  mng
@@ -103,123 +107,112 @@ mng: libmng
 mpeg: libmpeg3 or mpeg_lib(needs patch)
 avi: avifile(may need cvs version)
 
+
 2. Requirements
 
-Xサーバのdepthが 16, 24(bpp 24, 32)では動くと思われます。その他はいま
-のところunsupportedです。今あげたdepthで表示できなかった場合はxdpyinfo
-の出力と詳しい環境をお知らせください。なお、depth 16のmaskが
-0xf800,0x7e0,0x1f でない場合ばけると思われます。今のところこれは仕様で
-すが、そのうち改良されるかもしれません。
+X server's depth should be 16 or 24(bpp 24, 32). Other depths are
+unsupported so far. If you don't see a correct colored-image in these
+supported depths, let me know with xdpyinfo's output. When use in
+depth 16, color mask should be 0xf800, 0x7e0, 0x1f. Other masks might
+be supported sometime.
 
-今のところ以下の環境での動作が確認されています。
+These environments are checked:
 
 Linux(2.4.0-test8 w/ glibc-2.1)
 Linux(2.4.0-test11 w/ glibc-2.2)
 FreeBSD-4.1R
 
-私のメインの開発環境は2001/01/15現在 以下の通りです。
+Other similar environments should work. Please let me know if you try
+on the same/other environments.
 
-Kernel: Linux-2.4.0
+My main developing environment is:
+
+Kernel: Linux-2.4.1
 CPU: Celeron/366 (running at 550)
 X server: XFree86-4.0.2
 Video: Matrox MillenniumII/AGP 8M
 Compiler: gcc version 2.95.2 19991024 (release)
-libc: glibc-2.2
+libc: glibc-2.2.1
 
 
-3.コンパイル
+3. Compile
 
-コンパイルにはgccが必要です。コードにgccのextensionを使っています。
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-基本はconfigure して make するだけです。うまくいかない際には、どのよう
-なエラーがでたか報告していただければ幸いです。configureが生成する
-config.logなども参考になります。報告先は後述してあります。
+GCC is mandatory for compile, or compilation will fail.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Basically, type ./configure && make, that's all. If you get some error
+messages, please let me know with config.log, your environment, or
+such useful information.
 
-makeが通ったら、make installするか、srcに移動して./enfleとして起動して
-ください。
+After successfully compiled, type make install.
 
-configureスクリプトの指定できるオプションは、./configure --helpで詳細
-がみれます。MMXが使えて、かつ、nasmがinstallされていて、しかもdepth16
-で使いたいという場合には、--enable-nasmとするといいかもしれません。
+You can pass several options to configure script. You can see help
+message by typing ./configure --help. If you can use MMX, nasm, and
+you wish to use in depth 16, then add --enable-nasm.
 
-プラグインはshared objectとしてcompileされます。ファイル名は.soでおわっ
-ている必要があります。compileは通るが.so以外になってしまって動かないと
-いう方がいらっしゃいましたら御一報ください。ただし.aができている場合に
-はshared objectが作れない/使えない環境である可能性もあります。
+Plugins are compiled as a shared object. Filename should end with
+.so. If you get not .so but only .a, the chances are your system
+cannot/don't create shared object.
 
-susieのpluginを使いたい場合には--enable-spiが必要です。
-ungif pluginを使いたい場合には--with-ungifが必要です。
-
-4.コマンドライン
-
-Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
-けて指定するだけです。ディレクトリを指定した場合はその下のファイルを再
-帰的に追加します。対応してるアーカイブを指定した場合には、その中味も読
-まれます。
+If you'd like to enable susie plugin extension, add --enable-spi.
+If you'd like to enable libungif, add --with-ungif.
 
 
-5.使い方
+4. Command line
 
-左クリック,n,space	次の画像へ
-右クリック,b		前の画像へ
-中クリック,q		終了
-f			フルスクリーンon/off
-S(shift+s)		拡大アルゴリズムの変更(nointerpolate/bilinear)
-m			2倍拡大
-M(shift+m)		画像の長辺が画面いっぱいになるように拡大
-Alt+m			画像の短辺が画面いっぱいになるように拡大
+Enfle is very simple software. Pass filenames to arguments which you
+want to view. If you pass directory name, then files under that
+directory will be added recursively. Supported archives(such as
+.tar.gz) can be directly specified.
 
-また、全ての画像を表示し終わっても終了します。
 
-マウスのwheelにも対応しています。今のところ、前にまわすと次の画像、後
-にまわると前の画像にうつります。
+5. Usage
 
-6.カスタマイズ
+Left click,n,space	next image
+Right click,b		previous image
+Center click,q		quit
+f			full screen on/off
+S(shift+s)		toggle magnification algorithm(nointerpolate/bilinear)
+m			magnify x2
+M(shift+m)		magnify according to longer edge.
+Alt+m			magnify according to shorter edge.
 
-installすると$prefix/share/enfle/enfle.rc(だいたい
-/usr/share/enfle/enfle.rcとかそのあたり)という設定ファイルがinstallさ
-れます。カスタマイズするには、
+Yes, Enfle will quit when all pictures are viewed.
+
+If you have wheel, you can use it for Left, Right click.
+
+6. Customize
+
+There is the configuration file in $prefix/share/enfle/enfle.rc(normally, /usr/share/enfle/enfle.rc or like). If you'd like to customize, copy and edit it.
 
 mkdir ~/.enfle
 cp /usr/share/enfle/enfle.rc ~/.enfle/config
 
-とコピーして~/.enfle/configを書きかえてください。
 
+7. Contact
 
-7.その他
+All bug reporting and comments are welcome. Please subscribe to Enfle
+ML and post to it. To subscribe, write:
 
-w3mの外部ビューアとしてenfleを使う方法
+ subscribe Yourname
 
-~/.mailcap に
-image/*;enfle %s
-なんて感じに書いてください。システム全体でenfleにしてやるぜ、という方は
-/etc/mailcapにでも書いてください。
+in body, send it to <enfle-ctl@fennel.org>.
 
+ e.g. subscribe Hiroshi Takekawa
 
-8.連絡先
+You will be requested to confirm your subscription. Read it and
+confirm. I have the rights to read, convert, transfer, put in web
+pages, all posted mails, and any other necessary rights to provide an
+ML search engine. (I just want to provide an ML search engine. Please
+do not be alarmed.)
 
-バグの報告、御意見、御感想は歓迎します。Enfleに関するMLがあるので、そ
-ちらをご利用ください。自動登録となります。講読するには、
-
- subscribe あなたの名前
-
-とだけ本文に書いて、<enfle-ctl@fennel.org>に送ってください。
-
- 例: subscribe Hiroshi Takekawa
-
-その後折り返し届いたメールにしたがってconfirm(登録の確認)をしてくださ
-い。投稿されたメールは私に各種権利があるものとします。(ログの公開、検
-索の提供等を楽にするためくらいの意味しかないです)
-
-どうしてもという場合には私に直接でも結構です。
+If you insist, you can send me directly.
 
         Hiroshi Takekawa <sian@big.or.jp>
                          <sian@fennel.org>
 
 
-9.配布について
+9. Distribution
 
-EnfleはGNU GENERAL PUBLIC LICENSE Version 2に従います。Version 2のみで、
-それ以降のVersionにするオプションはいまのところありません。GPL2につい
-てはCOPYINGをお読みください。補助として日本語訳COPYING.jもつけてありま
-す。
+Enfle is distributed under GNU GENERAL PUBLIC LICENSE Version 2. See
+COPYING in detail. You cannot apply any later version without my
+explicit permission. This situation may change.
