@@ -20,8 +20,9 @@
 
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
-//#    include "enfle-config.h"
 //#    include "config.h"
+#include "enfle-config.h"
+#undef DEBUG
 #define HAVE_LRINTF
 #define CONFIG_ENCODERS
 #define CONFIG_DECODERS
@@ -1117,7 +1118,7 @@ if((y)<(x)){\
 #endif
 
 #ifdef ARCH_X86
-static inline long long rdtsc()
+static inline long long rdtsc(void)
 {
 	long long l;
 	asm volatile(	"rdtsc\n\t"
