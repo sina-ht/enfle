@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jun 21 00:43:51 2001.
- * $Id: jpeg.c,v 1.9 2001/06/20 15:53:19 sian Exp $
+ * Last Modified: Thu Jul 26 02:02:21 2001.
+ * $Id: jpeg.c,v 1.10 2001/07/29 00:39:24 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -199,8 +199,10 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
     return LOAD_OK;
   if (memcmp(buf + 6, "Exif", 4) == 0)
     return LOAD_OK;
+  if (memcmp(buf + 6, "\0" "\0" "\x1\x5", 4) == 0)
+    return LOAD_OK;
 
-  show_message("Looks like jpeg, but its ID (%c%c%c%c) is not recognized. I'll try to load. If I can load successfully, please report it.\n", buf[6], buf[7], buf[8], buf[9]);
+  show_message("Looks like jpeg, but its ID (%02X%02X%02X%02X:%c%c%c%c) is not recognized. I'll try to load. If I can load successfully, please report it.\n", buf[6], buf[7], buf[8], buf[9], buf[6], buf[7], buf[8], buf[9]);
 
   return LOAD_OK;
 }
