@@ -3,8 +3,8 @@
  * (C)Copyright 2002, 2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec  9 22:24:05 2003.
- * $Id: fourcc.h,v 1.4 2003/12/16 16:52:52 sian Exp $
+ * Last Modified: Tue Dec 30 04:03:27 2003.
+ * $Id: fourcc.h,v 1.5 2003/12/29 19:26:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -78,6 +78,7 @@
 
 // MS-MPEG4v1
 #define FCC_MPG4 FCC('M', 'P', 'G', '4')
+#define FCC_mpg4 FCC('m', 'p', 'g', '4')
 
 // WMV
 #define FCC_WMV1 FCC('W', 'M', 'V', '1')

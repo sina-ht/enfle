@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Dec 26 01:37:54 2003.
- * $Id: avcodec.c,v 1.5 2003/12/27 14:27:09 sian Exp $
+ * Last Modified: Tue Dec 30 04:26:13 2003.
+ * $Id: avcodec.c,v 1.6 2003/12/29 19:26:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -261,6 +261,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       info->vcodec_id = CODEC_ID_MSMPEG4V2; info->vcodec_name = "msmpeg4v2"; break;
     case FCC_MP41:
     case FCC_MPG4:
+    case FCC_mpg4:
       info->vcodec_id = CODEC_ID_MSMPEG4V1; info->vcodec_name = "msmpeg4v1"; break;
     case FCC_WMV1:
       info->vcodec_id = CODEC_ID_WMV1; info->vcodec_name = "wmv1"; break;
@@ -1059,6 +1060,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_DIV2:
     case FCC_MP41:
     case FCC_MPG4:
+    case FCC_mpg4:
     case FCC_WMV1:
     case FCC_WMV2:
     case FCC_dvsd:
