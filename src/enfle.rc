@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Mon Mar 15 01:47:37 2004.
-; $Id: enfle.rc,v 1.45 2004/03/14 16:52:26 sian Exp $
+; Last Modified: Thu Mar 18 23:34:48 2004.
+; $Id: enfle.rc,v 1.46 2004/03/24 15:03:01 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -108,6 +108,8 @@ enfle {
         mp3 := MP3:.
         mpg := MPEG:.
         mpeg := MPEG:.
+	asf := ASF:.
+	wmv := ASF:.
       }
     }
     videodecoder {
