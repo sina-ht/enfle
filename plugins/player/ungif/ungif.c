@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec  5 23:52:56 2000.
- * $Id: ungif.c,v 1.13 2000/12/05 15:06:45 sian Exp $
+ * Last Modified: Wed Dec  6 17:44:53 2000.
+ * $Id: ungif.c,v 1.14 2000/12/06 15:07:47 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -132,12 +132,12 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   if (m->direct_decode) {
     p->rendered_image = memory_create();
-    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    //memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
     if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
       return PLAY_ERROR;
   } else {
     p->rendered_image = memory_create();
-    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    //memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
     p->image = memory_create();
     if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
       return PLAY_ERROR;
