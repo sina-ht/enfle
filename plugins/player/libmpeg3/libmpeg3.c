@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 24 04:28:27 2000.
- * $Id: libmpeg3.c,v 1.15 2000/12/24 15:29:25 sian Exp $
+ * Last Modified: Fri Dec 29 06:56:22 2000.
+ * $Id: libmpeg3.c,v 1.16 2000/12/30 07:21:04 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -29,9 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpeg3/libmpeg3.h>
-#ifdef USE_PTHREAD
-#  include <pthread.h>
-#endif
+// pthread.h is included in mpeg3/video/slice.h
 
 #include "common.h"
 
@@ -105,7 +103,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   int i, Bpp;
 
   if ((info = calloc(1, sizeof(LibMPEG3_info))) == NULL) {
-    show_message("LibMPEG3: play_movie: No enough memory.\n");
+    show_message("LibMPEG3: " __FUNCTION__ ": No enough memory.\n");
     return PLAY_ERROR;
   }
 
