@@ -1,3 +1,16 @@
+2000-10-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added mpeg_lib checking. Fixed typo.
+
+	* common.h: Dropped coloring.
+
+	* plugins/player/ungif/ungif.c: Version up.
+
+	* plugins/ui/Xlib/Xlib.c: Fixed typo.
+
+	* plugins/player/Makefile.am, plugins/player/mpeg_lib/*: New
+	mpeg_lib player plugin.
+
 2000-10-11  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/Xlib/Xlib.c, plugins/player/ungif/ungif.c: More
