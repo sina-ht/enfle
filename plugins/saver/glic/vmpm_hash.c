@@ -1,8 +1,8 @@
 /*
  * vmpm_hash.c -- Hash related routines
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Jun 19 02:03:08 2001.
- * $Id: vmpm_hash.c,v 1.3 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Sun Sep  9 13:44:57 2001.
+ * $Id: vmpm_hash.c,v 1.4 2001/09/10 00:04:37 sian Exp $
  */
 
 #include <stdio.h>
@@ -75,7 +75,7 @@ register_to_token_hash(VMPM *vmpm, int offset, unsigned int length, int flag, To
 
     hash = (hash + skip) % HASH_SIZE;
     i++;
-    if (i > 100)
+    if (i > 1000)
       generic_error((char *)"Hash functions are not good\n", HASH_ERROR);
   }
 
