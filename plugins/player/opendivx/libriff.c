@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Wed Jan 24 06:54:51 2001.
- * $Id: libriff.c,v 1.2 2001/01/23 23:26:52 sian Exp $
+ * $Id: libriff.c,v 1.3 2001/08/27 21:55:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -197,7 +197,7 @@ read_chunks(RIFF_File *rf, RIFF_Chunk *rc,
   }
 
   rc->prev->next = NULL;
-  /* this is corrent. not to use _destroy() */
+  /* this is correct. not to use _destroy() */
   free(rc);
 
   *chunks_read_return = chunks_read;
