@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct 12 22:21:20 2001.
- * $Id: enfle-plugintype.h,v 1.5 2001/10/14 12:29:05 sian Exp $
+ * Last Modified: Wed Jan 28 02:17:37 2004.
+ * $Id: enfle-plugintype.h,v 1.6 2004/01/30 12:40:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,8 @@ typedef enum {
   ENFLE_PLUGIN_STREAMER,
   ENFLE_PLUGIN_ARCHIVER,
   ENFLE_PLUGIN_EFFECT,
+  ENFLE_PLUGIN_AUDIODECODER,
+  ENFLE_PLUGIN_VIDEODECODER,
   ENFLE_PLUGIN_END
 } PluginType;
 

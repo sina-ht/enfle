@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 17 23:23:51 2004.
- * $Id: audiodecoder.h,v 1.1 2004/01/18 07:15:19 sian Exp $
+ * Last Modified: Tue Jan 27 23:48:48 2004.
+ * $Id: audiodecoder.h,v 1.2 2004/01/30 12:40:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,7 @@
 #if !defined(_ENFLE_AUDIO_DECODER_H)
 #define _ENFLE_AUDIO_DECODER_H
 
+#include "enfle/enfle-plugins.h"
 #include "enfle/movie.h"
 
 typedef enum _audio_decoder_status {
@@ -41,7 +42,6 @@ struct _audio_decoder {
 #define audiodecoder_decode(adec,m,ad,b,l,r) (adec)->decode(adec,m,ad,b,l,r)
 #define audiodecoder_destroy(adec) (adec)->destroy(adec)
 
-AudioDecoder *audiodecoder_mpglib_init(void);
-AudioDecoder *audiodecoder_mad_init(void);
+AudioDecoder *audiodecoder_create(EnflePlugins *, const char *);
 
 #endif
