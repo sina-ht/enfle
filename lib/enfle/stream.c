@@ -1,10 +1,10 @@
 /*
  * stream.c -- stream interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:58:27 2001.
- * $Id: stream.c,v 1.5 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Wed Jul 10 22:18:23 2002.
+ * $Id: stream.c,v 1.6 2002/08/03 05:11:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -91,7 +91,7 @@ fdstream_grow(Stream *s , int size)
     ptr_offset = s->ptr - s->buffer;
     s->buffer_size += grow_size;
     if ((s->buffer = realloc(s->buffer, s->buffer_size)) == NULL) {
-      show_message("fdstream_grow: No enough memory (tried to allocate %d bytes)\n", s->buffer_size);
+      err_message_fnc("No enough memory (tried to allocate %d bytes)\n", s->buffer_size);
       return -1;
     }
     s->ptr = s->buffer + ptr_offset;
@@ -99,7 +99,7 @@ fdstream_grow(Stream *s , int size)
 
   /* Should I use select()? */
   if ((have_read = read((int)s->data, s->buffer + s->buffer_used, to_read)) < 0) {
-    show_message("fdstream_grow: read failed\n");
+    err_message_fnc("read failed\n");
     return -1;
   }
   s->buffer_used += have_read;
@@ -154,36 +154,36 @@ memorystream_seek(Stream *s, long offset, StreamWhence whence)
   switch (whence) {
   case _SET:
     if (offset < 0 || (unsigned long)offset > s->buffer_size) {
-      show_message("memorystream_seek: _SET: invalid offset %ld\n", offset);
+      err_message_fnc("_SET: invalid offset %ld\n", offset);
       return 0;
     }
     s->ptr = s->buffer + offset;
     return 1;
   case _CUR:
     if (s->ptr - s->buffer + offset < 0) {
-      show_message("memorystream_seek: _CUR: underflow (offset = %ld)\n", offset);
+      err_message_fnc("_CUR: underflow (offset = %ld)\n", offset);
       return 0;
     }
     if ((unsigned long)(s->ptr - s->buffer + offset) > s->buffer_size) {
-      show_message("memorystream_seek: _CUR: overflow (offset = %ld)\n", offset);
+      err_message_fnc("_CUR: overflow (offset = %ld)\n", offset);
       return 0;
     }
     s->ptr += offset;
     return 1;
   case _END:
     if (offset > 0) {
-      show_message("memorystream_seek: _END: overflow (offset = %ld)\n", offset);
+      err_message_fnc("_END: overflow (offset = %ld)\n", offset);
       return 0;
     }
     if (s->buffer_size < (unsigned long)-offset) {
-      show_message("memorystream_seek: _END: underflow (offset = %ld)\n", offset);
+      err_message_fnc("_END: underflow (offset = %ld)\n", offset);
       return 0;
     }
     s->ptr = s->buffer + s->buffer_size - offset;
     return 1;
   }
 
-  fprintf(stderr, "memorystream_seek: Invalid whence %d\n", whence);
+  debug_message_fnc("Invalid whence %d\n", whence);
   return 0;
 }
 
@@ -193,7 +193,7 @@ fdstream_seek(Stream *s, long offset, StreamWhence whence)
   switch (whence) {
   case _SET:
     if (offset < 0) {
-      show_message("fdstream_seek: _SET: underflow (offset = %ld)\n", offset);
+      err_message_fnc("_SET: underflow (offset = %ld)\n", offset);
       return 0;
     }
     if (fdstream_grow(s, offset - (s->ptr - s->buffer)) < 0)
@@ -202,7 +202,7 @@ fdstream_seek(Stream *s, long offset, StreamWhence whence)
     return 1;
   case _CUR:
     if (s->ptr - s->buffer + offset < 0) {
-      show_message("fdstream_seek: _CUR: underflow (offset = %ld)\n", offset);
+      err_message_fnc("_CUR: underflow (offset = %ld)\n", offset);
       return 0;
     }
     if (fdstream_grow(s, offset) < 0)
@@ -211,11 +211,11 @@ fdstream_seek(Stream *s, long offset, StreamWhence whence)
     return 1;
   case _END:
     /* cannot be implemented, since we don't know end. */
-    show_message("fdstream_seek: _END: cannot be implemented.\n");
+    err_message_fnc("_END: cannot be implemented.\n");
     return 0;
   }
 
-  fprintf(stderr, "fdstream_seek: Invalid whence %d\n", whence);
+  debug_message_fnc("Invalid whence %d\n", whence);
   return 0;
 }
 
@@ -231,7 +231,7 @@ filestream_seek(Stream *s, long offset, StreamWhence whence)
     return (fseek((FILE *)s->data, offset, SEEK_END) == -1) ? 0 : 1;
   }
 
-  fprintf(stderr, "filestream_seek: Invalid whence %d\n", whence);
+  debug_message_fnc("Invalid whence %d\n", whence);
   return -1;
 }
 
