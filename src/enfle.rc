@@ -1,11 +1,19 @@
 ; enfle.rc
-; Last Modified: Mon Dec  4 21:59:55 2000.
-; $Id: enfle.rc,v 1.6 2000/12/04 13:59:27 sian Exp $
+; Last Modified: Sat Dec  9 03:21:56 2000.
+; $Id: enfle.rc,v 1.7 2000/12/10 13:17:25 sian Exp $
 
 enfle {
 	plugins {
 		dir = ../plugins
-		ui/default = Normal
+		ui {
+			default = Normal
+			normal {
+				; normal/render = {normal|double|short|long}
+				render = normal
+				; magnify = no/bilinear
+				magnify_interpolate = bilinear
+			}
+		}
 		video/default = Xlib
 		spi/disabled = yes
 		player/MPEG_lib/disabled = yes
