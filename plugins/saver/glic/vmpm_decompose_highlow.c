@@ -1,17 +1,17 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 21:54:52 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.16 2001/08/09 17:32:07 sian Exp $
+ * Last Modified: Mon Aug 13 17:58:58 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.17 2001/08/15 06:41:53 sian Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define REQUIRE_FATAL
-#include "common.h"
 #define REQUIRE_STRING_H
 #include "compat.h"
+#define REQUIRE_FATAL
+#include "common.h"
 
 #define LOW_MASK(n) ((1 << n) - 1)
 

@@ -1,17 +1,17 @@
 /*
  * vmpm_decompose_highlow_esc.c -- Threshold ESC-A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 21:55:49 2001.
- * $Id: vmpm_decompose_highlow_esc.c,v 1.1 2001/08/09 17:29:15 sian Exp $
+ * Last Modified: Mon Aug 13 17:59:31 2001.
+ * $Id: vmpm_decompose_highlow_esc.c,v 1.2 2001/08/15 06:41:53 sian Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define REQUIRE_FATAL
-#include "common.h"
 #define REQUIRE_STRING_H
 #include "compat.h"
+#define REQUIRE_FATAL
+#include "common.h"
 
 #define LOW_MASK(n) ((1 << n) - 1)
 
