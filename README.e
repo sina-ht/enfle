@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Mon Feb 26 18:10:16 2001.
+     Last Modified: Tue Mar 20 11:24:45 2001.
 
  This file is part of Enfle.
 
@@ -29,14 +29,14 @@
 
  This software is based in part on the work of the Independent JPEG Group
 
- -- OK, libjpeg is only linked, not distributed with this archive. You
+ -- libjpeg is only linked, not distributed with this archive. You
  -- should install it.
 
  The Graphics Interchange Format(c) is
  the Copyright property of CompuServe Incorporated.
  GIF(sm) is a Service Mark property of CompuServe Incorporated.
 
- -- OK, libungif is only linked, not distributed with this
+ -- libungif is only linked, not distributed with this
  -- archive. Moreover, libungif is not used by default, for avoiding
  -- possible patent infringement. It's up to you whether use it or not.
 
@@ -64,9 +64,11 @@ various formatted pictures and movies.
  animated GIF
  mng
  mpeg(mpeg1, mpeg2)
- avi,asf(any formats which avifile supports)
+ avi,asf(avifile uses Windows DLL)
 
-This software has plugin architecture. You can write plugins to loader new formatted pictures and movies. Also, you can read irregular files, such as tar, gz,  bz2, and so on.
+This software has plugin architecture. You can write plugins to loader
+new formatted pictures and movies. Also, you can read irregular files,
+such as tar, gz, bz2, and so on.
 
 ***
 GIF decoder must perform LZW decompression. Unfortunately, it's
@@ -89,7 +91,7 @@ ungif: libungif-3.1.0 or later (recommended: 4.1.0 or later)
 mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
-avifile: avifile(tested with avifile-0.53.5)
+avifile: avifile-0.53.5
 
 
 2. Requirements
@@ -112,10 +114,10 @@ My main developing environment is:
 
 Kernel: Linux-2.4.2
 CPU: Celeron/366 (running at 550)
-X server: XFree86-4.0.2
+X server: XFree86-4.0.3
 Video: Matrox MillenniumII/AGP 8M
-Compiler: gcc version 2.95.2 19991024 (release)
-libc: glibc-2.2.1
+Compiler: gcc version 2.95.3 20010315 (release)
+libc: glibc-2.2.2
 
 
 3. Compile
@@ -152,7 +154,8 @@ directory will be added recursively. Supported archives(such as
 
 Left click,n,space	next image
 Right click,b		previous image
-Center click,q		quit
+Center click,N		next archive
+q			quit
 f			full screen on/off
 S(shift+s)		toggle magnification algorithm(nointerpolate/bilinear)
 m			magnify x2
@@ -165,7 +168,9 @@ If you have wheel, you can use it for Left, Right click.
 
 6. Customize
 
-There is the configuration file in $prefix/share/enfle/enfle.rc(normally, /usr/share/enfle/enfle.rc or like). If you'd like to customize, copy and edit it.
+There is the configuration file in
+$prefix/share/enfle/enfle.rc(normally, /usr/share/enfle/enfle.rc or
+like). If you'd like to customize, copy and edit it.
 
 mkdir ~/.enfle
 cp /usr/share/enfle/enfle.rc ~/.enfle/config
