@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 23:15:00 2001.
- * $Id: kernel32.c,v 1.18 2001/10/10 14:43:48 sian Exp $
+ * Last Modified: Fri Oct 12 17:34:14 2001.
+ * $Id: kernel32.c,v 1.19 2001/10/12 09:08:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -395,11 +395,16 @@ DEFINE_W32API(DWORD, SetFilePointer,
 	      (HANDLE handle, LONG offset, LONG *high, DWORD whence))
 {
   debug_message(__FUNCTION__ "(%p, %ld, %d) called\n", handle, offset, whence);
+
   if (high && *high) {
-    debug_message("*high != 0\n");
+    debug_message("*high != 0: Not supported...\n");
     return 0;
   }
-  return (fseek((FILE *)handle, offset, whence) == 0) ? 1 : 0;
+
+  if (fseek((FILE *)handle, offset, whence) == 0)
+    return ftell((FILE *)handle);
+
+  return HFILE_ERROR;
 }
 
 DEFINE_W32API(LONG, _llseek,
