@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Fri Apr 20 17:23:31 2001.
+     Last Modified: Wed Apr 25 15:03:20 2001.
 
  This file is part of Enfle.
 
@@ -165,6 +165,7 @@ Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
 省略するとPNGになります。
 -iは指定したパターンのファイル名のみ対象とします。
 -xは指定したパターンのファイル名を対象から外します。
+-wは最初に読みこんだ画像を壁紙にして終了します。
 
 
 5.使い方

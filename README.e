@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Fri Apr 20 17:22:37 2001.
+     Last Modified: Wed Apr 25 15:03:57 2001.
 
  This file is part of Enfle.
 
@@ -155,6 +155,7 @@ directory will be added recursively. Supported archives(such as
 -C converts images by specified Saver plugin. If the argument is omitted, PNG is used.
 -i specifies the pattern to include.
 -x specifies the pattern to exclude.
+-w sets the first image as wallpaper.
 
 
 5. Usage
