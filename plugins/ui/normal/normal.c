@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 15 19:27:33 2004.
- * $Id: normal.c,v 1.82 2004/08/16 11:08:47 sian Exp $
+ * Last Modified: Sat Sep 18 02:21:52 2004.
+ * $Id: normal.c,v 1.83 2004/09/17 17:25:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -804,6 +804,19 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   m->ap = uidata->ap;
 
   path = NULL;
+  if (uidata->nth > 1 && archive_nfiles(a) > 1 && archive_iteration_start(a)) {
+    int i;
+
+    for (i = 0; i < uidata->nth - 2; i++) {
+      path = archive_iteration_next(a);
+      if (!path)
+	break;
+    }
+    if (i == uidata->nth - 2)
+      path = archive_iteration_next(a);
+    uidata->nth = 0;
+  }
+
   ret = MAIN_LOOP_DO_NOTHING;
   while (ret != MAIN_LOOP_QUIT) {
     if (path == NULL)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  1 16:55:24 2004.
- * $Id: enfle.c,v 1.67 2004/05/15 04:09:59 sian Exp $
+ * Last Modified: Sat Sep 18 02:12:25 2004.
+ * $Id: enfle.c,v 1.68 2004/09/17 17:25:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -67,7 +67,8 @@ static Option enfle_options[] = {
   { "convert",   'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG, for Convert UI)." },
   { "magnify",   'm', _REQUIRED_ARGUMENT, "Specify magnification method(for Normal UI)." },
   { "config",    'c', _REQUIRED_ARGUMENT, "Additional config like -c '/enfle/plugins/saver/jpeg/quality = 80'." },
-  { "nocache",   'n', _NO_ARGUMENT,       "Don't use plugin cache." },
+  { "nth",       'n', _REQUIRED_ARGUMENT, "Start at nth file/archive." },
+  { "nocache",   'q', _NO_ARGUMENT,       "Don't use plugin cache." },
   { "recache",   'N', _NO_ARGUMENT,       "Re-create cache file." },
   { "include",   'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
@@ -389,6 +390,7 @@ main(int argc, char **argv)
   int include_fnmatch = 0;
   int exclude_fnmatch = 0;
   int if_use_cache = -1;
+  int nth = 0;
   char *pattern = NULL;
   char *homedir;
   char *plugin_path;
@@ -450,6 +452,9 @@ main(int argc, char **argv)
       dlist_add_str(override_config, optarg);
       break;
     case 'n':
+      nth = atoi(optarg);
+      break;
+    case 'q':
       if_use_cache = 0;
       break;
     case 'N':
@@ -575,6 +580,7 @@ main(int argc, char **argv)
     return 0;
   }
 
+  uidata.nth = nth;
   uidata.a = archive_create(ARCHIVE_ROOT);
 
   if (strcmp(argv[optind], "-") == 0) {
