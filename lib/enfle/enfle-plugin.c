@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 10 00:49:42 2004.
- * $Id: enfle-plugin.c,v 1.6 2004/02/14 05:30:28 sian Exp $
+ * Last Modified: Tue Mar  9 22:15:09 2004.
+ * $Id: enfle-plugin.c,v 1.7 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,8 @@
 
 #include <stdlib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "enfle-plugin.h"
@@ -33,5 +35,19 @@ static const char *plugintype_to_name[] = {
 const char *
 enfle_plugin_type_to_name(PluginType type)
 {
+  if (type < ENFLE_PLUGIN_START || type >= ENFLE_PLUGIN_END)
+    return NULL;
   return plugintype_to_name[type];
+}
+
+PluginType
+enfle_plugin_name_to_type(char *name)
+{
+  int i;
+
+  for (i = ENFLE_PLUGIN_START; i < ENFLE_PLUGIN_END; i++) {
+    if (strcasecmp(name, plugintype_to_name[i]) == 0)
+      return i;
+  }
+  return ENFLE_PLUGIN_INVALID;
 }

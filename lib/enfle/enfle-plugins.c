@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:52:37 2004.
- * $Id: enfle-plugins.c,v 1.14 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Tue Mar  9 22:28:35 2004.
+ * $Id: enfle-plugins.c,v 1.15 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,11 +22,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
 
+#include "utils/stdio-support.h"
+#include "utils/misc.h"
 #include "enfle-plugin.h"
 #include "enfle-plugins.h"
 
@@ -53,7 +57,7 @@ static EnflePlugins template = {
 };
 
 EnflePlugins *
-enfle_plugins_create(void)
+enfle_plugins_create(const char *path, int use_cache)
 {
   EnflePlugins *eps;
   int i;
@@ -74,7 +78,68 @@ enfle_plugins_create(void)
       free(eps);
       return NULL;
     }
+  eps->path = path;
 
+  if (use_cache) {
+    static const char *cache_file = ".cache";
+    char cache_path[strlen(path) + strlen(cache_file) + 2];
+    struct stat st;
+
+    strcpy(cache_path, path);
+    cache_path[strlen(path)] = '/';
+    cache_path[strlen(path) + 1] = '\0';
+    strcat(cache_path, cache_file);
+    eps->cache_path = strdup(cache_path);
+    if (stat(cache_path, &st) == 0) {
+      FILE *fp;
+
+      if ((fp = fopen(cache_path, "rb")) == NULL) {
+	err_message_fnc("Cannot open cache file %s\n", cache_path);
+	goto error;
+      } else {
+	char *line;
+	char **list;
+
+	while ((line = stdios_gets(fp)) != NULL) {
+	  Plugin *p;
+
+	  if (line[strlen(line) - 1] == '\n')
+	    line[strlen(line) - 1] = '\0';
+
+	  if ((list = misc_str_split(line, ':')) == NULL) {
+	    fclose(fp);
+	    goto error;
+	  }
+	  
+	  p = plugin_create();
+	  plugin_autoload(p, list[2]);
+	  if (!pluginlist_add(eps->pls[enfle_plugin_name_to_type(list[0])], p, list[1])) {
+	    plugin_destroy(p);
+	    fclose(fp);
+	    goto error;
+	  }
+	  //debug_message_fnc("autoload: %s %s %s\n", list[0], list[1], list[2]);
+	  misc_free_str_array(list);
+	}
+	if (!feof(fp)) {
+	  fclose(fp);
+	  goto error;
+	}
+	fclose(fp);
+      }
+    } else if (errno == ENOENT) {
+      eps->cache_to_be_created = 1;
+    } else {
+      err_message_fnc("Cannot open cache file %s\n", cache_path);
+      goto error;
+    }
+  }
+
+  return eps;
+
+ error:
+  free(eps->cache_path);
+  eps->cache_path = NULL;
   return eps;
 }
 

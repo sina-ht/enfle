@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 10 01:15:43 2004.
- * $Id: enfle.c,v 1.57 2004/02/14 05:26:48 sian Exp $
+ * Last Modified: Tue Mar  9 22:30:38 2004.
+ * $Id: enfle.c,v 1.58 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
@@ -146,7 +147,7 @@ check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
 }
 
 static void
-print_plugin_info(EnflePlugins *eps, int level)
+print_plugin_info(EnflePlugins *eps, const char *path, int level)
 {
   int i;
   PluginList *pl;
@@ -158,7 +159,7 @@ print_plugin_info(EnflePlugins *eps, int level)
   char *pluginname;
   const unsigned char *description, *author;
 
-  printf("Plugins:\n");
+  printf("Plugins: path = %s\n", path);
   for (i = 0; i < ENFLE_PLUGIN_END; i++) {
     pl = eps->pls[i];
     plugintypename = enfle_plugin_type_to_name((PluginType)i);
@@ -166,11 +167,11 @@ print_plugin_info(EnflePlugins *eps, int level)
     if (level >= 1)
       printf("\n");
     pluginlist_iter(pl, k, kl, p) {
-      ep = plugin_get(p);
       pluginname = (char *)k;
       if (level == 0) {
 	printf(" %s", pluginname);
       } else {
+	ep = plugin_get(p);
 	description = enfle_plugin_description(ep);
 	printf("  %s", description);
 	if (level >= 2) {
@@ -233,10 +234,26 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   Archive *a;
   PluginType type;
   char *fullpath, *path, *ext, *base_name, *name;
+  FILE *fp;
   int nplugins = 0;
 
   /* Add static linked plugins */
   STATIC_PLUGIN_ADD
+
+  if (eps->cache_path) {
+    if (eps->cache_to_be_created) {
+      if ((fp = fopen(eps->cache_path, "wb")) == NULL) {
+	err_message_fnc("Cannot create cache file %s\n", eps->cache_path);
+	eps->cache_to_be_created = 0;
+	free(eps->cache_path);
+	eps->cache_path = NULL;
+      }
+      show_message("Cache file %s to be created.\n", eps->cache_path);
+    } else {
+      debug_message_fnc("Using cache file %s\n", eps->cache_path);
+      return 1;
+    }
+  }
 
   a = archive_create(ARCHIVE_ROOT);
   archive_read_directory(a, plugin_path, 0);
@@ -262,8 +279,11 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 	if ((name = enfle_plugins_load(eps, fullpath, &type)) == NULL) {
 	  warning("enfle_plugin_load %s failed.\n", fullpath);
 	} else {
-	  nplugins++;
-	  nplugins -= check_and_unload(eps, c, type, name);
+	  if (!check_and_unload(eps, c, type, name)) {
+	    nplugins++;
+	    if (fp)
+	      fprintf(fp, "%s:%s:%s\n", enfle_plugin_type_to_name(type), name, fullpath);
+	  }
 	}
       }
     }
@@ -271,6 +291,9 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
     path = archive_iteration_next(a);
   }
   archive_destroy(a);
+
+  if (fp)
+    fclose(fp);
 
   return nplugins;
 }
@@ -407,13 +430,28 @@ main(int argc, char **argv)
   if (format)
     config_set_str(c, (char *)"/enfle/plugins/ui/convert/format", format);
 
-  eps = enfle_plugins_create();
+  {
+    int path_ok = 0;
+    struct stat st;
+
+    if ((plugin_path = getenv("ENFLE_PLUGINDIR")) == NULL) {
+      if (stat(plugin_path, &st) == 0)
+	path_ok = 1;
+    }
+    if (!path_ok && (plugin_path = config_get_str(c, "/enfle/plugins/dir"))) {
+      if (stat(plugin_path, &st) == 0)
+	path_ok = 1;
+    }
+    if (!path_ok) {
+      plugin_path = (char *)ENFLE_PLUGINDIR;
+      debug_message("plugin_path defaults to %s\n", plugin_path);
+    }
+  }
+
+  // 1 means using cache
+  eps = enfle_plugins_create(plugin_path, 1);
   set_enfle_plugins(eps);
 
-  if ((plugin_path = config_get_str(c, "/enfle/plugins/dir")) == NULL) {
-    plugin_path = (char *)ENFLE_PLUGINDIR;
-    debug_message("plugin_path defaults to %s\n", plugin_path);
-  }
   if (!scan_and_load_plugins(eps, c, plugin_path)) {
     err_message("scan_and_load_plugins() failed.  plugin path = %s\n", plugin_path);
     return 1;
@@ -432,7 +470,7 @@ main(int argc, char **argv)
 
   if (argc == optind) {
     usage();
-    print_plugin_info(eps, print_more_info);
+    print_plugin_info(eps, plugin_path, print_more_info);
     config_destroy(c);
     enfle_plugins_destroy(eps);
     return 0;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 13 01:42:09 2003.
- * $Id: plugin.c,v 1.13 2003/12/23 10:59:35 sian Exp $
+ * Last Modified: Tue Mar  9 22:28:24 2004.
+ * $Id: plugin.c,v 1.14 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -68,7 +68,7 @@ plugin_load(Plugin *p, char *filepath, const char *entry_symbol, const char *exi
     return 0;
   }
 
-  if ((p->filepath = strdup(filepath)) == NULL)
+  if (!p->filepath && (p->filepath = strdup(filepath)) == NULL)
     err_message("No enough memory to keep a plugin filepath: %s\n", filepath);
 
   if (entry_symbol) {
@@ -91,6 +91,30 @@ plugin_load(Plugin *p, char *filepath, const char *entry_symbol, const char *exi
     p->substance = entry();
 
   return 1;
+}
+
+int
+plugin_autoload(Plugin *p, char *filepath)
+{
+  if ((p->filepath = strdup(filepath)) == NULL) {
+    err_message("No enough memory to keep a plugin filepath: %s\n", filepath);
+    return 0;
+  }
+
+  return 1;
+}
+
+void *
+plugin_get(Plugin *p)
+{
+  if (p->substance)
+    return p->substance;
+  if (p->filepath) {
+    debug_message_fnc("autoloading %s\n", p->filepath);
+    if (plugin_load(p, p->filepath, "plugin_entry", "plugin_exit"))
+      return p->substance;
+  }
+  return NULL;
 }
 
 int

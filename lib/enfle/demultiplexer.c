@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 12 23:48:04 2004.
- * $Id: demultiplexer.c,v 1.1 2004/02/14 05:15:36 sian Exp $
+ * Last Modified: Tue Mar  9 22:53:25 2004.
+ * $Id: demultiplexer.c,v 1.2 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -73,18 +73,20 @@ demultiplexer_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
     free(ext);
   }
 
-  pluginlist_iter(pl, k, kl, p) {
-    dp = plugin_get(p);
-    //debug_message("demultiplexer: identify: try %s\n", (char *)k);
-    stream_rewind(st);
-    if (dp->identify(st, c, NULL) == DEMULTIPLEX_OK) {
-      m->format = (char *)k;
-      pluginlist_move_to_top;
-      return 1;
+  if (config_get_boolean(c, "/enfle/plugins/demultiplexer/scan_no_assoc", &res)) {
+    pluginlist_iter(pl, k, kl, p) {
+      dp = plugin_get(p);
+      //debug_message("demultiplexer: identify: try %s\n", (char *)k);
+      stream_rewind(st);
+      if (dp->identify(st, c, NULL) == DEMULTIPLEX_OK) {
+	m->format = (char *)k;
+	pluginlist_move_to_top;
+	return 1;
+      }
+      //debug_message("demultiplexer: identify: %s: failed\n", (char *)k);
     }
-    //debug_message("demultiplexer: identify: %s: failed\n", (char *)k);
+    pluginlist_iter_end;
   }
-  pluginlist_iter_end;
 
   return 0;
 }

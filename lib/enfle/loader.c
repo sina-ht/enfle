@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Nov 11 23:32:33 2003.
- * $Id: loader.c,v 1.27 2003/11/17 13:50:40 sian Exp $
+ * Last Modified: Tue Mar  9 22:53:33 2004.
+ * $Id: loader.c,v 1.28 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -75,18 +75,20 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
   }
 
   ip->format_detail = NULL;
-  pluginlist_iter(pl, k, kl, p) {
-    lp = plugin_get(p);
-    //debug_message("loader: identify: try %s\n", (char *)k);
-    stream_rewind(st);
-    if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
-      ip->format = (char *)k;
-      pluginlist_move_to_top;
-      return 1;
+  if (config_get_boolean(c, "/enfle/plugins/loader/scan_no_assoc", &res)) {
+    pluginlist_iter(pl, k, kl, p) {
+      lp = plugin_get(p);
+      //debug_message("loader: identify: try %s\n", (char *)k);
+      stream_rewind(st);
+      if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
+	ip->format = (char *)k;
+	pluginlist_move_to_top;
+	return 1;
+      }
+      //debug_message("loader: identify: %s: failed\n", (char *)k);
     }
-    //debug_message("loader: identify: %s: failed\n", (char *)k);
+    pluginlist_iter_end;
   }
-  pluginlist_iter_end;
 
   return 0;
 }

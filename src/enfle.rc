@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Thu Mar  4 00:56:59 2004.
-; $Id: enfle.rc,v 1.41 2004/03/03 15:57:31 sian Exp $
+; Last Modified: Tue Mar  9 22:57:18 2004.
+; $Id: enfle.rc,v 1.42 2004/03/09 13:59:24 sian Exp $
 
 enfle {
   identify {
@@ -14,17 +14,7 @@ enfle {
     spi/disabled = yes
     ; specify spi plugins path
     ;spi/dir = ../spis
-    ; How to find plugins. (NOT IMPLEMENTED YET)
-    ;                       ~~~~~~~~~~~~~~~~~~~
-    ;  scan_all: Scan the specified directory and load all plugins found.
-    ;  custom: Custom loading, can be set per plugin type.
-    loadmethod = scan_all
     ui {
-      ; How to find plugins.
-      ;  scan_all: Scan the UI directory and load all plugins found.
-      ;  ondemand: On-demand loading.
-      ;  load: Load only specified plugins.
-      loadmethod = ondemand
       default = Normal
       normal {
 	; render = {normal|double|short|long}
@@ -56,11 +46,6 @@ enfle {
       convert/format = PNG
     }
     video {
-      ; How to find plugins.
-      ;  scan_all: Scan the video directory and load all plugins found.
-      ;  ondemand: On-demand loading.
-      ;  load: Load only specified plugins.
-      loadmethod = ondemand
       default = Xlib
       ; caption font for full screen mode
       caption_font = a14
@@ -76,11 +61,6 @@ enfle {
       Xlib/preferred_format = packed
     }
     audio {
-      ; How to find plugins.
-      ;  scan_all: Scan the audio directory and load all plugins found.
-      ;  ondemand: On-demand loading.
-      ;  load: Load only specified plugins.
-      loadmethod = ondemand
       ;default = OSS
       default = ALSA
       oss/device_path = /dev/dsp
@@ -89,18 +69,14 @@ enfle {
       esd/server = NULL
     }
     loader {
-      ; How to find plugins.
-      ;  scan_all: Scan the audio directory and load all plugins found.
-      ;  ondemand: On-demand loading. (assoc needed).
-      ;  load: Load only specified plugins.
-      ;loadmethod = load(jpeg,ungif,png)
-      loadmethod = scan_all
+      ; To try all plugins for unknown extension, uncomment this.
+      ;scan_no_assoc = yes
       jpeg {
 	; dct_method = default/fast/slow/float/fastest
 	;  Default and fastest are defined in jpeglib.h or overridden by jconfig.h.
 	;  Normally, default = slow, fastest = fast.
-	;  If you wanna use jpeg-mmx and gain speed, then specify as fast.
-	dct_method = fast
+	;dct_method = fast
+	dct_method = slow
       }
       ; Associate an extension with an appropriate plugin name.
       ; . means no further try
@@ -115,6 +91,10 @@ enfle {
       }
     }
     demultiplexer {
+      ; To try all plugins for unknown extension, uncomment this.
+      ;scan_no_assoc = yes
+      ; Associate an extension with an appropriate plugin name.
+      ; . means no further try
       assoc {
         avi := AVI:OGG:.
 	ogg := OGG:.
@@ -139,13 +119,10 @@ enfle {
       }
     }
     player {
-      ; How to find plugins.
-      ;  scan_all: Scan the audio directory and load all plugins found.
-      ;  ondemand: On-demand loading. (assoc needed)
-      ;  load: Load only specified plugins.
-      ;loadmethod = load(libmpeg2,avifile,ungif)
-      loadmethod = scan_all
+      ; To try all plugins for unknown extension, uncomment this.
+      ;scan_no_assoc = yes
       ; Associate an extension with an appropriate plugin name.
+      ; . means no further try
       assoc {
 	asf := AviFile:.
 	;avi := AviFile:.
@@ -161,11 +138,6 @@ enfle {
       LibMPEG3/disabled = yes
     }
     saver {
-      ; How to find plugins.
-      ;  scan_all: Scan the audio directory and load all plugins found.
-      ;  ondemand: On-demand loading.
-      ;  load: Load only specified plugins.
-      loadmethod = ondemand
       png {
         compression_level = 9
 	; filter = {all|default|paeth|avg|sub|up|none}

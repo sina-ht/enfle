@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Sat Feb 21 18:05:56 2004.
+             Last Modified: Tue Mar  9 21:28:46 2004.
 
 ***************************************************************************
 
@@ -176,8 +176,11 @@ libtool の compiler_c_o が no になっていたら yes に変更。make。うまくい
 うなエラーがでたか報告していただければ幸いです。configure が生成する
 config.log なども参考になります。報告先は後述してあります。
 
-make が通ったら、 make install するか、 src に移動して enfle.rc を編集
-し ./enfle と起動してください。
+make が通ったら、 make install してください。
+make install せずに実行させたい場合は、 src に移動して enfle.rc を編集
+しプラグインの検索パスを指定して ./enfle と起動してください。
+プラグインの検索パスの指定は環境変数 ENFLE_PLUGINDIR, enfle.rc の設定、
+ビルトインのデフォルトの順で優先されます。
 
 configure スクリプトの指定できるオプションは、./configure --help で詳
 細がみれます。

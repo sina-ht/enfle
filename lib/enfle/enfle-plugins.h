@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jul  1 22:24:45 2002.
- * $Id: enfle-plugins.h,v 1.4 2002/08/03 04:57:16 sian Exp $
+ * Last Modified: Tue Mar  9 22:11:51 2004.
+ * $Id: enfle-plugins.h,v 1.5 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,9 @@
 
 typedef struct _enfle_plugins EnflePlugins;
 struct _enfle_plugins {
+  const char *path;
+  char *cache_path;
+  int cache_to_be_created;
   PluginList **pls;
 
   char *(*load)(EnflePlugins *, char *, PluginType *);
@@ -45,6 +48,7 @@ struct _enfle_plugins {
 #define enfle_plugins_add(eps, ent, ext, pt) (eps)->add((eps), (ent), (ext), (pt))
 #define enfle_plugins_get(eps, pt, n) (eps)->get((eps), (pt), (n))
 #define enfle_plugins_destroy(eps) (eps)->destroy((eps))
+#define enfle_plugins_path(eps) (eps)->path
 #define enfle_plugins_get_names(eps, pt) (eps)->get_names((eps), (pt))
 #define enfle_plugins_get_description(eps, pt, n) (eps)->get_description((eps), (pt), (n))
 #define enfle_plugins_get_author(eps, pt, n) (eps)->get_author((eps), (pt), (n))
@@ -53,6 +57,6 @@ extern EnflePlugins *global_enfle_plugins;
 #define set_enfle_plugins(eps) global_enfle_plugins = eps
 #define get_enfle_plugins() global_enfle_plugins
 
-EnflePlugins *enfle_plugins_create(void);
+EnflePlugins *enfle_plugins_create(const char *, int);
 
 #endif
