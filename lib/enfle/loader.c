@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  3 01:52:33 2000.
- * $Id: loader.c,v 1.4 2000/11/02 19:37:43 sian Exp $
+ * Last Modified: Sat Nov 18 15:12:32 2000.
+ * $Id: loader.c,v 1.5 2000/11/20 12:55:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -94,6 +94,11 @@ load_image(EnflePlugins *eps, char *pluginname, Image *ip, Stream *st)
   if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_LOADER], pluginname)) == NULL)
     return 0;
   lp = plugin_get(p);
+
+  if (ip->image) {
+    free(ip->image);
+    ip->image = NULL;
+  }
 
   stream_rewind(st);
   return lp->load(ip, st, lp->private);
