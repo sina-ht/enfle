@@ -1,3 +1,21 @@
+2004-03-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: Added config for mp3.
+
+	* configure.in, plugins/demultiplexer/Makefile.am: Added mp3
+	demultiplexer plugin.
+
+	* plugins/audiodecoder/mad/mad.c: Fixed a typo.
+
+	* plugins/player/generic/generic.c: Avoid calling
+	videodecoder_query() when no audio.
+
+	* plugins/demultiplexer/mpeg/mpeg.c: Plugged a memory leak.
+
+	* plugins/demultiplexer/mp3/.cvsignore,
+	plugins/demultiplexer/mp3/Makefile.am,
+	plugins/demultiplexer/mp3/mp3.c: New mp3 demultiplexer plugin.
+
 2004-02-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS: Added NEWS.
