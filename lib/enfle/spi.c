@@ -1,10 +1,10 @@
 /*
  * spi.c -- spi to enfle bridge
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 23:35:42 2001.
- * $Id: spi.c,v 1.16 2001/10/10 14:41:49 sian Exp $
+ * Last Modified: Fri Oct 12 18:06:19 2001.
+ * $Id: spi.c,v 1.17 2001/10/12 09:08:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #define REQUIRE_FATAL
 #include "common.h"
 
@@ -149,6 +148,7 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
   unsigned char *image, *d;
   BITMAPINFOHEADER *bih;
   int i, err, bpl;
+  unsigned int j;
 
   debug_message(__FUNCTION__ "() called\n");
   if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image,
@@ -156,7 +156,18 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
     p->depth = p->bits_per_pixel = bih->biBitCount;
     p->width = bih->biWidth;
     p->height = bih->biHeight;
+    debug_message(__FUNCTION__ ": (%d, %d) depth %d\n", p->width, p->height, p->depth);
     switch (p->depth) {
+    case 4:
+      p->type = _INDEX;
+      p->bytes_per_line = p->width;
+      bpl = (((p->width + 1) >> 1) + 3) & ~3;
+      for (i = 0; i < 16; i++) {
+	p->colormap[i][0] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 2);
+	p->colormap[i][1] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 1);
+	p->colormap[i][2] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 0);
+      }
+      break;
     case 8:
       p->type = _INDEX;
       p->bytes_per_line = p->width;
@@ -168,11 +179,15 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
       }
       break;
     case 24:
-    default: /* XXX */
       p->type = _BGR24;
       p->bytes_per_line = p->width * 3;
       bpl = (p->bytes_per_line + 3) & ~3;
       break;
+    default:
+      free(image);
+      free(bih);
+      show_message("Depth %d is not supported yet.\n", p->depth);
+      return LOAD_ERROR;
     }
 
     if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
@@ -181,8 +196,30 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
       show_message("No enough memory for image\n");
       return LOAD_ERROR;
     }
-    for (i = p->height - 1; i >= 0; i--)
-      memcpy(d + p->bytes_per_line * (p->height - 1 - i), image + bpl * i, p->bytes_per_line);
+
+    switch (p->depth) {
+    case 8:
+    case 24:
+      for (i = p->height - 1; i >= 0; i--)
+	memcpy(d + p->bytes_per_line * (p->height - 1 - i), image + bpl * i, p->bytes_per_line);
+      break;
+    case 4:
+      for (i = p->height - 1; i >= 0; i--) {
+	for (j = 0; j < (p->width >> 1); j++) {
+	  *(d + p->bytes_per_line * (p->height - 1 - i) + (j << 1)    ) = *(image + bpl * i + j) >> 4;
+	  *(d + p->bytes_per_line * (p->height - 1 - i) + (j << 1) + 1) = *(image + bpl * i + j) & 0xf;
+	}
+	if ((j << 1) < p->width)
+	  *(d + p->bytes_per_line * (p->height - 1 - i) + (j << 1)    ) = *(image + bpl * i + j) >> 4;
+      }
+      break;
+    default:
+      free(image);
+      free(bih);
+      show_message("Depth %d is not supported yet. (should not be reached)\n", p->depth);
+      return LOAD_ERROR;
+    }
+
     free(image);
     free(bih);
     return LOAD_OK;
