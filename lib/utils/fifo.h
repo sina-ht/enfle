@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 21:24:19 2001.
- * $Id: fifo.h,v 1.1 2001/06/22 17:34:43 sian Exp $
+ * Last Modified: Sun Jun 24 11:51:36 2001.
+ * $Id: fifo.h,v 1.2 2001/06/24 15:43:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,6 +50,8 @@ struct _fifo {
   int (*set_max)(FIFO *, unsigned int);
   void (*destroy)(FIFO *);
 };
+
+#define fifo_is_empty(f) ((f)->ndata == 0)
 
 #define fifo_put(f, d, dest) (f)->put((f), (d), (dest))
 #define fifo_get(f, d) (f)->get((f), (d))
