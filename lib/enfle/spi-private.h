@@ -26,7 +26,7 @@ typedef struct _picture_info {
 #define SPI_RESERVED           7 /* （予約） */
 #define SPI_INTERNAL_ERROR     8 /* 内部エラー */
 
-static char *spi_errormsg[] = {
+static const char *spi_errormsg[] = {
   /* -1: Unimplemented */
   "Success",
   "Callback returned non-zero",

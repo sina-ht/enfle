@@ -6,7 +6,7 @@
 #define _EXPORT_H
 
 typedef struct _symbol_info {
-  char *name;
+  const char *name;
   void *value;
 } Symbol_info;
 

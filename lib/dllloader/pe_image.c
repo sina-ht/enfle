@@ -38,7 +38,7 @@
 #include "common.h"
 
 static int load(PE_image *, char *);
-static void *resolve(PE_image *, char *symbolname);
+static void *resolve(PE_image *, const char *symbolname);
 static void destroy(PE_image *);
 
 static PE_image template = {
@@ -61,7 +61,7 @@ peimage_create(void)
 
 /* for internal use */
 
-DEFINE_W32API(void, unknown_symbol, ())
+DEFINE_W32API(void, unknown_symbol, (void))
 {
   show_message("unknown symbol called\n");
 }
@@ -72,7 +72,7 @@ get_dll_symbols(char *dllname)
   int i;
 
   static struct {
-    char *name;
+    const char *name;
     Symbol_info *(*get_symbols)(void);
   } name_to_func[] = {
     { "kernel32.dll", kernel32_get_export_symbols },
@@ -437,9 +437,9 @@ load(PE_image *p, char *path)
 }
 
 static void *
-resolve(PE_image *p, char *symbolname)
+resolve(PE_image *p, const char *symbolname)
 {
-  return hash_lookup(p->export_symbols, symbolname);
+  return hash_lookup(p->export_symbols, (char *)symbolname);
 }
 
 static void

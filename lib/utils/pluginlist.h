@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 07:15:39 2000.
- * $Id: pluginlist.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Nov 11 08:00:59 2000.
+ * $Id: pluginlist.h,v 1.2 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,7 +30,7 @@ typedef struct _pluginlist PluginList;
 struct _pluginlist {
   Hash *hash;
 
-  int (*add)(PluginList *, Plugin *, char *);
+  int (*add)(PluginList *, Plugin *, const char *);
   Plugin *(*get)(PluginList *, char *);
   int (*delete)(PluginList *, char *);
   Dlist *(*get_names)(PluginList *);

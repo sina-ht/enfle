@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov  5 01:11:56 2000.
- * $Id: enfle.c,v 1.12 2000/11/04 17:34:07 sian Exp $
+ * Last Modified: Sat Nov 11 07:56:35 2000.
+ * $Id: enfle.c,v 1.13 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,10 +50,10 @@ typedef enum _argument_requirement {
 } ArgumentRequirement;
 
 typedef struct _option {
-  char *longopt; /* not supported so far */
+  const char *longopt; /* not supported so far */
   char opt;
   ArgumentRequirement argreq;
-  unsigned char *description;
+  const unsigned char *description;
 } Option;
 
 static Option enfle_options[] = {

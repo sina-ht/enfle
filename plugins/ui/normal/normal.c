@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 05:24:16 2000.
- * $Id: normal.c,v 1.3 2000/11/04 17:33:00 sian Exp $
+ * Last Modified: Sat Nov 11 08:06:52 2000.
+ * $Id: normal.c,v 1.4 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -92,7 +92,8 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
   VideoEventData ev;
   int loop = 1;
   VideoButton button = ENFLE_Button_None;
-  VideoKey key;
+  VideoKey key = ENFLE_KEY_Unknown;
+
 
   if (p) {
     video_window_resize(vw, p->width, p->height);
@@ -348,7 +349,7 @@ ui_main(UIData *uidata)
   }
 
   uidata->vw = vw = vp->open_window(disp, 600, 400);
-  video_window_set_caption(vw, PROGNAME " version " VERSION);
+  video_window_set_caption(vw, (unsigned char *)PROGNAME " version " VERSION);
 
   video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask);
   /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyPressMask | ENFLE_PointerMask | ENFLE_WindowMask); */

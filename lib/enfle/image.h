@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 21:43:13 2000.
- * $Id: image.h,v 1.4 2000/10/10 17:27:26 sian Exp $
+ * Last Modified: Sat Nov 11 06:04:21 2000.
+ * $Id: image.h,v 1.5 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -85,6 +85,6 @@ struct _image {
 #define image_destroy(p) (p)->destroy((p))
 
 Image *image_create(void);
-char *image_type_to_string(ImageType);
+const char *image_type_to_string(ImageType);
 
 #endif

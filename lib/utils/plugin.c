@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  3 04:03:39 2000.
- * $Id: plugin.c,v 1.6 2000/11/02 19:34:52 sian Exp $
+ * Last Modified: Sat Nov 11 06:00:55 2000.
+ * $Id: plugin.c,v 1.7 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,7 +30,7 @@
 
 #include "plugin.h"
 
-static int load(Plugin *, char *, char *, char *);
+static int load(Plugin *, char *, const char *, const char *);
 static int unload(Plugin *);
 static void *get(Plugin *);
 static void destroy(Plugin *);
@@ -56,9 +56,9 @@ plugin_create(void)
 }
 
 static int
-load(Plugin *p, char *filepath, char *entry_symbol, char *exit_symbol)
+load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbol)
 {
-  void *(*entry)() = NULL;
+  void *(*entry)(void) = NULL;
 
   if ((p->handle = dlopen(filepath, RTLD_LAZY)) == NULL) {
     p->err = (char *)dlerror();

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov  5 01:06:11 2000.
- * $Id: spi.c,v 1.5 2000/11/04 17:33:29 sian Exp $
+ * Last Modified: Sat Nov 11 08:04:53 2000.
+ * $Id: spi.c,v 1.6 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -247,9 +247,9 @@ spi_plugin_exit(void *p)
   EnflePlugin *ep = (EnflePlugin *)p;
 
   if (ep->name)
-    free(ep->name);
+    free((void *)ep->name);
   if (ep->description)
-    free(ep->description);
+    free((void *)ep->description);
 
   switch (ep->type) {
   case ENFLE_PLUGIN_LOADER:
@@ -390,7 +390,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
 
   ep->name = strdup(misc_basename(path));
   ep->description = strdup(buf);
-  ep->author = "SPI author";
+  ep->author = (char *)"SPI author";
 
   p = plugin_create();
   p->filepath = strdup(path);
@@ -403,7 +403,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
     goto error;
   }
 
-  return ep->name;
+  return (char *)ep->name;
 
  error:
   peimage_destroy(pe);

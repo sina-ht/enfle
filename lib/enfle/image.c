@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 17:36:39 2000.
- * $Id: image.c,v 1.2 2000/10/09 20:29:16 sian Exp $
+ * Last Modified: Sat Nov 11 06:04:05 2000.
+ * $Id: image.c,v 1.3 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,7 +28,7 @@
 
 void *image_magnify_main(Image *, int, int, ImageInterpolateMethod);
 
-static char *image_type_to_string_array[] = {
+static const char *image_type_to_string_array[] = {
   "_BITMAP_LSBFirst",
   "_BITMAP_MSBFirst",
   "_GRAY",
@@ -66,7 +66,7 @@ image_create(void)
   return p;
 }
 
-char *
+const char *
 image_type_to_string(ImageType type)
 {
   if (type < 0)

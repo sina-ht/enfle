@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 31 00:37:14 2000.
- * $Id: misc.c,v 1.2 2000/10/30 16:17:44 sian Exp $
+ * Last Modified: Sat Nov 11 05:55:15 2000.
+ * $Id: misc.c,v 1.3 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,7 @@ misc_basename(char *path)
 }
 
 char *
-misc_trim_ext(char *path, char *ext)
+misc_trim_ext(const char *path, const char *ext)
 {
   char *p;
   int len;

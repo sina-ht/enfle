@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 02:50:21 2000.
- * $Id: enfle-plugin.c,v 1.2 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Sat Nov 11 05:59:28 2000.
+ * $Id: enfle-plugin.c,v 1.3 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,11 +26,11 @@
 
 #include "enfle-plugin.h"
 
-static char *plugintype_to_name[] = {
+static const char *plugintype_to_name[] = {
   "ui", "video", "loader", "player", "saver", "streamer", "archiver", "effect", "end"
 };
 
-char *
+const char *
 enfle_plugin_type_to_name(PluginType type)
 {
   return plugintype_to_name[type];

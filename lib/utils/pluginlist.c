@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 07:15:31 2000.
- * $Id: pluginlist.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Nov 11 08:01:16 2000.
+ * $Id: pluginlist.c,v 1.2 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,7 +26,7 @@
 
 #include "pluginlist.h"
 
-static int add(PluginList *, Plugin *, char *);
+static int add(PluginList *, Plugin *, const char *);
 static Plugin *get(PluginList *, char *);
 static int delete(PluginList *, char *);
 static Dlist *get_names(PluginList *);
@@ -55,13 +55,13 @@ pluginlist_create(void)
 }
 
 static int
-add(PluginList *pl, Plugin *p, char *name)
+add(PluginList *pl, Plugin *p, const char *name)
 {
   if (!pl->hash)
     if ((pl->hash = hash_create(PLUGINLIST_HASH_SIZE)) == NULL)
       return 0;
 
-  return hash_set(pl->hash, name, p);
+  return hash_set(pl->hash, (unsigned char *)name, p);
 }
 
 static Plugin *

@@ -63,7 +63,7 @@ DECLARE_W32API(LPVOID, HeapAlloc, (HANDLE, DWORD, DWORD));
 DECLARE_W32API(LPVOID, HeapReAlloc, (HANDLE, DWORD, LPVOID, DWORD));
 DECLARE_W32API(BOOL, HeapFree, (HANDLE, DWORD, LPVOID));
 DECLARE_W32API(BOOL, HeapDestroy, (HANDLE));
-DECLARE_W32API(HANDLE, GetProcessHeap, ());
+DECLARE_W32API(HANDLE, GetProcessHeap, (void));
 DECLARE_W32API(DWORD, GetProcessHeaps, (DWORD, HANDLE *));
 /* string related */
 DECLARE_W32API(INT, lstrlenA, (LPCSTR));
@@ -72,11 +72,11 @@ DECLARE_W32API(LPSTR, lstrcpyA, (LPSTR, LPCSTR));
 DECLARE_W32API(FARPROC, GetProcAddress, (HMODULE, LPCSTR));
 DECLARE_W32API(void, ExitProcess, (DWORD));
 /* thread related */
-DECLARE_W32API(HANDLE, GetCurrentThread, ());
-DECLARE_W32API(DWORD, GetCurrentThreadId, ());
-DECLARE_W32API(LCID, GetThreadLocale, ());
+DECLARE_W32API(HANDLE, GetCurrentThread, (void));
+DECLARE_W32API(DWORD, GetCurrentThreadId, (void));
+DECLARE_W32API(LCID, GetThreadLocale, (void));
 /* thread local-variable related */
-DECLARE_W32API(DWORD, TlsAlloc, ());
+DECLARE_W32API(DWORD, TlsAlloc, (void));
 DECLARE_W32API(BOOL, TlsFree, (DWORD));
 DECLARE_W32API(LPVOID, TlsGetValue, (DWORD));
 DECLARE_W32API(BOOL, TlsSetValue, (DWORD, LPVOID));
@@ -89,16 +89,16 @@ DECLARE_W32API(LONG, DeleteCriticalSection, (CRITICAL_SECTION *));
 DECLARE_W32API(DWORD, UnhandledExceptionFilter, (PEXCEPTION_POINTERS));
 DECLARE_W32API(void, RaiseException, (DWORD, DWORD, DWORD, const LPDWORD));
 /* Environment */
-DECLARE_W32API(LPSTR, GetCommandLineA, ());
-DECLARE_W32API(LPSTR, GetEnvironmentStringsA, ());
-DECLARE_W32API(LPWSTR, GetEnvironmentStringsW, ());
+DECLARE_W32API(LPSTR, GetCommandLineA, (void));
+DECLARE_W32API(LPSTR, GetEnvironmentStringsA, (void));
+DECLARE_W32API(LPWSTR, GetEnvironmentStringsW, (void));
 DECLARE_W32API(BOOL, FreeEnvironmentStringsA, (LPSTR));
 DECLARE_W32API(BOOL, FreeEnvironmentStringsW, (LPWSTR));
 DECLARE_W32API(VOID, GetStartupInfoA, (LPSTARTUPINFOA));
 /* codepage */
 DECLARE_W32API(INT, GetLocaleInfoA, (LCID, LCTYPE, LPSTR, INT));
-DECLARE_W32API(UINT, GetACP, ());
-DECLARE_W32API(UINT, GetOEMCP, ());
+DECLARE_W32API(UINT, GetACP, (void));
+DECLARE_W32API(UINT, GetOEMCP, (void));
 DECLARE_W32API(BOOL, GetCPInfo, (UINT, LPCPINFO));
 DECLARE_W32API(BOOL, GetStringTypeW, (DWORD, LPCWSTR, INT, LPWORD));
 DECLARE_W32API(INT, MultiByteToWideChar, (UINT, DWORD, LPCSTR, INT, LPWSTR, INT));
@@ -107,11 +107,11 @@ DECLARE_W32API(INT, WideCharToMultiByte, (UINT, DWORD, LPCWSTR, INT, LPSTR, INT,
 DECLARE_W32API(BOOL, EnumCalendarInfoA, (CALINFO_ENUMPROCA, LCID, CALID, CALTYPE));
 DECLARE_W32API(VOID, GetLocalTime, (LPSYSTEMTIME));
 /* miscellaneous */
-DECLARE_W32API(DWORD, GetLastError, ());
-DECLARE_W32API(LONG, GetVersion, ());
+DECLARE_W32API(DWORD, GetLastError, (void));
+DECLARE_W32API(LONG, GetVersion, (void));
 DECLARE_W32API(BOOL, GetVersionExA, (OSVERSIONINFOA *));
 /* unimplemented */
-DECLARE_W32API(void, unknown_symbol, ());
+DECLARE_W32API(void, unknown_symbol, (void));
 
 static Symbol_info symbol_infos[] = {
   { "CreateFileA", CreateFileA },
@@ -649,7 +649,7 @@ DEFINE_W32API(BOOL, HeapDestroy,
 }
 
 DEFINE_W32API(HANDLE, GetProcessHeap,
-	      ())
+	      (void))
 {
   more_debug_message("GetProcessHeap() called\n");
   return (HANDLE)1;
@@ -716,21 +716,21 @@ DEFINE_W32API(void, ExitProcess, (DWORD status))
 /* thread related */
 
 DEFINE_W32API(HANDLE, GetCurrentThread,
-	      ())
+	      (void))
 {
   debug_message("GetCurrentThread() called\n");
   return (HANDLE)0xfffffffe;
 }
 
 DEFINE_W32API(DWORD, GetCurrentThreadId,
-	      ())
+	      (void))
 {
   debug_message("GetCurrentThreadId() called\n");
   return getpid();
 }
 
 DEFINE_W32API(LCID, GetThreadLocale,
-	      ())
+	      (void))
 {
   debug_message("GetThreadLocale() called\n");
   return 0;
@@ -739,7 +739,7 @@ DEFINE_W32API(LCID, GetThreadLocale,
 /* thread local-variable related */
 
 DEFINE_W32API(DWORD, TlsAlloc,
-	      ())
+	      (void))
 {
   void *p;
 
@@ -828,21 +828,21 @@ DEFINE_W32API(void, RaiseException,
 /* environment */
 
 DEFINE_W32API(LPSTR, GetCommandLineA,
-	      ())
+	      (void))
 {
   debug_message("GetCommandLineA() called\n");
-  return "";
+  return (LPSTR)"";
 }
 
 DEFINE_W32API(LPSTR, GetEnvironmentStringsA,
-	      ())
+	      (void))
 {
   debug_message("GetEnvironmentStringsA() called\n");
-  return "";
+  return (LPSTR)"";
 }
 
 DEFINE_W32API(LPWSTR, GetEnvironmentStringsW,
-	      ())
+	      (void))
 {
   debug_message("GetEnvironmentStringsW() called\n");
   return (LPWSTR)"";
@@ -881,19 +881,22 @@ DEFINE_W32API(INT, GetLocaleInfoA,
   return 0;
 }
 
-DEFINE_W32API(UINT, GetACP, ())
+DEFINE_W32API(UINT, GetACP,
+	      (void))
 {
   debug_message("GetACP() called\n");
   return 0;
 }
 
-DEFINE_W32API(UINT, GetOEMCP, ())
+DEFINE_W32API(UINT, GetOEMCP,
+	      (void))
 {
   debug_message("GetOEMCP() called\n");
   return 0;
 }
 
-DEFINE_W32API(BOOL, GetCPInfo, (UINT cp, LPCPINFO info))
+DEFINE_W32API(BOOL, GetCPInfo,
+	      (UINT cp, LPCPINFO info))
 {
   debug_message("GetCPInfo() called\n");
   return TRUE;
@@ -995,14 +998,14 @@ DEFINE_W32API(VOID, GetLocalTime,
 /* miscellaneous */
 
 DEFINE_W32API(DWORD, GetLastError,
-	      ())
+	      (void))
 {
   debug_message("GetLastError() called\n");
   return 0;
 }
 
 DEFINE_W32API(LONG, GetVersion,
-	      ())
+	      (void))
 {
   debug_message("GetVersion() called\n");
 
@@ -1020,7 +1023,7 @@ DEFINE_W32API(BOOL, GetVersionExA,
 /* unimplemened */
 
 DEFINE_W32API(void, unknown_symbol,
-	      ())
+	      (void))
 {
   show_message("unknown symbol in kernel32 called\n");
 }

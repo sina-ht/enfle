@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 07:14:41 2000.
- * $Id: libconfig.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Nov 11 07:58:21 2000.
+ * $Id: libconfig.h,v 1.2 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,9 +30,9 @@ typedef struct _config Config;
 struct _config {
   Hash *hash;
 
-  int (*load)(Config *, char *);
+  int (*load)(Config *, const char *);
   int (*save)(Config *, char *);
-  void *(*get)(Config *, char *);
+  void *(*get)(Config *, const char *);
   int (*set)(Config *, char *, void *);
   void (*destroy)(Config *);
 };

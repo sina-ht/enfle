@@ -16,7 +16,7 @@ struct _pe_image {
 
   /* methods */
   int (*load)(PE_image *, char *);
-  void *(*resolve)(PE_image *, char *);
+  void *(*resolve)(PE_image *, const char *);
   void (*destroy)(PE_image *);
 };
 

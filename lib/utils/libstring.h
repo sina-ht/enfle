@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  2 11:19:41 2000.
- * $Id: libstring.h,v 1.2 2000/10/02 03:00:42 sian Exp $
+ * Last Modified: Sat Nov 11 05:51:52 2000.
+ * $Id: libstring.h,v 1.3 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,10 +32,10 @@ struct _string {
 
   unsigned char *(*get)(String *);
   unsigned int (*length)(String *);
-  int (*set)(String *, unsigned char *);
+  int (*set)(String *, const unsigned char *);
   int (*copy)(String *, String *);
   int (*cat_ch)(String *, unsigned char);
-  int (*cat)(String *, unsigned char *);
+  int (*cat)(String *, const unsigned char *);
   int (*append)(String *, String *);
   void (*shrink)(String *, unsigned int);
   String *(*dup)(String *);

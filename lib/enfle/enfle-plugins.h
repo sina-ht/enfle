@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:57:00 2000.
- * $Id: enfle-plugins.h,v 1.1 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Sat Nov 11 08:02:35 2000.
+ * $Id: enfle-plugins.h,v 1.2 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,8 +35,8 @@ struct _enfle_plugins {
   void *(*get)(EnflePlugins *, PluginType, char *);
   void (*destroy)(EnflePlugins *);
   Dlist *(*get_names)(EnflePlugins *, PluginType);
-  unsigned char *(*get_description)(EnflePlugins *, PluginType, char *);
-  unsigned char *(*get_author)(EnflePlugins *, PluginType, char *);
+  const unsigned char *(*get_description)(EnflePlugins *, PluginType, char *);
+  const unsigned char *(*get_author)(EnflePlugins *, PluginType, char *);
 };
 
 #define enfle_plugins_load(eps, p, pt) (eps)->load((eps), (p), (pt))

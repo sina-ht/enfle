@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 02:42:29 2000.
- * $Id: enfle-plugin.h,v 1.3 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Sat Nov 11 08:00:03 2000.
+ * $Id: enfle-plugin.h,v 1.4 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,9 +27,9 @@
 
 #define ENFLE_PLUGIN_COMMON_DATA \
   PluginType type; \
-  char *name; \
-  unsigned char *description; \
-  unsigned char *author
+  const char *name; \
+  const unsigned char *description; \
+  const unsigned char *author
 
 typedef struct _enfle_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
@@ -39,6 +39,6 @@ typedef struct _enfle_plugin {
   void *plugin_entry(void); \
   void plugin_exit(void *)
 
-char *enfle_plugin_type_to_name(PluginType);
+const char *enfle_plugin_type_to_name(PluginType);
 
 #endif

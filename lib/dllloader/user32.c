@@ -11,7 +11,7 @@
 
 #include "common.h"
 
-DECLARE_W32API(void, unknown_symbol, ());
+DECLARE_W32API(void, unknown_symbol, (void));
 DECLARE_W32API(BOOL, EnumThreadWindows, (DWORD, WNDENUMPROC, LPARAM));
 DECLARE_W32API(INT, MessageBoxA, (HWND, LPCSTR, LPCSTR, UINT));
 DECLARE_W32API(INT, LoadStringA, (HINSTANCE, UINT, LPSTR, INT));
@@ -84,7 +84,7 @@ DEFINE_W32API(INT, wsprintfA, (LPSTR buf, LPCSTR format, ...))
 
 /* unimplemened */
 
-DEFINE_W32API(void, unknown_symbol, ())
+DEFINE_W32API(void, unknown_symbol, (void))
 {
   show_message("unknown symbol in user32 called\n");
 }

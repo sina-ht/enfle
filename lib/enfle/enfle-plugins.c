@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  3 04:53:09 2000.
- * $Id: enfle-plugins.c,v 1.3 2000/11/02 19:57:13 sian Exp $
+ * Last Modified: Sat Nov 11 08:03:05 2000.
+ * $Id: enfle-plugins.c,v 1.4 2000/11/14 00:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,8 +33,8 @@ static int unload(EnflePlugins *, PluginType, char *);
 static void *get(EnflePlugins *, PluginType, char *);
 static void destroy(EnflePlugins *);
 static Dlist *get_names(EnflePlugins *, PluginType);
-static unsigned char *get_description(EnflePlugins *, PluginType, char *);
-static unsigned char *get_author(EnflePlugins *, PluginType, char *);
+static const unsigned char *get_description(EnflePlugins *, PluginType, char *);
+static const unsigned char *get_author(EnflePlugins *, PluginType, char *);
 
 static EnflePlugins template = {
   load: load,
@@ -96,7 +96,7 @@ load(EnflePlugins *eps, char *path, PluginType *type_return)
   }
 
   *type_return = ep->type;
-  return ep->name;
+  return (char *)ep->name;
 }
 
 static int
@@ -142,7 +142,7 @@ get_names(EnflePlugins *eps, PluginType type)
   return pluginlist_get_names(eps->pls[type]);
 }
 
-static unsigned char *
+static const unsigned char *
 get_description(EnflePlugins *eps, PluginType type, char *pluginname)
 {
   Plugin *p;
@@ -155,7 +155,7 @@ get_description(EnflePlugins *eps, PluginType type, char *pluginname)
   return ep->description;
 }
 
-static unsigned char *
+static const unsigned char *
 get_author(EnflePlugins *eps, PluginType type, char *pluginname)
 {
   Plugin *p;
