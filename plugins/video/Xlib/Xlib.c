@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Feb  4 20:41:45 2001.
- * $Id: Xlib.c,v 1.22 2001/02/05 15:58:18 sian Exp $
+ * $Id: Xlib.c,v 1.23 2001/02/05 16:08:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -96,6 +96,9 @@ static int render(VideoWindow *, Image *);
 static void update(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
 static void do_sync(VideoWindow *);
 static void destroy(void *);
+
+/* internal */
+static void do_sync_discard(VideoWindow *);
 
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
@@ -478,7 +481,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 #else
   pthread_mutex_lock(&mutex);
 #endif
-  XSync(x11_display(x11), False);
+  do_sync(vw);
 #endif
 
   fd = ConnectionNumber(x11_display(x11));
@@ -743,6 +746,8 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
+  do_sync_discard(vw);
+
   if (w == 0 || h == 0)
     return 0;
 
@@ -900,7 +905,7 @@ render(VideoWindow *vw, Image *p)
 #ifdef USE_PTHREAD
   if (pthread_mutex_trylock(&xwi->render_mutex) == EBUSY)
     return 0;
-  XSync(x11_display(x11window_x11(xw)), False);
+  do_sync(vw);
 #endif
 
   x11ximage_convert(xwi->xi, p);
@@ -947,6 +952,16 @@ do_sync(VideoWindow *vw)
   X11 *x11 = x11window_x11(xw);
 
   XSync(x11_display(x11), False);
+}
+
+static void
+do_sync_discard(VideoWindow *vw)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+
+  XSync(x11_display(x11), True);
 }
 
 static int
