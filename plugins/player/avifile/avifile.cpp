@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun  4 01:53:23 2001.
- * $Id: avifile.cpp,v 1.10 2001/06/03 16:56:14 sian Exp $
+ * Last Modified: Mon Jun 18 05:32:17 2001.
+ * $Id: avifile.cpp,v 1.11 2001/06/17 20:56:31 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -38,6 +38,10 @@
 #  error pthread is mandatory for avifile plugin
 #endif
 
+#define FCC(a,b,c,d) ((((((d << 8) | c) << 8) | b) << 8) | a)
+#define FCC_YUY2 FCC('Y', 'U', 'Y', '2')
+#define FCC_YV12 FCC('Y', 'V', '1', '2')
+
 extern "C" {
 #include "enfle/memory.h"
 #include "enfle/player-plugin.h"
@@ -51,6 +55,7 @@ typedef enum _decoding_state {
 typedef struct _avifile_info {
   int eof;
   int frametime;
+  int use_xv;
   Image *p;
   CImage *ci;
   IAviReadFile *rf;
@@ -82,7 +87,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "AviFile",
-  description: (const unsigned char *)"AviFile Player plugin version 0.4",
+  description: (const unsigned char *)"AviFile Player plugin version 0.5",
   author: (const unsigned char *)"Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -117,6 +122,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   IAviReadFile *rf;
   IAviReadStream *audiostream, *stream;
   int result;
+  int tmp_types;
 
   pthread_mutex_init(&info->decoding_state_mutex, NULL);
   pthread_cond_init(&info->decoding_cond, NULL);
@@ -152,12 +158,53 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     show_message("AviFile: No audio.\n");
   }
 
+  Image *p;
+
+  tmp_types = types;
+  p = info->p = image_create();
+  info->use_xv = 0;
   if ((stream = info->stream = rf->GetStream(0, IAviReadStream::Video))) {
     if ((result = stream->StartStreaming()) != 0) {
       show_message("video: StartStream() failed.\n");
       goto error;
     }
-    if ((result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel)) != 0) {
+
+    IVideoDecoder::CAPS caps = stream->GetDecoder()->GetCapabilities();
+    if (caps & IVideoDecoder::CAP_YUY2) {
+      debug_message("Good, YUV422 available.\n");
+      tmp_types |= IMAGE_YUV422;
+    }
+    if (caps & IVideoDecoder::CAP_YV12) {
+      debug_message("Good, YUV420P available.\n");
+      tmp_types |= IMAGE_YUV420_PLANAR;
+    }
+    if (types == tmp_types)
+      debug_message("YUV422, YUV420P not available, using RGB.\n");
+    m->requested_type = video_window_request_type(vw, tmp_types, &m->direct_decode);
+    debug_message("AviFile: requested type: %s direct\n", image_type_to_string(m->requested_type));
+    if (!m->direct_decode) {
+      show_message("AviFile: load_movie: Cannot direct decoding...\n");
+      goto error;
+    }
+    switch (m->requested_type) {
+    case _YUV422:
+    case _YVU422:
+      debug_message("SetDestFmt(0, FCC_YUY2);\n");
+      result = stream->GetDecoder()->SetDestFmt(0, FCC_YUY2);
+      info->use_xv = 1;
+      break;
+    case _YUV420P:
+    case _YVU420P:
+      debug_message("SetDestFmt(0, FCC_YV12);\n");
+      result = stream->GetDecoder()->SetDestFmt(0, FCC_YV12);
+      info->use_xv = 1;
+      break;
+    default:
+      debug_message("SetDestFmt(%d);\n", vw->bits_per_pixel);
+      result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel);
+      break;
+    }
+    if (result != 0) {
       show_message("SetDestFmt() failed.\n");
       goto error;
     }
@@ -167,44 +214,25 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     info->frametime = (int)(stream->GetFrameTime() * 1000);
     m->framerate = 1000 / info->frametime;
     m->has_video = 1;
+
+    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+
+    if (info->use_xv) {
+      m->rendering_width  = m->width;
+      m->rendering_height = m->height;
+    } else {
+      m->rendering_width  = p->magnified.width;
+      m->rendering_height = p->magnified.height;
+    }
+
+    debug_message("AviFile: s (%d,%d) r (%d,%d) d (%d,%d) %f fps %d frames\n",
+		  m->width, m->height, m->rendering_width, m->rendering_height,
+		  p->magnified.width, p->magnified.height,
+		  m->framerate, m->num_of_frames);
   } else {
     show_message("AviFile: No video.\n");
   }
 
-  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  if (!m->direct_decode) {
-    show_message("AviFile: load_movie: Cannot direct decoding...\n");
-    goto error;
-  }
-  debug_message("AviFile: requested type: %s direct\n", image_type_to_string(m->requested_type));
-
-#if 1
-  m->rendering_width = m->width;
-  m->rendering_height = m->height;
-#else
-  switch (vw->render_method) {
-  case _VIDEO_RENDER_NORMAL:
-    m->rendering_width  = m->width;
-    m->rendering_height = m->height;
-    break;
-  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    m->rendering_width  = m->width  << 1;
-    m->rendering_height = m->height << 1;
-    break;
-  default:
-    m->rendering_width  = m->width;
-    m->rendering_height = m->height;
-    break;
-  }
-#endif
-
-  debug_message("AviFile: (%d,%d) -> (%d,%d) %f fps %d frames\n",
-		m->width, m->height, m->rendering_width, m->rendering_height,
-		m->framerate, m->num_of_frames);
-
-  Image *p;
-
-  p = info->p = image_create();
   p->width = m->rendering_width;
   p->height = m->rendering_height;
   p->type = m->requested_type;
@@ -212,25 +240,43 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     goto error;
   memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
 
-  switch (vw->bits_per_pixel) {
-  case 32:
-    p->depth = 24;
-    p->bits_per_pixel = 32;
-    p->bytes_per_line = p->width * 4;
-    break;
-  case 24:
-    p->depth = 24;
-    p->bits_per_pixel = 24;
-    p->bytes_per_line = p->width * 3;
-    break;
-  case 16:
-    p->depth = 16;
-    p->bits_per_pixel = 16;
-    p->bytes_per_line = p->width * 2;
-    break;
-  default:
-    show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
-    return PLAY_ERROR;
+  if (info->use_xv) {
+    switch (p->type) {
+    case _YUV422:
+    case _YVU422:
+      p->bits_per_pixel = 16;
+      p->bytes_per_line = p->width << 1;
+      break;
+    case _YUV420P:
+    case _YVU420P:
+      p->bits_per_pixel = 12;
+      p->bytes_per_line = p->width * 3 / 2;
+      break;
+    default:
+      show_message("Cannot render %s\n", image_type_to_string(p->type));
+      return PLAY_ERROR;
+    }
+  } else {
+    switch (vw->bits_per_pixel) {
+    case 32:
+      p->depth = 24;
+      p->bits_per_pixel = 32;
+      p->bytes_per_line = p->width * 4;
+      break;
+    case 24:
+      p->depth = 24;
+      p->bits_per_pixel = 24;
+      p->bytes_per_line = p->width * 3;
+      break;
+    case 16:
+      p->depth = 16;
+      p->bits_per_pixel = 16;
+      p->bytes_per_line = p->width * 2;
+      break;
+    default:
+      show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+      return PLAY_ERROR;
+    }
   }
   memory_alloc(p->rendered.image, p->bytes_per_line * p->height);
 
@@ -239,7 +285,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   debug_message("AviFile: initializing screen.\n");
 
-  m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
+  m->initialize_screen(vw, m, p->magnified.width, p->magnified.height);
 
   play(m);
 
@@ -312,6 +358,7 @@ play_video(void *arg)
       pthread_cond_wait(&info->decoding_cond, &info->decoding_state_mutex);
     if (info->stream->Eof()) {
       info->eof = 1;
+      pthread_mutex_unlock(&info->decoding_state_mutex);
       break;
     }
     info->stream->ReadFrame();
@@ -321,6 +368,8 @@ play_video(void *arg)
     pthread_cond_signal(&info->decoded_cond);
     pthread_mutex_unlock(&info->decoding_state_mutex);
   }
+
+  debug_message("AviFile: play_video() exit\n");
 
   pthread_exit((void *)PLAY_OK);
 }
@@ -365,6 +414,9 @@ play_audio(void *arg)
   }
   m->ap->close_device(ad);
   delete input_buffer;
+
+  debug_message("AviFile: play_audio() exit\n");
+
   pthread_exit((void *)PLAY_OK);
 }
 
