@@ -1,5 +1,15 @@
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/ui/normal/normal.c: Bug fix. Deleted unused dir variable.
+
+	* lib/enfle/archive.c: Bug fix.
+
+	* lib/enfle/archive.h: Added archive_direction().
+
+	* lib/enfle/loader.c: Commented out one debug_message().
+
+2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/archive.c, lib/enfle/archive.h, plugins/ui/normal/normal.c:
 	Now iteration_delete() returns next data.
 
