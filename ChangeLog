@@ -1,5 +1,13 @@
 2001-02-19  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/ui/normal/normal.c: Fixed bad key response bug.
+
+	* plugins/video/Xlib/Xlib.c: Treat do_sync_discard() as a method.
+
+	* lib/enfle/video.h: Added do_sync_discard().
+
+2001-02-19  Hiroshi Takekawa  <sian@fennel.org>
+
 	* acinclude.m4, configure.in: Added certain checks for mpeg2.
 
 	* plugins/ui/normal/normal.c: Fixed deletion bug.
@@ -19,8 +27,8 @@
 	* configure.in: Fixed typo.
 
 	* lib/enfle/archive.c, lib/enfle/archive.h,
-	plugins/ui/normal/normal.c: Implemented deletion an entry from the
-	list and a file itself.
+	plugins/ui/normal/normal.c: Implemented deletion of an entry from
+	the list and a file itself.
 
 	* src/Makefile.am: Deleted -lX11, which is no longer needed.
 
