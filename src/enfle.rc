@@ -1,8 +1,12 @@
 ; enfle.rc
-; Last Modified: Mon Oct  8 02:28:38 2001.
-; $Id: enfle.rc,v 1.22 2001/10/07 17:37:08 sian Exp $
+; Last Modified: Sat Oct 13 01:03:48 2001.
+; $Id: enfle.rc,v 1.23 2001/10/14 12:40:53 sian Exp $
 
 enfle {
+  identify {
+    ; disable streamer plugin
+    ;streamer/disabled = yes
+  }
   plugins {
     ; To execute enfle in the build tree, override the default path.
     ;dir = ../plugins
@@ -28,6 +32,8 @@ enfle {
 	deletefile_without_shift = no
 	;
 	;caption_template = "%p %f %xx%y"
+        ; disable archiver plugin
+        ;archiver/disabled = yes
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -72,6 +78,14 @@ enfle {
 	dct_method = fast
       }
       spi/disabled = yes
+      ; Associate an extension with an appropriate plugin name.
+      assoc {
+	jpg = JPEG
+	jpeg = JPEG
+	gif = UNGIF
+	png = PNG
+	bmp = BMP
+      }
     }
     saver {
       ; How to find plugins.
@@ -99,16 +113,15 @@ enfle {
       ;  load: Load only specified plugins.
       ;loadmethod = load(libmpeg2,avifile,ungif)
       loadmethod = scan_all
-      ; Associate an extension with a appropriate plugin filename. (NOT IMPLEMENTED YET)
-      ;assoc {
-      ;  .gif = ungif
-      ;  .mng = mng
-      ;  .mpg = libmpeg2
-      ;  .mpeg = libmpeg2
-      ;  .mp3 = mpglib
-      ;  .m1v = mpeg_lib
-      ;}
-      ;
+      ; Associate an extension with an appropriate plugin name.
+      assoc {
+        gif = UNGIF
+        mng = MNG
+        mpg = LibMPEG2
+        mpeg = LibMPEG2
+        mp3 = Mpglib
+        m1v = MPEG_lib
+      }
       ; video only stream may be played by mpeg_lib.
       ; in this case, if you'd like to use libmpeg3 instead of mpeg_lib,
       ; uncomment this.
