@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Apr 30 03:45:35 2001.
- * $Id: glic.c,v 1.4 2001/04/30 01:09:08 sian Exp $
+ * Last Modified: Fri May  4 20:09:37 2001.
+ * $Id: glic.c,v 1.5 2001/05/04 12:07:47 sian Exp $
  */
 
 #include <stdlib.h>
@@ -148,7 +148,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
     vmpm.I = 4;
   vmpm.nlowbits = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/nlowbits", &result);
   if (!result)
-    vmpm.nlowbits = 2;
+    vmpm.nlowbits = 4;
 
   debug_message("glic: (%d, %d) vmpm_path %s, decompose method %s, scan method %s\n", vmpm.r, vmpm.I, vmpm_path, decompose_method, scan_method);
 
@@ -172,11 +172,14 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
   debug_message("glic: %d bytes allocated.\n", image_size);
 
   /* scanning */
-  if (!strcmp(scan_method, "Quad")) {
+  if (strcasecmp(scan_method, "Quad") == 0) {
     quad_scan(vmpm.buffer, s, p->width, p->width, p->height, 0, 0);
     debug_message("glic: scanned.\n");
-  } else {
+  } else if (strcasecmp(scan_method, "Normal") == 0) {
     memcpy(vmpm.buffer, s, image_size);
+  } else {
+    show_message("Invalid scan method: %s\n", scan_method);
+    return 0;
   }
 
   vmpm.bufferused = image_size;
