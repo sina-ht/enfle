@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 13 21:55:21 2004.
- * $Id: audiodecoder.h,v 1.3 2004/02/14 05:30:10 sian Exp $
+ * Last Modified: Wed Mar 31 21:42:50 2004.
+ * $Id: audiodecoder.h,v 1.4 2004/03/31 14:35:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,12 +37,19 @@ typedef enum _audio_decoder_status {
 struct _audio_decoder {
   const char *name;
   void *opaque;
+
+  int (*setup)(AudioDecoder *);
   AudioDecoderStatus (*decode)(AudioDecoder *, Movie *, AudioDevice *, unsigned char *, unsigned int, unsigned int *);
   void (*destroy)(AudioDecoder *);
 };
 
+#define audiodecoder_setup(adec) (adec)->setup(adec)
 #define audiodecoder_decode(adec,m,ad,b,l,r) (adec)->decode(adec,m,ad,b,l,r)
 #define audiodecoder_destroy(adec) (adec)->destroy(adec)
+
+/* protected */
+AudioDecoder *_audiodecoder_init(void);
+void _audiodecoder_destroy(AudioDecoder *);
 
 const char *audiodecoder_codec_name(unsigned int);
 int audiodecoder_select(EnflePlugins *, Movie *, unsigned int, Config *);

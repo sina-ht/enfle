@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 22 22:02:32 2004.
- * $Id: avi.c,v 1.4 2004/03/24 15:00:35 sian Exp $
+ * Last Modified: Wed Mar 31 21:30:42 2004.
+ * $Id: avi.c,v 1.5 2004/03/31 14:35:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -167,7 +167,10 @@ DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c, priv)
   m->width = info->width;
   m->height = info->height;
   m->framerate = info->framerate;
+  m->channels = info->nchannels;
+  m->samplerate = info->samples_per_sec;
   m->num_of_frames = info->num_of_frames;
+  m->num_of_samples = info->num_of_samples;
   m->v_fourcc = info->vhandler;
   m->a_fourcc = info->ahandler;
 

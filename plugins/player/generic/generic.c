@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar 23 00:04:12 2004.
- * $Id: generic.c,v 1.9 2004/03/24 15:00:35 sian Exp $
+ * Last Modified: Wed Mar 31 21:43:17 2004.
+ * $Id: generic.c,v 1.10 2004/03/31 14:35:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -462,6 +462,10 @@ play_audio(void *arg)
     err_message("audiodecoder plugin not found. Audio disabled.\n");
     m->has_audio = 0;
     return (void *)PLAY_OK;
+  }
+  if (!audiodecoder_setup(m->adec)) {
+    err_message_fnc("audiodecoder_setup() failed.\n");
+    return (void *)VD_ERROR;
   }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:28:19 2004.
- * $Id: mpglib.c,v 1.3 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Mon Mar 29 22:48:56 2004.
+ * $Id: mpglib.c,v 1.4 2004/03/31 14:35:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,7 @@ static AudioDecoderPlugin plugin = {
   .description = "mpglib Audio Decoder plugin version 0.1",
   .author = "Hiroshi Takekawa",
 
+  .query = query,
   .init = init
 };
 
@@ -108,6 +109,26 @@ destroy(AudioDecoder *adec)
   free(adec);
 }
 
+static int
+setup(AudioDecoder *adec)
+{
+  return 1;
+}
+
+static unsigned int
+query(unsigned int fourcc)
+{
+  switch (fourcc) {
+  case 0:
+  case WAVEFORMAT_TAG_MP2:
+  case WAVEFORMAT_TAG_MP3:
+    return 1;
+  default:
+    break;
+  }
+  return 0;
+}
+
 static AudioDecoder *
 init(unsigned int fourcc)
 {
@@ -130,6 +151,7 @@ init(unsigned int fourcc)
     return NULL;
   }
   adec->name = plugin.name;
+  adec->setup = setup;
   adec->decode = decode;
   adec->destroy = destroy;
   adm->param_is_set = 0;

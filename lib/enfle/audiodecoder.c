@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 19 22:12:47 2004.
- * $Id: audiodecoder.c,v 1.3 2004/02/20 17:19:20 sian Exp $
+ * Last Modified: Mon Mar 29 22:54:05 2004.
+ * $Id: audiodecoder.c,v 1.4 2004/03/31 14:35:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,25 +28,51 @@
 #include "utils/misc.h"
 #include "utils/libstring.h"
 
+AudioDecoder *
+_audiodecoder_init(void)
+{
+  AudioDecoder *vdec;
+
+  if ((vdec = calloc(1, sizeof(*vdec))) == NULL)
+    return NULL;
+  return vdec;
+}
+
+void
+_audiodecoder_destroy(AudioDecoder *vdec)
+{
+  if (vdec)
+    free(vdec);
+}
+
 const char *
 audiodecoder_codec_name(unsigned int fourcc)
 {
   switch (fourcc) {
   case WAVEFORMAT_TAG_PCM:
+    return "pcm";
   case WAVEFORMAT_TAG_MS_ADPCM:
+    return "ms_adpcm";
   case WAVEFORMAT_TAG_IMA_ADPCM:
+    return "ima_adpcm";
   case WAVEFORMAT_TAG_MS_GSM_6_10:
+    return "ms_gsm_6_10";
   case WAVEFORMAT_TAG_MSN_Audio:
-    return NULL;
+    return "MSN_Audio";
   case WAVEFORMAT_TAG_MP2:
+    return "mp2";
   case WAVEFORMAT_TAG_MP3:
     return "mp3";
   case WAVEFORMAT_TAG_Voxware:
+    return "voxware";
   case WAVEFORMAT_TAG_Acelp:
-  case WAVEFORMAT_TAG_DivX_WMA0:
-  case WAVEFORMAT_TAG_DivX_WMA1:
+    return "acelp";
+  case WAVEFORMAT_TAG_DivX_WMAv1:
+    return "wmav1";
+  case WAVEFORMAT_TAG_DivX_WMAv2:
+    return "wmav2";
   case WAVEFORMAT_TAG_IMC:
-    return NULL;
+    return "imc";
   case WAVEFORMAT_TAG_AC3:
     return "ac3";
   case WAVEFORMAT_TAG_VORBIS:
