@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 18 13:59:17 2001.
- * $Id: avifile.cpp,v 1.27 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Sat Jan  5 11:14:27 2002.
+ * $Id: avifile.cpp,v 1.28 2002/01/05 02:16:32 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -91,7 +91,7 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
-#define PLAYER_AVIFILE_PLUGIN_DESCRIPTION "AviFile Player plugin version 0.5"
+#define PLAYER_AVIFILE_PLUGIN_DESCRIPTION "AviFile Player plugin version 0.6"
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
@@ -167,18 +167,22 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   int result, dest_bpp = 0;
   int tmp_types;
 
-  if (!info->rf)
+  debug_message("AviFile: load_movie: try to CreateIAviReadFile().\n");
+  if (!info->rf) {
     rf = info->rf = CreateIAviReadFile(st->path);
-  else
+    debug_message("AviFile: load_movie: created.\n");
+  } else {
     rf = info->rf;
+    debug_message("AviFile: load_movie: using cache.\n");
+  }
 
   if (!rf) {
-    debug_message("AviFile: rf is NULL!\n");
+    debug_message("AviFile: load_movie: rf == NULL.\n");
     goto error;
   }
 
   if (!rf->StreamCount()) {
-    debug_message("AviFile: StreamCount() is zero.\n");
+    debug_message("AviFile: load_movie: No stream.\n");
     goto error;
   }
 
@@ -193,11 +197,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->has_video = 0;
   m->has_audio = 0;
   if ((audiostream = info->audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
-    if (m->ap == NULL)
+    if (m->ap == NULL) {
       show_message("Audio plugin is not available.\n");
-    else {
+      audiostream = NULL;
+    } else {
       if ((result = audiostream->StartStreaming()) != 0) {
 	debug_message("audio stream: StartStream() failed.\n");
+	audiostream = NULL;
       } else {
 	debug_message("Get output format.\n");
 	audiostream->GetOutputFormat(&info->owf, sizeof info->owf);
@@ -209,9 +215,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 	m->has_audio = 1;
       }
     }
-  } else {
-    show_message("AviFile: No audio.\n");
   }
+  if (!audiostream)
+    show_message("AviFile: No audio.\n");
 
   Image *p;
 
@@ -220,110 +226,115 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   info->use_xv = 0;
   if ((stream = info->stream = rf->GetStream(0, IAviReadStream::Video))) {
     if ((result = stream->StartStreaming()) != 0) {
-      show_message("video: StartStream() failed.\n");
-      goto error;
-    }
+      debug_message("video stream: StartStream() failed.\n");
+      stream = NULL;
+    } else {
+      IVideoDecoder::CAPS caps = stream->GetDecoder()->GetCapabilities();
 
-    IVideoDecoder::CAPS caps = stream->GetDecoder()->GetCapabilities();
-    if (caps & IVideoDecoder::CAP_YUY2) {
-      debug_message("Good, YUY2 available.\n");
-      tmp_types |= IMAGE_YUY2;
-    }
-    if (caps & IVideoDecoder::CAP_YV12) {
-      debug_message("Good, YV12 available.\n");
-      tmp_types |= IMAGE_YV12;
-    }
-    if (caps & IVideoDecoder::CAP_IYUV) {
-      debug_message("Good, IYUV(I420) available.\n");
-      tmp_types |= IMAGE_I420;
-    }
-    if (caps & IVideoDecoder::CAP_UYVY) {
-      debug_message("Good, UYVY available.\n");
-      tmp_types |= IMAGE_UYVY;
-    }
-    if (types == tmp_types)
-      debug_message("Neither YUY2, YV12, I420, nor UYUV is available, using RGB.\n");
-    m->requested_type = video_window_request_type(vw, tmp_types, &m->direct_decode);
-    debug_message("AviFile: requested type: %s direct\n", image_type_to_string(m->requested_type));
-    if (!m->direct_decode) {
-      show_message("AviFile: load_movie: Cannot direct decoding...\n");
-      goto error;
-    }
-    switch (m->requested_type) {
-    case _YUY2:
-      debug_message("SetDestFmt(0, FCC_YUY2);\n");
-      result = stream->GetDecoder()->SetDestFmt(0, FCC_YUY2);
-      info->use_xv = 1;
-      break;
-    case _YV12:
-      debug_message("SetDestFmt(0, FCC_YV12);\n");
-      result = stream->GetDecoder()->SetDestFmt(0, FCC_YV12);
-      info->use_xv = 1;
-      break;
-    case _I420:
-      debug_message("SetDestFmt(0, FCC_IYUV);\n");
-      result = stream->GetDecoder()->SetDestFmt(0, FCC_IYUV);
-      info->use_xv = 1;
-      break;
-    case _UYVY:
-      debug_message("SetDestFmt(0, FCC_UYVY);\n");
-      result = stream->GetDecoder()->SetDestFmt(0, FCC_UYVY);
-      info->use_xv = 1;
-      break;
-    default:
-      if (vw->bits_per_pixel == 32) {
-	if ((result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel)) != 0) {
-	  /* XXX: hack */
-	  debug_message("vw bpp == 32, but is not supported. Try 24.\n");
-	  result = stream->GetDecoder()->SetDestFmt(24);
-	  dest_bpp = 24;
-	  m->requested_type = _RGB24;
-	  m->direct_decode = 0;
-	} else {
-	  dest_bpp = 32;
-	}
-      } else {
-	debug_message("SetDestFmt(%d);\n", vw->bits_per_pixel);
-	result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel);
-	dest_bpp = vw->bits_per_pixel;
+      if (caps & IVideoDecoder::CAP_YUY2) {
+	debug_message("Good, YUY2 available.\n");
+	tmp_types |= IMAGE_YUY2;
       }
-      break;
-    }
-    if (result != 0) {
-      show_message("SetDestFmt() failed.\n");
-      goto error;
-    }
+      if (caps & IVideoDecoder::CAP_YV12) {
+	debug_message("Good, YV12 available.\n");
+	tmp_types |= IMAGE_YV12;
+      }
+      if (caps & IVideoDecoder::CAP_IYUV) {
+	debug_message("Good, IYUV(I420) available.\n");
+	tmp_types |= IMAGE_I420;
+      }
+      if (caps & IVideoDecoder::CAP_UYVY) {
+	debug_message("Good, UYVY available.\n");
+	tmp_types |= IMAGE_UYVY;
+      }
+      if (types == tmp_types)
+	debug_message("Neither YUY2, YV12, I420, nor UYUV is available, using RGB.\n");
+      m->requested_type = video_window_request_type(vw, tmp_types, &m->direct_decode);
+      debug_message("AviFile: requested type: %s direct\n", image_type_to_string(m->requested_type));
+      if (!m->direct_decode) {
+	show_message("AviFile: load_movie: Cannot direct decoding...\n");
+	stream->StopStreaming();
+	goto error;
+      }
+      switch (m->requested_type) {
+      case _YUY2:
+	debug_message("SetDestFmt(0, FCC_YUY2);\n");
+	result = stream->GetDecoder()->SetDestFmt(0, FCC_YUY2);
+	info->use_xv = 1;
+	break;
+      case _YV12:
+	debug_message("SetDestFmt(0, FCC_YV12);\n");
+	result = stream->GetDecoder()->SetDestFmt(0, FCC_YV12);
+	info->use_xv = 1;
+	break;
+      case _I420:
+	debug_message("SetDestFmt(0, FCC_IYUV);\n");
+	result = stream->GetDecoder()->SetDestFmt(0, FCC_IYUV);
+	info->use_xv = 1;
+	break;
+      case _UYVY:
+	debug_message("SetDestFmt(0, FCC_UYVY);\n");
+	result = stream->GetDecoder()->SetDestFmt(0, FCC_UYVY);
+	info->use_xv = 1;
+	break;
+      default:
+	if (vw->bits_per_pixel == 32) {
+	  if ((result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel)) != 0) {
+	    /* XXX: hack */
+	    debug_message("vw bpp == 32, but is not supported. Try 24.\n");
+	    result = stream->GetDecoder()->SetDestFmt(24);
+	    dest_bpp = 24;
+	    m->requested_type = _RGB24;
+	    m->direct_decode = 0;
+	  } else {
+	    dest_bpp = 32;
+	  }
+	} else {
+	  debug_message("SetDestFmt(%d);\n", vw->bits_per_pixel);
+	  result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel);
+	  dest_bpp = vw->bits_per_pixel;
+	}
+	break;
+      }
+      if (result != 0) {
+	show_message("SetDestFmt() failed.\n");
+	stream->StopStreaming();
+	goto error;
+      }
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
-    stream->GetVideoFormatInfo(&info->bmih, sizeof(info->bmih));
+      stream->GetVideoFormatInfo(&info->bmih, sizeof(info->bmih));
 #else
-    stream->GetVideoFormatInfo(&info->bmih);
+      stream->GetVideoFormatInfo(&info->bmih);
 #endif
 
-    m->width  = info->bmih.biWidth;
-    m->height = info->bmih.biHeight;
-    info->frametime = (int)(stream->GetFrameTime() * 1000);
-    m->framerate = 1000 / info->frametime;
-    m->has_video = 1;
+      m->width  = info->bmih.biWidth;
+      m->height = info->bmih.biHeight;
+      info->frametime = (int)(stream->GetFrameTime() * 1000);
+      m->framerate = 1000 / info->frametime;
+      m->has_video = 1;
 
-    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+      video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
 
-    if (info->use_xv) {
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-    } else {
-      m->rendering_width  = p->magnified.width;
-      m->rendering_height = p->magnified.height;
+      if (info->use_xv) {
+	m->rendering_width  = m->width;
+	m->rendering_height = m->height;
+      } else {
+	m->rendering_width  = p->magnified.width;
+	m->rendering_height = p->magnified.height;
+      }
+
+      debug_message("AviFile: s (%d,%d) r (%d,%d) d (%d,%d) %f fps %d frames\n",
+		    m->width, m->height, m->rendering_width, m->rendering_height,
+		    p->magnified.width, p->magnified.height,
+		    m->framerate, m->num_of_frames);
     }
-
-    debug_message("AviFile: s (%d,%d) r (%d,%d) d (%d,%d) %f fps %d frames\n",
-		  m->width, m->height, m->rendering_width, m->rendering_height,
-		  p->magnified.width, p->magnified.height,
-		  m->framerate, m->num_of_frames);
-  } else {
+  }
+  if (!stream) {
     show_message("AviFile: No video.\n");
     m->rendering_width  = 120;
     m->rendering_height = 80;
     m->requested_type = _RGB24;
+    dest_bpp = vw->bits_per_pixel;
   }
 
   p->width = m->rendering_width;
@@ -368,7 +379,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       p->bytes_per_line = p->width * 2;
       break;
     default:
-      show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+      show_message("Cannot render bpp %d\n", dest_bpp);
       return PLAY_ERROR;
     }
   }
@@ -437,7 +448,8 @@ play(Movie *m)
   pthread_mutex_lock(&info->update_mutex);
   pthread_mutex_unlock(&info->update_mutex);
 
-  debug_message(info->ci ? "OK\n" : "NG\n");
+  if (m->has_video)
+    debug_message(info->ci ? "OK\n" : "NG\n");
 
   return PLAY_OK;
 }
@@ -477,8 +489,6 @@ play_video(void *arg)
   pthread_exit((void *)PLAY_OK);
 }
 
-#define AUDIO_BUFFER_SIZE 32768
-
 static void *
 play_audio(void *arg)
 {
@@ -492,22 +502,25 @@ play_audio(void *arg)
   debug_message("AviFile: play_audio()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
-    show_message("Cannot open device.\n");
+    show_message("Cannot open audio device.\n");
     pthread_exit((void *)PLAY_ERROR);
   }
 
   if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
     show_message("Some params are set wrong.\n");
 
-  unsigned char *input_buffer = new unsigned char [AUDIO_BUFFER_SIZE];
-
-  samples_to_read = AUDIO_BUFFER_SIZE;
+  samples_to_read = info->audiostream->GetFrameSize();
+  unsigned char *input_buffer = new unsigned char [samples_to_read];
   while (m->status == _PLAY) {
-    if (info->audiostream->Eof())
+    if (info->audiostream->Eof()) {
+      if (!m->has_video)
+	info->eof = 1;
+      debug_message("AviFile: play_audio: EOF reached.\n");
       break;
+    }
     samples = ocnt = 0;
     info->audiostream->ReadFrames(input_buffer, samples_to_read, samples_to_read, samples, ocnt);
-    //debug_message("read %d samples (%d bytes)\n", samples, ocnt);
+    //debug_message("AviFile: play_audio: read %d samples (%d bytes)\n", samples, ocnt);
     m->ap->write_device(ad, input_buffer, ocnt);
     m->current_sample += samples;
   }
@@ -542,6 +555,9 @@ play_main(Movie *m, VideoWindow *vw)
     stop_movie(m);
     return PLAY_OK;
   }
+
+  if (!m->has_video)
+    return PLAY_OK;
 
   m->current_frame = info->stream->GetPos();
 
@@ -685,36 +701,49 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
       return PLAY_NOT;
   }
 
-  debug_message("AviFile: identify: identified as avi.\n");
+  debug_message("AviFile: identify: identified as avi(maybe).\n");
 
   info = info_create(m);
 
   /* see if this avi is supported by avifile */
-  if (!info->rf)
+  debug_message("AviFile: identify: try to CreateIAviReadFile().\n");
+  if (!info->rf) {
     rf = info->rf = CreateIAviReadFile(st->path);
-  else
+    debug_message("AviFile: identify: created.\n");
+  } else {
     rf = info->rf;
+    debug_message("AviFile: identify: using cache.\n");
+  }
 
-  if (!rf)
+  if (!rf) {
+    debug_message("AviFile: identify: rf == NULL.\n");
     goto not_avi;
-  if (!rf->StreamCount())
+  }
+  if (!rf->StreamCount()) {
+    debug_message("AviFile: identify: No stream.\n");
     goto not_avi;
+  }
 
   if ((audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
     if ((result = audiostream->StartStreaming()) != 0)
       show_message("AviFile: identify: Audio stream not played.\n");
+    else
+      audiostream->StopStreaming();
   }
 
   if ((stream = rf->GetStream(0, IAviReadStream::Video))) {
     if ((result = stream->StartStreaming()) != 0)
-      goto not_avi;
+      show_message("AviFile: identify: Video stream not played.\n");
+    else
+      stream->StopStreaming();
   }
 
-  audiostream->StopStreaming();
-  stream->StopStreaming();
-
+#if 0
+  debug_message("AviFile: identify: deleting rf.\n");
   delete rf;
   info->rf = NULL;
+  debug_message("AviFile: identify: deleted rf.\n");
+#endif
 
   return PLAY_OK;
 
