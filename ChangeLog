@@ -1,3 +1,15 @@
+2002-09-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/hash.c: Use unlikely().  Don't calculate skip when the
+	first try succeeds.
+
+	* lib/utils/dlist.[ch]: Use unlikely().  Get _attach() and
+	_detach() inlined.
+
+2002-08-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: Beautify -I output.
+
 2002-08-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11.c: Cosmetic changes.
@@ -11,12 +23,12 @@
 	lib/enfle/spi.c, lib/enfle/stream.c, lib/enfle/streamer.c:
 	Cosmetic clean-ups.
 
-2002-08-18  Hiroshi Takekawa <sian@fennel.org>
+2002-08-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/pluginlist.[ch], lib/utils/plugin.[ch]: Discarded
 	OO-style coding.
 
-2002-08-18  Hiroshi Takekawa <sian@fennel.org>
+2002-08-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/libstring.[ch]: Discarded OO-style coding.
 
@@ -24,7 +36,7 @@
 
 	* lib/utils/hash.c: Commented out one debug_message_fnc().
 
-2002-08-18  Hiroshi Takekawa <sian@fennel.org>
+2002-08-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/video/Xlib/Xlib.c: Plugged one memory leak.
 
@@ -80,7 +92,7 @@
 	* lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.c: Added
 	enfle_plugin_* macros, then use them.
 
-2002-08-08  Hiroshi Takekawa <sian@fennel.org>
+2002-08-08  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/dlist.[ch], lib/utils/hash.[ch]: Discarded OO-style
 	coding.
@@ -108,14 +120,14 @@
 	* lib/utils/dlist.[ch]: Make dlist_guard() and dlist_dlist()
 	private.
 
-2002-08-04  Hiroshi Takekawa <sian@fennel.org>
+2002-08-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/Makefile.am, plugins/player/avifile/Makefile.am: Added
 	new files.
 
 	* src/enfle.rc: Sorted in alphabetical order.
 
-2002-08-03  Hiroshi Takekawa <sian@fennel.org>
+2002-08-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/loader.c: Clear format_detail.
 
@@ -228,7 +240,7 @@
 
 	* configure.in: Check default include paths.
 
-2002-05-06  Hiroshi Takekawa <sian@fennel.org>
+2002-05-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/demultiplexer/demultiplexer_avi.c: Cosmetic change.
 
@@ -236,7 +248,7 @@
 
 	* src/enfle.c: Cosmetic change.
 
-2002-05-04  Hiroshi Takekawa <sian@fennel.org>
+2002-05-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/mpeg2/decode.c, lib/mpeg2/video_out.h,
 	plugins/player/libmpeg2/libmpeg2.c: Avoid vo_* unused but defined
@@ -256,7 +268,7 @@
 	* lib/mpeg2/video_out.h, lib/mpeg2/yuv2rgb_mmx.c: Include
 	"compat.h".
 
-2002-04-27  Hiroshi Takekawa <sian@fennel.org>
+2002-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, plugins/loader/png/png.c, plugins/saver/png/png.c:
 	Adapted for libpng-1.2.2.
@@ -1144,7 +1156,7 @@
 
 	* lib/enfle/identify.[ch]: New files.
 
-2001-07-10 Hiroshi Takekawa <sian@fennel.org>
+2001-07-10 Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/archiver.[ch], lib/enfle/effect.[ch],
 	lib/enfle/loader.[ch], lib/enfle/player.[ch],
@@ -1380,7 +1392,7 @@
 	* plugins/player/libmpeg3/libmpeg3.c: Disable audio when audio
 	device cannot be opened.
 
-2001-05-23 Hiroshi Takekawa <sian@fennel.org>
+2001-05-23 Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg3/libmpeg3.c: Cosmetic change.
 
@@ -1681,7 +1693,7 @@
 
 	* plugins/ui/normal/normal.c: Fixed more bugs.
 
-2001-03-13  Hiroshi Takekawa <sian@fennel.org>
+2001-03-13  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: More checking.
 
