@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 23 05:20:38 2000.
- * $Id: mpeg_lib.c,v 1.13 2000/12/22 23:13:19 sian Exp $
+ * Last Modified: Wed Jan  3 17:44:51 2001.
+ * $Id: mpeg_lib.c,v 1.14 2001/01/03 08:48:26 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -48,7 +48,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "MPEG_lib",
-  description: "MPEG_lib Player plugin version 0.2.2",
+  description: "MPEG_lib Player plugin version 0.2.3",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -140,6 +140,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->movie_private = (void *)info;
   m->st = st;
+  m->status = _STOP;
 
   m->initialize_screen(vw, m, p->width, p->height);
 
@@ -256,6 +257,8 @@ static void
 unload_movie(Movie *m)
 {
   MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
+
+  stop_movie(m);
 
   if (info->p)
     image_destroy(info->p);

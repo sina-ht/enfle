@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Dec 29 06:56:22 2000.
- * $Id: libmpeg3.c,v 1.16 2000/12/30 07:21:04 sian Exp $
+ * Last Modified: Wed Jan  3 17:44:44 2001.
+ * $Id: libmpeg3.c,v 1.17 2001/01/03 08:48:26 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -69,7 +69,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.3",
+  description: "LibMPEG3 Player plugin version 0.3.1",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -259,6 +259,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->movie_private = (void *)info;
   m->st = st;
+  m->status = _STOP;
 
   m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
@@ -570,6 +571,8 @@ unload_movie(Movie *m)
 {
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
+  stop_movie(m);
+
   if (info) {
     if (info->lines)
       free(info->lines);
@@ -583,6 +586,8 @@ unload_movie(Movie *m)
 
     free(info);
   }
+
+  m->status = _UNLOADED;
 }
 
 /* methods */
