@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Mon Sep  3 10:41:36 2001.
+     Last Modified: Fri Oct 12 01:27:47 2001.
 
  This file is part of Enfle.
 
@@ -44,10 +44,11 @@
  It seems I should include this sentence: "This product includes
  software developed by or derived from software developed by Project
  Mayo". Strictly speaking, Enfle and OpenDivX plugin itself don't
- include software by them. OpenDivX plugin will be dynamically linked
- with libdivxdecore. I'm not sure this plugin is regarded as "Larger
- Work". But it doesn't matter because this plugin can be and is
- released under GPL. See plugins/player/opendivx/opendivx.c for detail.
+ include any portion of software by them. OpenDivX plugin will be
+ dynamically linked with libdivxdecore. I'm not sure this plugin is
+ regarded as "Larger Work". But it doesn't matter because this plugin
+ can be and is released under GPL. See
+ plugins/player/opendivx/opendivx.c for detail.
 
  This software includes mpglib by Michael Hipp.
 
@@ -160,6 +161,11 @@ cannot/don't create shared object.
 If you'd like to enable susie plugin extension, add --enable-spi.
 If you'd like to enable libungif, add --with-ungif.
 
+Put Susie plugins on /usr/(local/)/lib/enfle/plugins/spis or such
+where plugins are searched. It might be able to decode pictures, or
+might fail to decode, or even might fail to load. Your mileage may
+vary. Please inform me of your result.
+
 
 4. Command line
 
@@ -209,6 +215,21 @@ or like). If you'd like to customize, copy and edit it.
 
 mkdir ~/.enfle
 cp /usr/share/enfle/enfle.rc ~/.enfle/config
+
+Customizing the caption
+
+Use caption_template to customize the window caption.
+Default: %p %f %xx%y
+
+Legends:
+%%: % itself
+%) or %>: Indicates the magnification algorithm used.
+%x and %y: Dimension of the displayed image
+%f: Replaced by the format description of the image
+%F: Simplified format description
+%p: The path to the file displayed
+%P: The full path
+%N: The name of the software
 
 
 7. Contact
