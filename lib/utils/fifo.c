@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 06:24:42 2004.
- * $Id: fifo.c,v 1.13 2004/01/11 21:37:47 sian Exp $
+ * Last Modified: Mon Jan 12 19:24:44 2004.
+ * $Id: fifo.c,v 1.14 2004/01/12 12:11:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -175,7 +175,6 @@ set_max(FIFO *f, unsigned int m)
 static void
 invalidate(FIFO *f)
 {
-  debug_message_fnc("\n");
 #ifdef USE_PTHREAD
   f->valid = 0;
   pthread_mutex_lock(&f->lock);
@@ -184,7 +183,6 @@ invalidate(FIFO *f)
   //pthread_cond_signal(&f->get_ok_cond);
   pthread_mutex_unlock(&f->lock);
 #endif
-  debug_message_fnc(" OK\n");
 }
 
 static void

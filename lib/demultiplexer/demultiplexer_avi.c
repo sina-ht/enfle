@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 06:25:19 2004.
- * $Id: demultiplexer_avi.c,v 1.24 2004/01/11 21:39:50 sian Exp $
+ * Last Modified: Mon Jan 12 19:13:35 2004.
+ * $Id: demultiplexer_avi.c,v 1.25 2004/01/12 12:10:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -425,7 +425,7 @@ demux_main(void *arg)
 	riff_file_skip_chunk_data(info->rf, rc);
       }
     } else {
-      show_message_fnc("Got unknown chunk '%s' at %d, skipped\n", riff_chunk_get_name(rc), riff_chunk_get_pos(rc));
+      debug_message_fnc("Got chunk '%s' at %d, skipped\n", riff_chunk_get_name(rc), riff_chunk_get_pos(rc));
       riff_file_skip_chunk_data(info->rf, rc);
     }
   }
@@ -469,7 +469,10 @@ stop(Demultiplexer *demux)
   debug_message_fn(" demultiplexer_avi\n");
 
   demux->running = 0;
-  pthread_join(demux->thread, &ret);
+  if (demux->thread) {
+    pthread_join(demux->thread, &ret);
+    demux->thread = 0;
+  }
 
   debug_message_fn(" demultiplexer_avi OK\n");
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 06:38:32 2004.
- * $Id: demultiplexer_mpeg.c,v 1.28 2004/01/11 21:38:49 sian Exp $
+ * Last Modified: Mon Jan 12 19:13:56 2004.
+ * $Id: demultiplexer_mpeg.c,v 1.29 2004/01/12 12:10:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -517,18 +517,18 @@ stop(Demultiplexer *demux)
 {
   void *ret;
 
-  debug_message("demultiplexer_mpeg stop()...\n");
+  if (!demux->running)
+    return 0;
+
+  debug_message_fn(" demultiplexer_mpeg\n");
 
   demux->running = 0;
-
   if (demux->thread) {
-    debug_message_fnc("joining...\n");
     pthread_join(demux->thread, &ret);
     demux->thread = 0;
-    debug_message_fnc("joined\n");
   }
 
-  debug_message("demultiplexer_mpeg stop() OK\n");
+  debug_message_fn(" demultiplexer_mpeg OK\n");
 
   return 1;
 }
