@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:50:48 2002.
- * $Id: normal.c,v 1.67 2002/08/17 02:19:35 sian Exp $
+ * Last Modified: Mon Sep 23 06:29:18 2002.
+ * $Id: normal.c,v 1.68 2002/09/22 21:32:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -805,6 +805,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
     case IDENTIFY_FILE_SOPEN_FAILED:
     case IDENTIFY_FILE_AOPEN_FAILED:
     case IDENTIFY_FILE_STAT_FAILED:
+    case IDENTIFY_FILE_ZERO_SIZE:
     default:
       ret = MAIN_LOOP_DELETE_FROM_LIST;
       continue;

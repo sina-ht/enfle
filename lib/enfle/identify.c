@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 19 20:53:24 2002.
- * $Id: identify.c,v 1.9 2002/08/19 12:22:33 sian Exp $
+ * Last Modified: Mon Sep 23 06:28:43 2002.
+ * $Id: identify.c,v 1.10 2002/09/22 21:32:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,6 +70,11 @@ identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a, Config *c)
       free(fullpath);
       return IDENTIFY_FILE_NOTREG;
     }
+    if (statbuf.st_size == 0) {
+      free(fullpath);
+      return IDENTIFY_FILE_ZERO_SIZE;
+    }
+
     if ((tmp = config_get_str(c, "/enfle/identify/streamer/disabled")) == NULL ||
 	strcasecmp(tmp, "yes") != 0) {
       if (streamer_identify(eps, s, fullpath, c)) {

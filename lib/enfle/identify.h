@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 13 00:43:02 2001.
- * $Id: identify.h,v 1.4 2001/10/14 12:31:36 sian Exp $
+ * Last Modified: Mon Sep 23 06:28:38 2002.
+ * $Id: identify.h,v 1.5 2002/09/22 21:32:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,6 +38,7 @@
 #define IDENTIFY_FILE_AOPEN_FAILED 4
 #define IDENTIFY_FILE_STAT_FAILED  5
 #define IDENTIFY_FILE_MEMORY_ERROR 6
+#define IDENTIFY_FILE_ZERO_SIZE    7
 
 #define IDENTIFY_STREAM_MOVIE_FAILED -2
 #define IDENTIFY_STREAM_IMAGE_FAILED -1
