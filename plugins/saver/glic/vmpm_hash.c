@@ -1,7 +1,8 @@
 /*
  * vmpm_hash.c -- Hash related routines
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr 12 11:02:40 2001.
+ * Last Modified: Fri Apr 20 18:43:04 2001.
+ * $Id: vmpm_hash.c,v 1.2 2001/04/21 07:28:07 sian Exp $
  */
 
 #include <stdio.h>

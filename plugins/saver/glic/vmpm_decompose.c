@@ -1,7 +1,8 @@
 /*
  * vmpm_decompose.c -- decompose plugin manager
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr 12 11:53:27 2001.
+ * Last Modified: Fri Apr 20 18:41:52 2001.
+ * $Id: vmpm_decompose.c,v 1.2 2001/04/21 07:28:07 sian Exp $
  */
 
 #include <stdio.h>
@@ -80,8 +81,8 @@ decomposer_scan_and_load(VMPM *vmpm, char *path)
         /* count += decomposer_scan_and_load(vmpm, filename); */
 	continue;
       } else if (S_ISREG(statbuf.st_mode) &&
-          (extname = strchr(ent->d_name, '.')) &&
-          (!strncmp(extname, ".so", 3))) {
+		 (extname = strchr(ent->d_name, '.')) &&
+		 (!strncmp(extname, ".so", 3))) {
         if (load(vmpm, filename))
 	  count++;
       }

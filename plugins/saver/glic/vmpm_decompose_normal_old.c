@@ -1,7 +1,8 @@
 /*
  * vmpm_decompose_normal_old.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr 12 15:09:07 2001.
+ * Last Modified: Fri Apr 20 18:43:46 2001.
+ * $Id: vmpm_decompose_normal_old.c,v 1.2 2001/04/21 07:28:07 sian Exp $
  */
 
 #include <stdio.h>

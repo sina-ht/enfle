@@ -1,7 +1,8 @@
 /*
  * vmpm.h -- Implementation of a variation of MPM header
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr 12 14:58:03 2001.
+ * Last Modified: Fri Apr 20 18:42:09 2001.
+ * $Id: vmpm.h,v 1.2 2001/04/21 07:28:07 sian Exp $
  */
 
 #ifndef _VMPM_H

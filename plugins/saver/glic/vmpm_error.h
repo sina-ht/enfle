@@ -1,7 +1,8 @@
 /*
  * vmpm_error.h -- Error messages
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Mar 23 10:08:29 2001.
+ * Last Modified: Fri Apr 20 18:42:50 2001.
+ * $Id: vmpm_error.h,v 1.2 2001/04/21 07:28:07 sian Exp $
  */
 
 #ifndef _VMPM_ERROR_H
