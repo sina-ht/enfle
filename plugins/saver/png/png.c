@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 14 06:12:54 2001.
- * $Id: png.c,v 1.1 2001/04/18 05:26:05 sian Exp $
+ * Last Modified: Thu Apr 19 20:25:15 2001.
+ * $Id: png.c,v 1.2 2001/04/20 08:09:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -148,6 +148,9 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
     return 0;
   }
 
+#if (PNG_LIBPNG_VER > 99)
+  png_set_compression_buffer_size(png_ptr, 32768L);
+#endif
   png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
 
   /* Write comments into the image */
