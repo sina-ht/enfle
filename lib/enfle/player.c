@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Nov 11 23:33:02 2003.
- * $Id: player.c,v 1.22 2003/11/17 13:50:40 sian Exp $
+ * Last Modified: Tue Jan 27 23:08:20 2004.
+ * $Id: player.c,v 1.23 2004/01/30 12:41:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,7 +58,7 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
 	  pp = plugin_get(p);
 	  stream_rewind(st);
 	  debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
-	  if (pp->identify(m, st, c, NULL) == PLAY_OK) {
+	  if (pp->identify(m, st, c, eps) == PLAY_OK) {
 	    m->format = strdup(pluginname);
 	    free(ext);
 	    return 1;
@@ -77,7 +77,7 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
     pp = plugin_get(p);
     //debug_message("player: identify: try %s\n", (char *)k);
     stream_rewind(st);
-    if (pp->identify(m, st, c, NULL) == PLAY_OK) {
+    if (pp->identify(m, st, c, eps) == PLAY_OK) {
       m->format = (char *)k;
       pluginlist_move_to_top;
       return 1;
@@ -100,5 +100,5 @@ player_load(EnflePlugins *eps, VideoWindow *vw, char *pluginname, Movie *m, Stre
   pp = plugin_get(p);
 
   stream_rewind(st);
-  return pp->load(vw, m, st, c, NULL);
+  return pp->load(vw, m, st, c, eps);
 }
