@@ -1,10 +1,10 @@
 /*
  * utils.c -- utility functions
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 07:04:58 2000.
- * $Id: utils.c,v 1.3 2000/12/27 23:29:29 sian Exp $
+ * Last Modified: Fri Apr 13 21:13:11 2001.
+ * $Id: utils.c,v 1.4 2001/04/18 05:38:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,5 +20,32 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <stdlib.h>
+
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 #include "utils.h"
+
+/* replace or add extension like 'png' */
+char *
+replace_ext(char *filename, char *ext)
+{
+  char *ptr = strrchr(filename, '.');
+  char *new;
+  int base_len;
+
+  if (ptr == NULL) {
+    base_len = strlen(filename);
+  } else {
+    base_len = (int)(ptr - filename);
+  }
+  if ((new = malloc(base_len + 1 + strlen(ext) + 1)) == NULL)
+    return NULL;
+  if (ptr != filename)
+    memcpy(new, filename, base_len);
+  new[base_len] = '.';
+  strcpy(new + base_len + 1, ext);
+
+  return new;
+}
