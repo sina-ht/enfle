@@ -1,10 +1,10 @@
 /*
  * libconfig.c -- configuration file manipulation library
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:17:25 2001.
- * $Id: libconfig.c,v 1.17 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Fri Feb  8 20:21:55 2002.
+ * $Id: libconfig.c,v 1.18 2002/02/08 11:30:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,12 +25,12 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #define REQUIRE_FATAL
 #include "common.h"
 
 #include "libstring.h"
 #include "libconfig.h"
+#include "misc.h"
 #include "stdio-support.h"
 
 static int load(Config *, const char *);
@@ -40,10 +40,12 @@ static void *get(Config *, const char *);
 static int set(Config *, char *, void *);
 static unsigned char *get_str(Config *, const char *);
 static int set_str(Config *, char *, unsigned char *);
-static int get_int(Config *, const char *, int *);
-static int set_int(Config *, char *, int);
 static int get_boolean(Config *, const char *, int *);
 static int set_boolean(Config *, char *, int);
+static int get_int(Config *, const char *, int *);
+static int set_int(Config *, char *, int);
+static char **get_list(Config *, const char *, int *);
+static int set_list(Config *, char *, char *);
 static void destroy(Config *);
 
 #define DQUOTATION 0x22
@@ -59,10 +61,12 @@ static Config config_template = {
   set: set,
   get_str: get_str,
   set_str: set_str,
-  get_int: get_int,
-  set_int: set_int,
   get_boolean: get_boolean,
   set_boolean: set_boolean,
+  get_int: get_int,
+  set_int: set_int,
+  get_list: get_list,
+  set_list: set_list,
   destroy: destroy
 };
 
@@ -167,34 +171,37 @@ remove_preceding_space(char *p)
 }
 
 static int
-set_internal(Config *c, String *config_path, char *path, char *remain)
+set_internal(Config *c, String *config_path, char *path, char *remain, int is_list)
 {
   String *value_path;
   int f;
 
   if ((value_path = string_dup(config_path)) == NULL)
-    fatal(1, "libconfig: %s(): No enough memory\n", __FUNCTION__);
+    fatal(1, "libconfig: %s(): No enough memory.\n", __FUNCTION__);
   if (path != NULL) {
     string_cat(value_path, "/");
     string_cat(value_path, path);
   }
 
-  if (*remain == '"') {
-    char *end, *quoted;
-
-    if ((end = strrchr(remain, '"')) == NULL || remain == end)
-      fatal(1, "libconfig: %s(): Non-terminated double quoted string.\n", __FUNCTION__);
-    if ((quoted = malloc(end - remain)) == NULL)
-      fatal(1, "libconfig: %s(): No enough memory\n", __FUNCTION__);
-    if (*(end + 1) != '\n' && *(end + 1) != '\0')
-      show_message("libconfig: %s(): Ignored trailing garbage: %s\n", __FUNCTION__, end + 1);
-    memcpy(quoted, remain + 1, end - remain - 1);
-    quoted[end - remain - 1] = '\0';
-    f = set_str(c, string_get(value_path), quoted);
-  } else if (isdigit(*remain) || ((*remain == '+' || *remain == '-') && isdigit(*(remain + 1)))) {
-    f = set_int(c, string_get(value_path), atoi(remain));
+  if (is_list) {
   } else {
-    f = set_str(c, string_get(value_path), strdup(remain));
+    if (*remain == '"') {
+      char *end, *quoted;
+
+      if ((end = strrchr(remain, '"')) == NULL || remain == end)
+	fatal(1, "libconfig: %s(): Non-terminated double quoted string.\n", __FUNCTION__);
+      if ((quoted = malloc(end - remain)) == NULL)
+	fatal(1, "libconfig: %s(): No enough memory\n", __FUNCTION__);
+      if (*(end + 1) != '\n' && *(end + 1) != '\0')
+	show_message("libconfig: %s(): Ignored trailing garbage: %s\n", __FUNCTION__, end + 1);
+      memcpy(quoted, remain + 1, end - remain - 1);
+      quoted[end - remain - 1] = '\0';
+      f = set_str(c, string_get(value_path), quoted);
+    } else if (isdigit(*remain) || ((*remain == '+' || *remain == '-') && isdigit(*(remain + 1)))) {
+      f = set_int(c, string_get(value_path), atoi(remain));
+    } else {
+      f = set_str(c, string_get(value_path), strdup(remain));
+    }
   }
   string_destroy(value_path);
 
@@ -262,6 +269,7 @@ load(Config *c, const char *filepath)
 	char *path, *op, *remain;
 
 	path = get_token(p);
+
 	if (strlen(path) < strlen(p)) {
 	  op = get_token(p + strlen(path) + 1);
 	  remain = strdup(p + strlen(path) + 1 + strlen(op));
@@ -289,8 +297,10 @@ load(Config *c, const char *filepath)
 	    parse_error(p, config_path);
 	  }
 	  string_shrink(config_path, pos - string_get(config_path));
+	} else if (strcmp(op, ":=") == 0) {
+	  (void)set_internal(c, config_path, path, remain, 1);
 	} else if (strcmp(op, "=") == 0) {
-	  (void)set_internal(c, config_path, path, remain);
+	  (void)set_internal(c, config_path, path, remain, 0);
 	} else {
 	  show_message("Syntax error.\n");
 	  parse_error(p, config_path);
@@ -368,35 +378,6 @@ set_str(Config *c, char *path, unsigned char *value)
 }
 
 static int
-get_int(Config *c, const char *path, int *is_success)
-{
-  char *p;
-
-  *is_success = 0;
-  if ((p = (char *)get(c, path)) == NULL)
-    return 0;
-  if (*p != '\0' || memcmp(p + 1, "INT", 3))
-    return 0;
-
-  *is_success = 1;
-  return *((int *)(p + 4));
-}
-
-static int
-set_int(Config *c, char *path, int value)
-{
-  char *p;
-
-  if ((p = malloc(4 + sizeof(int))) == NULL)
-    return 0;
-  p[0] = '\0';
-  memcpy(p + 1, "INT", 3);
-  *((int *)(p + 4)) = value;
-
-  return set(c, path, (void *)p);
-}
-
-static int
 get_boolean(Config *c, const char *path, int *is_success)
 {
   char *tmp;
@@ -424,6 +405,88 @@ set_boolean(Config *c, char *path, int boolean)
   if ((tmp = strdup(boolean ? "yes" : "no")) == NULL)
     return 0;
   return set_str(c, path, tmp);
+}
+
+static char *
+check_typed_data(Config *c, const char *path, const char *type)
+{
+  char *p;
+
+  if ((p = (char *)get(c, path)) == NULL)
+    return NULL;
+  if (*p != '\0' || memcmp(p + 1, type, 3))
+    return NULL;
+
+  return p;
+}
+
+static char *
+setup_typed_data(Config *c, char *path, const char *type, int size)
+{
+  char *p;
+
+  if ((p = malloc(4 + size)) == NULL)
+    return NULL;
+  p[0] = '\0';
+  memcpy(p + 1, type, 3);
+
+  return p;
+}
+
+static int
+get_int(Config *c, const char *path, int *is_success)
+{
+  char *p;
+
+  if ((p = check_typed_data(c, path, "INT")) == NULL) {
+    *is_success = 0;
+    return 0;
+  }
+  *is_success = 1;
+
+  return *((int *)(p + 4));
+}
+
+static int
+set_int(Config *c, char *path, int value)
+{
+  char *p;
+
+  if ((p = setup_typed_data(c, path, "INT", sizeof(int))) == NULL)
+    return 0;
+  *((int *)(p + 4)) = value;
+
+  return set(c, path, (void *)p);
+}
+
+static char **
+get_list(Config *c, const char *path, int *is_success)
+{
+  char *p;
+
+  if ((p = check_typed_data(c, path, "LST")) == NULL) {
+    *is_success = 0;
+    return 0;
+  }
+  *is_success = 1;
+
+  return *((char ***)(p + 4));
+}
+
+static int
+set_list(Config *c, char *path, char *lstr)
+{
+  char *p;
+  char **list;
+
+  /* XXX: LEAK */
+  if ((list = misc_str_split(lstr, ':')) == NULL)
+    return 0;
+  if ((p = setup_typed_data(c, path, "LST", sizeof(char ***))) == NULL)
+    return 0;
+  *((char ***)(p + 4)) = list;
+
+  return set(c, path, (void *)p);
 }
 
 static void

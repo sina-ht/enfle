@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 12 16:44:34 2001.
- * $Id: libconfig.h,v 1.5 2001/06/12 09:06:57 sian Exp $
+ * Last Modified: Fri Feb  8 20:20:46 2002.
+ * $Id: libconfig.h,v 1.6 2002/02/08 11:30:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,10 +37,12 @@ struct _config {
   int (*set)(Config *, char *, void *);
   unsigned char *(*get_str)(Config *, const char *);
   int (*set_str)(Config *, char *, unsigned char *);
-  int (*get_int)(Config *, const char *, int *);
-  int (*set_int)(Config *, char *, int);
   int (*get_boolean)(Config *, const char *, int *);
   int (*set_boolean)(Config *, char *, int);
+  int (*get_int)(Config *, const char *, int *);
+  int (*set_int)(Config *, char *, int);
+  char **(*get_list)(Config *, const char *, int *);
+  int (*set_list)(Config *, char *, char *);
   void (*destroy)(Config *);
 };
 
@@ -51,10 +53,12 @@ struct _config {
 #define config_set(c, p, d) (c)->set((c), (p), (d))
 #define config_get_str(c, p) (c)->get_str((c), (p))
 #define config_set_str(c, p, d) (c)->set_str((c), (p), (d))
-#define config_get_int(c, p, r) (c)->get_int((c), (p), (r))
-#define config_set_int(c, p, d) (c)->set_int((c), (p), (d))
 #define config_get_boolean(c, p, r) (c)->get_boolean((c), (p), (r))
 #define config_set_boolean(c, p, d) (c)->set_boolean((c), (p), (d))
+#define config_get_int(c, p, r) (c)->get_int((c), (p), (r))
+#define config_set_int(c, p, d) (c)->set_int((c), (p), (d))
+#define config_get_list(c, p, r) (c)->get_list((c), (p), (r))
+#define config_set_list(c, p, d) (c)->set_list((c), (p), (d))
 #define config_destroy(c) (c)->destroy((c))
 
 Config *config_create(void);
