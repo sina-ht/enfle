@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 11:02:59 2002.
- * $Id: dlist.c,v 1.11 2002/08/15 12:49:15 sian Exp $
+ * Last Modified: Mon Aug 19 21:31:17 2002.
+ * $Id: dlist.c,v 1.12 2002/08/19 12:51:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -112,11 +112,7 @@ dlist_insert_object(Dlist *dl, Dlist_data *inserted, void *d, Dlist_data_destruc
   Dlist_data *dd;
 
 #ifdef DEBUG
-  if (__dlist_dlist(inserted) != dl) {
-    debug_message_fnc("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n",
-		      __dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
-    raise(SIGABRT);
-  }
+  bug_on(__dlist_dlist(inserted) != dl);
 #endif
 
   if ((dd = dlist_data_create(dl)) == NULL)
@@ -195,8 +191,9 @@ dlist_delete(Dlist *dl, Dlist_data *dd)
 {
   if (dl == NULL || dd == NULL)
     return 0;
-  if (__dlist_dlist(dd) != dl)
-    return 0;
+#ifdef DEBUG
+  bug_on(__dlist_dlist(dd) != dl);
+#endif
 
   if (!dlist_detach(dl, dd))
     return 0;
@@ -210,8 +207,9 @@ dlist_delete(Dlist *dl, Dlist_data *dd)
 int
 dlist_move_to_top(Dlist *dl, Dlist_data *dd)
 {
-  if (__dlist_dlist(dd) != dl)
-    return 0;
+#ifdef DEBUG
+  bug_on(__dlist_dlist(dd) != dl);
+#endif
   if (dlist_top(dl) == dd)
     return 1;
 
