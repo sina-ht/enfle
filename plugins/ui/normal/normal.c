@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 12 07:22:16 2001.
- * $Id: normal.c,v 1.22 2001/02/12 13:13:59 sian Exp $
+ * Last Modified: Mon Feb 19 17:50:07 2001.
+ * $Id: normal.c,v 1.23 2001/02/19 16:41:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,7 +39,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.4",
+  description: "Normal UI plugin version 0.4.1",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -163,11 +163,8 @@ set_caption_string(VideoWindow *vw, char *path, char *format)
 #define MAIN_LOOP_NEXT 1
 #define MAIN_LOOP_PREV -1
 #define MAIN_LOOP_DELETE_FROM_LIST 2
-#define MAIN_LOOP_DELETE_FROM_LIST_N 2
-#define MAIN_LOOP_DELETE_FROM_LIST_P -2
 #define MAIN_LOOP_DELETE_FILE 3
-#define MAIN_LOOP_DELETE_FILE_N 3
-#define MAIN_LOOP_DELETE_FILE_P -3
+#define MAIN_LOOP_DO_NOTHING 4
 
 static int
 main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
@@ -357,8 +354,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Image *p;
   Movie *m;
   char *path;
-  int f;
-  int dir = 1;
+  int f, dir, ret;
   struct stat statbuf;
 
   s = stream_create();
@@ -374,11 +370,13 @@ process_files_of_archive(UIData *uidata, Archive *a)
   movie_set_play_every_frame(m, 0);
 
   path = NULL;
-  while (dir != MAIN_LOOP_QUIT) {
+  ret = MAIN_LOOP_DO_NOTHING;
+  dir = 1;
+  while (ret != MAIN_LOOP_QUIT) {
     if (path == NULL)
       path = archive_iteration_start(a);
     else {
-      switch (dir) {
+      switch (ret) {
       case MAIN_LOOP_DELETE_FROM_LIST:
 	archive_iteration_delete(a);
 	path = archive_iteration(a);
@@ -392,13 +390,17 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	path = archive_iteration(a);
 	break;
       case MAIN_LOOP_NEXT:
+	dir = 1;
 	path = archive_iteration_next(a);
 	break;
       case MAIN_LOOP_PREV:
+	dir = -1;
 	path = archive_iteration_prev(a);
 	break;
+      case MAIN_LOOP_DO_NOTHING:
+	break;
       default:
-	fprintf(stderr, "main_loop() returned unknown code %d\n", dir);
+	fprintf(stderr, "*** main_loop() returned unknown code %d\n", ret);
 	path = NULL;
 	break;
       }
@@ -435,6 +437,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	    archive_iteration_delete(a);
 	  }
 	  archive_destroy(arc);
+	  ret = dir == 1 ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
 	  archive_iteration_delete(a);
@@ -465,6 +468,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	if (archiver_open(ar, eps, arc, arc->format, s)) {
 	  dir = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
+	  ret = dir == 1 ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
 	  continue;
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
@@ -508,7 +512,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      dir = main_loop(uidata, vw, m, NULL, path);
+      ret = main_loop(uidata, vw, m, NULL, path);
       movie_unload(m);
     } else {
 
@@ -521,7 +525,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      dir = main_loop(uidata, vw, NULL, p, path);
+      ret = main_loop(uidata, vw, NULL, p, path);
       memory_destroy(p->rendered.image);
       p->rendered.image = NULL;
       memory_destroy(p->image);
