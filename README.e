@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Fri Feb  2 15:02:33 2001.
+     Last Modified: Sun Feb  4 20:02:20 2001.
 
  This file is part of Enfle.
 
@@ -41,23 +41,6 @@
  -- possible patent infringement. It's up to you whether use it or not.
 
  This software includes mpglib by Michael Hipp.
-
- This software includes libmpeg2 by Aaron Holtzman. For this part, you
- can apply GPL2 or later version.
-
- This product includes software developed by or derived from software
- developed by Project Mayo.
-
- In effect, only libdivxdecore is derived from software developed by
- Project Mayo. OpenDivX plugin uses the library, but all other portions
- of this software does not.
-
- This archive contains libdivxdecore from Project Mayo. OpenDivX player
- plugin uses libdivxdecore and is released as a "Larger Work" under
- that license. Consistent with that license, OpenDivX plugin is
- released under the GNU General Public License. The OpenDivX license
- can be found at OpenDivX-LICENSE in source tree, or
- http://www.projectmayo.com/opendivx/docs.php.
 
 ***************************************************
 
