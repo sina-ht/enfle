@@ -1,3 +1,13 @@
+2001-10-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Simplify scroll code. Added the code
+	to specify a part of the picture by a rectangle.
+
+	* lib/enfle/video.h, plugins/video/Xlib/Xlib.c: Added new methods:
+	draw_rect(), erase_rect().
+
+	* common.h: Added MAX(), MIN(), SWAP().
+
 2001-10-22  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11.h, lib/X11/x11ximage.c, plugins/video/Xlib/Xlib.c,
@@ -18,8 +28,8 @@
 
 2001-10-14  Hiroshi Takekawa  <sian@fennel.org>
 
-	* src/enfle.rc: More configuration: stream, archive control
-	feature control, and assoc sample.
+	* src/enfle.rc: More configuration: stream, archive feature
+	control, and assoc sample.
 
 	* src/enfle.c: Cleaned up.
 
