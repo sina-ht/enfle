@@ -1,8 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.3 2001/01/06 23:57:21 sian Exp $
+# $Id: Makefile.am,v 1.4 2001/01/23 23:49:44 sian Exp $
 
-CFLAGS += -DENFLE_PLUGINDIR=\"$(enfle_plugindir)\" -DENFLE_DATADIR=\"$(enfle_datadir)\"
+AM_CFLAGS = -DENFLE_PLUGINDIR=\"$(enfle_plugindir)\" -DENFLE_DATADIR=\"$(enfle_datadir)\"
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 bin_PROGRAMS = enfle

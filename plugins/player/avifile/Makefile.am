@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Jan  6 01:25:42 2001.
-# $Id: Makefile.am,v 1.1 2001/01/06 23:50:08 sian Exp $
+# Last Modified: Wed Jan 24 08:43:59 2001.
+# $Id: Makefile.am,v 1.2 2001/01/23 23:49:44 sian Exp $
 
-CXXFLAGS += -D_REENTRANT
+AM_CXXFLAGS = -D_REENTRANT
 libdir = $(enfle_player_plugindir)
 
 if HAVE_AVIFILE
