@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 03:43:57 2001.
- * $Id: Xlib.c,v 1.29 2001/04/25 19:16:28 sian Exp $
+ * Last Modified: Thu Apr 26 18:12:50 2001.
+ * $Id: Xlib.c,v 1.30 2001/04/27 01:06:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -737,7 +737,6 @@ set_background(VideoWindow *vw, Image *p)
   XClearWindow(x11_display(x11), x11window_win(xw));
 
   x11_free_pixmap(x11, pix);
-  x11_free_gc(x11, gc);
   x11ximage_destroy(xi);
 }
 
