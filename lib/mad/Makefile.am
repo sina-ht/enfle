@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Mar  8 16:49:53 2004.
-# $Id: Makefile.am,v 1.4 2004/03/08 07:50:40 sian Exp $
+# Last Modified: Thu Mar 11 22:42:08 2004.
+# $Id: Makefile.am,v 1.5 2004/03/11 15:09:01 sian Exp $
 
 AM_CFLAGS = -Dasm=__asm__
 EXTRA_DIST = mad.h.sed CHANGES COPYRIGHT CREDITS README TODO VERSION
@@ -11,7 +11,6 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 BUILT_SOURCES = mad.h
 CLEANFILES = mad.h
-noinst_HEADERS = mad.h
 #libenflemad_la_LIBADD = -lm
 #libenflemad_la_LIBADD = @ASO_OBJS@
 exported_headers = \
@@ -24,7 +23,7 @@ exported_headers = \
 	synth.h \
 	decoder.h
 
-include_HEADERS = \
+noinst_HEADERS = \
 	$(exported_headers) \
 	global.h \
 	huffman.h \
