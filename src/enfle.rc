@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sun Apr 18 15:52:10 2004.
-; $Id: enfle.rc,v 1.47 2004/04/23 16:34:17 sian Exp $
+; Last Modified: Mon Aug 16 19:27:46 2004.
+; $Id: enfle.rc,v 1.48 2004/08/16 11:09:49 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -38,7 +38,7 @@ enfle {
 	show_comment = no
 	; filename code conversion from internal representation to display
 	;filename_code_conversion = yes
-	;filename_code_from := UTF-8:Shift_JIS
+	;filename_code_from := EUC-JP:UTF-8:Shift_JIS
 	;filename_code_to = EUC-JP
 	;;filename_code_to = EUC-JISX0213
       }
@@ -75,7 +75,8 @@ enfle {
     }
     loader {
       ; To try all plugins for unknown extension, uncomment this.
-      ;scan_no_assoc = yes
+      ; To load .bmp.gz or such, enable this by default.
+      scan_no_assoc = yes
       jpeg {
 	; dct_method = default/fast/slow/float/fastest
 	;  Default and fastest are defined in jpeglib.h or overridden by jconfig.h.
@@ -171,8 +172,8 @@ enfle {
       }
     }
     archiver {
-      ; To try all plugins for unknown extension, uncomment this.
-      ;scan_no_assoc = yes
+      ; To load .tar.gz or such, enable this by default.
+      scan_no_assoc = yes
       assoc {
         tar := TAR:.
         zip := ARC:.
