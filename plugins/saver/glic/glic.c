@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug 30 10:05:07 2001.
- * $Id: glic.c,v 1.16 2001/08/30 01:07:33 sian Exp $
+ * Last Modified: Thu Sep  6 12:34:34 2001.
+ * $Id: glic.c,v 1.17 2001/09/07 04:46:19 sian Exp $
  */
 
 #include <stdlib.h>
@@ -28,6 +28,8 @@
 
 #include "predict.h"
 #include "scan.h"
+#include "threshold.h"
+#include "expand.h"
 
 #include "floorlog2.h"
 
@@ -82,6 +84,8 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   int scan_id;
   int b, count, result;
 
+  memset(&vmpm, 0, sizeof(vmpm));
+
   if (p->width != p->height) {
     show_message("width %d != %d height\n", p->width, p->height);
     return 0;
@@ -120,7 +124,6 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   decompose_method = (char *)config_get(c, "/enfle/plugins/saver/glic/decompose_method");
   predict_method = (char *)config_get(c, "/enfle/plugins/saver/glic/predict_method");
   scan_method = (char *)config_get(c, "/enfle/plugins/saver/glic/scan_method");
-  memset(&vmpm, 0, sizeof(vmpm));
   vmpm.outfilepath = strdup(path);
   vmpm.outfile = fp;
   vmpm.r = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/r", &result);
@@ -213,6 +216,13 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   free(predicted);
 
   vmpm.bufferused = image_size;
+
+  if (vmpm.nlowbits > 0)
+    threshold(&vmpm);
+
+  if (vmpm.bitwise)
+    expand(&vmpm);
+
   result = vmpm.decomposer->decompose(&vmpm, 0, vmpm.I, vmpm.bufferused);
   debug_message("glic: decomposed.\n");
 
@@ -221,6 +231,11 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 
   vmpm.decomposer->encode(&vmpm);
   debug_message("glic: encoded.\n");
+
+  if (vmpm.buffer_low) {
+    free(vmpm.buffer_low);
+    vmpm.buffer_low = NULL;
+  }
 
   /* check */
   rewind(vmpm.outfile);
