@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.11 2001/09/07 04:57:19 sian Exp $
+# $Id: Makefile.am,v 1.12 2001/09/09 23:58:37 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -29,7 +29,7 @@ lib_LTLIBRARIES = \
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib -I$(HOME)/work/m1/arith/src/libarith
 
 saver_glic_la_LIBADD = -lm
-saver_glic_la_LDFLAGS = -avoid-version -module -export-dynamic
+saver_glic_la_LDFLAGS = -avoid-version -module
 saver_glic_la_SOURCES = \
 	glic.c \
 	predict.c predict.h \
@@ -39,10 +39,9 @@ saver_glic_la_SOURCES = \
 	expand.c expand.h \
 	threshold.c threshold.h \
 	vmpm_decompose.c vmpm_decompose.h \
-	vmpm_error.c vmpm_error.h \
 	vmpm.h
 
-COMMON_FILES = ipow.c vmpm_hash.c vmpm_hash.h
+COMMON_FILES = ipow.c vmpm_hash.c vmpm_hash.h vmpm_error.c vmpm_error.h
 
 vmpm_decompose_normal_la_LIBADD = libarith.la
 vmpm_decompose_normal_la_LDFLAGS = -avoid-version -module
