@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Sep  7 23:24:22 2001.
- * $Id: cpucaps.c,v 1.1 2001/09/09 23:53:13 sian Exp $
+ * $Id: cpucaps.c,v 1.2 2001/09/10 11:57:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,8 +26,10 @@
 static void
 cpuid(int op, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
-  asm("cpuid\n\t"
-      "movl %%ebx, %%esi"
+  asm("pushl %%ebx\n\t"
+      "cpuid\n\t"
+      "movl %%ebx, %%esi\n\t"
+      "popl %%ebx"
       : "=a" (*eax), "=S" (*ebx), "=c" (*ecx), "=d" (*edx)
       : "a"  (op));
 }
