@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 02:18:06 2001.
- * $Id: video.h,v 1.12 2001/02/19 17:21:45 sian Exp $
+ * Last Modified: Tue Apr 24 19:49:26 2001.
+ * $Id: video.h,v 1.13 2001/04/24 16:41:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,6 +123,7 @@ typedef enum _videowindowcursor {
 typedef struct _video_window VideoWindow;
 struct _video_window {
   Config *c;
+  VideoWindow *parent;
   void *private_data;
   unsigned int x, y;
   unsigned int width, height;
@@ -141,6 +142,7 @@ struct _video_window {
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
   void (*set_caption)(VideoWindow *, unsigned char *);
   void (*set_cursor)(VideoWindow *, VideoWindowCursor);
+  void (*set_background)(VideoWindow *, Image *);
   int (*set_fullscreen_mode)(VideoWindow *, VideoWindowFullscreenMode);
   int (*resize)(VideoWindow *, unsigned int, unsigned int);
   int (*move)(VideoWindow *, unsigned int, unsigned int);
@@ -160,6 +162,7 @@ struct _video_window {
 #define video_window_dispatch_event(vw, ved) (vw)->dispatch_event((vw), (ved))
 #define video_window_set_caption(vw, c) (vw)->set_caption((vw), (c))
 #define video_window_set_cursor(vw, vc) (vw)->set_cursor((vw), (vc))
+#define video_window_set_background(vw, p) (vw)->set_background((vw), (p))
 #define video_window_set_fullscreen_mode(vw, m) (vw)->set_fullscreen_mode((vw), (m))
 #define video_window_resize(vw, w, h) (vw)->resize((vw), (w), (h))
 #define video_window_move(vw, x, y) (vw)->move((vw), (x), (y))
