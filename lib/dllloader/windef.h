@@ -1,10 +1,10 @@
 /*
  * windef.h
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 28 13:06:01 2001.
- * $Id: windef.h,v 1.8 2001/09/29 18:02:23 sian Exp $
+ * Last Modified: Sun Sep 30 05:10:02 2001.
+ * $Id: windef.h,v 1.9 2001/10/05 04:07:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -80,6 +80,7 @@ DECLARE_HANDLE(HLOCAL);
 DECLARE_HANDLE(HGLOBAL);
 DECLARE_HANDLE(HKEY);
 DECLARE_HANDLE(HWND);
+DECLARE_HANDLE(HRSRC);
 
 typedef HINSTANCE HMODULE;
 
@@ -251,6 +252,17 @@ typedef struct _exception_pointers {
   PEXCEPTION_RECORD ExceptionRecord;
   //PCONTEXT ContextRecord;
 } EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
+
+struct _exception_frame;
+typedef DWORD (CALLBACK *PEXCEPTION_HANDLER)(PEXCEPTION_RECORD, struct _exception_frame *, LPVOID);
+
+typedef struct _exception_frame {
+  struct __EXCEPTION_FRAME *Prev;
+  PEXCEPTION_HANDLER       Handler;
+} EXCEPTION_FRAME, *PEXCEPTION_FRAME;
+
+typedef LONG CALLBACK (*PTOP_LEVEL_EXCEPTION_FILTER)(PEXCEPTION_POINTERS);
+typedef PTOP_LEVEL_EXCEPTION_FILTER LPTOP_LEVEL_EXCEPTION_FILTER;
 
 /* environment */
 
