@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Tue Jan 27 23:15:07 2004.
-# $Id: Makefile.am,v 1.2 2004/01/30 12:40:02 sian Exp $
+# Last Modified: Mon Feb 23 01:40:33 2004.
+# $Id: Makefile.am,v 1.3 2004/02/24 15:54:38 sian Exp $
 
 AM_CFLAGS = -Dasm=__asm__
 EXTRA_DIST = mad.h.sed CHANGES COPYRIGHT CREDITS README TODO VERSION
@@ -15,6 +15,7 @@ noinst_HEADERS = mad.h
 #libenflemad_la_LIBADD = -lm
 #libenflemad_la_LIBADD = @ASO_OBJS@
 exported_headers = \
+	config.h \
 	version.h \
 	fixed.h \
 	bit.h \
@@ -52,6 +53,18 @@ libenflemad_la_SOURCES = \
 
 EXTRA_libenflemad_la_SOURCES = imdct_l_arm.S
 
+if ARCH_X86
+FPM=-DFPM_INTEL
+endif
+
+if ARCH_SPARC
+FPM=-DFPM_SPARC
+endif
+
+if ARCH_PPC
+FPM=-DFPM_PPC
+endif
+
 mad.h: Makefile.am $(srcdir)/COPYRIGHT $(srcdir)/mad.h.sed $(exported_headers)
 	(sed -e '1s|.*|/*|' -e '1b' -e '$$s|.*| */|' -e '$$b'  \
 		-e 's/^.*/ *&/' $(srcdir)/COPYRIGHT; echo;  \
@@ -59,7 +72,8 @@ mad.h: Makefile.am $(srcdir)/COPYRIGHT $(srcdir)/mad.h.sed $(exported_headers)
 	echo 'extern "C" {';  \
 	echo "# endif"; echo;  \
 	if [ ".$(FPM)" != "." ]; then  \
-		echo ".$(FPM)" | sed -e 's|^\.-D|# define |'; echo;  \
+		echo ".$(FPM)" | sed -e 's|^\.-D|# define |'; echo;  \	else \
+		echo ".-DFPM_DEFAULT" | sed -e 's|^\.-D|# define |'; echo;  \
 	fi;  \
 	sed -ne 's/^# *define  *\(HAVE_.*_ASM\).*/# define \1/p'  \
 		config.h; echo;  \
