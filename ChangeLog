@@ -1,3 +1,60 @@
+2004-01-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/mad/audiodecoder_mad.c: Removed audiodecoder_mad.c
+
+	* lib/mpglib/audiodecoder_mpglib.c: Removed audiodecoder_mpglib.c
+
+	* configure.in, src/enfle.c: Added audiodecoder and videodecoder
+	plugins.
+
+	* plugins/player/avcodec/avcodec.c, plugins/player/divx/divx.c,
+	plugins/player/libmpeg2/libmpeg2.c: Use videodecoder plugins.
+
+	* lib/enfle/player.c: Pass eps to player plugin method.
+
+	* lib/enfle/Makefile.am, lib/enfle/audiodecoder.h,
+	lib/enfle/enfle-plugin.c, lib/enfle/enfle-plugintype.h,
+	plugins/Makefile.am: Added audiodecoder and videodecoder plugins.
+
+	* lib/mad/.cvsignore, lib/mad/Makefile.am, lib/mpeg2/Makefile.am,
+	lib/mpeg2/cpu_accel.c, lib/mpglib/Makefile.am: Converted
+	*decoder_*.c to plugins.
+
+	* lib/enfle/audiodecoder-plugin.h, lib/enfle/audiodecoder.c,
+	lib/enfle/videodecoder-plugin.h, lib/enfle/videodecoder.c,
+	lib/enfle/videodecoder.h, plugins/audiodecoder/.cvsignore,
+	plugins/audiodecoder/Makefile.am,
+	plugins/audiodecoder/mad/.cvsignore,
+	plugins/audiodecoder/mad/Makefile.am,
+	plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/.cvsignore,
+	plugins/audiodecoder/mpglib/Makefile.am,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/videodecoder/.cvsignore, plugins/videodecoder/Makefile.am,
+	plugins/videodecoder/avcodec/.cvsignore,
+	plugins/videodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/.cvsignore,
+	plugins/videodecoder/divx/Makefile.am,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/.cvsignore,
+	plugins/videodecoder/libmpeg2/Makefile.am,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: New files.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Set pts, dts.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/common.h,
+	lib/avcodec/flicvideo.c, lib/avcodec/h263.c,
+	lib/avcodec/huffyuv.c, lib/avcodec/motion_est.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c: Updated.
+
+2004-01-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/*/*.c, lib/demultiplexer/*: Replaced AVIPacket
+	and MpegPacket with DemuxedPacket.
+
+	* lib/avcodec/*: Updated.
+
 2004-01-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.c: Clear if_attached.
