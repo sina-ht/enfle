@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Jun 14 03:00:22 2001.
- * $Id: x11.h,v 1.9 2001/06/13 18:17:29 sian Exp $
+ * Last Modified: Sat Jun 16 02:29:39 2001.
+ * $Id: x11.h,v 1.10 2001/06/15 18:44:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,10 +23,6 @@
 #ifndef _ENFLE_X11_H
 #define _ENFLE_X11_H
 
-#ifdef USE_XV
-#include <X11/extensions/Xvlib.h>
-#endif
-
 #define X11_EXT_SHM (1 << 0)
 #define X11_EXT_XV  (1 << 1)
 
@@ -44,7 +40,7 @@
 #define XV_YUY2_PACKED_FLAG (1 << XV_YUY2_PACKED)
 #define XV_YUY2_PLANAR_FLAG (1 << XV_YUY2_PLANAR)
 #define XV_YV12_PACKED_FLAG (1 << XV_YV12_PACKED)
-#define XV_YV12_PLANAR_FLAG (1 << XV_YU12_PLANAR)
+#define XV_YV12_PLANAR_FLAG (1 << XV_YV12_PLANAR)
 #define XV_I420_PACKED_FLAG (1 << XV_I420_PACKED)
 #define XV_I420_PLANAR_FLAG (1 << XV_I420_PLANAR)
 #define XV_UYVY_PACKED_FLAG (1 << XV_UYVY_PACKED)
@@ -53,13 +49,9 @@
 typedef struct _x11_xv {
   unsigned int ver, rev, req_base, ev_base, err_base;
   int nadaptors;
-  XvAdaptorInfo *adaptor_infos;
-  unsigned int nencodings;
-  XvEncodingInfo *encoding_infos;
-  int nformats;
-  XvImageFormatValues *formats;
   int image_port;
   unsigned int format_ids[XV_FORMAT_MAX];
+  char prefer_msb[XV_FORMAT_MAX];
   int capable_format;
 } X11Xv;
 #endif
@@ -98,6 +90,7 @@ struct _x11 {
 #define x11_black(x) (x)->black
 
 #define x11_if_shm(x) ((x)->extensions & X11_EXT_SHM)
+#define x11_if_xv(x) ((x)->extensions & X11_EXT_XV)
 
 #define x11_open(x, d) (x)->open((x), (d))
 #define x11_create_window(x, p, w, h) \
@@ -124,6 +117,9 @@ struct _x11 {
 #define x11_free_gc(x, gc) XFreeGC(x11_display((x)), (gc))
 #define x11_close(x) (x)->close((x))
 #define x11_destroy(x) (x)->destroy((x))
+
+#define x11_xv_create_ximage(x, p, i, d, w, h) XvCreateImage(x11_display((x)), (p), (i), (d), (w), (h))
+#define x11_xv_shm_create_ximage(x, p, i, d, w, h, s) XvShmCreateImage(x11_display((x)), (p), (i), (d), (w), (h), (s))
 
 X11 *x11_create(void);
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Jun 14 03:13:29 2001.
- * $Id: x11.c,v 1.9 2001/06/13 18:17:29 sian Exp $
+ * Last Modified: Sat Jun 16 02:43:07 2001.
+ * $Id: x11.c,v 1.10 2001/06/15 18:44:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,7 +29,11 @@
 #include "common.h"
 
 #ifdef USE_SHM
-#include <X11/extensions/XShm.h>
+#  include <X11/extensions/XShm.h>
+#endif
+
+#ifdef USE_XV
+#  include <X11/extensions/Xvlib.h>
 #endif
 
 #ifdef DEBUG
@@ -131,6 +135,11 @@ open(X11 *x11, char *dispname)
   {
     int result;
     X11Xv *xv;
+    XvAdaptorInfo *adaptor_infos;
+    unsigned int nencodings;
+    XvEncodingInfo *encoding_infos;
+    int nformats;
+    XvImageFormatValues *formats;
 
     xv = &x11->xv;
     if ((result = XvQueryExtension(x11_display(x11), &xv->ver, &xv->rev,
@@ -148,26 +157,26 @@ open(X11 *x11, char *dispname)
 
     if (x11->extensions & X11_EXT_XV) {
       if ((result = XvQueryAdaptors(x11_display(x11), x11_root(x11),
-				    &xv->nadaptors, &xv->adaptor_infos)) == Success) {
+				    &xv->nadaptors, &adaptor_infos)) == Success) {
 	if (xv->nadaptors) {
 	  int i, j, k, l;
 
 	  for (i = 0; i < xv->nadaptors; i++) {
-	    debug_message("x11: " __FUNCTION__ ": Xv: adaptor#%d[%s]: %ld ports\n", i, xv->adaptor_infos[i].name, xv->adaptor_infos[i].num_ports);
+	    debug_message("x11: " __FUNCTION__ ": Xv: adaptor#%d[%s]: %ld ports\n", i, adaptor_infos[i].name, adaptor_infos[i].num_ports);
 	    debug_message("x11: " __FUNCTION__ ": Xv:  operations: ");
-	    switch (xv->adaptor_infos[i].type & (XvInputMask | XvOutputMask)) {
+	    switch (adaptor_infos[i].type & (XvInputMask | XvOutputMask)) {
 	    case XvInputMask:
-             if(xv->adaptor_infos[i].type & XvVideoMask)
+             if (adaptor_infos[i].type & XvVideoMask)
                 debug_message("PutVideo ");
-             if(xv->adaptor_infos[i].type & XvStillMask)
+             if (adaptor_infos[i].type & XvStillMask)
                 debug_message("PutStill ");
-             if(xv->adaptor_infos[i].type & XvImageMask)
+             if (adaptor_infos[i].type & XvImageMask)
                 debug_message("PutImage ");
              break;
 	    case XvOutputMask:
-             if(xv->adaptor_infos[i].type & XvVideoMask) 
+             if (adaptor_infos[i].type & XvVideoMask) 
                 debug_message("GetVideo ");
-             if(xv->adaptor_infos[i].type & XvStillMask) 
+             if (adaptor_infos[i].type & XvStillMask) 
                 debug_message("GetStill ");
              break;
 	    default:
@@ -176,81 +185,89 @@ open(X11 *x11, char *dispname)
 	    }
 	    debug_message("\n");
 #if 0
-	    for (j = 0; j < xv->adaptor_infos[i].num_formats; j++)
-	      debug_message("x11: " __FUNCTION__ ": Xv:  format#%02d: depth %d visual id %d\n", j, xv->adaptor_infos[i].formats[j].depth, xv->adaptor_infos[i].formats[j].visual_id);
+	    for (j = 0; j < adaptor_infos[i].num_formats; j++)
+	      debug_message("x11: " __FUNCTION__ ": Xv:  format#%02d: depth %d visual id %d\n", j, adaptor_infos[i].formats[j].depth, adaptor_infos[i].formats[j].visual_id);
 #endif
 	    /* XXX: Information of the last port is only stored. */
-	    for (j = 0; j < xv->adaptor_infos[i].num_ports; j++) {
+	    for (j = 0; j < adaptor_infos[i].num_ports; j++) {
 	      debug_message("x11: " __FUNCTION__ ": Xv:  port#%d\n", j);
 	      if ((result = XvQueryEncodings(x11_display(x11),
-					     xv->adaptor_infos[i].base_id + j,
-					     &xv->nencodings,
-					     &xv->encoding_infos)) == Success) {
-		for (k = 0; k < xv->nencodings; k++) {
-		  debug_message("x11: " __FUNCTION__ ": Xv:   encoding#%d[%s] (%ld x %ld)\n", k, xv->encoding_infos[k].name, xv->encoding_infos[k].width, xv->encoding_infos[k].height);
+					     adaptor_infos[i].base_id + j,
+					     &nencodings,
+					     &encoding_infos)) == Success) {
+		for (k = 0; k < nencodings; k++) {
+		  debug_message("x11: " __FUNCTION__ ": Xv:   encoding#%d[%s] (%ld x %ld)\n", k, encoding_infos[k].name, encoding_infos[k].width, encoding_infos[k].height);
 
 		  /* XXX: Sorry, XvVideo, XvStill are unsupported */
 		  /* XXX: I can't test the functions which my G450 doesn't support... */
 
-		  if (!strcmp(xv->encoding_infos[k].name, "XV_IMAGE")) {
-		    xv->image_port = xv->adaptor_infos[i].base_id + j;
+		  if (!strcmp(encoding_infos[k].name, "XV_IMAGE")) {
+		    xv->image_port = adaptor_infos[i].base_id + j;
 		    debug_message("x11: " __FUNCTION__ ": Xv:   Image port %d detected\n", xv->image_port);
-		    xv->formats = XvListImageFormats(x11_display(x11),
-						     xv->adaptor_infos[i].base_id + j,
-						     &xv->nformats);
+		    formats = XvListImageFormats(x11_display(x11),
+						 adaptor_infos[i].base_id + j,
+						 &nformats);
 		    xv->capable_format = 0;
-		    for (l = 0; l < xv->nformats; l++) {
+		    for (l = 0; l < nformats; l++) {
 		      int m, c;
 		      char name[5] = { 0, 0, 0, 0, 0 };
 
 		      debug_message("x11: " __FUNCTION__ ": Xv:    format#%d[", l);
-		      memcpy(name, &xv->formats[l].id, 4);
+		      memcpy(name, &formats[l].id, 4);
 		      for (m = 0; m < 4; m++)
 			debug_message("%c", isprint(name[m]) ? name[m] : '.');
 		      debug_message("]: %d bpp %d planes type %s %s %s ",
-				    xv->formats[l].bits_per_pixel,
-				    xv->formats[l].num_planes,
-				    xv->formats[l].type == XvRGB ? "RGB" : "YUV",
-				    xv->formats[l].format == XvPacked ? "packed" : "planar",
-				    xv->formats[l].byte_order == LSBFirst ? "LSBFirst" : "MSBFirst");
+				    formats[l].bits_per_pixel,
+				    formats[l].num_planes,
+				    formats[l].type == XvRGB ? "RGB" : "YUV",
+				    formats[l].format == XvPacked ? "packed" : "planar",
+				    formats[l].byte_order == LSBFirst ? "LSBFirst" : "MSBFirst");
+		      debug_message("x11: " __FUNCTION__ ": Xv:     component order: ");
+		      for (m = 0; m < formats[l].num_planes; m++)
+			debug_message("%c", formats[l].component_order[m]);
+		      debug_message("\n");
 		      c = -1;
 		      if (strcmp(name, "YUY2") == 0)
-			c = xv->formats[l].format == XvPacked ? XV_YUY2_PACKED : XV_YUY2_PLANAR;
+			c = formats[l].format == XvPacked ? XV_YUY2_PACKED : XV_YUY2_PLANAR;
 		      else if (strcmp(name, "YV12") == 0)
-			c = xv->formats[l].format == XvPacked ? XV_YV12_PACKED : XV_YV12_PLANAR;
+			c = formats[l].format == XvPacked ? XV_YV12_PACKED : XV_YV12_PLANAR;
 		      else if (strcmp(name, "I420") == 0)
-			c = xv->formats[l].format == XvPacked ? XV_I420_PACKED : XV_I420_PLANAR;
+			c = formats[l].format == XvPacked ? XV_I420_PACKED : XV_I420_PLANAR;
 		      else if (strcmp(name, "UYVY") == 0)
-			c = xv->formats[l].format == XvPacked ? XV_UYVY_PACKED : XV_UYVY_PLANAR;
+			c = formats[l].format == XvPacked ? XV_UYVY_PACKED : XV_UYVY_PLANAR;
 
 		      if (c != -1) {
 			xv->capable_format |= (1 << c);
-			xv->format_ids[c] = xv->formats[l].id;
+			xv->format_ids[c] =  formats[l].id;
+			xv->prefer_msb[c] = (formats[l].byte_order == MSBFirst);
 		      } else {
 			debug_message("unsupported");
 		      }
 		      debug_message("\n");
-		      if (xv->formats[l].type == XvRGB) {
-			debug_message("x11: " __FUNCTION__ ": Xv: %d RGB mask %04X,%04X,%04X\n", xv->formats[l].depth, xv->formats[l].red_mask, xv->formats[l].green_mask, xv->formats[l].blue_mask);
+		      if (formats[l].type == XvRGB) {
+			debug_message("x11: " __FUNCTION__ ": Xv: %d RGB mask %04X,%04X,%04X\n", formats[l].depth, formats[l].red_mask, formats[l].green_mask, formats[l].blue_mask);
 		      } else {
 			debug_message("x11: " __FUNCTION__ ": Xv:     bits %d %d %d horz %d %d %d vert %d %d %d order %s\n",
-				      xv->formats[l].y_sample_bits,
-				      xv->formats[l].u_sample_bits,
-				      xv->formats[l].v_sample_bits,
-				      xv->formats[l].horz_y_period,
-				      xv->formats[l].horz_u_period,
-				      xv->formats[l].horz_v_period,
-				      xv->formats[l].vert_y_period,
-				      xv->formats[l].vert_u_period,
-				      xv->formats[l].vert_v_period,
-				      xv->formats[l].scanline_order == XvTopToBottom ? "TopToBottom" : "BottomToTop");
+				      formats[l].y_sample_bits,
+				      formats[l].u_sample_bits,
+				      formats[l].v_sample_bits,
+				      formats[l].horz_y_period,
+				      formats[l].horz_u_period,
+				      formats[l].horz_v_period,
+				      formats[l].vert_y_period,
+				      formats[l].vert_u_period,
+				      formats[l].vert_v_period,
+				      formats[l].scanline_order == XvTopToBottom ? "TopToBottom" : "BottomToTop");
 		      }
 		    }
+		    XFree(formats);
 		  }
 		}
+		XvFreeEncodingInfo(encoding_infos);
 	      }
 	    }
 	  }
+	  XvFreeAdaptorInfo(adaptor_infos);
 	} else {
 	  debug_message("x11: " __FUNCTION__ ": Xv: there are no adaptors found.\n");
 	}
