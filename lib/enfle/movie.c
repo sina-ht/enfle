@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 05:09:58 2000.
- * $Id: movie.c,v 1.1 2000/10/09 20:19:44 sian Exp $
+ * Last Modified: Tue Oct 10 17:39:00 2000.
+ * $Id: movie.c,v 1.2 2000/10/10 11:49:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #define REQUIRE_UNISTD_H
@@ -33,20 +34,18 @@
 
 #include "movie.h"
 
+static int initialize_screen(Movie *, int, int);
 static int render_frame(Movie *, Image *);
 static int pause_usec(unsigned int);
 
-static int play(Movie *);
-static int pause_movie(Movie *);
-static int stop(Movie *);
+static void unload(Movie *);
 static void destroy(Movie *);
 
 static Movie template = {
+  initialize_screen: initialize_screen,
   render_frame: render_frame,
   pause_usec: pause_usec,
-  play: play,
-  pause_movie: pause_movie,
-  stop: stop,
+  unload: unload,
   destroy: destroy
 };
 
@@ -63,6 +62,13 @@ movie_create(void)
 }
 
 /* default callback functions */
+
+static int
+initialize_screen(Movie *m, int w, int h)
+{
+  show_message("Movie screen: (%d x %d)\n", w, h);
+  return 1;
+}
 
 static int
 render_frame(Movie *m, Image *p)
@@ -86,26 +92,19 @@ pause_usec(unsigned int usec)
 
 /* methods */
 
-static int
-play(Movie *m)
+static void
+unload(Movie *m)
 {
-  return 0;
-}
-
-static int
-pause_movie(Movie *m)
-{
-  return 0;
-}
-
-static int
-stop(Movie *m)
-{
-  return 0;
+  if (m->status != _UNLOADED && m->unload_movie)
+    m->unload_movie(m);
+  m->status = _UNLOADED;
 }
 
 static void
 destroy(Movie *m)
 {
+  unload(m);
+  if (m->ui_private)
+    free(m->ui_private);
   free(m);
 }

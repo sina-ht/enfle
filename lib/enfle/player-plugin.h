@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 02:00:00 2000.
- * $Id: player-plugin.h,v 1.1 2000/10/08 17:38:15 sian Exp $
+ * Last Modified: Tue Oct 10 16:09:58 2000.
+ * $Id: player-plugin.h,v 1.2 2000/10/10 11:49:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,7 +27,7 @@
 
 #include "enfle-plugin.h"
 #include "stream.h"
-#include "image.h"
+#include "movie.h"
 
 typedef enum {
   PLAY_ERROR = -1,
@@ -38,8 +38,8 @@ typedef enum {
 typedef struct _player_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
 
-  PlayerStatus (*identify)(Image *, Stream *);
-  PlayerStatus (*play)(Image *, Stream *);
+  PlayerStatus (*identify)(Movie *, Stream *);
+  PlayerStatus (*load)(Movie *, Stream *);
 } PlayerPlugin;
 
 void *plugin_entry(void);

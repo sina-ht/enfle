@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 02:18:08 2000.
- * $Id: Xlib.c,v 1.2 2000/10/08 17:33:44 sian Exp $
+ * Last Modified: Tue Oct 10 17:59:58 2000.
+ * $Id: Xlib.c,v 1.3 2000/10/10 11:49:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,12 @@
 
 #include "ui-plugin.h"
 
+typedef struct {
+  X11 *x11;
+  X11Window *xw;
+  XImage *ximage;
+} Xlib_info;
+
 static int ui_main(UIData *);
 
 static UIPlugin plugin = {
@@ -72,9 +78,63 @@ plugin_exit(void *p)
 /* for internal use */
 
 static int
-play_movie(X11 *x11, X11Window *xw, Image *p)
+initialize_screen(Movie *m, int w, int h)
 {
-  return 0;
+  Xlib_info *info = (Xlib_info *)m->ui_private;
+  int f;
+
+  f = x11window_resize(info->xw, w, h);
+  XFlush(x11_display(info->x11));
+
+  return f;
+}
+
+static int
+render_frame(Movie *m, Image *p)
+{
+  Xlib_info *info = (Xlib_info *)m->ui_private;
+  X11 *x11 = info->x11;
+  X11Window *xw = info->xw;
+  XImage *ximage = info->ximage;
+  Pixmap pix;
+  GC gc;
+
+  x11ximage_convert_image(ximage, p);
+
+  pix = x11_create_pixmap(x11, x11window_win(xw), p->width, p->height, x11_depth(x11));
+  gc = x11_create_gc(x11, pix, 0, 0);
+  XPutImage(x11_display(x11), pix, gc, ximage, 0, 0, 0, 0, p->width, p->height);
+
+  if (ximage->data != (char *)p->image)
+    free(p->image);
+  p->image = NULL;
+
+  XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, 0, 0, p->width, p->height, 0, 0);
+  XFlush(x11_display(x11));
+
+  return 1;
+}
+
+static int
+play_movie(X11 *x11, X11Window *xw, Movie *m)
+{
+  XImage *ximage;
+  Xlib_info *info = (Xlib_info *)m->ui_private;
+
+  ximage = x11_create_ximage(x11, x11_visual(x11), x11_depth(x11), m->get_screen(m),
+			     m->width, m->height, 8, 0);
+  info->ximage = ximage;
+
+  do {
+    if (movie_play_main(m) != PLAY_OK) {
+      show_message("play_movie: Error\n");
+      return 0;
+    }
+  } while (m->status == _PLAY);
+
+  x11_destroy_ximage(ximage);
+
+  return 1;
 }
 
 static int
@@ -212,6 +272,8 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
   Archive *arc;
   Stream *s;
   Image *p;
+  Movie *m;
+  Xlib_info *info;
   char *path;
   int f;
   int dir = 1;
@@ -219,6 +281,17 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 
   s = stream_create();
   p = image_create();
+  m = movie_create();
+  
+  m->initialize_screen = initialize_screen;
+  m->render_frame = render_frame;
+  if ((m->ui_private = calloc(1, sizeof(Xlib_info))) == NULL) {
+    dir = 0;
+  }
+
+  info = (Xlib_info *)m->ui_private;
+  info->x11 = x11;
+  info->xw = xw;
 
   path = NULL;
   while (dir) {
@@ -300,36 +373,38 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
       continue;
     }
 
+    f = LOAD_NOT;
     if (loader_identify(ld, p, s)) {
 
       debug_message("Image identified as %s\n", p->format);
 
-      f = loader_load_image(ld, p->format, p, s);
+      if ((f = loader_load_image(ld, p->format, p, s)) == LOAD_OK)
+	stream_close(s);
     } else {
-      stream_close(s);
-
       show_message("%s identification failed\n", path);
-
-      archive_iteration_delete(a);
-      continue;
     }
 
     if (f != LOAD_OK) {
-      if (player_identify(player, p, s)) {
+      if (player_identify(player, m, s)) {
 
 	debug_message("Movie(Animation) identified as %s\n", p->format);
 
-	if ((f = player_play(player, p->format, p, s)) != PLAY_OK) {
+	if ((f = player_load_movie(player, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
-	  show_message("%s load failed\n", path);
+	  show_message("%s play failed\n", path);
 	  archive_iteration_delete(a);
 	  continue;
 	}
+      } else {
+	stream_close(s);
+	show_message("%s identify failed\n", path);
+	archive_iteration_delete(a);
+	continue;
       }
 
-      dir = play_movie(x11, xw, p);
+      dir = play_movie(x11, xw, m);
+      movie_unload(m);
     } else {
-      stream_close(s);
 
       debug_message("%s: (%d, %d)\n", path, p->width, p->height);
 
@@ -338,18 +413,12 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 	free(p->comment);
 	p->comment = NULL;
       }
-#if 0
-      {
-	Image *new;
-	new = image_magnify(p, p->width * 2, p->height * 2, _BILINEAR);
-	image_destroy(p);
-	p = new;
-      }
-#endif
+
       dir = show_image(x11, xw, p);
     }
   }
 
+  movie_destroy(m);
   image_destroy(p);
   stream_destroy(s);
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 02:04:20 2000.
- * $Id: player.c,v 1.1 2000/10/08 17:38:15 sian Exp $
+ * Last Modified: Tue Oct 10 16:09:43 2000.
+ * $Id: player.c,v 1.2 2000/10/10 11:49:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,8 +30,8 @@
 
 static char *load(Player *, Plugin *);
 static int unload(Player *, char *);
-static int identify(Player *, Image *, Stream *);
-static PlayerStatus play(Player *, char *, Image *, Stream *);
+static int identify(Player *, Movie *, Stream *);
+static PlayerStatus load_movie(Player *, char *, Movie *, Stream *);
 static void destroy(Player *);
 static Dlist *get_names(Player *);
 static unsigned char *get_description(Player *, char *);
@@ -42,7 +42,7 @@ static Player player_template = {
   load: load,
   unload: unload,
   identify: identify,
-  play: play,
+  load_movie: load_movie,
   destroy: destroy,
   get_names: get_names,
   get_description: get_description,
@@ -97,7 +97,7 @@ unload(Player *l, char *pluginname)
 }
 
 static int
-identify(Player *l, Image *ip, Stream *st)
+identify(Player *l, Movie *mp, Stream *st)
 {
   Dlist *dl;
   Dlist_data *dd;
@@ -116,8 +116,8 @@ identify(Player *l, Image *ip, Stream *st)
     lp = plugin_get(p);
 
     stream_rewind(st);
-    if (lp->identify(ip, st) == PLAY_OK) {
-      ip->format = pluginname;
+    if (lp->identify(mp, st) == PLAY_OK) {
+      mp->format = pluginname;
       dlist_move_to_top(dl, dd);
       return 1;
     }
@@ -127,17 +127,17 @@ identify(Player *l, Image *ip, Stream *st)
 }
 
 static PlayerStatus
-play(Player *l, char *pluginname, Image *ip, Stream *st)
+load_movie(Player *l, char *pluginname, Movie *m, Stream *st)
 {
   Plugin *p;
-  PlayerPlugin *lp;
+  PlayerPlugin *pp;
 
   if ((p = pluginlist_get(l->pl, pluginname)) == NULL)
     return 0;
-  lp = plugin_get(p);
+  pp = plugin_get(p);
 
   stream_rewind(st);
-  return lp->play(ip, st);
+  return pp->load(m, st);
 }
 
 static void
