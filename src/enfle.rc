@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Nov 30 00:58:33 2002.
-; $Id: enfle.rc,v 1.32 2002/11/29 16:01:16 sian Exp $
+; Last Modified: Sat Sep 13 02:13:35 2003.
+; $Id: enfle.rc,v 1.33 2003/10/12 04:04:51 sian Exp $
 
 enfle {
   identify {
@@ -37,10 +37,10 @@ enfle {
         ;archiver/disabled = yes
 	;
 	show_comment = no
-	; filename code conversion
-	filename_code_conversion = yes
-	filename_code_from = Shift_JIS
-	filename_code_to = EUC-JP
+	; filename code conversion from internal representation to display
+	;filename_code_conversion = yes
+	;filename_code_from = UTF-8
+	;filename_code_to = EUC-JP
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -159,6 +159,12 @@ enfle {
       }
     }
     archiver {
+      ; filename code conversion to internal representation
+      ;filename_code_conversion = yes
+      ;filename_code_from := Shift_JIS:EUC-JP
+      ;filename_code_to = UTF-8
+      filename_code_from := UTF-8:Shift_JIS
+      filename_code_to = EUC-JP
       assoc {
         tar := TAR
       }
