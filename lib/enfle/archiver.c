@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb  9 12:31:29 2002.
- * $Id: archiver.c,v 1.11 2002/02/09 03:45:28 sian Exp $
+ * Last Modified: Thu Aug  8 00:27:26 2002.
+ * $Id: archiver.c,v 1.12 2002/08/07 15:34:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,7 +22,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-#define REQUIRE_FATAL
 #include "common.h"
 
 #include "stream.h"
@@ -34,8 +33,6 @@
 int
 archiver_identify(EnflePlugins *eps, Archive *a, Stream *st, Config *c)
 {
-  Dlist *dl;
-  Dlist_data *dd;
   PluginList *pl;
   Plugin *p;
   ArchiverPlugin *arp;
@@ -75,22 +72,22 @@ archiver_identify(EnflePlugins *eps, Archive *a, Stream *st, Config *c)
     free(ext);
   }
 
-  dl = pluginlist_list(pl);
-  dlist_iter(dl, dd) {
-    pluginname = hash_key_key(dlist_data(dd));
-    if ((p = pluginlist_get(pl, pluginname)) == NULL)
-      bug(1, "%s archiver plugin not found but in list.\n", pluginname);
-    arp = plugin_get(p);
+  {
+    void *k;
+    unsigned int kl;
 
-    //debug_message("archiver: identify: try %s\n", pluginname);
-    stream_rewind(st);
-    if (arp->identify(a, st, arp->archiver_private) == OPEN_OK) {
-      a->format = pluginname;
-      dlist_move_to_top(dl, dd);
-      return 1;
+    pluginlist_iter(pl, k, kl, p) {
+      arp = plugin_get(p);
+      //debug_message("archiver: identify: try %s\n", (char *)k);
+      stream_rewind(st);
+      if (arp->identify(a, st, arp->archiver_private) == OPEN_OK) {
+	a->format = (char *)k;
+	pluginlist_move_to_top;
+	return 1;
+      }
+      //debug_message("archiver: identify: %s: failed\n", (char *)k);
     }
-
-    //debug_message("archiver: identify: %s: failed\n", pluginname);
+    pluginlist_iter_end;
   }
 
   return 0;

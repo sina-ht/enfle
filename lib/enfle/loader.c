@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 10 22:30:01 2002.
- * $Id: loader.c,v 1.23 2002/08/03 05:11:24 sian Exp $
+ * Last Modified: Thu Aug  8 00:17:51 2002.
+ * $Id: loader.c,v 1.24 2002/08/07 15:34:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,7 +22,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-#define REQUIRE_FATAL
 #include "common.h"
 
 #include "loader.h"
@@ -33,8 +32,6 @@
 int
 loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Config *c)
 {
-  Dlist *dl;
-  Dlist_data *dd;
   PluginList *pl;
   Plugin *p;
   LoaderPlugin *lp;
@@ -75,21 +72,23 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
     free(ext);
   }
 
-  dl = pluginlist_list(pl);
-  ip->format_detail = NULL;
-  dlist_iter(dl, dd) {
-    pluginname = hash_key_key(dlist_data(dd));
-    if ((p = pluginlist_get(pl, pluginname)) == NULL)
-      bug(1, "%s loader plugin not found but in list.\n", pluginname);
-    lp = plugin_get(p);
+  {
+    void *k;
+    unsigned int kl;
 
-    stream_rewind(st);
-    //debug_message_fnc("try %s\n", pluginname);
-    if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
-      ip->format = pluginname;
-      dlist_move_to_top(dl, dd);
-      return 1;
+    ip->format_detail = NULL;
+    pluginlist_iter(pl, k, kl, p) {
+      lp = plugin_get(p);
+      //debug_message("loader: identify: try %s\n", (char *)k);
+      stream_rewind(st);
+      if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
+	ip->format = (char *)k;
+	pluginlist_move_to_top;
+	return 1;
+      }
+      //debug_message("loader: identify: %s: failed\n", (char *)k);
     }
+    pluginlist_iter_end;
   }
 
   return 0;

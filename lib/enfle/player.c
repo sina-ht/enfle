@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 01:40:29 2002.
- * $Id: player.c,v 1.19 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Thu Aug  8 00:26:53 2002.
+ * $Id: player.c,v 1.20 2002/08/07 15:34:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,7 +22,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-#define REQUIRE_FATAL
 #include "common.h"
 
 #include "player.h"
@@ -33,8 +32,6 @@
 int
 player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
 {
-  Dlist *dl;
-  Dlist_data *dd;
   PluginList *pl;
   Plugin *p;
   PlayerPlugin *pp;
@@ -74,19 +71,22 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
     free(ext);
   }
 
-  dl = pluginlist_list(pl);
-  dlist_iter(dl, dd) {
-    pluginname = hash_key_key(dlist_data(dd));
-    if ((p = pluginlist_get(pl, pluginname)) == NULL)
-      bug(1, "%s player plugin not found but in list.\n", pluginname);
-    pp = plugin_get(p);
+  {
+    void *k;
+    unsigned int kl;
 
-    stream_rewind(st);
-    if (pp->identify(m, st, c, NULL) == PLAY_OK) {
-      m->format = pluginname;
-      dlist_move_to_top(dl, dd);
-      return 1;
+    pluginlist_iter(pl, k, kl, p) {
+      pp = plugin_get(p);
+      //debug_message("player: identify: try %s\n", (char *)k);
+      stream_rewind(st);
+      if (pp->identify(m, st, c, NULL) == PLAY_OK) {
+	m->format = (char *)k;
+	pluginlist_move_to_top;
+	return 1;
+      }
+      //debug_message("player: identify: %s: failed\n", (char *)k);
     }
+    pluginlist_iter_end;
   }
 
   return 0;
