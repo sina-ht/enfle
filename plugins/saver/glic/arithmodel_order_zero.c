@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Jul 16 16:47:31 2001.
- * $Id: arithmodel_order_zero.c,v 1.2 2001/07/17 12:22:51 sian Exp $
+ * Last Modified: Wed Aug  1 00:41:01 2001.
+ * $Id: arithmodel_order_zero.c,v 1.3 2001/07/31 20:25:57 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -43,11 +43,36 @@ default_update_escape_freq(Arithmodel *_am, Index index)
 }
 
 static void
+default_update_region(Arithmodel *_am, Index index)
+{
+  Arithmodel_order_zero *am = (Arithmodel_order_zero *)_am;
+  Arithcoder *ac = am->ac;
+  unsigned int tmp = ac->range / am->freq[am->nsymbols - 1];
+
+  debug_message(__FUNCTION__ "(%d, tmp %X)\n", index, tmp);
+
+  if (index > 0) {
+    ac->low += tmp * am->freq[index - 1];
+    ac->range = tmp * (am->freq[index] - am->freq[index - 1]);
+  } else {
+    ac->range = tmp * am->freq[0];
+  }
+}
+
+static void
 set_update_escape_freq(Arithmodel *_am, int (*func)(Arithmodel *, Index))
 {
   Arithmodel_order_zero *am = (Arithmodel_order_zero *)_am;
 
   am->update_escape_freq = func;
+}
+
+static void
+set_update_region(Arithmodel *_am, void (*func)(Arithmodel *, Index))
+{
+  Arithmodel_order_zero *am = (Arithmodel_order_zero *)_am;
+
+  am->update_region = func;
 }
 
 Arithmodel *
@@ -68,9 +93,11 @@ arithmodel_order_zero_create(int default_initial_eof_freq, int default_initial_e
   am->destroy = destroy;
   am->my_reset = my_reset;
   am->set_update_escape_freq = set_update_escape_freq;
+  am->set_update_region = set_update_region;
   am->default_initial_eof_freq = default_initial_eof_freq;
   am->default_initial_escape_freq = default_initial_escape_freq;
   set_update_escape_freq((Arithmodel *)am, default_update_escape_freq);
+  set_update_region((Arithmodel *)am, default_update_region);
 
   return (Arithmodel *)am;
 }
@@ -174,22 +201,6 @@ encode_init(Arithmodel *_am, Arithcoder *ac)
 }
 
 static void
-update_region(Arithmodel_order_zero *am, Index index)
-{
-  Arithcoder *ac = am->ac;
-  unsigned int tmp = ac->range / am->freq[am->nsymbols - 1];
-
-  debug_message(__FUNCTION__ "(%d, tmp %X)\n", index, tmp);
-
-  if (index > 0) {
-    ac->low += tmp * am->freq[index - 1];
-    ac->range = tmp * (am->freq[index] - am->freq[index - 1]);
-  } else {
-    ac->range = tmp * am->freq[0];
-  }
-}
-
-static void
 update_freq(Arithmodel *_am, Index index)
 {
   Arithmodel_order_zero *am = (Arithmodel_order_zero *)_am;
@@ -250,7 +261,7 @@ encode_bulk(Arithmodel *_am, Index index)
   }
 #endif
 
-  update_region(am, index);
+  am->update_region(_am, index);
   arithcoder_encode_renormalize(am->ac);
   update_freq(_am, index);
 
@@ -329,7 +340,7 @@ decode(Arithmodel *_am, Index *index_return)
   for (index = 0; am->freq[index] <= freq; index++) ;
 #endif
 
-  update_region(am, index);
+  am->update_region(_am, index);
   arithcoder_decode_renormalize(am->ac);
 
   if (IS_EOF_INSTALLED(am) && index == am->eof_symbol)

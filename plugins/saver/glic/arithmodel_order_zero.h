@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.h -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Jul 16 17:54:26 2001.
- * $Id: arithmodel_order_zero.h,v 1.2 2001/07/17 12:22:51 sian Exp $
+ * Last Modified: Wed Aug  1 01:11:19 2001.
+ * $Id: arithmodel_order_zero.h,v 1.3 2001/07/31 20:25:57 sian Exp $
  */
 
 #ifndef _ARITHMODEL_ORDER_ZERO_H
@@ -18,6 +18,9 @@ struct _arithmodel_order_zero {
   int (*my_reset)(Arithmodel *, int, int);
   void (*set_update_escape_freq)(Arithmodel *, int (*)(Arithmodel *, Index));
   int (*update_escape_freq)(Arithmodel *, Index);
+  void (*set_update_region)(Arithmodel *, void (*)(Arithmodel *, Index));
+  void (*update_region)(Arithmodel *, Index);
+  void *private_data;
   int default_initial_eof_freq;
   int initial_eof_freq;
   Index eof_symbol;
@@ -34,6 +37,7 @@ struct _arithmodel_order_zero {
 
 #define arithmodel_order_zero_reset(am, eof, esc) ((Arithmodel_order_zero *)am)->my_reset((am), (eof), (esc))
 #define arithmodel_order_zero_set_update_escape_freq(am, f) ((Arithmodel_order_zero *)am)->set_update_escape_freq((am), (f))
+#define arithmodel_order_zero_set_update_region(am, f) ((Arithmodel_order_zero *)am)->set_update_region((am), (f))
 
 Arithmodel *arithmodel_order_zero_create(int, int);
 
