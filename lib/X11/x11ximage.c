@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Dec  6 00:46:22 2000.
- * $Id: x11ximage.c,v 1.12 2000/12/05 15:52:11 sian Exp $
+ * Last Modified: Thu Dec  7 22:41:14 2000.
+ * $Id: x11ximage.c,v 1.13 2000/12/07 13:41:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,7 +86,9 @@ convert(X11XImage *xi, Image *p)
   unsigned char *dest = NULL, *dd, *s;
   XImage *ximage;
 
-  if (!xi->ximage || xi->ximage->width != p->width || xi->ximage->height != p->height) {
+  if (!xi->ximage ||
+      xi->ximage->width != p->width || xi->ximage->height != p->height ||
+      (memory_type(p->rendered_image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered_image))) {
     destroy_ximage(xi);
     switch (memory_type(p->rendered_image)) {
     case _NORMAL:
@@ -224,7 +226,6 @@ convert(X11XImage *xi, Image *p)
 	break;
       case _BGRA32:
 #ifdef WITH_NASM
-	/* incomplete */
 	bgra32to16(dest, s, p->width, p->height);
 #else
 	for (j = 0; j < p->height; j++) {
