@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May 19 11:32:58 2001.
- * $Id: libmpeg3.c,v 1.27 2001/05/23 12:18:09 sian Exp $
+ * Last Modified: Sun May 27 02:46:30 2001.
+ * $Id: libmpeg3.c,v 1.28 2001/06/03 16:55:56 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -371,6 +371,7 @@ play_audio(void *arg)
 
   if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
     show_message("Cannot open device.\n");
+    m->has_audio = 0;
     pthread_exit((void *)PLAY_ERROR);
   }
   info->ad = ad;
@@ -419,7 +420,7 @@ play_audio(void *arg)
 static int
 get_audio_time(Movie *m, AudioDevice *ad)
 {
-  if (ad && m->ap->bytes_written)
+  if (m->has_audio && ad && m->ap->bytes_written)
     return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500.0 / m->channels);
   return (int)((double)m->current_sample * 1000.0 / m->samplerate);
 }
