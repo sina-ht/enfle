@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec  7 17:16:23 2000.
- * $Id: memory.c,v 1.2 2000/12/07 13:38:00 sian Exp $
+ * Last Modified: Wed Dec 13 01:58:33 2000.
+ * $Id: memory.c,v 1.3 2000/12/12 17:03:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,11 +66,6 @@ alloc_normal(Memory *mem, unsigned int s)
 {
   unsigned char *tmp;
 
-  if (mem->size >= s) {
-    mem->used = s;
-    return mem->ptr;
-  }
-
   if ((tmp = realloc(mem->ptr, s)) == NULL)
     return NULL;
 
@@ -86,11 +81,6 @@ alloc_shm(Memory *mem, unsigned int s)
 {
 #ifdef USE_SHM
   /* debug_message("%p mem->size %d <=> %d = s\n", mem, mem->size,s); */
-
-  if (mem->size >= s) {
-    mem->used = s;
-    return mem->ptr;
-  }
 
   free_both(mem);
 
@@ -147,6 +137,11 @@ allocate(Memory *mem, unsigned int size)
 {
   unsigned int aligned_size;
   unsigned int alignment;
+
+  if (mem->size >= size) {
+    mem->used = size;
+    return mem->ptr;
+  }
 
   alignment = getpagesize();
   aligned_size = (size % alignment) ? ((size / alignment) + 1) * alignment : size;
