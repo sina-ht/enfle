@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Tue Jul  3 14:27:46 2001.
- * $Id: glic.c,v 1.10 2001/07/10 13:04:06 sian Exp $
+ * Last Modified: Mon Aug  6 00:35:55 2001.
+ * $Id: glic.c,v 1.11 2001/08/05 16:17:44 sian Exp $
  */
 
 #include <stdlib.h>
@@ -183,6 +183,26 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 
   vmpm.decomposer->encode(&vmpm);
   debug_message("glic: encoded.\n");
+
+  /* check */
+  rewind(vmpm.outfile);
+  {
+    char tmp[256];
+    int c;
+
+    fgets(tmp, 256, vmpm.outfile);
+    stat_message(&vmpm, "D:Header: %s\n", tmp);
+    if ((c = fgetc(vmpm.outfile)) != 0x1a) {
+      stat_message(&vmpm, "Invalid character after the header: %c\n", c);
+      debug_message("glic: check failed.\n");
+    } else {
+      scan_id = fgetc(vmpm.outfile);
+      predict_id = fgetc(vmpm.outfile);
+      stat_message(&vmpm, "D:scan %s/predictor %s\n", scan_get_name_by_id(scan_id), predict_get_name_by_id(predict_id));
+      debug_message("glic: checked (incomplete).\n");
+    }
+  }
+
   vmpm.decomposer->final(&vmpm);
 
   if (vmpm.is_stat)
