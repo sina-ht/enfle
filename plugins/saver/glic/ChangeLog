@@ -1,3 +1,7 @@
+2002-02-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/arithmodel_order_zero.c: Removed a warning.
+
 2001-09-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* ipow.h: Added const attribute.

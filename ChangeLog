@@ -1,3 +1,40 @@
+2002-03-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up. Added -std=c99 when debugging.
+
+	* plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/mpglib/mpglib.c: Introduced sampleformat_actual,
+	channels_actual, samplerate_actual. Fixed bugs.
+
+	* lib/enfle/movie.h, plugins/player/avifile/avifile.cpp,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/opendivx/opendivx.c: Introduced
+	sampleformat_actual, channels_actual, samplerate_actual.
+
+	* plugins/audio/alsa/alsa.c: Implemented bytes_written() method.
+
+	* lib/mpglib/common.c: Prepend "mpglib:" to a message to make the
+	error message understandable.
+
+2002-03-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/pe_image.c, lib/mpeg2/cpu_accel.c: Avoid warnings.
+
+2002-02-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audio/alsa/alsa.c: Setting sw_params.
+
+2002-02-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* *: Intel C++ Compiler(icc) support. Eliminated almost all
+	warnings.
+
+	* config.guess, config.sub: Upgraded.
+
+	* Makefile.am: Added ACLOCAL_AMFLAGS.
+
+	* macros/libtool.m4: New file.
+
 2002-02-14  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added XBM, XPM. Version up.
