@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  5 11:14:27 2002.
- * $Id: avifile.cpp,v 1.28 2002/01/05 02:16:32 sian Exp $
+ * Last Modified: Sun Jan  6 21:48:51 2002.
+ * $Id: avifile.cpp,v 1.29 2002/02/08 10:52:44 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -438,12 +438,13 @@ play(Movie *m)
   }
   info->eof = 0;
 
-  if (m->has_audio)
-    pthread_create(&info->audio_thread, NULL, play_audio, m);
   if (m->has_video) {
-    timer_start(m->timer);
+    if (!m->has_audio)
+      timer_start(m->timer);
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
+  if (m->has_audio)
+    pthread_create(&info->audio_thread, NULL, play_audio, m);
 
   pthread_mutex_lock(&info->update_mutex);
   pthread_mutex_unlock(&info->update_mutex);
@@ -521,10 +522,17 @@ play_audio(void *arg)
     samples = ocnt = 0;
     info->audiostream->ReadFrames(input_buffer, samples_to_read, samples_to_read, samples, ocnt);
     //debug_message("AviFile: play_audio: read %d samples (%d bytes)\n", samples, ocnt);
+    if (m->current_sample == 0 && m->has_video)
+      timer_start(m->timer);
     m->ap->write_device(ad, input_buffer, ocnt);
     m->current_sample += samples;
   }
+  debug_message_fnc("sync_device()...");
+  m->ap->sync_device(ad);
+  debug_message("OK\n");
+  debug_message_fnc("close_device()...");
   m->ap->close_device(ad);
+  debug_message("OK\n");
   delete input_buffer;
 
   debug_message("AviFile: play_audio() exit\n");
