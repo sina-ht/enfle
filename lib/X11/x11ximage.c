@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Dec 28 21:58:53 2000.
- * $Id: x11ximage.c,v 1.19 2000/12/30 07:19:56 sian Exp $
+ * Last Modified: Thu Jan  4 08:19:34 2001.
+ * $Id: x11ximage.c,v 1.20 2001/01/06 23:50:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -104,6 +104,8 @@ convert(X11XImage *xi, Image *p)
 
   p->rendered.width  = w;
   p->rendered.height = h;
+
+  /* debug_message("render: (%d, %d)\n", w, h); */
 
   if (!xi->ximage ||
       xi->ximage->width != w || xi->ximage->height != h ||
@@ -422,6 +424,8 @@ convert(X11XImage *xi, Image *p)
 
   ximage->data = dest;
   ximage->bits_per_pixel = bits_per_pixel;
+
+  //debug_message("converted: data %p bpp %d bpl %d\n", ximage->data, ximage->bits_per_pixel, ximage->bytes_per_line);
 
   return 1;
 }
