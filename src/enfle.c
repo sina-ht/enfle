@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 16 03:35:08 2001.
- * $Id: enfle.c,v 1.33 2001/06/15 18:49:39 sian Exp $
+ * Last Modified: Mon Jun 18 03:45:18 2001.
+ * $Id: enfle.c,v 1.34 2001/06/17 20:46:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,7 +58,7 @@ static Option enfle_options[] = {
   { "wallpaper", 'w', _NO_ARGUMENT,       "Set the first image as wallpaper(alias for -u Wallpaper)." },
   { "convert",   'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG, for Convert UI)." },
   { "magnify",   'm', _REQUIRED_ARGUMENT, "Specify magnification method(for Normal UI)." },
-  { "config",    'c', _REQUIRED_ARGUMENT, "Additional config expr. like -c '/enfle/plugins/saver/jpeg/quality = 80'." },
+  { "config",    'c', _REQUIRED_ARGUMENT, "Additional config like -c '/enfle/plugins/saver/jpeg/quality = 80'." },
   { "include",   'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
