@@ -1,3 +1,16 @@
+2001-09-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* glic.c, vmpm_decompose_esc.c, vmpm_decompose_escb.c,
+	vmpm_decompose_escc.c, vmpm_decompose_escfirst.c,
+	vmpm_decompose_highlow.c, vmpm_decompose_highlow_esc.c,
+	vmpm_decompose_highlow_escb.c, vmpm_decompose_highlow_rle.c,
+	vmpm_decompose_normal.c, vmpm_decompose_recur.c,
+	vmpm_decompose_recur2.c, vmpm_decompose_recur3.c: Avoid more
+	warnings.
+
+	* arithmodel_order_zero.c: Fixed subtracting start_symbol from
+	index twice.
+
 2001-09-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* arithmodel_order_zero.c: Pass arguments to fatal() correctly.

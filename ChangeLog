@@ -1,3 +1,29 @@
+2001-09-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avifile/avifile.cpp: Hack for RGB output, but
+	this doesn't suffice.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Stop cleanly.
+
+	* lib/utils/fifo.[ch]: Added valid flag to avoid deadlock.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Make fifo empty when
+	stop. Take longer data to examine.
+
+2001-09-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added more warning options. Version up.
+
+	* lib/X11/x11ximage.c, lib/dllloader/kernel32.c,
+	lib/dllloader/user32.c, lib/enfle/archive.c, lib/mpeg2/decode.c,
+	lib/mpglib/layer3.c, lib/utils/hash.c, lib/utils/libconfig.c,
+	lib/utils/timer_gettimeofday.c, plugins/effect/gamma/gamma.c,
+	plugins/loader/pnm/pnm.c, plugins/ui/normal/normal.c: Avoid more
+	warnings.
+
+	* plugins/saver/glic/arithmodel_order_zero.c: Fixed subtracting
+	start_symbol from index twice.
+
 2001-09-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Delayed set_caption().
