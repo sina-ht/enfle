@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 19:13:56 2004.
- * $Id: demultiplexer_mpeg.c,v 1.29 2004/01/12 12:10:28 sian Exp $
+ * Last Modified: Sun Jan 18 14:41:58 2004.
+ * $Id: demultiplexer_mpeg.c,v 1.30 2004/01/18 07:13:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,7 +49,7 @@ demultiplexer_mpeg_create(void)
   memcpy(demux, &template, sizeof(Demultiplexer));
 
   if ((info = calloc(1, sizeof(MpegInfo))) == NULL) {
-    free(demux);
+    _demultiplexer_destroy(demux);
     return NULL;
   }
 
@@ -103,7 +103,7 @@ examine(Demultiplexer *demux)
     if (read_total < DEMULTIPLEXER_MPEG_DETERMINE_SIZE) {
       if ((read_size = stream_read(info->st, buf + used_size,
 				   DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
-	show_message_fnc("read error.\n");
+	err_message_fnc("stream_read error.\n");
 	goto error;
       }
       if (read_size == 0)
@@ -115,7 +115,7 @@ examine(Demultiplexer *demux)
     if (read_total >= DEMULTIPLEXER_MPEG_DETERMINE_SIZE) {
       if (used_size <= 12 || used_size_prev == used_size) {
 	if (info->ver == 0) {
-	  debug_message_fnc("determined as not MPEG.\n");
+	  debug_message_fnc("Not determined as MPEG.\n");
 	  goto error;
 	} else {
 	  break;
@@ -125,22 +125,22 @@ examine(Demultiplexer *demux)
     }
 
     if (buf[0]) {
-      memcpy(buf, buf + 1, used_size - 1);
+      memmove(buf, buf + 1, used_size - 1);
       used_size--;
       continue;
     }
     if (buf[1]) {
-      memcpy(buf, buf + 2, used_size - 2);
+      memmove(buf, buf + 2, used_size - 2);
       used_size -= 2;
       continue;
     }
     if (buf[2] != 1) {
       if (buf[2]) {
-	memcpy(buf, buf + 3, used_size - 3);
+	memmove(buf, buf + 3, used_size - 3);
 	used_size -= 3;
 	continue;
       } else {
-	memcpy(buf, buf + 1, used_size - 1);
+	memmove(buf, buf + 1, used_size - 1);
 	used_size--;
 	continue;
       }
@@ -227,7 +227,7 @@ examine(Demultiplexer *demux)
       }
       break;
     }
-    memcpy(buf, buf + skip, used_size - skip);
+    memmove(buf, buf + skip, used_size - skip);
     used_size -= skip;
   } while (1);
 
@@ -316,26 +316,26 @@ demux_main(void *arg)
       memcpy(mp->data, buf, mp->size);
       fifo_put(info->vstream, mp, mpeg_packet_destructor);
       used_size = 0;
-      continue;
+      CONTINUE_IF_RUNNING;
     }
 
     if (buf[0]) {
-      memcpy(buf, buf + 1, used_size - 1);
+      memmove(buf, buf + 1, used_size - 1);
       used_size--;
       CONTINUE_IF_RUNNING;
     }
     if (buf[1]) {
-      memcpy(buf, buf + 2, used_size - 2);
+      memmove(buf, buf + 2, used_size - 2);
       used_size -= 2;
       CONTINUE_IF_RUNNING;
     }
     if (buf[2] != 1) {
       if (buf[2]) {
-	memcpy(buf, buf + 3, used_size - 3);
+	memmove(buf, buf + 3, used_size - 3);
 	used_size -= 3;
 	CONTINUE_IF_RUNNING;
       } else {
-	memcpy(buf, buf + 1, used_size - 1);
+	memmove(buf, buf + 1, used_size - 1);
 	used_size--;
 	CONTINUE_IF_RUNNING;
       }
@@ -482,7 +482,7 @@ demux_main(void *arg)
       }
       break;
     }
-    memcpy(buf, buf + skip, used_size - skip);
+    memmove(buf, buf + skip, used_size - skip);
     used_size -= skip;
   } while (demux->running);
 

@@ -1,10 +1,10 @@
 /*
  * demultiplexer.c -- Demultiplexer abstraction layer
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 24 03:43:36 2001.
- * $Id: demultiplexer.c,v 1.2 2001/02/24 08:23:31 sian Exp $
+ * Last Modified: Sun Jan 18 13:56:37 2004.
+ * $Id: demultiplexer.c,v 1.3 2004/01/18 07:13:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,7 +34,6 @@ _demultiplexer_create(void)
 
   if ((demux = calloc(1, sizeof(Demultiplexer))) == NULL)
     return NULL;
-  pthread_mutex_init(&demux->io_mutex, NULL);
 
   return demux;
 }
@@ -42,6 +41,5 @@ _demultiplexer_create(void)
 void
 _demultiplexer_destroy(Demultiplexer *demux)
 {
-  pthread_mutex_destroy(&demux->io_mutex);
   free(demux);
 }

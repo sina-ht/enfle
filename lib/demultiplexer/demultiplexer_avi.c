@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 19:13:35 2004.
- * $Id: demultiplexer_avi.c,v 1.25 2004/01/12 12:10:09 sian Exp $
+ * Last Modified: Sun Jan 18 14:04:47 2004.
+ * $Id: demultiplexer_avi.c,v 1.26 2004/01/18 07:13:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,7 +48,7 @@ demultiplexer_avi_create(void)
   memcpy(demux, &template, sizeof(Demultiplexer));
 
   if ((info = calloc(1, sizeof(AVIInfo))) == NULL) {
-    free(demux);
+    _demultiplexer_destroy(demux);
     return NULL;
   }
 
@@ -97,7 +97,7 @@ examine(Demultiplexer *demux)
   AVIStreamHeader ash;
   BITMAPINFOHEADER bih;
   WAVEFORMATEX wfx;
-  RIFF_Chunk *rc_top, *rc;
+  RIFF_Chunk *rc;
   unsigned int i;
 
   //debug_message_fn("()\n");
@@ -115,7 +115,7 @@ examine(Demultiplexer *demux)
     debug_message_fnc("riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
     goto error_destroy;
   }
-  rc_top = rc = riff_chunk_create();
+  rc = riff_chunk_create();
 
   /*
 RIFF( 'AVI' LIST ( 'hdrl'
@@ -216,7 +216,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	riff_file_read_data(info->rf, rc);
 	/* XXX: little endian only. */
 	memcpy(&mah, riff_chunk_get_data(rc), sizeof(MainAVIHeader));
-	riff_chunk_destroy(rc);
+	riff_chunk_free_data(rc);
 	info->nframes = mah.dwTotalFrames;
 	info->swidth  = mah.dwWidth;
 	info->sheight = mah.dwHeight;
@@ -264,7 +264,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	  riff_file_read_data(info->rf, rc);
 	  /* XXX: Little endian only */
 	  memcpy(&ash, riff_chunk_get_data(rc), sizeof(AVIStreamHeader));
-	  riff_chunk_destroy(rc);
+	  riff_chunk_free_data(rc);
 	  if (ash.fccType == FCC_vids) {
 	    info->vhandler = ash.fccHandler;
 	    if (info->vhandler == 0)
@@ -310,7 +310,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	    }
 	    info->nastreams++;
 	  }
-	  riff_chunk_destroy(rc);
+	  riff_chunk_free_data(rc);
 	}
 	break;
       default:
@@ -331,11 +331,11 @@ RIFF( 'AVI' LIST ( 'hdrl'
     goto error_free;
   }
 
-  free(rc);
+  riff_chunk_destroy(rc);
   return 1;
 
  error_free:
-  free(rc);
+  riff_chunk_destroy(rc);
  error_destroy:
   riff_file_destroy(info->rf);
   info->rf = NULL;

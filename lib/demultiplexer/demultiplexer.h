@@ -1,10 +1,10 @@
 /*
  * demultiplexer.h -- Demultiplexer abstraction layer header
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:06:09 2001.
- * $Id: demultiplexer.h,v 1.7 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sun Jan 18 13:56:31 2004.
+ * $Id: demultiplexer.h,v 1.8 2004/01/18 07:13:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,7 +28,6 @@
 typedef struct _demultiplexer Demultiplexer;
 struct _demultiplexer {
   pthread_t thread;
-  pthread_mutex_t io_mutex;
   int running;
   int eof;
   void *private_data;
@@ -63,8 +62,6 @@ void _demultiplexer_destroy(Demultiplexer *);
 #define demultiplexer_set_eof(de, f) (de)->eof = (f)
 #define demultiplexer_get_eof(de) (de)->eof
 
-#define demultiplexer_io_lock(de) pthread_mutex_lock(&((de)->io_mutex))
-#define demultiplexer_io_unlock(de) pthread_mutex_unlock(&((de)->io_mutex))
 #define demultiplexer_examine(de) (de)->examine((de))
 #define demultiplexer_start(de) (de)->start((de))
 #define demultiplexer_stop(de) (de)->stop((de))
