@@ -1,11 +1,41 @@
-2004-11-22  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+2004-12-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/i386/cputest.c,
+	lib/avcodec/i386/mpegvideo_mmx_template.c,
+	lib/avcodec/sparc/dsputil_vis.c, lib/avcodec/4xm.c,
+	lib/avcodec/Makefile.am, lib/avcodec/ac3enc.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/cabac.c, lib/avcodec/cabac.h,
+	lib/avcodec/common.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c,
+	lib/avcodec/error_resilience.c, lib/avcodec/ffv1.c,
+	lib/avcodec/flac.c, lib/avcodec/g726.c, lib/avcodec/h261.c,
+	lib/avcodec/h261data.h, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/imgconvert.c, lib/avcodec/lcl.c, lib/avcodec/mjpeg.c,
+	lib/avcodec/motion_est.c, lib/avcodec/motion_est_template.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegaudio.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/msmpeg4.c,
+	lib/avcodec/oggvorbis.c, lib/avcodec/parser.c, lib/avcodec/pcm.c,
+	lib/avcodec/raw.c, lib/avcodec/resample2.c, lib/avcodec/rv10.c,
+	lib/avcodec/snow.c, lib/avcodec/sonic.c, lib/avcodec/svq1.c,
+	lib/avcodec/utils.c, lib/avcodec/vp3.c, lib/avcodec/wmadec.c:
+	Updated.
+
+	* lib/avcodec/bitstream.c, lib/avcodec/bitstream.h,
+	lib/avcodec/png.c, lib/avcodec/pnm.c, lib/avcodec/qpeg.c,
+	lib/avcodec/rangecoder.c, lib/avcodec/rangecoder.h,
+	lib/avcodec/xl.c: New files.
+
+2004-11-22  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS, README, configure.in: Version up.
 
 	* plugins/ui/normal/normal.c: Plugged one memory leak in
 	convert_path().
 
-2004-10-23  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+2004-10-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/adpcm.c, lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
 	lib/avcodec/avcodec.h, lib/avcodec/bswap.h, lib/avcodec/common.h,
