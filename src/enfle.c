@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Mar 14 19:32:22 2004.
- * $Id: enfle.c,v 1.61 2004/03/14 16:51:50 sian Exp $
+ * Last Modified: Fri Mar 19 00:25:07 2004.
+ * $Id: enfle.c,v 1.62 2004/03/24 14:50:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,6 +63,8 @@ static Option enfle_options[] = {
   { "convert",   'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG, for Convert UI)." },
   { "magnify",   'm', _REQUIRED_ARGUMENT, "Specify magnification method(for Normal UI)." },
   { "config",    'c', _REQUIRED_ARGUMENT, "Additional config like -c '/enfle/plugins/saver/jpeg/quality = 80'." },
+  { "nocache",   'n', _NO_ARGUMENT,       "Don't use plugin cache." },
+  { "recache",   'N', _NO_ARGUMENT,       "Re-create cache file." },
   { "include",   'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
@@ -324,6 +326,7 @@ main(int argc, char **argv)
   int magnify_method = 0;
   int include_fnmatch = 0;
   int exclude_fnmatch = 0;
+  int if_use_cache = -1;
   char *pattern = NULL;
   char *homedir;
   char *plugin_path;
@@ -383,6 +386,12 @@ main(int argc, char **argv)
       break;
     case 'c':
       dlist_add_str(override_config, optarg);
+      break;
+    case 'n':
+      if_use_cache = 0;
+      break;
+    case 'N':
+      if_use_cache = 2;
       break;
     case 'w':
       ui_name = strdup("Wallpaper");
@@ -460,7 +469,8 @@ main(int argc, char **argv)
     }
   }
 
-  eps = enfle_plugins_create(plugin_path, config_get_boolean(c, "/enfle/use_cache", &result));
+  if_use_cache = if_use_cache == -1 ? config_get_boolean(c, "/enfle/use_cache", &result) : if_use_cache;
+  eps = enfle_plugins_create(plugin_path, if_use_cache);
   set_enfle_plugins(eps);
 
   if (!scan_and_load_plugins(eps, c, plugin_path)) {

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar  9 22:28:35 2004.
- * $Id: enfle-plugins.c,v 1.15 2004/03/09 13:59:24 sian Exp $
+ * Last Modified: Fri Mar 19 00:27:24 2004.
+ * $Id: enfle-plugins.c,v 1.16 2004/03/24 14:50:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -90,7 +90,7 @@ enfle_plugins_create(const char *path, int use_cache)
     cache_path[strlen(path) + 1] = '\0';
     strcat(cache_path, cache_file);
     eps->cache_path = strdup(cache_path);
-    if (stat(cache_path, &st) == 0) {
+    if (use_cache == 1 && stat(cache_path, &st) == 0) {
       FILE *fp;
 
       if ((fp = fopen(cache_path, "rb")) == NULL) {
@@ -127,7 +127,7 @@ enfle_plugins_create(const char *path, int use_cache)
 	}
 	fclose(fp);
       }
-    } else if (errno == ENOENT) {
+    } else if (use_cache == 2 || errno == ENOENT) {
       eps->cache_to_be_created = 1;
     } else {
       err_message_fnc("Cannot open cache file %s\n", cache_path);
