@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000-03 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Dec 30 01:49:01 2003.
-dnl $Id: configure.in,v 1.127 2003/12/29 16:49:09 sian Exp $
+dnl Last Modified: Tue Dec 30 21:11:31 2003.
+dnl $Id: configure.in,v 1.128 2003/12/30 12:20:19 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -221,7 +221,7 @@ if test "$available_zlib" = "yes"; then
   ])
   if test "$png_header_ok" = yes; then
     AC_CHECK_LIB(png, png_get_IHDR, [
-        available_png=yes; LIBADD_PNG="$LIBADD_POW $LIBADD_PNG -lpng";
+        available_png=yes; LIBADD_PNG="$LIBADD_POW -lpng $LIBADD_PNG";
       ], [], [$LIBADD_POW $LIBADD_ZLIB])
   fi
 fi
