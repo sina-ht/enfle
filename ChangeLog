@@ -1,3 +1,16 @@
+2001-02-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.h: More coding.
+
+	* lib/mpeg2/Makefile.am, lib/mpeg2/cpu_accel.c: Added cpu_accel.c.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Fixed stupid a_fd ->
+	v_fd typos. Check size restriction. Calculate the accurate number
+	of streams. Close pipes at end.
+
+	* README, README.e: More documentation.
+
 2001-02-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Fixed the infinite loop bug.
