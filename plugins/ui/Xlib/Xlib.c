@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 11 01:40:44 2000.
- * $Id: Xlib.c,v 1.4 2000/10/10 17:30:14 sian Exp $
+ * Last Modified: Wed Oct 11 17:27:18 2000.
+ * $Id: Xlib.c,v 1.5 2000/10/12 03:45:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -382,14 +382,12 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 
       if ((f = loader_load_image(ld, p->format, p, s)) == LOAD_OK)
 	stream_close(s);
-    } else {
-      show_message("%s identification failed\n", path);
     }
 
     if (f != LOAD_OK) {
       if (player_identify(player, m, s)) {
 
-	debug_message("Movie(Animation) identified as %s\n", p->format);
+	debug_message("Movie(Animation) identified as %s\n", m->format);
 
 	if ((f = player_load_movie(player, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
@@ -399,7 +397,7 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
 	}
       } else {
 	stream_close(s);
-	show_message("%s identify failed\n", path);
+	show_message("%s identification failed\n", path);
 	archive_iteration_delete(a);
 	continue;
       }
