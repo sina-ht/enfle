@@ -1,3 +1,11 @@
+2001-01-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/video.h, plugins/ui/normal/normal.c,
+	plugins/video/Xlib/Xlib.c: Implemented image scrolling.
+
+	* plugins/loader/ungif/ungif.c: Commented out a debug message
+	printing code.
+
 2000-12-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/dllloader/kernel32.c, lib/dllloader/pe.h,
