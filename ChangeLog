@@ -1,5 +1,15 @@
 2000-10-15  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/X11/x11.[ch]: Added bits_per_pixel member. More
+	sophisticated Visual search.
+
+	* lib/X11/x11ximage.c: Don't change the content of received Image.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Deleted unused error
+	handling routine.
+
+2000-10-15  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Added pthread and libmpeg3 checking. Backup $LIBS
 	to avoid linking Xlib against enfle executable.
 
@@ -27,8 +37,8 @@
 	* plugins/player/mpeg_lib/mpeg_lib.c,
 	plugins/player/ungif/ungif.c: Implemented stop_movie().
 
-	* lib/enfle/movie.c, lib/enfle/movie.h, lib/enfle/player-plugin.h,
-	lib/enfle/player.c, lib/enfle/player.h, lib/enfle/ui-plugin.h,
+	* lib/enfle/movie.[ch], lib/enfle/player-plugin.h,
+	lib/enfle/player.[ch],lib/enfle/ui-plugin.h,
 	plugins/ui/Xlib/Xlib.c: Implemented double buffering.
 
 2000-10-12  Hiroshi Takekawa  <sian@fennel.org>
