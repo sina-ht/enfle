@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 06:40:33 2004.
- * $Id: avcodec.c,v 1.9 2004/01/11 21:42:01 sian Exp $
+ * Last Modified: Mon Jan 12 19:21:51 2004.
+ * $Id: avcodec.c,v 1.10 2004/01/12 12:13:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -103,7 +103,7 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
-#define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.3"
+#define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.4"
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
@@ -566,11 +566,20 @@ play(Movie *m)
     /* XXX: decoder initialize */
     info->vcodec_ctx = avcodec_alloc_context();
     //info->vcodec_ctx->error_resilience = 3;
+    info->vcodec_ctx->width = m->width;
+    info->vcodec_ctx->height = m->height;
     info->vcodec_ctx->pix_fmt = -1;
     info->vcodec_ctx->opaque = info;
-    info->vcodec_picture = avcodec_alloc_frame();
+    if ((info->vcodec_picture = avcodec_alloc_frame()) == NULL) {
+      err_message_fnc("avcodec_alloc_frame() failed.\n");
+      return PLAY_ERROR;
+    }
     if (info->vcodec->capabilities & CODEC_CAP_TRUNCATED)
       info->vcodec_ctx->flags |= CODEC_FLAG_TRUNCATED;
+#if defined(USE_DR1)
+    if (info->vcodec->capabilities & CODEC_CAP_DR1)
+      info->vcodec_ctx->flags |= CODEC_FLAG_EMU_EDGE;
+#endif
     if (avcodec_open(info->vcodec_ctx, info->vcodec) < 0) {
       show_message("avcodec_open() failed.\n");
       free(info->vcodec_ctx);
@@ -579,7 +588,6 @@ play(Movie *m)
     }
     if (info->vcodec_ctx->pix_fmt == PIX_FMT_YUV420P &&
 	info->vcodec->capabilities & CODEC_CAP_DR1) {
-      info->vcodec_ctx->flags |= CODEC_FLAG_EMU_EDGE;
 #if defined(USE_DR1)
       info->vcodec_ctx->get_buffer = get_buffer;
       info->vcodec_ctx->reget_buffer = reget_buffer;
@@ -905,35 +913,32 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
+  timer_stop(m->timer);
+
   if (info->vstream)
     fifo_invalidate(info->vstream);
   if (info->video_thread) {
-#if defined(DEBUG)
     debug_message_fnc("waiting for joining (video).\n");
     pthread_cond_signal(&info->update_cond);
     pthread_join(info->video_thread, &v);
-    debug_message_fnc("joined (video).\n");
-#else
-    pthread_cancel(info->video_thread);
-#endif
     info->video_thread = 0;
+    debug_message_fnc("joined (video).\n");
   }
 
   if (info->astream)
     fifo_invalidate(info->astream);
   if (info->audio_thread) {
-#if defined(DEBUG)
     debug_message_fnc("waiting for joining (audio).\n");
     pthread_join(info->audio_thread, &a);
-    debug_message_fnc("joined (audio).\n");
-#else
-    pthread_cancel(info->audio_thread);
-#endif
     info->audio_thread = 0;
+    debug_message_fnc("joined (audio).\n");
   }
 
-  if (info->demux)
+  if (info->demux) {
+    debug_message_fnc("waiting for demultiplexer to stop.\n");
     demultiplexer_stop(info->demux);
+    debug_message_fnc("demultiplexer stopped\n");
+  }
 
   if (info->vstream) {
     fifo_destroy(info->vstream);
@@ -1048,15 +1053,9 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_MP42: // msmpeg4v2
     case FCC_mp42:
     case FCC_DIV2:
-      break;
     case FCC_MP41: // msmpeg4v1
     case FCC_MPG4:
     case FCC_mpg4:
-      warning("msmpeg4v1 video detected by avcodec plugin.  avcodec will probably emit sig. segv.  Being fixed, disable playback.\n");
-      demultiplexer_destroy(info->demux);
-      free(info);
-      m->movie_private = NULL;
-      return PLAY_NOT;
     case FCC_WMV1: // wmv1
     case FCC_WMV2: // wmv2
     case FCC_dvsd: // dvvideo
