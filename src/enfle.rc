@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Fri Apr 27 19:10:25 2001.
-; $Id: enfle.rc,v 1.14 2001/04/27 11:07:50 sian Exp $
+; Last Modified: Sat Apr 28 02:41:01 2001.
+; $Id: enfle.rc,v 1.15 2001/04/27 17:43:45 sian Exp $
 
 enfle {
   plugins {
@@ -13,6 +13,8 @@ enfle {
 	render = normal
 	; magnify_interpolate = no/bilinear
 	magnify_interpolate = bilinear
+	; save_format = PNG/JPEG
+	save_format = JPEG
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -20,7 +22,7 @@ enfle {
 	; magnify_interpolate = no/bilinear
 	magnify_interpolate = bilinear
       }
-      convert/format = GLIC
+      convert/format = PNG
     }
     video {
       default = Xlib
@@ -43,12 +45,9 @@ enfle {
 	; interlace = {yes/no} Note: interface increases a file size slightly.
 	interlace = no
       }
-      glic {
-        vmpm_path = ../plugins/saver/glic/.libs
-        ; decompose_method = {Normal/HighLow/Token}
-	decompose_method = HighLow
-        ; scan_method = {Normal/Quad}
-	scan_method = Quad
+      jpeg {
+        ; quality = 0...100
+        quality = 100
       }
     }
     player {
