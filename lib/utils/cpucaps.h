@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep  7 18:12:27 2001.
- * $Id: cpucaps.h,v 1.1 2001/09/09 23:53:13 sian Exp $
+ * Last Modified: Wed Sep 19 16:22:35 2001.
+ * $Id: cpucaps.h,v 1.2 2001/09/19 07:45:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,7 +29,8 @@ typedef enum _cpucap {
   _MMXEXT = 2,
   _SSE = 2,
   _AMD_MMXEXT = 2,
-  _3DNOW = 4
+  _SSE2 = 4,
+  _3DNOW = 8
 } CPUCap;
 
 #define cpucaps_is_mmx(c) ((c) & _MMX)
