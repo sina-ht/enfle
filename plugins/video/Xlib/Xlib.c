@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar  8 00:07:03 2002.
- * $Id: Xlib.c,v 1.45 2002/03/07 15:17:50 sian Exp $
+ * Last Modified: Thu Jun 13 23:28:23 2002.
+ * $Id: Xlib.c,v 1.46 2002/06/13 14:28:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -1226,7 +1226,7 @@ render(VideoWindow *vw, Image *p)
   vw->render_height = p->rendered.height;
   resize(vw, p->magnified.width, p->magnified.height);
 
-  //debug_message_fnc("r (%d, %d) m (%d, %d)\n", vw->render_width, vw->render_height, p->magnified.width, p->magnified.height);
+  //debug_message_fnc("rnd. (%d, %d) mag. (%d, %d) full: %d direct: %d\n", vw->render_width, vw->render_height, p->magnified.width, p->magnified.height, vw->if_fullscreen, vw->if_direct);
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
