@@ -1,3 +1,10 @@
+2001-10-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, lib/utils/Makefile.am, lib/utils/converter.c:
+	Reverted jpeg-mmx support change. Use AM_ICONV.
+
+	* plugins/player/opendivx/opendivx.c: Fixed typo.
+
 2001-10-07  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.rc: New configurations.
