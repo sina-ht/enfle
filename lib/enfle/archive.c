@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:52:03 2001.
- * $Id: archive.c,v 1.24 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Jul 29 21:35:16 2002.
+ * $Id: archive.c,v 1.25 2002/08/03 04:54:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -428,7 +428,7 @@ destroy(Archive *arc)
 {
   if (arc->pattern)
     free(arc->pattern);
-  hash_destroy(arc->filehash, 0);
+  hash_destroy(arc->filehash, 1);
   if (arc->path)
     free(arc->path);
   free(arc);
