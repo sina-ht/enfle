@@ -1,11 +1,12 @@
 /*
  * gifimage.c -- GIF image block parser and decoder
  * (C)Copyright 1998, 99 by Hiroshi Takekawa
- * Last Modified: Wed Jul 10 22:21:12 2002.
+ * Last Modified: Thu Aug  8 07:19:52 2002.
  *
  * NOTE: This code includes LZW decoder
  */
 
+#define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
 

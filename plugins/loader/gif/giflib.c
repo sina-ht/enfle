@@ -1,8 +1,8 @@
 /*
  * giflib.c -- GIF manipulation library
- * (C)Copyright 1997, 98, 99 by Hiroshi Takekawa
- * Last Modified: Wed Jul 10 22:21:39 2002.
- * $Id: giflib.c,v 1.1 2002/08/03 05:10:17 sian Exp $
+ * (C)Copyright 1997, 98, 99, 2002 by Hiroshi Takekawa
+ * Last Modified: Thu Aug  8 07:19:25 2002.
+ * $Id: giflib.c,v 1.2 2002/08/08 15:06:42 sian Exp $
  *
  *  This is GIF manipulation library.
  *  This can read GIF file into raster memory image.
@@ -13,6 +13,7 @@
  *
  */
 
+#define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
 
