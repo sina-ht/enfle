@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  7 21:10:15 2001.
- * $Id: movie.h,v 1.13 2001/01/11 22:31:31 sian Exp $
+ * Last Modified: Fri Jan 12 23:56:23 2001.
+ * $Id: movie.h,v 1.14 2001/01/14 15:22:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,11 +51,11 @@ struct _movie {
   void *movie_private;
   int width, height;
   int rendering_width, rendering_height;
-  int current_frame, num_of_frames;
+  unsigned int current_frame, num_of_frames;
   float framerate;
   int play_every_frame;
   int direct_decode;
-  int current_sample, num_of_samples;
+  unsigned int current_sample, num_of_samples;
   AudioFormat sampleformat;
   int channels, samplerate;
   char *format;
