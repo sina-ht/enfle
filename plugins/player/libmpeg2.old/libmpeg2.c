@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 19:23:18 2004.
- * $Id: libmpeg2.c,v 1.2 2004/01/12 12:14:02 sian Exp $
+ * Last Modified: Sun Jan 18 15:56:20 2004.
+ * $Id: libmpeg2.c,v 1.3 2004/01/18 07:12:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -564,7 +564,7 @@ play_main(Movie *m, VideoWindow *vw)
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
     audio_time = get_audio_time(m, info->ad);
-    debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
+    //debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
 
     /* if too fast to display, wait before render */
     while (video_time > audio_time)
@@ -589,7 +589,7 @@ play_main(Movie *m, VideoWindow *vw)
       mpeg2old_drop(&info->mpeg2dec, 0);
     }
   } else {
-    debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
+    //debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
 
     /* if too fast to display, wait before render */
     while (video_time > timer_get_milli(m->timer)) ;
