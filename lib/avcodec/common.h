@@ -24,7 +24,6 @@
 
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
-//#    include "config.h"
 #include "enfle-config.h"
 #undef DEBUG
 #define HAVE_LRINTF
@@ -32,11 +31,13 @@
 //#define CONFIG_ENCODERS
 #define CONFIG_DECODERS
 #define CONFIG_RISKY
+//#    include "config.h"
 
 #    include <stdlib.h>
 #    include <stdio.h>
 #    include <string.h>
 #    include <ctype.h>
+#    include <limits.h>
 #    ifndef __BEOS__
 #        include <errno.h>
 #    else
@@ -137,7 +138,7 @@ typedef unsigned int  uint_fast32_t;
 #endif
 
 #ifndef INT_BIT
-#    if INT_MAX == INT64_MAX
+#    if INT_MAX != 2147483647
 #        define INT_BIT 64
 #    else
 #        define INT_BIT 32

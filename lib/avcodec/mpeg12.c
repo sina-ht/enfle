@@ -2769,12 +2769,14 @@ static int mpeg_decode_frame(AVCodecContext *avctx,
     MpegEncContext *s2 = &s->mpeg_enc_ctx;
     dprintf("fill_buffer\n");
 
-    /* special case for last picture */
-    if (buf_size == 0 && s2->low_delay==0 && s2->next_picture_ptr) {
-        *picture= *(AVFrame*)s2->next_picture_ptr;
-        s2->next_picture_ptr= NULL;
+    if (buf_size == 0) {
+	/* special case for last picture */
+	if (s2->low_delay==0 && s2->next_picture_ptr) {
+	    *picture= *(AVFrame*)s2->next_picture_ptr;
+	    s2->next_picture_ptr= NULL;
 
-        *data_size = sizeof(AVFrame);
+	    *data_size = sizeof(AVFrame);
+	}
         return 0;
     }
 
@@ -2973,6 +2975,7 @@ AVCodec mpeg1video_encoder = {
     MPV_encode_picture,
     MPV_encode_end,
     .supported_framerates= frame_rate_tab+1,
+    .capabilities= CODEC_CAP_DELAY,
 };
 
 #ifdef CONFIG_RISKY
@@ -2986,6 +2989,7 @@ AVCodec mpeg2video_encoder = {
     MPV_encode_picture,
     MPV_encode_end,
     .supported_framerates= frame_rate_tab+1,
+    .capabilities= CODEC_CAP_DELAY,
 };
 #endif
 #endif

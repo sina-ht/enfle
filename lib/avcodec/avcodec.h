@@ -15,9 +15,9 @@ extern "C" {
 #include "rational.h"
 #include <sys/types.h> /* size_t */
 
-#define FFMPEG_VERSION_INT     0x000408
-#define FFMPEG_VERSION         "0.4.8"
-#define LIBAVCODEC_BUILD       4717
+#define FFMPEG_VERSION_INT     0x000409
+#define FFMPEG_VERSION         "0.4.9-pre1"
+#define LIBAVCODEC_BUILD       4718
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -140,6 +140,9 @@ enum CodecID {
     
     CODEC_ID_MPEG2TS, /* _FAKE_ codec to indicate a raw MPEG2 transport
                          stream (only used by libavformat) */
+
+    CODEC_ID_DTS,
+    CODEC_ID_XVID,
 };
 
 /* CODEC_ID_MP3LAME is absolete */
@@ -1722,6 +1725,7 @@ extern AVCodec mp2_encoder;
 extern AVCodec mp3lame_encoder;
 extern AVCodec oggvorbis_encoder;
 extern AVCodec faac_encoder;
+extern AVCodec xvid_encoder;
 extern AVCodec mpeg1video_encoder;
 extern AVCodec mpeg2video_encoder;
 extern AVCodec h263_encoder;
@@ -1858,6 +1862,7 @@ extern AVCodec rawvideo_decoder;
 
 /* the following codecs use external GPL libs */
 extern AVCodec ac3_decoder;
+extern AVCodec dts_decoder;
 
 /* resample.c */
 
@@ -1873,6 +1878,8 @@ void audio_resample_close(ReSampleContext *s);
 
 struct AVResampleContext *av_resample_init(int out_rate, int in_rate);
 int av_resample(struct AVResampleContext *c, short *dst, short *src, int *consumed, int src_size, int dst_size, int update_ctx);
+void av_resample_compensate(struct AVResampleContext *c, int sample_delta, int compensation_distance);
+void av_resample_close(struct AVResampleContext *c);
 
 /* YUV420 format is assumed ! */
 

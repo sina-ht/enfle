@@ -92,12 +92,14 @@ int av_parser_parse(AVCodecParserContext *s,
             s->fetch_timestamp=0;
             s->last_pts = pts;
             s->last_dts = dts;
+            s->cur_frame_pts[k] =
+            s->cur_frame_dts[k] = AV_NOPTS_VALUE;
         }
     }
 
     /* WARNING: the returned index can be negative */
     index = s->parser->parser_parse(s, avctx, poutbuf, poutbuf_size, buf, buf_size);
-//av_log(NULL, AV_LOG_DEBUG, "parser: in:%lld, %lld, out:%lld, %lld, in:%d out:%d %d\n", pts, dts, s->last_pts, s->last_dts, buf_size, *poutbuf_size, avctx->codec_id);
+//av_log(NULL, AV_LOG_DEBUG, "parser: in:%lld, %lld, out:%lld, %lld, in:%d out:%d id:%d\n", pts, dts, s->last_pts, s->last_dts, buf_size, *poutbuf_size, avctx->codec_id);
     /* update the file pointer */
     if (*poutbuf_size) {
         /* fill the data for the current frame */
@@ -279,7 +281,7 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
     int32_t start_code;
     int frame_rate_index, ext_type, bytes_left;
     int frame_rate_ext_n, frame_rate_ext_d;
-    int top_field_first, repeat_first_field, progressive_frame;
+    int picture_structure, top_field_first, repeat_first_field, progressive_frame;
     int horiz_size_ext, vert_size_ext;
 
     s->repeat_pict = 0;
@@ -326,6 +328,7 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
                     break;
                 case 0x8: /* picture coding extension */
                     if (bytes_left >= 5) {
+                        picture_structure = buf[2]&3;
                         top_field_first = buf[3] & (1 << 7);
                         repeat_first_field = buf[3] & (1 << 1);
                         progressive_frame = buf[4] & (1 << 7);
@@ -341,6 +344,11 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
                                 s->repeat_pict = 1;
                             }
                         }
+                        
+                        /* the packet only represents half a frame 
+                           XXX,FIXME maybe find a different solution */
+                        if(picture_structure != 3)
+                            s->repeat_pict = -1;
                     }
                     break;
                 }

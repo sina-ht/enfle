@@ -38,6 +38,7 @@ static AVCodec* avcodec_find_by_fcc(uint32_t fcc)
 	{ CODEC_ID_MJPEG, { MKTAG('M', 'J', 'P', 'G'), 0 } },
 	{ CODEC_ID_MPEG1VIDEO, { MKTAG('P', 'I', 'M', '1'), 0 } },
 	{ CODEC_ID_AC3, { 0x2000, 0 } },
+	{ CODEC_ID_DTS, { 0x10, 0 } },
 	{ CODEC_ID_MP2, { 0x50, 0x55, 0 } },
 	{ CODEC_ID_FLV1, { MKTAG('F', 'L', 'V', '1'), 0 } },
 
@@ -97,21 +98,19 @@ static void destroy_handle(private_handle_t* handle)
 int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 {
     AVCodecContext* ctx = handle;
-    private_handle_t** ph = (private_handle_t**)pout;
-
     switch (cmd)
     {
     case AVC_OPEN_BY_NAME:
 	{
             // pin  char* codec name
 	    private_handle_t* h = create_handle();
-	    *ph = h;
+	    (private_handle_t**)pout = h;
 	    if (!h)
 		return -ENOMEM;
 	    if (!h->avcodec)
 	    {
 		destroy_handle(h);
-		*ph = NULL;
+		(private_handle_t**)pout = NULL;
 		return -1;// better error
 	    }
             return 0;
@@ -120,14 +119,14 @@ int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 	{
             // pin  uint32_t codec fourcc
 	    private_handle_t* h = create_handle();
-	    *ph = h;
+	    (private_handle_t**)pout = h;
 	    if (!h)
 		return -ENOMEM;
 
 	    if (!h->avcodec)
 	    {
 		destroy_handle(h);
-		*ph = NULL;
+		(private_handle_t**)pout = NULL;
 		return -1;// better error
 	    }
             return 0;
@@ -136,14 +135,14 @@ int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 	{
             // pin  uint32_t codec fourcc
 	    private_handle_t* h = create_handle();
-	    *ph = h;
+	    (private_handle_t**)pout = h;
 	    if (!h)
 		return -ENOMEM;
 	    h->avcodec = avcodec_find_by_fcc((uint32_t) pin);
 	    if (!h->avcodec)
 	    {
 		destroy_handle(h);
-		*ph = NULL;
+		(private_handle_t**)pout = NULL;
 		return -1;// better error
 	    }
             return 0;
@@ -165,10 +164,7 @@ int avcodec(void* handle, avc_cmd_t cmd, void* pin, void* pout)
 	break;
 
     case AVC_GET_VERSION:
-	{
-	    int *pi = (int*)pout;
-	    *pi = 500;
-	}
+        (int*) pout = 500;
     default:
 	return -1;
 

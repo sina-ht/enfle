@@ -52,6 +52,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_FAAC
     register_avcodec(&faac_encoder);
 #endif
+#ifdef CONFIG_XVID
+    register_avcodec(&xvid_encoder);
+#endif
     register_avcodec(&mpeg1video_encoder);
 //    register_avcodec(&h264_encoder);
 #ifdef CONFIG_RISKY
@@ -150,6 +153,9 @@ void avcodec_register_all(void)
     register_avcodec(&zlib_decoder);
 #ifdef CONFIG_AC3
     register_avcodec(&ac3_decoder);
+#endif
+#ifdef CONFIG_DTS
+    register_avcodec(&dts_decoder);
 #endif
     register_avcodec(&ra_144_decoder);
     register_avcodec(&ra_288_decoder);
