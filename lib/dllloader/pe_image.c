@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 26 05:21:44 2002.
- * $Id: pe_image.c,v 1.23 2002/03/03 01:17:42 sian Exp $
+ * Last Modified: Thu Aug 15 22:48:04 2002.
+ * $Id: pe_image.c,v 1.24 2002/08/17 02:19:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -453,7 +453,7 @@ load(PE_image *p, char *path)
       DWORD *names = (DWORD *)(p->image + ied->AddressOfNames);
       WORD *name_ordinals = (WORD *)(p->image + ied->AddressOfNameOrdinals);
 
-      hash_set_str(p->export_symbols, p->image + names[i], p->image + functions[name_ordinals[i]]);
+      hash_set_str_value(p->export_symbols, p->image + names[i], p->image + functions[name_ordinals[i]]);
       debug_message(" %s", p->image + names[i]);
 
       export_syminfo[i].name = (char *)p->image + names[i];
@@ -614,9 +614,9 @@ destroy(PE_image *p)
 {
   module_deregister(misc_basename(p->filepath));
   if (p->resource)
-    hash_destroy(p->resource, 1);
+    hash_destroy(p->resource);
   if (p->export_symbols)
-    hash_destroy(p->export_symbols, 0);
+    hash_destroy(p->export_symbols);
   if (p->filepath)
     free(p->filepath);
   if (p->image)

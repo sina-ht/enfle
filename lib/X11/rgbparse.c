@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul 30 21:57:54 2002.
- * $Id: rgbparse.c,v 1.2 2002/07/31 13:57:58 sian Exp $
+ * Last Modified: Thu Aug 15 22:50:06 2002.
+ * $Id: rgbparse.c,v 1.3 2002/08/17 02:19:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -151,7 +151,7 @@ rgbparse(char *path)
       continue;
     chomp(s);
     if (!rgbparse_line(h, s)) {
-      hash_destroy(h, 1);
+      hash_destroy(h);
       return NULL;
     }
   }

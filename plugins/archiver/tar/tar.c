@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 15:42:24 2002.
- * $Id: tar.c,v 1.8 2002/08/02 14:03:55 sian Exp $
+ * Last Modified: Thu Aug 15 22:52:45 2002.
+ * $Id: tar.c,v 1.9 2002/08/17 02:19:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -172,7 +172,7 @@ static void /* overrides archive::destroy */
 tar_destroy(Archive *arc)
 {
   stream_destroy(arc->st);
-  hash_destroy(arc->filehash, 1);
+  hash_destroy(arc->filehash);
   if (arc->path)
     free(arc->path);
   free(arc);

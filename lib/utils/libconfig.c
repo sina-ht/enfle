@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul 30 21:37:28 2002.
- * $Id: libconfig.c,v 1.21 2002/08/01 12:42:50 sian Exp $
+ * Last Modified: Thu Aug 15 22:46:22 2002.
+ * $Id: libconfig.c,v 1.22 2002/08/17 02:19:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -77,7 +77,6 @@ config_create(void)
 
   if ((c = calloc(1, sizeof(Config))) == NULL)
     return NULL;
-
   memcpy(c, &config_template, sizeof(Config));
 
   if ((c->hash = hash_create(LIBCONFIG_HASH_SIZE)) == NULL) {
@@ -495,6 +494,6 @@ set_list(Config *c, char *path, char *lstr)
 static void
 destroy(Config *c)
 {
-  hash_destroy(c->hash, 1);
+  hash_destroy(c->hash);
   free(c);
 }

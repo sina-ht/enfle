@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul 30 22:08:03 2002.
- * $Id: xpm.c,v 1.2 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Thu Aug 15 22:52:25 2002.
+ * $Id: xpm.c,v 1.3 2002/08/17 02:19:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,7 +71,7 @@ ENFLE_PLUGIN_ENTRY(loader_xpm)
 ENFLE_PLUGIN_EXIT(loader_xpm, p)
 {
   if (rgbhash)
-    hash_destroy(rgbhash, 1);
+    hash_destroy(rgbhash);
   free(p);
 }
 
@@ -284,12 +284,12 @@ parse_color(Image *p, Stream *st, int cpp)
     while (isspace(c = stream_getc(st))) ;
     if (c != ',') {
       fprintf(stderr, "got %c\n", c);
-      hash_destroy(colortable, 1);
+      hash_destroy(colortable);
       free(chars);
       return NULL;
     }
     if ((line = get_string(st)) == NULL) {
-      hash_destroy(colortable, 1);
+      hash_destroy(colortable);
       free(chars);
       return NULL;
     }
@@ -305,7 +305,7 @@ parse_color(Image *p, Stream *st, int cpp)
 
     /* split */
     if ((tokens = misc_str_split(line, ' ')) == NULL) {
-      hash_destroy(colortable, 1);
+      hash_destroy(colortable);
       free(chars);
       return NULL;
     }
@@ -406,7 +406,7 @@ parse_color(Image *p, Stream *st, int cpp)
   return colortable;
 
  free_and_return:
-  hash_destroy(colortable, 1);
+  hash_destroy(colortable);
   free(chars);
   misc_free_str_array(tokens);
   return NULL;
@@ -560,11 +560,11 @@ load_image(Image *p, Stream *st)
   /* parse body */
   if (p->type == _RGB24 ? !parse_body_rgb24(p, st, colortable, cpp) :
       !parse_body_index(p, st, colortable, cpp)) {
-    hash_destroy(colortable, 1);
+    hash_destroy(colortable);
     return 0;
   }
 
-  hash_destroy(colortable, 1);
+  hash_destroy(colortable);
   debug_message("XPM file parse done.\n");
 
   return 1;

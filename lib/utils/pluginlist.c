@@ -1,10 +1,10 @@
 /*
  * pluginlist.c -- Plugin List library
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug  8 00:03:34 2002.
- * $Id: pluginlist.c,v 1.7 2002/08/07 15:34:06 sian Exp $
+ * Last Modified: Thu Aug 15 22:44:22 2002.
+ * $Id: pluginlist.c,v 1.8 2002/08/17 02:19:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,8 +35,6 @@ static Dlist *get_names(PluginList *);
 static void destroy(PluginList *);
 
 static PluginList pluginlist_template = {
-  hash: NULL,
-
   add: add,
   get: get,
   delete: delete,
@@ -51,8 +49,12 @@ pluginlist_create(void)
 
   if ((pl = (PluginList *)calloc(1, sizeof(PluginList))) == NULL)
     return NULL;
-
   memcpy(pl, &pluginlist_template, sizeof(PluginList));
+
+  if ((pl->hash = hash_create(PLUGINLIST_HASH_SIZE)) == NULL) {
+    free(pl);
+    return NULL;
+  }
 
   return pl;
 }
@@ -60,31 +62,25 @@ pluginlist_create(void)
 static int
 add(PluginList *pl, Plugin *p, const char *name)
 {
-  if (!pl->hash)
-    if ((pl->hash = hash_create(PLUGINLIST_HASH_SIZE)) == NULL)
-      return 0;
-
-  return hash_set_str(pl->hash, name, p);
+  return hash_set_str_value(pl->hash, name, p);
 }
 
 static Plugin *
 get(PluginList *pl, char *name)
 {
-  if (pl->hash)
-    return hash_lookup_str(pl->hash, name);
-  return NULL;
+  return hash_lookup_str(pl->hash, name);
 }
 
 static int
 delete(PluginList *pl, char *name)
 {
-  return hash_delete_str(pl->hash, name, 0);
+  return hash_delete_str(pl->hash, name);
 }
 
 static Dlist *
 get_names(PluginList *pl)
 {
-  if (!pl || !pl->hash)
+  if (!pl)
     return NULL;
   return hash_get_keys(pl->hash);
 }
@@ -92,17 +88,14 @@ get_names(PluginList *pl)
 static void
 destroy(PluginList *pl)
 {
-  if (pl->hash) {
-    Plugin *p;
-    void *k;
-    unsigned int kl;
+  Plugin *p;
+  void *k;
+  unsigned int kl;
 
-    pluginlist_iter(pl, k, kl, p)
-      plugin_destroy(p);
-    pluginlist_iter_end;
-
-    hash_destroy(pl->hash, 0);
-  }
+  pluginlist_iter(pl, k, kl, p)
+    plugin_destroy(p);
+  pluginlist_iter_end;
+  hash_destroy(pl->hash);
 
   free(pl);
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug  8 19:20:53 2002.
- * $Id: normal.c,v 1.66 2002/08/08 15:06:28 sian Exp $
+ * Last Modified: Thu Aug 15 22:50:48 2002.
+ * $Id: normal.c,v 1.67 2002/08/17 02:19:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -864,7 +864,7 @@ action_register(Hash *actionhash, UIAction *actions, int group_id)
     snprintf(buf, 16, "%04X%04X%04X", actions->key, actions->mod, actions->button);
     actions->group_id = group_id;
     actions->id = id++;
-    if (!hash_set_str(actionhash, buf, actions))
+    if (!hash_set_str_value(actionhash, buf, actions))
       return 0;
     actions++;
   }
@@ -964,7 +964,7 @@ ui_main(UIData *uidata)
   process_files_of_archive(uidata, uidata->a, NULL);
 #endif
 
-  hash_destroy(actionhash, 0);
+  hash_destroy(actionhash);
   video_window_destroy(vw);
   vp->close_video(disp);
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 11:05:05 2002.
- * $Id: archive.c,v 1.27 2002/08/15 12:48:14 sian Exp $
+ * Last Modified: Thu Aug 15 22:49:43 2002.
+ * $Id: archive.c,v 1.28 2002/08/17 02:19:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -272,7 +272,7 @@ delete_path(Archive *arc, char *path)
     warning("%s: %s: arc->nfiles = %d < 0\n", __FILE__, __FUNCTION__, arc->nfiles);
   }
 
-  if (!hash_delete_str(arc->filehash, path, 1)) {
+  if (!hash_delete_str(arc->filehash, path)) {
     /* This is not always, but probably bug. */
     warning("%s: %s: failed to delete %s.\n", __FILE__, __FUNCTION__, path);
   }
@@ -407,7 +407,7 @@ destroy(Archive *arc)
 {
   if (arc->pattern)
     free(arc->pattern);
-  hash_destroy(arc->filehash, 1);
+  hash_destroy(arc->filehash);
   if (arc->path)
     free(arc->path);
   free(arc);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 14 22:07:31 2002.
- * $Id: spi.c,v 1.20 2002/08/03 05:08:40 sian Exp $
+ * Last Modified: Thu Aug 15 22:49:03 2002.
+ * $Id: spi.c,v 1.21 2002/08/17 02:19:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -280,7 +280,7 @@ static void
 susie_archive_destroy(Archive *a)
 {
   stream_destroy(a->st);
-  hash_destroy(a->filehash, 1);
+  hash_destroy(a->filehash);
   free(a);
 }
 
