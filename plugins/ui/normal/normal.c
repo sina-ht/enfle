@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 02:20:01 2001.
- * $Id: normal.c,v 1.24 2001/02/19 17:23:19 sian Exp $
+ * Last Modified: Thu Feb 22 03:24:56 2001.
+ * $Id: normal.c,v 1.25 2001/02/21 18:26:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -430,6 +430,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  if (!archive_read_directory(arc, path, 1)) {
 	    archive_destroy(arc);
 	    archive_iteration_delete(a);
+	    path = archive_iteration(a);
 	    continue;
 	  }
 	  video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
@@ -439,10 +440,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	    archive_iteration_delete(a);
 	  }
 	  archive_destroy(arc);
-	  ret = dir == 1 ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	  ret = (dir == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
 	  archive_iteration_delete(a);
+	  path = archive_iteration(a);
 	  continue;
 	}
 
@@ -453,11 +455,13 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  if (!streamer_open(st, eps, s, s->format, path)) {
 	    show_message("Stream %s [%s] cannot open\n", s->format, path);
 	    archive_iteration_delete(a);
+	    path = archive_iteration(a);
 	    continue;
 	  }
 	} else if (!stream_make_filestream(s, path)) {
 	  show_message("Stream NORMAL [%s] cannot open\n", path);
 	  archive_iteration_delete(a);
+	  path = archive_iteration(a);
 	  continue;
 	}
       }
@@ -470,17 +474,19 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	if (archiver_open(ar, eps, arc, arc->format, s)) {
 	  dir = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
-	  ret = dir == 1 ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	  ret = (dir == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
 	  continue;
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
 	  archive_iteration_delete(a);
+	  path = archive_iteration(a);
 	}
       }
       archive_destroy(arc);
     } else if (!archive_open(a, s, path)) {
       show_message("File %s in %s archive cannot open\n", path, a->format);
       archive_iteration_delete(a);
+      path = archive_iteration(a);
       continue;
     }
 
@@ -504,12 +510,14 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  stream_close(s);
 	  show_message("%s load failed\n", path);
 	  archive_iteration_delete(a);
+	  path = archive_iteration(a);
 	  continue;
 	}
       } else {
 	stream_close(s);
 	show_message("%s identification failed\n", path);
 	archive_iteration_delete(a);
+	path = archive_iteration(a);
 	continue;
       }
 
