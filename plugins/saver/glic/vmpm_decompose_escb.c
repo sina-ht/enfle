@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escb.c -- ESC estimate method B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 22:10:52 2001.
- * $Id: vmpm_decompose_escb.c,v 1.3 2001/08/09 17:32:07 sian Exp $
+ * Last Modified: Wed Aug 15 15:07:57 2001.
+ * $Id: vmpm_decompose_escb.c,v 1.4 2001/08/15 06:42:11 sian Exp $
  */
 
 #include <stdio.h>
@@ -201,9 +201,11 @@ encode(VMPM *vmpm)
 	Arithmodel_order_zero *bin_am_oz = (Arithmodel_order_zero *)bin_am;
 
 	/* calculate and assign escape symbol's probability */
-	bin_am_oz->freq[0] = j + 1;
-	bin_am_oz->freq[1] = j + 2 + nsymbols;
-	//stat_message(vmpm, "freq[0] = %d, freq[1] = %d, nsymbols %d.\n", bin_am_oz->freq[0], bin_am_oz->freq[1], nsymbols);
+	//bin_am_oz->freq[0] = j + 1;
+	//bin_am_oz->freq[1] = j + 2 + nsymbols;
+	bin_am_oz->freq[0] = vmpm->token_index[i] - (vmpm->newtoken[i] - 1) + nsymbols - (j + 1) + 1;
+	bin_am_oz->freq[1] = vmpm->token_index[i] - (j + 1) + 1;
+	stat_message(vmpm, "freq[0] = %d, freq[1] = %d, nsymbols %d.\n", bin_am_oz->freq[0], bin_am_oz->freq[1], nsymbols);
 
 	if (nsymbols == tv) {
 	  stat_message(vmpm, "e ");
