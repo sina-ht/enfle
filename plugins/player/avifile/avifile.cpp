@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar 20 02:58:01 2002.
- * $Id: avifile.cpp,v 1.33 2002/03/19 18:13:46 sian Exp $
+ * Last Modified: Wed Mar 20 14:57:20 2002.
+ * $Id: avifile.cpp,v 1.34 2002/03/21 01:32:57 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -37,8 +37,6 @@
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
 # include <avifile/avifmt.h>
 #endif
-// only for GetAvifileVersion()...
-#include <avifile/aviplay.h>
 
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE_NAME
@@ -49,16 +47,11 @@
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
+#include "enfle/fourcc.h"
 
 #ifndef USE_PTHREAD
 #  error pthread is mandatory for avifile plugin
 #endif
-
-#define FCC(a,b,c,d) ((((((d << 8) | c) << 8) | b) << 8) | a)
-#define FCC_YUY2 FCC('Y', 'U', 'Y', '2')
-#define FCC_YV12 FCC('Y', 'V', '1', '2')
-#define FCC_IYUV FCC('I', 'Y', 'U', 'V')
-#define FCC_UYVY FCC('U', 'Y', 'V', 'Y')
 
 extern "C" {
 #include "enfle/memory.h"
@@ -121,7 +114,7 @@ plugin_entry(void)
   s = string_create();
   string_set(s, (const char *)PLAYER_AVIFILE_PLUGIN_DESCRIPTION);
   /* The version string is fetched dynamically, not statically compiled-in. */
-  string_catf(s, (const char *)" with avifile %g", GetAvifileVersion());
+  string_catf(s, (const char *)" with avifile %d.%d.%d.%d", AVIFILE_MAJOR_VERSION, AVIFILE_MINOR_VERSION, AVIFILE_PATCHLEVEL, AVIFILE_BETA_LEVEL);
   pp->description = (const unsigned char *)strdup((const char *)string_get(s));
   string_destroy(s);
 
