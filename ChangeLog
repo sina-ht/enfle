@@ -1,9 +1,11 @@
 2001-01-14  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/spi.c: Renamed configuration filename.
+
 	* README: More documentation.
 
-	* plugins/ui/normal/normal.c, plugins/video/Xlib/Xlib.c:
-	Support wheel mouse.
+	* plugins/ui/normal/normal.c, plugins/video/Xlib/Xlib.c: Support
+	wheel mouse.
 
 2001-01-14  Hiroshi Takekawa  <sian@fennel.org>
 
