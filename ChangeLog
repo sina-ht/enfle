@@ -1,3 +1,31 @@
+2002-03-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/mpeg2/Makefile.am, lib/mpeg2/attributes.h,
+	lib/mpeg2/cpu_state.c, lib/mpeg2/decode.c, lib/mpeg2/header.c,
+	lib/mpeg2/idct.c, lib/mpeg2/idct_altivec.c, lib/mpeg2/idct_mlib.c,
+	lib/mpeg2/idct_mmx.c, lib/mpeg2/mm_accel.h, lib/mpeg2/mmx.h,
+	lib/mpeg2/motion_comp.c, lib/mpeg2/motion_comp_altivec.c,
+	lib/mpeg2/motion_comp_mlib.c, lib/mpeg2/motion_comp_mmx.c,
+	lib/mpeg2/mpeg2.h, lib/mpeg2/mpeg2_internal.h, lib/mpeg2/slice.c,
+	lib/mpeg2/stats.c, lib/mpeg2/video_out.h, lib/mpeg2/vlc.h,
+	plugins/player/libmpeg2/libmpeg2.c: Upgraded libmpeg2 to 0.2.1.
+
+	* lib/enfle/fourcc.h: New file.
+
+	* plugins/player/opendivx/opendivx.c: Use fourcc to identify used
+	video codec. Supported Divx 5 (divx4linux50-20020304).
+
+	* plugins/player/avifile/avifile.cpp: New version printing
+	code. Use fourcc.h.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Fixed typo.
+
+	* lib/X11/x11ximage.c: Added a debug_message().
+
+2002-03-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avifile/avifile.cpp: Avoid warnings.
+
 2002-03-14  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg2/libmpeg2.c,
