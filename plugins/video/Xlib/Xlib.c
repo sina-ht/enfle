@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 18 14:43:14 2000.
- * $Id: Xlib.c,v 1.4 2000/11/20 12:58:03 sian Exp $
+ * Last Modified: Mon Nov 27 17:26:12 2000.
+ * $Id: Xlib.c,v 1.5 2000/11/27 14:42:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -499,7 +499,7 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
       xwi->gc_normal = xwi->gc;
     }
   } else {
-    if (vw->width < w || vw->height < h) {
+    if (vw->width > w || vw->height > h) {
       XFillRectangle(x11_display(x11), xwi->pix, xwi->gc, 0, 0, xwi->full_width, xwi->full_height);
       XFillRectangle(x11_display(x11), x11window_win(xw), xwi->gc, 0, 0, xwi->full_width, xwi->full_height);
     }
