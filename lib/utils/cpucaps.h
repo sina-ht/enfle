@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 19 16:22:35 2001.
- * $Id: cpucaps.h,v 1.2 2001/09/19 07:45:36 sian Exp $
+ * Last Modified: Sun Apr 18 01:09:08 2004.
+ * $Id: cpucaps.h,v 1.3 2004/04/18 06:29:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,14 +25,16 @@
 
 #ifdef __i386__
 typedef enum _cpucap {
-  _MMX = 1,
-  _MMXEXT = 2,
-  _SSE = 2,
-  _AMD_MMXEXT = 2,
-  _SSE2 = 4,
-  _3DNOW = 8
+  _TSC = 1,
+  _MMX = 2,
+  _MMXEXT = 4,
+  _SSE = 4,
+  _AMD_MMXEXT = 4,
+  _SSE2 = 8,
+  _3DNOW = 16
 } CPUCap;
 
+#define cpucaps_is_tsc(c) ((c) & _TSC)
 #define cpucaps_is_mmx(c) ((c) & _MMX)
 #define cpucaps_is_mmxext(c) ((c) & _MMXEXT)
 #define cpucaps_is_3dnow(c) ((c) & _3DNOW)
@@ -44,6 +46,7 @@ typedef enum _cpucap {
 
 typedef unsigned int CPUCaps;
 
+int cpucaps_freq(void);
 CPUCaps cpucaps_get(void);
 
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 02:47:55 2002.
- * $Id: cpucaps.c,v 1.6 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Sun Apr 18 01:35:26 2004.
+ * $Id: cpucaps.c,v 1.7 2004/04/18 06:29:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,7 +26,48 @@
 
 #include "cpucaps.h"
 
-//#if defined(__GNUC__) && defined(__i386__)
+static int
+cpufreq_default(void)
+{
+  return 1024 * 1024;
+}
+#if defined(__linux__)
+int
+cpucaps_freq(void)
+{
+  FILE *fp;
+  char buf[256];
+  static int freq = 0;
+
+  if (freq)
+    return freq;
+
+  freq = cpufreq_default();
+  if ((fp = fopen("/proc/cpuinfo", "rb")) == NULL)
+    return freq;
+  while (fgets(buf, 256, fp) != NULL) {
+    if (strncmp(buf, "cpu MHz", 7) == 0) {
+      char *s;
+
+      if ((s = strchr(buf, ':')) == NULL)
+	break;
+      s += 2;
+      freq = strtof(s, NULL) * 1000;
+      break;
+    }
+  }
+  fclose(fp);
+
+  return freq;
+}
+#else
+int
+cpucaps_freq(void)
+{
+  return cpufreq_default();
+}
+#endif
+
 #if defined(__i386__)
 static inline void
 cpuid(int op, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
@@ -146,9 +187,12 @@ cpucaps_get(void)
 31            ?
   */
 
+  if (edx & 0x00000010)
+    caps |= _TSC;
+
   if (!(edx & 0x00800000))
     return 0;
-  caps = _MMX;
+  caps |= _MMX;
 
   if (edx & 0x02000000)
     caps |= _SSE;
