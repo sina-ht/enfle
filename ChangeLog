@@ -1,3 +1,30 @@
+2000-11-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/enfle-plugins.c: Plugged a memory leak.
+
+	* lib/enfle/spi.c: Added spi plugin destroy routines.
+
+	* lib/enfle/loader.c: Added debug message.
+
+	* lib/dllloader/pe_image.c: module_deregister()ing.
+
+	* lib/dllloader/windef.h: More memory related definitions.
+
+	* lib/dllloader/module.c: Plugged a memory leak.
+
+	* lib/dllloader/mm.h: Inlined mem_free().
+
+	* lib/dllloader/kernel32.c: VirtualAlloc(), VirtualFree()
+	implementation.
+
+	* lib/utils/plugin.c: dmalloc work around deleted.
+
+	* lib/enfle/player.h, src/enfle.c: Plugged a player's memory leak.
+
+	* plugins/video/Xlib/Xlib.c: Plugged memory leaks.
+
+	* lib/X11/x11.c: Plugged a memory leak.
+
 2000-10-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Fixed bug which showed wrong
