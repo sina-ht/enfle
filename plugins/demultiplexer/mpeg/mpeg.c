@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 24 15:27:12 2004.
- * $Id: mpeg.c,v 1.7 2004/04/27 12:23:37 sian Exp $
+ * Last Modified: Wed Jun 16 01:16:38 2004.
+ * $Id: mpeg.c,v 1.8 2004/06/15 16:17:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,7 +44,7 @@ PREPARE_DEMULTIPLEXER_TEMPLATE;
 static DemultiplexerPlugin plugin = {
   .type = ENFLE_PLUGIN_DEMULTIPLEXER,
   .name = "MPEG",
-  .description = "MPEG Demultiplexer plugin version 0.1",
+  .description = "MPEG Demultiplexer plugin version 0.2",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -325,6 +325,7 @@ __examine(Demultiplexer *demux, int identify_only)
   return ds;
 }
 
+/* XXX: should be 33 bits long */
 static inline unsigned long
 get_timestamp(unsigned char *p)
 {
@@ -433,7 +434,7 @@ demux_main(void *arg)
 	}
 	info->ver = 1;
       } else {
-	show_message_fnc("MPEG neither I nor II.\n");
+	err_message_fnc("MPEG neither I nor II.\n");
 	goto error;
       }
       break;
@@ -487,55 +488,75 @@ demux_main(void *arg)
 
       if ((v_or_a == 1 && nvstream == demux->nvstream) ||
 	  (v_or_a == 2 && nastream == demux->nastream)) {
-	if ((buf[6] & 0xc0) == 0x80) {
-	  /* MPEG II */
+	unsigned char *p;
+	unsigned int pts, dts;
+
+	/* stuffing */
+	for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
+
+	if ((*p & 0xc0) == 0x40) {
+	  /* buffer scale, buffer size */
+	  p += 2;
+	}
+
+	switch (*p >> 4) {
+	case 0:
+	  p++;
+	  break;
+	case 2:
+	  pts = get_timestamp(p);
+	  dts = pts;
+	  p += 5;
+	  break;
+	case 3:
+	  /* presentation time stamp, decoding time stamp */
+	  pts = get_timestamp(p);
+	  dts = get_timestamp(p + 5);
+	  p += 10;
+	  break;
+	default:
+	  if ((*p & 0xc0) == 0x80) {
+	    unsigned int flags, header_len;
+
+	    /* MPEG II */
+	    if ((*p & 0x30) != 0) {
+	      warning_fnc("Encrypted multiplex cannot be handled.\n");
+	      CONTINUE_IF_RUNNING;
+	    }
+	    p++;
+
+	    flags = *p++;
+	    header_len = *p++;
+
+	    if ((flags & 0xc0) == 0x80) {
+	      pts = get_timestamp(p);
+	      dts = pts;
+	      p += 5;
+	      header_len -= 5;
+	    } else if ((flags & 0xc0) == 0xc0) {
+	      pts = get_timestamp(p);
+	      dts = get_timestamp(p + 5);
+	      p += 10;
+	      header_len -= 10;
+	    }
+	    p += header_len;
+	  } else {
+	    warning_fnc("*p == %02X\n", *p);
+	    CONTINUE_IF_RUNNING;
+	  }
+	  break;
+	}
+	if (p < buf + skip) {
 	  dp = malloc(sizeof(DemuxedPacket));
-	  dp->pts = dp->dts = -1;
-	  dp->size = skip - 9 - buf[8];
+	  dp->ts_base = TS_BASE;
+	  dp->pts = pts;
+	  dp->dts = dts;
+	  dp->size = buf + skip - p;
 	  dp->data = malloc(dp->size);
-	  memcpy(dp->data, buf + 9 + buf[8], dp->size);
+	  memcpy(dp->data, p, dp->size);
 	  fifo_put((v_or_a == 1) ? demux->vstream : demux->astream, dp, demultiplexer_destroy_packet);
 	} else {
-	  unsigned char *p;
-	  int pts_dts_flag;
-	  unsigned long pts = 0, dts = 0;
-
-	  for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
-	  if ((*p & 0xc0) == 0x40) {
-	    /* buffer scale, buffer size */
-	    p += 2;
-	  }
-	  pts_dts_flag = *p >> 4;
-	  switch (pts_dts_flag) {
-	  case 0:
-	    p++;
-	    break;
-	  case 2:
-	    /* presentation time stamp */
-	    pts = get_timestamp(p);
-	    dts = pts;
-	    p += 5;
-	    break;
-	  case 3:
-	    /* presentation time stamp, decoding time stamp */
-	    pts = get_timestamp(p);
-	    dts = get_timestamp(p + 5);
-	    p += 10;
-	    break;
-	  default:
-	    goto error;
-	  }
-
-	  if (p < buf + skip) {
-	    dp = malloc(sizeof(DemuxedPacket));
-	    dp->ts_base = TS_BASE;
-	    dp->pts = pts;
-	    dp->dts = dts;
-	    dp->size = buf + skip - p;
-	    dp->data = malloc(dp->size);
-	    memcpy(dp->data, p, dp->size);
-	    fifo_put((v_or_a == 1) ? demux->vstream : demux->astream, dp, demultiplexer_destroy_packet);
-	  }
+	  warning_fnc("p >= buf + skip! demux error?\n");
 	}
       } else if (!v_or_a) {
 	if (id < 0xb9 && id >= 0xa0) {
