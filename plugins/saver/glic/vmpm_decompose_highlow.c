@@ -1,8 +1,8 @@
 /*
- * vmpm_decompose_highlow.c -- High-Low decomposer
+ * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Jul 16 19:14:46 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.12 2001/07/17 12:22:51 sian Exp $
+ * Last Modified: Wed Aug  1 03:00:36 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.13 2001/07/31 20:25:25 sian Exp $
  */
 
 #include <stdio.h>
@@ -39,8 +39,8 @@ static void final(VMPM *);
 static void destroy(VMPM *);
 
 static VMPMDecomposer plugin = {
-  name: "HighLow",
-  description: "High-Low MPM decomposer",
+  name: "Threshold",
+  description: "Threshold MPM decomposer",
   init: init,
   decompose: decompose,
   encode: encode,
