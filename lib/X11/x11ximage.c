@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Dec  3 17:02:15 2000.
- * $Id: x11ximage.c,v 1.8 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Sun Dec  3 19:58:15 2000.
+ * $Id: x11ximage.c,v 1.9 2000/12/03 11:04:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -117,7 +117,7 @@ convert(X11XImage *xi, Image *p)
 
 #if 0
   debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
-  debug_message("p bpl: %d x bpl: %d\n", p->bits_per_pixel, ximage->bits_per_pixel);
+  debug_message("p type: %s p bpl: %d x bpl: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel);
 #endif
 
   /* _GRAY -> _INDEX */
@@ -325,31 +325,29 @@ convert(X11XImage *xi, Image *p)
 	break;
       }
 
-      if ((source = memory_dup(p->image)) == NULL) {
-	show_message(__FUNCTION__ ": No enough memory(source)\n");
-	exit(-2);
-      }
-
-#if 0
-      if (memory_alloc(p->image, p->width * p->height * 4) == NULL) {
-	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
-	exit(-2);
-      }
-#endif
-
       dest = memory_ptr(p->image);
-      s = memory_ptr(source);
       bytes_per_line = p->width << 2;
       switch (p->type) {
       case _RGBA32:
 	ximage->byte_order = MSBFirst;
-	memcpy(dest + 1, s, memory_size(p->image) - 1);
+	memcpy(dest + 1, dest, memory_size(p->image) - 1);
 	break;
       case _ABGR32:
 	ximage->byte_order = LSBFirst;
-	memcpy(dest, s + 1, memory_size(p->image) - 1);
+	memcpy(dest, dest + 1, memory_size(p->image) - 1);
 	break;
       case _INDEX:
+	if (memory_alloc(p->image, p->width * p->height * 4) == NULL) {
+	  show_message(__FUNCTION__ ": No enough memory(alloc)\n");
+	  exit(-2);
+	}
+
+	if ((source = memory_dup(p->image)) == NULL) {
+	  show_message(__FUNCTION__ ": No enough memory(source)\n");
+	  exit(-2);
+	}
+
+	s = memory_ptr(source);
 	dd = dest;
 	ximage->byte_order = LSBFirst;
 	for (i = 0; i < p->width * p->height; i++) {
