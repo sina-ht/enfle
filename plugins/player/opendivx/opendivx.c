@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 28 05:48:08 2001.
- * $Id: opendivx.c,v 1.4 2001/01/28 03:48:02 sian Exp $
+ * Last Modified: Sun Jan 28 13:56:01 2001.
+ * $Id: opendivx.c,v 1.5 2001/01/28 05:12:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -65,7 +65,7 @@ typedef struct _opendivx_info {
 } OpenDivX_info;
 
 static const unsigned int types =
-  (IMAGE_ARGB32 | IMAGE_RGB24 | IMAGE_RGB_WITH_BITMASK);
+  (IMAGE_ARGB32 | IMAGE_RGB24 | IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
 
 static PlayerStatus identify(Movie *, Stream *);
 static PlayerStatus load(VideoWindow *, Movie *, Stream *);
