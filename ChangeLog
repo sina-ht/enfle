@@ -1,3 +1,14 @@
+2004-04-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/generic/generic.c: No time-consuming a-v sync.
+
+	* lib/dllloader/kernel32.c, lib/enfle/dmo.c: Suppress debug
+	messages.
+
+	* lib/avcodec/h263dec.c, lib/avcodec/h264.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpeg12data.h, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/parser.c: Updated.
+
 2004-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/demultiplexer/asf/asf.c: Fixed garbage_len calculation.
