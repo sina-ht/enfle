@@ -1,3 +1,13 @@
+2001-02-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* compat.h, configure.in, lib/demultiplexer/Makefile.am,
+	lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer_mpeg.c,
+	lib/demultiplexer/demultiplexer_mpeg.h, lib/mpeg2/video_out.c,
+	plugins/player/Makefile.am, plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.c,
+	plugins/player/libmpeg2/libmpeg2_vo.h: Get mpeg2 stuffs compiled.
+
 2001-02-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/demultiplexer/demultiplexer.h,
