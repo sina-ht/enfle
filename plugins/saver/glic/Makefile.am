@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.6 2001/08/02 11:47:01 sian Exp $
+# $Id: Makefile.am,v 1.7 2001/08/09 17:31:51 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -18,6 +18,7 @@ lib_LTLIBRARIES = \
 	vmpm_decompose_esc.la \
 	vmpm_decompose_escb.la \
 	vmpm_decompose_highlow.la \
+	vmpm_decompose_highlow_esc.la \
 	vmpm_decompose_token.la \
 	vmpm_decompose_token2.la
 
@@ -51,6 +52,9 @@ vmpm_decompose_escb_la_SOURCES = vmpm_decompose_escb.c $(COMMON_FILES)
 vmpm_decompose_highlow_la_LIBADD = libarith.la
 vmpm_decompose_highlow_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_highlow_la_SOURCES = vmpm_decompose_highlow.c $(COMMON_FILES)
+vmpm_decompose_highlow_esc_la_LIBADD = libarith.la
+vmpm_decompose_highlow_esc_la_LDFLAGS = -avoid-version -module
+vmpm_decompose_highlow_esc_la_SOURCES = vmpm_decompose_highlow_esc.c $(COMMON_FILES)
 vmpm_decompose_token_la_LIBADD = libarith.la
 vmpm_decompose_token_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_token_la_SOURCES = vmpm_decompose_token.c $(COMMON_FILES)
