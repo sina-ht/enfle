@@ -1,11 +1,14 @@
 /*
  * vmpm_hash.c -- Hash related routines
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:43:04 2001.
- * $Id: vmpm_hash.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Tue Jun 19 02:03:08 2001.
+ * $Id: vmpm_hash.c,v 1.3 2001/06/19 08:16:19 sian Exp $
  */
 
 #include <stdio.h>
+
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "vmpm.h"
 #include "vmpm_hash.h"

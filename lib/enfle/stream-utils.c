@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr 13 16:49:39 2001.
- * $Id: stream-utils.c,v 1.3 2001/04/18 05:37:43 sian Exp $
+ * Last Modified: Tue Jun 19 01:33:01 2001.
+ * $Id: stream-utils.c,v 1.4 2001/06/19 08:16:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,8 @@
 
 #include <stdlib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "stream-utils.h"

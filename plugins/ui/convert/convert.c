@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 20:58:24 2001.
- * $Id: convert.c,v 1.7 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 01:59:15 2001.
+ * $Id: convert.c,v 1.8 2001/06/19 08:16:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -97,7 +97,7 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
     return 0;
   } else {
     config_set_str(uidata->c, (char *)"/enfle/plugins/ui/convert/source_path", outpath);
-    if (!saver_save(sv, eps, format, p, fp, uidata->c))
+    if (!saver_save(sv, eps, format, p, fp, uidata->c, NULL))
       show_message("Save failed.\n");
     fclose(fp);
   }

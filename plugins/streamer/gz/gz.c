@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:27:30 2001.
- * $Id: gz.c,v 1.4 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Tue Jun 19 01:34:51 2001.
+ * $Id: gz.c,v 1.5 2001/06/19 08:16:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,6 +25,8 @@
 
 #include <zlib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #define REQUIRE_FATAL
 #include "common.h"
 

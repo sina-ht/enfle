@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:01:25 2001.
- * $Id: loader-plugin.h,v 1.4 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 01:41:39 2001.
+ * $Id: loader-plugin.h,v 1.5 2001/06/19 08:16:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,10 +44,10 @@ typedef struct _loader_plugin {
 
 #define DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv) \
  static LoaderStatus \
- identify(Image * ## p ## , Stream * ## st ## , VideoWindow * ## vw ##, Config * ## c ##, void * ## priv ##)
+ identify(Image * p , Stream * st , VideoWindow * vw , Config * c , void * priv )
 #define DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv) \
  static LoaderStatus \
- load(Image * ## p ## , Stream * ## st ## , VideoWindow * ## vw ##, Config * ## c ##, void * ## priv ##)
+ load(Image * p , Stream * st , VideoWindow * vw , Config * c , void * priv )
 
 ENFLE_PLUGIN_ENTRIES;
 

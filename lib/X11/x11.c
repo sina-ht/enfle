@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Jun 18 20:49:22 2001.
- * $Id: x11.c,v 1.12 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 04:30:02 2001.
+ * $Id: x11.c,v 1.13 2001/06/19 08:16:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #ifdef USE_SHM
@@ -159,10 +161,10 @@ get_xvinfo(X11 *x11)
 				  formats[l].type == XvRGB ? "RGB" : "YUV",
 				  formats[l].format == XvPacked ? "packed" : "planar",
 				  formats[l].byte_order == LSBFirst ? "LSBFirst" : "MSBFirst");
-		    debug_message("x11: " __FUNCTION__ ": Xv:     component order: ");
+		    debug_message("component order: ");
 		    for (m = 0; m < formats[l].num_planes; m++)
 		      debug_message("%c", formats[l].component_order[m]);
-		    debug_message("\n");
+		    debug_message(" ");
 		    c = -1;
 		    /*
 		      name fcc        bpp        description

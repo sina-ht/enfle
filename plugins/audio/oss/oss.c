@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 17 21:38:44 2001.
- * $Id: oss.c,v 1.7 2001/01/17 13:25:16 sian Exp $
+ * Last Modified: Tue Jun 19 01:56:39 2001.
+ * $Id: oss.c,v 1.8 2001/06/19 08:16:19 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -28,6 +28,7 @@
 #include <errno.h>
 
 #define REQUIRE_UNISTD_H
+#define REQUIRE_STRING_H
 #include "compat.h"
 
 #ifdef HAVE_SYS_SOUNDCARD_H

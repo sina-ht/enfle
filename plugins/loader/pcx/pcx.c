@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:13:24 2001.
- * $Id: pcx.c,v 1.2 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 01:42:32 2001.
+ * $Id: pcx.c,v 1.3 2001/06/19 08:16:19 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "enfle/loader-plugin.h"

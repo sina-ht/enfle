@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr  9 15:50:55 2001.
- * $Id: timer.c,v 1.5 2001/04/18 05:31:19 sian Exp $
+ * Last Modified: Tue Jun 19 01:30:09 2001.
+ * $Id: timer.c,v 1.6 2001/06/19 08:16:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,8 @@
 
 #include <stdlib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "timer.h"

@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Wed May 23 14:09:04 2001.
- * $Id: glic.c,v 1.6 2001/05/23 12:13:14 sian Exp $
+ * Last Modified: Tue Jun 19 02:00:42 2001.
+ * $Id: glic.c,v 1.7 2001/06/19 08:16:19 sian Exp $
  */
 
 #include <stdlib.h>
@@ -68,9 +68,8 @@ DEFINE_SAVER_PLUGIN_GET_EXT(c)
   return strdup("glic");
 }
 
-DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
+DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 {
-  Config *c = (Config *)params;
   VMPM vmpm;
   unsigned char *s, *predicted;
   unsigned int image_size;

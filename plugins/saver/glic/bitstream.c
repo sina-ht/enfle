@@ -1,11 +1,14 @@
 /*
  * bitstream.c -- bitwise I/O stream
  * (C)Copyright 2000 by Hiroshi Takekawa
- * Last Modified: Tue Apr  3 18:08:57 2001.
- * $Id: bitstream.c,v 1.1 2001/04/18 05:43:31 sian Exp $
+ * Last Modified: Tue Jun 19 02:05:00 2001.
+ * $Id: bitstream.c,v 1.2 2001/06/19 08:16:19 sian Exp $
  */
 
 #include <stdlib.h>
+
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "bitstream.h"
 

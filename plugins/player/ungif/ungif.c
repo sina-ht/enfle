@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:36:06 2001.
- * $Id: ungif.c,v 1.19 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 01:44:27 2001.
+ * $Id: ungif.c,v 1.20 2001/06/19 08:16:19 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <gif_lib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "enfle/player-plugin.h"

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr 24 14:30:37 2001.
- * $Id: enfle-plugins.c,v 1.7 2001/04/24 16:39:31 sian Exp $
+ * Last Modified: Tue Jun 19 01:31:48 2001.
+ * $Id: enfle-plugins.c,v 1.8 2001/06/19 08:16:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "enfle-plugin.h"

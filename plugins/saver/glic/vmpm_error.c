@@ -1,11 +1,12 @@
 /*
  * vmpm_error.c
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:42:40 2001.
- * $Id: vmpm_error.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Tue Jun 19 02:02:09 2001.
+ * $Id: vmpm_error.c,v 1.3 2001/06/19 08:16:19 sian Exp $
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "vmpm_error.h"
 
