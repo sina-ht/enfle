@@ -1,3 +1,16 @@
+2002-04-27 Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in, plugins/loader/png/png.c, plugins/saver/png/png.c:
+	Adapted for libpng-1.2.2.
+
+	* plugins/ui/normal/normal.c: Let timer start to make invisible
+	cursor feature work properly.
+
+	* plugins/player/avifile/avifile.cpp,
+	plugins/player/opendivx/opendivx.c: Cleaned up.
+
+	* plugins/ui/wallpaper/wallpaper.c: Handle _RESIZING.
+
 2002-03-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/mpeg2/Makefile.am, lib/mpeg2/attributes.h,
