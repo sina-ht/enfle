@@ -1,9 +1,11 @@
 /*
  * arithmodel_utils.c -- Utility functions
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 02:14:50 2001.
- * $Id: arithmodel_utils.c,v 1.2 2001/08/06 04:58:06 sian Exp $
+ * Last Modified: Mon Aug  6 15:11:57 2001.
+ * $Id: arithmodel_utils.c,v 1.3 2001/08/06 18:50:20 sian Exp $
  */
+
+#include <stdio.h>
 
 #include "arithcoder.h"
 #include "arithmodel.h"
