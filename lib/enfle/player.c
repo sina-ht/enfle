@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:47:13 2000.
- * $Id: player.c,v 1.4 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Sat Oct 21 02:55:48 2000.
+ * $Id: player.c,v 1.5 2000/10/20 18:13:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,7 +29,7 @@
 #include "player.h"
 
 static int identify(EnflePlugins *, Movie *, Stream *);
-static PlayerStatus load_movie(EnflePlugins *, UIData *, char *, Movie *, Stream *);
+static PlayerStatus load_movie(EnflePlugins *, VideoWindow *, VideoPlugin *, char *, Movie *, Stream *);
 
 static Player template = {
   identify: identify,
@@ -83,7 +83,7 @@ identify(EnflePlugins *eps, Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load_movie(EnflePlugins *eps, UIData *uidata, char *pluginname, Movie *m, Stream *st)
+load_movie(EnflePlugins *eps, VideoWindow *vw, VideoPlugin *vp, char *pluginname, Movie *m, Stream *st)
 {
   Plugin *p;
   PlayerPlugin *pp;
@@ -93,5 +93,5 @@ load_movie(EnflePlugins *eps, UIData *uidata, char *pluginname, Movie *m, Stream
   pp = plugin_get(p);
 
   stream_rewind(st);
-  return pp->load(uidata, m, st);
+  return pp->load(vw, vp, m, st);
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:45:52 2000.
- * $Id: ui.c,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Sat Oct 21 02:14:31 2000.
+ * $Id: ui.c,v 1.3 2000/10/20 18:13:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,6 +54,7 @@ call(EnflePlugins *eps, char *pluginname, UIData *uidata)
   if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_UI], pluginname)) == NULL)
     return 0;
   uip = plugin_get(p);
-
-  return uip->ui_main(uidata);
+  if (uip)
+    return uip->ui_main(uidata);
+  return 0;
 }

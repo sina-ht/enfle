@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 16 05:55:35 2000.
- * $Id: movie.c,v 1.4 2000/10/16 19:33:08 sian Exp $
+ * Last Modified: Sat Oct 21 02:50:24 2000.
+ * $Id: movie.c,v 1.5 2000/10/20 18:13:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,8 +34,8 @@
 
 #include "movie.h"
 
-static int initialize_screen(UIData *, Movie *, int, int);
-static int render_frame(UIData *, Movie *, Image *);
+static int initialize_screen(VideoWindow *, VideoPlugin *, Movie *, int, int);
+static int render_frame(VideoWindow *, VideoPlugin *, Movie *, Image *);
 static int pause_usec(unsigned int);
 
 static void unload(Movie *);
@@ -70,14 +70,14 @@ movie_create(void)
 /* default callback functions */
 
 static int
-initialize_screen(UIData *uidata, Movie *m, int w, int h)
+initialize_screen(VideoWindow *vw, VideoPlugin *vp, Movie *m, int w, int h)
 {
   show_message("Movie screen: (%d x %d)\n", w, h);
   return 1;
 }
 
 static int
-render_frame(UIData *uidata, Movie *m, Image *p)
+render_frame(VideoWindow *vw, VideoPlugin *vp, Movie *m, Image *p)
 {
   /* do nothing */
   return 1;
