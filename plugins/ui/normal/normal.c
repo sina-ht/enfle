@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 27 02:08:49 2002.
- * $Id: normal.c,v 1.63 2002/04/27 13:02:15 sian Exp $
+ * Last Modified: Sat Jun  8 00:56:29 2002.
+ * $Id: normal.c,v 1.64 2002/06/13 14:34:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -114,27 +114,35 @@ static void
 magnify_if_requested(VideoWindow *vw, Image *p)
 {
   double s, ws, hs;
-  int use_hw_scale = 0;
+  int use_hw_scale;
 
-  if (p->type == _YUY2 || p->type == _YV12 || p->type == _I420 || p->type == _UYVY)
+  switch (p->type) {
+  case _YUY2:
+  case _YV12:
+  case _I420:
+  case _UYVY:
+  case _RV15:
+  case _RV16:
+  case _RV24:
+  case _RV32:
     use_hw_scale = 1;
+    break;
+  default:
+    use_hw_scale = 0;
+    break;
+  }
 
   switch (vw->render_method) {
-  case _VIDEO_RENDER_NORMAL:
-    p->if_magnified = 0;
-    if (!use_hw_scale && p->rendered.image)
-      memory_destroy(p->rendered.image);
-    if (!use_hw_scale)
-      p->rendered.image = memory_dup(p->image);
-    p->rendered.width  = p->magnified.width  = p->width;
-    p->rendered.height = p->magnified.height = p->height;
-    break;
   case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    if (!use_hw_scale) {
-      if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method))
-	show_message_fnc("image_magnify() failed.\n");
-      if (p->rendered.image)
-	memory_destroy(p->rendered.image);
+    if (!image_magnify(p, p->width << 1, p->height << 1, vw->interpolate_method, use_hw_scale))
+      show_message_fnc("image_magnify() failed.\n");
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
+    if (use_hw_scale) {
+      p->rendered.image = memory_dup(p->image);
+      p->rendered.width = p->width;
+      p->rendered.height = p->height;
+    } else {
       p->rendered.image = memory_dup(p->magnified.image);
     }
     break;
@@ -142,10 +150,15 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? hs : ws;
-    if (!use_hw_scale) {
-      image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
-      if (p->rendered.image)
-	memory_destroy(p->rendered.image);
+    if (!image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, use_hw_scale))
+      show_message_fnc("image_magnify() failed.\n");
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
+    if (use_hw_scale) {
+      p->rendered.image = memory_dup(p->image);
+      p->rendered.width = p->width;
+      p->rendered.height = p->height;
+    } else {
       p->rendered.image = memory_dup(p->magnified.image);
     }
     break;
@@ -153,16 +166,24 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? ws : hs;
-    if (!use_hw_scale) {
-      image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
-      if (p->rendered.image)
-	memory_destroy(p->rendered.image);
+    if (!image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, use_hw_scale))
+      show_message_fnc("image_magnify() failed.\n");
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
+    if (use_hw_scale) {
+      p->rendered.image = memory_dup(p->image);
+      p->rendered.width = p->width;
+      p->rendered.height = p->height;
+    } else {
       p->rendered.image = memory_dup(p->magnified.image);
     }
     break;
   default:
     show_message_fnc("invalid render_method %d\n", vw->render_method);
+  case _VIDEO_RENDER_NORMAL:
     p->if_magnified = 0;
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
     p->rendered.image = memory_dup(p->image);
     p->rendered.width  = p->magnified.width  = p->width;
     p->rendered.height = p->magnified.height = p->height;
@@ -368,7 +389,7 @@ main_loop_magnify_main(MainLoop *ml)
     video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 
     magnify_if_requested(vw, p);
-    video_window_resize(vw, p->magnified.width, p->magnified.height);
+    //video_window_resize(vw, p->magnified.width, p->magnified.height);
     video_window_set_offset(vw, 0, 0);
     video_window_render(vw, p);
 
@@ -481,7 +502,7 @@ main_loop_gamma_main(MainLoop *ml, int i)
     image_destroy(ml->p);
     ml->p = image_dup(ml->original_p);
     magnify_if_requested(ml->vw, ml->p);
-    video_window_resize(ml->vw, ml->p->magnified.width, ml->p->magnified.height);
+    //video_window_resize(ml->vw, ml->p->magnified.width, ml->p->magnified.height);
     video_window_set_offset(ml->vw, 0, 0);
     video_window_render(ml->vw, ml->p);
     result = 1;
@@ -698,10 +719,21 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   ml.original_p = NULL;
 
   if (p) {
-    if (p->type == _YUY2 || p->type == _YV12 || p->type == _I420 || p->type == _UYVY)
+    switch (p->type) {
+    case _YUY2:
+    case _YV12:
+    case _I420:
+    case _UYVY:
+    case _RV15:
+    case _RV16:
+    case _RV24:
+    case _RV32:
       vw->if_direct = 1;
-    else
+      break;
+    default:
       vw->if_direct = 0;
+      break;
+    }
     magnify_if_requested(vw, p);
     video_window_render(vw, p);
     set_caption_string(&ml);
@@ -979,6 +1011,17 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	free(p->comment);
 	p->comment = NULL;
       }
+
+#if 0
+      /* XXX: RV24 test */
+      switch (p->type) {
+      case _RGB24:
+	p->type = _RV24;
+	break;
+      default:
+	break;
+      }
+#endif
 
       ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
       memory_destroy(p->rendered.image);
