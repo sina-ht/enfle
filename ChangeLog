@@ -1,7 +1,23 @@
+2001-06-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11ximage.c: Avoid warnings.
+
+	* src/enfle.c: Implemented -m option.
+
+	* plugins/player/libmpeg3/libmpeg3.c, plugins/video/Xlib/Xlib.c:
+	Real Xv support.
+
+	* lib/enfle/image.[ch]: Added _YUV420, _YUV420P, _YVU420,
+	_YVU420P.
+
+	* lib/X11/x11ximage.[ch]: Real Xv support. Added put_scaled()
+	method.
+
+	* lib/X11/x11.[ch]: Moved libXv structures from x11.h to open().
+
 2001-06-13  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/X11/x11.c, lib/X11/x11.h: More decoding and printing Xv
-	information.
+	* lib/X11/x11.[ch]: More decoding and printing Xv information.
 
 	* lib/demultiplexer/demultiplexer_mpeg.c,
 	plugins/player/libmpeg2/libmpeg2.c: Decode pts and dts when
@@ -9,14 +25,13 @@
 
 2001-06-12  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in, lib/X11/Makefile.am, lib/X11/x11.c, lib/X11/x11.h,
+	* configure.in, lib/X11/Makefile.am, lib/X11/x11.[ch],
 	src/enfle.c: The begninning of supporting Xv extension. There are
 	no code to make use of it yet.
 
 	* src/enfle.c: Implemented -c option.
 
-	* lib/utils/libconfig.c, lib/utils/libconfig.h: Implemented
-	parse().
+	* lib/utils/libconfig.[ch]: Implemented parse().
 
 2001-06-03  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -66,14 +81,12 @@
 
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/archive.c, lib/enfle/archive.h,
-	plugins/ui/normal/normal.c: Now iteration_delete() returns next
-	data.
+	* lib/enfle/archive.[ch], plugins/ui/normal/normal.c: Now
+	iteration_delete() returns next data.
 
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/archive.c, lib/enfle/archive.h: Added
-	iteration_{first,last}().
+	* lib/enfle/archive.[ch]: Added iteration_{first,last}().
 
 	* plugins/ui/normal/normal.c: Added 'B'(previous archive), '<'(go
 	first) and '>'(go last) actions. More intuitive 'b' action. Bug
@@ -143,8 +156,8 @@
 
 	* lib/enfle/archive.c: Use misc_basename() instead of basename().
 
-	* lib/enfle/utils.c, lib/utils/misc.c, lib/utils/misc.h: Moved
-	replace_ext() from enfle/utils.c to utils/misc.c.
+	* lib/enfle/utils.c, lib/utils/misc.[ch]: Moved replace_ext() from
+	enfle/utils.c to utils/misc.c.
 
 2001-04-25  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -203,8 +216,8 @@
 
 	* lib/enfle/enfle-plugins.c: Supress annoying message output.
 
-	* lib/utils/libconfig.c, lib/utils/libconfig.h: Implemented
-	set_boolean(), get_boolean().
+	* lib/utils/libconfig.[ch]: Implemented set_boolean(),
+	get_boolean().
 
 	* lib/X11/x11window.c: Allow NULL as parent for
 	x11window_create(). In this case, root window object created.
@@ -246,18 +259,16 @@
 
 	* common.h: Added COPYRIGHT_MESSAGE definition.
 
-	* lib/enfle/image.c, lib/enfle/image.h: Implemented
-	image_compare().
+	* lib/enfle/image.[ch]: Implemented image_compare().
 
 	* lib/enfle/memory.c: Avoid warning. Added forgotten USE_SHM
 	ifdef.
 
 	* lib/enfle/loader.c: Clear format_detail.
 
-	* lib/enfle/utils.c, lib/enfle/utils.h: Implemented replace_ext().
+	* lib/enfle/utils.[ch]: Implemented replace_ext().
 
-	* lib/enfle/stream-utils.c, lib/enfle/stream-utils.h: Implemented
-	stream_gets().
+	* lib/enfle/stream-utils.[ch]: Implemented stream_gets().
 
 	* lib/enfle/ui-extra.h, lib/enfle/Makefile.am: Added saver and
 	effect.
@@ -269,8 +280,8 @@
 	* plugins/ui/normal/normal.c: Fixed some bugs. Added key bindings
 	to save image, rotate and flip effect.
 
-	* lib/utils/libconfig.c, lib/utils/libconfig.h: Implemented
-	get_str(), set_str(), get_int(), set_int().
+	* lib/utils/libconfig.[ch]: Implemented get_str(), set_str(),
+	get_int(), set_int().
 
 	* lib/utils/timer.c: Avoid warning.
 
@@ -305,8 +316,8 @@
 	plugins/loader/pnm/.cvsignore, plugins/saver/.cvsignore,
 	plugins/saver/png/.cvsignore: Updated or created .cvsignore.
 
-	* lib/enfle/saver-plugin.h, lib/enfle/saver.c, lib/enfle/saver.h:
-	New type of plugin: saver.
+	* lib/enfle/saver-plugin.h, lib/enfle/saver.[ch]: New type of
+	plugin: saver.
 
 	* lib/enfle/effect-plugin.h, lib/enfle/effect.c,
 	lib/enfle/effect.h: New type of plugin: effect.
@@ -362,8 +373,7 @@
 
 	* plugins/player/libmpeg2/Makefile.am,
 	plugins/player/libmpeg2/libmpeg2.c,
-	plugins/player/libmpeg2/libmpeg2_vo.c,
-	plugins/player/libmpeg2/libmpeg2_vo.h: Make libmpeg2 plugin
+	plugins/player/libmpeg2/libmpeg2_vo.[ch]: Make libmpeg2 plugin
 	working, but there is still the synchronizing problem.
 
 	* plugins/player/libmpeg3/libmpeg3.c: Fixed typo.
@@ -392,8 +402,7 @@
 2001-02-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg2/libmpeg2.c,
-	lib/demultiplexer/demultiplexer.c,
-	lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer.[ch],
 	lib/demultiplexer/demultiplexer_mpeg.c: Trial and error...
 
 	* lib/enfle/archive.c: Deleted unused debug messages.
@@ -423,17 +432,15 @@
 
 	* compat.h, configure.in, lib/demultiplexer/Makefile.am,
 	lib/demultiplexer/demultiplexer.h,
-	lib/demultiplexer/demultiplexer_mpeg.c,
-	lib/demultiplexer/demultiplexer_mpeg.h, lib/mpeg2/video_out.c,
+	lib/demultiplexer/demultiplexer_mpeg.[ch], lib/mpeg2/video_out.c,
 	plugins/player/Makefile.am, plugins/player/libmpeg2/libmpeg2.c,
-	plugins/player/libmpeg2/libmpeg2_vo.c,
-	plugins/player/libmpeg2/libmpeg2_vo.h: Get mpeg2 stuffs compiled.
+	plugins/player/libmpeg2/libmpeg2_vo.[ch]: Get mpeg2 stuffs
+	compiled.
 
 2001-02-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/demultiplexer/demultiplexer.h,
-	lib/demultiplexer/demultiplexer_mpeg.c,
-	lib/demultiplexer/demultiplexer_mpeg.h,
+	lib/demultiplexer/demultiplexer_mpeg.[ch],
 	plugins/player/libmpeg2/libmpeg2.c: More coding.
 
 2001-02-20  Hiroshi Takekawa  <sian@fennel.org>
@@ -446,8 +453,7 @@
 
 	* plugins/player/libmpeg2/Makefile.am,
 	plugins/player/libmpeg2/libmpeg2.c,
-	plugins/player/libmpeg2/libmpeg2_vo.c,
-	plugins/player/libmpeg2/libmpeg2_vo.h: More coding.
+	plugins/player/libmpeg2/libmpeg2_vo.[ch]: More coding.
 
 	* configure.in, lib/Makefile.am, lib/demultiplexer/*: Added
 	demultiplexer.
@@ -480,9 +486,8 @@
 
 	* configure.in: Fixed typo.
 
-	* lib/enfle/archive.c, lib/enfle/archive.h,
-	plugins/ui/normal/normal.c: Implemented deletion of an entry from
-	the list and a file itself.
+	* lib/enfle/archive.[ch], plugins/ui/normal/normal.c: Implemented
+	deletion of an entry from the list and a file itself.
 
 	* src/Makefile.am: Deleted -lX11, which is no longer needed.
 
@@ -604,10 +609,10 @@
 	* plugins/player/opendivx/Makefile.am,
 	plugins/player/opendivx/opendivx.c: Improved playback.
 
-	* lib/divxdecore/yuv2rgb.c, lib/divxdecore/yuv2rgb.h,
-	lib/divxdecore/yuv2rgb_mmx.c, lib/divxdecore/Makefile.am,
-	lib/divxdecore/idct.c, lib/divxdecore/idct_mmx.c,
-	lib/divxdecore/transferIDCT_mmx.c: Added MMX optimizations.
+	* lib/divxdecore/yuv2rgb.[ch], lib/divxdecore/yuv2rgb_mmx.c,
+	lib/divxdecore/Makefile.am, lib/divxdecore/idct.c,
+	lib/divxdecore/idct_mmx.c, lib/divxdecore/transferIDCT_mmx.c:
+	Added MMX optimizations.
 
 	* lib/mpglib/*: New mpglib library.
 
@@ -639,10 +644,8 @@
 
 	* OpenDivX-LICENSE: Added OpenDivX LICENSE description file.
 
-	* plugins/player/opendivx/libavi.c,
-	plugins/player/opendivx/libavi.h,
-	plugins/player/opendivx/libriff.c,
-	plugins/player/opendivx/libriff.h,
+	* plugins/player/opendivx/libavi.[ch],
+	plugins/player/opendivx/libriff.[ch],
 	plugins/player/opendivx/opendivx.c,
 	plugins/player/opendivx/yuv2rgb.c: Added copyright description.
 
@@ -728,7 +731,7 @@
 
 	* plugins/player/avifile/avifile.cpp: Implemented audio playing.
 
-	* lib/utils/dlist.c, lib/utils/dlist.h: Implemented sort().
+	* lib/utils/dlist.[ch]: Implemented sort().
 
 	* lib/enfle/video.h, plugins/video/Xlib/Xlib.c: Introduce sync()
 	method to video plugin.
@@ -784,8 +787,8 @@
 	* plugins/*/*/Makefile.am, plugins/*/*/*.c: Header files now
 	should be specified as enfle/*.h or so.
 
-	* lib/utils/dlist.c, lib/utils/dlist.h, lib/utils/hash.c,
-	lib/utils/hash.h: Avoid collision for C++.
+	* lib/utils/dlist.[ch], lib/utils/hash.[ch]: Avoid collision for
+	C++.
 
 	* lib/enfle/Makefile.am, lib/enfle/*.[ch]: Header files now should
 	be specified as enfle/*.h or so.
@@ -793,8 +796,8 @@
 	* lib/enfle/player-extra.h, lib/enfle/player-plugin.h:
 	PlayerStatus definition has been moved to player-extra.h.
 
-	* lib/enfle/memory.c, lib/enfle/memory.h: Header files now should
-	be specified as enfle/*.h or so. New method set().
+	* lib/enfle/memory.[ch]: Header files now should be specified as
+	enfle/*.h or so. New method set().
 
 	* lib/dllloader/Makefile.am, lib/dllloader/*.[ch]: Header files
 	now should be specified as enfle/*.h or so. Susie support is now
@@ -857,7 +860,7 @@
 	* common.h, lib/X11/x11ximage.c, lib/dllloader/kernel32.c,
 	lib/enfle/archive.c, lib/enfle/archiver.c, lib/enfle/loader.c,
 	lib/enfle/player.c, lib/enfle/spi.c, lib/enfle/streamer.c,
-	lib/enfle/utils.c, lib/enfle/utils.h, lib/utils/libconfig.c,
+	lib/enfle/utils.[ch], lib/utils/libconfig.c,
 	plugins/streamer/gz/gz.c: Use fatal(), fatal_perror(). Each of
 	these functions has the attribute 'noreturn'.
 
@@ -945,8 +948,7 @@
 
 	* lib/enfle/ui-extra.h: Added audio plugin.
 
-	* lib/enfle/movie.c, lib/enfle/movie.h: Pass config and audio
-	plugin.
+	* lib/enfle/movie.[ch]: Pass config and audio plugin.
 
 	* plugins/audio/oss/Makefile.am, plugins/audio/oss/oss.c: New OSS
 	Audio plugin.
@@ -1049,7 +1051,7 @@
 
 	* lib/X11/x11ximage.c: Cleanup.
 
-	* lib/X11/x11.c, lib/X11/x11.h: Added prefer_msb.
+	* lib/X11/x11.[ch]: Added prefer_msb.
 
 2000-12-03  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -1114,19 +1116,16 @@
 
 2000-11-14  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/dllloader/pe_image.c, lib/dllloader/pe_image.h,
-	lib/dllloader/user32.c, lib/dllloader/windef.h,
-	lib/enfle/archive.c, lib/enfle/enfle-plugin.c,
-	lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.c,
-	lib/enfle/enfle-plugins.h, lib/enfle/image.c, lib/enfle/image.h,
-	lib/enfle/spi-private.h, lib/enfle/spi.c, lib/utils/libconfig.c,
-	lib/utils/libconfig.h, lib/utils/libstring.c,
-	lib/utils/libstring.h, lib/utils/misc.c, lib/utils/misc.h,
-	lib/utils/plugin.c, lib/utils/plugin.h, lib/utils/pluginlist.c,
-	lib/utils/pluginlist.h, plugins/ui/normal/normal.c, src/enfle.c,
-	lib/dllloader/export.h, lib/dllloader/kernel32.c: Removed warnings
-	when -Wstrict-prototypes -Winline -Wwrite-strings is added to
-	CFLAGS.
+	* lib/dllloader/pe_image.[ch], lib/dllloader/user32.c,
+	lib/dllloader/windef.h, lib/enfle/archive.c,
+	lib/enfle/enfle-plugin.[ch], lib/enfle/enfle-plugins.[ch],
+	lib/enfle/image.[ch], lib/enfle/spi-private.h, lib/enfle/spi.c,
+	lib/utils/libconfig.[ch], lib/utils/libstring.[ch],
+	lib/utils/misc.[ch], lib/utils/plugin.[ch],
+	lib/utils/pluginlist.[ch], plugins/ui/normal/normal.c,
+	src/enfle.c, lib/dllloader/export.h, lib/dllloader/kernel32.c:
+	Removed warnings when -Wstrict-prototypes -Winline -Wwrite-strings
+	is added to CFLAGS.
 
 	* configure.in: Added -Wstrict-prototypes -Winline -Wwrite-strings
 	to CFLAGS.
@@ -1151,14 +1150,12 @@
 	* lib/enfle/video.h, lib/enfle/video-plugin.h: Moved VideoWindow
 	codes from video-plugin.h to video.h.
 
-	* lib/enfle/movie.c, lib/enfle/movie.h, lib/enfle/player.c,
-	lib/enfle/player.h, lib/enfle/player-plugin.h: No need to pass
-	VideoPlugin.
+	* lib/enfle/movie.[ch], lib/enfle/player.[ch],
+	lib/enfle/player-plugin.h: No need to pass VideoPlugin.
 
-	* lib/X11/x11window.c, lib/X11/x11window.h: Added wait_mapped().
+	* lib/X11/x11window.[ch]: Added wait_mapped().
 
-	* lib/X11/x11.c, lib/X11/x11.h: More implementation. Fixed some
-	bugs.
+	* lib/X11/x11.[ch]: More implementation. Fixed some bugs.
 
 2000-11-02  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -1223,38 +1220,35 @@
 
 	* lib/utils/Makefile.am: Added misc.[ch].
 
-	* lib/enfle/movie.c, lib/utils/timer.c, lib/utils/timer.h:
-	Work-around timer_create() name collision. Thanks to Mr. TAJIRI
-	Yasuhiro.
+	* lib/enfle/movie.c, lib/utils/timer.[ch]: Work-around
+	timer_create() name collision. Thanks to Mr. TAJIRI Yasuhiro.
 
 	* lib/dllloader/kernel32.c, lib/dllloader/Makefile.am,
 	lib/dllloader/module.c, lib/dllloader/pe_image.c,
 	lib/dllloader/user32.c, lib/dllloader/windef.h: More dll
 	implementations.
 
-	* lib/utils/misc.c, lib/utils/misc.h: New misc functions.
+	* lib/utils/misc.[ch]: New misc functions.
 
-	* lib/dllloader/advapi32.c, lib/dllloader/advapi32.h,
-	lib/dllloader/borlndmm.c, lib/dllloader/borlndmm.h: New dll
-	emulation.
+	* lib/dllloader/advapi32.[ch], lib/dllloader/borlndmm.[ch]: New
+	dll emulation.
 
 2000-10-28  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/libstring.c: Fixed bug.
 
 	* lib/enfle/archiver.c, lib/enfle/archiver-plugin.h,
-	lib/enfle/enfle-plugin.c, lib/enfle/enfle-plugin.h,
-	lib/enfle/enfle-plugintype.h, lib/enfle/loader.c,
-	lib/enfle/loader-plugin.h, lib/enfle/Makefile.am,
-	plugins/archiver/tar/tar.c, plugins/loader/bmp/bmp.c,
-	plugins/loader/jpeg/jpeg.c, plugins/loader/png/png.c,
-	plugins/loader/ungif/ungif.c, src/enfle.c: Susie plugin support.
+	lib/enfle/enfle-plugin.[ch], lib/enfle/enfle-plugintype.h,
+	lib/enfle/loader.c, lib/enfle/loader-plugin.h,
+	lib/enfle/Makefile.am, plugins/archiver/tar/tar.c,
+	plugins/loader/bmp/bmp.c, plugins/loader/jpeg/jpeg.c,
+	plugins/loader/png/png.c, plugins/loader/ungif/ungif.c,
+	src/enfle.c: Susie plugin support.
 
 	* lib/Makefile.am: Added dllloader.
 
-	* lib/dllloader/*, lib/enfle/spi.c, lib/enfle/spi.h,
-	lib/enfle/spi-private.h: Susie related dllloader and spi-to-enfle
-	bridge.
+	* lib/dllloader/*, lib/enfle/spi.[ch], lib/enfle/spi-private.h:
+	Susie related dllloader and spi-to-enfle bridge.
 
 2000-10-20  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -1262,13 +1256,12 @@
 
 	* common.h: Added stdio.h inclusion.
 
-	* lib/enfle/enfle-plugintype.h, lib/enfle/movie.c,
-	lib/enfle/movie.h, lib/enfle/player-plugin.h, lib/enfle/player.c,
-	lib/enfle/player.h, lib/enfle/ui-extra.h, lib/enfle/ui-plugin.h,
-	lib/enfle/ui.c: Adapted for new video architecture.
+	* lib/enfle/enfle-plugintype.h, lib/enfle/movie.[ch],
+	lib/enfle/player-plugin.h, lib/enfle/player.[ch],
+	lib/enfle/ui-extra.h, lib/enfle/ui-plugin.h, lib/enfle/ui.c:
+	Adapted for new video architecture.
 
-	* lib/X11/x11window.c, lib/X11/x11window.h: Added
-	set_event_mask(), get_position().
+	* lib/X11/x11window.[ch]: Added set_event_mask(), get_position().
 
 	* plugins/ui/Makefile.am: New Normal UI plugin.
 
@@ -1297,15 +1290,14 @@
 
 2000-10-17  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/archiver.c, lib/enfle/archiver-extra.h,
-	lib/enfle/archiver.h, lib/enfle/archiver-plugin.h,
-	lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.c,
-	lib/enfle/enfle-plugins.h, lib/enfle/enfle-plugintype.h,
-	lib/enfle/loader.c, lib/enfle/loader-extra.h, lib/enfle/loader.h,
-	lib/enfle/loader-plugin.h, lib/enfle/Makefile.am,
-	lib/enfle/player.c, lib/enfle/player.h, lib/enfle/player-plugin.h,
-	lib/enfle/streamer.c, lib/enfle/streamer.h, lib/enfle/ui.c,
-	lib/enfle/ui-extra.h, lib/enfle/ui.h, lib/enfle/ui-plugin.h,
+	* lib/enfle/archiver.[ch], lib/enfle/archiver-extra.h,
+	lib/enfle/archiver-plugin.h, lib/enfle/enfle-plugin.h,
+	lib/enfle/enfle-plugins.c, lib/enfle/enfle-plugins.h,
+	lib/enfle/enfle-plugintype.h, lib/enfle/loader.[ch],
+	lib/enfle/loader-extra.h, lib/enfle/loader-plugin.h,
+	lib/enfle/Makefile.am, lib/enfle/player.[ch],
+	lib/enfle/player-plugin.h, lib/enfle/streamer.[ch],
+	lib/enfle/ui.[ch], lib/enfle/ui-extra.h, lib/enfle/ui-plugin.h,
 	plugins/ui/Xlib/Xlib.c, src/enfle.c: New enfle plugin
 	implementation.
 
