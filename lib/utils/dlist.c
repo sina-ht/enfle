@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan  4 04:06:17 2001.
- * $Id: dlist.c,v 1.4 2001/01/06 23:55:47 sian Exp $
+ * Last Modified: Sun Jan 14 10:55:30 2001.
+ * $Id: dlist.c,v 1.5 2001/01/14 15:20:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,6 +33,8 @@ static Dlist_data *add(Dlist *, void *);
 static Dlist_data *add_str(Dlist *, char *);
 static int delete_item(Dlist *, Dlist_data *);
 static int move_to_top(Dlist *, Dlist_data *);
+static void set_compfunc(Dlist *, Dlist_compfunc);
+static int do_sort(Dlist *);
 static Dlist_data *get_top(Dlist *);
 static Dlist_data *get_head(Dlist *);
 static int get_datasize(Dlist *);
@@ -46,6 +48,8 @@ static Dlist dlist_template = {
   add_str: add_str,
   delete_item: delete_item,
   move_to_top: move_to_top,
+  set_compfunc: set_compfunc,
+  do_sort: do_sort,
   get_top: get_top,
   get_head: get_head,
   get_datasize: get_datasize,
@@ -178,6 +182,56 @@ move_to_top(Dlist *p, Dlist_data *t)
   p->top->prev = t;
   t->next = p->top;
   p->top = t;
+
+  return 1;
+}
+
+static void
+set_compfunc(Dlist *dl, Dlist_compfunc cf)
+{
+  dl->cf = cf;
+}
+
+#if 0
+static int
+validate(Dlist *dl)
+{
+  Dlist_data *i;
+
+  for (i = get_top(dl); i && i != get_head(dl); i = i->next);
+  if (i != get_head(dl))
+    return 0;
+  for (i = get_head(dl); i && i != get_top(dl); i = i->prev);
+  if (i != get_top(dl))
+    return 0;
+  return 1;
+}
+#endif
+
+static int
+do_sort(Dlist *dl)
+{
+  int i;
+  Dlist_data *t;
+  void **tmp;
+
+  if (get_datasize(dl) <= 1)
+    return 1;
+
+  if ((tmp = calloc(get_datasize(dl), sizeof(void *))) == NULL)
+    return 0;
+  t = get_top(dl);
+  for (i = 0; i < get_datasize(dl); i++) {
+    tmp[i] = t->data;
+    t = t->next;
+  }
+  qsort(&tmp[0], get_datasize(dl), sizeof(void *), dl->cf);
+  t = get_top(dl);
+  for (i = 0; i < get_datasize(dl); i++) {
+    t->data = tmp[i];
+    t = t->next;
+  }
+  free(tmp);
 
   return 1;
 }
