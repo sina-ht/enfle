@@ -1,3 +1,28 @@
+2001-10-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/kernel32.c: Added new API(stub)s: DeleteFileA,
+	FlushFileBuffers, SetStdHandle, IsBadCodePtr, FindResourceA,
+	SizeofResource, lstrcatA, lstrcmpA, TerminateProcess,
+	SetUnhandledExceptionFilter, RtlUnwind, GetStringTypeA,
+	LCMapStringA, SetLastError.
+
+	* lib/dllloader/windef.h: Added some stuffs.
+
+	* lib/dllloader/pe_image.c: First bit of resource support.
+
+	* lib/dllloader/pe.h: New structures: IMAGE_RESOURCE_DIRECTORY,
+	IMAGE_RESOURCE_DIRECTORY_ENTRY.
+
+2001-09-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/kernel32.c: New API: CreateFileW(), _lcreat(),
+	_lwrite(), CreateDirectoryA(), CreateDirectoryW().
+
+	* lib/dllloader/pe.h, lib/dllloader/pe_image.c: Reverted
+	DataDirectory change.
+
+	* lib/dllloader/windef.h: Added HFILE_ERROR.
+
 2001-09-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS: Updated NEWS.

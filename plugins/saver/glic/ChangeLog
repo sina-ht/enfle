@@ -1,3 +1,7 @@
+2001-09-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ipow.h: Added const attribute.
+
 2001-09-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* arithmodel_order_zero.c, expand.c: Avoid more warnings.
