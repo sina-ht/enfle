@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 12 22:16:59 2001.
- * $Id: oss.c,v 1.6 2001/01/12 13:19:04 sian Exp $
+ * Last Modified: Wed Jan 17 21:38:44 2001.
+ * $Id: oss.c,v 1.7 2001/01/17 13:25:16 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -51,6 +51,7 @@
 static AudioDevice *open_device(void *, Config *);
 static int set_params(AudioDevice *, AudioFormat *, int *, int *);
 static int write_device(AudioDevice *, unsigned char *, int);
+static int bytes_written(AudioDevice *);
 static int sync_device(AudioDevice *);
 static int close_device(AudioDevice *);
 
@@ -63,6 +64,7 @@ static AudioPlugin plugin = {
   open_device: open_device,
   set_params: set_params,
   write_device: write_device,
+  bytes_written: bytes_written,
   sync_device: sync_device,
   close_device: close_device
 };
@@ -108,6 +110,8 @@ open_device(void *data, Config *c)
     free(ad);
     return NULL;
   }
+
+  ioctl(ad->fd, SNDCTL_DSP_RESET);
 
   return ad;
 }
@@ -248,6 +252,16 @@ static int
 write_device(AudioDevice *ad, unsigned char *data, int size)
 {
   return write(ad->fd, data, size);
+}
+
+static int
+bytes_written(AudioDevice *ad)
+{
+  count_info info;
+
+  if (!ioctl(ad->fd, SNDCTL_DSP_GETOPTR, &info))
+    return info.bytes;
+  return -1;
 }
 
 static int
