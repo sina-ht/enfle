@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Sun Sep  9 00:11:14 2001.
- * $Id: arithmodel_order_zero.c,v 1.9 2001/09/09 23:59:00 sian Exp $
+ * Last Modified: Thu Sep 13 13:59:49 2001.
+ * $Id: arithmodel_order_zero.c,v 1.10 2001/09/13 12:10:44 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -46,6 +46,7 @@ static Arithmodel_order_zero template = {
   decode_final: decode_final,
   destroy: destroy,
   my_reset: my_reset,
+  get_freq: get_freq,
   set_update_escape_freq: set_update_escape_freq,
   private_data: NULL,
   is_eof_used: 0,
@@ -92,18 +93,21 @@ update_region_with_range(Arithmodel *_am, Index index, Index low, Index high)
 {
   Arithmodel_order_zero *am = AMOZ(_am);
   Arithcoder *ac = am->ac;
-  unsigned int tmp = ac->range / am->freq[high];
+  unsigned int lowest, highest, tmp;
 
-  if (low > 0)
-    fatal(255, __FUNCTION__ ": The code for low == %d > 0 is not yet written.\n", low);
+  lowest = (low > 0) ? am->freq[low - 1] : 0;
+  highest = am->freq[high] - lowest;
+  tmp = ac->range / highest;
 
-  debug_message(__FUNCTION__ "(%d, tmp %X)\n", index, tmp);
+  debug_message(__FUNCTION__ "(%d, tmp %X, lowest %X, highest %X)\n", index, tmp, lowest, highest);
 
   if (index > low) {
-    ac->low += tmp * am->freq[index - 1];
+    ac->low += tmp * (am->freq[index - 1] - lowest);
     ac->range = tmp * (am->freq[index] - am->freq[index - 1]);
+  } else if (index == low) {
+    ac->range = tmp * (am->freq[low] - lowest);
   } else {
-    ac->range = tmp * am->freq[low];
+    show_message(__FUNCTION__ ": index == %d < %d == low.\n", index, low);
   }
 }
 
@@ -227,6 +231,16 @@ my_reset(Arithmodel *_am, int eof_freq, int escape_freq)
   }
 
   return init(_am, eof_freq, escape_freq);
+}
+
+static unsigned int
+get_freq(Arithmodel *_am, unsigned int n)
+{
+  Arithmodel_order_zero *am = AMOZ(_am);
+  
+  if (n > 0)
+    return am->freq[n] - am->freq[n - 1];
+  return am->freq[0];
 }
 
 static int
