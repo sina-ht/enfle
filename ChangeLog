@@ -1,3 +1,34 @@
+2004-03-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/demultiplexer/*/Makefile.am: Use static libenfle.
+
+	* src/Makefile.am: Libraries link order change.
+
+	* src/enfle.c, src/enfle.rc: Check use_cache config.
+
+	* lib/mad/Makefile.am: noinst_HEADERS.
+
+	* lib/enfle/Makefile.am: noinst libenfle.
+
+	* lib/enfle/archiver.c, lib/enfle/streamer.c: Don't strdup.
+
+2004-03-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: Eliminated one warning.  Fixed logic reverse.
+
+	* lib/enfle/archiver.c, lib/enfle/streamer.c, src/enfle.rc: Added
+	the scan_no_assoc configuration variable for streamer and
+	archiver, too.
+
+	* README, configure.in, lib/enfle/demultiplexer.c,
+	lib/enfle/enfle-plugin.c, lib/enfle/enfle-plugin.h,
+	lib/enfle/enfle-plugins.c, lib/enfle/enfle-plugins.h,
+	lib/enfle/enfle-plugintype.h, lib/enfle/loader.c,
+	lib/enfle/player.c, lib/utils/plugin.c, lib/utils/plugin.h,
+	src/enfle.c, src/enfle.rc: Implemented plugin cache.  Added the
+	scan_no_assoc configuration variable.  Use ENFLE_PLUGINDIR
+	environment variable if exists.
+
 2004-03-08  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/mad/Makefile.am: Fixed mad.h building bug.
@@ -351,8 +382,6 @@
 
 2004-01-19  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in: Version up.
-
 	* plugins/player/avcodec/avcodec.c: Cleaned up.
 
 	* plugins/player/divx/divx.c,
@@ -430,8 +459,6 @@
 
 2004-01-11  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in: Version up.
-
 	* plugins/ui/normal/normal.c: Bug fix.
 
 	* plugins/player/libmpeg2/libmpeg2.c: Bigger fifo buffer for
@@ -468,8 +495,6 @@
 	* plugins/player/libmpeg2/libmpeg2.c: Fixed one dead-lock.
 
 2004-01-05  Hiroshi Takekawa  <sian@fennel.org>
-
-	* configure.in: Version up.
 
 	* plugins/ui/normal/normal.c: Clear m->width (and m->height).
 	libmpeg2 will not re-initialize screen if this is not done.
@@ -538,8 +563,6 @@
 
 2003-12-29  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in: Version up.
-
 	* plugins/saver/png/png.c: Use image_bpl().
 
 	* lib/avcodec/error_resilience.c: Updated.
@@ -548,8 +571,6 @@
 
 	* lib/X11/x11window.c, lib/enfle/image.h,
 	lib/utils/timer_gettimeofday.c: Commited various changes.
-
-	* configure.in: Version up.
 
 	* README: More documentation.
 
@@ -575,8 +596,6 @@
 
 2003-12-23  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in: Version up.
-
 	* plugins/player/avcodec/avcodec.c: Adapting for new libavcodec
 	changes.
 
@@ -597,8 +616,6 @@
 	libavcodec update
 
 2003-12-16  Hiroshi Takekawa  <sian@fennel.org>
-
-	* configure.in: Version up.
 
 	* src/enfle.c, src/enfle.rc: Split spi-related code.
 
