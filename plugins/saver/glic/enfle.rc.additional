@@ -1,0 +1,20 @@
+#enfle {
+#  plugins {
+#    saver {
+      glic {
+        vmpm_path = ../plugins/saver/glic/.libs
+        ; decompose_method = {Normal/HighLow/Token}
+	decompose_method = HighLow
+	; predict_method = {None/Up/Sub/Avg/Paeth/JPEGLS(=JLS)}
+	predict_method = Sub
+        ; scan_method = {Normal/Quad/Hilbert}
+	scan_method = Quad
+	vmpm {
+	  r = 4
+	  I = 4
+	  nlowbits = 4
+	}
+      }
+#    }
+#  }
+#}
