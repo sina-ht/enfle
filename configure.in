@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Sep  5 23:37:15 2002.
-dnl $Id: configure.in,v 1.117 2002/09/05 14:37:24 sian Exp $
+dnl Last Modified: Mon Sep 23 06:32:49 2002.
+dnl $Id: configure.in,v 1.118 2002/09/22 21:33:32 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20020905, sian@big.or.jp)
+AC_INIT(enfle, 20020923, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -400,10 +400,12 @@ ENFLE_MAX_ALIGN
 dnl Checks for library functions.
 AC_FUNC_FNMATCH
 AC_FUNC_MALLOC
+AC_FUNC_REALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
+AC_FUNC_SETVBUF_REVERSED
 AC_CHECK_FUNCS([getpagesize gettimeofday memalign memmove memset munmap pow select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr])
 
 dnl enable compatible function(s) if unavailable in system library.
