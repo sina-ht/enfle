@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 18 15:01:27 2000.
- * $Id: timer.c,v 1.3 2000/11/20 12:54:39 sian Exp $
+ * Last Modified: Sat Dec 23 05:55:06 2000.
+ * $Id: timer.c,v 1.4 2000/12/22 23:12:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -127,7 +127,13 @@ stop(Timer *timer)
 static Timer_t
 get_micro(Timer *timer)
 {
-  return timer->time;
+  Timer_t t;
+
+  pause(timer);
+  t = timer->time;
+  restart(timer);
+
+  return t;
 }
 
 static Timer_t
