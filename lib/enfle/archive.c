@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  6 01:49:37 2002.
- * $Id: archive.c,v 1.30 2002/10/05 17:17:33 sian Exp $
+ * Last Modified: Fri Nov 22 00:44:01 2002.
+ * $Id: archive.c,v 1.31 2002/11/29 15:56:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -205,6 +205,8 @@ set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnm)
 static void
 add(Archive *arc, char *path, void *reminder)
 {
+  debug_message_fnc("%s\n", path);
+
   if (arc->pattern) {
     int result = 0;
     char *base_name;
@@ -280,6 +282,25 @@ delete_path(Archive *arc, char *path)
   }
 }
 
+#define __dlist_next_or_null(dl, dd) ((dlist_head(dl) != dd) ? dlist_next(dd) : NULL)
+#define __dlist_prev_or_null(dl, dd) ((dlist_top(dl) != dd) ? dlist_prev(dd) : NULL)
+
+static int
+__iteration_index(Archive *arc)
+{
+  Dlist *dl = hash_get_keys(arc->filehash);
+  Dlist_data *dd = dlist_top(dl), *dd_n;
+  int i = 1;
+
+  while ((dd_n = __dlist_next_or_null(dl, dd)) != NULL) {
+    if (dd == arc->current)
+      break;
+    i++;
+  }
+
+  return i;
+}
+
 static char *
 iteration_start(Archive *arc)
 {
@@ -288,6 +309,8 @@ iteration_start(Archive *arc)
 
   if (!dlist_data(arc->current))
     return NULL;
+
+  arc->iteration_index = __iteration_index(arc);
 
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
@@ -300,11 +323,13 @@ iteration_first(Archive *arc)
   if (dlist_size(dl) == 0)
     return NULL;
 
-  arc->direction = 1;
   arc->current = dlist_top(dl);
+  arc->direction = 1;
 
   if (!dlist_data(arc->current))
     return NULL;
+
+  arc->iteration_index = 1;
 
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
@@ -323,11 +348,10 @@ iteration_last(Archive *arc)
   if (!dlist_data(arc->current))
     return NULL;
 
+  arc->iteration_index = arc->nfiles;
+
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
-
-#define __dlist_next_or_null(dl, dd) ((dlist_head(dl) != dd) ? dlist_next(dd) : NULL)
-#define __dlist_prev_or_null(dl, dd) ((dlist_top(dl) != dd) ? dlist_prev(dd) : NULL)
 
 static char *
 iteration_next(Archive *arc)
@@ -340,6 +364,8 @@ iteration_next(Archive *arc)
 
   if (!dlist_data(arc->current))
     return NULL;
+
+  arc->iteration_index++;
 
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
@@ -355,6 +381,8 @@ iteration_prev(Archive *arc)
 
   if (!dlist_data(arc->current))
     return NULL;
+
+  arc->iteration_index--;
 
   return hash_key_key(dlist_data(arc->current));
 }
