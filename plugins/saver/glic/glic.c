@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 00:35:55 2001.
- * $Id: glic.c,v 1.11 2001/08/05 16:17:44 sian Exp $
+ * Last Modified: Tue Aug 14 21:40:15 2001.
+ * $Id: glic.c,v 1.12 2001/08/15 06:40:54 sian Exp $
  */
 
 #include <stdlib.h>
@@ -122,10 +122,16 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   vmpm.outfile = fp;
   vmpm.r = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/r", &result);
   if (!result)
-    vmpm.r = 4;
+    vmpm.r = 2;
   vmpm.I = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/I", &result);
-  if (!result)
-    vmpm.I = 4;
+  if (!result || vmpm.I == 0) {
+    /* calculate the maximum value of I. */
+    unsigned int t;
+
+    for (vmpm.I = 0, t = image_size; t > 1; vmpm.I++)
+      t /= vmpm.r;
+    debug_message("glic: Max I = %d\n", vmpm.I);
+  }
   vmpm.nlowbits = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/nlowbits", &result);
   if (!result)
     vmpm.nlowbits = 4;
