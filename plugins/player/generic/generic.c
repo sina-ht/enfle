@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 14:04:13 2004.
- * $Id: generic.c,v 1.1 2004/02/14 05:22:46 sian Exp $
+ * Last Modified: Sat Feb 21 01:22:49 2004.
+ * $Id: generic.c,v 1.2 2004/02/20 17:23:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -143,36 +143,34 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
       if (m->ap->bytes_written == NULL)
 	warning("audio sync may be incorrect.\n");
-      m->has_audio = 1;
 
       if ((m->a_codec_name = audiodecoder_codec_name(m->a_fourcc)) == NULL) {
 	show_message("No audiodecoder for %X\n", m->a_fourcc);
-	demultiplexer_destroy(m->demux);
-	free(info);
-	m->movie_private = NULL;
-	return PLAY_NOT;
+	warning("Audio will not be played.\n");
+      } else {
+	m->has_audio = 1;
       }
     }
   } else {
     debug_message("No audio streams.\n");
   }
 
-  if (info->nvstreams) {
-    m->has_video = 1;
+  m->has_video = 0;
+  if (info->nvstreams > 0) {
     info->nvstream = 0;
     demultiplexer_set_video(m->demux, info->nvstream);
 
     if ((m->v_codec_name = videodecoder_codec_name(m->v_fourcc)) == NULL) {
       show_message("No videodecoder for %X\n", m->v_fourcc);
-      demultiplexer_destroy(m->demux);
-      free(info);
-      m->movie_private = NULL;
-      return PLAY_NOT;
+      warning("Video will not be played.\n");
+    } else {
+      m->has_video = 1;
     }
   } else {
     m->width = 128;
     m->height = 128;
     m->num_of_frames = 1;
+    debug_message("No video streams.\n");
   }
 
   p = info->p = image_create();
@@ -240,7 +238,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     }
   }
 
-  show_message("generic: video[%c%c%c%c(%08X):codec %s](%d streams)",
+  show_message("video[%c%c%c%c(%08X):codec %s](%d streams)",
 	       m->v_fourcc        & 0xff,
 	      (m->v_fourcc >>  8) & 0xff,
 	      (m->v_fourcc >> 16) & 0xff,
@@ -383,7 +381,7 @@ play_video(void *arg)
     return (void *)VD_ERROR;
   }
 
-  debug_message_fnc("using videodecoder %s\n", m->vdec->name);
+  show_message("videodecoder %s\n", m->vdec->name);
 
   vds = VD_OK;
   while (m->status == _PLAY) {
@@ -449,23 +447,24 @@ play_audio(void *arg)
 
   if (audiodecoder_select(info->eps, m, m->a_fourcc, info->c) == 0) {
     show_message("audiodecoder for %s not found\n", m->a_codec_name);
-    demultiplexer_destroy(m->demux);
-    free(info);
-    m->movie_private = NULL;
-    return PLAY_NOT;
+    m->has_audio = 0;
+    return (void *)PLAY_NOT;
   }
 
   if (m->adec == NULL) {
     err_message("audiodecoder plugin not found. Audio disabled.\n");
+    m->has_audio = 0;
     return (void *)PLAY_OK;
   }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");
+    audiodecoder_destroy(m->adec);
+    m->has_audio = 0;
     return (void *)PLAY_OK;
   }
   info->ad = ad;
 
-  debug_message_fnc("using audiodecoder %s\n", m->adec->name);
+  show_message("audiodecoder %s\n", m->adec->name);
 
   while (m->status == _PLAY) {
     if (!dp || dp->size == used) {
@@ -561,9 +560,6 @@ play_main(Movie *m, VideoWindow *vw)
     warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
-
-  if (!m->has_video)
-    return PLAY_OK;
 
   if (demultiplexer_get_eof(m->demux)) {
     if (info->astream && fifo_is_empty(info->astream)) {
