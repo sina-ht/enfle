@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Oct 19 11:23:12 2002.
- * $Id: demultiplexer_avi.c,v 1.17 2002/11/06 14:10:35 sian Exp $
+ * $Id: demultiplexer_avi.c,v 1.18 2003/02/05 15:20:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -78,6 +78,7 @@ seek_func(void *arg, unsigned int pos, RIFF_SeekWhence whence)
   case _SEEK_END:
     return stream_seek(st, pos, _END);
   }
+  return 0;
 }
 
 static int

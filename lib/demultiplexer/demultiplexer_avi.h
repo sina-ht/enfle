@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Sep  3 00:33:49 2001.
- * $Id: demultiplexer_avi.h,v 1.1 2001/09/03 00:31:03 sian Exp $
+ * $Id: demultiplexer_avi.h,v 1.2 2003/02/05 15:20:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,8 +20,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#ifndef _DEMULTIPLEXER_MPEG_H
-#define _DEMULTIPLEXER_MPEG_H
+#ifndef _DEMULTIPLEXER_AVI_H
+#define _DEMULTIPLEXER_AVI_H
 
 #include "demultiplexer.h"
 #include "enfle/stream.h"
