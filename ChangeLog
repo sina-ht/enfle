@@ -1,3 +1,11 @@
+2001-02-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Imported libmpeg2. Version up.
+
+	* lib/Makefile.am, lib/mpeg2/*: Imported libmpeg2.
+
+	* OpenDivX-LICENSE: Updated OpenDivX-LICENSE.
+
 2001-01-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, plugins/player/Makefile.am: New mpglib player
