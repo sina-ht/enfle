@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 19 19:50:20 2001.
- * $Id: archive.c,v 1.13 2001/04/20 07:24:58 sian Exp $
+ * Last Modified: Sat Apr 21 04:44:53 2001.
+ * $Id: archive.c,v 1.14 2001/04/21 07:26:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -77,7 +77,7 @@ archive_create(Archive *parent)
     return NULL;
   }
   arc->format = (char *)"NORMAL";
-  if (parent) {
+  if (parent && parent->pattern) {
     arc->fnmatch = parent->fnmatch;
     arc->pattern = strdup(parent->pattern);
   }
@@ -179,7 +179,7 @@ static void
 add(Archive *arc, char *path, void *reminder)
 {
   if (arc->pattern) {
-    int result;
+    int result = 0;
     char *base_copy, *base_name;
 
     base_copy = strdup(path);
