@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 17:44:19 2001.
- * $Id: libmpeg2_vo.h,v 1.3 2001/02/22 17:49:02 sian Exp $
+ * Last Modified: Mon Mar  5 01:01:08 2001.
+ * $Id: libmpeg2_vo.h,v 1.4 2001/03/04 17:10:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,30 +23,59 @@
 #ifndef _LIBMPEG2_VO_H
 #define _LIBMPEG2_VO_H
 
+#include "mpglib/mpg123.h"
+#include "mpglib/mpglib.h"
 #include "mpeg2/video_out.h"
 #include "mpeg2/video_out_internal.h"
 #include "mpeg2/yuv2rgb.h"
 #include "mpeg2/mpeg2.h"
+#include "demultiplexer/demultiplexer_mpeg.h"
 
 typedef struct _enfle_frame_t {
   vo_frame_t vo;
   uint8_t *rgb_ptr;
+  uint8_t *rgb_ptr_base;
   int rgb_stride;
   int yuv_stride;
 } enfle_frame_t;
 
 typedef struct _enfle_instance_t {
-  VideoWindow *vw;
-  Movie *m;
-  Image *p;
   vo_instance_t vo;
   int prediction_index;
-  vo_frame_t * frame_ptr[3];
+  vo_frame_t *frame_ptr[3];
   enfle_frame_t frame[3];
-  uint8_t * rgbdata;
+  Movie *m;
+  Image *p;
+  int image_size;
   int rgbstride;
   int width;
+  int height;
 } enfle_instance_t;
+
+typedef struct _libmpeg2_info {
+  VideoWindow *vw;
+  Image *p;
+  AudioDevice *ad;
+  struct mpstr mp;
+  mpeg2dec_t mpeg2dec;
+  Demultiplexer *demux;
+  vo_instance_t *vo;
+  int rendering_type;
+  int to_render;
+  int if_initialized;
+  pthread_mutex_t update_mutex;
+  pthread_cond_t update_cond;
+  int nvstreams;
+  int nvstream;
+  int v_fd_in;
+  int v_fd_out;
+  pthread_t video_thread;
+  int nastreams;
+  int nastream;
+  int a_fd_in;
+  int a_fd_out;
+  pthread_t audio_thread;
+} Libmpeg2_info;
 
 vo_instance_t *vo_enfle_rgb_open(VideoWindow *, Movie *, Image *);
 
