@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 02:01:05 2001.
- * $Id: archive.c,v 1.16 2001/05/01 17:08:10 sian Exp $
+ * Last Modified: Wed May  2 02:42:41 2001.
+ * $Id: archive.c,v 1.17 2001/05/01 17:55:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,7 +48,7 @@ static char *iteration_last(Archive *);
 static char *iteration_next(Archive *);
 static char *iteration_prev(Archive *);
 static char *iteration(Archive *);
-static void iteration_delete(Archive *);
+static char *iteration_delete(Archive *);
 static int open(Archive *, Stream *, char *);
 static void destroy(Archive *);
 
@@ -234,7 +234,6 @@ delete_path(Archive *arc, char *path)
     bug("archive.c: " __FUNCTION__ ": arc->nfiles = %d < 0\n", arc->nfiles);
   }
 
-  arc->current = (arc->direction == 1) ? dlist_prev(arc->current) : dlist_next(arc->current);
   if (!hash_delete_str(arc->filehash, path, 1)) {
     /* This is not always, but probably bug. */
     bug("archive.c: " __FUNCTION__ ": failed to delete %s.\n", path);
@@ -245,8 +244,6 @@ static char *
 iteration_start(Archive *arc)
 {
   Dlist *dl;
-
-  arc->direction = 1;
 
   dl = hash_get_keys(arc->filehash);
   if (!arc->current)
@@ -352,14 +349,24 @@ iteration(Archive *arc)
   return arc->direction == 1 ? iteration_next(arc) : iteration_prev(arc);
 }
 
-static void
+static char *
 iteration_delete(Archive *arc)
 {
   Dlist *dl;
+  Dlist_data *dl_n;
   dl = hash_get_keys(arc->filehash);
 
-  if (arc->current != dlist_guard(dl))
+  if (arc->current != dlist_guard(dl)) {
+    dl_n = dlist_next(arc->current);
     delete_path(arc, hash_key_key(dlist_data(arc->current)));
+    arc->current = dl_n;
+    if (arc->current == dlist_guard(dl))
+      return NULL;
+    if (!dlist_data(arc->current))
+      return NULL;
+    return hash_key_key(dlist_data(arc->current));
+  } else
+    return NULL;
 }
 
 static int

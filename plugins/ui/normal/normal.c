@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 02:04:32 2001.
- * $Id: normal.c,v 1.40 2001/05/01 17:07:50 sian Exp $
+ * Last Modified: Wed May  2 02:37:41 2001.
+ * $Id: normal.c,v 1.41 2001/05/01 17:55:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -660,17 +660,17 @@ process_files_of_archive(UIData *uidata, Archive *a)
     else {
       switch (ret) {
       case MAIN_LOOP_DELETE_FROM_LIST:
-	archive_iteration_delete(a);
+	path = archive_iteration_delete(a);
 	ret = MAIN_LOOP_NEXT;
-	continue;
+	break;
       case MAIN_LOOP_DELETE_FILE:
 	if (strcmp(a->format, "NORMAL") == 0) {
 	  unlink(s->path);
 	  show_message("DELETED: %s\n", s->path);
 	}
-	archive_iteration_delete(a);
+	path = archive_iteration_delete(a);
 	ret = MAIN_LOOP_NEXT;
-	continue;
+	break;
       case MAIN_LOOP_NEXT:
 	dir = 1;
 	path = archive_iteration_next(a);
