@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Tue Mar 20 11:24:45 2001.
+     Last Modified: Fri Apr 20 17:22:37 2001.
 
  This file is part of Enfle.
 
@@ -27,7 +27,8 @@
 
 **************************************************************************
 
- This software is based in part on the work of the Independent JPEG Group
+ JPEG Loader plugin and JPEG Saver plugin are based in part on the
+ work of the Independent JPEG Group
 
  -- libjpeg is only linked, not distributed with this archive. You
  -- should install it.
@@ -60,6 +61,7 @@ various formatted pictures and movies.
  JPEG
  PCX
  PNG
+ PNM
  spi(highly unstable, any formats which (some of) susie plugins support)
  animated GIF
  mng
@@ -87,7 +89,8 @@ JPEG: jpegsrc-6b (libjpeg)
 PNG: libpng-1.0.2 or later (recommended: 1.0.9)
 gz: zlib-1.1.3 or later
 bz2: bzip2-1.0.0 or later
-ungif: libungif-3.1.0 or later (recommended: 4.1.0 or later)
+ungif: libungif-3.1.0 or later may work..., but even 4.1.0 has bug.
+       (recommended: cvs version or ask me the patch)
 mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
@@ -110,9 +113,9 @@ FreeBSD (4.1R, x86)
 Other similar environments should work. Please let me know if you try
 on the same/other environments.
 
-My main developing environment is:
+My main environment is:
 
-Kernel: Linux-2.4.2
+Kernel: Linux-2.4.3
 CPU: Celeron/366 (running at 550)
 X server: XFree86-4.0.3
 Video: Matrox MillenniumII/AGP 8M
@@ -149,6 +152,10 @@ want to view. If you pass directory name, then files under that
 directory will be added recursively. Supported archives(such as
 .tar.gz) can be directly specified.
 
+-C converts images by specified Saver plugin. If the argument is omitted, PNG is used.
+-i specifies the pattern to include.
+-x specifies the pattern to exclude.
+
 
 5. Usage
 
@@ -158,9 +165,13 @@ Center click,N		next archive
 q			quit
 f			full screen on/off
 S(shift+s)		toggle magnification algorithm(nointerpolate/bilinear)
+C-s			save the image displayed as PNG.
+Alt-s			save the image displayed as specified in config.
+h,v			flip horizontally or vertically respecitively.
+l,r			rotate by a right angle.
 m			magnify x2
 M(shift+m)		magnify according to longer edge.
-Alt+m			magnify according to shorter edge.
+Alt-m			magnify according to shorter edge.
 
 Yes, Enfle will quit when all pictures are viewed.
 
@@ -189,7 +200,7 @@ in body, send it to <enfle-ctl@fennel.org>.
 
 You will be requested to confirm your subscription. Read it and
 confirm. I have the rights to read, convert, transfer, put in web
-pages, all posted mails, and any other necessary rights to provide an
+pages, all posted mails. And any other necessary rights to provide an
 ML search engine. (I just want to provide an ML search engine. Please
 do not be alarmed.)
 

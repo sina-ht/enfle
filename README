@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Tue Mar 20 11:20:39 2001.
+     Last Modified: Fri Apr 20 17:23:31 2001.
 
  This file is part of Enfle.
 
@@ -27,7 +27,8 @@
 
 ***************************************************
 
- This software is based in part on the work of the Independent JPEG Group
+ JPEG Loader plugin and JPEG Saver plugin are based in part on the
+ work of the Independent JPEG Group
 
  -- libjpeg is only linked, not distributed with this archive. You
  -- should install it.
@@ -40,7 +41,10 @@
  -- archive. Moreover, libungif is not used by default, for avoiding
  -- possible patent infringement. It's up to you whether use it or not.
 
- This software includes mpglib by Michael Hipp.
+ This archive includes mpglib by Michael Hipp. Read lib/mpglib/README.
+
+ This archive includes fnmatch.[ch] by FSF. These files can be
+ distributed under GPL2 or (at your option) any later version.
 
 ***************************************************
 
@@ -60,6 +64,7 @@ See README.e if you don't read Japanese, but English.
  JPEG
  PCX
  PNG
+ PNM
  spi(不安定, Susie pluginを利用できる)
  animated GIF
  mng
@@ -90,10 +95,11 @@ JPEG: jpegsrc-6b (libjpeg)
 PNG: libpng-1.0.2 or later (recommended: 1.0.9)
 gz: zlib-1.1.3 or later
 bz2: bzip2-1.0.0 or later
-ungif: libungif-3.1.0 or later (recommended: 4.1.0 or later)
+ungif: libungif-3.1.0 or later でとりあえず動作しますが、現時点で最新の4.1.0にもバグがあります。
+       (recommended: cvs version あるいは、私にパッチを請求してください)
 mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
-mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
+mpeg_lib: mpeg_lib-1.3.1+patch (パッチが必要な場合は私までどうぞ)
 avifile: avifile-0.53.5
 
 
@@ -112,9 +118,9 @@ FreeBSD (4.1R, x86)
 
 同じ/他の環境下で試された方は結果を御報告ください。
 
-私のメインの開発環境は2001/03/20現在 以下の通りです。
+私のメインの開発環境は2001/04/19現在 以下の通りです。
 
-Kernel: Linux-2.4.2
+Kernel: Linux-2.4.3
 CPU: Celeron/366 (running at 550)
 X server: XFree86-4.0.3
 Video: Matrox MillenniumII/AGP 8M
@@ -130,8 +136,8 @@ libc: glibc-2.2.2
 なエラーがでたか報告していただければ幸いです。configureが生成する
 config.logなども参考になります。報告先は後述してあります。
 
-makeが通ったら、make installするか、srcに移動して./enfleとして起動して
-ください。
+makeが通ったら、make installするか、srcに移動してenfle.rcを編集して
+./enfleと起動してください。
 
 configureスクリプトの指定できるオプションは、./configure --helpで詳細
 がみれます。MMXが使えて、かつ、nasmがinstallされていて、しかもdepth16
@@ -153,6 +159,13 @@ Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
 帰的に追加します。対応してるアーカイブを指定した場合には、その中味も読
 まれます。
 
+オプション:
+
+-Cはbatch作業で自動変換します。引数でSaver pluginの名前を指定できます。
+省略するとPNGになります。
+-iは指定したパターンのファイル名のみ対象とします。
+-xは指定したパターンのファイル名を対象から外します。
+
 
 5.使い方
 
@@ -162,14 +175,18 @@ Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
 q			終了
 f			フルスクリーンon/off
 S(shift+s)		拡大アルゴリズムの変更(nointerpolate/bilinear)
+C-s			表示中の画像をPNG形式で保存
+Alt-S			configで指定した形式で保存
+h,v			それぞれ水平、垂直方向の軸に対して線対称に変換
+l,r			それぞれ90度、-90度に回転変換
 m			2倍拡大
 M(shift+m)		画像の長辺が画面いっぱいになるように拡大
-Alt+m			画像の短辺が画面いっぱいになるように拡大
+Alt-m			画像の短辺が画面いっぱいになるように拡大
 
 また、全ての画像を表示し終わっても終了します。
 
 マウスのwheelにも対応しています。今のところ、前にまわすと次の画像、後
-にまわると前の画像にうつります。
+にまわすと前の画像にうつります。
 
 
 6.カスタマイズ
