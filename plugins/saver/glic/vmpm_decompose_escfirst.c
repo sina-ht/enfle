@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug  2 20:49:45 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.2 2001/08/02 11:50:00 sian Exp $
+ * Last Modified: Mon Aug  6 01:00:22 2001.
+ * $Id: vmpm_decompose_escfirst.c,v 1.3 2001/08/05 16:18:44 sian Exp $
  */
 
 #include <stdio.h>
@@ -181,13 +181,12 @@ encode(VMPM *vmpm)
     }
   }
       
-  fprintf(vmpm->outfile, "%c", i);
+  fputc(i, vmpm->outfile);
   if (match_found) {
     for (; i >= 1; i--) {
       unsigned int nsymbols = 0;
-      unsigned int n1;
 
-      stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i]);
+      stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
       /* Encode escape symbols at once. */
       arithmodel_order_zero_reset(bin_am, 0, 0);
       arithmodel_install_symbol(bin_am, 1);
@@ -206,19 +205,19 @@ encode(VMPM *vmpm)
 	}
       }
       stat_message(vmpm, "\n");
-      /* Then encode non-escape symbols */
+      /* Then encode non-escape symbols. */
       arithmodel_order_zero_reset(bin_am, 0, 0);
       arithmodel_install_symbol(bin_am, 1);
       arithmodel_install_symbol(bin_am, 1);
-      n1 = 0;
+      nsymbols = 0;
       for (j = 0; j < vmpm->token_index[i]; j++) {
 	Token *t = vmpm->token[i][j];
 	Token_value tv = t->value - 1;
 
 	if (nsymbols == tv) {
-	  n1++;
+	  nsymbols++;
 	} else {
-	  arithmodel_encode_cbt(bin_am, tv, n1 - 1, 0, 1);
+	  arithmodel_encode_cbt(bin_am, tv, nsymbols - 1, 0, 1);
 	}
       }
     }
@@ -275,48 +274,69 @@ decode(VMPM *vmpm)
 
   bin_am = arithmodel_order_zero_create(0, 0);
   arithmodel_decode_init(bin_am, ac);
-  arithmodel_install_symbol(bin_am, 1);
-  arithmodel_install_symbol(bin_am, 1);
 
-  vmpm->token_index[vmpm->I] = vmpm->blocksize / ipow(vmpm->r, vmpm->I);
-  for (i = vmpm->I; i >= 1; i--) {
-    stat_message(vmpm, "Level %d: %d\n", i, vmpm->token_index[i]);
+  i = fgetc(vmpm->outfile);
+  vmpm->token_index[i] = vmpm->blocksize / ipow(vmpm->r, i);
+  for (; i >= 1; i--) {
+    unsigned int nsymbols = 0;
+
+    stat_message(vmpm, "D:Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
     vmpm->token_index[i - 1] = 0;
     if ((vmpm->tokens[i] = calloc(vmpm->token_index[i], sizeof(Token))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
-    /* newtoken[] will not be known by decoder without sending. */
-    //arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-    arithmodel_order_zero_reset(am, 1, vmpm->token_index[i] >> 2);
+    /* Decode escape symbols at once. */
+    arithmodel_order_zero_reset(bin_am, 0, 0);
+    arithmodel_install_symbol(bin_am, 1);
+    arithmodel_install_symbol(bin_am, 1);
     for (j = 0; j < vmpm->token_index[i]; j++) {
       Index index;
 
-      arithmodel_decode(am, &index);
-      vmpm->tokens[i][j].value++;
-      if (vmpm->tokens[i][j].value > vmpm->token_index[i - 1]) {
-	if (vmpm->tokens[i][j].value == vmpm->token_index[i - 1] + 1)
-	  vmpm->token_index[i - 1]++;
-	else
-	  generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);
+      arithmodel_decode(bin_am, &index);
+      if (index) {
+	nsymbols++;
+	vmpm->token[i][j]->value = nsymbols;
+      } else {
+	vmpm->token[i][j]->value = 0;
       }
     }
-    vmpm->token_index[i - 1] *= vmpm->r;
+    /* Then decode non-escape symbols. */
+    arithmodel_order_zero_reset(bin_am, 0, 0);
+    arithmodel_install_symbol(bin_am, 1);
+    arithmodel_install_symbol(bin_am, 1);
+    for (j = 0; j < vmpm->token_index[i]; j++) {
+      if (vmpm->token[i][j]->value == 0) {
+	Token_value tv;
+	arithmodel_decode_cbt(bin_am, &tv, nsymbols - 1, 0, 1);
+	vmpm->token[i][j]->value = tv + 1;
+	stat_message(vmpm, "%d ", tv);
+      } else {
+	nsymbols++;
+	stat_message(vmpm, "e ");
+      }
+    }
+    stat_message(vmpm, "\n");
+    vmpm->token_index[i - 1] = nsymbols * vmpm->r;
   }
 
   if ((index_to_symbol = calloc(vmpm->alphabetsize, sizeof(unsigned int))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
 
   n = 0;
-  stat_message(vmpm, "Level 0: %d\n", vmpm->token_index[0]);
+  arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
+  stat_message(vmpm, "D:Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     Index v;
 
     if (arithmodel_decode(am, &v) == 2) {
       arithmodel_decode_bits(bin_am, &vmpm->tokens[0][j].value, vmpm->bits_per_symbol, 0, 1);
       index_to_symbol[n++] = vmpm->tokens[0][j].value;
+      stat_message(vmpm, "e ");
     } else {
       vmpm->tokens[0][j].value = index_to_symbol[v];
+      stat_message(vmpm, "%d ", v);
     }
   }
+  stat_message(vmpm, "\n");
   free(index_to_symbol);
 
   arithcoder_decode_final(ac);
