@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar 31 21:43:17 2004.
- * $Id: generic.c,v 1.10 2004/03/31 14:35:49 sian Exp $
+ * Last Modified: Mon Apr  5 23:13:15 2004.
+ * $Id: generic.c,v 1.11 2004/04/05 15:49:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -402,6 +402,7 @@ play_video(void *arg)
       if (dp)
 	destructor(dp);
       dp = (DemuxedPacket *)data;
+
 #if defined(USE_TS)
       pts = dp->pts;
       dts = dp->dts;
@@ -440,12 +441,12 @@ play_audio(void *arg)
 {
   Movie *m = arg;
   generic_info *info = (generic_info *)m->movie_private;
-  AudioDevice *ad;
   AudioDecoderStatus ads;
-  unsigned int used = 0, u;
   void *data;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
+  int used;
+  AudioDevice *ad;
 #ifdef USE_TS
   unsigned long pts, dts, size;
 #endif
@@ -463,7 +464,7 @@ play_audio(void *arg)
     m->has_audio = 0;
     return (void *)PLAY_OK;
   }
-  if (!audiodecoder_setup(m->adec)) {
+  if (!audiodecoder_setup(m->adec, m)) {
     err_message_fnc("audiodecoder_setup() failed.\n");
     return (void *)VD_ERROR;
   }
@@ -477,51 +478,33 @@ play_audio(void *arg)
 
   show_message("audiodecoder %s\n", m->adec->name);
 
-  while (m->status == _PLAY) {
-    if (!dp || dp->size == used) {
+  ads = AD_OK;
+  while (m->status == _PLAY || m->status == _RESIZING) {
+    while ((m->status == _PLAY || m->status == _RESIZING) && ads == AD_OK)
+      ads = audiodecoder_decode(m->adec, m, ad, NULL, 0, NULL);
+    if (ads == AD_NEED_MORE_DATA) {
       if (!fifo_get(info->astream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
-	break;
+	goto quit;
       }
       if (dp)
 	destructor(dp);
       dp = (DemuxedPacket *)data;
-      used = 0;
-    }
-    if (ad) {
-#ifdef USE_TS
-      switch (dp->pts_dts_flag) {
-      case 2:
-	pts = dp->pts;
-	dts = -1;
-	size = dp->size;
-	break;
-      case 3:
-	pts = dp->pts;
-	dts = dp->dts;
-	size = dp->size;
-	break;
-      default:
-	pts = dts = -1;
-	size = dp->size;
-	break;
-      }
+
+#if defined(USE_TS)
+      pts = dp->pts;
+      dts = dp->dts;
 #endif
-      ads = audiodecoder_decode(m->adec, m, ad, dp->data + used, dp->size - used, &u);
-      used += u;
-      while (ads == AD_OK) {
-	u = 0;
-	ads = audiodecoder_decode(m->adec, m, ad, NULL, 0, &u);
-	if (u > 0)
-	  debug_message_fnc("u should be zero.\n");
-      }
-      if (ads != AD_NEED_MORE_DATA) {
-	err_message_fnc("error in audio decoding.\n");
-	break;
-      }
+      ads = audiodecoder_decode(m->adec, m, ad, dp->data, dp->size, &used);
+      if (used != dp->size)
+	warning_fnc("audiodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
+    } else {
+      err_message_fnc("audiodecoder_decode returned %d\n", ads);
+      break;
     }
   }
 
+ quit:
   if (dp)
     destructor(dp);
 
