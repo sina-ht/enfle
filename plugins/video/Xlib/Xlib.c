@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 23:06:59 2000.
- * $Id: Xlib.c,v 1.10 2000/12/05 15:51:11 sian Exp $
+ * Last Modified: Thu Dec  7 16:36:28 2000.
+ * $Id: Xlib.c,v 1.11 2000/12/07 13:39:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -79,7 +79,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.2",
+  description: "Xlib Video plugin version 0.2.1",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -370,7 +370,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
   if (XCheckMaskEvent(x11_display(x11), x11window_mask(xw), &xev) == True) {
     switch (xev.type) {
     case Expose:
-      {
+      if (!vw->if_direct) {
 	XExposeEvent *xeev = (XExposeEvent *)&xev;
 	Region region = XCreateRegion();
 	XRectangle rect;
