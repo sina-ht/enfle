@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 17:20:39 2000.
- * $Id: image_magnify.c,v 1.2 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Sat Dec  9 03:22:28 2000.
+ * $Id: image_magnify.c,v 1.3 2000/12/10 13:19:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -272,64 +272,63 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 int
 image_magnify_main(Image *p, int dw, int dh, ImageInterpolateMethod method)
 {
-  unsigned int image_size;
-  Memory *image = NULL;
-
   switch (p->type) {
   case _GRAY:
   case _INDEX:
-    image_size = dw * dh;
+    p->magnified.bytes_per_line = dw;
     break;
   case _RGB_WITH_BITMASK:
   case _BGR_WITH_BITMASK:
-    image_size = dw * dh * 2;
+    p->magnified.bytes_per_line = dw * 2;
     break;
   case _RGB24:
   case _BGR24:
-    image_size = dw * dh * 3;
+    p->magnified.bytes_per_line = dw * 3;
     break;
   case _RGBA32:
   case _ABGR32:
   case _ARGB32:
   case _BGRA32:
-    image_size = dw * dh * 4;
+    p->magnified.bytes_per_line = dw * 4;
     break;
   default:
     fprintf(stderr, "image_magnify: unsupported image type %s\n", image_type_to_string(p->type));
     return 0;
   }
 
-  if ((memory_alloc(image, image_size)) == NULL)
+  if (!p->magnified.image && ((p->magnified.image = memory_create()) == NULL))
+    return 0;
+
+  if ((memory_alloc(p->magnified.image, p->magnified.bytes_per_line * dh)) == NULL)
     return 0;
 
   switch (p->type) {
   case _GRAY:
   case _INDEX:
-    magnify_generic8(memory_ptr(image), memory_ptr(p->image), p->width, p->height, dw, dh);
+    magnify_generic8(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh);
     break;
   case _RGB_WITH_BITMASK:
   case _BGR_WITH_BITMASK:
-    magnify_generic16((unsigned short *)memory_ptr(image), (unsigned short *)memory_ptr(p->image), p->width, p->height, dw, dh);
+    magnify_generic16((unsigned short *)memory_ptr(p->magnified.image), (unsigned short *)memory_ptr(p->image), p->width, p->height, dw, dh);
     break;
   case _RGB24:
   case _BGR24:
-    magnify_generic24(memory_ptr(image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
+    magnify_generic24(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
     break;
   case _RGBA32:
   case _ABGR32:
   case _ARGB32:
   case _BGRA32:
-    magnify_generic32(memory_ptr(image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
+    magnify_generic32(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
     break;
   default:
     fprintf(stderr, "image_magnify: unsupported image type %s\n", image_type_to_string(p->type));
     return 0;
   }
 
-  memory_destroy(p->image);
-  p->image = image;
-  p->width = dw;
-  p->height = dh;
+  p->magnified.width  = dw;
+  p->magnified.height = dh;
+  p->if_magnified = 1;
 
   return 1;
 }

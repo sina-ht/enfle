@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec  5 21:21:55 2000.
- * $Id: image.c,v 1.6 2000/12/05 15:06:44 sian Exp $
+ * Last Modified: Sat Dec  9 02:07:47 2000.
+ * $Id: image.c,v 1.7 2000/12/10 13:19:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,7 +26,7 @@
 
 #include "image.h"
 
-void *image_magnify_main(Image *, int, int, ImageInterpolateMethod);
+int image_magnify_main(Image *, int, int, ImageInterpolateMethod);
 
 static const char *image_type_to_string_array[] = {
   "_BITMAP_LSBFirst",
@@ -45,7 +45,7 @@ static const char *image_type_to_string_array[] = {
 };
 
 static Image *duplicate(Image *);
-static Image *magnify(Image *, int, int, ImageInterpolateMethod);
+static int magnify(Image *, int, int, ImageInterpolateMethod);
 static void destroy(Image *);
 
 static Image template = {
@@ -87,13 +87,16 @@ duplicate(Image *p)
     return NULL;
   memcpy(new, p, sizeof(Image));
 
-  if (p->rendered_image && (new->rendered_image = memory_dup_as_shm(p->rendered_image)) == NULL)
+  if (p->rendered.image && (new->rendered.image = memory_dup_as_shm(p->rendered.image)) == NULL)
       goto error;
 
-  if (p->image && (new->image = memory_dup_as_shm(p->image)) == NULL)
+  if (p->magnified.image && (new->magnified.image = memory_dup(p->magnified.image)) == NULL)
       goto error;
 
-  if (p->mask && (new->mask = memory_dup_as_shm(p->mask)) == NULL)
+  if (p->image && (new->image = memory_dup(p->image)) == NULL)
+      goto error;
+
+  if (p->mask && (new->mask = memory_dup(p->mask)) == NULL)
       goto error;
 
   if (p->next && (new->next = duplicate(p->next)) == NULL)
@@ -106,23 +109,19 @@ duplicate(Image *p)
   return NULL;
 }
 
-static Image *
+static int
 magnify(Image *p, int dw, int dh, ImageInterpolateMethod method)
 {
-  Image *new = image_dup(p);
-
-  if (new == NULL)
-    return NULL;
-  image_magnify_main(new, dw, dh, method);
-
-  return new;
+  return image_magnify_main(p, dw, dh, method);
 }
 
 static void
 destroy(Image *p)
 {
-  if (p->rendered_image)
-    memory_destroy(p->rendered_image);
+  if (p->rendered.image)
+    memory_destroy(p->rendered.image);
+  if (p->magnified.image)
+    memory_destroy(p->magnified.image);
   if (p->image)
     memory_destroy(p->image);
   if (p->mask)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 21:05:00 2000.
- * $Id: image.h,v 1.7 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Sat Dec  9 02:02:43 2000.
+ * $Id: image.h,v 1.8 2000/12/10 13:19:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,29 +69,38 @@ typedef struct _image_color {
   unsigned char index;
 } ImageColor;
 
+typedef struct _image_data {
+  unsigned int width, height;
+  unsigned int bytes_per_line;
+  int left, top;
+  Memory *image;
+} ImageData;
+
 typedef struct _image Image;
 struct _image {
-  int width, height;
+  ImageType type;
+  unsigned int width, height;
+  unsigned int bytes_per_line;
   int left, top;
-  Memory *rendered_image;
   Memory *image;
+  ImageData magnified;
+  ImageData rendered;
+  ImageColor background_color;
+  ImageColor transparent_color;
   Memory *mask;
   unsigned char *comment;
   char *format;
-  ImageType type;
-  ImageColor background_color;
-  ImageColor transparent_color;
   int alpha_enabled;
+  int if_magnified;
   int depth;
   int bits_per_pixel;
-  int bytes_per_line;
   int ncolors;
   unsigned char colormap[256][3];
   unsigned long red_mask, green_mask, blue_mask;
   Image *next;
 
   Image *(*duplicate)(Image *);
-  Image *(*magnify)(Image *, int, int, ImageInterpolateMethod);
+  int (*magnify)(Image *, int, int, ImageInterpolateMethod);
   void (*destroy)(Image *);
 };
 

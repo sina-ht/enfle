@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 21:46:17 2000.
- * $Id: video.h,v 1.5 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Sat Dec  9 02:54:05 2000.
+ * $Id: video.h,v 1.6 2000/12/10 13:19:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,10 @@ typedef enum {
 } VideoKey;
 
 typedef enum {
-  ENFLE_MOD_Shift, ENFLE_MOD_Ctrl, ENFLE_MOD_Alt
+  ENFLE_MOD_NONE  = 0,
+  ENFLE_MOD_Shift = 1,
+  ENFLE_MOD_Ctrl  = 2,
+  ENFLE_MOD_Alt   = 4
 } VideoModifierKey;
 
 typedef enum {
@@ -77,6 +80,7 @@ typedef union {
   } button;
   struct {
     VideoEventType type;
+    VideoModifierKey modkey;
     VideoKey key;
   } key;
   struct {
@@ -97,13 +101,23 @@ typedef enum _videowindowfullscreenmode {
   _VIDEO_WINDOW_FULLSCREEN_TOGGLE
 } VideoWindowFullscreenMode;
 
+typedef enum _videorendermethod {
+  _VIDEO_RENDER_NORMAL,
+  _VIDEO_RENDER_MAGNIFY_DOUBLE,
+  _VIDEO_RENDER_MAGNIFY_SHORT_FULL,
+  _VIDEO_RENDER_MAGNIFY_LONG_FULL
+} VideoRenderMethod;
+
 typedef struct _video_window VideoWindow;
 struct _video_window {
   void *private;
   unsigned int x, y;
   unsigned int width, height;
+  unsigned int full_width, full_height;
   int depth, bits_per_pixel;
   int if_fullscreen, if_direct, prefer_msb;
+  VideoRenderMethod render_method;
+  ImageInterpolateMethod interpolate_method;
 
   MemoryType (*preferred_memory_type)(VideoWindow *);
   ImageType (*request_type)(VideoWindow *, unsigned int, int *);

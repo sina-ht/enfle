@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Dec  7 22:41:14 2000.
- * $Id: x11ximage.c,v 1.13 2000/12/07 13:41:46 sian Exp $
+ * Last Modified: Sat Dec  9 03:22:46 2000.
+ * $Id: x11ximage.c,v 1.14 2000/12/10 13:19:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -80,27 +80,45 @@ convert(X11XImage *xi, Image *p)
 {
   int i, j;
   int bits_per_pixel = 0;
+  int bytes_per_line_s;
 #ifdef USE_SHM
   int to_be_attached = 0;
 #endif
   unsigned char *dest = NULL, *dd, *s;
   XImage *ximage;
+  Memory *to_be_rendered;
+  unsigned int w, h;
+
+  if (p->if_magnified) {
+    to_be_rendered = p->magnified.image;
+    bytes_per_line_s = p->magnified.bytes_per_line;
+    w = p->magnified.width;
+    h = p->magnified.height;
+  } else {
+    to_be_rendered = p->image;
+    bytes_per_line_s = p->bytes_per_line;
+    w = p->width;
+    h = p->height;
+  }
+
+  p->rendered.width  = w;
+  p->rendered.height = h;
 
   if (!xi->ximage ||
-      xi->ximage->width != p->width || xi->ximage->height != p->height ||
-      (memory_type(p->rendered_image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered_image))) {
+      xi->ximage->width != w || xi->ximage->height != h ||
+      (memory_type(p->rendered.image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered.image))) {
     destroy_ximage(xi);
-    switch (memory_type(p->rendered_image)) {
+    switch (memory_type(p->rendered.image)) {
     case _NORMAL:
       xi->ximage =
 	x11_create_ximage(xi->x11, x11_visual(xi->x11), x11_depth(xi->x11),
-			  memory_ptr(p->rendered_image), p->width, p->height, 8, 0);
+			  memory_ptr(p->rendered.image), w, h, 8, 0);
       break;
     case _SHM:
 #ifdef USE_SHM
       xi->ximage =
 	XShmCreateImage(x11_display(xi->x11), x11_visual(xi->x11), x11_depth(xi->x11), ZPixmap, NULL,
-			&xi->shminfo, p->width, p->height);
+			&xi->shminfo, w, h);
       to_be_attached = 1;
 #else
       show_message("No SHM support. Should not be reached here.\n");
@@ -110,10 +128,11 @@ convert(X11XImage *xi, Image *p)
     default:
       return 0;
     }
-    debug_message("ximage->bpl = %d\n", xi->ximage->bytes_per_line);
+    /* debug_message("ximage->bpl = %d\n", xi->ximage->bytes_per_line); */
   }
 
   ximage = xi->ximage;
+  p->rendered.bytes_per_line = ximage->bytes_per_line;
 
 #if 0
   debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
@@ -136,28 +155,28 @@ convert(X11XImage *xi, Image *p)
 
       if (p->type == _RGB_WITH_BITMASK) {
 	ximage->byte_order = MSBFirst;
-	dest = memory_ptr(p->rendered_image);
+	dest = memory_ptr(p->rendered.image);
 	break;
       } else if (p->type == _BGR_WITH_BITMASK) {
 	ximage->byte_order = LSBFirst;
-	dest = memory_ptr(p->rendered_image);
+	dest = memory_ptr(p->rendered.image);
 	break;
       }
 
-      if (memory_alloc(p->rendered_image, ximage->bytes_per_line * p->height) == NULL) {
+      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
 	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
 	exit(-2);
       }
 
-      dd = dest = memory_ptr(p->rendered_image);
-      s = memory_ptr(p->image);
+      dd = dest = memory_ptr(p->rendered.image);
+      s = memory_ptr(to_be_rendered);
 
       ximage->byte_order = LSBFirst;
       switch (p->type) {
       case _BGR24:
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    pix =
 	      ((s[i * 3 + 2] & 0xf8) << 8) |
 	      ((s[i * 3 + 1] & 0xfc) << 3) |
@@ -165,13 +184,13 @@ convert(X11XImage *xi, Image *p)
 	    *dd++ = pix & 0xff;
 	    *dd++ = pix >> 8;
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 	break;
       case _RGB24:
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    pix =
 	      ((s[i * 3    ] & 0xf8) << 8) |
 	      ((s[i * 3 + 1] & 0xfc) << 3) |
@@ -179,13 +198,13 @@ convert(X11XImage *xi, Image *p)
 	    *dd++ = pix & 0xff;
 	    *dd++ = pix >> 8;
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 	break;
       case _RGBA32:
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    pix =
 	      ((s[i * 4    ] & 0xf8) << 8) |
 	      ((s[i * 4 + 1] & 0xfc) << 3) |
@@ -193,13 +212,13 @@ convert(X11XImage *xi, Image *p)
 	    *dd++ = pix & 0xff;
 	    *dd++ = pix >> 8;
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 	break;
       case _ABGR32:
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    pix =
 	      ((s[i * 4 + 3] & 0xf8) << 8) |
 	      ((s[i * 4 + 2] & 0xfc) << 3) |
@@ -207,13 +226,13 @@ convert(X11XImage *xi, Image *p)
 	    *dd++ = pix & 0xff;
 	    *dd++ = pix >> 8;
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 	break;
       case _ARGB32:
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    pix =
 	      ((s[i * 4 + 1] & 0xf8) << 8) |
 	      ((s[i * 4 + 2] & 0xfc) << 3) |
@@ -221,16 +240,16 @@ convert(X11XImage *xi, Image *p)
 	    *dd++ = pix & 0xff;
 	    *dd++ = pix >> 8;
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 	break;
       case _BGRA32:
 #ifdef WITH_NASM
-	bgra32to16(dest, s, p->width, p->height);
+	bgra32to16(dest, s, w, h);
 #else
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    pix =
 	      ((s[i * 4 + 2] & 0xf8) << 8) |
 	      ((s[i * 4 + 1] & 0xfc) << 3) |
@@ -238,7 +257,7 @@ convert(X11XImage *xi, Image *p)
 	    *dd++ = pix & 0xff;
 	    *dd++ = pix >> 8;
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 #endif
 	break;
@@ -246,9 +265,9 @@ convert(X11XImage *xi, Image *p)
 	{
 	  unsigned char *pal;
 
-	  for (j = 0; j < p->height; j++) {
+	  for (j = 0; j < h; j++) {
 	    dd = dest + j * ximage->bytes_per_line;
-	    for (i = 0; i < p->width; i++) {
+	    for (i = 0; i < w; i++) {
 	      pal = p->colormap[s[i]];
 	      pix =
 		((pal[0] & 0xf8) << 8) |
@@ -257,7 +276,7 @@ convert(X11XImage *xi, Image *p)
 	      *dd++ = pix & 0xff;
 	      *dd++ = pix >> 8;
 	    }
-	    s += p->bytes_per_line;
+	    s += bytes_per_line_s;
 	  }
 	}
 	break;
@@ -275,32 +294,32 @@ convert(X11XImage *xi, Image *p)
 
       if (p->type == _RGB24) {
 	ximage->byte_order = MSBFirst;
-	dest = memory_ptr(p->rendered_image);
+	dest = memory_ptr(p->rendered.image);
 	break;
       } else if (p->type == _BGR24) {
 	ximage->byte_order = LSBFirst;
-	dest = memory_ptr(p->rendered_image);
+	dest = memory_ptr(p->rendered.image);
 	break;
       }
 
-      if (memory_alloc(p->rendered_image, ximage->bytes_per_line * p->height) == NULL) {
+      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
 	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
 	exit(-2);
       }
 
-      dd = dest = memory_ptr(p->rendered_image);
-      s = memory_ptr(p->image);
+      dd = dest = memory_ptr(p->rendered.image);
+      s = memory_ptr(to_be_rendered);
       ximage->byte_order = LSBFirst;
       switch (p->type) {
       case _INDEX:
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    *dd++ = p->colormap[s[i]][2];
 	    *dd++ = p->colormap[s[i]][1];
 	    *dd++ = p->colormap[s[i]][0];
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 	break;
       case _RGBA32:
@@ -326,55 +345,55 @@ convert(X11XImage *xi, Image *p)
 	ximage->byte_order = MSBFirst;
 	bits_per_pixel = 24;
 	/* invalid */
-	ximage->bytes_per_line = p->bytes_per_line;
-	dest = memory_ptr(p->rendered_image);
+	ximage->bytes_per_line = bytes_per_line_s;
+	dest = memory_ptr(p->rendered.image);
 	break;
       } else if (p->type == _BGR24) {
 	ximage->byte_order = LSBFirst;
 	bits_per_pixel = 24;
 	/* invalid */
-	ximage->bytes_per_line = p->bytes_per_line;
-	dest = memory_ptr(p->rendered_image);
+	ximage->bytes_per_line = bytes_per_line_s;
+	dest = memory_ptr(p->rendered.image);
 	break;
       } else if (p->type == _ARGB32) {
 	ximage->byte_order = MSBFirst;
-	dest = memory_ptr(p->rendered_image);
+	dest = memory_ptr(p->rendered.image);
 	break;
       } else if (p->type == _BGRA32) {
 	ximage->byte_order = LSBFirst;
-	dest = memory_ptr(p->rendered_image);
+	dest = memory_ptr(p->rendered.image);
 	break;
       }
 
-      dest = memory_ptr(p->rendered_image);
+      dest = memory_ptr(p->rendered.image);
       switch (p->type) {
       case _RGBA32:
 	ximage->byte_order = MSBFirst;
-	memcpy(dest + 1, memory_ptr(p->image), memory_size(p->image) - 1);
+	memcpy(dest + 1, memory_ptr(to_be_rendered), memory_size(to_be_rendered) - 1);
 	break;
       case _ABGR32:
 	ximage->byte_order = LSBFirst;
-	memcpy(dest, memory_ptr(p->image) + 1, memory_size(p->image) - 1);
+	memcpy(dest, memory_ptr(to_be_rendered) + 1, memory_size(to_be_rendered) - 1);
 	break;
       case _INDEX:
-	if (memory_alloc(p->rendered_image, ximage->bytes_per_line * p->height) == NULL) {
+	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
 	  show_message(__FUNCTION__ ": No enough memory(alloc)\n");
 	  exit(-2);
 	}
 
-	dest = memory_ptr(p->rendered_image);
-	s = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered.image);
+	s = memory_ptr(to_be_rendered);
 	dd = dest;
 	ximage->byte_order = LSBFirst;
-	for (j = 0; j < p->height; j++) {
+	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
-	  for (i = 0; i < p->width; i++) {
+	  for (i = 0; i < w; i++) {
 	    *dd++ = p->colormap[s[i]][2];
 	    *dd++ = p->colormap[s[i]][1];
 	    *dd++ = p->colormap[s[i]][0];
 	    dd++;
 	  }
-	  s += p->bytes_per_line;
+	  s += bytes_per_line_s;
 	}
 	break;
       default:
@@ -390,8 +409,8 @@ convert(X11XImage *xi, Image *p)
 
 #ifdef USE_SHM
   if (to_be_attached) {
-    xi->shminfo.shmid = memory_shmid(p->rendered_image);
-    xi->shminfo.shmaddr = memory_ptr(p->rendered_image);
+    xi->shminfo.shmid = memory_shmid(p->rendered.image);
+    xi->shminfo.shmaddr = memory_ptr(p->rendered.image);
     xi->shminfo.readOnly = False;
     XShmAttach(x11_display(xi->x11), &xi->shminfo);
     xi->if_attached = 1;

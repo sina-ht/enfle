@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec  6 00:41:51 2000.
- * $Id: normal.c,v 1.10 2000/12/05 15:51:27 sian Exp $
+ * Last Modified: Sat Dec  9 03:22:18 2000.
+ * $Id: normal.c,v 1.11 2000/12/10 13:19:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,7 +38,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.2",
+  description: "Normal UI plugin version 0.3.1",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -88,6 +88,55 @@ render_frame(VideoWindow *vw, Movie *m, Image *p)
   return 1;
 }
 
+static void
+magnify_if_requested(VideoWindow *vw, Image *p)
+{
+  double s, ws, hs;
+
+  switch (vw->render_method) {
+  case _VIDEO_RENDER_NORMAL:
+    p->if_magnified = 0;
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
+    p->rendered.image = memory_dup(p->image);
+    p->rendered.width  = p->magnified.width  = p->width;
+    p->rendered.height = p->magnified.height = p->height;
+    break;
+  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
+    if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method))
+      show_message(__FUNCTION__ ": image_magnify() failed.\n");
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
+    p->rendered.image = memory_dup(p->magnified.image);
+    break;
+  case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
+    ws = (double)vw->full_width  / (double)p->width;
+    hs = (double)vw->full_height / (double)p->height;
+    s = (ws * p->height > vw->full_height) ? hs : ws;
+    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
+    p->rendered.image = memory_dup(p->magnified.image);
+    break;
+  case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
+    ws = (double)vw->full_width  / (double)p->width;
+    hs = (double)vw->full_height / (double)p->height;
+    s = (ws * p->height > vw->full_height) ? ws : hs;
+    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
+    if (p->rendered.image)
+      memory_destroy(p->rendered.image);
+    p->rendered.image = memory_dup(p->magnified.image);
+    break;
+  default:
+    show_message(__FUNCTION__ ": invalid render_method %d\n", vw->render_method);
+    p->if_magnified = 0;
+    p->rendered.image = memory_dup(p->image);
+    p->rendered.width  = p->magnified.width  = p->width;
+    p->rendered.height = p->magnified.height = p->height;
+    break;
+  }
+}
+
 static int
 main_loop(VideoWindow *vw, Movie *m, Image *p)
 {
@@ -97,10 +146,9 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
   VideoKey key = ENFLE_KEY_Unknown;
 
   if (p) {
-    video_window_resize(vw, p->width, p->height);
     vw->if_direct = 0;
-    /* XXX: hack... */
-    p->rendered_image = memory_dup(p->image);
+    magnify_if_requested(vw, p);
+    video_window_resize(vw, p->magnified.width, p->magnified.height);
     video_window_render(vw, p);
   } else if (m) {
     vw->if_direct = 1;
@@ -141,6 +189,46 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
 	    return 0;
 	  case ENFLE_KEY_f:
 	    video_window_set_fullscreen_mode(vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
+	    break;
+	  case ENFLE_KEY_s:
+	    if (ev.key.modkey & ENFLE_MOD_Shift) {
+	      switch (vw->interpolate_method) {
+	      case _NOINTERPOLATE:
+		vw->interpolate_method = _BILINEAR;
+		break;
+	      case _BILINEAR:
+		vw->interpolate_method = _NOINTERPOLATE;
+		break;
+	      default:
+		show_message(__FUNCTION__ ": invalid interpolate method %d\n", vw->interpolate_method);
+		vw->interpolate_method = _NOINTERPOLATE;
+		break;
+	      }
+	      magnify_if_requested(vw, p);
+	      video_window_render(vw, p);
+	    }
+	    break;
+	  case ENFLE_KEY_m:
+	    switch (vw->render_method) {
+	    case _VIDEO_RENDER_NORMAL:
+	      if (ev.key.modkey & ENFLE_MOD_Shift)
+		vw->render_method = _VIDEO_RENDER_MAGNIFY_SHORT_FULL;
+	      else if (ev.key.modkey & ENFLE_MOD_Alt)
+		vw->render_method = _VIDEO_RENDER_MAGNIFY_LONG_FULL;
+	      else
+		vw->render_method = _VIDEO_RENDER_MAGNIFY_DOUBLE;
+	      break;
+	    case _VIDEO_RENDER_MAGNIFY_DOUBLE:
+	    case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
+	    case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
+	      vw->render_method = _VIDEO_RENDER_NORMAL;
+	      break;
+	    default:
+	      break;
+	    }
+	    magnify_if_requested(vw, p);
+	    video_window_resize(vw, p->magnified.width, p->magnified.height);
+	    video_window_render(vw, p);
 	    break;
 	  default:
 	    break;
@@ -330,8 +418,8 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       dir = main_loop(vw, NULL, p);
-      memory_destroy(p->rendered_image);
-      p->rendered_image = NULL;
+      memory_destroy(p->rendered.image);
+      p->rendered.image = NULL;
       memory_destroy(p->image);
       p->image = NULL;
     }
@@ -351,7 +439,9 @@ ui_main(UIData *uidata)
 {
   VideoPlugin *vp = uidata->vp;
   VideoWindow *vw;
+  Config *c = uidata->c;
   void *disp;
+  char *render_method, *interpolate_method;
 
   if ((disp = vp->open_video(NULL)) == NULL) {
     show_message("open_video() failed\n");
@@ -364,6 +454,32 @@ ui_main(UIData *uidata)
 
   video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask);
   /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyPressMask | ENFLE_PointerMask | ENFLE_WindowMask); */
+
+  if ((render_method = config_get(c, "/enfle/plugins/ui/normal/render")) != NULL) {
+    if (!strcasecmp(render_method, "normal")) {
+      vw->render_method = _VIDEO_RENDER_NORMAL;
+    } else if (!strcasecmp(render_method, "double")) {
+      vw->render_method = _VIDEO_RENDER_MAGNIFY_DOUBLE;
+    } else if (!strcasecmp(render_method, "short")) {
+      vw->render_method = _VIDEO_RENDER_MAGNIFY_SHORT_FULL;
+    } else if (!strcasecmp(render_method, "long")) {
+      vw->render_method = _VIDEO_RENDER_MAGNIFY_LONG_FULL;
+    } else {
+      show_message("Invalid ui/normal/render = %s\n", render_method);
+      vw->render_method = _VIDEO_RENDER_NORMAL;
+    }
+  }
+
+  if ((interpolate_method = config_get(c, "/enfle/plugins/ui/normal/magnify_interpolate")) != NULL) {
+    if (!strcasecmp(interpolate_method, "no")) {
+      vw->interpolate_method = _NOINTERPOLATE;
+    } else if (!strcasecmp(interpolate_method, "bilinear")) {
+      vw->interpolate_method = _BILINEAR;
+    } else {
+      show_message("Invalid ui/normal/magnify_interpolate = %s\n", interpolate_method);
+      vw->interpolate_method = _NOINTERPOLATE;
+    }
+  }
 
   process_files_of_archive(uidata, uidata->a);
 
