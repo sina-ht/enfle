@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Nov 30 00:58:21 2002.
- * $Id: normal.c,v 1.71 2002/11/29 15:59:08 sian Exp $
+ * $Id: normal.c,v 1.72 2003/02/05 15:22:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@
 #include "utils/misc.h"
 #include "utils/timer.h"
 #include "utils/timer_gettimeofday.h"
+#include "utils/converter.h"
 #include "enfle/ui-plugin.h"
 #include "enfle/ui-action.h"
 #include "enfle/loader.h"
