@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 22:45:56 2001.
- * $Id: mpglib.c,v 1.2 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Fri Jun 22 21:44:11 2001.
+ * $Id: mpglib.c,v 1.3 2001/06/22 16:54:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -172,9 +172,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
-  play(m);
-
-  return PLAY_OK;
+  return play(m);
 
  error:
   if (info->output_buffer)

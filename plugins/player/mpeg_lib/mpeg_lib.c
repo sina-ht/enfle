@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:41:11 2001.
- * $Id: mpeg_lib.c,v 1.17 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Fri Jun 22 21:43:47 2001.
+ * $Id: mpeg_lib.c,v 1.18 2001/06/22 16:54:11 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -143,9 +143,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->initialize_screen(vw, m, p->width, p->height);
 
-  play(m);
-
-  return PLAY_OK;
+  return play(m);
 }
 
 static PlayerStatus

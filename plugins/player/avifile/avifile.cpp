@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 17:36:52 2001.
- * $Id: avifile.cpp,v 1.15 2001/06/19 14:22:37 sian Exp $
+ * Last Modified: Fri Jun 22 21:42:28 2001.
+ * $Id: avifile.cpp,v 1.16 2001/06/22 16:54:11 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -315,9 +315,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->initialize_screen(vw, m, p->magnified.width, p->magnified.height);
 
-  play(m);
-
-  return PLAY_OK;
+  return play(m);
 
  error:
   if (rf)

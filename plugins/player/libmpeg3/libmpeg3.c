@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:43:48 2001.
- * $Id: libmpeg3.c,v 1.32 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Fri Jun 22 21:42:12 2001.
+ * $Id: libmpeg3.c,v 1.33 2001/06/22 16:54:11 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -300,9 +300,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   m->initialize_screen(vw, m, p->magnified.width, p->magnified.height);
 
-  play(m);
-
-  return PLAY_OK;
+  return  play(m);
 
  error:
   free(info);

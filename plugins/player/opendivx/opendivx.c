@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 28 20:22:28 2001.
- * $Id: opendivx.c,v 1.6 2001/01/28 12:46:00 sian Exp $
+ * Last Modified: Fri Jun 22 21:44:46 2001.
+ * $Id: opendivx.c,v 1.7 2001/06/22 16:54:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -255,9 +255,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
-  play(m);
-
-  return PLAY_OK;
+  return play(m);
 
  error:
   free(info);
