@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Jul 28 22:14:18 2002.
- * $Id: x11ximage.c,v 1.47 2002/08/03 05:08:40 sian Exp $
+ * Last Modified: Sun Aug 18 13:12:52 2002.
+ * $Id: x11ximage.c,v 1.48 2002/08/18 04:19:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,7 +26,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-#define REQUIRE_FATAL
 #include "common.h"
 
 #include "x11ximage.h"
@@ -287,7 +286,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
       to_be_attached = 1;
       XSync(x11_display(xi->x11), False);
 #else /* USE_SHM */
-      fatal(3, "No SHM support. Should not be reached here.\n");
+      fatal("No SHM support. Should not be reached here.\n");
 #endif /* USE_SHM */
       break;
     default:
@@ -329,7 +328,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
     p->depth = p->bits_per_pixel = 8;
     p->ncolors = 2;
     if ((dd = memory_alloc(src_img, image_bpl_by_index(p, src) * h)) == NULL)
-      fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
+      fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
     p->colormap[0][0] = p->colormap[0][1] = p->colormap[0][2] = 255;
     p->colormap[1][0] = p->colormap[1][1] = p->colormap[1][2] = 0;
     remain = w & 7;
@@ -396,7 +395,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	}
 
 	if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
-	  fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
+	  fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
 	dest = memory_ptr(dst_img);
 	s = memory_ptr(src_img);
 
@@ -515,7 +514,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	}
 
 	if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
-	  fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
+	  fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
 
 	dest = memory_ptr(dst_img);
 	s = memory_ptr(src_img);
@@ -594,7 +593,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	}
 
 	if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
-	  fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
+	  fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
 
 	dest = memory_ptr(dst_img);
 	switch (p->type) {
@@ -608,7 +607,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	  break;
 	case _INDEX:
 	  if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
-	    fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
+	    fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
 
 	  dest = memory_ptr(dst_img);
 	  s = memory_ptr(src_img);
@@ -648,7 +647,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
     debug_message("\n");
 
     if (memory_alloc(dst_img, xvimage->data_size) == NULL)
-      fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
+      fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
     if (xvimage->num_planes == 3) {
       if (xvimage->pitches[0] == (int)w &&
 	  xvimage->pitches[1] == (int)w >> 1 &&
@@ -659,12 +658,12 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	    xvimage->offsets[2] == (int)(w * h + ((w * h) >> 2))) {
 	  debug_message_fnc("XvImage:  offset OK\n");
 	} else {
-	  fatal(4, "%s: XvImage:  offset NG: %d %d %d <-> %d %d %d\n", __FUNCTION__,
+	  fatal("%s: XvImage:  offset NG: %d %d %d <-> %d %d %d\n", __FUNCTION__,
 		xvimage->offsets[0], xvimage->offsets[1], xvimage->offsets[2],
 		0, w * h, w * h + ((w * h) >> 2));
 	}
       } else {
-	fatal(4, "%s: XvImage:  pitch NG: %d %d %d <-> %d %d %d\n", __FUNCTION__,
+	fatal("%s: XvImage:  pitch NG: %d %d %d <-> %d %d %d\n", __FUNCTION__,
 	      xvimage->pitches[0], xvimage->pitches[1], xvimage->pitches[2],
 	      w, w >> 1, w >> 1);
       }
@@ -674,14 +673,14 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	if (xvimage->offsets[0] == 0) {
 	  debug_message_fnc("XvImage:  offset OK\n");
 	} else {
-	  fatal(4, "%s: XvImage:  offset NG: %d <-> %d\n", __FUNCTION__, xvimage->offsets[0], 0);
+	  fatal("%s: XvImage:  offset NG: %d <-> %d\n", __FUNCTION__, xvimage->offsets[0], 0);
 	}
       } else {
-	fatal(4, "%s: XvImage:  pitch NG: %d <-> %d\n", __FUNCTION__,
+	fatal("%s: XvImage:  pitch NG: %d <-> %d\n", __FUNCTION__,
 	      xvimage->pitches[0], w << 1);
       }
     } else {
-      fatal(4, "%s: Unknown nplanes == %d\n", __FUNCTION__, xvimage->num_planes);
+      fatal("%s: Unknown nplanes == %d\n", __FUNCTION__, xvimage->num_planes);
     }
 #endif
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 25 21:49:30 2002.
- * $Id: common.h,v 1.24 2002/08/02 13:55:57 sian Exp $
+ * Last Modified: Sun Aug 18 13:14:43 2002.
+ * $Id: common.h,v 1.25 2002/08/18 04:19:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,33 +45,12 @@
 #define err_message_fn(format, args...) fprintf(stderr, "Error: %s" format, __FUNCTION__ , ## args)
 #define err_message_fnc(format, args...) fprintf(stderr, "Error: %s: " format, __FUNCTION__ , ## args)
 
-#ifdef REQUIRE_FATAL
-#include <stdarg.h>
-static void fatal(int, const char *, ...) __attribute__ ((__noreturn__, __format__(printf, 2, 3)));
-static void
-fatal(int code, const char *format, ...)
-{
-  va_list args;
-
-  va_start(args, format);
-  fprintf(stderr, "*** " PACKAGE " FATAL: ");
-  vfprintf(stderr, format, args);
-  va_end(args);
-
-  exit(code);
-}
-#define bug(code, format, args...) fatal(code, "BUG[%s:%s]: " format, __FILE__, __FUNCTION__ , ## args)
-#endif
-
-#ifdef REQUIRE_FATAL_PERROR
-static inline void fatal_perror(int, const char *) __attribute__ ((__noreturn__));
-static inline void
-fatal_perror(int code, const char *msg)
-{
-  perror(msg);
-  exit(code);
-}
-#endif
+#include <signal.h>
+#define __fatal(msg, format, args...) \
+  do {fprintf(stderr, "%s" format, msg, ## args); raise(SIGABRT); exit(1);} while (0)
+#define fatal(format, args...) __fatal(PACKAGE " FATAL ERROR: ", format, ## args)
+#define bug(format, args...) __fatal(PACKAGE " BUG: ", format, ## args) 
+#define fatal_perror(msg) do { perror(msg); raise(SIGABRT); exit(1); } while (0)
 
 #if defined(__GNUC__)
 #ifndef MAX
@@ -112,9 +91,6 @@ fatal_perror(int code, const char *msg)
 #  define debug_message(format, args...)
 #  define debug_message_fn(format, args...)
 #  define debug_message_fnc(format, args...)
-/* #  define IDENTIFY_BEFORE_OPEN */
-/* #  define IDENTIFY_BEFORE_LOAD */
-/* #  define IDENTIFY_BEFORE_PLAY */
 #endif
 #define COPYRIGHT_MESSAGE "(C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa"
 

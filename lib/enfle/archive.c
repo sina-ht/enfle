@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:49:43 2002.
- * $Id: archive.c,v 1.28 2002/08/17 02:19:36 sian Exp $
+ * Last Modified: Sun Aug 18 13:08:25 2002.
+ * $Id: archive.c,v 1.29 2002/08/18 04:19:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -115,7 +115,7 @@ read_directory_recursively(Dlist *dl, char *basepath, char *addpath, int depth)
     return -1;
 
   if ((dir = opendir(path)) == NULL)
-    fatal_perror(1, __FUNCTION__);
+    fatal_perror(__FUNCTION__);
 
   while ((ent = readdir(dir))) {
     char fullpath[strlen(path) + strlen(ent->d_name) + 1];
@@ -217,7 +217,7 @@ add(Archive *arc, char *path, void *reminder)
       if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == 0)
 	result = 1;
       else if (result != FNM_NOMATCH)
-	fatal_perror(3, __FUNCTION__);
+	fatal_perror(__FUNCTION__);
       else
 	result = 0;
       break;
@@ -225,7 +225,7 @@ add(Archive *arc, char *path, void *reminder)
       if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == FNM_NOMATCH)
 	result = 1;
       else if (result)
-	fatal_perror(3, __FUNCTION__);
+	fatal_perror(__FUNCTION__);
       else
 	result = 0;
       break;

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 15 00:50:46 2002.
- * $Id: demultiplexer_avi.c,v 1.14 2002/06/18 13:26:13 sian Exp $
+ * Last Modified: Sun Aug 18 13:13:17 2002.
+ * $Id: demultiplexer_avi.c,v 1.15 2002/08/18 04:19:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,7 +25,6 @@
 #define REQUIRE_UNISTD_H
 #define REQUIRE_STRING_H
 #include "compat.h"
-#define REQUIRE_FATAL
 #include "common.h"
 
 #ifndef USE_PTHREAD
@@ -294,7 +293,7 @@ demux_main(void *arg)
       if (!riff_file_read_data(info->rf, rc))
 	break;
       if ((ap = malloc(sizeof(AVIPacket))) == NULL)
-	fatal(2, "%s: No enough memory.\n", __FUNCTION__);
+	fatal("%s: No enough memory.\n", __FUNCTION__);
       ap->size = riff_chunk_get_size(rc);
       ap->data = riff_chunk_get_data(rc);
       fifo_put(info->vstream, ap, avi_packet_destructor);
@@ -308,7 +307,7 @@ demux_main(void *arg)
 	  break;
 	if (riff_chunk_get_size(rc) > 0) {
 	  if ((ap = malloc(sizeof(AVIPacket))) == NULL)
-	    fatal(2, "%s: No enough memory.\n", __FUNCTION__);
+	    fatal("%s: No enough memory.\n", __FUNCTION__);
 	  ap->size = riff_chunk_get_size(rc);
 	  ap->data = riff_chunk_get_data(rc);
 	  fifo_put(info->astream, ap, avi_packet_destructor);

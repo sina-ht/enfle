@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 11:17:59 2002.
- * $Id: enfle.c,v 1.49 2002/08/15 12:47:58 sian Exp $
+ * Last Modified: Sun Aug 18 13:16:15 2002.
+ * $Id: enfle.c,v 1.50 2002/08/18 04:19:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,15 +31,12 @@
 #  include <getopt.h>
 #endif
 
-#define REQUIRE_FATAL
 #include "common.h"
 
 #include "utils/libstring.h"
 #include "utils/libconfig.h"
 #include "utils/misc.h"
-#ifdef __i386__
-#  include "utils/cpucaps.h"
-#endif
+#include "utils/cpucaps.h"
 #include "enfle/enfle-plugin.h"
 #include "enfle/ui.h"
 #include "enfle/streamer.h"
@@ -310,13 +307,13 @@ main(int argc, char **argv)
       break;
     case 'i':
       if (include_fnmatch)
-	fatal(2, "Sorry, only one -i option is permitted.\n");
+	fatal("Sorry, only one -i option is permitted.\n");
       include_fnmatch = 1;
       pattern = strdup(optarg);
       break;
     case 'x':
       if (exclude_fnmatch)
-	fatal(2, "Sorry, only one -x option is permitted.\n");
+	fatal("Sorry, only one -x option is permitted.\n");
       exclude_fnmatch = 1;
       pattern = strdup(optarg);
       break;
@@ -345,7 +342,7 @@ main(int argc, char **argv)
     case '?':
     default:
       usage();
-      fatal(1, "option error\n");
+      fatal("option error\n");
     }
   }
   free(optstr);
