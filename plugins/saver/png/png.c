@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr 24 22:57:13 2001.
- * $Id: png.c,v 1.3 2001/04/24 16:43:35 sian Exp $
+ * Last Modified: Sat Apr 28 02:36:07 2001.
+ * $Id: png.c,v 1.4 2001/04/27 17:42:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,11 +84,32 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
   png_bytep *row_pointers;
   char *tmp;
   int compression_level;
-  int filter_flag_set, filter_flag;
+  int filter_flag_set;
+  int filter_flag;
   int interlace_flag;
   int result, b;
 
   debug_message("png: save (%s) (%d, %d) called.\n", image_type_to_string(p->type), p->width, p->height);
+
+  if ((png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL)) == NULL) {
+    fclose(fp);
+    return 0;
+  }
+
+  /* Allocate and initialize the image information data. */
+  if ((info_ptr = png_create_info_struct(png_ptr)) == NULL) {
+    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    fclose(fp);
+    return 0;
+  }
+
+  /* Set error handling. */
+  if (setjmp(png_ptr->jmpbuf)) {
+    /* If we get here, we had a problem writing the file */
+    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    fclose(fp);
+    return 0;
+  }
 
   compression_level = config_get_int(c, "/enfle/plugins/saver/png/compression_level", &result);
   if (!result)
@@ -98,6 +119,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
     compression_level = 9;
   }
 
+  filter_flag = 0;
   if ((tmp = config_get_str(c, "/enfle/plugins/saver/png/filter")) == NULL)
     filter_flag_set = 0;
   else {
@@ -121,26 +143,6 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
     interlace_flag = b ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
   else
     interlace_flag = PNG_INTERLACE_NONE;
-
-  if ((png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL)) == NULL) {
-    fclose(fp);
-    return 0;
-  }
-
-  /* Allocate and initialize the image information data. */
-  if ((info_ptr = png_create_info_struct(png_ptr)) == NULL) {
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-    fclose(fp);
-    return 0;
-  }
-
-  /* Set error handling. */
-  if (setjmp(png_ptr->jmpbuf)) {
-    /* If we get here, we had a problem writing the file */
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-    fclose(fp);
-    return 0;
-  }
 
   /* set up the output control. */
   png_init_io(png_ptr, fp);
@@ -239,7 +241,6 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
   png_write_image(png_ptr, row_pointers);
   png_write_end(png_ptr, info_ptr);
   png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-  fclose(fp);
 
   return 1;
 }
