@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.10 2001/08/29 08:37:57 sian Exp $
+# $Id: Makefile.am,v 1.11 2001/09/07 04:57:19 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -19,6 +19,7 @@ lib_LTLIBRARIES = \
 	vmpm_decompose_escb.la \
 	vmpm_decompose_escc.la \
 	vmpm_decompose_recur.la \
+	vmpm_decompose_recur2.la \
 	vmpm_decompose_highlow.la \
 	vmpm_decompose_highlow_esc.la \
 	vmpm_decompose_highlow_escb.la \
@@ -36,6 +37,7 @@ saver_glic_la_SOURCES = \
 	floorlog2.c floorlog2.h \
 	ipow.c ipow.h \
 	expand.c expand.h \
+	threshold.c threshold.h \
 	vmpm_decompose.c vmpm_decompose.h \
 	vmpm_error.c vmpm_error.h \
 	vmpm.h
@@ -60,6 +62,9 @@ vmpm_decompose_escc_la_SOURCES = vmpm_decompose_escc.c $(COMMON_FILES)
 vmpm_decompose_recur_la_LIBADD = libarith.la
 vmpm_decompose_recur_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_recur_la_SOURCES = vmpm_decompose_recur.c $(COMMON_FILES)
+vmpm_decompose_recur2_la_LIBADD = libarith.la
+vmpm_decompose_recur2_la_LDFLAGS = -avoid-version -module
+vmpm_decompose_recur2_la_SOURCES = vmpm_decompose_recur2.c $(COMMON_FILES)
 vmpm_decompose_highlow_la_LIBADD = libarith.la
 vmpm_decompose_highlow_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_highlow_la_SOURCES = vmpm_decompose_highlow.c $(COMMON_FILES)
