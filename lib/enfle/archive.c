@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 17:42:39 2001.
- * $Id: archive.c,v 1.15 2001/04/27 01:00:40 sian Exp $
+ * Last Modified: Wed May  2 02:01:05 2001.
+ * $Id: archive.c,v 1.16 2001/05/01 17:08:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,6 +43,8 @@ static void add(Archive *, char *, void *);
 static void *get(Archive *, char *);
 static void delete_path(Archive *, char *);
 static char *iteration_start(Archive *);
+static char *iteration_first(Archive *);
+static char *iteration_last(Archive *);
 static char *iteration_next(Archive *);
 static char *iteration_prev(Archive *);
 static char *iteration(Archive *);
@@ -56,6 +58,8 @@ static Archive archive_template = {
   add: add,
   get: get,
   iteration_start: iteration_start,
+  iteration_first: iteration_first,
+  iteration_last: iteration_last,
   iteration_next: iteration_next,
   iteration_prev: iteration_prev,
   iteration: iteration,
@@ -245,7 +249,46 @@ iteration_start(Archive *arc)
   arc->direction = 1;
 
   dl = hash_get_keys(arc->filehash);
+  if (!arc->current)
+    return iteration_first(arc);
+
+  if (arc->current == dlist_guard(dl))
+    return NULL;
+
+  if (!dlist_data(arc->current))
+    return NULL;
+
+  return hash_key_key((Hash_key *)dlist_data(arc->current));
+}
+
+static char *
+iteration_first(Archive *arc)
+{
+  Dlist *dl;
+
+  arc->direction = 1;
+
+  dl = hash_get_keys(arc->filehash);
   arc->current = dlist_top(dl);
+
+  if (arc->current == dlist_guard(dl))
+    return NULL;
+
+  if (!dlist_data(arc->current))
+    return NULL;
+
+  return hash_key_key((Hash_key *)dlist_data(arc->current));
+}
+
+static char *
+iteration_last(Archive *arc)
+{
+  Dlist *dl;
+
+  arc->direction = 1;
+
+  dl = hash_get_keys(arc->filehash);
+  arc->current = dlist_head(dl);
 
   if (arc->current == dlist_guard(dl))
     return NULL;
