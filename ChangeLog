@@ -1,4 +1,32 @@
-2002-04-27 Hiroshi Takekawa <sian@fennel.org>
+2002-05-06 Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/demultiplexer/demultiplexer_avi.c: Cosmetic change.
+
+	* lib/enfle/Makefile.am: Added fourcc.h.
+
+	* src/enfle.c: Cosmetic change.
+
+2002-05-04  Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/mpeg2/decode.c, lib/mpeg2/video_out.h,
+	plugins/player/libmpeg2/libmpeg2.c: Avoid vo_* unused but defined
+	functions.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c,
+	lib/enfle/stream-utils.c, lib/enfle/utils.h,
+	plugins/loader/bmp/bmp.c, plugins/loader/pcx/pcx.c: Avoid
+	enfle/utils.h's unused but defined functions.
+
+	* lib/demultiplexer/demultiplexer_avi.c,
+	plugins/ui/wallpaper/wallpaper.c: Deleted unnecessary include
+	"enfle/utils.h".
+
+	* configure.in: Avoid -std mess.
+
+	* lib/mpeg2/video_out.h, lib/mpeg2/yuv2rgb_mmx.c: Include
+	"compat.h".
+
+2002-04-27  Hiroshi Takekawa <sian@fennel.org>
 
 	* configure.in, plugins/loader/png/png.c, plugins/saver/png/png.c:
 	Adapted for libpng-1.2.2.
