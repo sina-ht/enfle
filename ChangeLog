@@ -1,5 +1,9 @@
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/ui/normal/normal.c: Fixed 'Leap bug'.
+
+2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
+
 	* plugins/ui/normal/normal.c: Bug fix. Deleted unused dir variable.
 
 	* lib/enfle/archive.c: Bug fix.
