@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Sat Dec 13 13:00:50 2003.
+             Last Modified: Sat Feb 21 18:07:39 2004.
 
 ***************************************************************************
 
@@ -47,17 +47,27 @@ Acknowledgement
   patent infringement.  It's up to you whether use it or not.  This
   situation will change as the patent is expiring.
 
-  This archive includes mpglib by Michael Hipp.  Read lib/mpglib/README.
+Integrated libraries by other authors
+  Thanks to all authors.
 
-  This software includes libmpeg2 by Aaron Holtzman.  For this part,
-  you can apply GPL2 or later version.
+  lib/mpglib: mpglib from mpg123 for mp3 decoding
+    mpglib by Michael Hipp.  Read lib/mpglib/README.
 
-  This archive includes fnmatch.[ch] by FSF. These files can be
-  distributed under GPL2 or any later version.
+  lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 for MPEG decoding
+    libmpeg2 by Aaron Holtzman and others.  For this part, you can
+    apply GPL2 or later version.
 
-  This archive includes libavcodec from ffmpeg.  These files can be
-  distributed under LGPL2 or any later version.  LGPL license is in
-  lib/avcodec/COPYING.LIB.
+  lib/avcodec: libavcodec from ffmpeg-cvs as of 20040220 for a/v decoding
+    libavcodec by Fabrice Bellard and others.  For this part, you can
+    apply LGPL2 or any later version.  LGPL license is in
+    lib/avcodec/COPYING.LIB.
+
+  lib/mad: libmad-0.15.0 for mp3 decoding
+    libmad by Underbit Technologies, Inc.  For this part, you can
+    apply GPL2 or later version.
+
+  lib/j2k: libj2k for JPEG2000 decoding
+    libj2k by David Janssens.  Read lib/j2k/LICENSE.
 
 ***************************************************************************
 
@@ -77,13 +87,13 @@ This software aims to view many pictures just clicking.  You can view
 various formatted pictures and movies with several effects.
 
  Formats you can view:
- BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM
+ BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, JPEG2000
  spi(highly unstable, any formats which (some of) susie plugins support)
  animated GIF
  mng
  mpeg(mpeg1, mpeg2)
  avi,asf(avifile uses Windows DLL)
- avi (codec supported by avcodec)
+ avi,ogg,ogm (codec supported by avcodec, vorbis)
  DivX in AVI format supported by divx4linux
 
 This software has plugin architecture.  You can write plugins to
@@ -117,6 +127,8 @@ mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
 avifile: avifile-0.53.5 or avifile-0.6 in CVS
 divx: divx4linux-20030428 (old version will not work)
 alsa: require ALSA_PCM_NEW_HW_PARAMS_API.
+ogg: libogg-1.1
+vorbis: libvorbis-1.0.1
 
 
 2. Requirements
@@ -129,19 +141,19 @@ be supported sometime.
 
 These environments are checked:
 
-Linux (kernel 2.2, 2.4 or 2.6 + glibc-2.1, 2.2, or 2.3, x86)
+Linux (kernel 2.2/2.4/2.6 + glibc-2.1/2.2/2.3, x86)
 FreeBSD (4.1R, x86)
 
 Other similar environments should work.  Please let me know if you try
 on the same/other environments.
 
-My main environment (2003/12/13) is:
+My main environment (2004/02/21) is:
 
-Kernel: Linux-2.6.0-test11(-bk5)
-CPU: PentiumIII/1GHz or PentiumIII/700MHz
-X server: XFree86-4.3.99.16
+Kernel: Linux-2.6.3-rc1
+CPU: PentiumIV/3GHz or PentiumIII/700MHz
+X server: XFree86-4.3.99.902
 Video: NVIDIA GeForce4 Ti4800 SE or Silicon Motion, Inc. SM720 Lynx3DM
-Compiler: gcc version 2.95.3 or 3.3.2, icc 8.0
+Compiler: gcc version 2.95.3 or 3.3.3, icc 8.0
 libc: glibc-2.3.2
 
 
