@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb  5 02:54:53 2001.
- * $Id: enfle.c,v 1.24 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Fri Apr 13 20:56:12 2001.
+ * $Id: enfle.c,v 1.25 2001/04/18 05:34:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,8 @@
 #include "enfle/ui.h"
 #include "enfle/streamer.h"
 #include "enfle/loader.h"
+#include "enfle/saver.h"
+#include "enfle/effect.h"
 #include "enfle/archiver.h"
 #include "enfle/player.h"
 #ifdef USE_SPI
@@ -73,8 +75,7 @@ usage(void)
 {
   int i;
 
-  printf(PROGNAME " version " VERSION "\n");
-  printf("(C)Copyright 2000, 2001 by Hiroshi Takekawa\n\n");
+  printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n\n");
   printf("usage: enfle [options] [path...]\n");
 
 #if defined(USE_SHM) || defined(USE_PTHREAD) || defined(USE_SPI)
@@ -262,10 +263,6 @@ main(int argc, char **argv)
   EnflePlugins *eps;
   UI *ui;
   Config *c;
-  Streamer *st;
-  Loader *ld;
-  Archiver *ar;
-  Player *player;
   String *rcpath;
   int i, ch;
   int print_more_info = 0;
@@ -320,11 +317,13 @@ main(int argc, char **argv)
   string_destroy(rcpath);
 
   eps = uidata.eps = enfle_plugins_create();
-  st = uidata.st = streamer_create();
+  uidata.st = streamer_create();
   ui = ui_create();
-  ld = uidata.ld = loader_create();
-  ar = uidata.ar = archiver_create();
-  player = uidata.player = player_create();
+  uidata.ld = loader_create();
+  uidata.sv = saver_create();
+  uidata.ef = effect_create();
+  uidata.ar = archiver_create();
+  uidata.player = player_create();
 
   if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
     plugin_path = (char *)ENFLE_PLUGINDIR;
@@ -387,10 +386,12 @@ main(int argc, char **argv)
 
   player_destroy(uidata.player);
   archive_destroy(uidata.a);
-  archiver_destroy(ar);
-  streamer_destroy(st);
+  archiver_destroy(uidata.ar);
+  streamer_destroy(uidata.st);
   config_destroy(c);
-  loader_destroy(ld);
+  loader_destroy(uidata.ef);
+  loader_destroy(uidata.sv);
+  loader_destroy(uidata.ld);
   ui_destroy(ui);
   enfle_plugins_destroy(eps);
 
