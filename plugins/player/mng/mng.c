@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec  5 22:59:18 2000.
- * $Id: mng.c,v 1.8 2000/12/05 15:06:44 sian Exp $
+ * Last Modified: Wed Dec  6 17:44:42 2000.
+ * $Id: mng.c,v 1.9 2000/12/06 15:07:23 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -279,7 +279,6 @@ play_main(Movie *m, VideoWindow *vw)
   case MNG_NOERROR:
     break;
   case MNG_NEEDTIMERWAIT:
-    debug_message("MNG: " __FUNCTION__ ": delay %d msec\n", this->delay);
     /* XXX: hmm unless don't do this, not properly updated... why? */
     this->m->render_frame(this->vw, this->m, this->p);
     m->pause_usec(this->delay * 1000);
