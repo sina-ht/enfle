@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Jul 30 21:52:17 2002.
- * $Id: x11.c,v 1.19 2002/08/02 13:56:36 sian Exp $
+ * Last Modified: Mon Aug 19 21:45:38 2002.
+ * $Id: x11.c,v 1.20 2002/08/19 12:51:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,10 +36,6 @@
 
 #ifdef USE_XV
 #  include <X11/extensions/Xvlib.h>
-#endif
-
-#ifdef DEBUG
-#  include <stdio.h>
 #endif
 
 #include "x11.h"
@@ -139,7 +135,7 @@ get_xvinfo(X11 *x11)
 	}
 #if 0
 	for (j = 0; j < adaptor_infos[i].num_formats; j++)
-	  debug_message_fnc("Xv:  format#%02d: depth %d visual id %d\n", j, adaptor_infos[i].formats[j].depth, adaptor_infos[i].formats[j].visual_id);
+	  debug_message_fnc("Xv:  format#%02d: depth %d visual id %ld\n", j, adaptor_infos[i].formats[j].depth, adaptor_infos[i].formats[j].visual_id);
 #endif
 	/* XXX: Information of the last port is only stored. */
 	for (j = 0; j < adaptor_infos[i].num_ports; j++) {
@@ -155,7 +151,7 @@ get_xvinfo(X11 *x11)
 
 	      /* XXX: XvVideo, XvStill are unsupported */
 	      xv->image_port = adaptor_infos[i].base_id + j;
-	      debug_message_fnc("Xv:   Image port %d detected\n", xv->image_port);
+	      //debug_message_fnc("Xv:   Image port %d detected\n", xv->image_port);
 	      formats = XvListImageFormats(x11_display(x11),
 					   adaptor_infos[i].base_id + j,
 					   &nformats);
@@ -174,12 +170,14 @@ get_xvinfo(X11 *x11)
 			      formats[l].type == XvRGB ? "RGB" : "YUV",
 			      formats[l].format == XvPacked ? "packed" : "planar",
 			      formats[l].byte_order == LSBFirst ? "LSBFirst" : "MSBFirst");
+#if 0
 		if (formats[l].format == XvPlanar) {
 		  debug_message("component order: ");
 		  for (m = 0; m < formats[l].num_planes; m++)
 		    debug_message("%c", formats[l].component_order[m]);
 		  debug_message(" ");
 		}
+#endif
 		c = -1;
 		/*
 		  name fcc        bpp        description
@@ -227,9 +225,10 @@ get_xvinfo(X11 *x11)
 		  xv->bits_per_pixel[c] = formats[l].bits_per_pixel;
 		  xv->prefer_msb[c] = (formats[l].byte_order == MSBFirst);
 		} else {
-		  debug_message("unsupported");
+		  //debug_message("unsupported");
 		}
 		debug_message("\n");
+#if 0
 		if (formats[l].type == XvRGB) {
 		  debug_message_fnc("Xv: %d RGB mask %04X,%04X,%04X\n", formats[l].depth, formats[l].red_mask, formats[l].green_mask, formats[l].blue_mask);
 		} else {
@@ -245,6 +244,7 @@ get_xvinfo(X11 *x11)
 				    formats[l].vert_v_period,
 				    formats[l].scanline_order == XvTopToBottom ? "TopToBottom" : "BottomToTop");
 		}
+#endif
 	      }
 	      XFree(formats);
 	    }
