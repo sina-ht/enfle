@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug  6 01:15:16 2001.
- * $Id: identify.c,v 1.2 2001/08/05 16:17:05 sian Exp $
+ * Last Modified: Sat Aug 11 04:45:19 2001.
+ * $Id: identify.c,v 1.3 2001/08/15 06:38:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,18 +39,19 @@
 #include "utils/libconfig.h"
 #include "identify.h"
 
+/* The fourth argument 'a' can be NULL. */
 int
 identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a)
 {
   struct stat statbuf;
 
-  if (strcmp(a->format, "NORMAL") == 0) {
+  if (!a || strcmp(a->format, "NORMAL") == 0) {
     if (strcmp(path, "-") == 0) {
       stream_make_fdstream(s, dup(0));
       return IDENTIFY_FILE_STREAM;
     }
     if (stat(path, &statbuf)) {
-      show_message("stat() failed: %s: %s.\n", path, strerror(errno));
+      show_message("ERROR: %s: %s.\n", path, strerror(errno));
       return IDENTIFY_FILE_STAT_FAILED;
     }
     if (S_ISDIR(statbuf.st_mode))
