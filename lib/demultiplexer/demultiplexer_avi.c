@@ -1,10 +1,10 @@
 /*
  * demultiplexer_avi.c -- AVI stream demultiplexer
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 30 04:13:09 2003.
- * $Id: demultiplexer_avi.c,v 1.23 2003/12/29 19:27:17 sian Exp $
+ * Last Modified: Mon Jan 12 06:25:19 2004.
+ * $Id: demultiplexer_avi.c,v 1.24 2004/01/11 21:39:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -170,8 +170,26 @@ RIFF( 'AVI' LIST ( 'hdrl'
       riff_file_skip_chunk_data(info->rf, rc);
       break;
     case FCC_idx1:
-      debug_message_fnc("Got chunk 'idx1', skip (so far).\n");
-      riff_file_skip_chunk_data(info->rf, rc);
+      {
+	int nidx;
+
+	riff_file_read_data(info->rf, rc);
+	nidx = riff_chunk_get_size(rc) / sizeof(AVIINDEXENTRY);
+	debug_message_fnc("Got chunk 'idx1': has %d indexes\n", nidx);
+#if 0
+	info->idx_offset = calloc(nidx, sizeof(int));
+	info->idx_length = calloc(nidx, sizeof(int));
+	{
+	  AVIINDEXENTRY aie;
+	  int i;
+	  for (i = 0; i < nidx; i++) {
+	    memcpy(&aie, riff_chunk_get_data(rc) + i * sizeof(AVIINDEXENTRY), sizeof(AVIINDEXENTRY));
+	    info->idx_offset[i] = aie.dwChunkOffset;
+	    info->idx_length[i] = aie.dwChunkLength;
+	  }
+	}
+#endif
+      }
       break;
     case FCC_indx:
       debug_message_fnc("Got chunk 'indx', skip (so far).\n");
@@ -205,6 +223,16 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	info->rate = mah.dwRate;
 	info->length = mah.dwLength;
 	info->framerate = 1000000.0 / mah.dwMicroSecPerFrame;
+#if defined(DEBUG)
+	debug_message_fnc("AVI Flags: ");
+	if (mah.dwFlags & AVIF_HASINDEX)
+	  debug_message("HASINDEX ");
+	if (mah.dwFlags & AVIF_MUSTUSEINDEX)
+	  debug_message("MUSTUSEINDEX ");
+	if (mah.dwFlags & AVIF_ISINTERLEAVED)
+	  debug_message("ISINTERLEAVED ");
+	debug_message("\n");
+#endif
 
 	debug_message_fnc("Streams: %d\n", mah.dwStreams);
 	for (i = 0; i < mah.dwStreams; i++) {
@@ -433,7 +461,6 @@ start(Demultiplexer *demux)
 static int
 stop(Demultiplexer *demux)
 {
-  AVIInfo *info = (AVIInfo *)demux->private_data;
   void *ret;
 
   if (!demux->running)
@@ -442,10 +469,6 @@ stop(Demultiplexer *demux)
   debug_message_fn(" demultiplexer_avi\n");
 
   demux->running = 0;
-  if (info->vstream)
-    fifo_emptify(info->vstream);
-  if (info->astream)
-    fifo_emptify(info->astream);
   pthread_join(demux->thread, &ret);
 
   debug_message_fn(" demultiplexer_avi OK\n");
@@ -469,9 +492,14 @@ destroy(Demultiplexer *demux)
   AVIInfo *info = (AVIInfo *)demux->private_data;
 
   stop(demux);
-  if (info->rf)
-    riff_file_destroy(info->rf);
-  if (demux->private_data)
-    free(demux->private_data);
+  if (info) {
+    if (info->rf)
+      riff_file_destroy(info->rf);
+    if (info->idx_offset)
+      free(info->idx_offset);
+    if (info->idx_length)
+      free(info->idx_length);
+    free(info);
+  }
   _demultiplexer_destroy(demux);
 }
