@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 03:03:24 2000.
- * $Id: libmpeg3.c,v 1.4 2000/10/20 18:11:50 sian Exp $
+ * Last Modified: Tue Oct 31 00:08:13 2000.
+ * $Id: libmpeg3.c,v 1.5 2000/10/30 16:18:27 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -370,7 +370,9 @@ identify(Movie *m, Stream *st)
 
   return PLAY_NOT;
 #else
-  return mpeg3_check_sig(st->path) ? PLAY_OK : PLAY_NOT;
+  if (st->path)
+    return mpeg3_check_sig(st->path) ? PLAY_OK : PLAY_NOT;
+  return PLAY_NOT;
 #endif
 }
 
