@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar 20 06:11:27 2001.
- * $Id: avifile.cpp,v 1.8 2001/03/19 21:14:17 sian Exp $
+ * Last Modified: Tue Mar 20 11:12:31 2001.
+ * $Id: avifile.cpp,v 1.9 2001/03/20 02:25:46 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -141,7 +141,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       m->has_audio = 1;
     }
   } else {
-    show_message("No audio.\n");
+    show_message("AviFile: No audio.\n");
   }
 
   if ((stream = info->stream = rf->GetStream(0, IAviReadStream::Video))) {
@@ -160,7 +160,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     m->framerate = 1000 / info->frametime;
     m->has_video = 1;
   } else {
-    show_message("No video.\n");
+    show_message("AviFile: No video.\n");
   }
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
@@ -190,7 +190,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 #endif
 
-  debug_message("avifile player: (%d,%d) -> (%d,%d) %f fps %d frames\n",
+  debug_message("AviFile: (%d,%d) -> (%d,%d) %f fps %d frames\n",
 		m->width, m->height, m->rendering_width, m->rendering_height,
 		m->framerate, m->num_of_frames);
 
@@ -229,6 +229,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->st = st;
   m->status = _STOP;
 
+  debug_message("AviFile: initializing screen.\n");
+
   m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
   play(m);
@@ -251,6 +253,8 @@ play(Movie *m)
 {
   AviFile_info *info = (AviFile_info *)m->movie_private;
 
+  debug_message("AviFile: play()\n");
+
   switch (m->status) {
   case _PLAY:
     return PLAY_OK;
@@ -265,9 +269,15 @@ play(Movie *m)
     return PLAY_ERROR;
   }
 
-  info->stream->Seek((unsigned int)0);
-  info->audiostream->Seek((unsigned int)0);
-  m->current_sample = 0;
+  if (m->has_video) {
+    debug_message("AviFile: rewind(video)\n");
+    info->stream->Seek((unsigned int)0);
+  }
+  if (m->has_audio) {
+    debug_message("AviFile: rewind(audio)\n");
+    info->audiostream->Seek((unsigned int)0);
+    m->current_sample = 0;
+  }
   info->eof = 0;
   timer_start(m->timer);
 
@@ -284,6 +294,8 @@ play_video(void *arg)
 {
   Movie *m = (Movie *)arg;
   AviFile_info *info = (AviFile_info *)m->movie_private;
+
+  debug_message("AviFile: play_video()\n");
 
   while (m->status == _PLAY) {
     pthread_cond_wait(&info->update_cond, &info->update_mutex);
@@ -310,6 +322,8 @@ play_audio(void *arg)
   unsigned int samples, ocnt;
   int samples_to_read;
   int i;
+
+  debug_message("AviFile: play_audio()\n");
 
   if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
     show_message("Cannot open device.\n");
@@ -498,7 +512,7 @@ identify(Movie *m, Stream *st)
       return PLAY_NOT;
   }
 
-  debug_message("avifile: identify: identified as avi.\n");
+  debug_message("AviFile: identify: identified as avi.\n");
 
   /* see if this avi is supported by avifile */
   rf = CreateIAviReadFile(st->path);
@@ -521,7 +535,7 @@ identify(Movie *m, Stream *st)
   return PLAY_OK;
 
  not:
-  debug_message("avifile: identify: but not supported by avifile.\n");
+  debug_message("AviFile: identify: but not supported by avifile.\n");
   if (rf)
     delete rf;
   return PLAY_NOT;
@@ -532,7 +546,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
 {
   AviFile_info *info;
 
-  debug_message("avifile player: load() called\n");
+  debug_message("AviFile: load() called\n");
 
 #ifdef IDENTIFY_BEFORE_PLAY
   {
