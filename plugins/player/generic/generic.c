@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:16:12 2004.
- * $Id: generic.c,v 1.5 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Fri Mar 12 01:00:29 2004.
+ * $Id: generic.c,v 1.6 2004/03/11 16:01:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   .type = ENFLE_PLUGIN_PLAYER,
   .name = "generic",
-  .description = "generic Player plugin version 0.1",
+  .description = "generic Player plugin version 0.2",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -151,9 +151,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     if ((m->v_codec_name = videodecoder_codec_name(m->v_fourcc)) == NULL) {
       show_message("No videodecoder for %X\n", m->v_fourcc);
       warning("Video will not be played.\n");
-      m->width = 128;
-      m->height = 128;
-      m->num_of_frames = 1;
     } else {
       m->has_video = 1;
       if (videodecoder_query(info->eps, m, m->v_fourcc, &types, info->c) == 0) {
@@ -162,10 +159,17 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       }
     }
   } else {
+    debug_message("No video streams.\n");
+  }
+  if (!m->has_video) {
     m->width = 128;
     m->height = 128;
-    m->num_of_frames = 1;
-    debug_message("No video streams.\n");
+    m->num_of_frames = 0;
+    types =
+      IMAGE_RGB_WITH_BITMASK | IMAGE_BGR_WITH_BITMASK |
+      IMAGE_RGB24 | IMAGE_BGR24 |
+      IMAGE_RGBA32 | IMAGE_ABGR32 |
+      IMAGE_ARGB32 | IMAGE_BGRA32;
   }
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
@@ -238,6 +242,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 		  m->v_fourcc,
 		  m->v_codec_name,
 		 info->nvstreams);
+  else
+    show_message("video");
   if (image_width(p) > 0)
     show_message(": (%d,%d) %f fps %d frames",
 		 m->width, m->height, m->framerate, m->num_of_frames);
