@@ -1,5 +1,18 @@
 2001-06-19  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/demultiplexer/demultiplexer_mpeg.c,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.c: More libmpeg2 code...
+
+	* lib/X11/x11ximage.c: To be sure ximage or xvimage is not NULL.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c,
+	plugins/player/libmpeg2/libmpeg2.c: More libmpeg2 coding.
+
+	* plugins/player/avifile/avifile.cpp: Fixed condition bug.
+
+2001-06-19  Hiroshi Takekawa  <sian@fennel.org>
+
 	* plugins/video/Xlib/Xlib.c: Support not-movie image direct
 	rendering.
 
