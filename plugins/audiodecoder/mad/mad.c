@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 18:00:02 2004.
- * $Id: mad.c,v 1.7 2004/04/12 04:15:05 sian Exp $
+ * Last Modified: Sat May  1 21:01:35 2004.
+ * $Id: mad.c,v 1.8 2004/05/15 04:07:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,7 +48,7 @@ static AudioDecoderPlugin plugin = {
  * highest bit-rate 448 kb/s
  * input buffer must be larger than (448000*(1152/32000))/8 = 2016 bytes
  */
-#define INPUT_BUFFER_SIZE 5*8192
+#define INPUT_BUFFER_SIZE 20160*2
 #define OUTPUT_BUFFER_SIZE 8192 /* must be multiple of 4. */
 struct audiodecoder_mad {
   struct mad_stream stream;
