@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 17:24:06 2001.
- * $Id: timer.h,v 1.4 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sun Oct 14 12:41:12 2001.
+ * $Id: timer.h,v 1.5 2001/10/14 12:33:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,6 +55,7 @@ struct _timer {
 Timer *enfle_timer_create(Timer_impl *);
 
 #define timer_status(t) (t)->status
+#define timer_is_running(t) ((t)->status == _TIMER_RUNNING)
 
 #define timer_destroy(t) (t)->destroy((t))
 #define timer_reset(t) (t)->reset((t))
