@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct  5 23:28:35 2002.
- * $Id: tar.c,v 1.10 2002/10/05 17:16:56 sian Exp $
+ * Last Modified: Wed Sep 24 00:03:34 2003.
+ * $Id: tar.c,v 1.11 2003/10/12 04:02:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -200,6 +200,8 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
   TarHeader th;
   TarInfo *ti;
   unsigned int size, nrecord;
+  Dlist *dl;
+  Dlist_data *dd;
 
 #ifdef IDENTIFY_BEFORE_OPEN
   if (identify(a, st, priv) == OPEN_NOT)
@@ -207,6 +209,7 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
   stream_rewind(st);
 #endif
 
+  dl = dlist_create();
   while (READ_HEADER(&th, st)) {
     if (th.name[0] == '\0')
       break;
@@ -224,7 +227,7 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
       ti->size = size;
       ti->offset = stream_tell(st);
       debug_message("tar: %s: add %s at %ld (%d bytes)\n", __FUNCTION__, ti->path, ti->offset, ti->size);
-      archive_add(a, th.name, (void *)ti);
+      dlist_add_str(dl, th.name);
       break;
     default:
       debug_message("tar: %s: ignore %s\n", __FUNCTION__, th.name);
@@ -241,6 +244,13 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
       }
     }
   }
+
+  dlist_set_compfunc(dl, archive_key_compare);
+  dlist_sort(dl);
+  dlist_iter (dl, dd) {
+    archive_add(a, dlist_data(dd), (void *)ti);
+  }
+  dlist_destroy(dl);
 
   a->path = strdup(st->path);
   a->st = stream_transfer(st);
