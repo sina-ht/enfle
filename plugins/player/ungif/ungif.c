@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 12 20:47:33 2000.
- * $Id: ungif.c,v 1.6 2000/10/12 15:43:47 sian Exp $
+ * Last Modified: Mon Oct 16 03:15:32 2000.
+ * $Id: ungif.c,v 1.7 2000/10/16 19:28:06 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -130,7 +130,7 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
   m->movie_private = (void *)info;
   m->st = st;
   m->status = _PLAY;
-  m->nthframe = 0;
+  m->current_frame = 0;
 
   m->initialize_screen(uidata, m, m->width, m->height);
 
@@ -292,7 +292,7 @@ play_main(Movie *m, UIData *uidata)
 	goto error;
       memcpy(p->image, info->buffer[0], p->image_size);
 
-      m->nthframe++;
+      m->current_frame++;
       image_loaded = 1;
       break;
     case EXTENSION_RECORD_TYPE:
@@ -425,7 +425,7 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
-  m->nthframe = 0;
+  m->current_frame = 0;
 
   return PLAY_OK;
 }

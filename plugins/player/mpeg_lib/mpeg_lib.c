@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 14 05:48:07 2000.
- * $Id: mpeg_lib.c,v 1.3 2000/10/15 07:45:59 sian Exp $
+ * Last Modified: Mon Oct 16 03:15:47 2000.
+ * $Id: mpeg_lib.c,v 1.4 2000/10/16 19:28:06 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -114,7 +114,7 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
   m->movie_private = (void *)info;
   m->st = st;
   m->status = _PLAY;
-  m->nthframe = 0;
+  m->current_frame = 0;
 
   m->initialize_screen(uidata, m, m->width, m->height);
 
@@ -191,7 +191,7 @@ play_main(Movie *m, UIData *uidata)
   p->image = info->buffer;
 #endif
 
-  m->nthframe++;
+  m->current_frame++;
 
   m->render_frame(uidata, m, p);
 #if 1
@@ -205,10 +205,12 @@ play_main(Movie *m, UIData *uidata)
 
   return PLAY_OK;
 
+#if 0
  error:
   image_destroy(p);
 
   return PLAY_ERROR;
+#endif
 }
 
 static PlayerStatus
@@ -250,7 +252,7 @@ stop_movie(Movie *m)
 
   /* stop */
   RewindMPEGStream(m->st, &info->img, mpeg_lib_rewind_func);
-  m->nthframe = 0;
+  m->current_frame = 0;
 
   return PLAY_OK;
 }
