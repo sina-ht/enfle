@@ -1,10 +1,10 @@
 /*
  * libmpeg2.c -- libmpeg2 player plugin, which exploits libmpeg2.
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 22 02:20:03 2003.
- * $Id: libmpeg2.c,v 1.39 2003/11/17 13:57:54 sian Exp $
+ * Last Modified: Tue Dec 30 19:00:31 2003.
+ * $Id: libmpeg2.c,v 1.40 2003/12/30 10:01:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,7 +60,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.2.2 with integrated libmpeg2(mpeg2dec-0.2.1)",
+  description: "LibMPEG2 Player plugin version 0.3 with integrated libmpeg2(mpeg2dec-0.2.1)",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -257,7 +257,7 @@ play(Movie *m)
 
     if ((info->vstream = fifo_create()) == NULL)
       return PLAY_ERROR;
-    //fifo_set_max(info->vstream, 2000);
+    fifo_set_max(info->vstream, 256);
     demultiplexer_mpeg_set_vst(info->demux, info->vstream);
     accel = mm_accel();
     vo_accel(accel);
@@ -269,7 +269,7 @@ play(Movie *m)
     m->has_audio = 1;
     if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
-    //fifo_set_max(info->vstream, 2000);
+    fifo_set_max(info->astream, 64);
     demultiplexer_mpeg_set_ast(info->demux, info->astream);
     InitMP3(&info->mp);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
