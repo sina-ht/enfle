@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 17:55:30 2001.
- * $Id: enfle.c,v 1.29 2001/04/27 01:08:07 sian Exp $
+ * Last Modified: Mon Apr 30 07:19:28 2001.
+ * $Id: enfle.c,v 1.30 2001/04/30 01:05:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,18 +49,7 @@
 #  include "enfle/spi.h"
 #endif
 
-typedef enum _argument_requirement {
-  _NO_ARGUMENT,
-  _REQUIRED_ARGUMENT,
-  _OPTIONAL_ARGUMENT
-} ArgumentRequirement;
-
-typedef struct _option {
-  const char *longopt; /* not supported so far */
-  char opt;
-  ArgumentRequirement argreq;
-  const unsigned char *description;
-} Option;
+#include "getopt-support.h"
 
 static Option enfle_options[] = {
   { "ui",        'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
@@ -78,8 +67,6 @@ static Option enfle_options[] = {
 static void
 usage(void)
 {
-  int i;
-
   printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n\n");
   printf("usage: enfle [options] [path...]\n");
 
@@ -98,45 +85,9 @@ usage(void)
 #endif
 
   printf("Options:\n");
-  i = 0;
-  while (enfle_options[i].longopt != NULL) {
-    printf(" %c(%s): \t%s\n",
-	   enfle_options[i].opt, enfle_options[i].longopt, enfle_options[i].description);
-    i++;
-  }
+  print_option_usage(enfle_options);
 }
 
-static char *
-gen_optstring(Option opt[])
-{
-  int i;
-  String *s;
-  char *optstr;
-
-  s = string_create();
-  i = 0;
-  while (opt[i].longopt != NULL) {
-    string_cat_ch(s, opt[i].opt);
-    switch (opt[i].argreq) {
-    case _NO_ARGUMENT:
-      break;
-    case _REQUIRED_ARGUMENT:
-      string_cat_ch(s, ':');
-      break;
-    case _OPTIONAL_ARGUMENT:
-      string_cat(s, "::");
-      break;
-    }
-    i++;
-  }
-
-  optstr = strdup(string_get(s));
-
-  string_destroy(s);
-
-  return optstr;
-}
-  
 static int
 check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
 {
