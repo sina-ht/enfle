@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Sep 13 02:13:35 2003.
-; $Id: enfle.rc,v 1.33 2003/10/12 04:04:51 sian Exp $
+; Last Modified: Wed Nov 12 00:07:19 2003.
+; $Id: enfle.rc,v 1.34 2003/11/17 13:58:24 sian Exp $
 
 enfle {
   identify {
@@ -39,8 +39,9 @@ enfle {
 	show_comment = no
 	; filename code conversion from internal representation to display
 	;filename_code_conversion = yes
-	;filename_code_from = UTF-8
+	;filename_code_from = UTF-8:Shift_JIS
 	;filename_code_to = EUC-JP
+	;;filename_code_to = EUC-JISX0213
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -97,12 +98,13 @@ enfle {
       }
       spi/disabled = yes
       ; Associate an extension with an appropriate plugin name.
+      ; . means no further try
       assoc {
-	bmp := BMP
+	bmp := BMP:.
 	gif := UNGIF
-	jpeg := JPEG
-	jpg := JPEG
-	png := PNG
+	jpeg := JPEG:.
+	jpg := JPEG:.
+	png := PNG:.
       }
     }
     player {
@@ -113,16 +115,19 @@ enfle {
       ;loadmethod = load(libmpeg2,avifile,ungif)
       loadmethod = scan_all
       ; Associate an extension with an appropriate plugin name.
+      ; . means no further try
       assoc {
-	asf := AviFile
-	avi := OpenDivX:AviFile
-        gif := UNGIF
-        m1v := MPEG_lib
-        mng := MNG
-        mp3 := Mpglib
-        mpeg := LibMPEG2:LibMPEG3:MPEG_lib
-        mpg := LibMPEG2:LibMPEG3:MPEG_lib
-	wmv := AviFile
+	asf := AviFile:.
+	avi := DivX:AviFile:.
+        gif := UNGIF:.
+        m1v := MPEG_lib:.
+        mng := MNG:.
+        mp3 := Mpglib:.
+        mpeg := LibMPEG2:LibMPEG3:.
+        ;                         MPEG_lib
+        mpg := LibMPEG2:LibMPEG3:.
+        ;                        MPEG_lib
+	wmv := AviFile:.
       }
       ; video only stream may be played by mpeg_lib.
       ; system stream(including video and audio) will be played by libmpeg2 or 3.
@@ -131,7 +136,7 @@ enfle {
       ; libmpeg2 and libmpeg3 both can play mpeg movies.
       ; You may choose one of these.
       ;LibMPEG2/disabled = yes
-      ;LibMPEG3/disabled = yes
+      LibMPEG3/disabled = yes
     }
     saver {
       ; How to find plugins.
@@ -154,19 +159,13 @@ enfle {
     }
     streamer {
       assoc {
-	bz2 := BZ2
-        gz := GZ
+	bz2 := BZ2:.
+        gz := GZ:.
       }
     }
     archiver {
-      ; filename code conversion to internal representation
-      ;filename_code_conversion = yes
-      ;filename_code_from := Shift_JIS:EUC-JP
-      ;filename_code_to = UTF-8
-      filename_code_from := UTF-8:Shift_JIS
-      filename_code_to = EUC-JP
       assoc {
-        tar := TAR
+        tar := TAR:.
       }
     }
   }
