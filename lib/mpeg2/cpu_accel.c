@@ -24,7 +24,6 @@
 #include "compat.h"
 #include "common.h"
 #define PIC
-#define ARCH_X86
 #define ACCEL_DETECT
 
 #include <inttypes.h>

@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf should be 2.54 or later, automake 1.6.3 or later.
 dnl
-dnl (C)Copyright 1999, 2000-03 by Hiroshi Takekawa
+dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Jan  5 18:51:13 2004.
-dnl $Id: configure.in,v 1.130 2004/01/05 09:56:20 sian Exp $
+dnl Last Modified: Sat Jan 10 23:29:39 2004.
+dnl $Id: configure.in,v 1.131 2004/01/10 15:45:40 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20040105, sian@big.or.jp)
+AC_INIT(enfle, 20040110, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -99,16 +99,6 @@ AC_CHECK_HEADER(math.h, [
 available_pow=yes
 LIBADD_POW=-lm
 
-dnl available_mmxjpeg=no
-dnl AC_ARG_WITH(jpeg-mmx,
-dnl         [  --with-mmxjpeg          use mmxjpeg instead of normal libjpeg.])
-dnl if test "${with_mmxjpeg}" = "yes"; then
-dnl   AC_CHECK_LIB(jpeg-mmx, jpeg_finish_decompress, [ AC_MSG_CHECKING([if jpeg-mmx is wanted and available]); AC_MSG_RESULT([wanted and available]); available_mmxjpeg=yes; LIBADD_MMXJPEG=-ljpeg-mmx], [ AC_MSG_CHECKING([if jpeg-mmx is wanted and available]); AC_MSG_RESULT([wanted but unavailable]) ])
-dnl else
-dnl   AC_MSG_CHECKING([if jpeg-mmx is wanted and available])
-dnl   AC_MSG_RESULT([not wanted])
-dnl fi
-
 available_jpeg=no
 AC_CHECK_HEADER(jpeglib.h, [
 dnl   if test "${available_mmxjpeg}" = "yes"; then
@@ -172,20 +162,6 @@ if test "$available_libmpeg3" != "yes"; then
 fi
 AM_CONDITIONAL(HAVE_LIBMPEG3, test "$available_libmpeg3" = "yes")
 AC_SUBST(LIBADD_LIBMPEG3)
-
-dnl available_opendivx=no
-dnl if test "$available_pthread" = "yes"; then
-dnl   AC_CHECK_HEADER(decore.h, [
-dnl     AC_CHECK_LIB(divxdecore, decore, [
-dnl       available_opendivx=yes;
-dnl       LIBADD_DIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD";
-dnl     ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
-dnl fi
-dnl if test "$available_opendivx" != "yes"; then
-dnl   ENFLE_PLUGIN_DISABLE(player/opendivx)
-dnl fi
-dnl AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_opendivx" = "yes")
-dnl AC_SUBST(LIBADD_DIVXDECORE)
 
 available_divx=no
 if test "$available_pthread" = "yes"; then
@@ -300,7 +276,6 @@ available_libarc=no
 AC_CHECK_HEADER(libarc/arc.h, [
   AC_CHECK_LIB(arc, url_arc_open, [
     available_libarc=yes; LIBADD_LIBARC="-larc";
-    AC_DEFINE(USE_LIBARC, 1, [Define if you have libarc and want to use it.])
   ])
 ])
 if test "$available_libarc" != "yes"; then
@@ -379,10 +354,24 @@ fi
 test "$enable_mmx" = "yes" && AC_DEFINE(USE_MMX, 1, [ Define if you have and use MMX. ])
 AM_CONDITIONAL(USE_MMX, test "$enable_mmx" = "yes")
 
-AC_ARG_ENABLE(private,
-	[  --enable-private        enable private code. (Please ignore). ])
-enable_private=${enable_private-no}
-AM_CONDITIONAL(ENABLE_PRIVATE, test "$enable_private" = "yes")
+dnl for libmpeg2
+case "$host_cpu" in
+  i*86 )
+    AC_DEFINE(ARCH_X86, 1, [ Define if you have X86 architecture. ]) ;;
+  powerpc* )
+    AC_DEFINE(ARCH_PPC, 1, [ Define if you have PowerPC architecture. ]) ;;
+  sparc* )
+    AC_DEFINE(ARCH_SPARC, 1, [ Define if you have SPARC architecture. ]) ;;
+  alpha* )
+    AC_DEFINE(ARCH_ALPHA, 1, [ Define if you have ALPHA architecture. ]) ;;
+  *)
+    ;;
+esac
+
+dnl AC_ARG_ENABLE(private,
+dnl 	[  --enable-private        enable private code. (Please ignore). ])
+dnl enable_private=${enable_private-no}
+dnl AM_CONDITIONAL(ENABLE_PRIVATE, test "$enable_private" = "yes")
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
@@ -449,7 +438,7 @@ elif test "$enable_gif" = "yes"; then
   fi
 fi
 if test "$available_gif" != "yes"; then
-  ENFLE_PLUGIN_DISABLE(loader/gif);
+  ENFLE_PLUGIN_DISABLE(loader/gif)
 fi
 AM_CONDITIONAL(HAVE_GIF, test "$available_gif" = "yes")
 
@@ -524,6 +513,17 @@ dnl   fi
 dnl else
 dnl   AC_MSG_RESULT(no)
 dnl fi
+
+dnl avcodec library and plugin
+AC_ARG_ENABLE(avcodec,
+        [  --disable-avcodec       disable avcodec library and plugin.])
+if test "${enable_avcodec-set}" = "set" -o "$enable_avcodec" = yes; then
+  enable_avcodec=yes
+else
+  enable_avcodec=no
+  ENFLE_PLUGIN_DISABLE(player/avcodec)
+fi
+AM_CONDITIONAL(USE_AVCODEC, test "$enable_avcodec" = "yes")
 
 Static_plugin_objs=""
 Static_plugin_proto=""
