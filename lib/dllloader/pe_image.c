@@ -429,7 +429,7 @@ load(PE_image *p, char *path)
       show_message("InitDll returns %d\n", result);
   }
 
-  debug_message("-- Load completed\n");
+  debug_message("-- Load completed.\n");
 
   fclose(fp);
 
@@ -445,6 +445,7 @@ resolve(PE_image *p, char *symbolname)
 static void
 destroy(PE_image *p)
 {
+  module_deregister(misc_basename(p->filepath));
   if (p->export_symbols)
     hash_destroy(p->export_symbols, 0);
   if (p->image)
