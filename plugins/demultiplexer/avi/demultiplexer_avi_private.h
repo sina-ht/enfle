@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar 20 18:03:24 2004.
- * $Id: demultiplexer_avi_private.h,v 1.2 2004/03/24 14:54:25 sian Exp $
+ * Last Modified: Mon Apr  5 23:31:33 2004.
+ * $Id: demultiplexer_avi_private.h,v 1.3 2004/04/05 15:43:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -101,21 +101,7 @@ struct __avistreamheader {
 #define BI_RLE4 2
 #define BI_DIV4 0x33564944
 
-typedef struct __bitmapinfoheader BITMAPINFOHEADER;
-struct __bitmapinfoheader {
-  DWORD biSize;         /* size of this structure */
-  LONG  biWidth;        /* width of image */
-  LONG  biHeight;       /* width of height */
-  WORD  biPlanes;       /* must be 1 */
-  WORD  biBitCount;     /* bits per pixel */
-  DWORD biCompression;  /* compression type */
-  DWORD biSizeImage;    /* size of image */
-  LONG  biXPixPerMeter; /* horizontal resolution */
-  LONG  biYPixPerMeter; /* vertical resolution */
-  DWORD biClrUsed;      /* color table related */
-  DWORD biClrImportant; /* ditto */
-};
-
+#include "enfle/demultiplexer_bitmapinfoheader.h"
 #include "enfle/demultiplexer_waveformatex.h"
 
 #define AVIIF_LIST     0x00000001 // chunk is LIST
