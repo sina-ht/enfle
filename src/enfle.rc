@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Oct 13 01:03:48 2001.
-; $Id: enfle.rc,v 1.23 2001/10/14 12:40:53 sian Exp $
+; Last Modified: Sun Oct 21 03:44:47 2001.
+; $Id: enfle.rc,v 1.24 2001/10/22 08:48:43 sian Exp $
 
 enfle {
   identify {
@@ -52,6 +52,14 @@ enfle {
       default = Xlib
       ; caption font for full screen mode
       caption_font = a14
+      ; Preferred format order for YUV display
+      ; planar: YV12, I420, YUY2, UYVY
+      ; packed: YUY2, UYVY, YV12, I420
+      ; Under my environment, 'planar' decreases the number of dropped frames,
+      ; but poor image quality, on the other hand 'packed' increases the number,
+      ; but better image quality. Your mileage may vary.
+      ;Xlib/preferred_format = planar
+      Xlib/preferred_format = packed
     }
     audio {
       ; How to find plugins.

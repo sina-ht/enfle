@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Sep 20 14:33:51 2001.
- * $Id: x11.h,v 1.14 2001/09/20 05:35:58 sian Exp $
+ * Last Modified: Sun Oct 21 03:09:40 2001.
+ * $Id: x11.h,v 1.15 2001/10/22 08:48:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -85,6 +85,14 @@ struct _x11 {
 
 #define x11_if_shm(x) ((x)->extensions & X11_EXT_SHM)
 #define x11_if_xv(x) ((x)->extensions & X11_EXT_XV)
+
+#ifdef USE_PTHREAD
+#define x11_lock(x) XLockDisplay(x11_display((x)))
+#define x11_unlock(x) XUnlockDisplay(x11_display((x)))
+#else
+#define x11_lock(x)
+#define x11_unlock(x)
+#endif
 
 #define x11_open(x, d) (x)->open((x), (d))
 #define x11_create_window(x, p, w, h) \

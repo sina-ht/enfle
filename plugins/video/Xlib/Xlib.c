@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:36:07 2001.
- * $Id: Xlib.c,v 1.40 2001/09/18 05:22:23 sian Exp $
+ * Last Modified: Sun Oct 21 03:46:15 2001.
+ * $Id: Xlib.c,v 1.41 2001/10/22 08:48:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,10 +33,6 @@
 #define REQUIRE_UNISTD_H
 #include "compat.h"
 #include "common.h"
-
-#ifdef USE_PTHREAD
-#  include <pthread.h>
-#endif
 
 /* These are NOT official X11 headers, but enfle's. */
 #include "X11/x11.h"
@@ -69,9 +65,6 @@ typedef struct {
   WindowResource full;
   Font caption_font;
   XFontStruct *fs;
-#ifdef USE_PTHREAD
-  pthread_mutex_t render_mutex;
-#endif
 } X11Window_info;
 
 static void *open_video(void *, Config *);
@@ -107,7 +100,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.5.1",
+  description: "Xlib Video plugin version 0.6",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -263,9 +256,6 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
     return NULL;
   }
   xwi = (X11Window_info *)vw->private_data;
-#ifdef USE_PTHREAD
-  pthread_mutex_init(&xwi->render_mutex, NULL);
-#endif
 
   vw->c = p->c;
   if ((fontname = config_get(vw->c, "/enfle/plugins/video/caption_font")) == NULL) {
@@ -331,9 +321,11 @@ recreate_pixmap_if_resized(VideoWindow *vw, WindowResource *wr)
   X11 *x11 = x11window_x11(xw);
 
   if (wr->pix_width != vw->render_width || wr->pix_height != vw->render_height) {
+    x11_lock(x11);
     if (wr->pix)
       x11_free_pixmap(x11, wr->pix);
     wr->pix = x11_create_pixmap(x11, x11window_win(xw), vw->render_width, vw->render_height, x11_depth(x11));
+    x11_unlock(x11);
     wr->pix_width  = vw->render_width;
     wr->pix_height = vw->render_height;
   }
@@ -349,15 +341,19 @@ draw_caption(VideoWindow *vw)
   vw->if_caption = 1;
 
   if (!vw->if_fullscreen) {
+    x11_lock(x11);
     x11window_storename(xw, vw->caption);
+    x11_unlock(x11);
   } else {
     int x = (vw->full_width - XTextWidth(xwi->fs, vw->caption, strlen(vw->caption))) >> 1;
     int y = vw->full_height - (xwi->fs->ascent + xwi->fs->descent);
     int oy = (vw->full_height + vw->render_height) >> 1;
 
     if (oy < y) {
+      x11_lock(x11);
       XSetForeground(x11_display(x11), xwi->full.gc, x11_white(x11));
       XDrawString(x11_display(x11), x11window_win(xw), xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+      x11_unlock(x11);
     } else {
       vw->if_caption = 0;
     }
@@ -370,8 +366,12 @@ erase_caption(VideoWindow *vw)
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
-  int x = (vw->full_width - XTextWidth(xwi->fs, vw->caption, strlen(vw->caption))) >> 1;
-  int y = vw->full_height - (xwi->fs->ascent + xwi->fs->descent);
+  int x, y;
+
+  x11_lock(x11);
+  x = (vw->full_width - XTextWidth(xwi->fs, vw->caption, strlen(vw->caption))) >> 1;
+  x11_unlock(x11);
+  y = vw->full_height - (xwi->fs->ascent + xwi->fs->descent);
 
   if (!vw->if_caption)
     return;
@@ -379,8 +379,10 @@ erase_caption(VideoWindow *vw)
   if (!vw->if_fullscreen)
     return;
 
+  x11_lock(x11);
   XSetForeground(x11_display(x11), xwi->full.gc, x11_black(x11));
   XDrawString(x11_display(x11), x11window_win(xw), xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+  x11_unlock(x11);
 
   vw->if_caption = 0;
 }
@@ -446,46 +448,34 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
 
 #ifdef USE_XV
   /* YUV support for Xv extension */
-  if (types & IMAGE_YUY2) {
-    debug_message(__FUNCTION__ ": decoder can provide image in YUY2 format.\n");
-    if (xv->capable_format & XV_YUY2_FLAG) {
-      debug_message(__FUNCTION__ ": Xv can display YUY2 format image, good.\n");
-      *direct_decode = 1;
-      return _YUY2;
-    } else {
-      debug_message(__FUNCTION__ ": Xv cannot display YUY2 format image.\n");
-    }
+#define CHECK_AND_RETURN(f) \
+  if (types & IMAGE_ ## f) { \
+    debug_message(__FUNCTION__ ": decoder can provide image in " #f " format.\n"); \
+    if  (xv->capable_format & XV_ ## f ## _FLAG) { \
+      debug_message(__FUNCTION__ ": Xv can display " #f " format image, good.\n"); \
+      *direct_decode = 1; \
+      return _ ## f; \
+    } else { \
+      debug_message(__FUNCTION__ ": Xv cannot display " #f " format image.\n"); \
+    } \
   }
-  if (types & IMAGE_YV12) {
-    debug_message(__FUNCTION__ ": decoder can provide image in YV12 format.\n");
-    if  (xv->capable_format & XV_YV12_FLAG) {
-      debug_message(__FUNCTION__ ": Xv can display YV12 format image, good.\n");
-      *direct_decode = 1;
-      return _YV12;
-    } else {
-      debug_message(__FUNCTION__ ": Xv cannot display YV12 format image.\n");
-    }
-  }
-  if (types & IMAGE_I420) {
-    debug_message(__FUNCTION__ ": decoder can provide image in I420 format.\n");
-    if  (xv->capable_format & XV_I420_FLAG) {
-      debug_message(__FUNCTION__ ": Xv can display I420 format image, good.\n");
-      *direct_decode = 1;
-      return _I420;
-    } else {
-      debug_message(__FUNCTION__ ": Xv cannot display I420 format image.\n");
-    }
-  }
-  if (types & IMAGE_UYVY) {
-    debug_message(__FUNCTION__ ": decoder can provide image in UYVY format.\n");
-    if  (xv->capable_format & XV_UYVY_FLAG) {
-      debug_message(__FUNCTION__ ": Xv can display UYVY format image, good.\n");
-      *direct_decode = 1;
-      return _UYVY;
-    } else {
-      debug_message(__FUNCTION__ ": Xv cannot display UYVY format image.\n");
-    }
-  }
+
+ {
+   unsigned char *tmp = config_get(vw->c, "/enfle/plugins/video/Xlib/preferred_format");
+
+   if (strcasecmp(tmp, "planar") == 0) {
+     CHECK_AND_RETURN(YV12);
+     CHECK_AND_RETURN(I420);
+     CHECK_AND_RETURN(YUY2);
+     CHECK_AND_RETURN(UYVY);
+   } else {
+     CHECK_AND_RETURN(YUY2);
+     CHECK_AND_RETURN(UYVY);
+     CHECK_AND_RETURN(YV12);
+     CHECK_AND_RETURN(I420);
+   }
+ }
+#undef CHECK_AND_RETURN
 #endif
 
   switch (vw->bits_per_pixel) {
@@ -586,6 +576,7 @@ set_event_mask(VideoWindow *vw, int mask)
 {
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
   int x_mask = 0;
 
   if (mask & ENFLE_ExposureMask) 
@@ -602,7 +593,9 @@ set_event_mask(VideoWindow *vw, int mask)
   /* needs for wait_mapped() */
   x_mask |= StructureNotifyMask;
 
+  x11_lock(x11);
   x11window_set_event_mask(xw, x_mask);
+  x11_unlock(x11);
 
   return 1;
 }
@@ -617,17 +610,10 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   GC gc = vw->if_fullscreen ? xwi->full.gc : xwi->normal.gc;
   X11 *x11 = x11window_x11(xw);
-  int ret;
-  int fd;
+  int fd, ret;
   fd_set read_fds, write_fds, except_fds;
   struct timeval timeout;
   XEvent xev;
-#ifdef USE_PTHREAD
-  static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-  pthread_mutex_lock(&mutex);
-  do_sync(vw);
-#endif
 
   fd = ConnectionNumber(x11_display(x11));
   FD_ZERO(&read_fds);
@@ -638,9 +624,6 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
   timeout.tv_usec = 50;
 
   if ((ret = select(getdtablesize(), &read_fds, &write_fds, &except_fds, &timeout)) < 0) {
-#ifdef USE_PTHREAD
-    pthread_mutex_unlock(&mutex);
-#endif
     if (errno == EINTR)
       return 0;
     show_message("Xlib: " __FUNCTION__ ": select returns %d: errno = %d\n", ret, errno);
@@ -648,6 +631,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
   }
 
   ev->type = ENFLE_Event_None;
+  x11_lock(x11);
   if (XCheckMaskEvent(x11_display(x11), x11window_mask(xw), &xev) == True) {
     switch (xev.type) {
     case Expose:
@@ -784,10 +768,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
       break;
     }
   }
-
-#ifdef USE_PTHREAD
-  pthread_mutex_unlock(&mutex);
-#endif
+  x11_unlock(x11);
 
   return ret;
 }
@@ -812,6 +793,7 @@ set_cursor(VideoWindow *vw, VideoWindowCursor vc)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
+  x11_lock(x11);
   switch (vc) {
   case _VIDEO_CURSOR_NORMAL:
     XDefineCursor(x11_display(x11), x11window_win(xw), normal_cursor);
@@ -821,6 +803,7 @@ set_cursor(VideoWindow *vw, VideoWindowCursor vc)
     XFlush(x11_display(x11));
     break;
   }
+  x11_unlock(x11);
 }
 
 static void
@@ -835,7 +818,10 @@ set_background(VideoWindow *vw, Image *p)
 
   debug_message(__FUNCTION__ "() called\n");
 
+  x11_lock(x11);
+
   x11ximage_convert(xi, p);
+
   pix = x11_create_pixmap(x11, x11window_win(xw), p->rendered.width, p->rendered.height, x11_depth(xi->x11));
 
   x11ximage_put(xi, pix, gc, 0, 0, 0, 0, p->rendered.width, p->rendered.height);
@@ -844,6 +830,7 @@ set_background(VideoWindow *vw, Image *p)
 
   x11_free_pixmap(x11, pix);
   x11ximage_destroy(xi);
+  x11_unlock(x11);
 }
 
 static int
@@ -877,6 +864,7 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
   if (!state_changed)
     return 1;
 
+  x11_lock(x11);
   x11window_unmap(xw);
   set_offset(vw, 0, 0);
 
@@ -914,6 +902,7 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     x11window_wait_mapped(xwi->full.xw);
     XSetInputFocus(x11_display(x11), x11window_win(xwi->full.xw), RevertToPointerRoot, CurrentTime);
   }
+  x11_unlock(x11);
 
   return 1;
 }
@@ -936,7 +925,9 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   if (!vw->if_fullscreen) {
     unsigned int x, y;
 
+    x11_lock(x11);
     x11window_get_geometry(xw, &vw->x, &vw->y, &vw->width, &vw->height);
+    x11_unlock(x11);
     if (w == vw->width && h == vw->height)
       return 1;
 
@@ -949,20 +940,24 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
 
     //debug_message("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
 
+    x11_lock(x11);
     if (x != vw->x || y != vw->y)
       x11window_moveresize(xw, x, y, w, h);
     else
       x11window_resize(xw, w, h);
+    x11_unlock(x11);
   } else {
     if (w == vw->width && h == vw->height)
       return 1;
 
     if (vw->width > w || vw->height > h) {
+      x11_lock(x11);
       XSetForeground(x11_display(x11), xwi->full.gc, x11_black(x11));
       XFillRectangle(x11_display(x11), xwi->full.pix,  xwi->full.gc, 0, 0,
 		     vw->full_width, vw->full_height);
       XFillRectangle(x11_display(x11), x11window_win(xw), xwi->full.gc, 0, 0,
 		     vw->full_width, vw->full_height);
+      x11_unlock(x11);
     }
   }
 
@@ -975,9 +970,15 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
 static int
 move(VideoWindow *vw, unsigned int x, unsigned int y)
 {
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+
   if (!vw->if_fullscreen) {
+    x11_lock(x11);
     x11window_move((X11Window *)vw->private_data, x, y);
     x11window_get_geometry((X11Window *)vw->private_data, &vw->x, &vw->y, &vw->width, &vw->height);
+    x11_unlock(x11);
   }
 
   return 1;
@@ -1068,6 +1069,7 @@ update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, uns
 
   //debug_message(__FUNCTION__ ": (%d, %d) - (%d, %d) -> (%d, %d)\n", left + vw->offset_x, top + vw->offset_y, left + vw->offset_x + w, top + vw->offset_y + h, left, top);
 
+  x11_lock(x11);
   if (!vw->if_fullscreen) {
     XCopyArea(x11_display(x11), xwi->normal.pix, x11window_win(xw), xwi->normal.gc,
 	      left + vw->offset_x, top + vw->offset_y, w, h, left, top);
@@ -1077,6 +1079,7 @@ update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, uns
 	      left + ((vw->full_width  - vw->width ) >> 1),
 	      top  + ((vw->full_height - vw->height) >> 1));
   }
+  x11_unlock(x11);
 }
 
 static int
@@ -1084,12 +1087,9 @@ render(VideoWindow *vw, Image *p)
 {
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
 
-#ifdef USE_PTHREAD
-  if (pthread_mutex_trylock(&xwi->render_mutex) == EBUSY)
-    return 0;
-  do_sync(vw);
-#endif
+  x11_lock(x11);
 
   x11ximage_convert(xwi->xi, p);
 
@@ -1138,9 +1138,7 @@ render(VideoWindow *vw, Image *p)
     draw_caption(vw);
   }
 
-#ifdef USE_PTHREAD
-  pthread_mutex_unlock(&xwi->render_mutex);
-#endif
+  x11_unlock(x11);
 
   return 1;
 }
@@ -1152,7 +1150,9 @@ do_sync(VideoWindow *vw)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
+  x11_lock(x11);
   XSync(x11_display(x11), False);
+  x11_unlock(x11);
 }
 
 static void
@@ -1163,8 +1163,10 @@ discard_key_event(VideoWindow *vw)
   X11 *x11 = x11window_x11(xw);
   XEvent xev;
 
+  x11_lock(x11);
   while (XCheckWindowEvent(x11_display(x11), x11window_win(xw),
 			   KeyPressMask | KeyReleaseMask, &xev)) ;
+  x11_unlock(x11);
 }
 
 static void
@@ -1175,8 +1177,10 @@ discard_button_event(VideoWindow *vw)
   X11 *x11 = x11window_x11(xw);
   XEvent xev;
 
+  x11_lock(x11);
   while (XCheckWindowEvent(x11_display(x11), x11window_win(xw),
 			   ButtonPressMask | ButtonReleaseMask, &xev)) ;
+  x11_unlock(x11);
 }
 
 static int
@@ -1186,9 +1190,6 @@ destroy_window(VideoWindow *vw)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
-#ifdef USE_PTHREAD
-  pthread_mutex_destroy(&xwi->render_mutex);
-#endif
   if (xwi->xi)
     x11ximage_destroy(xwi->xi);
   if (xwi->normal.pix)

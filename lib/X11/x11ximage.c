@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Oct 13 13:12:47 2001.
- * $Id: x11ximage.c,v 1.41 2001/10/14 12:28:01 sian Exp $
+ * Last Modified: Sun Oct 21 02:49:46 2001.
+ * $Id: x11ximage.c,v 1.42 2001/10/22 08:48:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,7 +70,7 @@ x11ximage_create(X11 *x11)
   cpucaps = cpucaps_get();
 #ifdef USE_MMX
   if (cpucaps_is_mmx(cpucaps)) {
-    debug_message(__FUNCTION__ ": MMX is available.\n");
+    //debug_message(__FUNCTION__ ": MMX is available.\n");
     xi->bgra32to16 = bgra32to16_maybe_mmx;
   } else
 #endif
@@ -84,6 +84,7 @@ x11ximage_create(X11 *x11)
 static void
 destroy_ximage(X11XImage *xi)
 {
+  x11_lock(xi->x11);
   if (xi->use_xv) {
     if (xi->xvimage) {
 #ifdef USE_SHM
@@ -112,6 +113,7 @@ destroy_ximage(X11XImage *xi)
       xi->ximage = NULL;
     }
   }
+  x11_unlock(xi->x11);
 }
 
 void
@@ -266,6 +268,7 @@ convert(X11XImage *xi, Image *p)
 #endif
 
   if (create_ximage) {
+    x11_lock(xi->x11);
     switch (memory_type(p->rendered.image)) {
     case _NORMAL:
 #ifdef USE_XV
@@ -307,6 +310,7 @@ convert(X11XImage *xi, Image *p)
       return 0;
     }
     /* debug_message("ximage->bpl = %d\n", xi->ximage->bytes_per_line); */
+    x11_unlock(xi->x11);
   }
 
   if (!xi->use_xv) {
@@ -682,7 +686,9 @@ convert(X11XImage *xi, Image *p)
     xi->shminfo->shmid = memory_shmid(p->rendered.image);
     xi->shminfo->shmaddr = memory_ptr(p->rendered.image);
     xi->shminfo->readOnly = False;
+    x11_lock(xi->x11);
     XShmAttach(x11_display(xi->x11), xi->shminfo);
+    x11_unlock(xi->x11);
     xi->if_attached = 1;
   }
 #endif
@@ -704,6 +710,7 @@ convert(X11XImage *xi, Image *p)
 static void
 put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h)
 {
+  x11_lock(xi->x11);
 #ifdef USE_SHM
   if (xi->if_attached) {
 #ifdef USE_PTHREAD
@@ -762,6 +769,7 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
 #ifdef USE_SHM
   }
 #endif
+  x11_unlock(xi->x11);
 }
 
 static void
@@ -772,6 +780,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
     return;
   }
 
+  x11_lock(xi->x11);
 #ifdef USE_XV
 #ifdef USE_SHM
   if (xi->if_attached) {
@@ -801,6 +810,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
   }
 #endif
 #endif
+  x11_unlock(xi->x11);
 }
 
 static void
