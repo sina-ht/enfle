@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 03:49:39 2000.
- * $Id: enfle.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  2 11:52:37 2000.
+ * $Id: enfle.c,v 1.2 2000/10/02 03:01:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,8 +24,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if HAVE_UNISTD_H
+#  include <sys/types.h>
+#  include <unistd.h>
+#endif
+
+#include <getopt.h>
+
 #include "common.h"
 
+#include "libstring.h"
 #include "libconfig.h"
 #include "enfle-plugin.h"
 #include "ui.h"
@@ -33,9 +41,79 @@
 #include "loader.h"
 #include "archiver.h"
 
+typedef enum _argument_requirement {
+  _NO_ARGUMENT,
+  _REQUIRED_ARGUMENT,
+  _OPTIONAL_ARGUMENT
+} ArgumentRequirement;
+
+typedef struct _option {
+  char *longopt; /* not supported so far */
+  char opt;
+  ArgumentRequirement argreq;
+  unsigned char *description;
+} Option;
+
+static Option enfle_options[] = {
+  { "help", 'h', _NO_ARGUMENT,       "Show help message." },
+  { "ui",   'u', _REQUIRED_ARGUMENT, "Specify which UI to use."  },
+  { NULL }
+};
+
+static void
+usage(void)
+{
+  int i;
+
+  printf(PROGNAME " version " VERSION "\n");
+  printf("(C)Copyright 2000 by Hiroshi Takekawa\n\n");
+  printf("usage: enfle imagefilename [options] [path...]\n");
+  
+  printf("Options:\n");
+  i = 0;
+  while (enfle_options[i].longopt != NULL) {
+    printf(" %c(%s): \t%s\n",
+	   enfle_options[i].opt, enfle_options[i].longopt, enfle_options[i].description);
+    i++;
+  }
+}
+
+static char *
+gen_optstring(Option opt[])
+{
+  int i;
+  String *s;
+  char *optstr;
+
+  s = string_create();
+  i = 0;
+  while (opt[i].longopt != NULL) {
+    string_cat_ch(s, opt[i].opt);
+    switch (opt[i].argreq) {
+    case _NO_ARGUMENT:
+      break;
+    case _REQUIRED_ARGUMENT:
+      string_cat_ch(s, ':');
+      break;
+    case _OPTIONAL_ARGUMENT:
+      string_cat(s, "::");
+      break;
+    }
+    i++;
+  }
+
+  optstr = strdup(string_get(s));
+
+  string_destroy(s);
+
+  return optstr;
+}
+  
 int
 main(int argc, char **argv)
 {
+  extern char *optarg;
+  extern int optind;
   UIData uidata;
   UI *ui;
   Config *c;
@@ -43,14 +121,37 @@ main(int argc, char **argv)
   Loader *ld;
   Archiver *ar;
   Archive *a;
-  int i;
-  char *plugin_path, *path, *ext, *name, *ui_name;
+  int i, ch;
+  char *plugin_path, *path, *ext, *name, *ui_name = NULL;
+  char *optstr;
 
-  if (argc == 1) {
-    printf(PROGNAME " version " VERSION "\n");
-    printf("(C)Copyright 2000 by Hiroshi Takekawa\n\n");
-    printf("%s imagefilename [imagefilename...]\n", argv[0]);
-    return 1;
+  optstr = gen_optstring(enfle_options);
+  while ((ch = getopt(argc, argv, optstr)) != EOF) {
+    i = 0;
+    switch (ch) {
+    case 'h':
+      usage();
+      if (ui_name)
+	free(ui_name);
+      return 0;
+    case 'u':
+      ui_name = strdup(optarg);
+      break;
+    default:
+      fprintf(stderr, "unknown option %c\n", ch);
+      usage();
+      if (ui_name)
+	free(ui_name);
+      exit(1);
+    }
+  }
+  free(optstr);
+
+  if (argc == optind) {
+    usage();
+    if (ui_name)
+      free(ui_name);
+    return 0;
   }
 
   c = uidata.c = config_create();
@@ -119,10 +220,10 @@ main(int argc, char **argv)
 
   uidata.a = archive_create();
 
-  if (strcmp(argv[1], "-") == 0) {
+  if (strcmp(argv[optind], "-") == 0) {
     archive_add(uidata.a, argv[1], strdup(argv[1]));
   } else {
-    for (i = 1; i < argc; i++) {
+    for (i = optind; i < argc; i++) {
       if (strcmp(argv[i], "-") == 0) {
 	fprintf(stderr, "Cannot specify stdin(-) with other files. ignored.\n");
       } else {
@@ -131,11 +232,13 @@ main(int argc, char **argv)
     }
   }
 
-  if ((ui_name = config_get(c, "/enfle/plugins/ui/default")) == NULL) {
+  if (ui_name == NULL && ((ui_name = config_get(c, "/enfle/plugins/ui/default")) == NULL)) {
     fprintf(stderr, "configuration error\n");
     return 1;
   }
-  ui_call(ui, ui_name, &uidata);
+
+  if (!ui_call(ui, ui_name, &uidata))
+    fprintf(stderr, "No UI %s or UI %s initialize failed\n", ui_name, ui_name);
 
   archive_destroy(uidata.a);
   archiver_destroy(ar);
