@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed Oct 11 16:45:41 2000.
-dnl $Id: configure.in,v 1.6 2000/10/12 03:47:04 sian Exp $
+dnl Last Modified: Sat Oct 14 05:28:46 2000.
+dnl $Id: configure.in,v 1.7 2000/10/15 07:52:57 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@ AM_CONFIG_HEADER(config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20001010)
+AM_INIT_AUTOMAKE(enfle, 20001014)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -85,6 +85,17 @@ AC_CHECK_HEADER(mpeg.h, [
   fi])
 AM_CONDITIONAL(HAVE_MPEG_LIB, test "$available_mpeg_lib" = "yes")
 AC_SUBST(LIBADD_MPEG_LIB)
+
+available_pthread=no
+AC_CHECK_LIB(pthread, pthread_create, [ available_pthread=yes; LIBADD_PTHREAD=-lpthread; ])
+
+available_libmpeg3=no
+if test "$available_pthread" = "yes"; then
+  AC_CHECK_HEADER(mpeg3/libmpeg3.h,
+    AC_CHECK_LIB(mpeg3, mpeg3_open, [ available_libmpeg3=yes; LIBADD_LIBMPEG3="-lmpeg3 $LIBADD_PTHREAD"; ], [], $LIBADD_PTHREAD))
+fi
+AM_CONDITIONAL(HAVE_LIBMPEG3, test "$available_libmpeg3" = "yes")
+AC_SUBST(LIBADD_LIBMPEG3)
 
 available_zlib=no
 AC_CHECK_HEADER(zlib.h,
@@ -144,6 +155,9 @@ dnl Checks for X libraries.
 AC_PATH_XTRA
 CPPFLAGS="$CPPFLAGS -I$x_includes"
 LDFLAGS="$LDFLAGS $X_LIBS"
+
+LIBS_BACKUP=$LIBS
+
 LIBS="$X_PRELIBS $LIBS"
 AC_CHECK_LIB(X11, XOpenDisplay)
 AM_CONDITIONAL(HAVE_X11, test "$have_x" = "yes")
@@ -154,6 +168,8 @@ AC_CHECK_HEADER(gif_lib.h,
   AC_CHECK_LIB(ungif, DGifOpen, [ available_ungif=yes; LIBADD_UNGIF=-lungif; ]))
 AM_CONDITIONAL(HAVE_UNGIF, test "$available_ungif" = "yes")
 AC_SUBST(LIBADD_UNGIF)
+
+LIBS=$LIBS_BACKUP
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN
@@ -201,4 +217,5 @@ AC_OUTPUT(
    plugins/player/Makefile
     plugins/player/ungif/Makefile
     plugins/player/mpeg_lib/Makefile
+    plugins/player/libmpeg3/Makefile
 )
