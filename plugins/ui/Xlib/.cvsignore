@@ -1,8 +1,0 @@
-*~
-*.diff
-*.patch
-*.lo
-Makefile
-Makefile.in
-.deps
-.libs
