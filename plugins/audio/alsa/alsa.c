@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 20001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:37:43 2001.
- * $Id: alsa.c,v 1.3 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Fri Feb 22 02:35:28 2002.
+ * $Id: alsa.c,v 1.4 2002/02/22 17:41:06 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -45,7 +45,7 @@ static int close_device(AudioDevice *);
 static AudioPlugin plugin = {
   type: ENFLE_PLUGIN_AUDIO,
   name: "ALSA",
-  description: "ALSA Audio plugin version 0.0.1",
+  description: "ALSA Audio plugin version 0.0.2",
   author: "Hiroshi Takekawa",
 
   open_device: open_device,
@@ -58,6 +58,8 @@ static AudioPlugin plugin = {
 
 typedef struct _alsa_data {
   snd_pcm_t *fd;
+  snd_pcm_sframes_t buffer_size;
+  snd_pcm_sframes_t period_size;
   snd_output_t *log;
 } ALSA_data;
 
@@ -118,7 +120,7 @@ static int
 set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
 {
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
-  int r = 0, err;
+  int r = 0, err, dir;
   snd_pcm_format_t f;
   AudioFormat format = *format_p;
   snd_pcm_hw_params_t *hwparams;
@@ -210,10 +212,12 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     show_message_fnc("snd_pcm_hw_params_set_buffer_near() failed.\n");
     return 0;
   }
+  alsa->buffer_size = snd_pcm_hw_params_get_buffer_size(hwparams);
   if ((err = snd_pcm_hw_params_set_period_time_near(alsa->fd, hwparams, 500000 / 4, 0)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_period_near() failed.\n");
     return 0;
   }
+  alsa->period_size = snd_pcm_hw_params_get_period_size(hwparams, &dir);
 
   if ((err = snd_pcm_hw_params(alsa->fd, hwparams)) < 0) {
     show_message_fnc("snd_pcm_hw_params() failed.\n");
@@ -242,8 +246,30 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   default:                       debug_message("UNKNOWN "); break;
   }
 
-  debug_message("%d ch %d Hz OK\n", ad->channels, ad->speed);
+  debug_message("%d ch %d Hz buffer %ld period %ld OK\n", ad->channels, ad->speed, alsa->buffer_size, alsa->period_size);
 #endif
+
+  /* sw_params */
+  if ((err = snd_pcm_sw_params_current(alsa->fd, swparams)) < 0) {
+    show_message_fnc("snd_pcm_sw_params_any() failed.\n");
+    return 0;
+  }
+  if ((err = snd_pcm_sw_params_set_start_threshold(alsa->fd, swparams, alsa->buffer_size)) < 0) {
+    show_message_fnc("snd_pcm_sw_params_set_start_threshold() failed.\n");
+    return 0;
+  }
+  if ((err = snd_pcm_sw_params_set_avail_min(alsa->fd, swparams, alsa->period_size)) < 0) {
+    show_message_fnc("snd_pcm_sw_params_set_avail_min() failed.\n");
+    return 0;
+  }
+  if ((err = snd_pcm_sw_params_set_xfer_align(alsa->fd, swparams, 1)) < 0) {
+    show_message_fnc("snd_pcm_sw_params_set_xfer_align() failed.\n");
+    return err;
+  }
+  if ((err = snd_pcm_sw_params(alsa->fd, swparams)) < 0) {
+    show_message_fnc("snd_pcm_sw_params() failed.\n");
+    return err;
+  }
 
   return 1;
 }
