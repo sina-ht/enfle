@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 18:11:08 2002.
- * $Id: libmpeg2.c,v 1.33 2002/03/07 15:17:50 sian Exp $
+ * Last Modified: Thu Mar 14 14:27:11 2002.
+ * $Id: libmpeg2.c,v 1.34 2002/03/14 18:43:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -232,6 +232,7 @@ play(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     return PLAY_OK;
   case _PAUSE:
     return pause_movie(m);
@@ -241,6 +242,7 @@ play(Movie *m)
   case _UNLOADED:
     return PLAY_ERROR;
   default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -388,7 +390,7 @@ play_video(void *arg)
 
   debug_message_fnc("exiting.\n");
 
-  pthread_exit((void *)PLAY_OK);
+  return (void *)PLAY_OK;
 }
 
 #define MP3_DECODE_BUFFER_SIZE 16384
@@ -475,7 +477,7 @@ play_audio(void *arg)
   ExitMP3(&info->mp);
   debug_message("OK. exit.\n");
 
-  pthread_exit((void *)PLAY_OK);
+  return (void *)PLAY_OK;
 }
 
 static PlayerStatus
@@ -509,6 +511,7 @@ play_main(Movie *m, VideoWindow *vw)
   case _UNLOADED:
     return PLAY_ERROR;
   default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -609,6 +612,7 @@ pause_movie(Movie *m)
 {
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _PAUSE;
     timer_pause(m->timer);
     return PLAY_OK;
@@ -619,6 +623,7 @@ pause_movie(Movie *m)
   case _STOP:
     return PLAY_OK;
   case _UNLOADED:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -634,6 +639,7 @@ stop_movie(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _STOP;
     break;
   case _PAUSE:
@@ -642,6 +648,7 @@ stop_movie(Movie *m)
   case _UNLOADED:
     return PLAY_ERROR;
   default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 

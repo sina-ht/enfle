@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 21:43:47 2001.
- * $Id: mpeg_lib.c,v 1.18 2001/06/22 16:54:11 sian Exp $
+ * Last Modified: Thu Mar 14 14:24:21 2002.
+ * $Id: mpeg_lib.c,v 1.19 2002/03/14 18:43:30 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -153,6 +153,7 @@ play(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     return PLAY_OK;
   case _PAUSE:
     return pause_movie(m);
@@ -162,6 +163,7 @@ play(Movie *m)
   case _UNLOADED:
     return PLAY_ERROR;
   default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -180,6 +182,7 @@ play_main(Movie *m, VideoWindow *vw)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     break;
   case _PAUSE:
   case _STOP:
@@ -187,6 +190,7 @@ play_main(Movie *m, VideoWindow *vw)
   case _UNLOADED:
     return PLAY_ERROR;
   default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -206,6 +210,7 @@ pause_movie(Movie *m)
 {
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _PAUSE;
     return PLAY_OK;
   case _PAUSE:
@@ -214,6 +219,7 @@ pause_movie(Movie *m)
   case _STOP:
     return PLAY_OK;
   case _UNLOADED:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -225,6 +231,7 @@ stop_movie(Movie *m)
 {
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _STOP;
     return PLAY_OK;
   case _PAUSE:
@@ -232,6 +239,9 @@ stop_movie(Movie *m)
     return PLAY_OK;
   case _UNLOADED:
     return PLAY_ERROR;
+  default:
+    return PLAY_ERROR;
+    warning("Unknown status %d\n", m->status);
   }
 
   return PLAY_ERROR;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:32:41 2002.
- * $Id: ungif.c,v 1.27 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Thu Mar 14 14:20:28 2002.
+ * $Id: ungif.c,v 1.28 2002/03/14 18:43:30 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -171,6 +171,7 @@ play(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     return PLAY_OK;
   case _PAUSE:
     return pause_movie(m);
@@ -178,6 +179,9 @@ play(Movie *m)
     m->status = _PLAY;
     break;
   case _UNLOADED:
+    return PLAY_ERROR;
+  default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -215,6 +219,7 @@ play_main(Movie *m, VideoWindow *vw)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     break;
   case _PAUSE:
   case _STOP:
@@ -222,6 +227,7 @@ play_main(Movie *m, VideoWindow *vw)
   case _UNLOADED:
     return PLAY_ERROR;
   default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -446,6 +452,7 @@ pause_movie(Movie *m)
 {
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _PAUSE;
     return PLAY_OK;
   case _PAUSE:
@@ -454,6 +461,9 @@ pause_movie(Movie *m)
   case _STOP:
     return PLAY_OK;
   case _UNLOADED:
+    return PLAY_ERROR;
+  default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
@@ -467,6 +477,7 @@ stop_movie(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _STOP;
     break;
   case _PAUSE:
@@ -475,6 +486,7 @@ stop_movie(Movie *m)
   case _UNLOADED:
     return PLAY_ERROR;
   default:
+    warning("Unknown status %d\n", m->status);
     return PLAY_ERROR;
   }
 
