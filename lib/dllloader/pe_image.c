@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Sep 17 14:40:43 2001.
- * $Id: pe_image.c,v 1.14 2001/09/18 05:22:24 sian Exp $
+ * $Id: pe_image.c,v 1.15 2001/09/29 18:02:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,7 +66,6 @@ static void destroy(PE_image *);
 static PE_image template = {
   filepath: NULL,
   pe_header: IMAGE_FILE_HEADER_INITIALIZER,
-  opt_header: IMAGE_OPTIONAL_HEADER_INITIALIZER,
   sect_headers: NULL,
   export_symbols: NULL,
   image: NULL,
@@ -83,10 +82,6 @@ peimage_create(void)
   if ((p = calloc(1, sizeof(PE_image))) == NULL)
     return NULL;
   memcpy(p, &template, sizeof(PE_image));
-  if ((p->opt_header.DataDirectory = calloc(IMAGE_NUMBEROF_DIRECTORY_ENTRIES, sizeof(IMAGE_DATA_DIRECTORY))) == NULL) {
-    free(p);
-    return NULL;
-  }
 
   return p;
 }
@@ -515,8 +510,6 @@ static void
 destroy(PE_image *p)
 {
   module_deregister(misc_basename(p->filepath));
-  if (p->opt_header.DataDirectory)
-    free(p->opt_header.DataDirectory);
   if (p->export_symbols)
     hash_destroy(p->export_symbols, 0);
   if (p->image)
