@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 29 00:30:19 2004.
- * $Id: fourcc.h,v 1.13 2004/06/28 15:32:53 sian Exp $
+ * Last Modified: Sun Sep 19 10:28:18 2004.
+ * $Id: fourcc.h,v 1.14 2004/09/22 19:28:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -109,6 +109,7 @@
 #define FCC_VCR2 FCC('V', 'C', 'R', '2')
 
 // MJPEG
+#define FCC_mjpg FCC('m', 'j', 'p', 'g')
 #define FCC_MJPG FCC('M', 'J', 'P', 'G')
 #define FCC_JPGL FCC('J', 'P', 'G', 'L')
 #define FCC_LJPG FCC('L', 'J', 'P', 'G')

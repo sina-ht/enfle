@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 12 13:21:50 2004.
- * $Id: videodecoder.c,v 1.5 2004/06/12 06:11:29 sian Exp $
+ * Last Modified: Sun Sep 19 10:28:24 2004.
+ * $Id: videodecoder.c,v 1.6 2004/09/22 19:28:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,6 +123,7 @@ videodecoder_codec_name(unsigned int fourcc)
   case FCC_PIM1:
   case FCC_VCR2:
     return "mpeg1video";
+  case FCC_mjpg:
   case FCC_MJPG:
     return "mjpeg";
   case FCC_JPGL:
