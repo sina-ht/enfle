@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep  5 01:31:46 2001.
- * $Id: demultiplexer_avi.c,v 1.2 2001/09/07 04:38:54 sian Exp $
+ * Last Modified: Wed Sep 12 20:35:31 2001.
+ * $Id: demultiplexer_avi.c,v 1.3 2001/09/12 11:39:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -168,6 +168,7 @@ examine(Demultiplexer *demux)
 
     _READ_CHUNK_HEADER(info->rf, rc);
     _CHECK_CHUNK_NAME(rc, "strh");
+    debug_message(__FUNCTION__ ": Got chunk 'strh'\n");
     riff_file_read_data(info->rf, rc);
     /* XXX: Little endian only */
     memcpy(&ash, riff_chunk_get_data(rc), sizeof(AVIStreamHeader));
@@ -187,6 +188,7 @@ examine(Demultiplexer *demux)
 
     _READ_CHUNK_HEADER(info->rf, rc);
     _CHECK_CHUNK_NAME(rc, "strf");
+    debug_message(__FUNCTION__ ": Got chunk 'strf'\n");
     riff_file_read_data(info->rf, rc);
     /* XXX: Little endian only */
     if (ash.fccType == FCC_vids) {
@@ -302,10 +304,12 @@ demux_main(void *arg)
       if (nstream == info->nastream) {
 	if (!riff_file_read_data(info->rf, rc))
 	  break;
-	ap = malloc(sizeof(AVIPacket));
-	ap->size = riff_chunk_get_size(rc);
-	ap->data = riff_chunk_get_data(rc);
-	while (!fifo_put(info->astream, ap, avi_packet_destructor)) ;
+	if (riff_chunk_get_size(rc) > 0) {
+	  ap = malloc(sizeof(AVIPacket));
+	  ap->size = riff_chunk_get_size(rc);
+	  ap->data = riff_chunk_get_data(rc);
+	  while (!fifo_put(info->astream, ap, avi_packet_destructor)) ;
+	}
       } else {
 	riff_file_skip_chunk_data(info->rf, rc);
       }
