@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 11 00:37:26 2004.
- * $Id: libmpeg2.c,v 1.45 2004/01/11 21:42:22 sian Exp $
+ * Last Modified: Mon Jan 12 19:21:45 2004.
+ * $Id: libmpeg2.c,v 1.46 2004/01/12 12:14:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,7 +86,7 @@ typedef struct _libmpeg2_info {
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.2 with integrated libmpeg2(mpeg2dec-0.4.0)",
+  description: "LibMPEG2 Player plugin version 0.3 with integrated libmpeg2(mpeg2dec-0.4.0)",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -727,39 +727,41 @@ stop_movie(Movie *m)
 
   timer_stop(m->timer);
 
-  debug_message_fnc("waiting for demultiplexer thread to exit... \n");
+  if (info->vstream)
+    fifo_invalidate(info->vstream);
+  if (info->video_thread) {
+    info->to_render = 0;
+    debug_message_fnc("waiting for joining (video).\n");
+    pthread_cond_signal(&info->update_cond);
+    pthread_join(info->video_thread, NULL);
+    info->video_thread = 0;
+    debug_message_fnc("joined (video).\n");
+  }
 
-  demultiplexer_stop(info->demux);
+  if (info->astream)
+    fifo_invalidate(info->astream);
+  if (info->audio_thread) {
+    debug_message_fnc("waiting for joining (audio).\n");
+    pthread_join(info->audio_thread, NULL);
+    info->audio_thread = 0;
+    debug_message_fnc("joined (audio).\n");
+  }
 
-  debug_message_fnc("demultiplexer stopped\n");
+  if (info->demux) {
+    debug_message_fnc("waiting for demultiplexer to stop.\n");
+    demultiplexer_stop(info->demux);
+    debug_message_fnc("demultiplexer stopped\n");
+  }
 
   if (m->has_video && info->vstream) {
     fifo_destroy(info->vstream);
-    debug_message_fnc("fifo for video destroyed\n");
     info->vstream = NULL;
     demultiplexer_mpeg_set_vst(info->demux, NULL);
   }
   if (m->has_audio && info->astream) {
     fifo_destroy(info->astream);
-    debug_message_fnc("fifo for audio destroyed\n");
     info->astream = NULL;
     demultiplexer_mpeg_set_ast(info->demux, NULL);
-  }
-
-  debug_message_fnc("waiting for video thread to exit... \n");
-
-  if (info->video_thread) {
-    info->to_render = 0;
-    pthread_cond_signal(&info->update_cond);
-    pthread_join(info->video_thread, NULL);
-    info->video_thread = 0;
-  }
-
-  debug_message_fnc("waiting for audio thread to exit... \n");
-
-  if (info->audio_thread) {
-    pthread_join(info->audio_thread, NULL);
-    info->audio_thread = 0;
   }
 
   debug_message_fnc("OK\n");
