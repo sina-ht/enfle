@@ -1,5 +1,10 @@
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/archive.c, lib/enfle/archive.h, plugins/ui/normal/normal.c:
+	Now iteration_delete() returns next data.
+
+2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/archive.c, lib/enfle/archive.h: Added
 	iteration_{first,last}().
 
