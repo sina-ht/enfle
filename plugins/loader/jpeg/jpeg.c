@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:51:52 2001.
- * $Id: jpeg.c,v 1.15 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sat Oct  6 14:13:26 2001.
+ * $Id: jpeg.c,v 1.16 2001/10/06 16:00:52 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -183,6 +183,7 @@ attach_stream_src(j_decompress_ptr cinfo, Stream *st)
 struct my_error_mgr {
   struct jpeg_error_mgr pub;    /* "public" fields */
   jmp_buf setjmp_buffer;        /* for return to caller */
+  char *path;
 };
 typedef struct my_error_mgr *my_error_ptr;
 
@@ -192,8 +193,10 @@ my_error_exit (j_common_ptr cinfo)
   /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
   my_error_ptr myerr = (my_error_ptr)cinfo->err;
 
-  if (cinfo->err->msg_code != JERR_NO_SOI)
+  if (cinfo->err->msg_code != JERR_NO_SOI) {
+    show_message("JPEG ERROR: %s: ", myerr->path);
     (*cinfo->err->output_message)(cinfo);
+  }
 
   /* Return control to the setjmp point */
   longjmp(myerr->setjmp_buffer, 1);
@@ -265,6 +268,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 
   cinfo->err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = my_error_exit;
+  jerr.path = st->path;
   /* Establish the setjmp return context for my_error_exit to use. */
   if (setjmp(jerr.setjmp_buffer)) {
   error_destroy_free:
