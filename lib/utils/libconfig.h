@@ -1,10 +1,10 @@
 /*
  * libconfig.h -- configuration file manipulation library header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr 24 23:03:42 2001.
- * $Id: libconfig.h,v 1.4 2001/04/24 16:38:58 sian Exp $
+ * Last Modified: Tue Jun 12 16:44:34 2001.
+ * $Id: libconfig.h,v 1.5 2001/06/12 09:06:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,6 +32,7 @@ struct _config {
 
   int (*load)(Config *, const char *);
   int (*save)(Config *, char *);
+  int (*parse)(Config *, char *);
   void *(*get)(Config *, const char *);
   int (*set)(Config *, char *, void *);
   unsigned char *(*get_str)(Config *, const char *);
@@ -45,6 +46,7 @@ struct _config {
 
 #define config_load(c, p) (c)->load((c), (p))
 #define config_save(c, p) (c)->save((c), (p))
+#define config_parse(c, s) (c)->parse((c), (s))
 #define config_get(c, p) (c)->get((c), (p))
 #define config_set(c, p, d) (c)->set((c), (p), (d))
 #define config_get_str(c, p) (c)->get_str((c), (p))
