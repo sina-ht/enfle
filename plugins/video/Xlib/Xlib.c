@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov  5 01:17:33 2000.
- * $Id: Xlib.c,v 1.3 2000/11/04 17:34:27 sian Exp $
+ * Last Modified: Sat Nov 18 14:43:14 2000.
+ * $Id: Xlib.c,v 1.4 2000/11/20 12:58:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -548,7 +548,7 @@ render(VideoWindow *vw, Image *p)
     update(vw, p->left, p->top, p->width, p->height);
   }
 
-  xwi->share_image = (xwi->ximage->data != (char *)p->image) ? 1 : 0;
+  xwi->share_image = (xwi->ximage->data == (char *)p->image) ? 1 : 0;
 
   return 1;
 }
@@ -560,8 +560,11 @@ destroy_window(VideoWindow *vw)
   X11Window *xw = (X11Window *)xwi->xw;
   X11 *x11 = x11window_x11(xw);
 
-  if (xwi->ximage)
+  if (xwi->ximage) {
+    if (xwi->share_image)
+      xwi->ximage->data = NULL;
     x11_destroy_ximage(xwi->ximage);
+  }
   if (xwi->pix)
     x11_free_pixmap(x11, xwi->pix);
   if (xwi->gc)
