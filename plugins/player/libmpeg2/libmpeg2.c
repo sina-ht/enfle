@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan  2 23:26:33 2004.
- * $Id: libmpeg2.c,v 1.42 2004/01/03 10:20:03 sian Exp $
+ * Last Modified: Mon Jan  5 18:54:18 2004.
+ * $Id: libmpeg2.c,v 1.43 2004/01/05 09:54:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -402,22 +402,20 @@ play_video(void *arg)
       if (m->width == 0) {
 	m->width = seq->width;
 	m->height = seq->height;
-	m->framerate = 27000000 / seq->frame_period;
+	m->framerate = 27000000.0 / seq->frame_period;
 	show_message_fnc("(%d, %d) fps %2.5f\n", m->width, m->height, m->framerate);
 	if (memory_alloc(image_rendered_image(info->p), size) == NULL) {
 	  show_message_fnc("No enough memory (%d bytes) for rendered image.\n", size);
 	  goto err;
 	}
       }
-      /* XXX: skip */
-      //mpeg2_skip(info->mpeg2dec, info->to_skip);
       break;
     case STATE_SLICE:
     case STATE_END:
     case STATE_INVALID_END:
 #if 0
       if (state == STATE_SLICE)
-	debug_message_fnc("STATE_SLICE: %d %d\n", seq->width, seq->height);
+	debug_message_fnc("STATE_SLICE\n");
       else if (state == STATE_END)
 	debug_message_fnc("STATE_END\n");
       else
@@ -434,24 +432,17 @@ play_video(void *arg)
 	  pthread_cond_wait(&info->update_cond, &info->update_mutex);
 	pthread_mutex_unlock(&info->update_mutex);
       }
+      /* XXX: skip */
+      //mpeg2_skip(info->mpeg2dec, info->to_skip);
       break;
     case STATE_SEQUENCE_REPEATED:
-      //debug_message_fnc("STATE_SEQUENCE_REPEATED\n");
-      //break;
     case STATE_GOP:
-      //debug_message_fnc("STATE_GOP\n");
-      //break;
     case STATE_PICTURE:
-      //debug_message_fnc("STATE_PICTURE\n");
-      //break;
     case STATE_SLICE_1ST:
-      //debug_message_fnc("STATE_SLICE_1ST\n");
-      //break;
     case STATE_PICTURE_2ND:
-      //debug_message_fnc("STATE_PICTURE_2ND\n");
-      //break;
+      break;
     case STATE_INVALID:
-      //debug_message_fnc("STATE_INVALID\n");
+      warning_fnc("STATE_INVALID: invalid stream passed.\n");
       break;
     default:
       debug_message_fnc("STATE_***UNKNOWN***\n");
@@ -536,11 +527,12 @@ play_audio(void *arg)
 	m->sampleformat = _AUDIO_FORMAT_S16_LE;
 	m->channels = info->mp.fr.stereo;
 	m->samplerate = freqs[info->mp.fr.sampling_frequency];
+	debug_message_fnc("mp3: (%d format) %d ch %d Hz\n", m->sampleformat, m->channels, m->samplerate);
 	m->sampleformat_actual = m->sampleformat;
 	m->channels_actual = m->channels;
 	m->samplerate_actual = m->samplerate;
 	if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
-	  show_message("Some params are set wrong.\n");
+	  warning_fnc("set_params went wrong: (%d format) %d ch %d Hz\n", m->sampleformat_actual, m->channels_actual, m->samplerate_actual);
 	param_is_set++;
       }
       while (ret == MP3_OK) {
@@ -647,7 +639,7 @@ play_main(Movie *m, VideoWindow *vw)
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
     audio_time = get_audio_time(m, info->ad);
-    debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
+    //debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
 
     /* if too fast to display, wait before render */
     while (video_time > audio_time)
@@ -658,7 +650,7 @@ play_main(Movie *m, VideoWindow *vw)
 
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
   } else {
-    debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
+    //debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
 
     /* if too fast to display, wait before render */
     while (video_time > timer_get_milli(m->timer)) ;
