@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 19:36:57 2001.
- * $Id: demultiplexer_mpeg.c,v 1.16 2001/09/20 10:36:00 sian Exp $
+ * Last Modified: Thu Sep 20 23:15:57 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.17 2001/09/21 02:22:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -348,6 +348,13 @@ demux_main(void *arg)
 	CONTINUE_IF_RUNNING;
       }
       break;
+    case MPEG_RESERVED_STREAM1:
+      skip = 6 + utils_get_big_uint16(buf + 4);
+      if (used_size < skip) {
+	CONTINUE_IF_RUNNING;
+      }
+      debug_message(__FUNCTION__ ": MPEG_RESERVED_STREAM1\n");
+      break;
     case MPEG_PRIVATE_STREAM1: /* AC3? */
       skip = 6 + utils_get_big_uint16(buf + 4);
       if (used_size < skip) {
@@ -360,6 +367,13 @@ demux_main(void *arg)
       if (used_size < skip) {
 	CONTINUE_IF_RUNNING;
       }
+      break;
+    case MPEG_PRIVATE_STREAM2:
+      skip = 6 + utils_get_big_uint16(buf + 4);
+      if (used_size < skip) {
+	CONTINUE_IF_RUNNING;
+      }
+      debug_message(__FUNCTION__ ": MPEG_PRIVATE_STREAM2\n");
       break;
     default:
       skip = 6 + utils_get_big_uint16(buf + 4);
@@ -471,8 +485,10 @@ stop(Demultiplexer *demux)
 {
   void *ret;
 
-  if (!demux->running)
+  if (!demux->running) {
+    debug_message(__FUNCTION__ " already stopped.\n");
     return 0;
+  }
 
   debug_message(__FUNCTION__ " demultiplexer_mpeg\n");
 
