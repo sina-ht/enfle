@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct  5 15:36:43 2001.
- * $Id: pe_image.c,v 1.17 2001/10/05 11:56:23 sian Exp $
+ * Last Modified: Sat Oct  6 23:03:47 2001.
+ * $Id: pe_image.c,v 1.18 2001/10/06 16:02:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -278,6 +278,7 @@ traverse_directory(PE_image *p, IMAGE_RESOURCE_DIRECTORY *ird, String *s)
 
   for (i = 0; i < ne + ie; i++) {
     IMAGE_RESOURCE_DIRECTORY_ENTRY *irde = (IMAGE_RESOURCE_DIRECTORY_ENTRY *)((char *)ird + sizeof(*ird) + sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY) * i);
+    String *new_s = string_dup(s);
 
     if (irde->Id & 0x80000000) {
       debug_message("Named Id: %d offset: %x\n", irde->Id & 0x7fffffff, irde->OffsetToData);
@@ -285,26 +286,31 @@ traverse_directory(PE_image *p, IMAGE_RESOURCE_DIRECTORY *ird, String *s)
       debug_message("Id: %d offset: %x\n", irde->Id, irde->OffsetToData);
     }
 
+    /* XXX: should extract resource name */
+    string_catf(new_s, "/0x%X", irde->Id);
+
     if (irde->OffsetToData & 0x80000000) {
       IMAGE_RESOURCE_DIRECTORY *new_ird;
-      String *new_s = string_dup(s);
 
       new_ird = (IMAGE_RESOURCE_DIRECTORY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress + (irde->OffsetToData & 0x7fffffff)];
-      string_catf(new_s, "/0x%X", irde->Id);
       traverse_directory(p, new_ird, new_s);
-      string_destroy(new_s);
     } else {
       IMAGE_RESOURCE_DATA_ENTRY *de = (IMAGE_RESOURCE_DATA_ENTRY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress + irde->OffsetToData];
-      void *data;
+      unsigned char *data;
 
       debug_message("%X %d\n", de->OffsetToData, de->Size);
-      if ((data = malloc(de->Size)) == NULL) {
+      if ((data = (unsigned char *)malloc(4 + de->Size)) == NULL) {
 	show_message("No enough memory for resource.\n");
 	exit(-1);
       }
-      memcpy(data, &p->image[de->OffsetToData], de->Size);
-      hash_define(p->resource, string_get(s), string_length(s), data);
+      data[0] =  de->Size >> 24;
+      data[1] = (de->Size >> 16) & 0xff;
+      data[2] = (de->Size >>  8) & 0xff;
+      data[3] =  de->Size        & 0xff;
+      memcpy(data + 4, &p->image[de->OffsetToData], de->Size);
+      hash_define_str(p->resource, string_get(new_s), data);
     }
+    string_destroy(new_s);
   }
 
   debug_message("<<<%s\n", string_get(s));
@@ -570,7 +576,7 @@ load(PE_image *p, char *path)
        * but do as below will cause segmentation fault...
        */
       //__asm__ __volatile__("pushl %ebx\n\t");
-      if ((result = InitDll((HMODULE)p->image, DLL_PROCESS_ATTACH, NULL)) != 1)
+      if ((result = InitDll((HMODULE)p, DLL_PROCESS_ATTACH, NULL)) != 1)
 	show_message("InitDll returns %d\n", result);
       //__asm__ __volatile__("popl %ebx\n\t");
     }
@@ -591,6 +597,8 @@ static void
 destroy(PE_image *p)
 {
   module_deregister(misc_basename(p->filepath));
+  if (p->resource)
+    hash_destroy(p->resource, 1);
   if (p->export_symbols)
     hash_destroy(p->export_symbols, 0);
   if (p->image)
