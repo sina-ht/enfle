@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:46:12 2002.
- * $Id: demultiplexer_avi.c,v 1.13 2002/05/06 11:03:29 sian Exp $
+ * Last Modified: Sat Jun 15 00:50:46 2002.
+ * $Id: demultiplexer_avi.c,v 1.14 2002/06/18 13:26:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -125,7 +125,7 @@ examine(Demultiplexer *demux)
   RIFF_Chunk *rc_top, *rc;
   unsigned int i;
 
-  debug_message_fn("()\n");
+  //debug_message_fn("()\n");
 
   info->nastreams = 0;
   info->nvstreams = 0;
