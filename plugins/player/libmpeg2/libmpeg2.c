@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 01:46:06 2001.
- * $Id: libmpeg2.c,v 1.22 2001/09/03 00:32:26 sian Exp $
+ * Last Modified: Wed Sep 19 17:35:04 2001.
+ * $Id: libmpeg2.c,v 1.23 2001/09/19 08:37:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -453,6 +453,7 @@ play_main(Movie *m, VideoWindow *vw)
   Image *p = info->p;
   int i;
   int video_time, audio_time;
+  static int dropping = 0;
 
   switch (m->status) {
   case _PLAY:
@@ -508,14 +509,23 @@ play_main(Movie *m, VideoWindow *vw)
     while (video_time > audio_time)
       audio_time = get_audio_time(m, info->ad);
 
+    m->render_frame(vw, m, p);
+    info->to_render--;
+
     /* skip if delayed */
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
-      info->to_render--;
-      debug_message("discard\n");
+      if (!dropping) {
+	debug_message("drop on\n");
+	dropping++;
+      }
+      mpeg2_drop(&info->mpeg2dec, 1);
     } else {
-      m->render_frame(vw, m, p);
-      info->to_render--;
+      if (dropping) {
+	debug_message("drop off\n");
+	dropping--;
+      }
+      mpeg2_drop(&info->mpeg2dec, 0);
     }
   } else {
     /* if too fast to display, wait before render */
@@ -527,9 +537,16 @@ play_main(Movie *m, VideoWindow *vw)
     /* skip if delayed */
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
-      debug_message("drop on\n");
+      if (!dropping) {
+	debug_message("drop on\n");
+	dropping++;
+      }
       mpeg2_drop(&info->mpeg2dec, 1);
     } else {
+      if (dropping) {
+	debug_message("drop off\n");
+	dropping--;
+      }
       mpeg2_drop(&info->mpeg2dec, 0);
     }
   }
