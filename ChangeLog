@@ -1,5 +1,11 @@
 2000-12-05  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/X11/x11ximage.c: Fixed rendering bug.
+
+	* plugins/ui/normal/normal.c: Plugged memory leaks.
+
+	* plugins/video/Xlib/Xlib.c: Removed warning.
+
 	* lib/X11/x11ximage.c: Changed implementation to use ximage's
 	bytes_per_line, because shm-ximage doesn't accept changes of its
 	parameters after creation.
