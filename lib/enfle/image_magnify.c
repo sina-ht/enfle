@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 14 03:00:40 2002.
- * $Id: image_magnify.c,v 1.6 2002/02/13 18:03:56 sian Exp $
+ * Last Modified: Thu Feb 14 09:32:30 2002.
+ * $Id: image_magnify.c,v 1.7 2002/02/14 00:33:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -159,11 +159,12 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 	for (y = 0; y < dh; y++) {
 	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
 	  t = y * h / dh * w;
-	  for (x = 0; x < dw; x++) {
-	    dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
-	    t3 = x * w / dw;
 
-	    if (t < yt) {
+	  if (t < yt) {
+	    for (x = 0; x < dw; x++) {
+	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	      t3 = x * w / dw;
+
 	      /* bilinear interpolation */
 	      for (i = 0; i < 3; i++) 
 		*dd++ = (
@@ -171,7 +172,12 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 		  s[(t +     (t3 + 1)) * 3 + i] *            dx  * (MIN_INT - dy) +
 		  s[(t + w +  t3     ) * 3 + i] * (MIN_INT - dx) *            dy  +
 		  s[(t + w + (t3 + 1)) * 3 + i] *            dx  *            dy ) >> PRECISION2;
-	    } else {
+	    }
+	  } else {
+	    for (x = 0; x < dw; x++) {
+	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	      t3 = x * w / dw;
+
 	      for (i = 0; i < 3; i++) 
 		*dd++ = (
 		  s[(t     +  t3     ) * 3 + i] * (MIN_INT - dx) +
@@ -275,11 +281,13 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	for (y = 0; y < dh; y++) {
 	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
 	  t = y * h / dh * w;
-	  for (x = 0; x < dw; x++) {
-	    dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
-	    t3 = x * w / dw;
 
-	    if (t < yt) {
+
+	  if (t < yt) {
+	    for (x = 0; x < dw; x++) {
+	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	      t3 = x * w / dw;
+
 	      /* bilinear interpolation */
 	      for (i = 0; i < 3; i++) 
 		*dd++ = (
@@ -288,7 +296,12 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 		  s[((t + w +  t3     ) << 2) + i] * (MIN_INT - dx) *            dy  +
 		  s[((t + w + (t3 + 1)) << 2) + i] *            dx  *            dy ) >> PRECISION2;
 	      dd++;
-	    } else {
+	    }
+	  } else {
+	    for (x = 0; x < dw; x++) {
+	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	      t3 = x * w / dw;
+
 	      for (i = 0; i < 3; i++) 
 		*dd++ = (
 		  s[((t     +  t3     ) << 2) + i] * (MIN_INT - dx) +
