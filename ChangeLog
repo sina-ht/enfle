@@ -1,3 +1,26 @@
+2002-08-18 Hiroshi Takekawa <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Plugged one memory leak.
+
+	* lib/utils/libconfig.c: Use misc_remove_preceding_space().
+	Plugged list data memory leaks.
+
+	* lib/utils/misc.[ch]: Added misc_remove_preceding_space().
+
+	* lib/utils/hash.c: Plugged one memory leak.  The problem is that
+	set_* method functions override previous data unfreed.
+
+	* lib/enfle/loader.c: Plugged one memory leak.
+
+	* common.h: Added likely(), unlikely(), bug_on().
+
+	* common.h, lib/X11/x11ximage.c,
+	lib/demultiplexer/demultiplexer_avi.c, lib/enfle/archive.c,
+	lib/enfle/spi.c, plugins/streamer/gz/gz.c, src/enfle.c: fatal(),
+	fatal_perror(), bug() clean-ups.
+
+	* lib/utils/libconfig.[ch]: Discarded OO-style coding.
+
 2002-08-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/avifile/config.h: New file.
