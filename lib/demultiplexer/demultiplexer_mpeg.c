@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb  8 03:33:34 2003.
- * $Id: demultiplexer_mpeg.c,v 1.24 2003/11/17 13:59:00 sian Exp $
+ * Last Modified: Mon Nov 24 01:34:52 2003.
+ * $Id: demultiplexer_mpeg.c,v 1.25 2003/11/30 05:49:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -180,11 +180,11 @@ examine(Demultiplexer *demux)
 	continue;
       debug_message_fnc("MPEG_RESERVED_STREAM1\n");
       break;
-    case MPEG_PRIVATE_STREAM1: /* AC3? */
+    case MPEG_PRIVATE_STREAM1: /* AC3 */
       skip = 6 + utils_get_big_uint16(buf + 4);
       if (used_size < skip)
 	continue;
-      debug_message_fnc("MPEG_PRIVATE_STREAM1\n");
+      debug_message_fnc("MPEG_PRIVATE_STREAM1 (AC3)\n");
       break;
     case MPEG_PADDING:
       skip = 6 + utils_get_big_uint16(buf + 4);
