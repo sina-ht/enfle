@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 16 21:11:04 2001.
- * $Id: normal.c,v 1.30 2001/04/18 05:33:50 sian Exp $
+ * Last Modified: Thu Apr 19 16:01:15 2001.
+ * $Id: normal.c,v 1.31 2001/04/20 08:08:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -509,7 +509,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  break;
 	}
 	if (S_ISDIR(statbuf.st_mode)) {
-	  arc = archive_create();
+	  arc = archive_create(a);
 
 	  debug_message("reading %s\n", path);
 
@@ -554,7 +554,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	}
       }
 
-      arc = archive_create();
+      arc = archive_create(a);
       if (archiver_identify(ar, eps, arc, s)) {
 
 	debug_message("Archiver identified as %s\n", arc->format);
