@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Jun 25 01:39:46 2001.
- * $Id: x11ximage.c,v 1.31 2001/06/24 16:52:26 sian Exp $
+ * Last Modified: Mon Jun 25 05:56:01 2001.
+ * $Id: x11ximage.c,v 1.32 2001/06/24 20:59:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -119,12 +119,10 @@ convert(X11XImage *xi, Image *p)
 
   if (p->if_magnified) {
     to_be_rendered = p->magnified.image;
-    bytes_per_line_s = p->magnified.bytes_per_line;
     w = p->magnified.width;
     h = p->magnified.height;
   } else {
     to_be_rendered = p->image;
-    bytes_per_line_s = p->bytes_per_line;
     w = p->width;
     h = p->height;
   }
@@ -272,9 +270,70 @@ convert(X11XImage *xi, Image *p)
   /* _GRAY -> _INDEX */
   if (p->type == _GRAY) {
     for (i = 0; i < p->ncolors; i++)
-      p->colormap[i][0] = p->colormap[i][1] = p->colormap[i][2] = 255 * i / p->ncolors;
+      p->colormap[i][0] = p->colormap[i][1] = p->colormap[i][2] = 255 * i / (p->ncolors - 1);
     p->type = _INDEX;
   }
+
+  /* _BITMAP_* -> _INDEX */
+  if (p->type == _BITMAP_LSBFirst || p->type == _BITMAP_MSBFirst) {
+    Memory *m;
+    unsigned char *s, *d, b;
+    int k, obpl, remain;
+
+    m = memory_dup(p->image);
+    s = memory_ptr(m);
+    obpl = p->bytes_per_line;
+    p->bytes_per_line = p->width;
+    p->depth = p->bits_per_pixel = 8;
+    p->ncolors = 2;
+    if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
+      fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
+    p->colormap[0][0] = p->colormap[0][1] = p->colormap[0][2] = 255;
+    p->colormap[1][0] = p->colormap[1][1] = p->colormap[1][2] = 0;
+    remain = p->width & 7;
+
+    if (p->type == _BITMAP_LSBFirst) {
+      for (j = 0; j < p->height; j++) {
+	for (i = 0; i < (p->width >> 3); i++) {
+	  b = s[i];
+	  for (k = 8; k > 0; k--) {
+	    *d++ = b & 1;
+	    b >>= 1;
+	  }
+	}
+	if (remain) {
+	  b = s[i];
+	  for (k = remain; k > 0; k--) {
+	    *d++ = b & 1;
+	    b >>= 1;
+	  }
+	}
+	s += obpl;
+      }
+    } else {
+      for (j = 0; j < p->height; j++) {
+	for (i = 0; i < (p->width >> 3); i++) {
+	  b = s[i];
+	  for (k = 8; k > 0; k--) {
+	    *d++ = (b & 0x80) ? 1 : 0;
+	    b <<= 1;
+	  }
+	}
+	if (remain) {
+	  b = s[i];
+	  for (k = remain; k > 0; k--) {
+	    *d++ = (b & 0x80) ? 1 : 0;
+	    b <<= 1;
+	  }
+	}
+	s += obpl;
+      }
+    }
+    p->type = _INDEX;
+    memory_destroy(m);
+  }
+
+  bytes_per_line_s = p->if_magnified ? p->magnified.bytes_per_line : p->bytes_per_line;
 
   if (!xi->use_xv) {
     switch (ximage->bits_per_pixel) {
