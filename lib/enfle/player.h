@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  3 04:27:31 2000.
- * $Id: player.h,v 1.6 2000/11/02 19:34:25 sian Exp $
+ * Last Modified: Sat Nov  4 04:59:29 2000.
+ * $Id: player.h,v 1.7 2000/11/04 17:31:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,11 +33,11 @@ typedef struct _player Player;
 
 struct _player {
   int (*identify)(EnflePlugins *, Movie *, Stream *);
-  PlayerStatus (*load_movie)(EnflePlugins *, VideoWindow *, VideoPlugin *, char *, Movie *, Stream *);
+  PlayerStatus (*load_movie)(EnflePlugins *, VideoWindow *, char *, Movie *, Stream *);
 };
 
 #define player_identify(l, eps, p, s) (l)->identify((eps), (p), (s))
-#define player_load_movie(l, eps, vw, vp, n, p, s) (l)->load_movie((eps), (vw), (vp), (n), (p), (s))
+#define player_load_movie(l, eps, vw, n, p, s) (l)->load_movie((eps), (vw), (n), (p), (s))
 #define player_destroy(p) if ((p)) free((p))
 
 Player *player_create(void);

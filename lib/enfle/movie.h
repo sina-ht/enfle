@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:59:55 2000.
- * $Id: movie.h,v 1.5 2000/10/20 18:13:39 sian Exp $
+ * Last Modified: Sat Nov  4 05:01:05 2000.
+ * $Id: movie.h,v 1.6 2000/11/04 17:31:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,8 +51,8 @@ struct _movie {
   char *format;
 
   /* These are callback functions which may or should be provided by UI. */
-  int (*initialize_screen)(VideoWindow *, VideoPlugin *, Movie *, int, int);
-  int (*render_frame)(VideoWindow *, VideoPlugin *, Movie *, Image *);
+  int (*initialize_screen)(VideoWindow *, Movie *, int, int);
+  int (*render_frame)(VideoWindow *, Movie *, Image *);
   int (*pause_usec)(unsigned int);
 
   /* These are methods. */
@@ -64,7 +64,7 @@ struct _movie {
   /* These are implemented by movie plugin. */
   void *(*get_screen)(Movie *);
   int (*play)(Movie *);
-  int (*play_main)(Movie *, VideoWindow *, VideoPlugin *);
+  int (*play_main)(Movie *, VideoWindow *);
   int (*pause_movie)(Movie *);
   int (*stop)(Movie *);
   void (*unload_movie)(Movie *);
@@ -72,7 +72,7 @@ struct _movie {
 
 #define movie_get_screen(m) (m)->get_screen((m))
 #define movie_play(m) (m)->play((m))
-#define movie_play_main(m, vw, vp) (m)->play_main((m), (vw), (vp))
+#define movie_play_main(m, vw) (m)->play_main((m), (vw))
 #define movie_pause(m) (m)->pause_movie((m))
 #define movie_stop(m) (m)->stop((m))
 #define movie_unload(m) (m)->unload((m))

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 31 00:08:13 2000.
- * $Id: libmpeg3.c,v 1.5 2000/10/30 16:18:27 sian Exp $
+ * Last Modified: Sat Nov  4 05:06:11 2000.
+ * $Id: libmpeg3.c,v 1.6 2000/11/04 17:32:19 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -44,7 +44,7 @@ typedef struct _libmpeg3_info {
 } LibMPEG3_info;
 
 static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, VideoPlugin *, Movie *, Stream *);
+static PlayerStatus load(VideoWindow *, Movie *, Stream *);
 
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
@@ -80,7 +80,7 @@ plugin_exit(void *p)
 /* for internal use */
 
 static PlayerStatus
-load_movie(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   LibMPEG3_info *info;
   int i, Bpp;
@@ -147,7 +147,7 @@ load_movie(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
   m->previous_frame = 0;
   m->current_frame = 0;
 
-  m->initialize_screen(vw, vp, m, m->width, m->height);
+  m->initialize_screen(vw, m, m->width, m->height);
 
   timer_start(m->timer);
 
@@ -193,7 +193,7 @@ play(Movie *m)
 }
 
 static PlayerStatus
-play_main(Movie *m, VideoWindow *vw, VideoPlugin *vp)
+play_main(Movie *m, VideoWindow *vw)
 {
   int decode_error;
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
@@ -265,7 +265,7 @@ play_main(Movie *m, VideoWindow *vw, VideoPlugin *vp)
 
   debug_message("%3.2f fps\r", fps);
 
-  m->render_frame(vw, vp, m, p);
+  m->render_frame(vw, m, p);
   m->previous_frame = m->current_frame;
 
   if (fps <= m->framerate) {
@@ -377,7 +377,7 @@ identify(Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
+load(VideoWindow *vw, Movie *m, Stream *st)
 {
   debug_message("libmpeg3 player: load() called\n");
 
@@ -398,5 +398,5 @@ load(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, vp, m, st);
+  return load_movie(vw, m, st);
 }

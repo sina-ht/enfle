@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:57:50 2000.
- * $Id: ungif.c,v 1.8 2000/10/20 18:11:50 sian Exp $
+ * Last Modified: Sat Nov  4 04:58:29 2000.
+ * $Id: ungif.c,v 1.9 2000/11/04 17:32:19 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -51,7 +51,7 @@ typedef enum {
 } Disposal;
 
 static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, VideoPlugin *, Movie *, Stream *);
+static PlayerStatus load(VideoWindow *, Movie *, Stream *);
 
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
@@ -95,7 +95,7 @@ ungif_input_func(GifFileType *GifFile, GifByteType *p, int s)
 }
 
 static PlayerStatus
-load_movie(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   int i, size;
   UNGIF_info *info;
@@ -132,7 +132,7 @@ load_movie(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
   m->status = _PLAY;
   m->current_frame = 0;
 
-  m->initialize_screen(vw, vp, m, m->width, m->height);
+  m->initialize_screen(vw, m, m->width, m->height);
 
   return PLAY_OK;
 }
@@ -169,7 +169,7 @@ play(Movie *m)
 }
 
 static PlayerStatus
-play_main(Movie *m, VideoWindow *vw, VideoPlugin *vp)
+play_main(Movie *m, VideoWindow *vw)
 {
   int i, j, extcode, image_loaded = 0;
   int if_transparent = 0, transparent_index = 0, delay = 0, image_disposal = 0;
@@ -359,7 +359,7 @@ play_main(Movie *m, VideoWindow *vw, VideoPlugin *vp)
     }
   } while (!image_loaded);
 
-  m->render_frame(vw, vp, m, p);
+  m->render_frame(vw, m, p);
   if (delay)
     m->pause_usec(delay * 10000);
 
@@ -474,7 +474,7 @@ identify(Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
+load(VideoWindow *vw, Movie *m, Stream *st)
 {
   debug_message("ungif player: load() called\n");
 
@@ -495,5 +495,5 @@ load(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, vp, m, st);
+  return load_movie(vw, m, st);
 }
