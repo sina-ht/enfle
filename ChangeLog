@@ -1,3 +1,43 @@
+2001-12-26  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h, lib/X11/x11.c, lib/X11/x11ximage.c,
+	lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/demultiplexer_mpeg.c,
+	lib/demultiplexer/libriff.c, lib/dllloader/kernel32.c,
+	lib/dllloader/mm.c, lib/dllloader/pe_image.c,
+	lib/dllloader/user32.c, lib/enfle/archive.c,
+	lib/enfle/enfle-plugins.c, lib/enfle/loader.c, lib/enfle/memory.c,
+	lib/enfle/player.c, lib/enfle/spi.c, lib/utils/converter.c,
+	lib/utils/dlist.c, lib/utils/libconfig.c,
+	plugins/archiver/tar/tar.c, plugins/audio/alsa/alsa.c,
+	plugins/audio/esd/esd.c, plugins/audio/oss/oss.c,
+	plugins/effect/rotate/rotate.c, plugins/loader/png/png.c,
+	plugins/loader/pnm/pnm.c, plugins/player/avifile/avifile.cpp,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.c,
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
+	plugins/player/mpglib/mpglib.c,
+	plugins/player/opendivx/opendivx.c, plugins/player/ungif/ungif.c,
+	plugins/saver/glic/arithmodel_order_zero.c,
+	plugins/saver/glic/arithmodel_utils.c, plugins/saver/glic/glic.c,
+	plugins/saver/glic/vmpm_decompose.c,
+	plugins/saver/glic/vmpm_decompose_esc.c,
+	plugins/saver/glic/vmpm_decompose_escb.c,
+	plugins/saver/glic/vmpm_decompose_escc.c,
+	plugins/saver/glic/vmpm_decompose_escfirst.c,
+	plugins/saver/glic/vmpm_decompose_highlow.c,
+	plugins/saver/glic/vmpm_decompose_highlow_esc.c,
+	plugins/saver/glic/vmpm_decompose_highlow_escb.c,
+	plugins/saver/glic/vmpm_decompose_highlow_rle.c,
+	plugins/saver/glic/vmpm_decompose_normal.c,
+	plugins/saver/glic/vmpm_decompose_recur.c,
+	plugins/saver/glic/vmpm_decompose_recur2.c,
+	plugins/saver/glic/vmpm_decompose_recur3.c,
+	plugins/saver/png/png.c, plugins/ui/convert/convert.c,
+	plugins/ui/normal/normal.c, plugins/ui/wallpaper/wallpaper.c,
+	plugins/video/Xlib/Xlib.c: Adapted for gcc-3.0.3. __FUNCTION__ is
+	regarded as a varible.
+
 2001-12-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/enfle-plugins.c: Show error message when plugin_load()
