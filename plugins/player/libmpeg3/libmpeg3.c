@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 15 21:05:51 2000.
- * $Id: libmpeg3.c,v 1.2 2000/10/15 12:28:04 sian Exp $
+ * Last Modified: Mon Oct 16 06:04:34 2000.
+ * $Id: libmpeg3.c,v 1.3 2000/10/16 19:33:08 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -23,7 +23,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA */
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,14 +32,14 @@
 
 #include "common.h"
 
+#include "timer.h"
+#include "timer_gettimeofday.h"
 #include "player-plugin.h"
 
 typedef struct _libmpeg3_info {
   mpeg3_t *file;
   int nstreams;
   int nstream;
-  int nframes;
-  float framerate;
   unsigned char **buffer;
 } LibMPEG3_info;
 
@@ -51,7 +52,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.1",
+  description: "LibMPEG3 Player plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -82,7 +83,8 @@ static PlayerStatus
 load_movie(UIData *uidata, Movie *m, Stream *st)
 {
   LibMPEG3_info *info;
-  int i;
+  UIScreen *uiscreen = uidata->screen;
+  int i, Bpp;
 
   if ((info = calloc(1, sizeof(LibMPEG3_info))) == NULL) {
     show_message("LibMPEG3: play_movie: No enough memory.\n");
@@ -96,6 +98,7 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
 
   /* can set how many CPUs you want to use. */
   /* mpeg3_set_cpus(info->file, 2); */
+  /* mpeg3_set_mmx(info->file, 1); */
 
   if (!mpeg3_has_video(info->file)) {
     show_message("This stream is audio only. Not supported(so far).\n");
@@ -116,11 +119,11 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
 
   m->width = mpeg3_video_width(info->file, info->nstream);
   m->height = mpeg3_video_height(info->file, info->nstream);
-  info->framerate = mpeg3_frame_rate(info->file, 0);
-  info->nframes = mpeg3_video_frames(info->file, 0);
+  m->framerate = mpeg3_frame_rate(info->file, 0);
+  m->num_of_frames = mpeg3_video_frames(info->file, 0);
 
   debug_message("libmpeg3 player: (%d x %d) %f fps %d frames\n",
-		m->width, m->height, info->framerate, info->nframes);
+		m->width, m->height, m->framerate, m->num_of_frames);
 
   /* rewind stream */
   mpeg3_seek_percentage(info->file, 0);
@@ -129,26 +132,29 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
        (unsigned char **)calloc(m->height, sizeof(unsigned char *))) == NULL)
     goto error;
 
+  Bpp = uiscreen->bits_per_pixel >> 3;
   /* extra 4 bytes are needed for MMX routine */
   if ((info->buffer[0] =
-       (unsigned char *)malloc(m->width * m->height * 4 + 4)) == NULL)
+       (unsigned char *)malloc(m->width * m->height * Bpp + 4)) == NULL)
     goto error;
-  memset(info->buffer[0], 0, m->width * m->height * 4 + 4);
+  memset(info->buffer[0], 0, m->width * m->height * Bpp + 4);
 
   for (i = 1; i < m->height; i++)
-    info->buffer[i] = info->buffer[0] + i * m->width * 4;
+    info->buffer[i] = info->buffer[0] + i * m->width * Bpp;
 
   m->movie_private = (void *)info;
   m->st = st;
   m->status = _PLAY;
-  m->nthframe = 0;
+  m->previous_frame = 0;
+  m->current_frame = 0;
 
   m->initialize_screen(uidata, m, m->width, m->height);
+
+  timer_start(m->timer);
 
   return PLAY_OK;
 
  error:
-  mpeg3_close(info->file);
   free(info);
   return PLAY_ERROR;
 }
@@ -176,6 +182,9 @@ play(Movie *m)
     return pause_movie(m);
   case _STOP:
     m->status = _PLAY;
+    m->current_frame = 0;
+    m->previous_frame = 0;
+    timer_start(m->timer);
     return PLAY_OK;
   case _UNLOADED:
     return PLAY_ERROR;
@@ -189,7 +198,10 @@ play_main(Movie *m, UIData *uidata)
 {
   int decode_error;
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
+  UIScreen *uiscreen = uidata->screen;
   Image *p;
+  int rendering_type, dropframes;
+  float time_elapsed, fps;
 
   switch (m->status) {
   case _PLAY:
@@ -205,30 +217,73 @@ play_main(Movie *m, UIData *uidata)
 
   p = image_create();
 
+  p->width  = m->width;
+  p->height = m->height;
+
+  switch (uiscreen->bits_per_pixel) {
+  case 32:
+    rendering_type = MPEG3_RGBA8888;
+    p->type = _RGBA32;
+    p->depth = 24;
+    p->bytes_per_line = m->width * 4;
+    p->bits_per_pixel = 32;
+    break;
+  case 24:
+    rendering_type = MPEG3_RGB888;
+    p->type = _RGB24;
+    p->depth = 24;
+    p->bytes_per_line = m->width * 3;
+    p->bits_per_pixel = 24;
+    break;
+  case 16:
+    rendering_type = MPEG3_RGB565;
+    p->depth = 16;
+    p->type = _BGR_WITH_BITMASK;
+    p->bytes_per_line = m->width * 2;
+    p->bits_per_pixel = 16;
+    break;
+  default:
+    show_message("Cannot render bpp %d\n", uiscreen->bits_per_pixel);
+    rendering_type = MPEG3_RGBA8888;
+    break;
+  }
+
   decode_error = (mpeg3_read_frame(info->file, info->buffer,
 				   0, 0,
 				   m->width, m->height,
 				   m->width, m->height,
-				   MPEG3_RGBA8888, info->nstream) == -1) ? 0 : 1;
+				   rendering_type, info->nstream) == -1) ? 0 : 1;
 
-  p->width  = m->width;
-  p->height = m->height;
-  p->type = _RGBA32;
-  p->depth = 24;
-  p->bytes_per_line = m->width * 4;
-  p->bits_per_pixel = 32;
   p->next = NULL;
   p->image_size = p->bytes_per_line * p->height;
   p->image = info->buffer[0];
 
-  m->nthframe++;
+  m->current_frame++;
+
+  timer_pause(m->timer);
+  time_elapsed = timer_get_milli(m->timer);
+  timer_restart(m->timer);
+  fps = m->current_frame * 1000 / time_elapsed;
+
+  debug_message("%3.2f fps\r", fps);
 
   m->render_frame(uidata, m, p);
-  p->image = NULL;
+  m->previous_frame = m->current_frame;
 
+  if (fps <= m->framerate) {
+    dropframes = m->framerate * time_elapsed / 1000 - m->current_frame;
+    if (dropframes && !movie_get_play_every_frame(m)) {
+      mpeg3_drop_frames(info->file, dropframes, info->nstream);
+      m->current_frame += dropframes;
+
+      debug_message("\ndropped %d frame\n", dropframes);
+    }
+  }
+
+  p->image = NULL;
   image_destroy(p);
 
-  if (!decode_error || m->nthframe == info->nframes)
+  if (!decode_error || m->current_frame >= m->num_of_frames)
     stop_movie(m);
 
   return PLAY_OK;
@@ -240,9 +295,11 @@ pause_movie(Movie *m)
   switch (m->status) {
   case _PLAY:
     m->status = _PAUSE;
+    timer_pause(m->timer);
     return PLAY_OK;
   case _PAUSE:
     m->status = _PLAY;
+    timer_restart(m->timer);
     return PLAY_OK;
   case _STOP:
     return PLAY_OK;
@@ -272,7 +329,7 @@ stop_movie(Movie *m)
   }
 
   mpeg3_seek_percentage(info->file, 0);
-  m->nthframe = 0;
+  timer_stop(m->timer);
 
   return PLAY_OK;
 }
@@ -282,15 +339,17 @@ unload_movie(Movie *m)
 {
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
-  if (info->buffer[0])
-    free(info->buffer[0]);
-  if (info->buffer)
-    free(info->buffer);
+  if (info) {
+    if (info->buffer[0])
+      free(info->buffer[0]);
+    if (info->buffer)
+      free(info->buffer);
 
-  /* close */
-  mpeg3_close(info->file);
+    /* close */
+    mpeg3_close(info->file);
 
-  free(info);
+    free(info);
+  }
 }
 
 /* methods */

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 12 19:21:45 2000.
- * $Id: movie.h,v 1.3 2000/10/12 15:47:02 sian Exp $
+ * Last Modified: Mon Oct 16 06:04:35 2000.
+ * $Id: movie.h,v 1.4 2000/10/16 19:33:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,6 +27,8 @@ typedef struct _movie Movie;
 
 #include "image.h"
 #include "stream.h"
+#include "timer.h"
+#include "timer_gettimeofday.h"
 #include "ui-plugin.h"
 
 typedef enum {
@@ -39,9 +41,12 @@ typedef enum {
 struct _movie {
   Stream *st;
   MovieStatus status;
+  Timer *timer;
   void *movie_private;
   int width, height;
-  int nthframe;
+  int current_frame, previous_frame, num_of_frames;
+  float framerate;
+  int play_every_frame;
   char *format;
 
   /* These are callback functions which may or should be provided by UI. */
@@ -49,8 +54,10 @@ struct _movie {
   int (*render_frame)(UIData *, Movie *, Image *);
   int (*pause_usec)(unsigned int);
 
-  /* This is a method. */
+  /* These are methods. */
   void (*unload)(Movie *);
+  void (*set_play_every_frame)(Movie *, int);
+  int (*get_play_every_frame)(Movie *);
   void (*destroy)(Movie *);
 
   /* These are implemented by movie plugin. */
@@ -68,6 +75,8 @@ struct _movie {
 #define movie_pause(m) (m)->pause_movie((m))
 #define movie_stop(m) (m)->stop((m))
 #define movie_unload(m) (m)->unload((m))
+#define movie_set_play_every_frame(m, f) (m)->set_play_every_frame((m), (f))
+#define movie_get_play_every_frame(m) (m)->get_play_every_frame((m))
 #define movie_destroy(m) (m)->destroy((m))
 
 Movie *movie_create(void);

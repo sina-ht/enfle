@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 12 19:11:49 2000.
- * $Id: movie.c,v 1.3 2000/10/12 15:47:02 sian Exp $
+ * Last Modified: Mon Oct 16 05:55:35 2000.
+ * $Id: movie.c,v 1.4 2000/10/16 19:33:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,8 @@ static int render_frame(UIData *, Movie *, Image *);
 static int pause_usec(unsigned int);
 
 static void unload(Movie *);
+static void set_play_every_frame(Movie *, int);
+static int get_play_every_frame(Movie *);
 static void destroy(Movie *);
 
 static Movie template = {
@@ -46,6 +48,8 @@ static Movie template = {
   render_frame: render_frame,
   pause_usec: pause_usec,
   unload: unload,
+  set_play_every_frame: set_play_every_frame,
+  get_play_every_frame: get_play_every_frame,
   destroy: destroy
 };
 
@@ -57,6 +61,8 @@ movie_create(void)
   if ((m = calloc(1, sizeof(Movie))) == NULL)
     return NULL;
   memcpy(m, &template, sizeof(Movie));
+
+  m->timer = timer_create(timer_gettimeofday());
 
   return m;
 }
@@ -82,7 +88,6 @@ pause_usec(unsigned int usec)
 {
   struct timeval tv;
 
-  /* wait usec, if possible... */
   tv.tv_sec  = usec / 1000000;
   tv.tv_usec = usec % 1000000;
   select(0, NULL, NULL, NULL, &tv);
@@ -101,8 +106,22 @@ unload(Movie *m)
 }
 
 static void
+set_play_every_frame(Movie *m, int f)
+{
+  m->play_every_frame = f;
+}
+
+static int
+get_play_every_frame(Movie *m)
+{
+  return m->play_every_frame;
+}
+
+static void
 destroy(Movie *m)
 {
   unload(m);
+  if (m->timer)
+    timer_destroy(m->timer);
   free(m);
 }
