@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 30 06:25:39 2001.
- * $Id: pe_image.c,v 1.16 2001/10/05 04:07:00 sian Exp $
+ * Last Modified: Fri Oct  5 15:36:43 2001.
+ * $Id: pe_image.c,v 1.17 2001/10/05 11:56:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,11 +41,12 @@
 # include <machine/segments.h>
 # include <machine/sysarch.h>
 #else
-# error Sorry, LDT is not supported.
+# error Sorry, LDT is not supported. Please submit a patch.
 #endif
 
 #include "pe_image.h"
 #include "utils/misc.h"
+#include "utils/libstring.h"
 
 #include "w32api.h"
 #include "module.h"
@@ -60,7 +61,7 @@
 #include "common.h"
 
 static int load(PE_image *, char *);
-static void *resolve(PE_image *, const char *symbolname);
+static void *resolve(PE_image *, const char *);
 static void destroy(PE_image *);
 
 static PE_image template = {
@@ -82,6 +83,7 @@ peimage_create(void)
   if ((p = calloc(1, sizeof(PE_image))) == NULL)
     return NULL;
   memcpy(p, &template, sizeof(PE_image));
+  debug_message("PE_image = %p\n", p);
 
   return p;
 }
@@ -242,6 +244,72 @@ uninstall_fs(void)
 }
 #endif
 
+/*
+0x0001 = Cursor
+0x0002 = Bitmap
+0x0003 = Icon
+0x0004 = Menu
+0x0005 = Dialog
+0x0006 = String Table
+0x0007 = Font Directory
+0x0008 = Font
+0x0009 = Accelerators Table
+0x000A = RC Data (custom binary data)
+0x000B = Message table
+0x000C = Group Cursor
+0x000E = Group Icon
+0x0010 = Version Information
+0x0011 = Dialog Include
+0x0013 = Plug'n'Play
+0x0014 = VXD
+0x0015 = Animated Cursor
+0x2002 = Bitmap (new version)
+0x2004 = Menu (new version)
+0x2005 = Dialog (new version)
+*/
+static void
+traverse_directory(PE_image *p, IMAGE_RESOURCE_DIRECTORY *ird, String *s)
+{
+  unsigned int ne = ird->NumberOfNamedEntries;
+  unsigned int ie = ird->NumberOfIdEntries;
+  unsigned int i;
+
+  debug_message(">>>%s(%d named, %d id)\n", string_get(s), ne, ie);
+
+  for (i = 0; i < ne + ie; i++) {
+    IMAGE_RESOURCE_DIRECTORY_ENTRY *irde = (IMAGE_RESOURCE_DIRECTORY_ENTRY *)((char *)ird + sizeof(*ird) + sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY) * i);
+
+    if (irde->Id & 0x80000000) {
+      debug_message("Named Id: %d offset: %x\n", irde->Id & 0x7fffffff, irde->OffsetToData);
+    } else {
+      debug_message("Id: %d offset: %x\n", irde->Id, irde->OffsetToData);
+    }
+
+    if (irde->OffsetToData & 0x80000000) {
+      IMAGE_RESOURCE_DIRECTORY *new_ird;
+      String *new_s = string_dup(s);
+
+      new_ird = (IMAGE_RESOURCE_DIRECTORY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress + (irde->OffsetToData & 0x7fffffff)];
+      string_catf(new_s, "/0x%X", irde->Id);
+      traverse_directory(p, new_ird, new_s);
+      string_destroy(new_s);
+    } else {
+      IMAGE_RESOURCE_DATA_ENTRY *de = (IMAGE_RESOURCE_DATA_ENTRY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress + irde->OffsetToData];
+      void *data;
+
+      debug_message("%X %d\n", de->OffsetToData, de->Size);
+      if ((data = malloc(de->Size)) == NULL) {
+	show_message("No enough memory for resource.\n");
+	exit(-1);
+      }
+      memcpy(data, &p->image[de->OffsetToData], de->Size);
+      hash_define(p->resource, string_get(s), string_length(s), data);
+    }
+  }
+
+  debug_message("<<<%s\n", string_get(s));
+}
+
 /* methods */
 
 static int
@@ -348,7 +416,7 @@ load(PE_image *p, char *path)
 
   /* export symbols */
   debug_message("-- Exported Symbols\n");
-  p->export_symbols = hash_create(1024);
+  p->export_symbols = hash_create(PE_EXPORT_HASH_SIZE);
   if (p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size) {
     IMAGE_EXPORT_DIRECTORY *ied = (IMAGE_EXPORT_DIRECTORY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress];
     Symbol_info *export_syminfo;
@@ -429,15 +497,15 @@ load(PE_image *p, char *path)
 
   /* resource */
   debug_message("-- Resource\n");
+  p->resource = hash_create(PE_RESOURCE_HASH_SIZE);
   if (p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].Size) {
+    String *s;
     IMAGE_RESOURCE_DIRECTORY *ird = (IMAGE_RESOURCE_DIRECTORY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress];
-    unsigned int ne = ird->NumberOfNamedEntries;
-    unsigned int ie = ird->NumberOfIdEntries;
-    debug_message("%d named entries, %d id entries.\n", ne, ie);
-    for (i = ne; i < ne + ie; i++) {
-      IMAGE_RESOURCE_DIRECTORY_ENTRY *irde = (IMAGE_RESOURCE_DIRECTORY_ENTRY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress + sizeof(*ird) + sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY) * i];
-      debug_message("Id: %d offset: %x\n", irde->Id, irde->OffsetToData);
-    }
+
+    s = string_create();
+    string_set(s, "");
+    traverse_directory(p, ird, s);
+    string_destroy(s);
   }
 
   /* relocation */
