@@ -1,10 +1,10 @@
 dnl acinclude.m4 -- Enfle local m4 macro
 dnl
-dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
+dnl (C)Copyright 1999-2003 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed Feb  5 23:52:06 2003.
-dnl $Id: acinclude.m4,v 1.4 2003/02/05 15:23:35 sian Exp $
+dnl Last Modified: Sun Dec  7 02:14:58 2003.
+dnl $Id: acinclude.m4,v 1.5 2003/12/07 04:23:52 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -87,19 +87,4 @@ AC_DEFUN([ENFLE_MAX_ALIGN], [
   else
     AC_MSG_RESULT(no support)
   fi
-])
-
-AC_DEFUN([AM_WITH_DMALLOCTH], [
-  AC_MSG_CHECKING(if malloc debugging with threading is wanted)
-  AC_ARG_WITH(dmallocth,
-    [  --with-dmallocth        use dmalloc with threading.],
-    [ if test "$withval" = "yes"; then
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(WITH_DMALLOCTH, 1,
-                  [Define if use the dmalloc debugging malloc package with threading])
-        LIBS="$LIBS -ldmallocth"
-      else
-        AC_MSG_RESULT(no)
-      fi
-    ], [AC_MSG_RESULT(no)])
 ])
