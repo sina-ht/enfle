@@ -4,8 +4,8 @@
  * Adapted for newer version by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:08:40 2004.
- * $Id: arc.c,v 1.4 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sat Oct 16 01:57:14 2004.
+ * $Id: arc.c,v 1.5 2005/03/06 03:26:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -78,6 +78,7 @@ arc_open(Archive *arc, Stream *st, char *path)
 
   strcpy(fullpath, arc->path);
   strcat(fullpath, path);
+
   url = url_arc_open(fullpath);
   if(url == NULL){
     err_message("Can't open: %s\n", fullpath);
@@ -117,9 +118,16 @@ arc_destroy(Archive *arc)
 /* methods */
 DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
 {
-  // debug_message_fnc("%s\n", st->path);
-  if (strchr(st->path, '#') != NULL) {
-    return OPEN_NOT;
+  char *tmp;
+
+  debug_message_fnc("%s\n", st->path);
+  if ((tmp = strchr(st->path, '#')) != NULL) {
+    debug_message_fnc("tmp %p, path %p\n", tmp, st->path);
+    if (tmp != st->path) {
+      tmp--;
+     if (*tmp != '/')
+       return OPEN_NOT;
+    }
   }
 
   if (get_archive_type(st->path) < 0)
@@ -138,9 +146,9 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
   filesbuf[0] = st->path;
   filesbuf[1] = NULL;
   files = expand_archive_names(&nfiles, filesbuf);
+  //debug_message_fnc("path = %s, files = %p\n", st->path, files);
   if (files == NULL)
     return OPEN_NOT;
-  //debug_message_fnc("path = %s\n",st->path);
 
   dl = dlist_create();
   for (i = 0; i < nfiles; i++) {
