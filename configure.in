@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Aug 26 10:08:31 2001.
-dnl $Id: configure.in,v 1.83 2001/08/26 01:08:50 sian Exp $
+dnl Last Modified: Sun Aug 26 10:17:26 2001.
+dnl $Id: configure.in,v 1.84 2001/08/27 06:29:57 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -120,7 +120,7 @@ available_opendivx=no
 if test "$available_pthread" = "yes"; then
   AC_CHECK_HEADER(decore.h, [
     AC_CHECK_LIB(divxdecore, decore, [
-      available_opendivx=yes; LIBADD_LIBDIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD"; ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
+      available_opendivx=yes; LIBADD_DIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD"; ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
 fi
 AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_opendivx" = "yes")
 AC_SUBST(LIBADD_DIVXDECORE)
