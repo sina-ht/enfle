@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Jun 16 04:39:07 2001.
- * $Id: x11ximage.c,v 1.23 2001/06/15 19:48:15 sian Exp $
+ * Last Modified: Mon Jun 18 02:25:10 2001.
+ * $Id: x11ximage.c,v 1.24 2001/06/17 20:55:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,7 +123,14 @@ convert(X11XImage *xi, Image *p)
     switch (memory_type(p->rendered.image)) {
     case _NORMAL:
 #ifdef USE_XV
-      if (p->type == _YUV420P || p->type == _YVU420P) {
+      if (p->type == _YUV422 || p->type == _YVU422) {
+	if (xi->x11->xv.capable_format & XV_YUY2_PACKED_FLAG) {
+	  xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[XV_YUY2_PACKED], memory_ptr(p->rendered.image), w, h);
+	  xi->use_xv = 1;
+	} else {
+	  fatal(4, "Image provided in YUV422 or YVU422, but Xv cannot display...\n");
+	}
+      } else if (p->type == _YUV420P || p->type == _YVU420P) {
 	if (xi->x11->xv.capable_format & XV_YV12_PLANAR_FLAG) {
 	  xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[XV_YV12_PLANAR], memory_ptr(p->rendered.image), w, h);
 	  xi->use_xv = 1;
@@ -143,7 +150,14 @@ convert(X11XImage *xi, Image *p)
     case _SHM:
 #ifdef USE_SHM
 #ifdef USE_XV
-      if (p->type == _YUV420P || p->type == _YVU420P) {
+      if (p->type == _YUV422 || p->type == _YVU422) {
+	if (xi->x11->xv.capable_format & XV_YUY2_PACKED_FLAG) {
+	  xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[XV_YUY2_PACKED], NULL, w, h, &xi->shminfo);
+	  xi->use_xv = 1;
+	} else {
+	  fatal(4, "Image provided in YUV422 or YVU422, but Xv cannot display...\n");
+	}
+      } else if (p->type == _YUV420P || p->type == _YVU420P) {
 	if (xi->x11->xv.capable_format & XV_YV12_PLANAR_FLAG) {
 	  xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[XV_YV12_PLANAR], NULL, w, h, &xi->shminfo);
 	  xi->use_xv = 1;
