@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 22:09:03 2000.
- * $Id: Xlib.c,v 1.9 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Mon Dec  4 23:06:59 2000.
+ * $Id: Xlib.c,v 1.10 2000/12/05 15:51:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -275,7 +275,7 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
     _BGR24, _RGB24,
     _BGRA32, _RGBA32, _ABGR32, _ARGB32,
     _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
-  ImageType *prefer_direct, *prefer;
+  ImageType *prefer_direct = NULL, *prefer = NULL;
   int i;
 
   switch (vw->bits_per_pixel) {
