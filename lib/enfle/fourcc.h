@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 29 22:51:57 2004.
- * $Id: fourcc.h,v 1.10 2004/03/31 14:32:56 sian Exp $
+ * Last Modified: Sat Apr 10 17:58:10 2004.
+ * $Id: fourcc.h,v 1.11 2004/04/12 04:14:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -91,6 +91,7 @@
 // WMV
 #define FCC_WMV1 FCC('W', 'M', 'V', '1')
 #define FCC_WMV2 FCC('W', 'M', 'V', '2')
+#define FCC_WMV3 FCC('W', 'M', 'V', '3')
 
 // DVVIDEO
 #define FCC_dvsd FCC('d', 'v', 's', 'd')
