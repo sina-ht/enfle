@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb 25 00:49:32 2004.
- * $Id: mpeg.c,v 1.3 2004/02/24 15:55:03 sian Exp $
+ * Last Modified: Thu Mar  4 00:24:23 2004.
+ * $Id: mpeg.c,v 1.4 2004/03/03 15:45:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -352,13 +352,13 @@ demux_main(void *arg)
   int nvstream = 0, nastream = 0;
   int v_or_a;
 
+  if (demux->running)
+    pthread_exit((void *)0);
+
   if ((buf = malloc(DEMULTIPLEXER_MPEG_BUFFER_SIZE)) == NULL)
     pthread_exit((void *)0);
   used_size = 0;
   read_total = 0;
-
-  if (demux->running)
-    pthread_exit((void *)0);
 
   demux->running = 1;
   do {
