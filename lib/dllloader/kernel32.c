@@ -1,10 +1,10 @@
 /*
  * kernel32.c -- implementation of routines in kernel32.dll
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr  9 00:01:18 2004.
- * $Id: kernel32.c,v 1.24 2004/04/12 04:13:13 sian Exp $
+ * Last Modified: Sun Apr 18 14:47:01 2004.
+ * $Id: kernel32.c,v 1.25 2004/04/18 06:24:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,8 +40,8 @@
 #define REQUIRE_UNISTD_H
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #include "common.h"
+#include "utils/cpucaps.h"
 
 #ifdef USE_PTHREAD
 #  include <pthread.h>
@@ -175,6 +175,8 @@ DECLARE_W32API(VOID, GetStartupInfoA, (LPSTARTUPINFOA));
 DECLARE_W32API(BOOL, GetComputerNameA, (LPSTR, LPDWORD));
 DECLARE_W32API(BOOL, GetComputerNameW, (LPWSTR, LPDWORD));
 DECLARE_W32API(VOID, GetSystemInfo, (LPSYSTEM_INFO));
+DECLARE_W32API(BOOL, QueryPerformanceCounter, (PLARGE_INTEGER));
+DECLARE_W32API(BOOL, QueryPerformanceFrequency, (PLARGE_INTEGER));
 /* codepage */
 DECLARE_W32API(INT, GetLocaleInfoA, (LCID, LCTYPE, LPSTR, INT));
 DECLARE_W32API(UINT, GetACP, (void));
@@ -192,6 +194,11 @@ DECLARE_W32API(VOID, GetLocalTime, (LPSYSTEMTIME));
 DECLARE_W32API(VOID, GetSystemTimeAsFileTime, (LPFILETIME));
 DECLARE_W32API(VOID, Sleep, (DWORD));
 DECLARE_W32API(int, GetTickCount, (void));
+/* event */
+DECLARE_W32API(HANDLE, CreateEventA, (LPSECURITY_ATTRIBUTES, BOOL, BOOL, LPCSTR));
+DECLARE_W32API(BOOL, SetEvent, (HANDLE));
+DECLARE_W32API(BOOL, ResetEvent, (HANDLE));
+DECLARE_W32API(DWORD, WaitForSingleObject, (HANDLE, DWORD));
 /* miscellaneous */
 DECLARE_W32API(DWORD, GetLastError, (void));
 DECLARE_W32API(void, SetLastError, (DWORD));
@@ -306,6 +313,8 @@ static Symbol_info symbol_infos[] = {
   { "GetComputerNameA", GetComputerNameA },
   { "GetComputerNameW", GetComputerNameW },
   { "GetSystemInfo", GetSystemInfo },
+  { "QueryPerformanceCounter", QueryPerformanceCounter },
+  { "QueryPerformanceFrequency", QueryPerformanceFrequency },
   { "GetLocaleInfoA", GetLocaleInfoA },
   { "GetACP", GetACP },
   { "GetOEMCP", GetOEMCP },
@@ -321,12 +330,48 @@ static Symbol_info symbol_infos[] = {
   { "GetSystemTimeAsFileTime", GetSystemTimeAsFileTime },
   { "Sleep", Sleep },
   { "GetTickCount", GetTickCount },
+  { "CreateEventA", CreateEventA },
+  { "SetEvent", SetEvent },
+  { "ResetEvent", ResetEvent },
+  { "WaitForSingleObject", WaitForSingleObject },
   { "GetLastError", GetLastError },
   { "SetLastError", SetLastError },
   { "GetVersion", GetVersion },
   { "GetVersionExA", GetVersionExA },
   { NULL, unknown_symbol }
 };
+
+/* internal handle implementation */
+
+typedef enum __handle_type {
+  __HANDLE_FILE = 0,
+  __HANDLE_THREAD,
+  __HANDLE_EVENT
+} HandleType;
+
+typedef struct __handle {
+  HandleType type;
+  void *data;
+} Handle;
+
+static HANDLE
+__create_handle(HandleType type, void *data)
+{
+  Handle *h;
+
+  if ((h = calloc(1, sizeof(*h))) == NULL)
+    return NULL;
+  h->type = type;
+  h->data = data;
+
+  return h;
+}
+
+static void
+__destroy_handle(Handle *h)
+{
+  free(h);
+}
 
 /* file related */
 
@@ -336,9 +381,11 @@ DEFINE_W32API(HANDLE, CreateFileA,
 	       DWORD attributes, HANDLE template))
 {
   HANDLE handle;
+  FILE *fp;
 
   debug_message_fn("(%s): ", filename);
-  handle = (HANDLE)fopen(filename, "rb");
+  fp = fopen(filename, "rb");
+  handle = (fp == NULL) ? NULL : __create_handle(__HANDLE_FILE, fp);
   debug_message("%p\n", handle);
 
   return handle;
@@ -349,9 +396,11 @@ DEFINE_W32API(HANDLE, CreateFileW,
 	       LPSECURITY_ATTRIBUTES sa, DWORD creation, DWORD attributes, HANDLE template))
 {
   HANDLE handle;
+  FILE *fp;
 
   debug_message_fn("(%s): ", (char *)filename);
-  handle = (HANDLE)fopen((char *)filename, "rb");
+  fp = fopen((char *)filename, "rb");
+  handle = (fp == NULL) ? NULL : __create_handle(__HANDLE_FILE, fp);
   debug_message("%p\n", handle);
 
   return handle;
@@ -383,7 +432,7 @@ DEFINE_W32API(BOOL, ReadFile,
     *bytes_read = 0;
   if (bytes_to_read == 0)
     return TRUE;
-  _bytes_read = fread(buffer, 1, bytes_to_read, (FILE *)handle);
+  _bytes_read = fread(buffer, 1, bytes_to_read, (FILE *)((Handle *)handle)->data);
   *bytes_read = (DWORD)_bytes_read;
 
   return (_bytes_read >= 0) ? TRUE : FALSE;
@@ -612,18 +661,22 @@ DEFINE_W32API(BOOL, GetDiskFreeSpaceExW,
 DEFINE_W32API(HANDLE, GetStdHandle,
 	      (DWORD std))
 {
+  static Handle *stdin_handle = NULL, *stdout_handle = NULL, *stderr_handle = NULL;
   debug_message_fn("(%d): ", std);
 
   switch (std) {
   case STD_INPUT_HANDLE:
-    debug_message("stdin returned.\n");
-    return (HANDLE)stdin;
+    if (stdin_handle == NULL)
+      stdin_handle = __create_handle(__HANDLE_FILE, stdin);
+    return (HANDLE)stdin_handle;
   case STD_OUTPUT_HANDLE:
-    debug_message("stdout returned.\n");
-    return (HANDLE)stdout;
+    if (stdout_handle == NULL)
+      stdout_handle = __create_handle(__HANDLE_FILE, stdout);
+    return (HANDLE)stdout_handle;
   case STD_ERROR_HANDLE:
-    debug_message("stderr returned.\n");
-    return (HANDLE)stderr;
+    if (stderr_handle == NULL)
+      stderr_handle = __create_handle(__HANDLE_FILE, stderr);
+    return (HANDLE)stderr_handle;
   default:
     debug_message("unknown.\n");
     break;
@@ -647,14 +700,27 @@ DEFINE_W32API(UINT, SetHandleCount,
 DEFINE_W32API(BOOL, CloseHandle,
 	      (HANDLE handle))
 {
-  /* XXX: Nasty workaround... */
-  static HANDLE prev = NULL;
+  Handle *h = handle;
 
-  debug_message_fn("(%p)\n", handle);
-  if (prev == handle)
+  if (h == NULL)
     return TRUE;
-  prev = handle;
-  fclose((FILE *)handle);
+  switch (h->type) {
+  case __HANDLE_FILE:
+    debug_message_fn("(File %p, fp = %p)\n", h, h->data);
+    fclose((FILE *)h->data);
+    break;
+  case __HANDLE_THREAD:
+    debug_message_fn("(Thread %p, th = %p)\n", h, h->data);
+    break;
+  case __HANDLE_EVENT:
+    debug_message_fn("(Event %p, ev = %p)\n", h, h->data);
+    break;
+  default:
+    debug_message_fn("(Generic %p)\n", h);
+    break;
+  }
+  __destroy_handle(h);
+
   return TRUE;
 }
 
@@ -1149,7 +1215,7 @@ DEFINE_W32API(DWORD, GetCurrentThreadId,
 	      (void))
 {
   debug_message_fn("()\n");
-  return getpid();
+  return pthread_self();
 }
 
 DEFINE_W32API(LCID, GetThreadLocale,
@@ -1181,8 +1247,16 @@ DEFINE_W32API(BOOL, DisableThreadLibraryCalls, (HMODULE module))
 
 DEFINE_W32API(HANDLE, CreateThread, (SECURITY_ATTRIBUTES *sa, DWORD stack, LPTHREAD_START_ROUTINE start, LPVOID param, DWORD flags, LPDWORD id))
 {
+  pthread_t *thread;
+
   debug_message_fn("(sa %p, stack %d, start %p, param %p, flags %d, id %p)\n", sa, stack, start, param, flags, id);
-  return 0;
+  if ((thread = calloc(1, sizeof(*thread))) == NULL)
+    return NULL;
+  pthread_create(thread, NULL, (void *(*)(void *))start, param);
+  if (id)
+    *id = (DWORD)thread;
+
+  return __create_handle(__HANDLE_THREAD, thread);
 }
 
 /* thread local-variable related */
@@ -1233,7 +1307,7 @@ DEFINE_W32API(BOOL, TlsSetValue,
 /* critical section */
 
 typedef struct _cs_private {
-#ifdef USE_PTHREAD
+#if defined(USE_PTHREAD)
   pthread_t thread;
   pthread_mutex_t mutex;
 #endif
@@ -1245,15 +1319,15 @@ DEFINE_W32API(void, InitializeCriticalSection,
 {
   CSPrivate *csp;
 
-  debug_message_fn("()\n");
+  debug_message_fn("(%p)\n", cs);
 
-  if ((csp = calloc(1, sizeof(CSPrivate))) == NULL)
+  if ((csp = calloc(1, sizeof(*csp))) == NULL)
     return;
-#ifdef USE_PTHREAD
+#if defined(USE_PTHREAD)
   pthread_mutex_init(&csp->mutex, NULL);
 #endif
-  //csp->is_locked = 0;
   *(void **)cs = csp;
+
   return;
 }
 
@@ -1262,7 +1336,7 @@ DEFINE_W32API(void, EnterCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message_fn("()\n");
+  debug_message_fn("(%p)\n", cs);
 
   if (csp->is_locked)
 #ifdef USE_PTHREAD
@@ -1285,12 +1359,14 @@ DEFINE_W32API(void, LeaveCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message_fn("()\n");
+  debug_message_fn("(%p)\n", cs);
 
-  csp->is_locked = 0;
+  if (csp->is_locked) {
 #ifdef USE_PTHREAD
-  pthread_mutex_unlock(&csp->mutex);
+    pthread_mutex_unlock(&csp->mutex);
 #endif
+    csp->is_locked = 0;
+  }
 
   return;
 }
@@ -1300,7 +1376,7 @@ DEFINE_W32API(void, DeleteCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message_fn("()\n");
+  debug_message_fn("(%p)\n", cs);
 
 #ifdef USE_PTHREAD
   pthread_mutex_destroy(&csp->mutex);
@@ -1325,10 +1401,15 @@ DEFINE_W32API(LONG, InterlockedExchangeAdd,
 	      (PLONG dest, LONG incr))
 {
   LONG ret;
-  __asm__ __volatile__("lock; xaddl %0,(%1)"
-		       : "=r" (ret)
-		       : "r" (dest), "0" (incr)
-		       : "memory" );
+
+  __asm__ __volatile__
+    (
+     "lock; xaddl %0,(%1)"
+     : "=r" (ret)
+     : "r" (dest), "0" (incr)
+     : "memory"
+     );
+
   return ret;
 }
 
@@ -1472,7 +1553,95 @@ DEFINE_W32API(BOOL, GetComputerNameW,
 DEFINE_W32API(VOID, GetSystemInfo,
 	      (LPSYSTEM_INFO si))
 {
-  debug_message_fn("()\n");
+  static int cache = 0;
+  static SYSTEM_INFO cached_si;
+
+  debug_message_fn("(%p)\n", si);
+
+  if (!cache) {
+    memset(&cached_si, 0, sizeof(cached_si));
+    cached_si.u.s.wProcessorArchitecture  = PROCESSOR_ARCHITECTURE_INTEL;
+    cached_si.dwPageSize                  = getpagesize();
+    cached_si.lpMinimumApplicationAddress = (void *)0x00000000;
+    cached_si.lpMaximumApplicationAddress = (void *)0x7FFFFFFF;
+    cached_si.dwActiveProcessorMask       = 1;
+    cached_si.dwNumberOfProcessors        = 1;
+    cached_si.dwProcessorType             = PROCESSOR_INTEL_PENTIUM;
+    cached_si.dwAllocationGranularity     = 0x10000;
+    cached_si.wProcessorLevel             = 5; /* pentium */
+    cached_si.wProcessorRevision          = 9;
+    cache = 1;
+  }
+  memcpy(si, &cached_si, sizeof(*si));
+  return;
+}
+
+/* counter */
+static void
+longcount_tsc(long long *z)
+{
+  __asm__ __volatile__
+    (
+     "pushl %%ebx\n\t"
+     "movl %%eax, %%ebx\n\t"
+     "rdtsc\n\t"
+     "movl %%eax, 0(%%ebx)\n\t"
+     "movl %%edx, 4(%%ebx)\n\t"
+     "popl %%ebx\n\t"
+     ::"a"(z)
+     );
+}
+static void
+longcount_notsc(long long *z)
+{
+  struct timeval tv;
+  unsigned long long result;
+  unsigned limit = ~0;
+
+  if (!z)
+    return;
+
+  limit /= 1000000;
+  gettimeofday(&tv, 0);
+  result = tv.tv_sec;
+  result <<= 32;
+  result += limit * tv.tv_usec;
+  *z = result;
+}
+
+static void longcount_bootstrap(long long *);
+static void(*longcount)(long long *) = longcount_bootstrap;
+static void
+longcount_bootstrap(long long *z)
+{
+  static CPUCaps caps;
+
+  caps = cpucaps_get();
+  longcount = cpucaps_is_tsc(caps) ? longcount_tsc : longcount_notsc;
+  debug_message_fnc("(%p): using %s\n", z, cpucaps_is_tsc(caps) ? "tsc" : "notsc");
+  longcount(z);
+}
+
+DEFINE_W32API(BOOL, QueryPerformanceCounter,
+	      (PLARGE_INTEGER p))
+{
+  long long *z = (long long *)p;
+
+  longcount(z);
+  //debug_message_fn("(%p) -> %lld\n", z, *z);
+
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, QueryPerformanceFrequency,
+	      (PLARGE_INTEGER p))
+{
+  long long *z = (long long *)p;
+
+  *z = cpucaps_freq();
+  //debug_message_fn("(%p) -> %lld kHz)\n", z, *z);
+
+  return TRUE;
 }
 
 /* codepage */
@@ -1721,9 +1890,55 @@ DEFINE_W32API(int, GetTickCount,
   if (tcstart == -1)
     tcstart = tc;
 
-  debug_message_fn("(): %d\n", tc - tcstart);
+  //debug_message_fn("(): %d\n", tc - tcstart);
 
   return tc - tcstart;
+}
+
+/* event */
+
+struct event {
+  char state;
+  char reset;
+  char name[128];
+};
+
+DEFINE_W32API(HANDLE, CreateEventA,
+	      (LPSECURITY_ATTRIBUTES sa, BOOL manual_reset, BOOL initial_state, LPCSTR name))
+{
+  struct event *ev;
+
+  debug_message_fn("(%p, %d, %d, %s)\n", sa, manual_reset, initial_state, name);
+
+  ev = malloc(sizeof(*ev));
+  ev->state = initial_state;
+  ev->reset = manual_reset;
+  if (name)
+    strncpy(ev->name, name, 128);
+  else
+    ev->name[0] = '\0';
+
+  return (HANDLE)__create_handle(__HANDLE_EVENT, ev);
+}
+
+DEFINE_W32API(BOOL, SetEvent,
+	      (HANDLE h))
+{
+  debug_message_fn("(%p)\n", h);
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, ResetEvent,
+	      (HANDLE h))
+{
+  debug_message_fn("(%p)\n", h);
+  return TRUE;
+}
+
+DEFINE_W32API(DWORD, WaitForSingleObject,
+	      (HANDLE h, DWORD d))
+{
+  return WAIT_OBJECT_0;
 }
 
 /* miscellaneous */
