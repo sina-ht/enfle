@@ -80,6 +80,13 @@ extern void XVMC_pack_pblocks(MpegEncContext *s,int cbp);
 extern void XVMC_init_block(MpegEncContext *s);//set s->block
 #endif
 
+enum PixelFormat pixfmt_yuv_420[]= {PIX_FMT_YUV420P,-1};
+enum PixelFormat pixfmt_yuv_422[]= {PIX_FMT_YUV422P,-1};
+enum PixelFormat pixfmt_yuv_444[]= {PIX_FMT_YUV444P,-1};
+enum PixelFormat pixfmt_xvmc_mpg2_420[] = {
+                                           PIX_FMT_XVMC_MPEG2_IDCT,
+                                           PIX_FMT_XVMC_MPEG2_MC,
+					   -1};
 #ifdef CONFIG_ENCODERS
 static uint8_t (*mv_penalty)[MAX_MV*2+1]= NULL;
 static uint8_t fcode_tab[MAX_MV*2+1];
@@ -419,7 +426,9 @@ void mpeg1_encode_picture_header(MpegEncContext *s, int picture_number)
             put_bits(&s->pb, 8, 255);
         }
         put_bits(&s->pb, 2, s->intra_dc_precision);
-        put_bits(&s->pb, 2, s->picture_structure= PICT_FRAME);
+        
+        assert(s->picture_structure == PICT_FRAME);
+        put_bits(&s->pb, 2, s->picture_structure);
         if (s->progressive_sequence) {
             put_bits(&s->pb, 1, 0); /* no repeat */
         } else {
@@ -2352,8 +2361,12 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
             );
         avctx->bit_rate = s->bit_rate;
         
-        //get_format() or set_video(width,height,aspect,pix_fmt);
-        //until then pix_fmt may be changed right after codec init
+        if(avctx->xvmc_acceleration){
+	    avctx->pix_fmt = avctx->get_format(avctx,pixfmt_xvmc_mpg2_420);
+        }else{
+	    avctx->pix_fmt = avctx->get_format(avctx,pixfmt_yuv_420);
+        }
+	
         if( avctx->pix_fmt == PIX_FMT_XVMC_MPEG2_IDCT )
             if( avctx->idct_algo == FF_IDCT_AUTO )
                 avctx->idct_algo = FF_IDCT_SIMPLE;
@@ -2371,6 +2384,10 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
     if (get_bits1(&s->gb)) {
         for(i=0;i<64;i++) {
             v = get_bits(&s->gb, 8);
+            if(v==0){
+                av_log(s->avctx, AV_LOG_ERROR, "intra matrix damaged\n");
+                return -1;
+            }
             j = s->intra_scantable.permutated[i];
             s->intra_matrix[j] = v;
             s->chroma_intra_matrix[j] = v;
@@ -2392,6 +2409,10 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
     if (get_bits1(&s->gb)) {
         for(i=0;i<64;i++) {
             v = get_bits(&s->gb, 8);
+            if(v==0){
+                av_log(s->avctx, AV_LOG_ERROR, "inter matrix damaged\n");
+                return -1;
+            }
             j = s->intra_scantable.permutated[i];
             s->inter_matrix[j] = v;
             s->chroma_inter_matrix[j] = v;
@@ -2409,6 +2430,11 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
             s->inter_matrix[j] = v;
             s->chroma_inter_matrix[j] = v;
         }
+    }
+    
+    if(show_bits(&s->gb, 23) != 0){
+        av_log(s->avctx, AV_LOG_ERROR, "sequence header damaged\n");
+        return -1;
     }
 
     /* we set mpeg2 parameters so that it emulates mpeg1 */
@@ -2443,8 +2469,12 @@ static int vcr2_init_sequence(AVCodecContext *avctx)
     avctx->has_b_frames= 0; //true?
     s->low_delay= 1;
 
-    //get_format() or set_video(width,height,aspect,pix_fmt);
-    //until then pix_fmt may be changed right after codec init
+    if(avctx->xvmc_acceleration){
+        avctx->pix_fmt = avctx->get_format(avctx,pixfmt_xvmc_mpg2_420);
+    }else{
+        avctx->pix_fmt = avctx->get_format(avctx,pixfmt_yuv_420);
+    }
+
     if( avctx->pix_fmt == PIX_FMT_XVMC_MPEG2_IDCT )
         if( avctx->idct_algo == FF_IDCT_AUTO )
             avctx->idct_algo = FF_IDCT_SIMPLE;
