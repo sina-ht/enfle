@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 19:32:03 2001.
- * $Id: hash.c,v 1.8 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Tue Jul 30 21:23:34 2002.
+ * $Id: hash.c,v 1.9 2002/08/01 12:42:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -181,6 +181,18 @@ hash_key_create(void *k, unsigned int len)
   return hk;
 }
 
+static void
+hash_key_destroy(void *arg)
+{
+  Hash_key *hk = arg;
+
+  if (hk) {
+    if (hk->key)
+      free(hk->key);
+    free(hk);
+  }
+}
+
 /* methods */
 
 static void
@@ -207,8 +219,8 @@ define(Hash *h, void *k, unsigned int len, void *d)
 
   if ((hk = hash_key_create(k, len)) == NULL)
     return 0;
-  if ((h->data[i]->key = h->keys->add(h->keys, hk)) == NULL) {
-    free(hk);
+  if ((h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy)) == NULL) {
+    hash_key_destroy(hk);
     return 0;
   }
 
@@ -227,8 +239,8 @@ set(Hash *h, void *k, unsigned int len, void *d)
   if (h->data[i]->key == NULL || h->data[i]->key == (Dlist_data *)-1) {
     if ((hk = hash_key_create(k, len)) == NULL)
       return 0;
-    if ((h->data[i]->key = h->keys->add(h->keys, hk)) == NULL) {
-      free(hk);
+    if ((h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy)) == NULL) {
+      hash_key_destroy(hk);
       return 0;
     }
   }
