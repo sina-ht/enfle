@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 04:55:17 2000.
- * $Id: enfle.c,v 1.14 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Tue Dec 19 00:56:30 2000.
+ * $Id: enfle.c,v 1.15 2000/12/18 17:01:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,6 +60,7 @@ static Option enfle_options[] = {
   { "help",  'h', _NO_ARGUMENT,       "Show help message." },
   { "ui",    'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
   { "video", 'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
+  { "audio", 'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
   { NULL }
 };
 
@@ -152,7 +153,8 @@ main(int argc, char **argv)
   Player *player;
   Archive *a;
   int i, ch, spi_enabled = 1;
-  char *plugin_path, *path, *ext, *name, *ui_name = NULL, *video_name = NULL;
+  char *plugin_path, *path, *ext, *name;
+  char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
   char *optstr, *tmp;
 
   optstr = gen_optstring(enfle_options);
@@ -169,6 +171,9 @@ main(int argc, char **argv)
       break;
     case 'v':
       video_name = strdup(optarg);
+      break;
+    case 'a':
+      audio_name = strdup(optarg);
       break;
     default:
       fprintf(stderr, "unknown option %c\n", ch);
@@ -253,6 +258,19 @@ main(int argc, char **argv)
   if (ui_name == NULL && ((ui_name = config_get(c, "/enfle/plugins/ui/default")) == NULL)) {
     fprintf(stderr, "configuration error\n");
     return 1;
+  }
+
+  if (audio_name == NULL)
+    audio_name = config_get(c, "/enfle/plugins/audio/default");
+
+  uidata.ap = NULL;
+  if (audio_name) {
+    if ((uidata.ap = enfle_plugins_get(eps, ENFLE_PLUGIN_AUDIO, audio_name)) == NULL)
+      fprintf(stderr, "No %s Audio plugin\n", audio_name);
+    else
+      show_message("Audio plugin %s\n", audio_name);
+  } else {
+    show_message("No audio plugin specified.\n");
   }
 
   if (video_name == NULL && ((video_name = config_get(c, "/enfle/plugins/video/default")) == NULL)) {

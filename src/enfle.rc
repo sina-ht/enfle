@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Tue Dec 12 23:50:25 2000.
-; $Id: enfle.rc,v 1.8 2000/12/12 17:02:48 sian Exp $
+; Last Modified: Tue Dec 19 00:25:11 2000.
+; $Id: enfle.rc,v 1.9 2000/12/18 17:01:49 sian Exp $
 
 enfle {
   plugins {
@@ -17,6 +17,10 @@ enfle {
     video {
       default = Xlib
       caption_font = a14
+    }
+    audio {
+      default = oss
+      oss/device_path = /dev/dsp
     }
     spi/disabled = yes
     player/MPEG_lib/disabled = yes

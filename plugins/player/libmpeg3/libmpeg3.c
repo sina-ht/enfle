@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 14 21:06:49 2000.
- * $Id: libmpeg3.c,v 1.12 2000/12/14 16:06:14 sian Exp $
+ * Last Modified: Tue Dec 19 01:55:54 2000.
+ * $Id: libmpeg3.c,v 1.13 2000/12/18 17:01:49 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -38,11 +38,15 @@
 
 typedef struct _libmpeg3_info {
   mpeg3_t *file;
-  int nstreams;
-  int nstream;
+  int nvstreams;
+  int nvstream;
   int rendering_type;
   unsigned char **lines;
   Image *p;
+  AudioDevice *ad;
+  int nastreams;
+  int nastream;
+  int ch;
 } LibMPEG3_info;
 
 static const unsigned int types =
@@ -57,7 +61,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.2.3",
+  description: "LibMPEG3 Player plugin version 0.3",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -112,22 +116,47 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   /* mpeg3_set_mmx(info->file, 1); */
 
   if (!mpeg3_has_video(info->file)) {
-    show_message("This stream is audio only. Not supported(so far).\n");
+    show_message("This stream has no video stream.\n");
     goto error;
   }
 
   if (mpeg3_has_audio(info->file)) {
-    show_message("Audio support is not yet implemented, might be implemented someday.\n");
+    if ((m->ap == NULL) || (info->ad = m->ap->open_device(NULL, m->c)) == NULL)
+      show_message("Audio is not played.\n");
+    else {
+      AudioFormat format;
+      int ch, rate, samples;
+
+      show_message("Audio support is preliminary.\n");
+
+      info->nastreams = mpeg3_total_astreams(info->file);
+      /* XXX: stream should be selectable */
+      info->nastream = 0;
+
+      format = _AUDIO_FORMAT_S16_LE;
+      ch = mpeg3_audio_channels(info->file, info->nastream);
+      rate = mpeg3_sample_rate(info->file, info->nastream);
+      samples = mpeg3_audio_samples(info->file, info->nastream);
+
+      format = m->ap->set_format(info->ad, format);
+      info->ch = m->ap->set_channels(info->ad, ch);
+      rate = m->ap->set_speed(info->ad, rate);
+      show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, format, info->ch, rate, samples);
+    }
+  } else {
+    debug_message("No audio streams.\n");
   }
 
-  if ((info->nstreams = mpeg3_total_vstreams(info->file)) > 1) {
-    show_message("There are %d video streams in this whole stream.\n", info->nstreams);
+  if ((info->nvstreams = mpeg3_total_vstreams(info->file)) > 1) {
+    show_message("There are %d video streams in this whole stream.\n", info->nvstreams);
     show_message("Only the first video stream will be played(so far). Sorry.\n");
   }
-  info->nstream = 0;
 
-  m->width = mpeg3_video_width(info->file, info->nstream);
-  m->height = mpeg3_video_height(info->file, info->nstream);
+  /* XXX: stream should be selectable */
+  info->nvstream = 0;
+
+  m->width = mpeg3_video_width(info->file, info->nvstream);
+  m->height = mpeg3_video_height(info->file, info->nvstream);
   m->framerate = mpeg3_frame_rate(info->file, 0);
   m->num_of_frames = mpeg3_video_frames(info->file, 0);
 
@@ -275,6 +304,10 @@ play(Movie *m)
   return PLAY_ERROR;
 }
 
+/* XXX: as a temporary expedient */
+#define AUDIO_READ_SIZE 2048
+#define AUDIO_WRITE_SIZE 4096
+
 static PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
@@ -283,6 +316,8 @@ play_main(Movie *m, VideoWindow *vw)
   Image *p = info->p;
   int dropframes;
   float time_elapsed, fps;
+  short input_buffer[AUDIO_WRITE_SIZE];
+  short output_buffer[AUDIO_WRITE_SIZE];
 
   switch (m->status) {
   case _PLAY:
@@ -296,11 +331,21 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  decode_error = (mpeg3_read_frame(info->file, info->lines,
-				   0, 0,
-				   m->width, m->height,
-				   m->rendering_width, m->rendering_height,
-				   info->rendering_type, info->nstream) == -1) ? 0 : 1;
+  if (info->nastreams && info->ad) {
+    mpeg3_read_audio(info->file, NULL, input_buffer, 0, AUDIO_READ_SIZE, info->nastream);
+    if (info->ch == 1) {
+      m->ap->write_device(info->ad, (unsigned char *)input_buffer, AUDIO_READ_SIZE * sizeof(short));
+    } else {
+      int i;
+
+      mpeg3_reread_audio(info->file, NULL, input_buffer + AUDIO_READ_SIZE, 1, AUDIO_READ_SIZE, info->nastream);
+      for (i = 0; i < AUDIO_READ_SIZE; i++) {
+	output_buffer[i * 2    ] = input_buffer[i];
+	output_buffer[i * 2 + 1] = input_buffer[i + AUDIO_READ_SIZE];
+      }
+      m->ap->write_device(info->ad, (unsigned char *)output_buffer, AUDIO_WRITE_SIZE * sizeof(short));
+    }
+  }
 
   timer_pause(m->timer);
   time_elapsed = timer_get_milli(m->timer);
@@ -309,19 +354,26 @@ play_main(Movie *m, VideoWindow *vw)
 
   debug_message("%3.2f fps\r", fps);
 
-  m->current_frame++;
-  m->render_frame(vw, m, p);
   m->previous_frame = m->current_frame;
 
   if (fps <= m->framerate) {
     dropframes = m->framerate * time_elapsed / 1000 - m->current_frame;
     if (dropframes && !movie_get_play_every_frame(m)) {
-      mpeg3_drop_frames(info->file, dropframes, info->nstream);
+      mpeg3_drop_frames(info->file, dropframes, info->nvstream);
       m->current_frame += dropframes;
 
-      debug_message("\ndropped %d frame\n", dropframes);
+      /* debug_message("\ndropped %d frame\n", dropframes); */
     }
   }
+
+  decode_error = (mpeg3_read_frame(info->file, info->lines,
+				   0, 0,
+				   m->width, m->height,
+				   m->rendering_width, m->rendering_height,
+				   info->rendering_type, info->nvstream) == -1) ? 0 : 1;
+
+  m->render_frame(vw, m, p);
+  m->current_frame++;
 
   if (!decode_error || m->current_frame >= m->num_of_frames)
     stop_movie(m);
@@ -387,6 +439,8 @@ unload_movie(Movie *m)
 
     /* close */
     mpeg3_close(info->file);
+    if (info->ad)
+      m->ap->close_device(info->ad);
 
     free(info);
   }
