@@ -1,8 +1,8 @@
 /*
- * vmpm_decompose_normal.c -- Normal decomposer
+ * vmpm_decompose_normal.c -- Original decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug  2 15:22:28 2001.
- * $Id: vmpm_decompose_normal.c,v 1.8 2001/08/02 11:47:37 sian Exp $
+ * Last Modified: Fri Aug  3 18:37:06 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.9 2001/08/05 06:03:02 sian Exp $
  */
 
 #include <stdio.h>
@@ -33,8 +33,8 @@ static void final(VMPM *);
 static void destroy(VMPM *);
 
 static VMPMDecomposer plugin = {
-  name: "Normal",
-  description: "Refined normal MPM decomposer",
+  name: "Original",
+  description: "Refined original MPM decomposer",
   init: init,
   decompose: decompose,
   encode: encode,
@@ -150,7 +150,7 @@ encode(VMPM *vmpm)
   }
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
+  am = arithmodel_order_zero_create(0, 1);
 
   arithcoder_encode_init(ac, vmpm->outfile);
   arithmodel_encode_init(am, ac);
@@ -158,8 +158,6 @@ encode(VMPM *vmpm)
 
   bin_am = arithmodel_order_zero_create(0, 0);
   arithmodel_encode_init(bin_am, ac);
-  arithmodel_install_symbol(bin_am, 1);
-  arithmodel_install_symbol(bin_am, 1);
 #ifdef ESCAPE_RUN
   {
     Arithmodel_order_zero *am_oz = (Arithmodel_order_zero *)am;
@@ -193,9 +191,12 @@ encode(VMPM *vmpm)
     for (; i >= 1; i--) {
       int nsymbols = 0;
 
-      stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i]);
-      //arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-      arithmodel_order_zero_reset(am, 1, vmpm->token_index[i] >> 2);
+      stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
+      arithmodel_order_zero_reset(bin_am, 0, 0);
+      arithmodel_install_symbol(bin_am, 1);
+      arithmodel_install_symbol(bin_am, 1);
+      arithmodel_encode_cbt(bin_am, vmpm->token_index[i], vmpm->newtoken[i] - 1, 0, 1);
+      arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
       for (j = 0; j < vmpm->token_index[i]; j++) {
 	Token *t = vmpm->token[i][j];
 	Token_value tv = t->value - 1;
@@ -219,6 +220,9 @@ encode(VMPM *vmpm)
 
   n = 0;
   arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
+  arithmodel_order_zero_reset(bin_am, 0, 0);
+  arithmodel_install_symbol(bin_am, 1);
+  arithmodel_install_symbol(bin_am, 1);
   stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
@@ -254,27 +258,30 @@ decode(VMPM *vmpm)
   unsigned int j;
 
   //debug_message(__FUNCTION__ "()\n");
-  fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
+  am = arithmodel_order_zero_create(0, 1);
 
   arithcoder_decode_init(ac, vmpm->infile);
   arithmodel_decode_init(am, ac);
 
   bin_am = arithmodel_order_zero_create(0, 0);
   arithmodel_decode_init(bin_am, ac);
-  arithmodel_install_symbol(bin_am, 1);
-  arithmodel_install_symbol(bin_am, 1);
 
   vmpm->token_index[vmpm->I] = vmpm->blocksize / ipow(vmpm->r, vmpm->I);
   for (i = vmpm->I; i >= 1; i--) {
-    stat_message(vmpm, "Level %d: %d\n", i, vmpm->token_index[i]);
+    unsigned int tmp;
+
+    stat_message(vmpm, "D:Level %d: %d\n", i, vmpm->token_index[i]);
+    arithmodel_order_zero_reset(bin_am, 0, 0);
+    arithmodel_install_symbol(bin_am, 1);
+    arithmodel_install_symbol(bin_am, 1);
+    arithmodel_decode_cbt(bin_am, vmpm->token_index[i], &tmp, 0, 1);
+    vmpm->newtoken[i] = tmp + 1;
     vmpm->token_index[i - 1] = 0;
     if ((vmpm->tokens[i] = calloc(vmpm->token_index[i], sizeof(Token))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
-    // DECODING IS INVALID
-    //arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
+    arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
     for (j = 0; j < vmpm->token_index[i]; j++) {
       Index index;
 
@@ -294,7 +301,11 @@ decode(VMPM *vmpm)
     memory_error(NULL, MEMORY_ERROR);
 
   n = 0;
-  stat_message(vmpm, "Level 0: %d\n", vmpm->token_index[0]);
+  arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
+  arithmodel_order_zero_reset(bin_am, 0, 0);
+  arithmodel_install_symbol(bin_am, 1);
+  arithmodel_install_symbol(bin_am, 1);
+  stat_message(vmpm, "D:Level 0: %d\n", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     Index v;
 
@@ -309,6 +320,7 @@ decode(VMPM *vmpm)
 
   arithcoder_decode_final(ac);
 
+  arithmodel_destroy(bin_am);
   arithmodel_destroy(am);
   arithcoder_destroy(ac);
 }
