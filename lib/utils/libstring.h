@@ -1,10 +1,10 @@
 /*
  * libstring.h -- String manipulation library header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 05:51:52 2000.
- * $Id: libstring.h,v 1.3 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sat Aug 25 06:21:50 2001.
+ * $Id: libstring.h,v 1.4 2001/08/25 21:06:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,9 @@ struct _string {
   int (*set)(String *, const unsigned char *);
   int (*copy)(String *, String *);
   int (*cat_ch)(String *, unsigned char);
+  int (*ncat)(String *, const unsigned char *, int);
   int (*cat)(String *, const unsigned char *);
+  int (*catf)(String *, const unsigned char *, ...);
   int (*append)(String *, String *);
   void (*shrink)(String *, unsigned int);
   String *(*dup)(String *);
@@ -50,7 +52,9 @@ struct _string {
 #define string_set(s, p) (s)->set((s), (p))
 #define string_copy(s1, s2) (s1)->copy((s1), (s2))
 #define string_cat_ch(s, c) (s)->cat_ch((s), (c))
+#define string_ncat(s, p, l) (s)->ncat((s), (p), (l))
 #define string_cat(s, p) (s)->cat((s), (p))
+#define string_catf(s, f, args...) (s)->catf((s), (f), ## args)
 #define string_append(s1, s2) (s1)->append((s1), (s2))
 #define string_shrink(s, l) (s)->shrink((s), l)
 #define string_dup(s) (s)->dup(s)

@@ -1,10 +1,10 @@
 /*
  * libstring.c -- String manipulation library
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 05:51:18 2000.
- * $Id: libstring.c,v 1.6 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sat Aug 25 06:22:12 2001.
+ * $Id: libstring.c,v 1.7 2001/08/25 21:06:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,6 +21,7 @@
  */
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #define REQUIRE_STRING_H
 #include "compat.h"
@@ -34,7 +35,9 @@ static unsigned int length(String *);
 static int set(String *, const unsigned char *);
 static int copy(String *, String *);
 static int cat_ch(String *, unsigned char);
+static int ncat(String *, const unsigned char *, int);
 static int cat(String *, const unsigned char *);
+static int catf(String *, const unsigned char *, ...);
 static int append(String *, String *);
 static void shrink(String *, unsigned int);
 static String *dup(String *);
@@ -49,7 +52,9 @@ String string_template = {
   set: set,
   copy: copy,
   cat_ch: cat_ch,
+  ncat: ncat,
   cat: cat,
+  catf: catf,
   shrink: shrink,
   append: append,
   dup: dup,
@@ -177,14 +182,55 @@ cat_ch(String *s, unsigned char c)
 }
 
 static int
-cat(String *s, const unsigned char *p)
+ncat(String *s, const unsigned char *p, int l)
 {
-  if (!buffer_increase(s, strlen(p)))
+  if (l > strlen(p))
+    l = strlen(p);
+  if (!buffer_increase(s, l))
     return 0;
-  strcat(string_buffer(s), p);
-  string_length(s) += strlen(p);
+  strncat(string_buffer(s), p, l);
+  string_length(s) += l;
 
   return 1;
+}
+
+static int
+cat(String *s, const unsigned char *p)
+{
+  return ncat(s, p, strlen(p));
+}
+
+static int
+catf(String *s, const unsigned char *format, ...)
+{
+  va_list args;
+  unsigned char *p, *tmp;
+  int n, size, result;
+
+  size = 100;
+  if ((p = malloc(size)) == NULL)
+    return 0;
+
+  while (1) {
+    va_start(args, format);
+    n = vsnprintf (p, size, format, args);
+    va_end(args);
+
+    if (n > -1 && n < size)
+      break;
+
+    size = (n > -1) ? n + 1 : (size << 1);
+    if ((tmp = realloc(p, size)) == NULL) {
+      free(p);
+      return 0;
+    }
+    p = tmp;
+  }
+
+  result = cat(s, p);
+  free(p);
+
+  return result;
 }
 
 static int
