@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Aug  2 22:52:56 2002.
- * $Id: libmpeg2.c,v 1.37 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Sat Sep 21 23:03:11 2002.
+ * $Id: libmpeg2.c,v 1.38 2002/09/22 21:32:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -416,7 +416,8 @@ play_audio(void *arg)
   debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
-    show_message("Cannot open device.\n");
+    show_message("Cannot open device. Audio disabled.\n");
+    m->has_audio = 0;
     ExitMP3(&info->mp);
     pthread_exit((void *)PLAY_ERROR);
   }
@@ -586,6 +587,8 @@ play_main(Movie *m, VideoWindow *vw)
       mpeg2_drop(&info->mpeg2dec, 0);
     }
   } else {
+    debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
+
     /* if too fast to display, wait before render */
     while (video_time > timer_get_milli(m->timer)) ;
 
