@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 01:45:57 2001.
- * $Id: opendivx.c,v 1.10 2001/09/03 00:33:26 sian Exp $
+ * Last Modified: Mon Sep  3 10:05:37 2001.
+ * $Id: opendivx.c,v 1.11 2001/09/03 01:44:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -19,12 +19,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  *
- * This plugin uses library derived from software develolped by
- * Project Mayo and is released as a "Larger Work" under that
- * license. Consistent with that license, this plugin is released
- * under the GNU General Public License. The OpenDivX license can be
- * found at OpenDivX-LICENSE in source tree, or
- * http://www.projectmayo.com/opendivx/docs.php.
+ * This plugin uses libdivxdecore developed by Project Mayo and its
+ * contributors. This plugin itself doesn't include any part of codes
+ * by others. I'm not sure this plugin is regarded as "Larger
+ * Work". But even if so, consistent with OpenDivX-LICENSE, this
+ * plugin can be and is released under the GNU General Public
+ * License. The OpenDivX license can be found in the top of this
+ * source tree, or
+ * http://www.projectmayo.com/projects/divx_open_license.txt
  */
 
 #include <stdio.h>

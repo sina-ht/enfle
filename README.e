@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Mon Jun 25 02:10:07 2001.
+     Last Modified: Mon Sep  3 10:41:36 2001.
 
  This file is part of Enfle.
 
@@ -41,6 +41,14 @@
  -- archive. Moreover, libungif is not used by default, for avoiding
  -- possible patent infringement. It's up to you whether use it or not.
 
+ It seems I should include this sentence: "This product includes
+ software developed by or derived from software developed by Project
+ Mayo". Strictly speaking, Enfle and OpenDivX plugin itself don't
+ include software by them. OpenDivX plugin will be dynamically linked
+ with libdivxdecore. I'm not sure this plugin is regarded as "Larger
+ Work". But it doesn't matter because this plugin can be and is
+ released under GPL. See plugins/player/opendivx/opendivx.c for detail.
+
  This software includes mpglib by Michael Hipp.
 
  This software includes libmpeg2 by Aaron Holtzman. For this part, you
@@ -67,17 +75,13 @@ This software aims to view many pictures just clicking. You can view
 various formatted pictures and movies with several effects.
 
  Formats you can view:
- BMP
- GIF
- JPEG
- PCX
- PNG
- PNM
+ BMP, GIF, JPEG, PCX, PNG, PNM
  spi(highly unstable, any formats which (some of) susie plugins support)
  animated GIF
  mng
  mpeg(mpeg1, mpeg2)
  avi,asf(avifile uses Windows DLL)
+ DivX in AVI format supported by divx4linux
 
 This software has plugin architecture. You can write plugins to loader
 new formatted pictures and movies. Also, you can read irregular files,
@@ -106,6 +110,7 @@ mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
 avifile: avifile-0.53.5
+opendivx: divx4linux-20010807
 
 
 2. Requirements
@@ -126,12 +131,12 @@ on the same/other environments.
 
 My main environment is:
 
-Kernel: Linux-2.4.5-ac17
+Kernel: Linux-2.4.8-ac11
 CPU: PentiumIII/1GHz
 X server: XFree86-4.1.0
 Video: Matrox Millennium G450 DH/AGP 16M
-Compiler: gcc version 3.0
-libc: glibc-2.2.2
+Compiler: gcc version 2.95.3
+libc: glibc-2.2.4
 
 
 3. Compile
@@ -177,6 +182,8 @@ directory will be added recursively. Supported archives(such as
 Left click,n,space	next image
 Right click,b		previous image
 Center click,N		next archive
+d			delete displaying file from list
+D(shift+d)		delete displaying file
 q			quit
 f			full screen on/off
 S(shift+s)		toggle magnification algorithm(nointerpolate/bilinear)
@@ -197,8 +204,8 @@ If you have wheel, you can use it for Left, Right click.
 6. Customize
 
 There is the configuration file in
-$prefix/share/enfle/enfle.rc(normally, /usr/share/enfle/enfle.rc or
-like). If you'd like to customize, copy and edit it.
+$prefix/share/enfle/enfle.rc(normally, /usr/local/share/enfle/enfle.rc
+or like). If you'd like to customize, copy and edit it.
 
 mkdir ~/.enfle
 cp /usr/share/enfle/enfle.rc ~/.enfle/config

@@ -1,4 +1,4 @@
-NEWS  Last Modified: Sun Sep  2 14:49:29 2001.
+NEWS  Last Modified: Mon Sep  3 09:44:48 2001.
 
 THIS IS A DEVELOPING RELEASE.
 
@@ -10,6 +10,7 @@ THIS IS A DEVELOPING RELEASE.
   and obey Netscape's loop count extension.
  Customizable caption.
  More meaningful cursor switching.
+ Preliminary OpenDivX plugin.
 
 20010625:
  Xv extension support.

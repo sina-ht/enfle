@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Mon Jun 25 02:09:39 2001.
+     Last Modified: Mon Sep  3 10:39:15 2001.
 
  This file is part of Enfle.
 
@@ -41,6 +41,14 @@
  -- archive. Moreover, libungif is not used by default, for avoiding
  -- possible patent infringement. It's up to you whether use it or not.
 
+ It seems I should include this sentence: "This product includes
+ software developed by or derived from software developed by Project
+ Mayo". Strictly speaking, Enfle and OpenDivX plugin itself don't
+ include software by them. OpenDivX plugin will be dynamically linked
+ with libdivxdecore. I'm not sure this plugin is regarded as "Larger
+ Work". But it doesn't matter because this plugin can be and is
+ released under GPL. See plugins/player/opendivx/opendivx.c for detail.
+
  This archive includes mpglib by Michael Hipp. Read lib/mpglib/README.
 
  This software includes libmpeg2 by Aaron Holtzman. For this part, you
@@ -69,17 +77,13 @@ See README.e if you don't read Japanese, but English.
 にも対応しています。
 
  対応フォーマット
- BMP
- GIF
- JPEG
- PCX
- PNG
- PNM
+ BMP, GIF, JPEG, PCX, PNG, PNM
  spi(不安定, Susie pluginを利用できる)
  animated GIF
  mng
  mpeg(mpeg1, mpeg2)
  avi,asf(avifileがWindowsのDLLを利用)
+ DivX in AVI format supported by divx4linux
 
 各フォーマットへの対応はプラグインによって実装されております。画像の他
 に特殊なアーカイブ、tarなどの一般的なアーカイブ、圧縮されたgzなどのファ
@@ -102,15 +106,16 @@ libungifのLZW codeを使用できるかどうかとは別ですので、各自の責任におい
 おきます。
 
 JPEG: jpegsrc-6b (libjpeg)
-PNG: libpng-1.0.2 or later (recommended: 1.0.9)
+PNG: libpng-1.0.2 or later (recommended: 1.0.9 or 1.2.0)
 gz: zlib-1.1.3 or later
 bz2: bzip2-1.0.0 or later
 ungif: libungif-3.1.0 or later でとりあえず動作しますが、現時点で最新の4.1.0にもバグがあります。
-       (recommended: cvs version あるいは、私にパッチを請求してください)
+       (recommended: cvs version)
 mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (パッチが必要な場合は私までどうぞ)
 avifile: avifile-0.53.5
+opendivx: divx4linux-20010807
 
 
 2.動作環境
@@ -128,14 +133,14 @@ FreeBSD (4.1R, x86)
 
 同じ/他の環境下で試された方は結果を御報告ください。
 
-私のメインの開発環境は2001/06/25現在 以下の通りです。
+私のメインの開発環境は2001/09/03現在 以下の通りです。
 
-Kernel: Linux-2.4.5-ac17
+Kernel: Linux-2.4.8-ac11
 CPU: PentiumIII/1GHz
 X server: XFree86-4.1.0
 Video: Matrox Millennium G450 DH/AGP 16M
-Compiler: gcc version 3.0
-libc: glibc-2.2.2
+Compiler: gcc version 2.95.3
+libc: glibc-2.2.4
 
 
 3.コンパイル
@@ -186,6 +191,8 @@ Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
 左クリック,n,space	次の画像へ
 右クリック,b		前の画像へ
 中クリック,N		次のアーカイブへ
+d			今表示してるファイルを表示リストからはずす
+D(shift+d)		今表示してるファイルを削除する
 q			終了
 f			フルスクリーンon/off
 S(shift+s)		拡大アルゴリズムの変更(nointerpolate/bilinear)
@@ -209,8 +216,8 @@ Alt-m			画像の短辺が画面いっぱいになるように拡大
 6.カスタマイズ
 
 installすると$prefix/share/enfle/enfle.rc(だいたい
-/usr/share/enfle/enfle.rcとかそのあたり)という設定ファイルがinstallさ
-れます。カスタマイズするには、
+/usr/local/share/enfle/enfle.rcとかそのあたり)という設定ファイルが
+installされます。カスタマイズするには、
 
 mkdir ~/.enfle
 cp /usr/share/enfle/enfle.rc ~/.enfle/config
