@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 23 04:00:02 2001.
- * $Id: fifo.c,v 1.7 2001/09/22 19:00:22 sian Exp $
+ * Last Modified: Thu Mar  7 04:55:57 2002.
+ * $Id: fifo.c,v 1.8 2002/03/06 19:56:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -83,8 +83,10 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
   if (f->maxdata)
     while (f->valid && f->ndata >= f->maxdata)
       pthread_cond_wait(&f->put_ok_cond, &f->lock);
-  if (!f->valid)
+  if (!f->valid) {
+    pthread_mutex_unlock(&f->lock);
     return 0;
+  }
 #else
   if (f->maxdata && f->ndata >= f->maxdata)
     return 0;
@@ -126,8 +128,10 @@ get(FIFO *f, void **d_return, FIFO_destructor *destructor_r)
   pthread_mutex_lock(&f->lock);
   while (f->valid && f->ndata == 0)
     pthread_cond_wait(&f->get_ok_cond, &f->lock);
-  if (!f->valid)
+  if (!f->valid) {
+    pthread_mutex_unlock(&f->lock);
     return 0;
+  }
 #endif
   if ((fd = f->next_get) == NULL)
     return 0;
