@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 13 07:34:58 2001.
- * $Id: opendivx.c,v 1.13 2001/09/13 12:13:11 sian Exp $
+ * Last Modified: Thu Sep 20 14:19:38 2001.
+ * $Id: opendivx.c,v 1.14 2001/09/20 05:31:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -366,8 +366,8 @@ play_video(void *arg)
   Movie *m = arg;
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
   void *data;
-  int i;
   AVIPacket *ap;
+  FIFO_destructor destructor;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -376,35 +376,44 @@ play_video(void *arg)
       info->eof = 1;
       break;
     }
-    if (fifo_get(info->vstream, &data)) {
-      ap = (AVIPacket *)data;
-
+    
+    if (!fifo_get(info->vstream, &data, &destructor)) {
+      show_message(__FUNCTION__ ": fifo_get() failed.\n");
+    } else {      
+      if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
+	info->eof = 1;
+	break;
+      }
       pthread_mutex_lock(&info->update_mutex);
-
       info->dec_frame.length = ap->size;
       info->dec_frame.bitstream = ap->data;
       info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
       info->dec_frame.render_flag = 1;
       decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
-      free(ap->data);
-      free(ap);
+      destructor(ap);
       m->current_frame++;
 
-      for (i = 0; i < info->drop; i++) {
-	while (!fifo_get(info->vstream, &data)) ;
-	info->dec_frame.length = ap->size;
-	info->dec_frame.bitstream = ap->data;
-	info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
-	info->dec_frame.render_flag = 1;
-	decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
-	free(ap->data);
-	free(ap);
-	m->current_frame++;
+      /* demultiplexer should seek to next key frame... */
+      for (; info->drop; info->drop--) {
+	if (!fifo_get(info->vstream, &data, &destructor)) {
+	  show_message(__FUNCTION__ ": fifo_get() failed.\n");
+	} else {
+	  if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
+	    info->eof = 1;
+	    break;
+	  }
+	  info->dec_frame.length = ap->size;
+	  info->dec_frame.bitstream = ap->data;
+	  info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
+	  info->dec_frame.render_flag = 1;
+	  decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
+	  destructor(ap);
+	  m->current_frame++;
+	}
       }
+      pthread_cond_wait(&info->update_cond, &info->update_mutex);
+      pthread_mutex_unlock(&info->update_mutex);
     }
-    info->drop = 0;
-    pthread_cond_wait(&info->update_cond, &info->update_mutex);
-    pthread_mutex_unlock(&info->update_mutex);
   }
 
   debug_message(__FUNCTION__ " exiting.\n");
@@ -424,6 +433,7 @@ play_audio(void *arg)
   int param_is_set = 0;
   void *data;
   AVIPacket *ap;
+  FIFO_destructor destructor;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -435,8 +445,9 @@ play_audio(void *arg)
   info->ad = ad;
 
   while (m->status == _PLAY) {
-    /* XXX: Should I use wait and singal? */
-    if (fifo_get(info->astream, &data)) {
+    if (!fifo_get(info->astream, &data, &destructor)) {
+      show_message(__FUNCTION__ ": fifo_get() failed.\n");
+    } else {
       ap = (AVIPacket *)data;
       ret = decodeMP3(&info->mp, ap->data, ap->size,
 		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
@@ -450,12 +461,10 @@ play_audio(void *arg)
       }
       while (ret == MP3_OK) {
 	m->ap->write_device(ad, output_buffer, write_size);
-	//debug_message(__FUNCTION__ ": %d bytes written.\n", write_size);
 	ret = decodeMP3(&info->mp, NULL, 0,
 			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       }
-      free(ap->data);
-      free(ap);
+      destructor(ap);
     }
   }
 
