@@ -1,3 +1,34 @@
+2001-04-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/*: Added rcs Id header.
+
+	* plugins/ui/normal/normal.c: Fixed bug.
+
+	* plugins/ui/convert/convert.c: Avoid warning.
+
+	* lib/enfle/archive.c: Avoid core dump and warning.
+
+2001-04-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e: Updated documentations.
+
+	* src/enfle.c: Implemented -i, -x, -C.
+
+	* plugins/saver/png/png.c: Use png_set_compression_buffer_size()
+	to set buffer size.
+
+	* plugins/ui/normal/normal.c: Accommodate to Archive interface
+	changes.
+
+	* plugins/ui/convert/convert.c: Accommodate to Archive interface
+	changes. Fixed one silly bug.
+
+	* Makefile.am, compat.h, configure.in, lib/enfle/archive.c,
+	lib/enfle/archive.h, lib/utils/Makefile.am: Added fnmatch() staff.
+
+	* compat/.cvsignore, compat/Makefile.am, compat/fnmatch.c,
+	compat/fnmatch.h: Compatibility staff.
+
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/glic/*: Implemented new Saver: GLIC. This is for
