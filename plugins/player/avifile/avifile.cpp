@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 15 05:36:21 2001.
- * $Id: avifile.cpp,v 1.22 2001/09/16 23:09:37 sian Exp $
+ * Last Modified: Wed Sep 19 01:04:21 2001.
+ * $Id: avifile.cpp,v 1.23 2001/09/19 00:36:38 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -34,6 +34,9 @@
 
 #include <avifile/avifile.h>
 #include <avifile/version.h>
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
+# include <avifile/avifmt.h>
+#endif
 // only for GetAvifileVersion()...
 #include <avifile/aviplay.h>
 
