@@ -1,10 +1,10 @@
 /*
  * misc.c -- miscellaneous routines
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 05:55:15 2000.
- * $Id: misc.c,v 1.3 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Thu Apr 26 17:45:30 2001.
+ * $Id: misc.c,v 1.4 2001/04/27 01:00:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,4 +58,27 @@ misc_trim_ext(const char *path, const char *ext)
   p[len] = '\0';
 
   return p;
+}
+
+/* replace or add extension like 'png' */
+char *
+misc_replace_ext(char *filename, char *ext)
+{
+  char *ptr = strrchr(filename, '.');
+  char *new;
+  int base_len;
+
+  if (ptr == NULL) {
+    base_len = strlen(filename);
+  } else {
+    base_len = (int)(ptr - filename);
+  }
+  if ((new = malloc(base_len + 1 + strlen(ext) + 1)) == NULL)
+    return NULL;
+  if (ptr != filename)
+    memcpy(new, filename, base_len);
+  new[base_len] = '.';
+  strcpy(new + base_len + 1, ext);
+
+  return new;
 }
