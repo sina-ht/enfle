@@ -1,3 +1,22 @@
+2001-10-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: New configurations.
+
+	* plugins/loader/jpeg/jpeg.c: Added DCT method stuff.
+
+	* plugins/audio/Makefile.am: Added new ALSA plugin.
+
+	* plugins/audio/alsa/.cvsignore: New file.
+
+	* plugins/audio/alsa/Makefile.am, plugins/audio/alsa/alsa.c: New
+	files.
+
+	* lib/enfle/audio.h: Added private_data.
+
+	* lib/X11/x11ximage.c: Commented out an annoying debug message.
+
+	* configure.in: Added jpeg-mmx support. Added ALSA stuff.
+
 2001-10-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/dllloader/user32.c: Implemented LoadStringA() more usefully.
