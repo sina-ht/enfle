@@ -39,10 +39,12 @@ static char *spi_errormsg[] = {
   "Internal error"
 };
 
+typedef int PASCAL (*ProgressCallback)(int, int, long);
+
 typedef int PASCAL (*IsSupportedFunc)(LPSTR, DWORD);
 typedef int PASCAL (*GetPluginInfoFunc)(int, LPSTR, int);
 typedef int PASCAL (*GetPictureInfoFunc)(LPSTR, long, unsigned int, PictureInfo *);
-typedef int PASCAL (*GetPictureFunc)(LPSTR, long, unsigned int, HANDLE *, HANDLE *, FARPROC, long);
+typedef int PASCAL (*GetPictureFunc)(LPSTR, long, unsigned int, HANDLE *, HANDLE *, ProgressCallback, long);
 
 typedef struct _file_info {
   unsigned char method[8]; /* ∞µΩÃÀ°§ŒºÔŒ‡ */
@@ -73,4 +75,4 @@ typedef struct _BITMAPINFOHEADER {
 /* typedef int PASCAL (*GetPluginInfoFunc)(int, LPSTR, int); */
 typedef int PASCAL (*GetArchiveInfoFunc)(LPSTR, long, unsigned int, HLOCAL *);
 typedef int PASCAL (*GetFileInfoFunc)(LPSTR, long, LPSTR, unsigned int, fileInfo *);
-typedef int PASCAL (*GetFileFunc)(LPSTR, long, LPSTR, unsigned int, FARPROC, long);
+typedef int PASCAL (*GetFileFunc)(LPSTR, long, LPSTR, unsigned int, ProgressCallback, long);
