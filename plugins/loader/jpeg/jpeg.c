@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Aug 15 10:50:04 2001.
- * $Id: jpeg.c,v 1.11 2001/08/15 06:32:28 sian Exp $
+ * Last Modified: Sat Sep  1 01:04:22 2001.
+ * $Id: jpeg.c,v 1.12 2001/09/01 18:41:44 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -289,7 +289,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   /* JSAMPLEs per row in output buffer */
   p->bytes_per_line = p->width * cinfo->output_components;
 
-  debug_message("Attempt to allocate memory %d bytes... ", p->bytes_per_line * p->height);
+  //debug_message("Attempt to allocate memory %d bytes... ", p->bytes_per_line * p->height);
 
   if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
 #ifdef DEBUG

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 08:47:42 2001.
- * $Id: identify.c,v 1.4 2001/08/26 00:50:56 sian Exp $
+ * Last Modified: Sat Sep  1 01:03:51 2001.
+ * $Id: identify.c,v 1.5 2001/09/01 18:41:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -103,11 +103,8 @@ identify_stream(EnflePlugins *eps, Image *p, Movie *m, Stream *s, VideoWindow *v
     else
       debug_message("Image identified as %s\n", p->format);
 #endif
-    if (!p->image) {
-      debug_message("*** p->image == NULL ***\n");
+    if (!p->image)
       p->image = memory_create();
-      debug_message("*** memory object p->image created (no problem) ***\n");
-    }
     if ((f = loader_load(eps, p->format, p, s, vw, c)) == LOAD_OK)
       return IDENTIFY_STREAM_IMAGE;
     if (f != LOAD_NOT)
