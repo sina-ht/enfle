@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Aug  1 02:41:30 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.1 2001/07/31 20:25:03 sian Exp $
+ * Last Modified: Thu Aug  2 20:49:45 2001.
+ * $Id: vmpm_decompose_escfirst.c,v 1.2 2001/08/02 11:50:00 sian Exp $
  */
 
 #include <stdio.h>
@@ -218,7 +218,7 @@ encode(VMPM *vmpm)
 	if (nsymbols == tv) {
 	  n1++;
 	} else {
-	  arithmodel_encode_cbt(bin_am, tv, n1, 0, 1);
+	  arithmodel_encode_cbt(bin_am, tv, n1 - 1, 0, 1);
 	}
       }
     }
