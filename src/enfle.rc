@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Tue Apr 24 22:51:34 2001.
-; $Id: enfle.rc,v 1.13 2001/04/24 16:46:49 sian Exp $
+; Last Modified: Fri Apr 27 19:10:25 2001.
+; $Id: enfle.rc,v 1.14 2001/04/27 11:07:50 sian Exp $
 
 enfle {
   plugins {
@@ -37,23 +37,25 @@ enfle {
     saver {
       png {
         compression_level = 9
-	; all/default/paeth_only/none
-	;              ^^-- This is correct, should not be transposed.
+	; filter = {all/default/paeth_only/none}
+	;                        ^^-- This is correct, should not be transposed.
 	filter = all
-	; yes/no, note: interface increases a file size slightly.
+	; interlace = {yes/no} Note: interface increases a file size slightly.
 	interlace = no
       }
       glic {
         vmpm_path = ../plugins/saver/glic/.libs
-        decompose_method = Normal
-        scan_method = Quad
+        ; decompose_method = {Normal/HighLow/Token}
+	decompose_method = HighLow
+        ; scan_method = {Normal/Quad}
+	scan_method = Quad
       }
     }
     player {
       ;; assoc is not implemented yet
       ;assoc {
-      ;  .mpg = libmpeg3
-      ;  .mpeg = libmpeg3
+      ;  .mpg = LibMPEG3
+      ;  .mpeg = LibMPEG3
       ;  .mp3 = mpglib
       ;  .m1v = MPEG_lib
       ;}
