@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Thu Jan 25 13:08:46 2001.
+     Last Modified: Fri Feb  2 01:04:11 2001.
 
  This file is part of Enfle.
 
@@ -25,11 +25,25 @@
  ATTENTION: GPL version 2 only. You cannot apply any later
  version. This situation may change.
 
+***************************************************
+
  This software is based in part on the work of the Independent JPEG Group
+
+ -- OK, libjpeg is only linked, not distributed with this archive. You
+ -- should install it.
 
  The Graphics Interchange Format(c) is
  the Copyright property of CompuServe Incorporated.
  GIF(sm) is a Service Mark property of CompuServe Incorporated.
+
+ -- OK, libungif is only linked, not distributed with this
+ -- archive. Moreover, libungif is not used by default, for avoiding
+ -- possible patent infringement. It's up to you whether use it or not.
+
+ This software includes mpglib by Michael Hipp.
+
+ This software includes libmpeg2 by Aaron Holtzman. For this part, you
+ can apply GPL2 or later version.
 
  This product includes software developed by or derived from software
  developed by Project Mayo.
@@ -47,6 +61,7 @@
 
 ***************************************************
 
+OK, legal part is over. The rest is fun.
 
 Sorry Japanese only. Are there any volunteers for translation?
 
@@ -88,7 +103,7 @@ libungifのLZW codeを使用できるかどうかとは別ですので、各自の責任におい
 おきます。
 
 JPEG: jpegsrc-6b (libjpeg)
-PNG: libpng-1.0.2 or later (recommended: 1.0.8)
+PNG: libpng-1.0.2 or later (recommended: 1.0.9)
 gz: zlib-1.1.3 or later
 bz2: bzip2-1.0.0 or later
 ungif: libungif-3.1.0 or later (recommended: 4.1.0)
