@@ -1,10 +1,10 @@
 /*
  * stream-utils.c -- stream utility
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 07:17:44 2000.
- * $Id: stream-utils.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Tue Feb 20 20:10:47 2001.
+ * $Id: stream-utils.c,v 1.2 2001/02/20 13:55:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,6 +47,32 @@ stream_read_big_uint32(Stream *st, unsigned int *val)
     return 0;
 
   *val = utils_get_big_uint32(buf);
+
+  return 1;
+}
+
+int
+stream_read_little_uint16(Stream *st, unsigned short int *val)
+{
+  unsigned char buf[2];
+
+  if (stream_read(st, buf, 2) != 2)
+    return 0;
+
+  *val = utils_get_little_uint16(buf);
+
+  return 1;
+}
+
+int
+stream_read_big_uint16(Stream *st, unsigned short int *val)
+{
+  unsigned char buf[2];
+
+  if (stream_read(st, buf, 2) != 2)
+    return 0;
+
+  *val = utils_get_big_uint16(buf);
 
   return 1;
 }
