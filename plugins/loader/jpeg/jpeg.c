@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 19 11:23:49 2002.
- * $Id: jpeg.c,v 1.22 2002/11/06 14:11:55 sian Exp $
+ * Last Modified: Thu Feb  5 23:13:50 2004.
+ * $Id: jpeg.c,v 1.23 2004/02/14 05:20:52 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -231,7 +231,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   if (memcmp(buf + 6, "\0" "\0" "\x1\x5", 4) == 0)
     return LOAD_OK;
 
-  show_message("Unknown ID (%02X%02X%02X%02X:%c%c%c%c). Please report.\n", buf[6], buf[7], buf[8], buf[9], buf[6], buf[7], buf[8], buf[9]);
+  debug_message_fnc("Unknown ID (%02X%02X%02X%02X:%c%c%c%c).\n", buf[6], buf[7], buf[8], buf[9], buf[6], buf[7], buf[8], buf[9]);
 
   return LOAD_OK;
 }
