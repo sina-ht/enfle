@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 23 06:34:42 2000.
- * $Id: audio-plugin.h,v 1.2 2000/12/22 23:12:14 sian Exp $
+ * Last Modified: Sun Dec 24 04:25:35 2000.
+ * $Id: audio-plugin.h,v 1.3 2000/12/24 15:17:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,9 +30,7 @@ typedef struct _audio_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
 
   AudioDevice *(*open_device)(void *, Config *);
-  AudioFormat (*set_format)(AudioDevice *, AudioFormat);
-  int (*set_channels)(AudioDevice *, int);
-  int (*set_speed)(AudioDevice *, int);
+  int (*set_params)(AudioDevice *, AudioFormat *, int *, int *);
   int (*write_device)(AudioDevice *, unsigned char *, int);
   int (*sync_device)(AudioDevice *);
   int (*close_device)(AudioDevice *);

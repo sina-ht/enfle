@@ -3,8 +3,10 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 23 06:36:39 2000.
- * $Id: oss.c,v 1.2 2000/12/22 23:12:14 sian Exp $
+ * Last Modified: Sun Dec 24 06:14:21 2000.
+ * $Id: oss.c,v 1.3 2000/12/24 15:17:41 sian Exp $
+ *
+ * Note: Audio support is incomplete.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,25 +22,31 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <stdlib.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <sys/soundcard.h>
 #include <errno.h>
 
 #define REQUIRE_UNISTD_H
 #include "compat.h"
 
+#ifdef HAVE_SYS_SOUNDCARD_H
+#  include <sys/soundcard.h>
+#else
+#  ifdef HAVE_SOUNDCARD_H
+#    include <soundcard.h>
+#  endif
+#  ifdef HAVE_MACHINE_SOUNDCARD_H
+#    include <machine/soundcard.h>
+#  endif
+#endif
+
 #include "common.h"
 
 #include "audio-plugin.h"
 
-typedef struct {
-} OSS_info;
-
 static AudioDevice *open_device(void *, Config *);
-static AudioFormat set_format(AudioDevice *, AudioFormat);
-static int set_channels(AudioDevice *, int);
-static int set_speed(AudioDevice *, int);
+static int set_params(AudioDevice *, AudioFormat *, int *, int *);
 static int write_device(AudioDevice *, unsigned char *, int);
 static int sync_device(AudioDevice *);
 static int close_device(AudioDevice *);
@@ -46,13 +54,11 @@ static int close_device(AudioDevice *);
 static AudioPlugin plugin = {
   type: ENFLE_PLUGIN_AUDIO,
   name: "OSS",
-  description: "OSS Audio plugin version 0.1.1",
+  description: "OSS Audio plugin version 0.1.2",
   author: "Hiroshi Takekawa",
 
   open_device: open_device,
-  set_format: set_format,
-  set_channels: set_channels,
-  set_speed: set_speed,
+  set_params: set_params,
   write_device: write_device,
   sync_device: sync_device,
   close_device: close_device
@@ -105,11 +111,15 @@ open_device(void *data, Config *c)
   return ad;
 }
 
-static AudioFormat
-set_format(AudioDevice *ad, AudioFormat format)
+static int
+set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
 {
-  int f;
+  int c, f, r;
+  AudioFormat format = *format_p;
+  int ch = *ch_p;
+  int rate = *rate_p;
 
+  /* format part */
   switch (format) {
   case _AUDIO_FORMAT_MU_LAW:
     f = AFMT_MU_LAW;
@@ -149,7 +159,8 @@ set_format(AudioDevice *ad, AudioFormat format)
   default:
     show_message(__FUNCTION__ ": format %d is invalid.\n", format);
     ad->format = _AUDIO_FORMAT_UNSET;
-    return _AUDIO_FORMAT_UNSET;
+    *format_p = _AUDIO_FORMAT_UNSET;
+    return 0;
   }
 
   if (ioctl(ad->fd, SNDCTL_DSP_SETFMT, &f) == -1) {
@@ -201,51 +212,35 @@ set_format(AudioDevice *ad, AudioFormat format)
     break;
   }
 
-  return ad->format;
-}
+  *format_p = ad->format;
 
-static int
-set_channels(AudioDevice *ad, int ch)
-{
-  int c;
-
-  debug_message(__FUNCTION__ ": setting channels %d\n", ch);
-
+  /* channel part */
   c = ch;
   if (ioctl(ad->fd, SNDCTL_DSP_CHANNELS, &c) == -1) {
     show_message(__FUNCTION__ ": in setting channels to %d.\n", ch);
     perror("OSS");
-    ad->channels = 0;
+    *ch_p = 0;
     return 0;
   }
 
   debug_message(__FUNCTION__ ": set to %d\n", c);
 
-  ad->channels = c;
+  *ch_p = c;
 
-  return c;
-}
-
-static int
-set_speed(AudioDevice *ad, int speed)
-{
-  int s;
-
-  debug_message(__FUNCTION__ ": setting speed %d\n", speed);
-
-  s = speed;
-  if (ioctl(ad->fd, SNDCTL_DSP_SPEED, &s) == -1) {
-    show_message(__FUNCTION__ ": in setting speed to %d.\n", speed);
+  /* rate part */
+  r = rate;
+  if (ioctl(ad->fd, SNDCTL_DSP_SPEED, &r) == -1) {
+    show_message(__FUNCTION__ ": in setting speed to %d.\n", rate);
     perror("OSS");
-    ad->speed = 0;
+    *rate_p = 0;
     return 0;
   }
 
-  debug_message(__FUNCTION__ ": set to %d\n", s);
+  debug_message(__FUNCTION__ ": set to %d\n", r);
 
-  ad->speed = s;
+  *rate_p = r;
 
-  return s;
+  return 1;
 }
 
 static int
@@ -258,6 +253,7 @@ static int
 sync_device(AudioDevice *ad)
 {
   ioctl(ad->fd, SNDCTL_DSP_SYNC, 0);
+
   return 1;
 }
 
