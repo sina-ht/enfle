@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 16 03:23:51 2000.
- * $Id: timer_gettimeofday.c,v 1.1 2000/10/16 19:24:33 sian Exp $
+ * Last Modified: Sat Nov 18 15:07:59 2000.
+ * $Id: timer_gettimeofday.c,v 1.2 2000/11/20 12:55:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,12 +20,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <sys/time.h>
+#include <stdlib.h>
+
+#include "common.h"
+
 #include "timer.h"
 #include "timer_impl.h"
 #include "timer_gettimeofday.h"
-
-#include <sys/time.h>
-#include <stdlib.h>
 
 static Timer *create(Timer *);
 static void destroy(Timer *);
@@ -54,7 +56,13 @@ static Timer_impl timer_impl_gettimeofday = {
 Timer_impl *
 timer_gettimeofday(void)
 {
-  return &timer_impl_gettimeofday;
+  Timer_impl *impl;
+
+  if ((impl = calloc(1, sizeof(Timer_impl))) == NULL)
+    return NULL;
+  memcpy(impl, &timer_impl_gettimeofday, sizeof(Timer_impl));
+
+  return impl;
 }
 
 static Timer *
@@ -73,6 +81,7 @@ destroy(Timer *timer)
 {
   if (timer->impl->impl_data)
     free(timer->impl->impl_data);
+  free(timer->impl);
 }
 
 static double
