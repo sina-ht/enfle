@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Nov  6 23:56:44 2003.
- * $Id: Xlib.c,v 1.53 2003/11/17 13:58:39 sian Exp $
+ * Last Modified: Tue Dec 23 18:58:46 2003.
+ * $Id: Xlib.c,v 1.54 2003/12/23 11:03:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -308,26 +308,23 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
     debug_message_fnc("load font [%s]\n", fontname);
   }
 
+  xwi->fontset = 0;
   {
     char **miss = NULL, *def = NULL;
     int misscount = 0;
 
     if (fontsetname) {
       xwi->xfontset = XCreateFontSet(x11_display(x11), fontsetname, &miss, &misscount, &def);
-      if (misscount > 0) {
-	warning("%d miss for '%s'\n", misscount, fontsetname);
-	xwi->caption_font = XLoadFont(x11_display(x11), fontname);
-	xwi->fontset = 0;
-      } else {
-	debug_message("XCreateFontSet(%s) OK.\n", fontsetname);
+      if (xwi->xfontset) {
+	if (misscount > 0) {
+	  warning("%d miss for '%s'\n", misscount, fontsetname);
+	  XFreeStringList(miss);
+	}
 	xwi->fontset = 1;
-	xwi->caption_font = XLoadFont(x11_display(x11), fontname);
       }
-    } else {
-      xwi->caption_font = XLoadFont(x11_display(x11), fontname);
-      xwi->fontset = 0;
     }
   }
+  xwi->caption_font = XLoadFont(x11_display(x11), fontname);
   xwi->fs = XQueryFont(x11_display(x11), xwi->caption_font);
 
   vw->full_width = WidthOfScreen(x11_sc(x11));
