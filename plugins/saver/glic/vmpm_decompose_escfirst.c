@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 15:31:05 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.5 2001/08/07 09:29:05 sian Exp $
+ * Last Modified: Tue Aug  7 21:51:49 2001.
+ * $Id: vmpm_decompose_escfirst.c,v 1.6 2001/08/09 17:32:07 sian Exp $
  */
 
 #include <stdio.h>
@@ -153,11 +153,11 @@ encode(VMPM *vmpm)
   ac = arithcoder_arith_create();
   arithcoder_encode_init(ac, vmpm->outfile);
 
-  am = arithmodel_order_zero_create(0, 1);
+  am = arithmodel_order_zero_create();
   arithmodel_encode_init(am, ac);
   arithmodel_order_zero_set_update_escape_freq(am, update_escape_freq);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_encode_init(bin_am, ac);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
@@ -250,7 +250,7 @@ encode(VMPM *vmpm)
   arithmodel_order_zero_reset(bin_am, 0, 0);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
-  arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
+  arithmodel_order_zero_reset(am, 0, vmpm->alphabetsize - 1);
   stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
@@ -289,12 +289,12 @@ decode(VMPM *vmpm)
   fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
-
   arithcoder_decode_init(ac, vmpm->infile);
+
+  am = arithmodel_order_zero_create();
   arithmodel_decode_init(am, ac);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_decode_init(bin_am, ac);
 
   i = fgetc(vmpm->outfile);
@@ -344,7 +344,7 @@ decode(VMPM *vmpm)
     memory_error(NULL, MEMORY_ERROR);
 
   n = 0;
-  arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
+  arithmodel_order_zero_reset(am, 0, vmpm->alphabetsize - 1);
   stat_message(vmpm, "D:Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     Index v;

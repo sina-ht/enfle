@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escb.c -- ESC estimate method B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 18:00:54 2001.
- * $Id: vmpm_decompose_escb.c,v 1.2 2001/08/06 18:51:42 sian Exp $
+ * Last Modified: Tue Aug  7 22:10:52 2001.
+ * $Id: vmpm_decompose_escb.c,v 1.3 2001/08/09 17:32:07 sian Exp $
  */
 
 #include <stdio.h>
@@ -153,14 +153,14 @@ encode(VMPM *vmpm)
   ac = arithcoder_arith_create();
   arithcoder_encode_init(ac, vmpm->outfile);
 
-  char_am = arithmodel_order_zero_create(0, 1);
+  char_am = arithmodel_order_zero_create();
   arithmodel_encode_init(char_am, ac);
   arithmodel_order_zero_set_update_escape_freq(char_am, update_escape_freq);
 
-  am = arithmodel_order_zero_create(0, 0);
+  am = arithmodel_order_zero_create();
   arithmodel_encode_init(am, ac);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_encode_init(bin_am, ac);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
@@ -235,7 +235,7 @@ encode(VMPM *vmpm)
   memset(symbol_to_index, 255, vmpm->alphabetsize * sizeof(unsigned int));
 
   n = 0;
-  arithmodel_order_zero_reset(char_am, 1, vmpm->alphabetsize - 1);
+  arithmodel_order_zero_reset(char_am, 0, vmpm->alphabetsize - 1);
   stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
@@ -274,12 +274,12 @@ decode(VMPM *vmpm)
   fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
-
   arithcoder_decode_init(ac, vmpm->infile);
+
+  am = arithmodel_order_zero_create();
   arithmodel_decode_init(am, ac);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_decode_init(bin_am, ac);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
@@ -291,8 +291,8 @@ decode(VMPM *vmpm)
     if ((vmpm->tokens[i] = calloc(vmpm->token_index[i], sizeof(Token))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
     /* newtoken[] will not be known by decoder without sending. */
-    //arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-    arithmodel_order_zero_reset(am, 1, vmpm->token_index[i] >> 2);
+    //arithmodel_order_zero_reset(am, 0, vmpm->newtoken[i]);
+    arithmodel_order_zero_reset(am, 0, vmpm->token_index[i] >> 2);
     for (j = 0; j < vmpm->token_index[i]; j++) {
       Index index;
 

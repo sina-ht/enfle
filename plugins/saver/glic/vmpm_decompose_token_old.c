@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_token -- Token decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:44:15 2001.
- * $Id: vmpm_decompose_token_old.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Tue Aug  7 22:08:51 2001.
+ * $Id: vmpm_decompose_token_old.c,v 1.3 2001/08/09 17:32:08 sian Exp $
  */
 
 #include <stdio.h>
@@ -171,18 +171,20 @@ encode(VMPM *vmpm)
   unsigned int j;
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
-
   arithcoder_encode_init(ac, vmpm->outfile);
+
+  am = arithmodel_order_zero_create();
   arithmodel_encode_init(am, ac);
+  arithmodel_order_zero_reset(am, 0, 1);
 
   for (i = vmpm->I; i >= 1; i--) {
     stat_message(vmpm, "level %d: %d\n", i, vmpm->token_index[i]);
     if ((bin_ams = calloc(vmpm->newtoken[i], sizeof(Arithmodel *))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
     for (j = 0; j < vmpm->newtoken[i]; j++) {
-      bin_ams[j] = arithmodel_order_zero_create(0, 0);
+      bin_ams[j] = arithmodel_order_zero_create();
       arithmodel_encode_init(bin_ams[j], ac);
+      arithmodel_order_zero_reset(bin_ams[j], 0, 0);
       arithmodel_install_symbol(bin_ams[j], 1);
       arithmodel_install_symbol(bin_ams[j], 1);
     }
@@ -196,7 +198,7 @@ encode(VMPM *vmpm)
 	arithmodel_encode(bin_ams[t->value - 1], is_extra_token(t) ? 1 : 0);
       }
     }
-    arithmodel_reset(am);
+    arithmodel_order_zero_reset(am, 0, 1);
     for (j = 0; j < vmpm->newtoken[i]; j++) {
       arithmodel_encode_final(bin_ams[j]);
       arithmodel_destroy(bin_ams[j]);
@@ -208,8 +210,9 @@ encode(VMPM *vmpm)
     memory_error(NULL, MEMORY_ERROR);
   memset(symbol_to_index, 255, vmpm->alphabetsize * sizeof(unsigned int));
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_encode_init(bin_am, ac);
+  arithmodel_order_zero_reset(bin_am, 0, 0);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
 

@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_half -- Half decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:43:35 2001.
- * $Id: vmpm_decompose_half.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Tue Aug  7 21:53:38 2001.
+ * $Id: vmpm_decompose_half.c,v 1.3 2001/08/09 17:32:07 sian Exp $
  */
 
 #include <stdio.h>
@@ -175,13 +175,15 @@ encode(VMPM *vmpm)
   unsigned int j, k;
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
-
   arithcoder_encode_init(ac, vmpm->outfile);
-  arithmodel_encode_init(am, ac);
 
-  bit_am = arithmodel_order_zero_create(0, 0);
+  am = arithmodel_order_zero_create();
+  arithmodel_encode_init(am, ac);
+  arithmodel_order_zero_reset(am, 0, 1);
+
+  bit_am = arithmodel_order_zero_create();
   arithmodel_encode_init(bit_am, ac);
+  arithmodel_order_zero_reset(bin_am, 0, 0);
   arithmodel_install_symbol(bit_am, 1);
   arithmodel_install_symbol(bit_am, 1);
 

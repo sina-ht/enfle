@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_esc.c -- ESC estimatation method A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 15:28:53 2001.
- * $Id: vmpm_decompose_esc.c,v 1.6 2001/08/07 09:28:48 sian Exp $
+ * Last Modified: Fri Aug 10 02:29:46 2001.
+ * $Id: vmpm_decompose_esc.c,v 1.7 2001/08/09 17:32:07 sian Exp $
  */
 
 #include <stdio.h>
@@ -154,14 +154,14 @@ encode(VMPM *vmpm)
   ac = arithcoder_arith_create();
   arithcoder_encode_init(ac, vmpm->outfile);
 
-  char_am = arithmodel_order_zero_create(0, 1);
+  char_am = arithmodel_order_zero_create();
   arithmodel_encode_init(char_am, ac);
   arithmodel_order_zero_set_update_escape_freq(char_am, update_escape_freq);
 
-  am = arithmodel_order_zero_create(0, 0);
+  am = arithmodel_order_zero_create();
   arithmodel_encode_init(am, ac);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_encode_init(bin_am, ac);
 
   match_found = 0;
@@ -187,10 +187,10 @@ encode(VMPM *vmpm)
   if (match_found) {
     for (; i >= 1; i--) {
       stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
-      /* Encode escape symbols at once. */
       arithmodel_order_zero_reset(bin_am, 0, 0);
       arithmodel_install_symbol(bin_am, 1);
       arithmodel_install_symbol(bin_am, 1);
+      /* The first token of each level must be t_0. */
       if (vmpm->token[i][0]->value != 1)
 	generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);
       /* Hence, we don't need to encode it. */
@@ -224,7 +224,7 @@ encode(VMPM *vmpm)
   arithmodel_order_zero_reset(bin_am, 0, 0);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
-  arithmodel_order_zero_reset(char_am, 1, vmpm->alphabetsize - 1);
+  arithmodel_order_zero_reset(char_am, 0, vmpm->alphabetsize - 1);
   stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
@@ -263,12 +263,12 @@ decode(VMPM *vmpm)
   fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
+  am = arithmodel_order_zero_create();
 
   arithcoder_decode_init(ac, vmpm->infile);
   arithmodel_decode_init(am, ac);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_decode_init(bin_am, ac);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);

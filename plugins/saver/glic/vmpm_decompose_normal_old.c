@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal_old.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:43:46 2001.
- * $Id: vmpm_decompose_normal_old.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Tue Aug  7 21:59:54 2001.
+ * $Id: vmpm_decompose_normal_old.c,v 1.3 2001/08/09 17:32:07 sian Exp $
  */
 
 #include <stdio.h>
@@ -135,13 +135,15 @@ encode(VMPM *vmpm)
   //debug_message(__FUNCTION__ "()\n");
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
-
   arithcoder_encode_init(ac, vmpm->outfile);
-  arithmodel_encode_init(am, ac);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  am = arithmodel_order_zero_create();
+  arithmodel_encode_init(am, ac);
+  arithmodel_order_zero_reset(am, 0, 1);
+
+  bin_am = arithmodel_order_zero_create();
   arithmodel_encode_init(bin_am, ac);
+  arithmodel_order_zero_reset(bin_am, 0, 0);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
 
@@ -152,7 +154,7 @@ encode(VMPM *vmpm)
 
       arithmodel_encode(am, t->value - 1);
     }
-    arithmodel_reset(am);
+    arithmodel_order_zero_reset(am, 0, 1);
   }
 
   if ((symbol_to_index = malloc(vmpm->alphabetsize * sizeof(unsigned int))) == NULL)
@@ -193,12 +195,12 @@ decode(VMPM *vmpm)
   //debug_message(__FUNCTION__ "()\n");
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
+  am = arithmodel_order_zero_create();
 
   arithcoder_decode_init(ac, vmpm->infile);
   arithmodel_decode_init(am, ac);
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_decode_init(bin_am, ac);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);

@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_token -- Token decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Jun 19 17:45:35 2001.
- * $Id: vmpm_decompose_token2.c,v 1.4 2001/06/19 14:22:58 sian Exp $
+ * Last Modified: Tue Aug  7 22:04:54 2001.
+ * $Id: vmpm_decompose_token2.c,v 1.5 2001/08/09 17:32:08 sian Exp $
  */
 
 #include <stdio.h>
@@ -172,9 +172,9 @@ encode(VMPM *vmpm)
   unsigned int j;
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
-
   arithcoder_encode_init(ac, vmpm->outfile);
+
+  am = arithmodel_order_zero_create();
   arithmodel_encode_init(am, ac);
 
   for (i = vmpm->I; i >= 1; i--) {
@@ -182,8 +182,9 @@ encode(VMPM *vmpm)
     if ((bin_ams = calloc(vmpm->newtoken[i], sizeof(Arithmodel *))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
     for (j = 0; j < vmpm->newtoken[i]; j++) {
-      bin_ams[j] = arithmodel_order_zero_create(0, 0);
+      bin_ams[j] = arithmodel_order_zero_create();
       arithmodel_encode_init(bin_ams[j], ac);
+      arithmodel_order_zero_reset(bin_ams[j], 0, 0);
       arithmodel_install_symbol(bin_ams[j], 1);
       arithmodel_install_symbol(bin_ams[j], 1);
     }
@@ -209,8 +210,9 @@ encode(VMPM *vmpm)
     memory_error(NULL, MEMORY_ERROR);
   memset(symbol_to_index, 255, vmpm->alphabetsize * sizeof(unsigned int));
 
-  bin_am = arithmodel_order_zero_create(0, 0);
+  bin_am = arithmodel_order_zero_create();
   arithmodel_encode_init(bin_am, ac);
+  arithmodel_order_zero_reset(bin_am, 0, 0);
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
 
