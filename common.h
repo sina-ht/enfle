@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  2 13:57:13 2001.
- * $Id: common.h,v 1.10 2001/02/02 16:43:04 sian Exp $
+ * Last Modified: Mon Feb 19 17:24:12 2001.
+ * $Id: common.h,v 1.11 2001/02/19 16:39:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,8 @@
 
 #include <stdio.h>
 #define show_message(format, args...) printf(format, ## args)
-#define warning(format, args...) printf("warning" format, ## args)
+#define warning(format, args...) printf("warning: " format, ## args)
+#define bug(format, args...) printf("BUG:" format, ## args)
 
 #ifdef REQUIRE_FATAL
 #include <stdarg.h>
