@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 24 09:52:03 2001.
- * $Id: libmpeg2.c,v 1.10 2001/02/24 08:24:50 sian Exp $
+ * Last Modified: Sat Mar  3 03:34:48 2001.
+ * $Id: libmpeg2.c,v 1.11 2001/03/02 18:39:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <inttypes.h>
 
@@ -181,7 +182,12 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   if ((info->vo = vo_enfle_rgb_open(vw, m, p)) == NULL)
     goto error;
-  mpeg2_init(&info->mpeg2dec, mm_accel(), info->vo);
+  {
+    unsigned int accel;
+    accel = mm_accel();
+    vo_accel(accel);
+    mpeg2_init(&info->mpeg2dec, accel, info->vo);
+  }
 
   switch (vw->bits_per_pixel) {
   case 32:
@@ -249,7 +255,7 @@ play(Movie *m)
   stream_rewind(m->st);
 
   if (m->has_video) {
-    if (pipe(fds) != 0) {
+    if (socketpair(PF_LOCAL, SOCK_STREAM, 0, fds) != 0) {
       perror("libmpeg2");
       return PLAY_ERROR;
     }
@@ -269,7 +275,7 @@ play(Movie *m)
   info->nastream = -1;
   demultiplexer_mpeg_set_audio(info->demux, info->nastream);
   if (m->has_audio) {
-    if (pipe(fds) != 0)
+    if (socketpair(PF_LOCAL, SOCK_STREAM, 0, fds) != 0)
       return PLAY_ERROR;
     info->a_fd_in = fds[0];
     info->a_fd_out = fds[1];
@@ -320,6 +326,13 @@ play_video(void *arg)
       break;
     }
     debug_message(__FUNCTION__ ": decode %d bytes\n", read_size);
+    {
+      int i;
+      fprintf(stderr, "DATA: ");
+      for (i = 0; i < 32; i++)
+	fprintf(stderr, "%02X ", buf[i]);
+      fprintf(stderr, "\n");
+    }
     nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, buf, buf + read_size);
     debug_message(__FUNCTION__ ": decode %d frames\n", nframe_decoded);
   }
