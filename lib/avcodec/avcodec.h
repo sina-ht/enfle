@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000408
 #define FFMPEG_VERSION         "0.4.8"
-#define LIBAVCODEC_BUILD       4700
+#define LIBAVCODEC_BUILD       4701
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -93,6 +93,7 @@ enum CodecID {
     CODEC_ID_VMDAUDIO,
     CODEC_ID_MSZH,
     CODEC_ID_ZLIB,
+    CODEC_ID_QTRLE,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE,
@@ -110,10 +111,13 @@ enum CodecID {
     CODEC_ID_ADPCM_IMA_DK3,
     CODEC_ID_ADPCM_IMA_DK4,
     CODEC_ID_ADPCM_IMA_WS,
+    CODEC_ID_ADPCM_IMA_SMJPEG,
     CODEC_ID_ADPCM_MS,
     CODEC_ID_ADPCM_4XM,
     CODEC_ID_ADPCM_XA,
     CODEC_ID_ADPCM_ADX,
+    CODEC_ID_ADPCM_EA,
+    CODEC_ID_ADPCM_G726,
 
 	/* AMR */
     CODEC_ID_AMR_NB,
@@ -220,12 +224,6 @@ typedef struct RcOverride{
 
 /* only for ME compatiblity with old apps */
 extern int motion_estimation_method;
-
-/* ME algos sorted by quality */
-//FIXME remove IMHO
-static const __attribute__((unused)) int Motion_Est_QTab[] =
- { ME_ZERO, ME_PHODS, ME_LOG, ME_X1, ME_EPZS, ME_FULL };
-
 
 #define FF_MAX_B_FRAMES 8
 
@@ -1704,6 +1702,7 @@ extern AVCodec ra_288_decoder;
 extern AVCodec roq_dpcm_decoder;
 extern AVCodec interplay_dpcm_decoder;
 extern AVCodec xan_dpcm_decoder;
+extern AVCodec qtrle_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -1726,10 +1725,13 @@ PCM_CODEC(CODEC_ID_ADPCM_IMA_WAV, adpcm_ima_wav);
 PCM_CODEC(CODEC_ID_ADPCM_IMA_DK3, adpcm_ima_dk3);
 PCM_CODEC(CODEC_ID_ADPCM_IMA_DK4, adpcm_ima_dk4);
 PCM_CODEC(CODEC_ID_ADPCM_IMA_WS, adpcm_ima_ws);
+PCM_CODEC(CODEC_ID_ADPCM_SMJPEG, adpcm_ima_smjpeg);
 PCM_CODEC(CODEC_ID_ADPCM_MS, adpcm_ms);
 PCM_CODEC(CODEC_ID_ADPCM_4XM, adpcm_4xm);
 PCM_CODEC(CODEC_ID_ADPCM_XA, adpcm_xa);
 PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
+PCM_CODEC(CODEC_ID_ADPCM_EA, adpcm_ea);
+PCM_CODEC(CODEC_ID_ADPCM_G726, adpcm_g726);
 
 #undef PCM_CODEC
 

@@ -40,6 +40,7 @@ void avcodec_register_all(void)
 
     /* encoders */
 #ifdef CONFIG_ENCODERS
+    register_avcodec(&ac3_encoder);
     register_avcodec(&mp2_encoder);
 #ifdef CONFIG_MP3LAME
     register_avcodec(&mp3lame_encoder);
@@ -152,6 +153,7 @@ void avcodec_register_all(void)
     register_avcodec(&roq_dpcm_decoder);
     register_avcodec(&interplay_dpcm_decoder);
     register_avcodec(&xan_dpcm_decoder);
+    register_avcodec(&qtrle_decoder);
 #endif /* CONFIG_DECODERS */
 
 #ifdef AMR_NB
@@ -195,10 +197,13 @@ PCM_CODEC(CODEC_ID_ADPCM_IMA_WAV, adpcm_ima_wav);
 PCM_CODEC(CODEC_ID_ADPCM_IMA_DK3, adpcm_ima_dk3);
 PCM_CODEC(CODEC_ID_ADPCM_IMA_DK4, adpcm_ima_dk4);
 PCM_CODEC(CODEC_ID_ADPCM_IMA_WS, adpcm_ima_ws);
+PCM_CODEC(CODEC_ID_ADPCM_IMA_SMJPEG, adpcm_ima_smjpeg);
 PCM_CODEC(CODEC_ID_ADPCM_MS, adpcm_ms);
 PCM_CODEC(CODEC_ID_ADPCM_4XM, adpcm_4xm);
 PCM_CODEC(CODEC_ID_ADPCM_XA, adpcm_xa);
 PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
+PCM_CODEC(CODEC_ID_ADPCM_EA, adpcm_ea);
+PCM_CODEC(CODEC_ID_ADPCM_EA, adpcm_g726);
 
 #undef PCM_CODEC
 
@@ -213,3 +218,4 @@ PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
     av_register_codec_parser(&ac3_parser);
 #endif
 }
+

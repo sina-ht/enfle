@@ -748,7 +748,7 @@ int MPV_encode_init(AVCodecContext *avctx)
     }    
         
     if((s->flags & CODEC_FLAG_4MV) && s->codec_id != CODEC_ID_MPEG4 
-       && s->codec_id != CODEC_ID_H263 && s->codec_id != CODEC_ID_H263P){
+       && s->codec_id != CODEC_ID_H263 && s->codec_id != CODEC_ID_H263P && s->codec_id != CODEC_ID_FLV1){
         av_log(avctx, AV_LOG_ERROR, "4MV not supported by codec\n");
         return -1;
     }
@@ -3734,10 +3734,10 @@ static inline void encode_mb_hq(MpegEncContext *s, MpegEncContext *backup, MpegE
 
     encode_mb(s, motion_x, motion_y);
     
-    score= get_bit_count(&s->pb);
+    score= put_bits_count(&s->pb);
     if(s->data_partitioning){
-        score+= get_bit_count(&s->pb2);
-        score+= get_bit_count(&s->tex_pb);
+        score+= put_bits_count(&s->pb2);
+        score+= put_bits_count(&s->tex_pb);
     }
    
     if(s->avctx->mb_decision == FF_MB_DECISION_RD){
@@ -4012,7 +4012,7 @@ static void encode_picture(MpegEncContext *s, int picture_number)
     if(s->current_picture.key_frame)
         s->picture_in_gop_number=0;
 
-    s->last_bits= get_bit_count(&s->pb);
+    s->last_bits= put_bits_count(&s->pb);
     switch(s->out_format) {
     case FMT_MJPEG:
         mjpeg_picture_header(s);
@@ -4041,7 +4041,7 @@ static void encode_picture(MpegEncContext *s, int picture_number)
     default:
         assert(0);
     }
-    bits= get_bit_count(&s->pb);
+    bits= put_bits_count(&s->pb);
     s->header_bits= bits - s->last_bits;
     s->last_bits= bits;
     s->mv_bits=0;
@@ -4134,11 +4134,11 @@ static void encode_picture(MpegEncContext *s, int picture_number)
                     align_put_bits(&s->pb);
                     flush_put_bits(&s->pb);
 
-                    assert((get_bit_count(&s->pb)&7) == 0);
+                    assert((put_bits_count(&s->pb)&7) == 0);
                     current_packet_size= pbBufPtr(&s->pb) - s->ptr_lastgob;
                     
                     if(s->avctx->error_rate && s->resync_mb_x + s->resync_mb_y > 0){
-                        int r= get_bit_count(&s->pb)/8 + s->picture_number + s->codec_id + s->mb_x + s->mb_y;
+                        int r= put_bits_count(&s->pb)/8 + s->picture_number + s->codec_id + s->mb_x + s->mb_y;
                         int d= 100 / s->avctx->error_rate;
                         if(r % d == 0){
                             current_packet_size=0;
@@ -4169,7 +4169,7 @@ static void encode_picture(MpegEncContext *s, int picture_number)
                     }
 
                     if(s->flags&CODEC_FLAG_PASS1){
-                        int bits= get_bit_count(&s->pb);
+                        int bits= put_bits_count(&s->pb);
                         s->misc_bits+= bits - s->last_bits;
                         s->last_bits= bits;
                     }
@@ -4394,23 +4394,23 @@ static void encode_picture(MpegEncContext *s, int picture_number)
 
                 copy_context_after_encode(s, &best_s, -1);
                 
-                pb_bits_count= get_bit_count(&s->pb);
+                pb_bits_count= put_bits_count(&s->pb);
                 flush_put_bits(&s->pb);
                 ff_copy_bits(&backup_s.pb, bit_buf[next_block^1], pb_bits_count);
                 s->pb= backup_s.pb;
                 
                 if(s->data_partitioning){
-                    pb2_bits_count= get_bit_count(&s->pb2);
+                    pb2_bits_count= put_bits_count(&s->pb2);
                     flush_put_bits(&s->pb2);
                     ff_copy_bits(&backup_s.pb2, bit_buf2[next_block^1], pb2_bits_count);
                     s->pb2= backup_s.pb2;
                     
-                    tex_pb_bits_count= get_bit_count(&s->tex_pb);
+                    tex_pb_bits_count= put_bits_count(&s->tex_pb);
                     flush_put_bits(&s->tex_pb);
                     ff_copy_bits(&backup_s.tex_pb, bit_buf_tex[next_block^1], tex_pb_bits_count);
                     s->tex_pb= backup_s.tex_pb;
                 }
-                s->last_bits= get_bit_count(&s->pb);
+                s->last_bits= put_bits_count(&s->pb);
                
 #ifdef CONFIG_RISKY
                 if (s->out_format == FMT_H263 && s->pict_type!=B_TYPE)
@@ -4574,7 +4574,7 @@ static void encode_picture(MpegEncContext *s, int picture_number)
             }
             if(s->loop_filter)
                 ff_h263_loop_filter(s);
-//printf("MB %d %d bits\n", s->mb_x+s->mb_y*s->mb_stride, get_bit_count(&s->pb));
+//printf("MB %d %d bits\n", s->mb_x+s->mb_y*s->mb_stride, put_bits_count(&s->pb));
         }
     }
     emms_c();
@@ -4915,8 +4915,6 @@ static int dct_quantize_trellis_c(MpegEncContext *s,
     return last_non_zero;
 }
 
-#define BASIS_SHIFT 16
-#define RECON_SHIFT 6
 //#define REFINE_STATS 1
 static int16_t basis[64][64];
 
@@ -4939,33 +4937,11 @@ static void build_basis(uint8_t *perm){
     }
 }
 
-static int try_basis(int16_t rem[64], int16_t weight[64], int index, int scale){
-    int i;
-    unsigned int sum=0;
-
-    for(i=0; i<8*8; i++){
-        int b= rem[i] - ((basis[index][i]*scale + (1<<(BASIS_SHIFT - RECON_SHIFT-1)))>>(BASIS_SHIFT - RECON_SHIFT));
-        int w= weight[i];
-        b= (b + (1<<(RECON_SHIFT-1))) >> RECON_SHIFT;
-        assert(-512<b && b<512);
-
-        sum += (w*b)*(w*b)>>4;
-    }
-    return sum>>2;
-}
-
-static void add_basis(int16_t rem[64], int index, int scale){
-    int i;
-
-    for(i=0; i<8*8; i++){
-        rem[i] -= (basis[index][i]*scale + (1<<(BASIS_SHIFT - RECON_SHIFT-1)))>>(BASIS_SHIFT - RECON_SHIFT);
-    }    
-}
-
 static int dct_quantize_refine(MpegEncContext *s, //FIXME breaks denoise?
                         DCTELEM *block, int16_t *weight, DCTELEM *orig,
                         int n, int qscale){
     int16_t rem[64];
+    DCTELEM d1[64];
     const int *qmat;
     const uint8_t *scantable= s->intra_scantable.scantable;
     const uint8_t *perm_scantable= s->intra_scantable.permutated;
@@ -4979,7 +4955,7 @@ static int dct_quantize_refine(MpegEncContext *s, //FIXME breaks denoise?
     uint8_t * length;
     uint8_t * last_length;
     int lambda;
-    int rle_index, run, q = 0, sum;
+    int rle_index, run, q, sum;
 #ifdef REFINE_STATS
 static int count=0;
 static int after_last=0;
@@ -5028,8 +5004,9 @@ static int messed_sign=0;
 #ifdef REFINE_STATS
 {START_TIMER
 #endif
-    for(i=0; i<64; i++){ //FIXME memsetw or similar
-        rem[i]= (orig[i]<<RECON_SHIFT) - dc; //FIXME  use orig dirrectly insteadof copying to rem[]
+    dc += (1<<(RECON_SHIFT-1));
+    for(i=0; i<64; i++){
+        rem[i]= dc - (orig[i]<<RECON_SHIFT); //FIXME  use orig dirrectly insteadof copying to rem[]
     }
 #ifdef REFINE_STATS
 STOP_TIMER("memset rem[]")}
@@ -5067,7 +5044,7 @@ STOP_TIMER("memset rem[]")}
             run_tab[rle_index++]=run;
             run=0;
 
-            add_basis(rem, j, coeff);
+            s->dsp.add_8x8basis(rem, basis[j], coeff);
         }else{
             run++;
         }
@@ -5081,14 +5058,35 @@ STOP_TIMER("init rem[]")
 {START_TIMER
 #endif
     for(;;){
-        int best_score=try_basis(rem, weight, 0, 0);
+        int best_score=s->dsp.try_8x8basis(rem, weight, basis[0], 0);
         int nochange_score= best_score;
         int best_coeff=0;
         int best_change=0;
-        int run2, best_unquant_change = 0;
+        int run2, best_unquant_change, analyze_gradient;
 #ifdef REFINE_STATS
 {START_TIMER
 #endif
+        analyze_gradient = last_non_zero > 2 || s->avctx->quantizer_noise_shaping >= 3;
+
+        if(analyze_gradient){
+#ifdef REFINE_STATS
+{START_TIMER
+#endif
+            for(i=0; i<64; i++){
+                int w= weight[i];
+            
+                d1[i] = (rem[i]*w*w + (1<<(RECON_SHIFT+12-1)))>>(RECON_SHIFT+12);
+            }
+#ifdef REFINE_STATS
+STOP_TIMER("rem*w*w")}
+{START_TIMER
+#endif
+            s->dsp.fdct(d1);
+#ifdef REFINE_STATS
+STOP_TIMER("dct")}
+#endif
+        }
+
         if(start_i){
             const int level= block[0];
             int change, old_coeff;
@@ -5105,7 +5103,7 @@ STOP_TIMER("init rem[]")
                 if(new_coeff >= 2048 || new_coeff < 0)
                     continue;
 
-                score= try_basis(rem, weight, 0, new_coeff - old_coeff);
+                score= s->dsp.try_8x8basis(rem, weight, basis[0], new_coeff - old_coeff);
                 if(score<best_score){
                     best_score= score;
                     best_coeff= 0;
@@ -5165,6 +5163,13 @@ STOP_TIMER("init rem[]")
                         }
                     }else{
                         assert(ABS(new_level)==1);
+                        
+                        if(analyze_gradient){
+                            int g= d1[ scantable[i] ];
+                            if(g && (g^new_level) >= 0)
+                                continue;
+                        }
+
                         if(i < last_non_zero){
                             int next_i= i + run2 + 1;
                             int next_level= block[ perm_scantable[next_i] ] + 64;
@@ -5221,7 +5226,7 @@ STOP_TIMER("init rem[]")
                 unquant_change= new_coeff - old_coeff;
                 assert((score < 100*lambda && score > -100*lambda) || lambda==0);
                 
-                score+= try_basis(rem, weight, j, unquant_change);
+                score+= s->dsp.try_8x8basis(rem, weight, basis[j], unquant_change);
                 if(score<best_score){
                     best_score= score;
                     best_coeff= i;
@@ -5295,7 +5300,7 @@ if(256*256*256*64 % count == 0){
                  }
             }
             
-            add_basis(rem, j, best_unquant_change);
+            s->dsp.add_8x8basis(rem, basis[j], best_unquant_change);
         }else{
             break;
         }
