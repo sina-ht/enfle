@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Feb 14 14:32:25 2004.
-dnl $Id: configure.in,v 1.137 2004/02/14 05:32:57 sian Exp $
+dnl Last Modified: Sat Feb 21 02:23:56 2004.
+dnl $Id: configure.in,v 1.138 2004/02/20 17:24:14 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20040214, sian@big.or.jp)
+AC_INIT(enfle, 20040221, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -183,6 +183,18 @@ if test "$available_divx" != "yes"; then
 fi
 AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_divx" = "yes")
 AC_SUBST(LIBADD_DIVXDECORE)
+
+available_ogg=no
+AC_CHECK_HEADER(ogg/ogg.h, [
+  AC_CHECK_LIB(ogg, ogg_sync_init, [ available_ogg=yes; LIBADD_OGG=-logg; ]) ])
+AM_CONDITIONAL(HAVE_OGG, test "$available_ogg" = "yes")
+AC_SUBST(LIBADD_OGG)
+
+available_vorbis=no
+AC_CHECK_HEADER(vorbis/codec.h, [
+  AC_CHECK_LIB(vorbis, vorbis_info_init, [ available_vorbis=yes; LIBADD_VORBIS=-lvorbis; ]) ])
+AM_CONDITIONAL(HAVE_VORBIS, test "$available_vorbis" = "yes")
+AC_SUBST(LIBADD_VORBIS)
 
 available_zlib=no
 AC_CHECK_HEADER(zlib.h, [
@@ -687,6 +699,7 @@ AC_CONFIG_FILES([
    plugins/audiodecoder/Makefile
     plugins/audiodecoder/mad/Makefile
     plugins/audiodecoder/mpglib/Makefile
+    plugins/audiodecoder/vorbis/Makefile
    plugins/videodecoder/Makefile
     plugins/videodecoder/avcodec/Makefile
     plugins/videodecoder/divx/Makefile
@@ -694,6 +707,7 @@ AC_CONFIG_FILES([
    plugins/demultiplexer/Makefile
     plugins/demultiplexer/avi/Makefile
     plugins/demultiplexer/mpeg/Makefile
+    plugins/demultiplexer/ogg/Makefile
 ])
 
 AC_OUTPUT
