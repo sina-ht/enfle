@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug  8 23:59:40 2002.
- * $Id: dlist.c,v 1.10 2002/08/08 15:07:24 sian Exp $
+ * Last Modified: Thu Aug 15 11:02:59 2002.
+ * $Id: dlist.c,v 1.11 2002/08/15 12:49:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,16 +66,14 @@ static void
 destroy_dlist_data(Dlist_data *dd)
 {
   void *ddd = dlist_data(dd);
-  Dlist_data_destructor dddest = dlist_data_destructor(dd);
+  Dlist_data_destructor dddest = __dlist_data_destructor(dd);
 
-  if (dddest)
+  if (ddd && dddest)
     dddest(ddd);
-  else
-    free(ddd);
 }
 
 int
-dlist_destroy(Dlist *dl, int f)
+dlist_destroy(Dlist *dl)
 {
   Dlist_data *dd, *dd_n, *g;
 
@@ -85,8 +83,7 @@ dlist_destroy(Dlist *dl, int f)
   free(g);
   for (dd = dd_n; dd; dd = dd_n) {
     dd_n = dlist_next(dd);
-    if (f && dlist_data(dd))
-      destroy_dlist_data(dd);
+    destroy_dlist_data(dd);
     free(dd);
   }
   free(dl);
@@ -125,7 +122,7 @@ dlist_insert_object(Dlist *dl, Dlist_data *inserted, void *d, Dlist_data_destruc
   if ((dd = dlist_data_create(dl)) == NULL)
     return NULL;
   dlist_data(dd) = d;
-  dlist_data_destructor(dd) = dddest;
+  __dlist_data_destructor(dd) = dddest;
 
   dlist_attach(dl, dd, inserted);
 
@@ -135,7 +132,19 @@ dlist_insert_object(Dlist *dl, Dlist_data *inserted, void *d, Dlist_data_destruc
 Dlist_data *
 dlist_insert(Dlist *dl, Dlist_data *inserted, void *d)
 {
+  return dlist_insert_object(dl, inserted, d, free);
+}
+
+Dlist_data *
+dlist_insert_value(Dlist *dl, Dlist_data *inserted, void *d)
+{
   return dlist_insert_object(dl, inserted, d, NULL);
+}
+
+Dlist_data *
+dlist_add_object(Dlist *dl, void *d, Dlist_data_destructor dddest)
+{
+  return dlist_insert_object(dl, __dlist_guard(dl), d, dddest);
 }
 
 Dlist_data *
@@ -145,9 +154,9 @@ dlist_add(Dlist *dl, void *d)
 }
 
 Dlist_data *
-dlist_add_object(Dlist *dl, void *d, Dlist_data_destructor dddest)
+dlist_add_value(Dlist *dl, void *d)
 {
-  return dlist_insert_object(dl, __dlist_guard(dl), d, dddest);
+  return dlist_insert_value(dl, __dlist_guard(dl), d);
 }
 
 Dlist_data *
@@ -192,8 +201,7 @@ dlist_delete(Dlist *dl, Dlist_data *dd)
   if (!dlist_detach(dl, dd))
     return 0;
 
-  if (dlist_data(dd))
-    destroy_dlist_data(dd);
+  destroy_dlist_data(dd);
   free(dd);
 
   return 1;
