@@ -1,12 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl NOTE: autoconf should be 2.49b or later (2.49e or later recommended).
+dnl NOTE: autoconf should be 2.49b or later (2.50 or later recommended).
 dnl       Older autoconf needs some modifications.
 dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Jun 25 02:00:00 2001.
-dnl $Id: configure.in,v 1.76 2001/06/24 17:15:38 sian Exp $
+dnl Last Modified: Tue Jul 10 23:18:50 2001.
+dnl $Id: configure.in,v 1.77 2001/07/10 14:19:35 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (could be uncommented for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010625)
+AM_INIT_AUTOMAKE(enfle, 20010710)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -77,7 +77,7 @@ available_mpeg_lib=no
 AC_CHECK_HEADER(mpeg.h, [
   AC_CHECK_LIB(mpeg, OpenMPEG, [
     AC_CHECK_LIB(mpeg, OpenMPEGStream, [ available_mpeg_lib=yes; LIBADD_MPEG_LIB=-lmpeg ],
-                                       [ AC_MSG_WARN([*** mpeg_lib requires patch.]) ]) ]) ])
+                                       [ AC_MSG_WARN([*** mpeg_lib requires a patch.]) ]) ]) ])
 AM_CONDITIONAL(HAVE_MPEG_LIB, test "$available_mpeg_lib" = "yes")
 AC_SUBST(LIBADD_MPEG_LIB)
 
@@ -109,7 +109,7 @@ if test "$available_pthread" = "yes"; then
     ], [], [$LIBADD_POW $LIBADD_PTHREAD])
   ], [
     AC_CHECK_HEADER(libmpeg3.h, [
-      AC_MSG_WARN([*** please put libmpeg3 headers in include/mpeg3/.])
+      AC_MSG_WARN([*** please put libmpeg3 headers in (/usr/local/)include/mpeg3/.])
     ])
   ])
 fi
@@ -157,7 +157,7 @@ AC_SUBST(LIBADD_MNG)
 
 available_avifile=no
 AC_ARG_WITH(avifile,
-        [  --with-avifile-path     specify avifile path (or auto detect).])
+        [  --with-avifile-path     specify avifile path (default: auto detect).])
 if test "${with_avifile-set}" = "set"; then
   with_avifile=yes
   ac_configure_args="$ac_configure_args --with-avifile"
@@ -236,7 +236,7 @@ elif test "$enable_nasm" = "yes"; then
     AC_DEFINE(WITH_NASM, 1, [Define if you want to use nasm.])
     use_nasm=yes
   else
-    AC_MSG_WARN([*** asm requested but assembler nasm not found])
+    AC_MSG_WARN([*** asm requested but the assembler nasm not found])
   fi
 fi
 AM_CONDITIONAL(USE_NASM, test "$use_nasm" = "yes")
@@ -296,14 +296,14 @@ AC_CHECK_HEADER(sys/ipc.h,
     AC_CHECK_HEADER(X11/extensions/XShm.h,
       AC_CHECK_LIB(Xext, XShmCreateImage, [ available_shm=yes; LIBADD_SHM="-lXext"; ]))))
 dnl AM_CONDITIONAL(HAVE_SHM, test "$available_shm" = "yes")
-test "$available_shm" = "yes" && AC_DEFINE(USE_SHM,,[ Define if you have MIT Shared Memory extension ])
+test "$available_shm" = "yes" && AC_DEFINE(USE_SHM,,[ Define if you have the MIT Shared Memory extension ])
 AC_SUBST(LIBADD_SHM)
 
 available_xv=no
 AC_CHECK_HEADER(X11/extensions/Xvlib.h,
   AC_CHECK_LIB(Xv, XvQueryExtension, [ available_xv=yes; LIBADD_XV="-lXext -lXv"; ],, -lXext))
 dnl AM_CONDITIONAL(HAVE_XV, test "$available_xv" = "yes")
-test "$available_xv" = "yes" && AC_DEFINE(USE_XV,,[ Define if you have Xv extension ])
+test "$available_xv" = "yes" && AC_DEFINE(USE_XV,,[ Define if you have the Xv extension ])
 AC_SUBST(LIBADD_XV)
 
 available_ungif=no
