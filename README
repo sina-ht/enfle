@@ -3,9 +3,9 @@
      Simple Plugin-based Graphic Loader Enfle
 			*** DEVELOPING VERSION ***
 
- (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa.
+ (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Thu Dec 28 09:08:26 2000.
+     Last Modified: Sat Jan  6 19:20:58 2001.
 
  This file is part of Enfle.
 
@@ -47,9 +47,11 @@ GIF(sm) is a Service Mark property of CompuServe Incorporated.
  JPEG
  PNG
  BMP
+ spi(unstable, any formats which (some of) susie plugins support)
  animated GIF
  mng
- mpeg(mpeg1, mpeg2, including audio support)
+ mpeg(unstable, mpeg1, mpeg2, including audio support)
+ avi,asf(unstable, any formats which avifile supports)
 
 各フォーマットへの対応はプラグインによって実装されております。画像の他
 に特殊なアーカイブ、tarなどの一般的なアーカイブ、圧縮されたgzなどのファ
@@ -64,7 +66,8 @@ enfleのコード自体にはLZW decoderは含まれておりません。decodeには特許は
 いるので一応含まないでおきます。libungifを使うungifプラグインが含まれ
 ていますが、ungifプラグイン自体はLZW関連のcodeを含んでいません。ただし、
 libungifのLZW codeを使用できるかどうかとは別ですので、各自の責任におい
-て使用してください。
+て使用してください。ungif pluginを利用するには、configure時に
+--with-ungifを明示的に指定する必要があります。
 ***
 
 以下のpluginにはlibraryが別途必要です。動作するであろうversionを書いて
@@ -75,7 +78,9 @@ PNG: libpng-1.0.2 or later (recommended: 1.0.8)
 gz: zlib-1.1.3 or later
 bz2: bzip2-1.0.0 or later
 ungif: libungif-3.1.0 or later (recommended: 4.1.0)
-
+mng: libmng
+mpeg: libmpeg3 or mpeg_lib(needs patch)
+avi: avifile(cvs version)
 
 2.動作環境
 
@@ -121,6 +126,8 @@ configureスクリプトの指定できるオプションは、./configure --helpで詳細
 いう方がいらっしゃいましたら御一報ください。ただし.aができている場合に
 はshared objectが作れない/使えない環境である可能性もあります。
 
+susieのpluginを使いたい場合には--enable-spiが必要です。
+ungif pluginを使いたい場合には--with-ungifが必要です。
 
 4.コマンドライン
 
