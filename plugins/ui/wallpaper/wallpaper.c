@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:26:46 2002.
- * $Id: wallpaper.c,v 1.10 2002/05/04 14:34:54 sian Exp $
+ * Last Modified: Sat Jun  8 00:10:57 2002.
+ * $Id: wallpaper.c,v 1.11 2002/06/13 14:32:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -82,7 +82,7 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     p->rendered.height = p->magnified.height = p->height;
     break;
   case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method))
+    if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method, 0))
       show_message_fnc("image_magnify() failed.\n");
     if (p->rendered.image)
       memory_destroy(p->rendered.image);
@@ -92,7 +92,7 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? hs : ws;
-    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
+    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, 0);
     if (p->rendered.image)
       memory_destroy(p->rendered.image);
     p->rendered.image = memory_dup(p->magnified.image);
@@ -101,7 +101,7 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? ws : hs;
-    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
+    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, 0);
     if (p->rendered.image)
       memory_destroy(p->rendered.image);
     p->rendered.image = memory_dup(p->magnified.image);
