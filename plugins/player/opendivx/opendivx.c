@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 18 00:51:53 2001.
- * $Id: opendivx.c,v 1.18 2001/10/18 04:47:25 sian Exp $
+ * Last Modified: Sun Oct 21 03:15:21 2001.
+ * $Id: opendivx.c,v 1.19 2001/10/22 08:40:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -377,43 +377,44 @@ play_video(void *arg)
     }
     
     if (!fifo_get(info->vstream, &data, &destructor)) {
-      show_message(__FUNCTION__ ": fifo_get() failed.\n");
-    } else {      
-      if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
-	info->eof = 1;
-	break;
-      }
-      pthread_mutex_lock(&info->update_mutex);
-      info->dec_frame.length = ap->size;
-      info->dec_frame.bitstream = ap->data;
-      info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
-      info->dec_frame.render_flag = 1;
-      decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
-      destructor(ap);
-      m->current_frame++;
-
-      /* demultiplexer should seek to next key frame... */
-      for (; info->drop; info->drop--) {
-	if (!fifo_get(info->vstream, &data, &destructor)) {
-	  show_message(__FUNCTION__ ": fifo_get() failed.\n");
-	} else {
-	  if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
-	    info->eof = 1;
-	    pthread_mutex_unlock(&info->update_mutex);
-	    break;
-	  }
-	  info->dec_frame.length = ap->size;
-	  info->dec_frame.bitstream = ap->data;
-	  info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
-	  info->dec_frame.render_flag = 1;
-	  decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
-	  destructor(ap);
-	  m->current_frame++;
-	}
-      }
-      pthread_cond_wait(&info->update_cond, &info->update_mutex);
-      pthread_mutex_unlock(&info->update_mutex);
+      debug_message(__FUNCTION__ ": fifo_get() failed.\n");
+      break;
     }
+
+    if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
+      info->eof = 1;
+      break;
+    }
+    pthread_mutex_lock(&info->update_mutex);
+    info->dec_frame.length = ap->size;
+    info->dec_frame.bitstream = ap->data;
+    info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
+    info->dec_frame.render_flag = 1;
+    decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
+    destructor(ap);
+    m->current_frame++;
+
+    /* demultiplexer should seek to next key frame... */
+    for (; info->drop; info->drop--) {
+      if (!fifo_get(info->vstream, &data, &destructor)) {
+	show_message(__FUNCTION__ ": fifo_get() failed.\n");
+      } else {
+	if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
+	  info->eof = 1;
+	  pthread_mutex_unlock(&info->update_mutex);
+	  break;
+	}
+	info->dec_frame.length = ap->size;
+	info->dec_frame.bitstream = ap->data;
+	info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
+	info->dec_frame.render_flag = 1;
+	decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
+	destructor(ap);
+	m->current_frame++;
+      }
+    }
+    pthread_cond_wait(&info->update_cond, &info->update_mutex);
+    pthread_mutex_unlock(&info->update_mutex);
   }
 
   debug_message(__FUNCTION__ " exiting.\n");
@@ -447,25 +448,25 @@ play_audio(void *arg)
   while (m->status == _PLAY) {
     if (!fifo_get(info->astream, &data, &destructor)) {
       debug_message(__FUNCTION__ ": fifo_get() failed.\n");
-    } else {
-      ap = (AVIPacket *)data;
-      ret = decodeMP3(&info->mp, ap->data, ap->size,
-		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
-      if (!param_is_set) {
-	m->sampleformat = _AUDIO_FORMAT_S16_LE;
-	m->channels = info->mp.fr.stereo;
-	m->samplerate = freqs[info->mp.fr.sampling_frequency];
-	if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
-	  show_message("Some params are set wrong.\n");
-	param_is_set++;
-      }
-      while (ret == MP3_OK) {
-	m->ap->write_device(ad, output_buffer, write_size);
-	ret = decodeMP3(&info->mp, NULL, 0,
-			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
-      }
-      destructor(ap);
+      break;
     }
+    ap = (AVIPacket *)data;
+    ret = decodeMP3(&info->mp, ap->data, ap->size,
+		    output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+    if (!param_is_set) {
+      m->sampleformat = _AUDIO_FORMAT_S16_LE;
+      m->channels = info->mp.fr.stereo;
+      m->samplerate = freqs[info->mp.fr.sampling_frequency];
+      if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+	show_message("Some params are set wrong.\n");
+      param_is_set++;
+    }
+    while (ret == MP3_OK) {
+      m->ap->write_device(ad, output_buffer, write_size);
+      ret = decodeMP3(&info->mp, NULL, 0,
+		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+    }
+    destructor(ap);
   }
 
   m->ap->sync_device(ad);
