@@ -138,10 +138,12 @@ static int dvvideo_init(AVCodecContext *avctx)
         }
 
 	for (i = 0; i < NB_DV_VLC - 1; i++) {
-#if 0
-           if (dv_vlc_run[i] >= DV_VLC_MAP_RUN_SIZE || dv_vlc_level[i] >= DV_VLC_MAP_LEV_SIZE)
-	       continue;
+           if (dv_vlc_run[i] >= DV_VLC_MAP_RUN_SIZE
+#if DV_VLC_MAP_LEV_SIZE < 255
+	       || dv_vlc_level[i] >= DV_VLC_MAP_LEV_SIZE
 #endif
+	       )
+	       continue;
 	   
 	   if (dv_vlc_map[dv_vlc_run[i]][dv_vlc_level[i]].size != 0)
 	       continue;
@@ -644,12 +646,6 @@ typedef struct EncBlockInfo {
     uint32_t partial_bit_buffer; /* we can't use uint16_t here */
 } EncBlockInfo;
 
-static always_inline int dv_bits_left(PutBitContext* s)
-{
-    return (s->buf_end - s->buf) * 8 - 
-           ((s->buf_ptr - s->buf) * 8 + 32 - (int64_t)s->bit_left);
-}
-
 static always_inline void dv_encode_ac(EncBlockInfo* bi, PutBitContext* pb_pool, 
                                        int pb_size)
 {
@@ -662,7 +658,7 @@ static always_inline void dv_encode_ac(EncBlockInfo* bi, PutBitContext* pb_pool,
     bi->partial_bit_count = bi->partial_bit_buffer = 0;
 vlc_loop:
        /* Find suitable storage space */
-       for (; size > (bits_left = dv_bits_left(pb)); pb++) {
+       for (; size > (bits_left = put_bits_left(pb)); pb++) {
           if (bits_left) {
               size -= bits_left;
 	      put_bits(pb, bits_left, vlc >> size);

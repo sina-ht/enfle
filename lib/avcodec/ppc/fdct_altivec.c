@@ -24,11 +24,11 @@
 #include "gcc_fixes.h"
 
 
-#define vs16(v) (*(vector signed short*)&(v))
-#define vs32(v) (*(vector signed int*)&(v))
-#define vu8(v)  (*(vector unsigned char*)&(v))
-#define vu16(v) (*(vector unsigned short*)&(v))
-#define vu32(v) (*(vector unsigned int*)&(v))
+#define vs16(v) ((vector signed short)(v))
+#define vs32(v) ((vector signed int)(v))
+#define vu8(v)  ((vector unsigned char)(v))
+#define vu16(v) ((vector unsigned short)(v))
+#define vu32(v) ((vector unsigned int)(v))
 
 
 #define C1     0.98078525066375732421875000 /* cos(1*PI/16) */
