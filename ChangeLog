@@ -1,4 +1,26 @@
-2000-10-15  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+2000-10-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/movie.[ch], plugins/player/libmpeg3/libmpeg3.c: Using
+	timer to calculate fps (frame per second). Dropping frame if
+	actual fps is less than given fps. Implemented
+	{set,get}_play_every_frame().
+
+	* lib/enfle/ui-plugin.h (UIScreen): Added bits_per_pixel.
+
+	* plugins/ui/Xlib/Xlib.c: Utilize new set_play_every_frame and
+	bits_per_pixel(in UIScreen).
+
+	* plugins/player/ungif/ungif.c,
+	plugins/player/mpeg_lib/mpeg_lib.c: Renamed nthframe as
+	current_frame.
+
+	* lib/utils/Makefile.am: Added timer.
+
+	* lib/X11/x11ximage.c: More rendering code.
+
+	* lib/utils/timer*: New timer object implementation.
+
+2000-10-15  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.c: Improved rendering code.
 
