@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Sep 18 13:47:36 2001.
- * $Id: arithmodel_order_zero.c,v 1.12 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Wed Sep 19 16:37:07 2001.
+ * $Id: arithmodel_order_zero.c,v 1.13 2001/09/19 07:44:26 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -292,7 +292,7 @@ encode_bulk(Arithmodel *_am, Index index, Index low, Index high, int use_range)
 
   if (am->nsymbols == index) {
     if (use_range)
-      fatal(4, __FUNCTION__ ": nsymbols %d == %d index, when use_range is true.\n");
+      fatal(4, __FUNCTION__ ": nsymbols %d == %d index, when use_range is true.\n", am->nsymbols, index);
     if (IS_ESCAPE_INSTALLED(am)) {
       if (am->escape_encoded_with_rle) {
 	am->escape_run++;
