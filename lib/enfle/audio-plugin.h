@@ -1,10 +1,10 @@
 /*
  * audio-plugin.h -- audio plugin interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan  4 03:51:25 2001.
- * $Id: audio-plugin.h,v 1.4 2001/01/06 23:55:25 sian Exp $
+ * Last Modified: Fri Jan 12 13:55:22 2001.
+ * $Id: audio-plugin.h,v 1.5 2001/01/12 13:18:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,7 +24,7 @@
 #define _AUDIO_PLUGIN_H
 
 #include "enfle-plugin.h"
-#include "../enfle/audio.h"
+#include "enfle/audio.h"
 
 typedef struct _audio_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
