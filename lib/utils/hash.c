@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:46:57 2002.
- * $Id: hash.c,v 1.13 2002/08/17 02:16:22 sian Exp $
+ * Last Modified: Sun Aug 18 22:19:00 2002.
+ * $Id: hash.c,v 1.14 2002/08/18 13:26:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -220,6 +220,13 @@ hash_define_value(Hash *h, void *k, unsigned int len, void *d)
   return hash_define_object(h, k, len, d, NULL);
 }
 
+static void
+destroy_hash_data(Hash_data *d)
+{
+  if (d->datum && d->data_destructor)
+    d->data_destructor(d->datum);
+}
+
 int
 hash_set_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destructor dest)
 {
@@ -233,6 +240,9 @@ hash_set_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destructo
       hash_key_destroy(hk);
       return 0;
     }
+  } else {
+    debug_message_fnc("Overwrite %s\n", (char *)k);
+    destroy_hash_data(h->data[i]);
   }
 
   h->data[i]->datum = d;
@@ -279,8 +289,7 @@ destroy_datum(Hash *h, int i)
       return 0;
     d->key = HASH_DESTROYED_KEY;
   }
-  if (d->datum && d->data_destructor)
-    d->data_destructor(d->datum);
+  destroy_hash_data(d);
 
   return 1;
 }
