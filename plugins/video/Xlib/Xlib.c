@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan  2 22:11:02 2004.
- * $Id: Xlib.c,v 1.55 2004/01/03 10:32:34 sian Exp $
+ * Last Modified: Sun Feb 15 21:36:34 2004.
+ * $Id: Xlib.c,v 1.56 2004/02/20 17:21:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -407,6 +407,7 @@ draw_caption(VideoWindow *vw)
     XmbTextListToTextProperty(x11_display(x11), list, 1, XCompoundTextStyle, &text);
     x11_lock(x11);
     x11window_setwmname(xw, &text);
+    XFree(text.value);
     x11_unlock(x11);
   } else {
     int x = (vw->full_width - XTextWidth(xwi->fs, vw->caption, strlen(vw->caption))) >> 1;
@@ -1447,6 +1448,15 @@ destroy_window(VideoWindow *vw)
     x11_free_pixmap(x11, xwi->full.pix);
   if (xwi->full.gc)
     x11_free_gc(x11, xwi->full.gc);
+  if (xwi->caption_font)
+    XUnloadFont(x11_display(x11), xwi->caption_font);
+  if (xwi->fs)
+    XFreeFontInfo(NULL, xwi->fs, 1);
+#if !defined(DEBUG)
+  /* XXX: This causes valgrind to seg. fault... */
+  if (xwi->fontset)
+    XFreeFontSet(x11_display(x11), xwi->xfontset);
+#endif
 
   if (vw->caption)
     free(vw->caption);
