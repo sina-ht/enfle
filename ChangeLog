@@ -1,5 +1,13 @@
 2001-01-28  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/divxdecore/yuv2rgb_mmx.c: Original code convert to RGB15,
+	not RGB16, changed to convert to RGB16.
+
+	* plugins/player/opendivx/opendivx.c: Added IMAGE_BGR_WITH_BITMASK
+	to types.
+
+2001-01-28  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Added --enable-mmx. Version up.
 
 	* src/enfle.c: Fixed warning when compiled with spi disabled.
