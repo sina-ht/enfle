@@ -1,5 +1,7 @@
 2004-03-11  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/loader/jasper/Makefile.am: JasPer needs libjpeg.
+
 	* plugins/demultiplexer/*/Makefile.am: Use static libenfle.
 
 	* src/Makefile.am: Libraries link order change.
