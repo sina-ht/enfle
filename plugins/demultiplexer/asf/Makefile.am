@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.1 2004/03/24 14:47:49 sian Exp $
+# $Id: Makefile.am,v 1.2 2004/03/31 14:38:03 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -20,5 +20,7 @@ demultiplexer_asf_la_LDFLAGS = $(MORE_LDFLAGS) -module
 demultiplexer_asf_la_CFLAGS = $(MORE_CFLAGS)
 if HAVE_ASF
 demultiplexer_asf_la_SOURCES = asf.c
+else
+am__demultiplexer_asf_la_SOURCES_DIST =
 endif
 demultiplexer_asf_la_LIBADD = $(top_builddir)/lib/enfle/libenfle.la
