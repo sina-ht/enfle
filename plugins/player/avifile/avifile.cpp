@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep  7 13:39:57 2001.
- * $Id: avifile.cpp,v 1.19 2001/09/07 04:41:24 sian Exp $
+ * Last Modified: Sat Sep  8 11:38:40 2001.
+ * $Id: avifile.cpp,v 1.20 2001/09/09 23:52:37 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -139,6 +139,28 @@ plugin_exit(void *p)
 
 /* for internal use */
 
+static AviFile_info *
+info_create(Movie *m)
+{
+  AviFile_info *info;
+
+  if (!m->movie_private) {
+    if ((info = (AviFile_info *)calloc(1, sizeof(AviFile_info))) == NULL) {
+      show_message("AviFile: info_create: No enough memory.\n");
+      return NULL;
+    }
+    m->movie_private = (void *)info;
+  } else {
+    info = (AviFile_info *)m->movie_private;
+  }
+
+  pthread_mutex_init(&info->decoding_state_mutex, NULL);
+  pthread_cond_init(&info->decoding_cond, NULL);
+  pthread_cond_init(&info->decoded_cond, NULL);
+
+  return info;
+}
+
 PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
@@ -148,11 +170,11 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   int result;
   int tmp_types;
 
-  pthread_mutex_init(&info->decoding_state_mutex, NULL);
-  pthread_cond_init(&info->decoding_cond, NULL);
-  pthread_cond_init(&info->decoded_cond, NULL);
+  if (!info->rf)
+    rf = info->rf = CreateIAviReadFile(st->path);
+  else
+    rf = info->rf;
 
-  rf = info->rf = CreateIAviReadFile(st->path);
   if (!rf)
     goto error;
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
@@ -391,6 +413,15 @@ play(Movie *m)
   if (m->has_audio)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
 
+  pthread_mutex_lock(&info->decoding_state_mutex);
+  while (info->ds != _DECODED)
+    pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
+  pthread_mutex_unlock(&info->decoding_state_mutex);
+  if (info->ci)
+    debug_message("OK\n");
+  else
+    debug_message("NG\n");
+
   return PLAY_OK;
 }
 
@@ -518,7 +549,7 @@ play_main(Movie *m, VideoWindow *vw)
   due_time = (int)(info->stream->GetTime() * 1000);
   //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
 
-  if (info->ci) {
+  //if (info->ci) {
     pthread_mutex_lock(&info->decoding_state_mutex);
     while (info->ds != _DECODED)
       pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
@@ -541,7 +572,7 @@ play_main(Movie *m, VideoWindow *vw)
     pthread_mutex_unlock(&info->decoding_state_mutex);
 
     m->render_frame(vw, m, p);
-  }
+  //}
 
   return PLAY_OK;
 }
@@ -619,6 +650,10 @@ unload_movie(Movie *m)
   stop_movie(m);
 
   if (info) {
+    if (info->audiostream)
+      info->audiostream->StopStreaming();
+    if (info->stream)
+      info->stream->StopStreaming();
     if (info->rf)
       delete info->rf;
     if (info->p)
@@ -639,6 +674,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   unsigned char buf[16];
   IAviReadFile *rf;
   IAviReadStream *audiostream, *stream;
+  AviFile_info *info;
   int result;
 
   /* see if this is asf by extension... */
@@ -654,15 +690,20 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 
   debug_message("AviFile: identify: identified as avi.\n");
 
+  info = info_create(m);
+
   /* see if this avi is supported by avifile */
-  rf = CreateIAviReadFile(st->path);
+  if (!info->rf)
+    rf = info->rf = CreateIAviReadFile(st->path);
+  else
+    rf = info->rf;
+
   if (!rf)
     goto not_avi;
   if (!rf->StreamCount())
     goto not_avi;
 
   if ((audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
-    debug_message("AviFile: identify: Got audio stream.\n");
     if ((result = audiostream->StartStreaming()) != 0)
       show_message("AviFile: identify: Audio stream not played.\n");
   }
@@ -671,12 +712,18 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     if ((result = stream->StartStreaming()) != 0)
       goto not_avi;
   }
-  delete rf;
+
+  audiostream->StopStreaming();
+  stream->StopStreaming();
 
   return PLAY_OK;
 
  not_avi:
   debug_message("AviFile: identify: but not supported by avifile.\n");
+  if (audiostream)
+    audiostream->StopStreaming();
+  if (stream)
+    stream->StopStreaming();
   if (rf)
     delete rf;
   return PLAY_NOT;
@@ -704,12 +751,8 @@ DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  if ((info = (AviFile_info *)calloc(1, sizeof(AviFile_info))) == NULL) {
-    show_message("AviFile: load: No enough memory.\n");
-    return PLAY_ERROR;
-  }
+  info = info_create(m);
   info->c = c;
-  m->movie_private = (void *)info;
 
   return load_movie(vw, m, st);
 }
