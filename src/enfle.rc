@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Thu Dec 28 08:13:14 2000.
-; $Id: enfle.rc,v 1.10 2000/12/27 23:26:44 sian Exp $
+; Last Modified: Mon Jan 29 21:17:59 2001.
+; $Id: enfle.rc,v 1.11 2001/01/29 15:11:35 sian Exp $
 
 enfle {
   plugins {
@@ -9,26 +9,37 @@ enfle {
     ui {
       default = Normal
       normal {
-	; normal/render = {normal|double|short|long}
+	; render = {normal|double|short|long}
 	render = normal
-	; magnify = no/bilinear
+	; magnify_interpolate = no/bilinear
 	magnify_interpolate = bilinear
       }
     }
     video {
       default = Xlib
+      ; caption font for full screen mode
       caption_font = a14
     }
     audio {
       default = OSS
       oss/device_path = /dev/dsp
     }
-    spi/disabled = yes
-    ; video only stream may be played by mpeg_lib.
-    ; in this case, if you'd like to use libmpeg3 instead of mpeg_lib,
-    ; uncomment this.
-    ; system stream(including video and audio) will be played by libmpeg3.
-    ; mpeg_lib won't play all such streams.
-    ;player/MPEG_lib/disabled = yes
+    loader {
+      spi/disabled = yes
+    }
+    player {
+      ;assoc {
+      ;  .mpg = libmpeg3
+      ;  .mpeg = libmpeg3
+      ;  .mp3 = mpglib
+      ;  .m1v = MPEG_lib
+      ;}
+      ; video only stream may be played by mpeg_lib.
+      ; in this case, if you'd like to use libmpeg3 instead of mpeg_lib,
+      ; uncomment this.
+      ; system stream(including video and audio) will be played by libmpeg3.
+      ; mpeg_lib won't play all such streams.
+      MPEG_lib/disabled = yes
+    }
   }
 }
