@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 30 04:26:13 2003.
- * $Id: avcodec.c,v 1.6 2003/12/29 19:26:32 sian Exp $
+ * Last Modified: Fri Jan  2 22:11:39 2004.
+ * $Id: avcodec.c,v 1.7 2004/01/03 10:31:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,7 @@
 #include "enfle/fourcc.h"
 
 #if defined(DEBUG)
-#define USE_DR1
+//#define USE_DR1
 #endif
 
 struct pic_buf {
@@ -1032,11 +1032,11 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 
   if (info->nvstreams) {
     switch (aviinfo->vhandler) {
-    case FCC_H263:
-    case FCC_I263:
-    case FCC_U263:
+    case FCC_H263: // h263
+    case FCC_I263: // h263i
+    case FCC_U263: // h263p
     case FCC_viv1:
-    case FCC_DIVX:
+    case FCC_DIVX: // mpeg4
     case FCC_divx:
     case FCC_DX50:
     case FCC_XVID:
@@ -1047,7 +1047,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_BLZ0:
     case FCC_mp4v:
     case FCC_UMP4:
-    case FCC_DIV3:
+    case FCC_DIV3: // msmpeg4
     case FCC_DIV4:
     case FCC_DIV5:
     case FCC_DIV6:
@@ -1056,40 +1056,46 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_AP41:
     case FCC_COL1:
     case FCC_COL0:
-    case FCC_MP42:
+    case FCC_MP42: // msmpeg4v2
     case FCC_DIV2:
-    case FCC_MP41:
+      break;
+    case FCC_MP41: // msmpeg4v1
     case FCC_MPG4:
     case FCC_mpg4:
-    case FCC_WMV1:
-    case FCC_WMV2:
-    case FCC_dvsd:
+      warning("msmpeg4v1 video detected by avcodec plugin.  avcodec will probably emit sig. segv.  Being fixed, disable playback.\n");
+      demultiplexer_destroy(info->demux);
+      free(info);
+      m->movie_private = NULL;
+      return PLAY_NOT;
+    case FCC_WMV1: // wmv1
+    case FCC_WMV2: // wmv2
+    case FCC_dvsd: // dvvideo
     case FCC_dvhd:
     case FCC_dvsl:
     case FCC_dv25:
-    case FCC_mpg1:
+    case FCC_mpg1: // mpeg1video
     case FCC_mpg2:
     case FCC_PIM1:
     case FCC_VCR2:
-    case FCC_MJPG:
-    case FCC_JPGL:
+    case FCC_MJPG: // mjpeg
+    case FCC_JPGL: // ljpeg
     case FCC_LJPG:
-    case FCC_HFYU:
-    case FCC_CYUV:
-    case FCC_Y422:
+    case FCC_HFYU: // huffyuv
+    case FCC_CYUV: // cyuv
+    case FCC_Y422: // rawvideo
     case FCC_I420:
-    case FCC_IV31:
+    case FCC_IV31: // indeo3
     case FCC_IV32:
-    case FCC_VP31:
-    case FCC_ASV1:
-    case FCC_ASV2:
-    case FCC_VCR1:
-    case FCC_FFV1:
-    case FCC_Xxan:
-    case FCC_mrle:
+    case FCC_VP31: // vp3
+    case FCC_ASV1: // asv1
+    case FCC_ASV2: // asv2
+    case FCC_VCR1: // vcr1
+    case FCC_FFV1: // ffv1
+    case FCC_Xxan: // xan_wc4
+    case FCC_mrle: // msrle
     case FCC_0x01000000:
-    case FCC_cvid:
-    case FCC_MSVC:
+    case FCC_cvid: // cinepak
+    case FCC_MSVC: // msvideo1
     case FCC_msvc:
     case FCC_CRAM:
     case FCC_cram:
@@ -1097,12 +1103,12 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_wham:
       break;
     default:
-	debug_message_fnc("Video [%c%c%c%c](%08X) was not identified as any avcodec supported format.\n",        aviinfo->vhandler        & 0xff,
-	      (aviinfo->vhandler >>  8) & 0xff,
-	      (aviinfo->vhandler >> 16) & 0xff,
-	      (aviinfo->vhandler >> 24) & 0xff,
-			  aviinfo->vhandler);
-	demultiplexer_destroy(info->demux);
+      debug_message_fnc("Video [%c%c%c%c](%08X) was not identified as any avcodec supported format.\n",                              aviinfo->vhandler        & 0xff,
+			(aviinfo->vhandler >>  8) & 0xff,
+			(aviinfo->vhandler >> 16) & 0xff,
+			(aviinfo->vhandler >> 24) & 0xff,
+			 aviinfo->vhandler);
+      demultiplexer_destroy(info->demux);
       free(info);
       m->movie_private = NULL;
       return PLAY_NOT;
