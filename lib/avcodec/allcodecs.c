@@ -40,7 +40,6 @@ void avcodec_register_all(void)
 
     /* encoders */
 #ifdef CONFIG_ENCODERS
-    register_avcodec(&ac3_encoder);
     register_avcodec(&mp2_encoder);
 #ifdef CONFIG_MP3LAME
     register_avcodec(&mp3lame_encoder);
@@ -214,4 +213,3 @@ PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
     av_register_codec_parser(&ac3_parser);
 #endif
 }
-
