@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 19 22:08:05 2004.
- * $Id: fourcc.h,v 1.8 2004/02/20 17:19:26 sian Exp $
+ * Last Modified: Sat Feb 21 14:18:14 2004.
+ * $Id: fourcc.h,v 1.9 2004/02/21 07:49:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,6 +37,8 @@
 #define FCC_I420 FCC('I', '4', '2', '0')
 #define FCC_ABGR FCC('A', 'B', 'G', 'R')
 #define FCC_Y422 FCC('Y', '4', '2', '2')
+#define FCC_RGB2 FCC('R', 'G', 'B', '2')
+#define FCC_DIB  FCC('D', 'I', 'B', ' ')
 
 #define FCC_CYUV FCC('C', 'Y', 'U', 'V')
 #define FCC_HFYU FCC('H', 'F', 'Y', 'U')
@@ -58,6 +60,7 @@
 #define FCC_XVID FCC('X', 'V', 'I', 'D')
 
 // DivX ;-) 3.11 (MS-MPEG4v3)
+#define FCC_div3 FCC('d', 'i', 'v', '3')
 #define FCC_DIV3 FCC('D', 'I', 'V', '3')
 #define FCC_DIV4 FCC('D', 'I', 'V', '4')
 #define FCC_DIV5 FCC('D', 'I', 'V', '5')
