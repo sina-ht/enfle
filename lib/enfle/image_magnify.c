@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 14 01:50:46 2002.
- * $Id: image_magnify.c,v 1.5 2002/02/13 16:53:54 sian Exp $
+ * Last Modified: Thu Feb 14 03:00:40 2002.
+ * $Id: image_magnify.c,v 1.6 2002/02/13 18:03:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,6 +24,8 @@
 #include <stdlib.h>
 
 #include "common.h"
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "image.h"
 
@@ -153,8 +155,6 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 	unsigned int dx, dy;
 	int yt;
 
-	debug_message_fnc("integer arithmetic24\n");
-
 	yt = (h - 1) * w;
 	for (y = 0; y < dh; y++) {
 	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
@@ -256,11 +256,13 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 		  s[((t +     (t3 + 1)) << 2) + i] *        dx  * (1.0 - dy) +
 		  s[((t + w +  t3     ) << 2) + i] * (1.0 - dx) *        dy  +
 		  s[((t + w + (t3 + 1)) << 2) + i] *        dx  *        dy;
+	      dd++;
 	    } else {
 	      for (i = 0; i < 3; i++) 
 		*dd++ =
 		  s[((t     +  t3     ) << 2) + i] * (1.0 - dx) +
 		  s[((t     + (t3 + 1)) << 2) + i] *        dx;
+	      dd++;
 	    }
 	  }
 	}
@@ -268,8 +270,6 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	unsigned char *dd = d;
 	unsigned int dx, dy;
 	int yt;
-
-	debug_message_fnc("integer arithmetic32\n");
 
 	yt = (h - 1) * w;
 	for (y = 0; y < dh; y++) {
@@ -287,11 +287,13 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 		  s[((t +     (t3 + 1)) << 2) + i] *            dx  * (MIN_INT - dy) +
 		  s[((t + w +  t3     ) << 2) + i] * (MIN_INT - dx) *            dy  +
 		  s[((t + w + (t3 + 1)) << 2) + i] *            dx  *            dy ) >> PRECISION2;
+	      dd++;
 	    } else {
 	      for (i = 0; i < 3; i++) 
 		*dd++ = (
 		  s[((t     +  t3     ) << 2) + i] * (MIN_INT - dx) +
 		  s[((t     + (t3 + 1)) << 2) + i] *            dx ) >> PRECISION;
+	      dd++;
 	    }
 	  }
 	}
@@ -339,6 +341,21 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
       }
 }
 
+static void
+canonicalize(Image *p, unsigned int shrinked_bpl)
+{
+  unsigned char *s = memory_ptr(p->image);
+  unsigned int i;
+
+  if (p->bytes_per_line <= shrinked_bpl)
+    return;
+
+  for (i = 1; i < p->height; i++)
+    memmove(s + i * shrinked_bpl, s + i * p->bytes_per_line, shrinked_bpl);
+  p->bytes_per_line = shrinked_bpl;
+  memory_alloc(p->image, shrinked_bpl * p->height);
+}
+
 /* public interface */
 
 int
@@ -348,20 +365,24 @@ image_magnify_main(Image *p, int dw, int dh, ImageInterpolateMethod method)
   case _GRAY:
   case _INDEX:
     p->magnified.bytes_per_line = dw;
+    canonicalize(p, p->width);
     break;
   case _RGB_WITH_BITMASK:
   case _BGR_WITH_BITMASK:
-    p->magnified.bytes_per_line = dw * 2;
+    p->magnified.bytes_per_line = dw << 1;
+    canonicalize(p, p->width << 1);
     break;
   case _RGB24:
   case _BGR24:
     p->magnified.bytes_per_line = dw * 3;
+    canonicalize(p, p->width * 3);
     break;
   case _RGBA32:
   case _ABGR32:
   case _ARGB32:
   case _BGRA32:
     p->magnified.bytes_per_line = dw << 2;
+    canonicalize(p, p->width << 2);
     break;
   default:
     show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
