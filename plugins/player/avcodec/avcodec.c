@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 16:14:43 2004.
- * $Id: avcodec.c,v 1.12 2004/01/18 07:15:19 sian Exp $
+ * Last Modified: Mon Jan 19 22:17:06 2004.
+ * $Id: avcodec.c,v 1.13 2004/01/19 13:19:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,6 +44,7 @@
 //#define USE_DR1
 #endif
 
+#if defined(USE_DR1)
 struct pic_buf {
   int idx;
   Memory *mem;
@@ -57,6 +58,7 @@ typedef struct __picture_buffer {
 } Picture_buffer;
 
 #define N_PICTURE_BUFFER 32
+#endif
 
 typedef struct __avcodec_info {
   Config *c;
@@ -70,8 +72,10 @@ typedef struct __avcodec_info {
   const char *vcodec_name;
   AVCodecContext *vcodec_ctx;
   AVFrame *vcodec_picture;
+#if defined(USE_DR1)
   Picture_buffer picture_buffer[N_PICTURE_BUFFER];
   int picture_buffer_count;
+#endif
   AVCodec *acodec;
   AVCodecContext *acodec_ctx;
   enum CodecID acodec_id;
@@ -950,7 +954,6 @@ static void
 unload_movie(Movie *m)
 {
   avcodec_info *info = (avcodec_info *)m->movie_private;
-  int i;
 
   debug_message_fn("()\n");
 
@@ -964,16 +967,19 @@ unload_movie(Movie *m)
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
 
+#if defined(USE_DR1)
     /* free picture_buffer */
-    for (i = 0; i < info->picture_buffer_count; i++) {
-      if (info->picture_buffer[i].base)
-	memory_destroy(info->picture_buffer[i].base);
+    {
+      int i;
+      for (i = 0; i < info->picture_buffer_count; i++) {
+	if (info->picture_buffer[i].base)
+	  memory_destroy(info->picture_buffer[i].base);
+      }
     }
+#endif
 
-    debug_message_fnc("freeing info\n");
     free(info);
     m->movie_private = NULL;
-    debug_message_fnc("freed info\n");
   }
 
   debug_message_fn("() Ok\n");

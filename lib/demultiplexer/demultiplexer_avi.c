@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 14:04:47 2004.
- * $Id: demultiplexer_avi.c,v 1.26 2004/01/18 07:13:01 sian Exp $
+ * Last Modified: Mon Jan 19 22:07:39 2004.
+ * $Id: demultiplexer_avi.c,v 1.27 2004/01/19 13:15:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -320,7 +320,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
       }
       break;
     default:
-      debug_message_fnc("Got chunk '%s'... not handled\n", riff_chunk_get_name(rc));
+      debug_message_fnc("Got chunk '%s' at %d ... not handled\n", riff_chunk_get_name(rc), riff_chunk_get_pos(rc));
       riff_file_skip_chunk_data(info->rf, rc);
       break;
     }
@@ -430,7 +430,7 @@ demux_main(void *arg)
     }
   }
 
-  free(rc);
+  riff_chunk_destroy(rc);
 
   if (riff_file_get_err(info->rf) != _RIFF_ERR_SUCCESS) {
     show_message_fnc("Abort: %s.\n", riff_file_get_errmsg(info->rf));
@@ -462,9 +462,6 @@ static int
 stop(Demultiplexer *demux)
 {
   void *ret;
-
-  if (!demux->running)
-    return 0;
 
   debug_message_fn(" demultiplexer_avi\n");
 
