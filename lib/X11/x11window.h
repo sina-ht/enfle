@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Oct 21 00:29:25 2000.
- * $Id: x11window.h,v 1.2 2000/10/20 18:13:06 sian Exp $
+ * Last Modified: Sat Nov  4 07:39:36 2000.
+ * $Id: x11window.h,v 1.3 2000/11/04 17:30:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@ struct _x11window {
 
   int (*set_event_mask)(X11Window *, int);
   int (*get_position)(X11Window *, unsigned int *, unsigned int *);
+  void (*wait_mapped)(X11Window *);
   void (*destroy)(X11Window *);
 };
 
@@ -45,8 +46,11 @@ struct _x11window {
 #define x11window_get_position(xw, xp, yp) (xw)->get_position((xw), (xp), (yp))
 #define x11window_move(xw, x, y) x11_move_window(x11window_x11((xw)), x11window_win((xw)), (x), (y))
 #define x11window_resize(xw, w, h) x11_resize_window(x11window_x11((xw)), x11window_win((xw)), (w), (h))
-#define x11window_moveresize(xw, x, y, w, h) x11_moveresize(x11window_x11((xw)), x11window_win((xw)), (x), (y), (w), (h))
+#define x11window_moveresize(xw, x, y, w, h) x11_moveresize_window(x11window_x11((xw)), x11window_win((xw)), (x), (y), (w), (h))
+#define x11window_raise(xw) x11_raise_window(x11window_x11((xw)), x11window_win((xw)))
 #define x11window_map(xw) x11_map_window(x11window_x11((xw)), x11window_win((xw)))
+#define x11window_map_raised(xw) x11_map_raised(x11window_x11((xw)), x11window_win((xw)))
+#define x11window_wait_mapped(xw) (xw)->wait_mapped((xw))
 #define x11window_unmap(xw) x11_unmap_window(x11window_x11((xw)), x11window_win((xw)))
 #define x11window_storename(xw, s) x11_storename(x11window_x11((xw)), x11window_win((xw)), s)
 

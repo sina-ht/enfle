@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Oct 21 01:52:15 2000.
- * $Id: x11window.c,v 1.2 2000/10/20 18:13:06 sian Exp $
+ * Last Modified: Sat Nov  4 07:40:21 2000.
+ * $Id: x11window.c,v 1.3 2000/11/04 17:30:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,11 +31,13 @@
 
 static int set_event_mask(X11Window *, int);
 static int get_position(X11Window *, unsigned int *, unsigned int *);
+static void wait_mapped(X11Window *);
 static void destroy(X11Window *);
 
 static X11Window template = {
   set_event_mask: set_event_mask,
   get_position: get_position,
+  wait_mapped: wait_mapped,
   destroy: destroy
 };
 
@@ -75,10 +77,10 @@ get_position(X11Window *xw, unsigned int *x_return, unsigned int *y_return)
   X11 *x11;
   Window root, parent, *child;
   int x, y, px, py, nc;
-  unsigned int width, height, bw, depth;
+  unsigned int w, h, bw, depth;
 
   x11 = x11window_x11(xw);
-  if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &x, &y, &width, &height, &bw, &depth))
+  if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &x, &y, &w, &h, &bw, &depth))
     return 0;
   if (!XQueryTree(x11_display(x11), x11window_win(xw), &root, &parent, &child, &nc))
     return 0;
@@ -86,7 +88,7 @@ get_position(X11Window *xw, unsigned int *x_return, unsigned int *y_return)
     XFree(child);
 
   while (root != parent) {
-    if (!XGetGeometry(x11_display(x11), parent, &root, &px, &py, &width, &height, &bw, &depth))
+    if (!XGetGeometry(x11_display(x11), parent, &root, &px, &py, &w, &h, &bw, &depth))
       return 0;
     x += px + bw;
     y += py + bw;
@@ -100,6 +102,17 @@ get_position(X11Window *xw, unsigned int *x_return, unsigned int *y_return)
   *y_return = y;
 
   return 1;
+}
+
+static void
+wait_mapped(X11Window *xw)
+{
+  XEvent xev;
+  X11 *x11 = x11window_x11(xw);
+
+  do {
+    XMaskEvent(x11_display(x11), StructureNotifyMask, &xev);
+  } while ((xev.type != MapNotify) || (xev.xmap.event != x11window_win(xw)));
 }
 
 static void
