@@ -1,3 +1,83 @@
+2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/*: Implemented new Saver: GLIC. This is for
+	my research only.
+
+	* configure.in: Added saver and effect.
+
+	* compat.h: Added getpagesize() check.
+
+	* common.h: Added COPYRIGHT_MESSAGE definition.
+
+	* lib/enfle/image.c, lib/enfle/image.h: Implemented
+	image_compare().
+
+	* lib/enfle/memory.c: Avoid warning. Added forgotten USE_SHM
+	ifdef.
+
+	* lib/enfle/loader.c: Clear format_detail.
+
+	* lib/enfle/utils.c, lib/enfle/utils.h: Implemented replace_ext().
+
+	* lib/enfle/stream-utils.c, lib/enfle/stream-utils.h: Implemented
+	stream_gets().
+
+	* lib/enfle/ui-extra.h, lib/enfle/Makefile.am: Added saver and
+	effect.
+
+	* src/enfle.rc: More configuration settings.
+
+	* src/enfle.c: Cleaned up. Added saver and effect.
+
+	* plugins/ui/normal/normal.c: Fixed some bugs. Added key bindings
+	to save image, rotate and flip effect.
+
+	* lib/utils/libconfig.c, lib/utils/libconfig.h: Implemented
+	get_str(), set_str(), get_int(), set_int().
+
+	* lib/utils/timer.c: Avoid warning.
+
+	* plugins/ui/Makefile.am: Added new UI: Convert.
+
+	* plugins/ui/convert/.cvsignore, plugins/ui/convert/Makefile.am,
+	plugins/ui/convert/convert.c: Implemented New UI: Convert.
+
+	* plugins/loader/Makefile.am: Added new loader: PNM.
+
+	* plugins/loader/pnm/Makefile.am, plugins/loader/pnm/pnm.c:
+	Implemented PNM Loader.
+
+	* plugins/Makefile.am: Added new plugin types: Effect Saver.
+
+	* plugins/saver/png/Makefile.am, plugins/saver/png/png.c:
+	Implemented PNG Saver plugin.
+
+	* plugins/saver/Makefile.am: Saver Makefile.am.
+
+	* plugins/effect/Makefile.am: Effect Makefile.am.
+
+	* plugins/effect/rotate/Makefile.am,
+	plugins/effect/rotate/rotate.c: Implemented Rotate Effect plugin.
+
+	* plugins/effect/rotate/.cvsignore: Created .cvsignore.
+
+	* config.guess, config.sub, ltmain.sh: Upgraded config.guess,
+	config.sub, ltmain.sh.
+
+	* .cvsignore, plugins/effect/.cvsignore,
+	plugins/loader/pnm/.cvsignore, plugins/saver/.cvsignore,
+	plugins/saver/png/.cvsignore: Updated or created .cvsignore.
+
+	* lib/enfle/saver-plugin.h, lib/enfle/saver.c, lib/enfle/saver.h:
+	New type of plugin: saver.
+
+	* lib/enfle/effect-plugin.h, lib/enfle/effect.c,
+	lib/enfle/effect.h: New type of plugin: effect.
+
+2001-03-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/jpeg/jpeg.c: Loosened identity checking.
+
 2001-03-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README, README.e: Updated documentations.
