@@ -1,5 +1,11 @@
 2001-01-28  Hiroshi Takekawa  <sian@fennel.org>
 
+	* configure.in, lib/divxdecore/Makefile.am,
+	lib/divxdecore/yuv2rgb.h, lib/divxdecore/yuv2rgb_mmx.c,
+	plugins/player/opendivx/opendivx.c: MMX related tweaks.
+
+2001-01-28  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/divxdecore/yuv2rgb_mmx.c: Original code convert to RGB15,
 	not RGB16, changed to convert to RGB16.
 
