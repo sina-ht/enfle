@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:53:32 2001.
- * $Id: pluginlist.c,v 1.6 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Thu Aug  8 00:03:34 2002.
+ * $Id: pluginlist.c,v 1.7 2002/08/07 15:34:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -93,13 +93,14 @@ static void
 destroy(PluginList *pl)
 {
   if (pl->hash) {
-    Dlist *dl;
-    Dlist_data *dd;
-    Hash_key *hk;
     Plugin *p;
+    void *k;
+    unsigned int kl;
 
-    pluginlist_iter(pl, dl, dd, hk, p)
+    pluginlist_iter(pl, k, kl, p)
       plugin_destroy(p);
+    pluginlist_iter_end;
+
     hash_destroy(pl->hash, 0);
   }
 
