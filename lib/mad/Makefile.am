@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Feb 23 01:40:33 2004.
-# $Id: Makefile.am,v 1.3 2004/02/24 15:54:38 sian Exp $
+# Last Modified: Mon Mar  8 16:49:53 2004.
+# $Id: Makefile.am,v 1.4 2004/03/08 07:50:40 sian Exp $
 
 AM_CFLAGS = -Dasm=__asm__
 EXTRA_DIST = mad.h.sed CHANGES COPYRIGHT CREDITS README TODO VERSION
@@ -15,7 +15,6 @@ noinst_HEADERS = mad.h
 #libenflemad_la_LIBADD = -lm
 #libenflemad_la_LIBADD = @ASO_OBJS@
 exported_headers = \
-	config.h \
 	version.h \
 	fixed.h \
 	bit.h \
@@ -72,7 +71,8 @@ mad.h: Makefile.am $(srcdir)/COPYRIGHT $(srcdir)/mad.h.sed $(exported_headers)
 	echo 'extern "C" {';  \
 	echo "# endif"; echo;  \
 	if [ ".$(FPM)" != "." ]; then  \
-		echo ".$(FPM)" | sed -e 's|^\.-D|# define |'; echo;  \	else \
+		echo ".$(FPM)" | sed -e 's|^\.-D|# define |'; echo;  \
+	else \
 		echo ".-DFPM_DEFAULT" | sed -e 's|^\.-D|# define |'; echo;  \
 	fi;  \
 	sed -ne 's/^# *define  *\(HAVE_.*_ASM\).*/# define \1/p'  \
