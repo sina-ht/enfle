@@ -1,3 +1,26 @@
+2000-10-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Fixed bug which showed wrong
+	archiver type.
+
+	* plugins/player/libmpeg3/libmpeg3.c: st->path == NULL work
+	around. This occurs when stream is memory_stream.
+
+	* lib/utils/misc.c: Fixed stupid bug.
+
+	* lib/enfle/spi.c: Archiver spi-to-enfle bridge.
+
+	* lib/enfle/spi-private.h: Fixed callback prototype.
+
+	* lib/dllloader/pe_image.c: LDT support for FreeBSD. Thanks to
+	Mr. Yuki Sawada.
+
+	* lib/dllloader/msvcrt.c: Use compat.h. More implementation.
+
+	* lib/dllloader/module.c: Use compat.h. Fixed wrong free()'ing.
+
+	* lib/dllloader/kernel32.c: Use compat.h.
+
 2000-10-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/Makefile.am, lib/enfle/spi-private.h, lib/enfle/spi.c:
@@ -6,7 +29,8 @@
 	* lib/utils/Makefile.am: Added misc.[ch].
 
 	* lib/enfle/movie.c, lib/utils/timer.c, lib/utils/timer.h:
-	Work-around timer_create() collision.
+	Work-around timer_create() name collision. Thanks to Mr. TAJIRI
+	Yasuhiro.
 
 	* lib/dllloader/kernel32.c, lib/dllloader/Makefile.am,
 	lib/dllloader/module.c, lib/dllloader/pe_image.c,
