@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Jun 21 00:50:31 2001.
- * $Id: x11ximage.c,v 1.28 2001/06/20 15:52:53 sian Exp $
+ * Last Modified: Sat Jun 23 01:52:58 2001.
+ * $Id: x11ximage.c,v 1.29 2001/06/22 16:52:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,6 +70,7 @@ static void
 destroy_ximage(X11XImage *xi)
 {
   if (xi->use_xv) {
+#ifdef USE_XV
     if (xi->xvimage) {
 #ifdef USE_SHM
       if (xi->if_attached) {
@@ -80,6 +81,7 @@ destroy_ximage(X11XImage *xi)
 #endif
       XFree(xi->xvimage);
     }
+#endif
   } else {
     if (xi->ximage) {
       xi->ximage->data = NULL;
