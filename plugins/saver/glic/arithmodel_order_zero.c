@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep  7 13:33:13 2001.
- * $Id: arithmodel_order_zero.c,v 1.8 2001/09/07 05:03:00 sian Exp $
+ * Last Modified: Sun Sep  9 00:11:14 2001.
+ * $Id: arithmodel_order_zero.c,v 1.9 2001/09/09 23:59:00 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -274,7 +274,7 @@ encode_bulk(Arithmodel *_am, Index index, Index low, Index high, int use_range)
   Arithmodel_order_zero *am = AMOZ(_am);
 
   if (am->nsymbols < index)
-    fatal(2, __FUNCTION__ ": nsymbols %d < %d index\n", am->nsymbols, index);
+    fatal(2, __FUNCTION__ ": nsymbols %d < %d index, start = %d, low = %d, high = %d\n", am->nsymbols, index, am->start_symbol, low, high);
 
   if (am->nsymbols == index) {
     if (use_range)
