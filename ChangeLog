@@ -1,3 +1,50 @@
+2004-01-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* plugins/ui/normal/normal.c: Clear m->width (and m->height).
+	libmpeg2 will not re-initialize screen if this is not done.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Fixed silly fps calculation
+	bug.
+
+	* plugins/audio/alsa/alsa.c: Fixed bug.
+
+	* lib/enfle/fourcc.h, plugins/player/avcodec/avcodec.c: Added mp42
+	fourcc for msmpeg4v2.
+
+	* lib/X11/x11.c: Suppress xvinfo debug messages.
+
+	* lib/avcodec/*: avcodec update.
+
+2004-01-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: Use optind.
+
+	* plugins/video/Xlib/Xlib.c: Fixed a stupid mistake...
+
+	* plugins/player/avcodec/avcodec.c: Disable msmpeg4v1 for the time
+	being.
+
+	* lib/enfle/stream.c: Dummy s->path.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Pass video streams
+	through.
+
+	* plugins/player/Makefile.am, lib/Makefile.am, configure.in:
+	Preserve old libmpeg2(0.2.1) library and plugin as libmpeg2.old.
+
+	* common.h: Define ARCH_X86 when USE_MMX for libmpeg2.
+
+	* plugins/player/libmpeg2/Makefile.am,
+	plugins/player/libmpeg2/libmpeg2.c: new plugin for libmpeg2 0.4.0.
+
+	* plugins/player/libmpeg2.old/*: old plugin for libmpeg2 0.2.1.
+
+	* lib/mpeg2/*: libmpeg2 0.4.0.
+
+	* lib/mpeg2.old/*: libmpeg2 0.2.1.
+
 2003-12-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Link -lpng before -lz.
