@@ -1,3 +1,22 @@
+2000-11-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/pe_image.c, lib/dllloader/pe_image.h,
+	lib/dllloader/user32.c, lib/dllloader/windef.h,
+	lib/enfle/archive.c, lib/enfle/enfle-plugin.c,
+	lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.c,
+	lib/enfle/enfle-plugins.h, lib/enfle/image.c, lib/enfle/image.h,
+	lib/enfle/spi-private.h, lib/enfle/spi.c, lib/utils/libconfig.c,
+	lib/utils/libconfig.h, lib/utils/libstring.c,
+	lib/utils/libstring.h, lib/utils/misc.c, lib/utils/misc.h,
+	lib/utils/plugin.c, lib/utils/plugin.h, lib/utils/pluginlist.c,
+	lib/utils/pluginlist.h, plugins/ui/normal/normal.c, src/enfle.c,
+	lib/dllloader/export.h, lib/dllloader/kernel32.c: Removed warnings
+	when -Wstrict-prototypes -Winline -Wwrite-strings is added to
+	CFLAGS.
+
+	* configure.in: Added -Wstrict-prototypes -Winline -Wwrite-strings
+	to CFLAGS.
+
 2000-11-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added -Werror to CFLAGS. Version up.
