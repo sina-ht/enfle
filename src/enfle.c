@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 02:07:57 2000.
- * $Id: enfle.c,v 1.4 2000/10/08 17:33:44 sian Exp $
+ * Last Modified: Tue Oct 10 05:09:30 2000.
+ * $Id: enfle.c,v 1.5 2000/10/09 20:29:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,14 +22,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#if HAVE_UNISTD_H
-#  include <sys/types.h>
-#  include <unistd.h>
+#define REQUIRE_STRING_H
+#define REQUIRE_UNISTD_H
+#include "compat.h"
+
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
 #endif
-
-#include <getopt.h>
 
 #include "common.h"
 

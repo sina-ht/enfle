@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  2 11:37:44 2000.
- * $Id: libstring.c,v 1.2 2000/10/02 03:00:42 sian Exp $
+ * Last Modified: Tue Oct 10 04:58:04 2000.
+ * $Id: libstring.c,v 1.3 2000/10/09 20:29:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,8 +21,10 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "common.h"
 
