@@ -1,3 +1,37 @@
+2001-08-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* vmpm_decompose_null.c, vmpm_decompose_token.c,
+	vmpm_decompose_token2.c, vmpm_decompose_token2_old.c,
+	vmpm_decompose_token2_old2.c, vmpm_decompose_token_old.c,
+	vmpm_decompose_token_old2.c, vmpm_decompose_esc.c,
+	vmpm_decompose_escb.c, vmpm_decompose_escfirst.c,
+	vmpm_decompose_half.c, vmpm_decompose_highlow.c,
+	vmpm_decompose_highlow_rle.c, vmpm_decompose_normal.c,
+	vmpm_decompose_normal_old.c, vmpm_decompose_normal_rle.c: Adapted
+	to new arithmodel_order_zero interface.
+
+	* Makefile.am: Added a new decomposer.
+
+	* vmpm_decompose_highlow_esc.c: New file.
+
+	* arithmodel_order_zero.[ch]: Change interface. Now
+	arithmodel_order_zero_create() accepts no arguments. You should
+	set initial frequencies by arithmodel_order_zero_reset().
+
+2001-08-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* vmpm_decompose_normal.c: Uninstall escape symbol when all escape
+	are emitted.
+
+	* vmpm_error.h: Added INTERNAL_ERROR code.
+
+	* vmpm_decompose_escfirst.c: Cosmetic change.
+
+	* vmpm_decompose_esc.c: Removed redundant code.
+
+	* arithmodel.h, arithmodel_order_zero.[ch]: Added
+	uninstall_symbol().
+
 2001-08-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* vmpm_decompose_esc.c, vmpm_decompose_escb.c,
