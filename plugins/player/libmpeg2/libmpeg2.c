@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb  1 18:34:30 2001.
- * $Id: libmpeg2.c,v 1.1 2001/02/01 16:10:22 sian Exp $
+ * Last Modified: Fri Feb  2 11:08:55 2001.
+ * $Id: libmpeg2.c,v 1.2 2001/02/02 16:40:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -101,11 +101,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
-  if ((info->file = mpeg3_open(st->path)) == NULL) {
-    free(info);
-    return PLAY_ERROR;
-  }
-
   pthread_mutex_init(&info->update_mutex, NULL);
   pthread_cond_init(&info->update_cond, NULL);
 
@@ -115,10 +110,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
   debug_message("Libmpeg2: requested type: %s direct\n", image_type_to_string(m->requested_type));
-
-  /* can set how many CPUs you want to use. */
-  /* mpeg3_set_cpus(info->file, 2); */
-  /* mpeg3_set_mmx(info->file, 1); */
 
   m->has_audio = 0;
   if (mpeg3_has_audio(info->file)) {
