@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Thu Feb 19 23:56:09 2004.
-; $Id: enfle.rc,v 1.38 2004/02/20 17:23:06 sian Exp $
+; Last Modified: Sat Feb 21 15:54:32 2004.
+; $Id: enfle.rc,v 1.39 2004/02/21 07:51:53 sian Exp $
 
 enfle {
   identify {
@@ -127,6 +127,7 @@ enfle {
         mpeg4 := DivX:avcodec:.
         msmpeg4 := DivX:avcodec:.
         msmpeg4v2 := DivX:avcodec:.
+        raw := raw:.
       }
     }
     audiodecoder {
