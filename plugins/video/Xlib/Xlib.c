@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 18:12:50 2001.
- * $Id: Xlib.c,v 1.30 2001/04/27 01:06:55 sian Exp $
+ * Last Modified: Mon Apr 30 10:02:42 2001.
+ * $Id: Xlib.c,v 1.31 2001/04/30 01:10:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -110,7 +110,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.4.3",
+  description: "Xlib Video plugin version 0.4.4",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -520,12 +520,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 #ifdef USE_PTHREAD
   static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#if 0
-  if (pthread_mutex_trylock(&mutex) == EBUSY)
-    return 0;
-#else
   pthread_mutex_lock(&mutex);
-#endif
   do_sync(vw);
 #endif
 
@@ -646,19 +641,22 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
       break;
     case MotionNotify:
       ev->type = ENFLE_Event_PointerMoved;
-      ev->pointer.button = ENFLE_Button_None;
-      if (xev.xmotion.state & Button1Mask)
-	ev->pointer.button |= ENFLE_Button_1;
-      if (xev.xmotion.state & Button2Mask)
-	ev->pointer.button |= ENFLE_Button_2;
-      if (xev.xmotion.state & Button3Mask)
-	ev->pointer.button |= ENFLE_Button_3;
-      if (xev.xmotion.state & Button4Mask)
-	ev->pointer.button |= ENFLE_Button_4;
-      if (xev.xmotion.state & Button5Mask)
-	ev->pointer.button |= ENFLE_Button_5;
-      ev->pointer.x = xev.xmotion.x;
-      ev->pointer.y = xev.xmotion.y;
+      do {
+	ev->pointer.button = ENFLE_Button_None;
+	if (xev.xmotion.state & Button1Mask)
+	  ev->pointer.button |= ENFLE_Button_1;
+	if (xev.xmotion.state & Button2Mask)
+	  ev->pointer.button |= ENFLE_Button_2;
+	if (xev.xmotion.state & Button3Mask)
+	  ev->pointer.button |= ENFLE_Button_3;
+	if (xev.xmotion.state & Button4Mask)
+	  ev->pointer.button |= ENFLE_Button_4;
+	if (xev.xmotion.state & Button5Mask)
+	  ev->pointer.button |= ENFLE_Button_5;
+	ev->pointer.x = xev.xmotion.x;
+	ev->pointer.y = xev.xmotion.y;
+      } while (XCheckWindowEvent(x11_display(x11), x11window_win(xw),
+				 PointerMotionMask, &xev));
       ret = 1;
       break;
     case ConfigureNotify:
