@@ -3,7 +3,7 @@ Hash: SHA1
 
 DivX Open License 
 ================= 
-Version 2.0
+Version 2.1
 
 This version of the DivX Open License supercedes any prior versions.
 
@@ -92,13 +92,13 @@ express written permission from Project Mayo before you use the names
 file extensions ".divx" or ".div" to promote or endorse any products
 derived from the Codec, including, but not limited to Larger Works.
 
-7. You must prominently display the "Encoded in DivX" logo on the
-package of any Encoded Content (be that package physical or digital)
-in a manner immediately visible to viewers when the means for such
-display are reasonably available.  You must also include the "Encoded
-in DivX" video logo at the beginning of any Encoded Content and use
-the ".divx" file extension in any Encoded Content when the means for
-such inclusion are reasonably available.
+7. You must use the ".divx" file extension in any Encoded Content,
+when tools for this purpose are readily available.  For Encoded
+Content used for a commercial purpose, you must prominently display
+the "Encoded in DivX" logo on the package of any Encoded Content in a
+manner immediately visible to viewers and you must include the
+"Encoded in DivX" video logo at the beginning of any Encoded Content
+when the means for such display are reasonably available.
 
 8. The Codec contains copyrighted materials that are proprietary to
 Project Mayo, and no rights are granted to you except as expressly
@@ -127,7 +127,7 @@ POSSIBILITY OF SUCH DAMAGE.
 -----BEGIN PGP SIGNATURE-----
 Version: PGPfreeware 6.5.8 for non-commercial use <http://www.pgp.com>
 
-iQA/AwUBOm9RCrXDfJUTzjUTEQIB/ACgknWT8A0WIq2/B8ObW9y+D8+WP98AoMLq
-WR2K/wPBov1PQZnxnEaBq9PA
-=2hHO
+iQA/AwUBOnHuvrXDfJUTzjUTEQJqwwCgubh/AG+UHnjxg9LqCNQppDkNxbkAoIxv
+/Mi7T5y9r9PN3Gp2bCIrblz0
+=M2Ol
 -----END PGP SIGNATURE-----
