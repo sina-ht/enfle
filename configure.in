@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf must be 2.59 or later, automake should be 1.8.2 or later.
 dnl
-dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
+dnl (C)Copyright 1999-2005 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Nov 22 22:56:15 2004.
-dnl $Id: configure.in,v 1.164 2004/11/22 13:56:34 sian Exp $
+dnl Last Modified: Sun Mar  6 12:27:20 2005.
+dnl $Id: configure.in,v 1.165 2005/03/06 05:20:36 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT([enfle],[20041122],[sian@big.or.jp])
+AC_INIT([enfle],[20050306],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
