@@ -1,10 +1,10 @@
 /*
  * hash.c -- Hash Table Library
- * (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Aug  7 23:26:20 2002.
- * $Id: hash.c,v 1.10 2002/08/07 15:32:05 sian Exp $
+ * Last Modified: Fri Aug  9 00:03:23 2002.
+ * $Id: hash.c,v 1.11 2002/08/08 15:07:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,16 +32,7 @@
 
 #define HASH_LOOKUP_SEARCH_MATCH 0
 #define HASH_LOOKUP_ACCEPT_DELETED 1
-
-static int define(Hash *, void *, unsigned int, void *);
-static int set(Hash *, void *, unsigned int, void *);
-static void set_function(Hash *, unsigned int (*)(void *, unsigned int));
-static void set_function2(Hash *, unsigned int (*)(void *, unsigned int));
-static Dlist *get_keys(Hash *);
-static int get_key_size(Hash *);
-static void *lookup(Hash *, void *, unsigned int);
-static int delete_key(Hash *, void *, unsigned int, int);
-static void destroy(Hash *, int);
+#define HASH_DESTROYED_KEY ((Dlist_data *)-1)
 
 static unsigned int default_hash_function(void *, unsigned int);
 static unsigned int default_hash_function2(void *, unsigned int);
@@ -49,16 +40,6 @@ static unsigned int default_hash_function2(void *, unsigned int);
 static Hash hash_template = {
   hash_function: default_hash_function,
   hash_function2: default_hash_function2,
-
-  define: define,
-  set: set,
-  set_function: set_function,
-  set_function2: set_function2,
-  get_keys: get_keys,
-  get_key_size: get_key_size,
-  lookup: lookup,
-  delete_key: delete_key,
-  destroy: destroy
 };
 
 static unsigned int
@@ -108,7 +89,6 @@ hash_create(int size)
 
   if ((h = (Hash *)calloc(1, sizeof(Hash))) == NULL)
     return NULL;
-
   memcpy(h, &hash_template, sizeof(Hash));
 
   if ((h->data = (Hash_data **)calloc(size, sizeof(Hash_data *))) == NULL)
@@ -146,7 +126,7 @@ lookup_internal(Hash *h, void *k, unsigned int len, int flag)
   skip = h->hash_function2(k, len);
 
   do {
-    if (h->data[hash]->key == (Dlist_data *)-1) {
+    if (h->data[hash]->key == HASH_DESTROYED_KEY) {
       if (flag == HASH_LOOKUP_ACCEPT_DELETED)
 	break;
       hash = (hash + skip) % h->size;
@@ -198,26 +178,26 @@ hash_key_destroy(void *arg)
 
 /* methods */
 
-static void
-set_function(Hash *h, unsigned int (*function)(void *, unsigned int))
+void
+hash_set_function(Hash *h, unsigned int (*function)(void *, unsigned int))
 {
   h->hash_function = function;
 }
 
-static void
-set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int))
+void
+hash_set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int))
 {
   h->hash_function2 = function2;
 }
 
-static int
-define(Hash *h, void *k, unsigned int len, void *d)
+int
+hash_define(Hash *h, void *k, unsigned int len, void *d)
 {
   unsigned int i;
   Hash_key *hk;
 
   i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
-  if (h->data[i]->key != NULL && h->data[i]->key != (Dlist_data *)-1)
+  if (h->data[i]->key != NULL && h->data[i]->key != HASH_DESTROYED_KEY)
     return -1; /* already registered */
 
   if ((hk = hash_key_create(k, len)) == NULL)
@@ -232,14 +212,14 @@ define(Hash *h, void *k, unsigned int len, void *d)
   return 1;
 }
 
-static int
-set(Hash *h, void *k, unsigned int len, void *d)
+int
+hash_set(Hash *h, void *k, unsigned int len, void *d)
 {
   unsigned int i;
   Hash_key *hk;
 
   i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
-  if (h->data[i]->key == NULL || h->data[i]->key == (Dlist_data *)-1) {
+  if (h->data[i]->key == NULL || h->data[i]->key == HASH_DESTROYED_KEY) {
     if ((hk = hash_key_create(k, len)) == NULL)
       return 0;
     if ((h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy)) == NULL) {
@@ -253,28 +233,17 @@ set(Hash *h, void *k, unsigned int len, void *d)
   return 1;
 }
 
-static Dlist *
-get_keys(Hash *h)
+int
+hash_get_key_size(Hash *h)
 {
-  return h->keys;
-}
-
-static int
-get_key_size(Hash *h)
-{
-  Dlist *keys;
-
-  keys = get_keys(h);
+  Dlist *keys = hash_get_keys(h);
   return dlist_size(keys);
 }
 
-static void *
-lookup(Hash *h, void *k, unsigned int len)
+void *
+hash_lookup(Hash *h, void *k, unsigned int len)
 {
-  unsigned int i;
-
-  i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
-
+  unsigned int i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
   return (h->data[i]->key == NULL) ? NULL : h->data[i]->datum;
 }
 
@@ -283,12 +252,12 @@ destroy_datum(Hash *h, int i, int f)
 {
   Hash_data *d = h->data[i];
 
-  if (d->key == (Dlist_data *)-1)
+  if (d->key == HASH_DESTROYED_KEY)
     return 0;
   if (d->key != NULL) {
     if (!dlist_delete(h->keys, d->key))
       return 0;
-    d->key = (Dlist_data *)-1;
+    d->key = HASH_DESTROYED_KEY;
   }
   if (f && d->datum != NULL)
     free(d->datum);
@@ -296,8 +265,8 @@ destroy_datum(Hash *h, int i, int f)
   return 1;
 }
 
-static int
-delete_key(Hash *h, void *k, unsigned int len, int f)
+int
+hash_delete(Hash *h, void *k, unsigned int len, int f)
 {
   int i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
 
@@ -310,18 +279,18 @@ delete_key(Hash *h, void *k, unsigned int len, int f)
   return 1;
 }
 
-static void
-destroy(Hash *h, int f)
+void
+hash_destroy(Hash *h, int f)
 {
   Dlist_data *t;
   Dlist *keys;
   Hash_key *hk;
 
-  keys = get_keys(h);
-  while (get_key_size(h) > 0) {
+  keys = hash_get_keys(h);
+  while (hash_get_key_size(h) > 0) {
     t = dlist_top(keys);
     hk = dlist_data(t);
-    delete_key(h, hk->key, hk->len, f);
+    hash_delete(h, hk->key, hk->len, f);
   }
 
   dlist_destroy(keys, 1);

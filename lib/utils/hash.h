@@ -1,10 +1,10 @@
 /*
  * hash.h -- Hash Table Library Header
- * (C)Copyright 1999, 2000 by Hiroshi Takekawa
+ * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug  8 00:08:12 2002.
- * $Id: hash.h,v 1.6 2002/08/07 15:32:05 sian Exp $
+ * Last Modified: Thu Aug  8 23:41:40 2002.
+ * $Id: hash.h,v 1.7 2002/08/08 15:07:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,34 +42,25 @@ struct _hash {
   Dlist *keys;
   unsigned int (*hash_function)(void *, unsigned int);
   unsigned int (*hash_function2)(void *, unsigned int);
-
-  int (*define)(Hash *, void *, unsigned int, void *);
-  int (*set)(Hash *, void *, unsigned int, void *);
-  void (*set_function)(Hash *, unsigned int (*)(void *, unsigned int));
-  void (*set_function2)(Hash *, unsigned int (*)(void *, unsigned int));
-  Dlist *(*get_keys)(Hash *);
-  int (*get_key_size)(Hash *);
-  void *(*lookup)(Hash *, void *, unsigned int);
-  int (*delete_key)(Hash *, void *, unsigned int, int);
-  void (*destroy)(Hash *, int);
 };
 
-#define hash_define(h, k, l, d) (h)->define((h), (k), (l), (d))
-#define hash_set(h, k, l, d) (h)->set((h), (k), (l), (d))
-#define hash_lookup(h, k, l) (h)->lookup((h), (k), (l))
-#define hash_delete(h, k, l, f) (h)->delete_key((h), (k), (l), (f))
+Hash *hash_create(int);
+int hash_define(Hash *, void *, unsigned int, void *);
+int hash_set(Hash *, void *, unsigned int, void *);
+void *hash_lookup(Hash *, void *, unsigned int);
+int hash_delete(Hash *, void *, unsigned int, int);
+void hash_set_function(Hash *, unsigned int (*)(void *, unsigned int));
+void hash_set_function2(Hash *, unsigned int (*)(void *, unsigned int));
+int hash_get_key_size(Hash *);
+void hash_destroy(Hash *, int);
 
 /* avoid side effect */
-#define hash_define_str(h, k, d) ({void * _k = (void *)(k); (h)->define((h), _k, strlen((const char *)_k) + 1, (d));})
-#define hash_set_str(h, k, d) ({void * _k = (void *)(k); (h)->set((h), _k, strlen((const char *)_k) + 1, (d));})
-#define hash_lookup_str(h, k) ({void * _k = (void *)(k); (h)->lookup((h), _k, strlen((const char *)_k) + 1);})
-#define hash_delete_str(h, k, f) ({void * _k = (void *)(k); (h)->delete_key((h), _k, strlen((const char *)_k) + 1, (f));})
+#define hash_define_str(h, k, d) ({void * _k = (void *)(k); hash_define((h), _k, strlen((const char *)_k) + 1, (d));})
+#define hash_set_str(h, k, d) ({void * _k = (void *)(k); hash_set((h), _k, strlen((const char *)_k) + 1, (d));})
+#define hash_lookup_str(h, k) ({void * _k = (void *)(k); hash_lookup((h), _k, strlen((const char *)_k) + 1);})
+#define hash_delete_str(h, k, f) ({void * _k = (void *)(k); hash_delete((h), _k, strlen((const char *)_k) + 1, (f));})
 
-#define hash_set_function(h, func) (h)->set_function((h), (func))
-#define hash_set_function2(h, func) (h)->set_function2((h), (func))
-#define hash_get_keys(h) (h)->get_keys((h))
-#define hash_get_key_size(h) (h)->get_key_size((h))
-#define hash_destroy(h, f) (h)->destroy((h), (f))
+#define hash_get_keys(h) ((h)->keys)
 
 #define hash_key_key(hk) ((Hash_key *)hk)->key
 #define hash_key_len(hk) ((Hash_key *)hk)->len
@@ -85,7 +76,5 @@ struct _hash {
 #define hash_iter_dl __dl
 #define hash_iter_dd __dd
 #define hash_iter_end }
-
-Hash *hash_create(int);
 
 #endif
