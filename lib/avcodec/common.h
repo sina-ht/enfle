@@ -1259,7 +1259,7 @@ if((y)<(x)){\
 #endif
 
 #ifdef ARCH_X86
-static inline long long rdtsc()
+static inline long long rdtsc(void)
 {
 	long long l;
 	asm volatile(	"rdtsc\n\t"

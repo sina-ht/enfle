@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 12 13:21:56 2004.
- * $Id: fourcc.h,v 1.12 2004/06/12 06:11:29 sian Exp $
+ * Last Modified: Tue Jun 29 00:30:19 2004.
+ * $Id: fourcc.h,v 1.13 2004/06/28 15:32:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -144,7 +144,9 @@
  * Audio Codecs
  */
 
-#define WAVEFORMAT_TAG_PCM         0x01
+/* Dunno correct values... */
+#define WAVEFORMAT_TAG_PCM         0x00
+#define WAVEFORMAT_TAG_MP3_01      0x01
 #define WAVEFORMAT_TAG_MS_ADPCM    0x02
 #define WAVEFORMAT_TAG_IMA_ADPCM   0x11
 #define WAVEFORMAT_TAG_MS_GSM_6_10 0x31

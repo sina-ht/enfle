@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 18:01:10 2004.
- * $Id: avcodec.c,v 1.3 2004/04/12 04:15:05 sian Exp $
+ * Last Modified: Tue Jun 29 00:31:45 2004.
+ * $Id: avcodec.c,v 1.4 2004/06/28 15:32:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -193,13 +193,13 @@ static unsigned int
 query(unsigned int fourcc, void *priv)
 {
   switch (fourcc) {
-  case 0:
   case WAVEFORMAT_TAG_PCM:
   case WAVEFORMAT_TAG_MS_ADPCM:
   case WAVEFORMAT_TAG_IMA_ADPCM:
   case WAVEFORMAT_TAG_MS_GSM_6_10:
   case WAVEFORMAT_TAG_MSN_Audio:
   case WAVEFORMAT_TAG_MP2:
+  case WAVEFORMAT_TAG_MP3_01:
   case WAVEFORMAT_TAG_MP3:
   case WAVEFORMAT_TAG_Voxware:
   case WAVEFORMAT_TAG_Acelp:
@@ -222,13 +222,13 @@ init(unsigned int fourcc, void *priv)
   struct audiodecoder_avcodec *adm;
 
   switch (fourcc) {
-  case 0:
   case WAVEFORMAT_TAG_PCM:
   case WAVEFORMAT_TAG_MS_ADPCM:
   case WAVEFORMAT_TAG_IMA_ADPCM:
   case WAVEFORMAT_TAG_MS_GSM_6_10:
   case WAVEFORMAT_TAG_MSN_Audio:
   case WAVEFORMAT_TAG_MP2:
+  case WAVEFORMAT_TAG_MP3_01:
   case WAVEFORMAT_TAG_MP3:
   case WAVEFORMAT_TAG_Voxware:
   case WAVEFORMAT_TAG_Acelp:

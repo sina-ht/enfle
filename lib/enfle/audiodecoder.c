@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 17:52:14 2004.
- * $Id: audiodecoder.c,v 1.5 2004/04/12 04:14:10 sian Exp $
+ * Last Modified: Tue Jun 29 00:29:43 2004.
+ * $Id: audiodecoder.c,v 1.6 2004/06/28 15:32:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,7 +50,7 @@ audiodecoder_codec_name(unsigned int fourcc)
 {
   switch (fourcc) {
   case WAVEFORMAT_TAG_PCM:
-    return "pcm";
+    return "pcm_s16le";
   case WAVEFORMAT_TAG_MS_ADPCM:
     return "ms_adpcm";
   case WAVEFORMAT_TAG_IMA_ADPCM:
@@ -61,6 +61,7 @@ audiodecoder_codec_name(unsigned int fourcc)
     return "MSN_Audio";
   case WAVEFORMAT_TAG_MP2:
     return "mp2";
+  case WAVEFORMAT_TAG_MP3_01:
   case WAVEFORMAT_TAG_MP3:
     return "mp3";
   case WAVEFORMAT_TAG_Voxware:
