@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 23:20:35 2001.
- * $Id: fifo.c,v 1.6 2001/09/21 02:57:01 sian Exp $
+ * Last Modified: Sun Sep 23 04:00:02 2001.
+ * $Id: fifo.c,v 1.7 2001/09/22 19:00:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -64,6 +64,7 @@ fifo_create(void)
 
 #ifdef USE_PTHREAD
   pthread_mutex_init(&f->lock, NULL);
+  f->valid = 1;
 #endif
 
   return f;
@@ -80,8 +81,10 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
 #ifdef USE_PTHREAD
   pthread_mutex_lock(&f->lock);
   if (f->maxdata)
-    while (f->ndata >= f->maxdata)
+    while (f->valid && f->ndata >= f->maxdata)
       pthread_cond_wait(&f->put_ok_cond, &f->lock);
+  if (!f->valid)
+    return 0;
 #else
   if (f->maxdata && f->ndata >= f->maxdata)
     return 0;
@@ -121,8 +124,10 @@ get(FIFO *f, void **d_return, FIFO_destructor *destructor_r)
 
 #ifdef USE_PTHREAD
   pthread_mutex_lock(&f->lock);
-  while (f->ndata == 0)
+  while (f->valid && f->ndata == 0)
     pthread_cond_wait(&f->get_ok_cond, &f->lock);
+  if (!f->valid)
+    return 0;
 #endif
   if ((fd = f->next_get) == NULL)
     return 0;
@@ -161,6 +166,7 @@ destroy(FIFO *f)
   FIFO_data *m, *n;
 
 #ifdef USE_PTHREAD
+  f->valid = 0;
   pthread_mutex_lock(&f->lock);
   pthread_cond_signal(&f->put_ok_cond);
   pthread_cond_signal(&f->get_ok_cond);

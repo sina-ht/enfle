@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 14:25:17 2001.
- * $Id: fifo.h,v 1.3 2001/09/20 05:29:03 sian Exp $
+ * Last Modified: Sun Sep 23 03:35:25 2001.
+ * $Id: fifo.h,v 1.4 2001/09/22 19:00:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,6 +35,7 @@ struct _fifo {
   pthread_mutex_t lock;
   pthread_cond_t put_ok_cond;
   pthread_cond_t get_ok_cond;
+  int valid;
 #endif
   unsigned int ndata;
   unsigned int maxdata;
