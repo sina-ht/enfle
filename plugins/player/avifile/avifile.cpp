@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 03:50:16 2001.
- * $Id: avifile.cpp,v 1.14 2001/06/19 08:19:00 sian Exp $
+ * Last Modified: Tue Jun 19 17:36:52 2001.
+ * $Id: avifile.cpp,v 1.15 2001/06/19 14:22:37 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -44,7 +44,6 @@
 #define FCC_YUY2 FCC('Y', 'U', 'Y', '2')
 #define FCC_YV12 FCC('Y', 'V', '1', '2')
 #define FCC_IYUV FCC('I', 'Y', 'U', 'V')
-//#define FCC_I420 FCC('I', '4', '2', '0')
 #define FCC_UYVY FCC('U', 'Y', 'V', 'Y')
 
 extern "C" {
@@ -229,8 +228,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       show_message("SetDestFmt() failed.\n");
       goto error;
     }
-    stream->GetVideoFormatInfo(&info->bmih, sizeof(info->bmih));
-#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION >= 6) || (AVIFILE_MAJOR_VERSION > 0)
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
     stream->GetVideoFormatInfo(&info->bmih, sizeof(info->bmih));
 #else
     stream->GetVideoFormatInfo(&info->bmih);
@@ -395,7 +393,7 @@ play_video(void *arg)
 
     info->stream->ReadFrame();
     info->ci = info->stream->GetFrame();
-#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION >= 6) || (AVIFILE_MAJOR_VERSION > 0)
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
     memcpy(memory_ptr(info->p->rendered.image), info->ci->Data(), info->ci->Bpl() * info->ci->Height());
 #else
     memcpy(memory_ptr(info->p->rendered.image), info->ci->data(), info->ci->bpl() * info->ci->height());
