@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri May  4 20:41:34 2001.
- * $Id: archive.c,v 1.19 2001/05/04 12:06:31 sian Exp $
+ * Last Modified: Sun Aug 26 09:06:53 2001.
+ * $Id: archive.c,v 1.20 2001/08/26 00:50:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,7 +30,6 @@
 #define REQUIRE_DIRENT_H
 #include "compat.h"
 
-#define REQUIRE_FATAL
 #define REQUIRE_FATAL_PERROR
 #include "common.h"
 
@@ -41,6 +40,7 @@ static int read_directory(Archive *, char *, int);
 static void set_fnmatch(Archive *, char *, Archive_fnmatch);
 static void add(Archive *, char *, void *);
 static void *get(Archive *, char *);
+static char *getpathname(Archive *, char *);
 static void delete_path(Archive *, char *);
 static char *iteration_start(Archive *);
 static char *iteration_first(Archive *);
@@ -57,6 +57,7 @@ static Archive archive_template = {
   set_fnmatch: set_fnmatch,
   add: add,
   get: get,
+  getpathname: getpathname,
   iteration_start: iteration_start,
   iteration_first: iteration_first,
   iteration_last: iteration_last,
@@ -81,10 +82,15 @@ archive_create(Archive *parent)
     return NULL;
   }
   arc->format = (char *)"NORMAL";
-  if (parent && parent->pattern) {
-    arc->fnmatch = parent->fnmatch;
-    arc->pattern = strdup(parent->pattern);
-  }
+  if (parent) {
+    if (parent->pattern) {
+      arc->fnmatch = parent->fnmatch;
+      arc->pattern = strdup(parent->pattern);
+    }
+    if (parent->path)
+      arc->path = strdup(parent->path);
+  } else
+    arc->path = NULL;
 
   return arc;
 }
@@ -92,36 +98,42 @@ archive_create(Archive *parent)
 /* for internal use */
 
 static int
-read_directory_recursively(Dlist *dl, char *path, int depth)
+read_directory_recursively(Dlist *dl, char *basepath, char *addpath, int depth)
 {
-  char *filepath;
   DIR *dir;
   struct dirent *ent;
   struct stat statbuf;
   int count = 0;
+  char path[strlen(basepath) + strlen(addpath) + 1];
+
+  strcpy(path, basepath);
+  strcat(path, addpath);
 
   if (stat(path, &statbuf) || !S_ISDIR(statbuf.st_mode))
-    return 0;
+    return -1;
 
   if ((dir = opendir(path)) == NULL)
     fatal_perror(1, __FUNCTION__);
 
   while ((ent = readdir(dir))) {
+    char fullpath[strlen(path) + strlen(ent->d_name) + 1];
+    char filepath[strlen(addpath) + strlen(ent->d_name) + 2];
+    /* +2 is needed for last '/'. */
+
     if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
       continue;
-    if ((filepath = calloc(1, strlen(path) + strlen(ent->d_name) + 2)) == NULL)
-      fatal(1, __FUNCTION__ ": No enough memory for filepath.\n");
-    strcpy(filepath, path);
-    if (filepath[strlen(filepath) - 1] != '/')
-      strcat(filepath, "/");
+    strcpy(fullpath, path);
+    strcat(fullpath, ent->d_name);
+    strcpy(filepath, addpath);
     strcat(filepath, ent->d_name);
-    if (!stat(filepath, &statbuf)) {
+    if (!stat(fullpath, &statbuf)) {
       if (S_ISDIR(statbuf.st_mode)) {
+	strcat(filepath, "/");
 	if (depth > 1)
 	  depth--;
-	if (depth == 0 || depth > 1)
-	  count += read_directory_recursively(dl, filepath, depth);
-	else {
+	if (depth == 0 || depth > 1) {
+	  count += read_directory_recursively(dl, basepath, filepath, depth);
+	} else {
 	  dlist_add_str(dl, filepath);
 	  count++;
 	}
@@ -130,7 +142,6 @@ read_directory_recursively(Dlist *dl, char *path, int depth)
 	count++;
       }
     }
-    free(filepath);
   }
   closedir(dir);
 
@@ -155,10 +166,19 @@ read_directory(Archive *arc, char *path, int depth)
   Dlist *dl;
   Dlist_data *dd;
 
-  dl = dlist_create();
-  dlist_set_compfunc(dl, key_compare);
-  c = read_directory_recursively(dl, path, depth);
+  if (arc->path == NULL) {
+    if ((arc->path = misc_canonical_pathname(path)) == NULL)
+      return 0;
+    dl = dlist_create();
+    if ((c = read_directory_recursively(dl, arc->path, (char *)"", depth)) < 0)
+      return 0;
+  } else {
+    dl = dlist_create();
+    if ((c = read_directory_recursively(dl, arc->path, path, depth)) < 0)
+      return 0;
+  }
 
+  dlist_set_compfunc(dl, key_compare);
   dlist_sort(dl);
   dlist_iter (dl, dd) {
     add(arc, dlist_data(dd), strdup(dlist_data(dd)));
@@ -224,6 +244,23 @@ static void *
 get(Archive *arc, char *path)
 {
   return hash_lookup_str(arc->filehash, path);
+}
+
+static char *
+getpathname(Archive *arc, char *path)
+{
+  char *fullpath;
+
+  if (!arc->path || strlen(arc->path) == 0)
+    return strdup(path);
+  if ((fullpath = malloc(strlen(arc->path) + strlen(path) + 2)) == NULL)
+    return NULL;
+  strcpy(fullpath, arc->path);
+  if (strcmp(arc->format, "NORMAL") != 0)
+    strcat(fullpath, "#");
+  strcat(fullpath, path);
+
+  return fullpath;
 }
 
 static void
@@ -357,7 +394,8 @@ iteration_delete(Archive *arc)
   dl = hash_get_keys(arc->filehash);
 
   if (arc->current != dlist_guard(dl)) {
-    dl_n = (arc->direction == 1) ? dlist_next(arc->current) : dlist_prev(arc->current);
+    //dl_n = (arc->direction == 1) ? dlist_next(arc->current) : dlist_prev(arc->current);
+    dl_n = dlist_next(arc->current);
     delete_path(arc, hash_key_key(dlist_data(arc->current)));
     arc->current = dl_n;
     if (arc->current == dlist_guard(dl))
@@ -372,7 +410,11 @@ iteration_delete(Archive *arc)
 static int
 open(Archive *arc, Stream *st, char *path)
 {
-  return stream_make_filestream(st, path);
+  char fullpath[strlen(arc->path) + strlen(path) + 1];
+
+  strcpy(fullpath, arc->path);
+  strcat(fullpath, path);
+  return stream_make_filestream(st, fullpath);
 }
 
 static void
@@ -381,5 +423,7 @@ destroy(Archive *arc)
   if (arc->pattern)
     free(arc->pattern);
   hash_destroy(arc->filehash, 0);
+  if (arc->path)
+    free(arc->path);
   free(arc);
 }
