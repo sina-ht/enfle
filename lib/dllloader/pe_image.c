@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb  7 22:08:42 2001.
- * $Id: pe_image.c,v 1.10 2001/02/07 17:34:35 sian Exp $
+ * Last Modified: Mon Aug  6 01:11:38 2001.
+ * $Id: pe_image.c,v 1.11 2001/08/05 16:15:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -317,7 +317,6 @@ load(PE_image *p, char *path)
 	      p->opt_header.DataDirectory[i].Size);
 #endif
 
-  //if ((p->image = malloc(p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage)) == NULL) {
   if ((p->image = calloc(1, p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage)) == NULL) {
     show_message("No enough memory for image (%d bytes)\n",
 		 p->opt_header.SizeOfImage + p->opt_header.SizeOfHeaders);
