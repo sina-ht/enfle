@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr  6 00:04:31 2004.
- * $Id: movie.h,v 1.22 2004/04/05 15:51:22 sian Exp $
+ * Last Modified: Mon Apr 12 19:39:09 2004.
+ * $Id: movie.h,v 1.23 2004/04/18 06:28:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,6 +66,7 @@ struct _movie {
   VideoDecoder *vdec;
   unsigned int out_fourcc;
   int out_bitcount;
+  void *video_header;
   void *video_extradata;
   int video_extradata_size;
 
