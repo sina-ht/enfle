@@ -1,3 +1,89 @@
+2004-06-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Enable GIF.
+
+	* README, README.e: Updated.
+
+	* plugins/demultiplexer/mpeg/mpeg.c: Make more robust.
+
+	* lib/enfle/videodecoder.h,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: Predict next pts value
+	from previous two pts values when not supplied.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.h, lib/avcodec/cinepak.c,
+	lib/avcodec/dsputil.h, lib/avcodec/flac.c, lib/avcodec/golomb.h,
+	lib/avcodec/h263.c, lib/avcodec/imgresample.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/resample.c, lib/avcodec/resample2.c,
+	lib/avcodec/svq1.c, lib/avcodec/svq3.c, lib/avcodec/xvmcvideo.c:
+	Updated.
+
+	* plugins/loader/gif/Makefile.am, plugins/loader/gif/gif.c,
+	plugins/loader/gif/gifbitio.c, plugins/loader/gif/gifbitio.h,
+	plugins/loader/gif/gifext.c, plugins/loader/gif/gifimage.c,
+	plugins/loader/gif/giflib.c, plugins/loader/gif/giflib.h: Now that
+	LZW patent has been expired, make all codes GPL'd.
+
+2004-06-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/identify.c: Clear timer_offset_set.
+
+	* lib/enfle/movie.h: Added timer_offset_set and timer_offset.
+
+	* plugins/demultiplexer/mpeg/mpeg.c: Get pts and dts from MPEG II
+	stream.
+
+	* plugins/player/generic/generic.c: Set timer_offset for audio
+	timer offset.
+
+	* plugins/videodecoder/libmpeg2/libmpeg2.c: Use pts in stream
+	instead of calculated value.
+
+2004-06-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/fourcc.h, lib/enfle/videodecoder.c,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c: More fourccs.
+
+	* lib/avcodec/4xm.c, lib/avcodec/Makefile.am,
+	lib/avcodec/a52dec.c, lib/avcodec/ac3dec.c, lib/avcodec/adpcm.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/amr.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/cljr.c, lib/avcodec/cyuv.c,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h, lib/avcodec/dv.c,
+	lib/avcodec/faad.c, lib/avcodec/ffv1.c, lib/avcodec/flac.c,
+	lib/avcodec/h261.c, lib/avcodec/h261data.h, lib/avcodec/h263.c,
+	lib/avcodec/h263dec.c, lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/imgresample.c,
+	lib/avcodec/indeo3.c, lib/avcodec/mace.c, lib/avcodec/mdec.c,
+	lib/avcodec/mem.c, lib/avcodec/mjpeg.c, lib/avcodec/motion_est.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/msmpeg4.c,
+	lib/avcodec/oggvorbis.c, lib/avcodec/parser.c, lib/avcodec/pcm.c,
+	lib/avcodec/ppc/dsputil_altivec.c,
+	lib/avcodec/ppc/dsputil_altivec.h, lib/avcodec/ppc/dsputil_ppc.c,
+	lib/avcodec/ppc/dsputil_ppc.h, lib/avcodec/pthread.c,
+	lib/avcodec/qtrle.c, lib/avcodec/raw.c, lib/avcodec/roqvideo.c,
+	lib/avcodec/rpza.c, lib/avcodec/rv10.c, lib/avcodec/svq1.c,
+	lib/avcodec/svq3.c, lib/avcodec/truemotion1.c,
+	lib/avcodec/utils.c, lib/avcodec/vcr1.c, lib/avcodec/vmdav.c,
+	lib/avcodec/vp3.c, lib/avcodec/wmv2.c: Updated.
+
+2004-05-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/avcodec.h, lib/avcodec/cabac.c, lib/avcodec/cabac.h,
+	lib/avcodec/dsputil.h, lib/avcodec/faandct.c,
+	lib/avcodec/i386/dsputil_mmx.c,
+	lib/avcodec/i386/dsputil_mmx_avg.h,
+	lib/avcodec/i386/dsputil_mmx_rnd.h, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/i386/idct_mmx.c, lib/avcodec/i386/mpegvideo_mmx.c,
+	lib/avcodec/i386/simple_idct_mmx.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/parser.c,
+	lib/avcodec/pthread.c, lib/avcodec/ra288.c, lib/avcodec/svq1.c,
+	lib/avcodec/svq1_cb.h, lib/avcodec/vp3data.h,
+	lib/avcodec/vp3dsp.c, lib/avcodec/wmv2.c: Updated.
+
 2004-05-15  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/demultiplexer.h, lib/enfle/dmo.c,
