@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.12 2001/09/09 23:58:37 sian Exp $
+# $Id: Makefile.am,v 1.13 2001/09/13 12:11:22 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -20,13 +20,14 @@ lib_LTLIBRARIES = \
 	vmpm_decompose_escc.la \
 	vmpm_decompose_recur.la \
 	vmpm_decompose_recur2.la \
+	vmpm_decompose_recur3.la \
 	vmpm_decompose_highlow.la \
 	vmpm_decompose_highlow_esc.la \
 	vmpm_decompose_highlow_escb.la \
 	vmpm_decompose_token.la \
 	vmpm_decompose_token2.la
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib -I$(HOME)/work/m1/arith/src/libarith
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 saver_glic_la_LIBADD = -lm
 saver_glic_la_LDFLAGS = -avoid-version -module
@@ -41,7 +42,7 @@ saver_glic_la_SOURCES = \
 	vmpm_decompose.c vmpm_decompose.h \
 	vmpm.h
 
-COMMON_FILES = ipow.c vmpm_hash.c vmpm_hash.h vmpm_error.c vmpm_error.h
+COMMON_FILES = ipow.c ipow.h vmpm_hash.c vmpm_hash.h vmpm_error.c vmpm_error.h
 
 vmpm_decompose_normal_la_LIBADD = libarith.la
 vmpm_decompose_normal_la_LDFLAGS = -avoid-version -module
@@ -64,6 +65,9 @@ vmpm_decompose_recur_la_SOURCES = vmpm_decompose_recur.c $(COMMON_FILES)
 vmpm_decompose_recur2_la_LIBADD = libarith.la
 vmpm_decompose_recur2_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_recur2_la_SOURCES = vmpm_decompose_recur2.c $(COMMON_FILES)
+vmpm_decompose_recur3_la_LIBADD = libarith.la
+vmpm_decompose_recur3_la_LDFLAGS = -avoid-version -module
+vmpm_decompose_recur3_la_SOURCES = vmpm_decompose_recur3.c $(COMMON_FILES)
 vmpm_decompose_highlow_la_LIBADD = libarith.la
 vmpm_decompose_highlow_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_highlow_la_SOURCES = vmpm_decompose_highlow.c $(COMMON_FILES)
