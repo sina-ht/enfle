@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  2 14:04:25 2001.
- * $Id: normal.c,v 1.19 2001/02/02 16:39:59 sian Exp $
+ * Last Modified: Sun Feb  4 20:37:28 2001.
+ * $Id: normal.c,v 1.20 2001/02/05 15:58:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -186,6 +186,7 @@ main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
 
   while (loop) {
     if (video_window_dispatch_event(vw, &ev)) {
+      /* XXX: Key bindings should be configurable. */
       switch (ev.type) {
       case ENFLE_Event_ButtonPressed:
 	button = ev.button.button;
@@ -356,6 +357,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
   path = NULL;
   while (dir) {
+    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
     if (path == NULL)
       path = archive_iteration_start(a);
     else {
@@ -384,11 +386,13 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
 	  debug_message("reading %s\n", path);
 
+	  video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 	  if (!archive_read_directory(arc, path, 1)) {
 	    archive_destroy(arc);
 	    archive_iteration_delete(a);
 	    continue;
 	  }
+	  video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 	  dir = process_files_of_archive(uidata, arc);
 	  if (arc->nfiles == 0) {
 	    /* Now that deleted all paths in this archive, should be deleted wholly. */
@@ -439,6 +443,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
     }
 
     f = LOAD_NOT;
+    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     if (loader_identify(ld, eps, p, s)) {
 
       debug_message("Image identified as %s\n", p->format);
@@ -466,6 +471,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	continue;
       }
 
+      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
       dir = main_loop(vw, m, NULL, path);
       movie_unload(m);
     } else {
@@ -478,6 +484,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	p->comment = NULL;
       }
 
+      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
       dir = main_loop(vw, NULL, p, path);
       memory_destroy(p->rendered.image);
       p->rendered.image = NULL;

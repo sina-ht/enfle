@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 14 07:38:42 2001.
- * $Id: video.h,v 1.10 2001/01/14 15:19:47 sian Exp $
+ * Last Modified: Sun Feb  4 20:27:00 2001.
+ * $Id: video.h,v 1.11 2001/02/05 15:58:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -115,6 +115,11 @@ typedef enum _videorendermethod {
   _VIDEO_RENDER_MAGNIFY_LONG_FULL
 } VideoRenderMethod;
 
+typedef enum _videowindowcursor {
+  _VIDEO_CURSOR_NORMAL,
+  _VIDEO_CURSOR_WAIT
+} VideoWindowCursor;
+
 typedef struct _video_window VideoWindow;
 struct _video_window {
   Config *c;
@@ -135,6 +140,7 @@ struct _video_window {
   int (*set_event_mask)(VideoWindow *, int);
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
   void (*set_caption)(VideoWindow *, unsigned char *);
+  void (*set_cursor)(VideoWindow *, VideoWindowCursor);
   int (*set_fullscreen_mode)(VideoWindow *, VideoWindowFullscreenMode);
   int (*resize)(VideoWindow *, unsigned int, unsigned int);
   int (*move)(VideoWindow *, unsigned int, unsigned int);
@@ -152,6 +158,7 @@ struct _video_window {
 #define video_window_set_event_mask(vw, m) (vw)->set_event_mask((vw), (m))
 #define video_window_dispatch_event(vw, ved) (vw)->dispatch_event((vw), (ved))
 #define video_window_set_caption(vw, c) (vw)->set_caption((vw), (c))
+#define video_window_set_cursor(vw, vc) (vw)->set_cursor((vw), (vc))
 #define video_window_set_fullscreen_mode(vw, m) (vw)->set_fullscreen_mode((vw), (m))
 #define video_window_resize(vw, w, h) (vw)->resize((vw), (w), (h))
 #define video_window_move(vw, x, y) (vw)->move((vw), (x), (y))

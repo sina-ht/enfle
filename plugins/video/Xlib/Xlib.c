@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 24 08:46:10 2001.
- * $Id: Xlib.c,v 1.21 2001/01/23 23:50:40 sian Exp $
+ * Last Modified: Sun Feb  4 20:41:45 2001.
+ * $Id: Xlib.c,v 1.22 2001/02/05 15:58:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,6 +27,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <X11/cursorfont.h>
 
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
@@ -47,6 +48,11 @@
 
 #define WINDOW_CAPTION_WIDTH  0
 #define WINDOW_CAPTION_HEIGHT 30
+
+#define WAIT_CURSOR XC_watch
+#define NORMAL_CURSOR XC_arrow
+
+static Cursor normal_cursor, wait_cursor;
 
 typedef struct {
   X11 *x11;
@@ -78,6 +84,7 @@ static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
 static int dispatch_event(VideoWindow *, VideoEventData *);
 static void set_caption(VideoWindow *, unsigned char *);
+static void set_cursor(VideoWindow *, VideoWindowCursor);
 static int set_fullscreen_mode(VideoWindow *, VideoWindowFullscreenMode);
 static int destroy_window(VideoWindow *);
 static int resize(VideoWindow *, unsigned int, unsigned int);
@@ -93,7 +100,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.3.4",
+  description: "Xlib Video plugin version 0.4",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -108,6 +115,7 @@ static VideoWindow template = {
   set_event_mask: set_event_mask,
   dispatch_event: dispatch_event,
   set_caption: set_caption,
+  set_cursor: set_cursor,
   set_fullscreen_mode: set_fullscreen_mode,
   destroy: destroy_window,
   resize: resize,
@@ -157,6 +165,9 @@ open_video(void *data)
 
   if (!x11_open(p->x11, dsp))
     goto error_x11_open;
+
+  wait_cursor = XCreateFontCursor(x11_display(p->x11), WAIT_CURSOR);
+  normal_cursor = XCreateFontCursor(x11_display(p->x11), NORMAL_CURSOR);
 
   return p;
 
@@ -638,6 +649,24 @@ set_caption(VideoWindow *vw, unsigned char *cap)
     return;
 
   draw_caption(vw);
+}
+
+static void
+set_cursor(VideoWindow *vw, VideoWindowCursor vc)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+
+  switch (vc) {
+  case _VIDEO_CURSOR_NORMAL:
+    XDefineCursor(x11_display(x11), x11window_win(xw), normal_cursor);
+    break;
+  case _VIDEO_CURSOR_WAIT:
+    XDefineCursor(x11_display(x11), x11window_win(xw), wait_cursor);
+    XFlush(x11_display(x11));
+    break;
+  }
 }
 
 static int
