@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 01:37:22 2002.
- * $Id: mm.c,v 1.3 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Wed Apr 14 22:03:00 2004.
+ * $Id: mm.c,v 1.4 2004/04/18 06:24:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,7 +47,7 @@ w32api_mem_alloc(int size)
   MM_Chunk *mc;
   void *p;
 
-  if ((p = malloc(size)) == NULL)
+  if ((p = calloc(1, size)) == NULL)
     return NULL;
 
   if ((mc = calloc(1, sizeof(MM_Chunk))) == NULL) {
