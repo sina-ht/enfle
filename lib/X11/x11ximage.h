@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:18:46 2001.
- * $Id: x11ximage.h,v 1.3 2001/01/06 23:51:55 sian Exp $
+ * Last Modified: Sat Jun 16 02:30:45 2001.
+ * $Id: x11ximage.h,v 1.4 2001/06/15 18:45:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,15 +24,22 @@
 #define _X11XIMAGE_H
 
 #include "enfle/image.h"
-#include "x11.h"
 #ifdef USE_SHM
-#include <X11/extensions/XShm.h>
+#  include <X11/extensions/XShm.h>
 #endif
+#ifdef USE_XV
+#  include <X11/extensions/Xvlib.h>
+#endif
+#include "x11.h"
 
 typedef struct _x11ximage X11XImage;
 struct _x11ximage {
   X11 *x11;
   XImage *ximage;
+  int use_xv;
+#ifdef USE_XV
+  XvImage *xvimage;
+#endif
 #ifdef USE_SHM
   int if_attached;
   XShmSegmentInfo shminfo;
@@ -40,11 +47,17 @@ struct _x11ximage {
 
   int (*convert)(X11XImage *, Image *);
   void (*put)(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int, unsigned int);
+#ifdef USE_XV
+  void (*put_scaled)(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int, unsigned int, unsigned int, unsigned int);
+#endif
   void (*destroy)(X11XImage *);
 };
 
 #define x11ximage_convert(xi, p) (xi)->convert((xi), (p))
 #define x11ximage_put(xi, pix, gc, sx, sy, dx, dy, w, h) (xi)->put((xi), (pix), (gc), (sx), (sy), (dx), (dy), (w), (h))
+#ifdef USE_XV
+#define x11ximage_put_scaled(xi, pix, gc, sx, sy, dx, dy, sw, sh, dw, dh) (xi)->put_scaled((xi), (pix), (gc), (sx), (sy), (dx), (dy), (sw), (sh), (dw), (dh))
+#endif
 #define x11ximage_destroy(xi) (xi)->destroy((xi))
 
 X11XImage *x11ximage_create(X11 *);
