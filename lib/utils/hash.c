@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb  5 02:43:51 2001.
- * $Id: hash.c,v 1.5 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Tue Mar 13 10:01:13 2001.
+ * $Id: hash.c,v 1.6 2001/03/13 06:48:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -262,19 +262,22 @@ lookup(Hash *h, void *k, unsigned int len)
   return (h->data[index]->key == NULL) ? NULL : h->data[index]->datum;
 }
 
-static void
+static int
 destroy_datum(Hash *h, int index, int f)
 {
   Hash_data *d = h->data[index];
 
   if (d->key == (Dlist_data *)-1)
-    return;
+    return 0;
   if (d->key != NULL) {
-    dlist_delete(h->keys, d->key);
+    if (!dlist_delete(h->keys, d->key))
+      return 0;
     d->key = (Dlist_data *)-1;
   }
   if (f && d->datum != NULL)
     free(d->datum);
+
+  return 1;
 }
 
 static int
@@ -285,7 +288,8 @@ delete_key(Hash *h, void *k, unsigned int len, int f)
   if (h->data[index]->key == NULL)
     return 0;
 
-  destroy_datum(h, index, f);
+  if (!destroy_datum(h, index, f))
+    return 0;
 
   return 1;
 }
