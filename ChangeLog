@@ -1,3 +1,18 @@
+2002-08-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avifile/config.h: New file.
+
+	* plugins/player/opendivx/opendivx.c: Plugged one memory leak.
+
+	* lib/X11/rgbparse.c, lib/dllloader/pe_image.c,
+	lib/enfle/archive.c, lib/enfle/spi.c, lib/utils/libconfig.c,
+	lib/utils/pluginlist.c, plugins/archiver/tar/tar.c,
+	plugins/loader/xpm/xpm.c, plugins/ui/normal/normal.c: Adapted for
+	hash object interface changes.
+
+	* lib/utils/hash.[ch]: Introducing data destructor, removed the
+	extra argument of _delete() and _destroy().  Some clean-ups.
+
 2002-08-15  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/dlist.[ch]: Removed the second arg. from
