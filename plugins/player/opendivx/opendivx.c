@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  8 14:23:05 2001.
- * $Id: opendivx.c,v 1.16 2001/10/09 00:55:55 sian Exp $
+ * Last Modified: Sun Oct 14 13:02:02 2001.
+ * $Id: opendivx.c,v 1.17 2001/10/14 12:35:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,6 @@
 
 #include <pthread.h>
 
-#include "utils/timer.h"
 #include "enfle/player-plugin.h"
 #include "demultiplexer/demultiplexer_avi.h"
 #include "mpglib/mpg123.h"
@@ -594,6 +593,8 @@ stop_movie(Movie *m)
   default:
     return PLAY_ERROR;
   }
+
+  demultiplexer_stop(info->demux);
 
   pthread_mutex_lock(&info->update_mutex);
   pthread_cond_signal(&info->update_cond);

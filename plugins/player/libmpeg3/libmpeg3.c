@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:49:46 2001.
- * $Id: libmpeg3.c,v 1.34 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sun Oct 14 12:47:30 2001.
+ * $Id: libmpeg3.c,v 1.35 2001/10/14 12:35:33 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -39,7 +39,6 @@
 #  error pthread is mandatory for libmpeg3 plugin
 #endif
 
-#include "utils/timer.h"
 #include "enfle/player-plugin.h"
 
 typedef struct _libmpeg3_info {

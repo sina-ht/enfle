@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 23 04:00:36 2001.
- * $Id: libmpeg2.c,v 1.27 2001/09/22 19:00:57 sian Exp $
+ * Last Modified: Sun Oct 14 12:46:35 2001.
+ * $Id: libmpeg2.c,v 1.28 2001/10/14 12:35:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,7 +40,6 @@
 
 #include <pthread.h>
 
-#include "utils/timer.h"
 #include "enfle/player-plugin.h"
 #include "libmpeg2_vo.h"
 #include "mpeg2/mm_accel.h"
