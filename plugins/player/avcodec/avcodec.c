@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 16 22:21:13 2003.
- * $Id: avcodec.c,v 1.1 2003/11/17 13:56:48 sian Exp $
+ * Last Modified: Sun Nov 30 14:46:54 2003.
+ * $Id: avcodec.c,v 1.2 2003/11/30 05:51:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -507,6 +507,12 @@ play(Movie *m)
       info->vcodec_ctx->get_buffer = get_buffer;
       info->vcodec_ctx->release_buffer = release_buffer;
       show_message("DR1 direct rendering enabled.\n");
+#if 1
+      // XXX: direct rendering causes seg. fault...
+      info->vcodec_ctx->get_buffer = avcodec_default_get_buffer;
+      info->vcodec_ctx->release_buffer = avcodec_default_release_buffer;
+      show_message("DR1 direct rendering disabled.\n");
+#endif
     }
 
     pthread_create(&info->video_thread, NULL, play_video, m);
@@ -966,6 +972,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 	debug_message_fnc("Not identified as any avcodec supported format: %08X\n", aviinfo->vhandler);
 	demultiplexer_destroy(info->demux);
       free(info);
+      m->movie_private = NULL;
       return PLAY_NOT;
     }
   }
