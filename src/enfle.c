@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 25 00:23:02 2000.
- * $Id: enfle.c,v 1.16 2000/12/24 15:30:06 sian Exp $
+ * Last Modified: Thu Dec 28 08:21:46 2000.
+ * $Id: enfle.c,v 1.17 2000/12/27 23:26:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -125,11 +125,12 @@ gen_optstring(Option opt[])
   return optstr;
 }
   
-static void
+static int
 check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
 {
   String *s = string_create();
   char *tmp;
+  int result;
 
   string_set(s, "/enfle/plugins/");
   string_cat(s, enfle_plugin_type_to_name(type));
@@ -138,12 +139,16 @@ check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
   string_cat_ch(s, '/');
   string_cat(s, "disabled");
 
+  result = 0;
   if (((tmp = config_get(c, string_get(s))) != NULL) &&
       !strcasecmp(tmp, "yes")) {
     //printf("unload %s (disabled)\n", name);
     enfle_plugins_unload(eps, type, name);
+    result = 1;
   }
   string_destroy(s);
+
+  return result;
 }
 
 static void
@@ -183,6 +188,46 @@ print_plugin_info(EnflePlugins *eps, int level)
   }
 }
 
+static int
+scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path, int spi_enabled)
+{
+  Archive *a;
+  char *path, *ext, *name;
+  int nplugins = 0;
+
+  /* scanning... */
+  a = archive_create();
+  archive_read_directory(a, plugin_path, 0);
+  path = archive_iteration_start(a);
+  while (path) {
+    if ((ext = strrchr(path, '.')) && !strncmp(ext, ".so", 3)) {
+      PluginType type;
+
+      if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
+	fprintf(stderr, "enfle_plugin_load %s failed.\n", path);
+	return 0;
+      }
+      nplugins++;
+      nplugins -= check_and_unload(eps, c, type, name);
+    } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
+      PluginType type;
+
+      if ((name = spi_load(eps, path, &type)) == NULL) {
+	fprintf(stderr, "spi_load %s failed.\n", path);
+	return 1;
+      }
+      printf("%s(SPI) %s\n", name,
+	     enfle_plugins_get_description(eps, type, name));
+      nplugins++;
+      nplugins -= check_and_unload(eps, c, type, name);
+    }
+    path = archive_iteration_next(a);
+  }
+  archive_destroy(a);
+
+  return nplugins;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -196,15 +241,16 @@ main(int argc, char **argv)
   Loader *ld;
   Archiver *ar;
   Player *player;
-  Archive *a;
+  String *rcpath;
   int i, ch, spi_enabled = 1;
   int print_more_info = 0;
-  char *plugin_path, *path, *ext, *name;
+  char *homedir;
+  char *plugin_path;
   char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
   char *optstr, *tmp;
 
   optstr = gen_optstring(enfle_options);
-  while ((ch = getopt(argc, argv, optstr)) != EOF) {
+  while ((ch = getopt(argc, argv, optstr)) != -1) {
     i = 0;
     switch (ch) {
     case 'h':
@@ -224,16 +270,29 @@ main(int argc, char **argv)
     case 'I':
       print_more_info++;
       break;
+    case '?':
     default:
-      fprintf(stderr, "unknown option %c\n", ch);
       usage();
-      exit(1);
+      fatal(1, "option error\n");
     }
   }
   free(optstr);
 
+  if ((homedir = getenv("HOME")) == NULL) {
+    fprintf(stderr, "Please set HOME environment.\n");
+    return 1;
+  }
+
   c = uidata.c = config_create();
-  config_load(c, "enfle.rc");
+
+  rcpath = string_create();
+  string_set(rcpath, homedir);
+  string_cat(rcpath, "/.enfle/config");
+  if (!(config_load(c, "./enfle.rc") ||
+	config_load(c, string_get(rcpath)) ||
+	config_load(c, ENFLE_DATADIR "/enfle.rc")))
+    fprintf(stderr, "No configuration file. Incomplete install?\n");
+  string_destroy(rcpath);
 
   eps = uidata.eps = enfle_plugins_create();
   st = uidata.st = streamer_create();
@@ -246,37 +305,14 @@ main(int argc, char **argv)
       strcasecmp(tmp, "yes") == 0)
     spi_enabled = 0;
 
-  /* scanning... */
   if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
-    fprintf(stderr, "plugins/dir not found: configuration error\n");
+    plugin_path = ENFLE_PLUGINDIR;
+    fprintf(stderr, "plugin_path defaults to %s\n", plugin_path);
+  }
+  if (!scan_and_load_plugins(eps, c, plugin_path, spi_enabled)) {
+    fprintf(stderr, "scan_and_load_plugins() failed.\n");
     return 1;
   }
-  a = archive_create();
-  archive_read_directory(a, plugin_path, 0);
-  path = archive_iteration_start(a);
-  while (path) {
-    if ((ext = strrchr(path, '.')) && !strncmp(ext, ".so", 3)) {
-      PluginType type;
-
-      if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
-	fprintf(stderr, "enfle_plugin_load %s failed.\n", path);
-	return 1;
-      }
-      check_and_unload(eps, c, type, name);
-    } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
-      PluginType type;
-
-      if ((name = spi_load(eps, path, &type)) == NULL) {
-	fprintf(stderr, "spi_load %s failed.\n", path);
-	return 1;
-      }
-      printf("%s(SPI) %s\n", name,
-	     enfle_plugins_get_description(eps, type, name));
-      check_and_unload(eps, c, type, name);
-    }
-    path = archive_iteration_next(a);
-  }
-  archive_destroy(a);
 
   if (argc == optind) {
     usage();
@@ -311,7 +347,7 @@ main(int argc, char **argv)
     if ((uidata.ap = enfle_plugins_get(eps, ENFLE_PLUGIN_AUDIO, audio_name)) == NULL)
       fprintf(stderr, "No %s Audio plugin\n", audio_name);
     else
-      show_message("Audio plugin %s\n", audio_name);
+      debug_message("Audio plugin %s\n", audio_name);
   } else {
     show_message("No audio plugin specified.\n");
   }
