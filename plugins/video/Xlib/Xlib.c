@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb  8 02:30:35 2001.
- * $Id: Xlib.c,v 1.24 2001/02/07 17:38:17 sian Exp $
+ * Last Modified: Tue Feb 20 02:20:43 2001.
+ * $Id: Xlib.c,v 1.25 2001/02/19 17:22:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -98,10 +98,10 @@ static int adjust_offset(VideoWindow *, int, int);
 static int render(VideoWindow *, Image *);
 static void update(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
 static void do_sync(VideoWindow *);
+static void do_sync_discard(VideoWindow *);
 static void destroy(void *);
 
 /* internal */
-static void do_sync_discard(VideoWindow *);
 
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
@@ -132,7 +132,8 @@ static VideoWindow template = {
   adjust_offset: adjust_offset,
   render: render,
   update: update,
-  do_sync: do_sync
+  do_sync: do_sync,
+  do_sync_discard: do_sync_discard
 };
 
 void *
@@ -772,8 +773,6 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
-  do_sync_discard(vw);
-
   if (w == 0 || h == 0)
     return 0;
 
@@ -781,6 +780,8 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
 
   if (w == vw->width && h == vw->height)
     return 1;
+
+  do_sync_discard(vw);
 
   if (!vw->if_fullscreen) {
     int x, y;
