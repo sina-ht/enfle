@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 16:34:12 2000.
- * $Id: memory.h,v 1.1 2000/12/03 08:36:32 sian Exp $
+ * Last Modified: Wed Dec 13 19:55:14 2000.
+ * $Id: memory.h,v 1.2 2000/12/14 16:03:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,6 +24,7 @@
 #define _MEMORY_H
 
 #ifdef USE_SHM
+#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #endif
