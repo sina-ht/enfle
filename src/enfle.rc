@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Thu Feb 14 02:05:16 2002.
-; $Id: enfle.rc,v 1.29 2002/02/13 18:02:07 sian Exp $
+; Last Modified: Thu Mar  7 03:40:17 2002.
+; $Id: enfle.rc,v 1.30 2002/03/06 19:32:09 sian Exp $
 
 enfle {
   identify {
@@ -73,6 +73,8 @@ enfle {
       default = OSS
       oss/device_path = /dev/dsp
       alsa/device = default
+      ; NULL or hostname:port
+      esd/server = NULL
     }
     loader {
       ; How to find plugins.
