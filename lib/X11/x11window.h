@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Sep 18 07:19:44 2000.
- * $Id: x11window.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Oct 21 00:29:25 2000.
+ * $Id: x11window.h,v 1.2 2000/10/20 18:13:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,13 +30,19 @@ typedef struct _x11window X11Window;
 struct _x11window {
   X11 *x11;
   Window win;
+  int mask;
 
+  int (*set_event_mask)(X11Window *, int);
+  int (*get_position)(X11Window *, unsigned int *, unsigned int *);
   void (*destroy)(X11Window *);
 };
 
 #define x11window_x11(xw) (xw)->x11
 #define x11window_win(xw) (xw)->win
+#define x11window_mask(xw) (xw)->mask
 
+#define x11window_set_event_mask(xw, m) (xw)->set_event_mask((xw), (m))
+#define x11window_get_position(xw, xp, yp) (xw)->get_position((xw), (xp), (yp))
 #define x11window_move(xw, x, y) x11_move_window(x11window_x11((xw)), x11window_win((xw)), (x), (y))
 #define x11window_resize(xw, w, h) x11_resize_window(x11window_x11((xw)), x11window_win((xw)), (w), (h))
 #define x11window_moveresize(xw, x, y, w, h) x11_moveresize(x11window_x11((xw)), x11window_win((xw)), (x), (y), (w), (h))

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Sep 20 00:46:08 2000.
- * $Id: x11window.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Oct 21 01:52:15 2000.
+ * $Id: x11window.c,v 1.2 2000/10/20 18:13:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,9 +29,13 @@
 
 #include "x11window.h"
 
+static int set_event_mask(X11Window *, int);
+static int get_position(X11Window *, unsigned int *, unsigned int *);
 static void destroy(X11Window *);
 
 static X11Window template = {
+  set_event_mask: set_event_mask,
+  get_position: get_position,
   destroy: destroy
 };
 
@@ -52,6 +56,51 @@ x11window_create(X11 *x11, X11Window *parent, unsigned int width, unsigned heigh
 }
 
 /* methods */
+
+static int
+set_event_mask(X11Window *xw, int mask)
+{
+  X11 *x11;
+
+  x11 = x11window_x11(xw);
+  XSelectInput(x11_display(x11), x11window_win(xw), mask);
+  xw->mask = mask;
+
+  return 1;
+}
+
+static int
+get_position(X11Window *xw, unsigned int *x_return, unsigned int *y_return)
+{
+  X11 *x11;
+  Window root, parent, *child;
+  int x, y, px, py, nc;
+  unsigned int width, height, bw, depth;
+
+  x11 = x11window_x11(xw);
+  if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &x, &y, &width, &height, &bw, &depth))
+    return 0;
+  if (!XQueryTree(x11_display(x11), x11window_win(xw), &root, &parent, &child, &nc))
+    return 0;
+  if (child != NULL)
+    XFree(child);
+
+  while (root != parent) {
+    if (!XGetGeometry(x11_display(x11), parent, &root, &px, &py, &width, &height, &bw, &depth))
+      return 0;
+    x += px + bw;
+    y += py + bw;
+    if (!XQueryTree(x11_display(x11), parent, &root, &parent, &child, &nc))
+      return 0;
+    if (child != NULL)
+      XFree(child);
+  }
+
+  *x_return = x;
+  *y_return = y;
+
+  return 1;
+}
 
 static void
 destroy(X11Window *xw)
