@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Sat Jan  6 19:20:58 2001.
+     Last Modified: Mon Jan 15 04:03:45 2001.
 
  This file is part of Enfle.
 
@@ -80,7 +80,7 @@ bz2: bzip2-1.0.0 or later
 ungif: libungif-3.1.0 or later (recommended: 4.1.0)
 mng: libmng
 mpeg: libmpeg3 or mpeg_lib(needs patch)
-avi: avifile(cvs version)
+avi: avifile(may need cvs version)
 
 2.動作環境
 
@@ -96,9 +96,9 @@ Linux(2.4.0-test8 w/ glibc-2.1)
 Linux(2.4.0-test11 w/ glibc-2.2)
 FreeBSD-4.1R
 
-私のメインの開発環境は2000/12/28現在 以下の通りです。
+私のメインの開発環境は2001/01/15現在 以下の通りです。
 
-Kernel: Linux-2.4.0-test11
+Kernel: Linux-2.4.0
 CPU: Celeron/366 (running at 550)
 X server: XFree86-4.0.2
 Video: Matrox MillenniumII/AGP 8M
@@ -150,6 +150,8 @@ Alt+m			画像の短辺が画面いっぱいになるように拡大
 
 また、全ての画像を表示し終わっても終了します。
 
+マウスのwheelにも対応しています。今のところ、前にまわすと次の画像、後
+にまわると前の画像にうつります。
 
 6.カスタマイズ
 
@@ -196,6 +198,7 @@ image/*;enfle %s
 
 9.配布について
 
-EnfleはGNU GENERAL PUBLIC LICENSE Version 2に従います。それ以降の
-Versionにするオプションはありません。GPL2についてはCOPYINGをお読みくだ
-さい。補助として日本語訳COPYING.jもつけてあります。
+EnfleはGNU GENERAL PUBLIC LICENSE Version 2に従います。Version 2のみで、
+それ以降のVersionにするオプションはいまのところありません。GPL2につい
+てはCOPYINGをお読みください。補助として日本語訳COPYING.jもつけてありま
+す。
