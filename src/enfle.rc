@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Feb 21 15:54:32 2004.
-; $Id: enfle.rc,v 1.39 2004/02/21 07:51:53 sian Exp $
+; Last Modified: Sun Feb 29 23:40:04 2004.
+; $Id: enfle.rc,v 1.40 2004/02/29 14:48:37 sian Exp $
 
 enfle {
   identify {
@@ -109,6 +109,8 @@ enfle {
 	gif := UNGIF
 	jpeg := JPEG:.
 	jpg := JPEG:.
+	jp2 := JasPer:J2K:.
+	jpc := J2K:.
 	png := PNG:.
       }
     }
