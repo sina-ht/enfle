@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Dec  3 19:51:14 2000.
- * $Id: x11.c,v 1.6 2000/12/03 11:03:30 sian Exp $
+ * Last Modified: Mon Dec  4 22:57:37 2000.
+ * $Id: x11.c,v 1.7 2000/12/04 14:00:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -113,6 +113,12 @@ open(X11 *x11, char *dispname)
   }
   XFree(xpfv);
 
+#ifdef DEBUG
+  debug_message("x11: " __FUNCTION__ ": bits_per_pixel = %d\n", x11_bpp(x11));
+  if (x11_bpp(x11) == 32)
+    debug_message("You have 32bpp ZPixmap.\n");
+#endif
+
 #ifdef USE_SHM
   if (XShmQueryExtension(x11_display(x11))) {
     x11->extensions |= X11_EXT_SHM;
@@ -128,12 +134,6 @@ open(X11 *x11, char *dispname)
     x11->prefer_msb = (xi->byte_order == LSBFirst) ? 0 : 1;
     XDestroyImage(xi);
   }
-
-#ifdef DEBUG
-  debug_message("x11: " __FUNCTION__ ": bits_per_pixel = %d\n", x11_bpp(x11));
-  if (x11_bpp(x11) == 32)
-    debug_message("You have 32bpp ZPixmap.\n");
-#endif
 
   return 1;
 }
