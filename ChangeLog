@@ -1,3 +1,26 @@
+2001-10-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/user32.c: Implemented LoadStringA() more usefully.
+
+	* lib/dllloader/pe_image.c: Added resource support.
+
+	* lib/utils/Makefile.am: Added converter.
+
+	* plugins/loader/jpeg/jpeg.c: More informative message.
+
+	* configure.in: iconv support.
+
+	* lib/utils/converter.c, lib/utils/converter.h: New files.
+
+2001-10-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/user32.c: Supporting resource (still underway...).
+
+	* lib/dllloader/pe_image.c: More resource support code.
+
+	* lib/dllloader/pe.h, lib/dllloader/pe_image.h: Added
+	IMAGE_RESOURCE_DATA_ENTRY.
+
 2001-10-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/dllloader/kernel32.c: Added new API(stub)s: DeleteFileA,
