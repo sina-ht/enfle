@@ -1,3 +1,17 @@
+2001-12-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/enfle-plugins.c: Show error message when plugin_load()
+	failed.
+
+	* plugins/loader/jpeg/jpeg.c: Minor fix.
+
+	* plugins/loader/png/png.c: Strip off alpha data, not used under
+	the current implementation.
+
+	* plugins/saver/png/png.c: Fixed typo. Supported _BGR24.
+
+	* plugins/ui/convert/convert.c: Unlink an output file when failed.
+
 2001-11-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Check -lm. Version up.
