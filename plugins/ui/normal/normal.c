@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar  8 00:07:34 2002.
- * $Id: normal.c,v 1.62 2002/03/07 15:17:50 sian Exp $
+ * Last Modified: Sat Apr 27 02:08:49 2002.
+ * $Id: normal.c,v 1.63 2002/04/27 13:02:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -715,6 +715,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   video_window_set_offset(vw, 0, 0);
   video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 
+  timer_start(ml.timer);
   ml.ret = MAIN_LOOP_DO_NOTHING;
   while (ml.ret == MAIN_LOOP_DO_NOTHING) {
     if (timer_is_running(ml.timer) && timer_get(ml.timer) >= 2) {
