@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.6 2003/12/16 16:51:55 sian Exp $
+# $Id: Makefile.am,v 1.7 2004/03/14 16:50:35 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -16,7 +16,7 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib #-I/usr/local/include/gtk-1.2 -I/
 
 ui_normal_la_LDFLAGS = $(MORE_LDFLAGS) -module
 ui_normal_la_CFLAGS = $(MORE_CFLAGS)
-ui_normal_la_LIBADD = $(top_builddir)/lib/X11/libenfleX11.la #@LIBADD_PTHREAD@ -L/usr/local/lib -L/usr/X11R6/lib -lgtk -lgdk -lgmodule -lglib -ldl -lXi -lXext -lX11 -lm
+ui_normal_la_LIBADD = $(top_builddir)/lib/X11/libenfleX11.la $(top_builddir)/lib/enfle/libenfle.la #@LIBADD_PTHREAD@ -L/usr/local/lib -L/usr/X11R6/lib -lgtk -lgdk -lgmodule -lglib -ldl -lXi -lXext -lX11 -lm
 ui_normal_la_SOURCES = \
 	normal.c
 #	gui_gtk.c gui_gtk.h gui.h \
