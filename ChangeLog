@@ -1,5 +1,12 @@
 2001-09-03  Hiroshi Takekawa  <sian@fennel.org>
 
+	* config.guess, config.sub, ltmain.sh: Upgraded libtool to 1.4.1.
+
+	* plugins/player/avifile/avifile.cpp: Expose library's name and
+	version.
+
+2001-09-03  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/demultiplexer/Makefile.am: Added
 	demultiplexer_avi_private.h.
 
@@ -39,7 +46,7 @@
 
 	* configure.in: Check bzlibVersion() instead of bzopen().
 
-	* plugins/player/ungif/ungif.c: Expose librarys' name and
+	* plugins/player/ungif/ungif.c: Expose libraries' name and
 	version. Parse application extension. Obey Netscape's loop count
 	extension.
 
