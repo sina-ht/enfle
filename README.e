@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Sat Feb 10 19:46:42 2001.
+     Last Modified: Thu Feb 22 18:07:22 2001.
 
  This file is part of Enfle.
 
@@ -41,6 +41,9 @@
  -- possible patent infringement. It's up to you whether use it or not.
 
  This software includes mpglib by Michael Hipp.
+
+ This software includes libmpeg2 by Aaron Holtzman. For this part, you
+ can apply GPL2 or later version.
 
 ***************************************************
 
