@@ -1,8 +1,8 @@
 /*
- * vmpm_decompose_esc.c -- ESC estimation method A decomposer
+ * vmpm_decompose_esc.c -- ESC estimate method A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Aug  1 01:17:21 2001.
- * $Id: vmpm_decompose_esc.c,v 1.1 2001/07/31 20:25:03 sian Exp $
+ * Last Modified: Thu Aug  2 20:48:55 2001.
+ * $Id: vmpm_decompose_esc.c,v 1.2 2001/08/02 11:49:16 sian Exp $
  */
 
 #include <stdio.h>
@@ -44,11 +44,6 @@ static VMPMDecomposer plugin = {
   destroy: destroy,
   next: NULL
 };
-
-typedef struct _esc_a {
-  unsigned int esc_freq;
-  unsigned int esc_total;
-} ESC_A;
 
 VMPMDecomposer *
 decomposer_init(VMPM *vmpm)
@@ -138,17 +133,11 @@ update_escape_freq(Arithmodel *_am, Index index)
 }
 
 static void
-update_region(Arithmodel *_am, Index index)
-{
-  return;
-}
-
-static void
 encode(VMPM *vmpm)
 {
   Arithcoder *ac;
+  Arithmodel *char_am;
   Arithmodel *am;
-  Arithmodel_order_zero *am_oz;
   Arithmodel *bin_am;
   unsigned int *symbol_to_index;
   int i, n, match_found;
@@ -162,15 +151,14 @@ encode(VMPM *vmpm)
   }
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(1, 1);
-  am_oz = (Arithmodel_order_zero *)am;
-  if ((am_oz->private_data = calloc(1, sizeof(ESC_A))) == NULL)
-    memory_error(NULL, MEMORY_ERROR);
-
   arithcoder_encode_init(ac, vmpm->outfile);
+
+  char_am = arithmodel_order_zero_create(0, 1);
+  arithmodel_encode_init(char_am, ac);
+  arithmodel_order_zero_set_update_escape_freq(char_am, update_escape_freq);
+
+  am = arithmodel_order_zero_create(0, 0);
   arithmodel_encode_init(am, ac);
-  arithmodel_order_zero_set_update_escape_freq(am, update_escape_freq);
-  arithmodel_order_zero_set_update_region(am, update_region);
 
   bin_am = arithmodel_order_zero_create(0, 0);
   arithmodel_encode_init(bin_am, ac);
@@ -201,12 +189,13 @@ encode(VMPM *vmpm)
   fprintf(vmpm->outfile, "%c", i);
   if (match_found) {
     for (; i >= 1; i--) {
-      int nsymbols = 0;
+      unsigned int nsymbols = 0;
 
       stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i]);
-      /* newtoken[] will not be known by decoder without sending. */
-      //arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-      arithmodel_order_zero_reset(am, 1, vmpm->token_index[i] >> 2);
+      arithmodel_order_zero_reset(am, 0, 0);
+      arithmodel_order_zero_reset(bin_am, 0, 0);
+      arithmodel_install_symbol(bin_am, 1);
+      arithmodel_install_symbol(bin_am, 1);
       for (j = 0; j < vmpm->token_index[i]; j++) {
 	Token *t = vmpm->token[i][j];
 	Token_value tv = t->value - 1;
@@ -214,11 +203,13 @@ encode(VMPM *vmpm)
 	if (nsymbols == tv) {
 	  stat_message(vmpm, "e ");
 	  nsymbols++;
+	  arithmodel_encode(bin_am, 1);
+	  arithmodel_install_symbol(am, 1);
 	} else {
 	  stat_message(vmpm, "%d ", tv);
+	  arithmodel_encode(bin_am, 0);
+	  arithmodel_encode(am, tv);
 	}
-
-	arithmodel_encode(am, t->value - 1);
       }
       stat_message(vmpm, "\n");
     }
@@ -229,28 +220,28 @@ encode(VMPM *vmpm)
   memset(symbol_to_index, 255, vmpm->alphabetsize * sizeof(unsigned int));
 
   n = 0;
-  arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
+  arithmodel_order_zero_reset(char_am, 1, vmpm->alphabetsize - 1);
   stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
       stat_message(vmpm, "e ");
-      arithmodel_encode(am, n);
+      arithmodel_encode(char_am, n);
       symbol_to_index[(int)vmpm->token[0][j]] = n++;
       arithmodel_encode_bits(bin_am, (int)vmpm->token[0][j], vmpm->bits_per_symbol, 0, 1);
     } else {
       stat_message(vmpm, "%d ", symbol_to_index[(int)vmpm->token[0][j]]);
-      arithmodel_encode(am, symbol_to_index[(int)vmpm->token[0][j]]);
+      arithmodel_encode(char_am, symbol_to_index[(int)vmpm->token[0][j]]);
     }
   }
   stat_message(vmpm, "\n");
   free(symbol_to_index);
 
   arithmodel_encode_final(bin_am);
-  arithmodel_encode_final(am);
+  arithmodel_encode_final(char_am);
   arithcoder_encode_final(ac);
 
   arithmodel_destroy(bin_am);
-  arithmodel_destroy(am);
+  arithmodel_destroy(char_am);
   arithcoder_destroy(ac);
 }
 
