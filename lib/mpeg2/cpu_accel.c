@@ -34,26 +34,26 @@ static uint32_t x86_accel (void)
     uint32_t caps;
 
 #define cpuid(op,eax,ebx,ecx,edx)	\
-    asm ("cpuid"			\
-	 : "=a" (eax),			\
-	   "=b" (ebx),			\
-	   "=c" (ecx),			\
-	   "=d" (edx)			\
-	 : "a" (op)			\
-	 : "cc")
+    __asm__ ("cpuid"			\
+	     : "=a" (eax),		\
+	       "=b" (ebx),		\
+	       "=c" (ecx),		\
+	       "=d" (edx)		\
+	     : "a" (op)			\
+	     : "cc");
 
-    asm ("pushfl\n\t"
-	 "popl %0\n\t"
-	 "movl %0,%1\n\t"
-	 "xorl $0x200000,%0\n\t"
-	 "pushl %0\n\t"
-	 "popfl\n\t"
-	 "pushfl\n\t"
-	 "popl %0"
-         : "=a" (eax),
-	   "=b" (ebx)
-	 :
-	 : "cc");
+    __asm__ ("pushfl\n\t"
+	     "popl %0\n\t"
+	     "movl %0,%1\n\t"
+	     "xorl $0x200000,%0\n\t"
+	     "pushl %0\n\t"
+	     "popfl\n\t"
+	     "pushfl\n\t"
+	     "popl %0"
+           : "=a" (eax),
+	     "=b" (ebx)
+	   :
+	   : "cc");
 
     if (eax == ebx)		/* no cpuid */
 	return 0;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 04:21:14 2002.
- * $Id: pe_image.c,v 1.22 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Tue Feb 26 05:21:44 2002.
+ * $Id: pe_image.c,v 1.23 2002/03/03 01:17:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -132,7 +132,7 @@ get_dll_symbols(char *dllname)
 #define LDT_RPL 3
 #define LDT_SELECTOR(i, t, rpl) ((i << 3) | (t << 2) | rpl)
 
-#if defined(linux)
+#if defined(__linux__)
 #ifdef PIC
 static int
 modify_ldt(int func, struct modify_ldt_ldt_s *p, unsigned long c)
@@ -157,7 +157,7 @@ static _syscall3(int, modify_ldt, int, func, struct modify_ldt_ldt_s *, p, unsig
 static int fs_installed = 0;
 static char *fs_seg = NULL;
 
-#if defined(linux)
+#if defined(__linux__)
 static int
 install_fs(void)
 {
@@ -234,6 +234,8 @@ install_fs(void)
 
   return 0;
 }
+#else
+#error No install_fs()
 #endif
 
 #if 0
