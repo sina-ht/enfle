@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 25 10:00:44 2001.
- * $Id: normal.c,v 1.34 2001/04/25 06:10:04 sian Exp $
+ * Last Modified: Thu Apr 26 02:18:29 2001.
+ * $Id: normal.c,v 1.35 2001/04/25 17:28:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,7 +40,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.4.3",
+  description: "Normal UI plugin version 0.4.4",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -207,6 +207,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
   EnflePlugins *eps = uidata->eps;
   Config *c = uidata->c;
   Effect *ef = uidata->ef;
+  Image *original_p;
   unsigned int old_x = 0, old_y = 0;
   int first_point = 1;
   int offset_x, offset_y;
@@ -216,6 +217,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
     magnify_if_requested(vw, p);
     video_window_render(vw, p);
     set_caption_string(vw, path, p->format);
+    original_p = image_dup(p);
   } else if (m) {
     vw->if_direct = 1;
     vw->render_width  = m->width;
@@ -239,14 +241,19 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  video_window_sync_discard(vw);
 	  switch (ev.button.button) {
 	  case ENFLE_Button_1:
+	    image_destroy(original_p);
 	    return MAIN_LOOP_NEXT;
 	  case ENFLE_Button_2:
+	    image_destroy(original_p);
 	    return MAIN_LOOP_NEXTARCHIVE;
 	  case ENFLE_Button_3:
+	    image_destroy(original_p);
 	    return MAIN_LOOP_PREV;
 	  case ENFLE_Button_4:
+	    image_destroy(original_p);
 	    return MAIN_LOOP_NEXT;
 	  case ENFLE_Button_5:
+	    image_destroy(original_p);
 	    return MAIN_LOOP_PREV;
 	  default:
 	    break;
@@ -263,15 +270,19 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  switch (ev.key.key) {
 	  case ENFLE_KEY_n:
 	  case ENFLE_KEY_space:
+	    image_destroy(original_p);
 	    return (ev.key.modkey & ENFLE_MOD_Shift) ? MAIN_LOOP_NEXTARCHIVE :  MAIN_LOOP_NEXT;
 	  case ENFLE_KEY_b:
+	    image_destroy(original_p);
 	    return MAIN_LOOP_PREV;
 	  case ENFLE_KEY_q:
+	    image_destroy(original_p);
 	    return MAIN_LOOP_QUIT;
 	  case ENFLE_KEY_f:
 	    video_window_set_fullscreen_mode(vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
 	    break;
 	  case ENFLE_KEY_d:
+	    image_destroy(original_p);
 	    return (ev.key.modkey & ENFLE_MOD_Shift) ?
 	      MAIN_LOOP_DELETE_FILE : MAIN_LOOP_DELETE_FROM_LIST;
 	  case ENFLE_KEY_s:
@@ -371,6 +382,62 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 		show_message("Rotate effect failed.\n");
 	    }
 	    break;
+	  case ENFLE_KEY_1:
+	  case ENFLE_KEY_2:
+	  case ENFLE_KEY_3:
+	  case ENFLE_KEY_4:
+	  case ENFLE_KEY_5:
+	  case ENFLE_KEY_6:
+	  case ENFLE_KEY_7:
+	    if (p) {
+	      Image *old_p;
+	      int index = 1;
+
+	      switch (ev.key.key) {
+	      case ENFLE_KEY_1:
+		index = 0;
+		break;
+	      case ENFLE_KEY_2:
+		index = 1;
+		break;
+	      case ENFLE_KEY_3:
+		index = 2;
+		break;
+	      case ENFLE_KEY_4:
+		index = 3;
+		break;
+	      case ENFLE_KEY_5:
+		index = 4;
+		break;
+	      case ENFLE_KEY_6:
+		index = 5;
+		break;
+	      case ENFLE_KEY_7:
+		index = 6;
+		break;
+	      default:
+		break;
+	      }
+	      if (index == 3) {
+		image_destroy(p);
+		p = image_dup(original_p);
+		magnify_if_requested(vw, p);
+		video_window_resize(vw, p->magnified.width, p->magnified.height);
+		video_window_set_offset(vw, 0, 0);
+		video_window_render(vw, p);
+	      } else {
+		config_set_int(c, (char *)"/enfle/plugins/effect/gamma/index", index);
+		if ((old_p = effect_call(ef, eps, (char *)"Gamma", p, c))) {
+		  if (old_p != p)
+		    image_destroy(old_p);
+		  magnify_if_requested(vw, p);
+		  video_window_set_offset(vw, 0, 0);
+		  video_window_render(vw, p);
+		} else
+		  show_message("Gamma correction failed.\n");
+	      }
+	    }
+	    break;
 	  default:
 	    break;
 	  }
@@ -421,6 +488,8 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
       }
     }
   }
+
+  image_destroy(original_p);
 
   return 0;
 }
