@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan  3 15:37:23 2001.
- * $Id: normal.c,v 1.16 2001/01/03 08:48:03 sian Exp $
+ * Last Modified: Sat Jan  6 01:20:33 2001.
+ * $Id: normal.c,v 1.17 2001/01/05 16:22:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,8 +31,8 @@
 
 #include "common.h"
 
-#include "libstring.h"
-#include "ui-plugin.h"
+#include "utils/libstring.h"
+#include "enfle/ui-plugin.h"
 
 static int ui_main(UIData *);
 
@@ -166,7 +166,7 @@ main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
   int loop = 1;
   VideoButton button = ENFLE_Button_None;
   VideoKey key = ENFLE_KEY_Unknown;
-  unsigned int old_x, old_y;
+  unsigned int old_x = 0, old_y = 0;
   int first_point = 1;
   int offset_x, offset_y;
 
