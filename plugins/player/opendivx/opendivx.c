@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 23 16:08:43 2001.
- * $Id: opendivx.c,v 1.15 2001/09/23 17:13:09 sian Exp $
+ * Last Modified: Mon Oct  8 14:23:05 2001.
+ * $Id: opendivx.c,v 1.16 2001/10/09 00:55:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -142,8 +142,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   demultiplexer_avi_set_input(info->demux, st);
   if (!demultiplexer_examine(info->demux))
     return PLAY_NOT;
+  info->nvstreams = demultiplexer_avi_nvideos(info->demux);
   info->nastreams = demultiplexer_avi_naudios(info->demux);
-  info->nvstreams = demultiplexer_avi_naudios(info->demux);
   aviinfo = demultiplexer_avi_info(info->demux);
 
   if (info->nastreams == 0 && info->nvstreams == 0)
