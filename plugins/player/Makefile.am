@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Sep 22 09:58:55 2000.
-# $Id: Makefile.am,v 1.1 2000/10/08 17:46:42 sian Exp $
+# Last Modified: Wed Oct 11 16:31:49 2000.
+# $Id: Makefile.am,v 1.2 2000/10/12 03:46:12 sian Exp $
 
-SUBDIRS = ungif
+SUBDIRS = ungif mpeg_lib
