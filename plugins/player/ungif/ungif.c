@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:48:20 2001.
- * $Id: ungif.c,v 1.23 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sun Oct 14 12:46:00 2001.
+ * $Id: ungif.c,v 1.24 2001/10/14 12:35:13 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -38,14 +38,11 @@
 #include "common.h"
 
 #include "enfle/player-plugin.h"
-#include "utils/timer.h"
-#include "utils/timer_gettimeofday.h"
 
 typedef struct _ungif_info {
   GifFileType *gf;
   GifRowType *buffer;
   Image *p;
-  Timer *timer;
   unsigned int delay_time;
   unsigned int max_loop_count;
   unsigned int loop_count;
@@ -164,8 +161,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     info->buffer[i] = info->buffer[0] + i * size;
   memset(info->buffer[0], info->gf->SBackGroundColor, m->height * size);
 
-  info->timer = enfle_timer_create(timer_gettimeofday());
-
   m->movie_private = (void *)info;
   m->st = st;
   m->status = _PLAY;
@@ -240,10 +235,10 @@ play_main(Movie *m, VideoWindow *vw)
   if (!info->gf)
     return PLAY_OK;
 
-  if (timer_status(info->timer) == _TIMER_RUNNING &&
-      timer_get_micro(info->timer) < info->delay_time)
+  if (timer_is_running(m->timer) &&
+      timer_get_micro(m->timer) < info->delay_time)
     return PLAY_OK;
-  timer_stop(info->timer);
+  timer_stop(m->timer);
 
   do {
     if (DGifGetRecordType(gf, &rectype) == GIF_ERROR) {
@@ -441,7 +436,7 @@ play_main(Movie *m, VideoWindow *vw)
 
   m->render_frame(vw, m, p);
   info->delay_time = delay * 10000;
-  timer_start(info->timer);
+  timer_start(m->timer);
 
   if (image_disposal == _RESTOREBACKGROUND)
     memset(info->buffer[0], gf->SBackGroundColor, m->width * m->height);
@@ -503,6 +498,7 @@ unload_movie(Movie *m)
 {
   UNGIF_info *info = (UNGIF_info *)m->movie_private;
 
+  timer_stop(m->timer);
   if (info->buffer[0])
     free(info->buffer[0]);
   if (info->buffer)
