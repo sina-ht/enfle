@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb  8 00:05:58 2001.
- * $Id: normal.c,v 1.21 2001/02/07 17:38:17 sian Exp $
+ * Last Modified: Mon Feb 12 07:22:16 2001.
+ * $Id: normal.c,v 1.22 2001/02/12 13:13:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,7 +39,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.3.5",
+  description: "Normal UI plugin version 0.4",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -159,6 +159,16 @@ set_caption_string(VideoWindow *vw, char *path, char *format)
   string_destroy(cap);
 }
 
+#define MAIN_LOOP_QUIT 0
+#define MAIN_LOOP_NEXT 1
+#define MAIN_LOOP_PREV -1
+#define MAIN_LOOP_DELETE_FROM_LIST 2
+#define MAIN_LOOP_DELETE_FROM_LIST_N 2
+#define MAIN_LOOP_DELETE_FROM_LIST_P -2
+#define MAIN_LOOP_DELETE_FILE 3
+#define MAIN_LOOP_DELETE_FILE_N 3
+#define MAIN_LOOP_DELETE_FILE_P -3
+
 static int
 main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 {
@@ -198,15 +208,15 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	if (button == ev.button.button)
 	  switch (ev.button.button) {
 	  case ENFLE_Button_1:
-	    return 1;
+	    return MAIN_LOOP_NEXT;
 	  case ENFLE_Button_2:
-	    return 0;
+	    return MAIN_LOOP_QUIT;
 	  case ENFLE_Button_3:
-	    return -1;
+	    return MAIN_LOOP_PREV;
 	  case ENFLE_Button_4:
-	    return 1;
+	    return MAIN_LOOP_NEXT;
 	  case ENFLE_Button_5:
-	    return -1;
+	    return MAIN_LOOP_PREV;
 	  default:
 	    break;
 	  }
@@ -220,14 +230,17 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  switch (ev.key.key) {
 	  case ENFLE_KEY_n:
 	  case ENFLE_KEY_space:
-	    return 1;
+	    return MAIN_LOOP_NEXT;
 	  case ENFLE_KEY_b:
-	    return -1;
+	    return MAIN_LOOP_PREV;
 	  case ENFLE_KEY_q:
-	    return 0;
+	    return MAIN_LOOP_QUIT;
 	  case ENFLE_KEY_f:
 	    video_window_set_fullscreen_mode(vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
 	    break;
+	  case ENFLE_KEY_d:
+	    return (ev.key.modkey & ENFLE_MOD_Shift) ?
+	      MAIN_LOOP_DELETE_FILE : MAIN_LOOP_DELETE_FROM_LIST;
 	  case ENFLE_KEY_s:
 	    if (ev.key.modkey & ENFLE_MOD_Shift) {
 	      switch (vw->interpolate_method) {
@@ -361,20 +374,38 @@ process_files_of_archive(UIData *uidata, Archive *a)
   movie_set_play_every_frame(m, 0);
 
   path = NULL;
-  while (dir) {
-    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+  while (dir != MAIN_LOOP_QUIT) {
     if (path == NULL)
       path = archive_iteration_start(a);
     else {
       switch (dir) {
-      case 1:
+      case MAIN_LOOP_DELETE_FROM_LIST:
+	archive_iteration_delete(a);
+	path = archive_iteration(a);
+	break;
+      case MAIN_LOOP_DELETE_FILE:
+	if (strcmp(a->format, "NORMAL") == 0) {
+	  unlink(s->path);
+	  fprintf(stderr, "DELETED: %s\n", s->path);
+	}
+	archive_iteration_delete(a);
+	path = archive_iteration(a);
+	break;
+      case MAIN_LOOP_NEXT:
 	path = archive_iteration_next(a);
 	break;
-      case -1:
+      case MAIN_LOOP_PREV:
 	path = archive_iteration_prev(a);
+	break;
+      default:
+	fprintf(stderr, "main_loop() returned unknown code %d\n", dir);
+	path = NULL;
 	break;
       }
     }
+
+    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+
     if (!path)
       break;
 

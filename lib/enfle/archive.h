@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:13:27 2001.
- * $Id: archive.h,v 1.2 2001/01/06 23:55:25 sian Exp $
+ * Last Modified: Mon Feb 12 05:45:11 2001.
+ * $Id: archive.h,v 1.3 2001/02/12 13:13:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,6 +43,7 @@ struct _archive {
   char *(*iteration_start)(Archive *);
   char *(*iteration_next)(Archive *);
   char *(*iteration_prev)(Archive *);
+  char *(*iteration)(Archive *);
   void (*iteration_delete)(Archive *);
   int (*open)(Archive *, Stream *, char *);
   void (*destroy)(Archive *);
@@ -56,6 +57,7 @@ struct _archive {
 #define archive_iteration_start(a) (a)->iteration_start((a))
 #define archive_iteration_next(a) (a)->iteration_next((a))
 #define archive_iteration_prev(a) (a)->iteration_prev((a))
+#define archive_iteration(a) (a)->iteration((a))
 #define archive_iteration_delete(a) (a)->iteration_delete((a))
 #define archive_open(a, st, n) (a)->open((a), (st), (n))
 #define archive_destroy(a) (a)->destroy((a))

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb  5 02:59:58 2001.
- * $Id: archive.c,v 1.8 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Mon Feb 12 07:11:22 2001.
+ * $Id: archive.c,v 1.9 2001/02/12 13:13:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,26 +38,23 @@
 static int read_directory(Archive *, char *, int);
 static void add(Archive *, char *, void *);
 static void *get(Archive *, char *);
-static void delete(Archive *, char *, int);
+static void delete_path(Archive *, char *, int);
 static char *iteration_start(Archive *);
 static char *iteration_next(Archive *);
 static char *iteration_prev(Archive *);
+static char *iteration(Archive *);
 static void iteration_delete(Archive *);
 static int open(Archive *, Stream *, char *);
 static void destroy(Archive *);
 
 static Archive archive_template = {
-  filehash: NULL,
-  st: NULL,
-  format: NULL,
-  nfiles: 0,
-  data: NULL,
   read_directory: read_directory,
   add: add,
   get: get,
   iteration_start: iteration_start,
   iteration_next: iteration_next,
   iteration_prev: iteration_prev,
+  iteration: iteration,
   iteration_delete: iteration_delete,
   open: open,
   destroy: destroy
@@ -182,7 +179,7 @@ get(Archive *arc, char *path)
 }
 
 static void
-delete(Archive *arc, char *path, int dir)
+delete_path(Archive *arc, char *path, int dir)
 {
   arc->nfiles--;
   arc->current = (dir == 1) ? dlist_prev(arc->current) : dlist_next(arc->current);
@@ -200,7 +197,7 @@ iteration_start(Archive *arc)
   dl = hash_get_keys(arc->filehash);
   arc->current = dlist_top(dl);
 
-  if (!arc->current)
+  if (arc->current == dlist_guard(dl))
     return NULL;
 
   if (!dlist_data(arc->current))
@@ -212,12 +209,15 @@ iteration_start(Archive *arc)
 static char *
 iteration_next(Archive *arc)
 {
+  Dlist *dl;
+  dl = hash_get_keys(arc->filehash);
+
   arc->direction = 1;
 
-  if (arc->current == NULL)
+  if (arc->current == dlist_guard(dl))
     return iteration_start(arc);
 
-  if (dlist_next(arc->current) == NULL)
+  if (dlist_next(arc->current) == dlist_guard(dl))
     return NULL;
 
   arc->current = dlist_next(arc->current);
@@ -231,15 +231,18 @@ iteration_next(Archive *arc)
 static char *
 iteration_prev(Archive *arc)
 {
+  Dlist *dl;
+  dl = hash_get_keys(arc->filehash);
+
   arc->direction = -1;
 
-  if (arc->current == NULL) {
+  if (arc->current == dlist_guard(dl)) {
     Dlist *dl;
 
     dl = hash_get_keys(arc->filehash);
     arc->current = dlist_head(dl);
   } else {
-    if (dlist_prev(arc->current) == NULL)
+    if (dlist_prev(arc->current) == dlist_guard(dl))
       return NULL;
     arc->current = dlist_prev(arc->current);
   }
@@ -250,10 +253,20 @@ iteration_prev(Archive *arc)
   return hash_key_key(dlist_data(arc->current));
 }
 
+static char *
+iteration(Archive *arc)
+{
+  return arc->direction == 1 ? iteration_next(arc) : iteration_prev(arc);
+}
+
 static void
 iteration_delete(Archive *arc)
 {
-  delete(arc, hash_key_key(dlist_data(arc->current)), arc->direction);
+  Dlist *dl;
+  dl = hash_get_keys(arc->filehash);
+
+  if (arc->current != dlist_guard(dl))
+    delete_path(arc, hash_key_key(dlist_data(arc->current)), arc->direction);
 }
 
 static int
