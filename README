@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Mon Jan 15 04:03:45 2001.
+     Last Modified: Wed Jan 24 06:52:57 2001.
 
  This file is part of Enfle.
 
@@ -24,6 +24,13 @@
 
  ATTENTION: GPL version 2 only. You cannot apply any later
  version. This situation may change.
+
+ This archive contains libdivxdecore from OpenDivX. OpenDivX player
+ plugin uses libdivxdecore and is released as a "Larger Work" under
+ that license. Consistant with that license, OpenDivX plugin is
+ released under the GNU General Public License. The OpenDivX license
+ can be found at OpenDivX-LICENSE in source tree, or
+ http://www.projectmayo.com/opendivx/docs.php.
 
 ***************************************************
 
