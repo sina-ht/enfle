@@ -1,3 +1,44 @@
+2004-10-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/ac3.h,
+	lib/avcodec/allcodecs.c, lib/avcodec/avcodec.c,
+	lib/avcodec/avcodec.h, lib/avcodec/common.c, lib/avcodec/dpcm.c,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h, lib/avcodec/dv.c,
+	lib/avcodec/h261.c, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/h264idct.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/indeo3.c,
+	lib/avcodec/jrevdct.c, lib/avcodec/lcl.c, lib/avcodec/mdec.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudio.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/parser.c, lib/avcodec/qdrw.c,
+	lib/avcodec/resample2.c, lib/avcodec/snow.c, lib/avcodec/svq1.c,
+	lib/avcodec/truemotion1.c, lib/avcodec/utils.c,
+	lib/avcodec/vmdav.c, lib/avcodec/xvmcvideo.c, INSTALL,
+	config.guess, config.sub, install-sh, ltmain.sh, missing: Updated.
+
+2004-09-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/fourcc.h, lib/enfle/videodecoder.c,
+	plugins/videodecoder/avcodec/avcodec.c: Added FCC_mjpg.
+
+2004-09-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dvdata.h, lib/avcodec/ffv1.c, lib/avcodec/golomb.h,
+	lib/avcodec/h261.c, lib/avcodec/h261data.h, lib/avcodec/h263.c,
+	lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_mmx.c,
+	lib/avcodec/i386/dsputil_mmx_avg.h,
+	lib/avcodec/i386/dsputil_mmx_rnd.h, lib/avcodec/motion_est.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/ppc/dsputil_ppc.c, lib/avcodec/ppc/dsputil_ppc.h,
+	lib/avcodec/snow.c, lib/avcodec/sonic.c, lib/avcodec/svq1.c,
+	lib/avcodec/tscc.c, lib/avcodec/utils.c: Updated.
+
+	* lib/avcodec/ulti.c, lib/avcodec/ulti_cb.h: New files.
+
 2004-09-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README, lib/enfle/ui-extra.h, plugins/ui/normal/normal.c,
