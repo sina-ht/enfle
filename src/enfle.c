@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 03:45:18 2001.
- * $Id: enfle.c,v 1.34 2001/06/17 20:46:12 sian Exp $
+ * Last Modified: Thu Jun 21 01:21:27 2001.
+ * $Id: enfle.c,v 1.35 2001/06/22 17:46:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,26 +69,28 @@ static Option enfle_options[] = {
 static void
 usage(void)
 {
-  printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n\n");
-  printf("usage: enfle [options] [path...]\n");
-
+  const char *ext = 
 #if defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI)
-  printf("Extension: "
 #ifdef USE_SHM
- "SHM "
+    "SHM "
 #endif
 #ifdef USE_XV
- "Xv "
+    "Xv "
 #endif
 #ifdef USE_PTHREAD
- "pthread "
+    "pthread "
 #endif
 #ifdef USE_SPI
- "spi "
+    "spi "
 #endif
-	 "\n");
+#else
+    "None"
 #endif
+    "\n";
 
+  printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n\n");
+  printf("usage: enfle [options] [path...]\n");
+  printf("Extension: %s", ext);
   printf("Options:\n");
   print_option_usage(enfle_options);
 }
