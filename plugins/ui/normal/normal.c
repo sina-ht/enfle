@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 04:34:51 2001.
- * $Id: normal.c,v 1.26 2001/02/24 08:23:03 sian Exp $
+ * Last Modified: Sun Mar 11 21:53:45 2001.
+ * $Id: normal.c,v 1.27 2001/03/11 17:42:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,7 +39,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.4.1",
+  description: "Normal UI plugin version 0.4.2",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -162,9 +162,10 @@ set_caption_string(VideoWindow *vw, char *path, char *format)
 #define MAIN_LOOP_QUIT 0
 #define MAIN_LOOP_NEXT 1
 #define MAIN_LOOP_PREV -1
-#define MAIN_LOOP_DELETE_FROM_LIST 2
-#define MAIN_LOOP_DELETE_FILE 3
-#define MAIN_LOOP_DO_NOTHING 4
+#define MAIN_LOOP_NEXTARCHIVE 2
+#define MAIN_LOOP_DELETE_FROM_LIST 3
+#define MAIN_LOOP_DELETE_FILE 4
+#define MAIN_LOOP_DO_NOTHING 5
 
 static int
 main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
@@ -208,7 +209,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  case ENFLE_Button_1:
 	    return MAIN_LOOP_NEXT;
 	  case ENFLE_Button_2:
-	    return MAIN_LOOP_QUIT;
+	    return MAIN_LOOP_NEXTARCHIVE;
 	  case ENFLE_Button_3:
 	    return MAIN_LOOP_PREV;
 	  case ENFLE_Button_4:
@@ -230,7 +231,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  switch (ev.key.key) {
 	  case ENFLE_KEY_n:
 	  case ENFLE_KEY_space:
-	    return MAIN_LOOP_NEXT;
+	    return (ev.key.modkey & ENFLE_MOD_Shift) ? MAIN_LOOP_NEXTARCHIVE :  MAIN_LOOP_NEXT;
 	  case ENFLE_KEY_b:
 	    return MAIN_LOOP_PREV;
 	  case ENFLE_KEY_q:
@@ -400,6 +401,10 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	dir = -1;
 	path = archive_iteration_prev(a);
 	break;
+      case MAIN_LOOP_NEXTARCHIVE:
+	path = NULL;
+	ret = MAIN_LOOP_NEXT;
+	break;
       case MAIN_LOOP_DO_NOTHING:
 	break;
       default:
@@ -435,13 +440,13 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	    continue;
 	  }
 	  video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-	  dir = process_files_of_archive(uidata, arc);
+	  ret = process_files_of_archive(uidata, arc);
 	  if (arc->nfiles == 0) {
 	    /* Now that deleted all paths in this archive, should be deleted wholly. */
 	    archive_iteration_delete(a);
 	  }
 	  archive_destroy(arc);
-	  ret = (dir == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	  dir = 1;
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
 	  archive_iteration_delete(a);
@@ -473,9 +478,9 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	debug_message("Archiver identified as %s\n", arc->format);
 
 	if (archiver_open(ar, eps, arc, arc->format, s)) {
-	  dir = process_files_of_archive(uidata, arc);
+	  ret = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
-	  ret = (dir == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	  dir = 1;
 	  continue;
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
@@ -548,7 +553,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   image_destroy(p);
   stream_destroy(s);
 
-  return dir;
+  return ret;
 }
 
 /* methods */
