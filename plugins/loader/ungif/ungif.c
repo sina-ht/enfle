@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 01:57:56 2000.
- * $Id: ungif.c,v 1.2 2000/10/08 17:25:38 sian Exp $
+ * Last Modified: Mon Oct  9 17:32:24 2000.
+ * $Id: ungif.c,v 1.3 2000/10/09 20:23:43 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -120,13 +120,11 @@ load_image(Image *p, Stream *st)
 
   do {
     if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
+      if (!image_loaded)
+	goto error;
+      /* Show error message, but try to display. */
       PrintGifError();
-#if 0
-      DGifCloseFile(GifFile);
-      free(ScreenBuffer[0]);
-      free(ScreenBuffer);
-      return LOAD_ERROR;
-#endif
+      break;
     }
 
     switch (RecordType) {
@@ -238,6 +236,7 @@ load_image(Image *p, Stream *st)
   p->bits_per_pixel = 8;
   p->bytes_per_line = p->width;
   p->next = NULL;
+
   p->image_size = p->bytes_per_line * p->height;
   if ((p->image = calloc(1, p->image_size)) == NULL)
     goto error_after_closed;
@@ -281,7 +280,9 @@ identify(Image *p, Stream *st)
   if (memcmp(buf, "89a", 3) == 0)
     return LOAD_OK;
 
-  return LOAD_NOT;
+  show_message("GIF detected, but version is neither 87a nor 89a.\n");
+
+  return LOAD_OK;
 }
 
 static LoaderStatus

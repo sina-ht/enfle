@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 02:05:17 2000.
- * $Id: ungif.c,v 1.1 2000/10/08 17:46:42 sian Exp $
+ * Last Modified: Mon Oct  9 17:33:55 2000.
+ * $Id: ungif.c,v 1.2 2000/10/09 20:23:43 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -105,7 +105,9 @@ identify(Image *p, Stream *st)
   if (memcmp(buf, "89a", 3) == 0)
     return PLAY_OK;
 
-  return PLAY_NOT;
+  show_message("GIF detected, but version is neither 87a nor 89a.\n");
+
+  return PLAY_OK;
 }
 
 static PlayerStatus
