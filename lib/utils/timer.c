@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 12:12:38 2001.
- * $Id: timer.c,v 1.8 2001/10/14 12:33:23 sian Exp $
+ * Last Modified: Sat Mar  6 11:59:09 2004.
+ * $Id: timer.c,v 1.9 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,23 +42,21 @@ static Timer_t get(Timer *);
 static Timer_t get_difference(Timer *);
 
 static Timer template = {
-  impl: NULL,
-  time: 0,
-  previous_time: 0,
-  status: _TIMER_STOP,
+  .impl = NULL,
+  .status = _TIMER_STOP,
 
-  destroy: destroy,
-  reset: reset,
-  start: start,
-  pause: pause,
-  restart: restart,
-  stop: stop,
-  get_micro: get_micro,
-  get_difference_micro: get_difference_micro,
-  get_milli: get_milli,
-  get_difference_milli: get_difference_milli,
-  get: get,
-  get_difference: get_difference
+  .destroy = destroy,
+  .reset = reset,
+  .start = start,
+  .pause = pause,
+  .restart = restart,
+  .stop = stop,
+  .get_micro = get_micro,
+  .get_difference_micro = get_difference_micro,
+  .get_milli = get_milli,
+  .get_difference_milli = get_difference_milli,
+  .get = get,
+  .get_difference = get_difference
 };
 
 Timer *

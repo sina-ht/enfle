@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 24 06:54:06 2001.
- * $Id: libavi.c,v 1.2 2001/01/23 23:26:52 sian Exp $
+ * Last Modified: Sat Mar  6 12:13:45 2004.
+ * $Id: libavi.c,v 1.3 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,9 +29,9 @@ static int close_avi(AviFileReader *);
 static void destroy(AviFileReader *);
 
 static AviFileReader template = {
-  open_avi: open_avi,
-  close_avi: close_avi,
-  destroy: destroy
+  .open_avi = open_avi,
+  .close_avi = close_avi,
+  .destroy = destroy
 };
 
 /* constructor */

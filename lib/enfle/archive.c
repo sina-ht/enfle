@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb 15 20:57:49 2004.
- * $Id: archive.c,v 1.35 2004/02/20 17:19:08 sian Exp $
+ * Last Modified: Sat Mar  6 11:51:14 2004.
+ * $Id: archive.c,v 1.36 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,21 +54,21 @@ static int open(Archive *, Stream *, char *);
 static void destroy(Archive *);
 
 static Archive archive_template = {
-  read_directory: read_directory,
-  set_fnmatch: set_fnmatch,
-  add: add,
-  get: get,
-  delete_and_get: delete_and_get,
-  getpathname: getpathname,
-  iteration_start: iteration_start,
-  iteration_first: iteration_first,
-  iteration_last: iteration_last,
-  iteration_next: iteration_next,
-  iteration_prev: iteration_prev,
-  iteration: iteration,
-  iteration_delete: iteration_delete,
-  open: open,
-  destroy: destroy
+  .read_directory = read_directory,
+  .set_fnmatch = set_fnmatch,
+  .add = add,
+  .get = get,
+  .delete_and_get = delete_and_get,
+  .getpathname = getpathname,
+  .iteration_start = iteration_start,
+  .iteration_first = iteration_first,
+  .iteration_last = iteration_last,
+  .iteration_next = iteration_next,
+  .iteration_prev = iteration_prev,
+  .iteration = iteration,
+  .iteration_delete = iteration_delete,
+  .open = open,
+  .destroy = destroy
 };
 
 Archive *

@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  4 00:24:23 2004.
- * $Id: mpeg.c,v 1.4 2004/03/03 15:45:52 sian Exp $
+ * Last Modified: Sat Mar  6 12:09:33 2004.
+ * $Id: mpeg.c,v 1.5 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,13 +42,13 @@ DECLARE_DEMULTIPLEXER_METHODS;
 PREPARE_DEMULTIPLEXER_TEMPLATE;
 
 static DemultiplexerPlugin plugin = {
-  type: ENFLE_PLUGIN_DEMULTIPLEXER,
-  name: "MPEG",
-  description: "MPEG Demultiplexer plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_DEMULTIPLEXER,
+  .name = "MPEG",
+  .description = "MPEG Demultiplexer plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  identify: identify,
-  examine: examine
+  .identify = identify,
+  .examine = examine
 };
 
 ENFLE_PLUGIN_ENTRY(demultiplexer_mpeg)

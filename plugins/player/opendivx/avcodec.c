@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 16 22:21:13 2003.
- * $Id: avcodec.c,v 1.1 2003/11/17 13:54:02 sian Exp $
+ * Last Modified: Sat Mar  6 12:13:21 2004.
+ * $Id: avcodec.c,v 1.2 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,12 +86,13 @@ static PlayerStatus stop_movie(Movie *);
 #define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.1"
 
 static PlayerPlugin plugin = {
-  type: ENFLE_PLUGIN_PLAYER,
-  name: "avcodec",
-  description: NULL,
-  author: "Hiroshi Takekawa",
-  identify: identify,
-  load: load
+  .type = ENFLE_PLUGIN_PLAYER,
+  .name = "avcodec",
+  .description = NULL,
+  .author = "Hiroshi Takekawa",
+
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(player_divx)

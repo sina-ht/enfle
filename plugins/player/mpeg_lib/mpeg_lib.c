@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 15:57:30 2002.
- * $Id: mpeg_lib.c,v 1.20 2002/08/03 05:08:38 sian Exp $
+ * Last Modified: Sat Mar  6 12:14:55 2004.
+ * $Id: mpeg_lib.c,v 1.21 2004/03/06 03:43:36 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -45,13 +45,13 @@ static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
-  type: ENFLE_PLUGIN_PLAYER,
-  name: "MPEG_lib",
-  description: "MPEG_lib Player plugin version 0.2.3",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_PLAYER,
+  .name = "MPEG_lib",
+  .description = "MPEG_lib Player plugin version 0.2.3",
+  .author = "Hiroshi Takekawa",
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(player_mpeg_lib)

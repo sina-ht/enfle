@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 01:28:24 2004.
- * $Id: vorbis.c,v 1.1 2004/02/20 17:17:41 sian Exp $
+ * Last Modified: Sat Mar  6 12:28:06 2004.
+ * $Id: vorbis.c,v 1.2 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,12 +35,12 @@ static AudioDecoderStatus decode(AudioDecoder *, Movie *, AudioDevice *, unsigne
 static void destroy(AudioDecoder *);
 
 static AudioDecoderPlugin plugin = {
-  type: ENFLE_PLUGIN_AUDIODECODER,
-  name: "vorbis",
-  description: "vorbis Audio Decoder plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_AUDIODECODER,
+  .name = "vorbis",
+  .description = "vorbis Audio Decoder plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  init: init
+  .init = init
 };
 
 typedef enum vorbis_state {

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 31 14:50:28 2004.
- * $Id: wallpaper.c,v 1.14 2004/02/02 16:38:50 sian Exp $
+ * Last Modified: Sat Mar  6 12:06:08 2004.
+ * $Id: wallpaper.c,v 1.15 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,12 +39,12 @@
 static int ui_main(UIData *);
 
 static UIPlugin plugin = {
-  type: ENFLE_PLUGIN_UI,
-  name: "Wallpaper",
-  description: "Wallpaper UI plugin version 0.1.2",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_UI,
+  .name = "Wallpaper",
+  .description = "Wallpaper UI plugin version 0.1.2",
+  .author = "Hiroshi Takekawa",
 
-  ui_main: ui_main,
+  .ui_main = ui_main,
 };
 
 ENFLE_PLUGIN_ENTRY(ui_wallpaper)

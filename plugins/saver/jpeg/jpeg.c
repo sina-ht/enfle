@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 16:03:16 2002.
- * $Id: jpeg.c,v 1.3 2002/08/03 05:08:37 sian Exp $
+ * Last Modified: Sat Mar  6 12:02:01 2004.
+ * $Id: jpeg.c,v 1.4 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,13 +48,13 @@
 DECLARE_SAVER_PLUGIN_METHODS;
 
 static SaverPlugin plugin = {
-  type: ENFLE_PLUGIN_SAVER,
-  name: "JPEG",
-  description: "JPEG Saver plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_SAVER,
+  .name = "JPEG",
+  .description = "JPEG Saver plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  save: save,
-  get_ext: get_ext
+  .save = save,
+  .get_ext = get_ext
 };
 
 struct my_error_mgr {

@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 24 00:05:16 2003.
- * $Id: hash.c,v 1.18 2003/10/12 03:59:14 sian Exp $
+ * Last Modified: Sat Mar  6 11:58:13 2004.
+ * $Id: hash.c,v 1.19 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,8 +37,8 @@ static unsigned int default_hash_function(void *, unsigned int);
 static unsigned int default_hash_function2(void *, unsigned int);
 
 static Hash hash_template = {
-  hash_function: default_hash_function,
-  hash_function2: default_hash_function2,
+  .hash_function = default_hash_function,
+  .hash_function2 = default_hash_function2,
 };
 
 static unsigned int

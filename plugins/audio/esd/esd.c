@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 15:45:13 2002.
- * $Id: esd.c,v 1.6 2002/08/02 14:03:55 sian Exp $
+ * Last Modified: Sat Mar  6 12:05:04 2004.
+ * $Id: esd.c,v 1.7 2004/03/06 03:43:36 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -43,17 +43,17 @@ static int sync_device(AudioDevice *);
 static int close_device(AudioDevice *);
 
 static AudioPlugin plugin = {
-  type: ENFLE_PLUGIN_AUDIO,
-  name: "EsounD",
-  description: "EsounD Audio plugin version 0.2",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_AUDIO,
+  .name = "EsounD",
+  .description = "EsounD Audio plugin version 0.2",
+  .author = "Hiroshi Takekawa",
 
-  open_device: open_device,
-  set_params: set_params,
-  write_device: write_device,
-  bytes_written: bytes_written,
-  sync_device: sync_device,
-  close_device: close_device
+  .open_device = open_device,
+  .set_params = set_params,
+  .write_device = write_device,
+  .bytes_written = bytes_written,
+  .sync_device = sync_device,
+  .close_device = close_device
 };
 
 typedef struct _esd_data {

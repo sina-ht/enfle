@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  9 22:58:05 2002.
- * $Id: rotate.c,v 1.3 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Sat Mar  6 12:00:34 2004.
+ * $Id: rotate.c,v 1.4 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,13 +55,13 @@ int rotate_mode = 0;
 int flip_mode = 0;
 
 static EffectPlugin plugin = {
-  type: ENFLE_PLUGIN_EFFECT,
-  name: "Rotate",
-  description: "Rotate Effect plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_EFFECT,
+  .name = "Rotate",
+  .description = "Rotate Effect plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  actions: actions,
-  effect: effect
+  .actions = actions,
+  .effect = effect
 };
 
 ENFLE_PLUGIN_ENTRY(effect_rotate)

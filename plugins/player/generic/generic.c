@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  4 00:40:10 2004.
- * $Id: generic.c,v 1.4 2004/03/03 15:46:24 sian Exp $
+ * Last Modified: Sat Mar  6 12:16:12 2004.
+ * $Id: generic.c,v 1.5 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -61,12 +61,13 @@ static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
-  type: ENFLE_PLUGIN_PLAYER,
-  name: "generic",
-  description: "generic Player plugin version 0.1",
-  author: "Hiroshi Takekawa",
-  identify: identify,
-  load: load
+  .type = ENFLE_PLUGIN_PLAYER,
+  .name = "generic",
+  .description = "generic Player plugin version 0.1",
+  .author = "Hiroshi Takekawa",
+
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(player_generic)

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 13 22:04:42 2004.
- * $Id: mpglib.c,v 1.2 2004/02/14 05:24:20 sian Exp $
+ * Last Modified: Sat Mar  6 12:28:19 2004.
+ * $Id: mpglib.c,v 1.3 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,12 +34,12 @@ static AudioDecoderStatus decode(AudioDecoder *, Movie *, AudioDevice *, unsigne
 static void destroy(AudioDecoder *);
 
 static AudioDecoderPlugin plugin = {
-  type: ENFLE_PLUGIN_AUDIODECODER,
-  name: "mpglib",
-  description: "mpglib Audio Decoder plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_AUDIODECODER,
+  .name = "mpglib",
+  .description = "mpglib Audio Decoder plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  init: init
+  .init = init
 };
 
 #define MP3_DECODE_BUFFER_SIZE 16384

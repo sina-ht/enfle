@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 30 14:50:42 2003.
- * $Id: oss.c,v 1.13 2003/11/30 05:51:38 sian Exp $
+ * Last Modified: Sat Mar  6 12:04:44 2004.
+ * $Id: oss.c,v 1.14 2004/03/06 03:43:36 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -57,17 +57,17 @@ static int sync_device(AudioDevice *);
 static int close_device(AudioDevice *);
 
 static AudioPlugin plugin = {
-  type: ENFLE_PLUGIN_AUDIO,
-  name: "OSS",
-  description: "OSS Audio plugin version 0.1.3",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_AUDIO,
+  .name = "OSS",
+  .description = "OSS Audio plugin version 0.1.3",
+  .author = "Hiroshi Takekawa",
 
-  open_device: open_device,
-  set_params: set_params,
-  write_device: write_device,
-  bytes_written: bytes_written,
-  sync_device: sync_device,
-  close_device: close_device
+  .open_device = open_device,
+  .set_params = set_params,
+  .write_device = write_device,
+  .bytes_written = bytes_written,
+  .sync_device = sync_device,
+  .close_device = close_device
 };
 
 ENFLE_PLUGIN_ENTRY(audio_oss)

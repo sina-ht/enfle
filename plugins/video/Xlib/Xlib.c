@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar  5 13:40:48 2004.
- * $Id: Xlib.c,v 1.57 2004/03/05 04:43:03 sian Exp $
+ * Last Modified: Sat Mar  6 12:04:19 2004.
+ * $Id: Xlib.c,v 1.58 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -113,43 +113,43 @@ static void draw_rect_xor(VideoWindow *, unsigned int, unsigned int, unsigned in
 /* internal */
 
 static VideoPlugin plugin = {
-  type: ENFLE_PLUGIN_VIDEO,
-  name: "Xlib",
-  description: "Xlib Video plugin version 0.6.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_VIDEO,
+  .name = "Xlib",
+  .description = "Xlib Video plugin version 0.6.1",
+  .author = "Hiroshi Takekawa",
 
-  open_video: open_video,
-  close_video: close_video,
-  get_root: get_root,
-  open_window: open_window,
-  set_wallpaper: set_wallpaper,
-  destroy: destroy
+  .open_video = open_video,
+  .close_video = close_video,
+  .get_root = get_root,
+  .open_window = open_window,
+  .set_wallpaper = set_wallpaper,
+  .destroy = destroy
 };
 
 static VideoWindow template = {
-  preferred_memory_type: preferred_memory_type,
-  request_type: request_type,
-  calc_magnified_size: calc_magnified_size,
-  set_event_mask: set_event_mask,
-  dispatch_event: dispatch_event,
-  set_caption: set_caption,
-  set_cursor: set_cursor,
-  set_background: set_background,
-  set_fullscreen_mode: set_fullscreen_mode,
-  destroy: destroy_window,
-  resize: resize,
-  move: move,
-  get_offset: get_offset,
-  set_offset: set_offset,
-  adjust_offset: adjust_offset,
-  erase_rect: erase_rect,
-  draw_rect: draw_rect,
-  render: render,
-  render_scaled: render_scaled,
-  update: update,
-  do_sync: do_sync,
-  discard_key_event: discard_key_event,
-  discard_button_event: discard_button_event
+  .preferred_memory_type = preferred_memory_type,
+  .request_type = request_type,
+  .calc_magnified_size = calc_magnified_size,
+  .set_event_mask = set_event_mask,
+  .dispatch_event = dispatch_event,
+  .set_caption = set_caption,
+  .set_cursor = set_cursor,
+  .set_background = set_background,
+  .set_fullscreen_mode = set_fullscreen_mode,
+  .destroy = destroy_window,
+  .resize = resize,
+  .move = move,
+  .get_offset = get_offset,
+  .set_offset = set_offset,
+  .adjust_offset = adjust_offset,
+  .erase_rect = erase_rect,
+  .draw_rect = draw_rect,
+  .render = render,
+  .render_scaled = render_scaled,
+  .update = update,
+  .do_sync = do_sync,
+  .discard_key_event = discard_key_event,
+  .discard_button_event = discard_button_event
 };
 
 ENFLE_PLUGIN_ENTRY(video_Xlib)

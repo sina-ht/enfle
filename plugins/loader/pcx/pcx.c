@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb  6 00:03:26 2003.
- * $Id: pcx.c,v 1.8 2003/02/05 15:21:04 sian Exp $
+ * Last Modified: Sat Mar  6 12:18:44 2004.
+ * $Id: pcx.c,v 1.9 2004/03/06 03:43:36 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -38,14 +38,14 @@
 DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "PCX",
-  description: "PCX Loader plugin version 0.1",
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "PCX",
+  .description = "PCX Loader plugin version 0.1",
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(loader_pcx)

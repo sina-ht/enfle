@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Feb 15 04:20:23 2003.
- * $Id: x11window.c,v 1.10 2003/12/27 14:29:06 sian Exp $
+ * Last Modified: Sat Mar  6 11:41:31 2004.
+ * $Id: x11window.c,v 1.11 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,10 +37,10 @@ static void wait_mapped(X11Window *);
 static void destroy(X11Window *);
 
 static X11Window template = {
-  set_event_mask: set_event_mask,
-  get_geometry: get_geometry,
-  wait_mapped: wait_mapped,
-  destroy: destroy
+  .set_event_mask = set_event_mask,
+  .get_geometry = get_geometry,
+  .wait_mapped = wait_mapped,
+  .destroy = destroy
 };
 
 X11Window *

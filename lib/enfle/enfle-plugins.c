@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 19 20:51:41 2002.
- * $Id: enfle-plugins.c,v 1.13 2002/08/19 12:22:33 sian Exp $
+ * Last Modified: Sat Mar  6 11:52:37 2004.
+ * $Id: enfle-plugins.c,v 1.14 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,14 +42,14 @@ static const unsigned char *get_description(EnflePlugins *, PluginType, char *);
 static const unsigned char *get_author(EnflePlugins *, PluginType, char *);
 
 static EnflePlugins template = {
-  load: load,
-  unload: unload,
-  add: add,
-  get: get,
-  destroy: destroy,
-  get_names: get_names,
-  get_description: get_description,
-  get_author: get_author
+  .load = load,
+  .unload = unload,
+  .add = add,
+  .get = get,
+  .destroy = destroy,
+  .get_names = get_names,
+  .get_description = get_description,
+  .get_author = get_author
 };
 
 EnflePlugins *

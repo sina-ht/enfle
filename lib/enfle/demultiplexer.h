@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 01:52:59 2004.
- * $Id: demultiplexer.h,v 1.1 2004/02/14 05:15:36 sian Exp $
+ * Last Modified: Sat Mar  6 12:31:39 2004.
+ * $Id: demultiplexer.h,v 1.2 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,10 +74,10 @@ typedef struct _demuxed_packet {
 
 #define PREPARE_DEMULTIPLEXER_TEMPLATE \
   static Demultiplexer template = { \
-    start: start, \
-    stop: stop, \
-    demux_rewind: demux_rewind, \
-    destroy: destroy \
+    .start = start, \
+    .stop = stop, \
+    .demux_rewind = demux_rewind, \
+    .destroy = destroy \
   }
 
 #define demultiplexer_set_eof(de, f) (de)->eof = (f)

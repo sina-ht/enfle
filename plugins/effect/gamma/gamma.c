@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 10 22:22:40 2002.
- * $Id: gamma.c,v 1.4 2002/08/03 05:08:40 sian Exp $
+ * Last Modified: Sat Mar  6 12:00:56 2004.
+ * $Id: gamma.c,v 1.5 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,13 +50,13 @@ static UIAction actions[] = {
 int gamma_idx = 3;
 
 static EffectPlugin plugin = {
-  type: ENFLE_PLUGIN_EFFECT,
-  name: "Gamma",
-  description: "Gamma Correction Effect plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_EFFECT,
+  .name = "Gamma",
+  .description = "Gamma Correction Effect plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  actions: actions,
-  effect: effect
+  .actions = actions,
+  .effect = effect
 };
 
 static void calc_gamma(unsigned char *, int);

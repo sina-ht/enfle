@@ -1,12 +1,10 @@
 /*
  * alsa.c -- ALSA Audio plugin
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 15:32:01 2004.
- * $Id: alsa.c,v 1.12 2004/01/18 07:11:44 sian Exp $
- *
- * Note: Audio support is incomplete.
+ * Last Modified: Sat Mar  6 12:05:41 2004.
+ * $Id: alsa.c,v 1.13 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,17 +42,17 @@ static int sync_device(AudioDevice *);
 static int close_device(AudioDevice *);
 
 static AudioPlugin plugin = {
-  type: ENFLE_PLUGIN_AUDIO,
-  name: "ALSA",
-  description: "ALSA Audio plugin version 0.2.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_AUDIO,
+  .name = "ALSA",
+  .description = "ALSA Audio plugin version 0.2.1",
+  .author = "Hiroshi Takekawa",
 
-  open_device: open_device,
-  set_params: set_params,
-  write_device: write_device,
-  bytes_written: bytes_written,
-  sync_device: sync_device,
-  close_device: close_device
+  .open_device = open_device,
+  .set_params = set_params,
+  .write_device = write_device,
+  .bytes_written = bytes_written,
+  .sync_device = sync_device,
+  .close_device = close_device
 };
 
 typedef struct _alsa_data {

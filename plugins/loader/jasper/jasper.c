@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 02:31:16 2004.
- * $Id: jasper.c,v 1.2 2004/02/21 07:50:25 sian Exp $
+ * Last Modified: Sat Mar  6 12:19:10 2004.
+ * $Id: jasper.c,v 1.3 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,14 +46,14 @@ DECLARE_LOADER_PLUGIN_METHODS;
 #define LOADER_JASPER_PLUGIN_DESCRIPTION "JasPer Loader plugin version 0.1"
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "JasPer",
-  description: NULL,
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "JasPer",
+  .description = NULL,
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(loader_jasper)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 31 14:49:59 2004.
- * $Id: movie.c,v 1.11 2004/02/02 16:38:50 sian Exp $
+ * Last Modified: Sat Mar  6 11:51:32 2004.
+ * $Id: movie.c,v 1.12 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,11 +43,11 @@ static void unload(Movie *);
 static void destroy(Movie *);
 
 static Movie template = {
-  initialize_screen: initialize_screen,
-  render_frame: render_frame,
-  pause_usec: pause_usec,
-  unload: unload,
-  destroy: destroy
+  .initialize_screen = initialize_screen,
+  .render_frame = render_frame,
+  .pause_usec = pause_usec,
+  .unload = unload,
+  .destroy = destroy
 };
 
 Movie *

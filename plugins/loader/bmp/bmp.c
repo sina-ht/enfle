@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 15:25:40 2002.
- * $Id: bmp.c,v 1.12 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Sat Mar  6 12:27:29 2004.
+ * $Id: bmp.c,v 1.13 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,14 +38,14 @@
 DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "BMP",
-  description: "BMP Loader plugin version 0.2",
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "BMP",
+  .description = "BMP Loader plugin version 0.2",
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(loader_bmp)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Jan  4 16:19:11 2004.
- * $Id: x11.c,v 1.21 2004/01/05 09:52:21 sian Exp $
+ * Last Modified: Sat Mar  6 11:41:10 2004.
+ * $Id: x11.c,v 1.22 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,9 +45,9 @@ static int close(X11 *);
 static void destroy(X11 *);
 
 static X11 template = {
-  open: open,
-  close: close,
-  destroy: destroy
+  .open = open,
+  .close = close,
+  .destroy = destroy
 };
 
 X11 *

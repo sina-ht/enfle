@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Dec 26 00:10:58 2003.
- * $Id: memory.c,v 1.9 2003/12/27 14:26:18 sian Exp $
+ * Last Modified: Sat Mar  6 11:50:18 2004.
+ * $Id: memory.c,v 1.10 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,17 +40,16 @@ static Memory *duplicate(Memory *, int);
 static void destroy(Memory *);
 
 static Memory template = {
-  ptr: NULL,
-  size: 0,
-  used: 0,
-  type: _UNKNOWN,
-  shmid: -1,
-  request_type: request_type,
-  allocate: allocate,
-  set: set,
-  free_both: free_both,
-  duplicate: duplicate,
-  destroy: destroy
+  .ptr = NULL,
+  .type = _UNKNOWN,
+  .shmid = -1,
+
+  .request_type = request_type,
+  .allocate = allocate,
+  .set = set,
+  .free_both = free_both,
+  .duplicate = duplicate,
+  .destroy = destroy
 };
 
 Memory *

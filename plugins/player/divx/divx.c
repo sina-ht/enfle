@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 13 00:19:26 2004.
- * $Id: divx.c,v 1.8 2004/02/14 05:11:51 sian Exp $
+ * Last Modified: Sat Mar  6 12:16:26 2004.
+ * $Id: divx.c,v 1.9 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -73,12 +73,13 @@ static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
-  type: ENFLE_PLUGIN_PLAYER,
-  name: "DivX",
-  description: "DivX Player plugin version 0.3",
-  author: "Hiroshi Takekawa",
-  identify: identify,
-  load: load
+  .type = ENFLE_PLUGIN_PLAYER,
+  .name = "DivX",
+  .description = "DivX Player plugin version 0.3",
+  .author = "Hiroshi Takekawa",
+
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(player_divx)

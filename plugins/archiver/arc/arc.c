@@ -4,8 +4,8 @@
  * Adapted for newer version by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 12 06:42:39 2003.
- * $Id: arc.c,v 1.3 2003/10/12 04:02:32 sian Exp $
+ * Last Modified: Sat Mar  6 12:08:40 2004.
+ * $Id: arc.c,v 1.4 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,13 +36,14 @@ extern struct URL_module URL_module_file;
 DECLARE_ARCHIVER_PLUGIN_METHODS;
 
 static ArchiverPlugin plugin = {
-  type: ENFLE_PLUGIN_ARCHIVER,
-  name: "ARC",
-  description: "libarc Archiver plugin version 0.0.8 compiled with libarc-" ARC_LIB_VERSION,
-  author: "Junji Hashimoto",
-  archiver_private: NULL,
-  identify: identify,
-  open: open
+  .type = ENFLE_PLUGIN_ARCHIVER,
+  .name = "ARC",
+  .description = "libarc Archiver plugin version 0.0.8 compiled with libarc-" ARC_LIB_VERSION,
+  .author = "Junji Hashimoto",
+  .archiver_private = NULL,
+
+  .identify = identify,
+  .open = open
 };
 
 ENFLE_PLUGIN_ENTRY(archiver_arc)

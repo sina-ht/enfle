@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 15:55:26 2004.
- * $Id: raw.c,v 1.1 2004/02/21 07:47:21 sian Exp $
+ * Last Modified: Sat Mar  6 12:11:59 2004.
+ * $Id: raw.c,v 1.2 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,13 +39,13 @@
 DECLARE_VIDEODECODER_PLUGIN_METHODS;
 
 static VideoDecoderPlugin plugin = {
-  type: ENFLE_PLUGIN_VIDEODECODER,
-  name: "raw",
-  description: "raw Video Decoder plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_VIDEODECODER,
+  .name = "raw",
+  .description = "raw Video Decoder plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  query: query,
-  init: init,
+  .query = query,
+  .init = init,
 };
 
 struct videodecoder_raw {

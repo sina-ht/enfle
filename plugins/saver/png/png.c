@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 28 23:08:52 2004.
- * $Id: png.c,v 1.14 2004/02/28 14:14:26 sian Exp $
+ * Last Modified: Sat Mar  6 12:01:43 2004.
+ * $Id: png.c,v 1.15 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,13 +47,13 @@
 DECLARE_SAVER_PLUGIN_METHODS;
 
 static SaverPlugin plugin = {
-  type: ENFLE_PLUGIN_SAVER,
-  name: "PNG",
-  description: "PNG Saver plugin version 0.2",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_SAVER,
+  .name = "PNG",
+  .description = "PNG Saver plugin version 0.2",
+  .author = "Hiroshi Takekawa",
 
-  save: save,
-  get_ext: get_ext
+  .save = save,
+  .get_ext = get_ext
 };
 
 ENFLE_PLUGIN_ENTRY(saver_png)

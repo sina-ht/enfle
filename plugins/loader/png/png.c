@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 10 22:14:16 2002.
- * $Id: png.c,v 1.15 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Sat Mar  6 12:18:30 2004.
+ * $Id: png.c,v 1.16 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -52,14 +52,14 @@ DECLARE_LOADER_PLUGIN_METHODS;
 #define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.3.1"
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "PNG",
-  description: NULL,
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "PNG",
+  .description = NULL,
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(loader_png)

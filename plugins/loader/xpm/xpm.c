@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:52:25 2002.
- * $Id: xpm.c,v 1.3 2002/08/17 02:19:35 sian Exp $
+ * Last Modified: Sat Mar  6 12:17:04 2004.
+ * $Id: xpm.c,v 1.4 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,14 +39,14 @@
 DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "XPM",
-  description: "XPM Loader plugin version 0.1.1",
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "XPM",
+  .description = "XPM Loader plugin version 0.1.1",
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 static Hash *rgbhash = NULL;

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 24 06:54:51 2001.
- * $Id: libriff.c,v 1.3 2001/08/27 21:55:37 sian Exp $
+ * Last Modified: Sat Mar  6 12:14:08 2004.
+ * $Id: libriff.c,v 1.4 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,7 +27,7 @@
 static int rc_destroy(RIFF_Chunk *);
 
 static RIFF_Chunk rc_template = {
-  destroy: rc_destroy
+  .destroy = rc_destroy
 };
 
 static int set_func_input(RIFF_File *, RIFF_Input_func);
@@ -43,17 +43,17 @@ static const unsigned char *get_errmsg(RIFF_File *);
 static int rf_destroy(RIFF_File *);
 
 static RIFF_File rf_template = {
-  set_func_input: set_func_input,
-  set_func_seek: set_func_seek,
-  set_func_arg: set_func_arg,
-  open_file: open_file,
-  iter_set: iter_set,
-  iter_next_chunk: iter_next_chunk,
-  read_data: read_data,
-  iter_push: iter_push,
-  iter_pop: iter_pop,
-  get_errmsg: get_errmsg,
-  destroy: rf_destroy
+  .set_func_input = set_func_input,
+  .set_func_seek = set_func_seek,
+  .set_func_arg = set_func_arg,
+  .open_file = open_file,
+  .iter_set = iter_set,
+  .iter_next_chunk = iter_next_chunk,
+  .read_data = read_data,
+  .iter_push = iter_push,
+  .iter_pop = iter_pop,
+  .get_errmsg = get_errmsg,
+  .destroy = rf_destroy
 };
 
 RIFF_Chunk *

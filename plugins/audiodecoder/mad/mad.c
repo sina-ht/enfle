@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  4 00:43:51 2004.
- * $Id: mad.c,v 1.3 2004/03/03 15:46:36 sian Exp $
+ * Last Modified: Sat Mar  6 12:28:32 2004.
+ * $Id: mad.c,v 1.4 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,12 +35,12 @@ static AudioDecoderStatus decode(AudioDecoder *, Movie *, AudioDevice *, unsigne
 static void destroy(AudioDecoder *);
 
 static AudioDecoderPlugin plugin = {
-  type: ENFLE_PLUGIN_AUDIODECODER,
-  name: "mad",
-  description: "mad Audio Decoder plugin version 0.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_AUDIODECODER,
+  .name = "mad",
+  .description = "mad Audio Decoder plugin version 0.1",
+  .author = "Hiroshi Takekawa",
 
-  init: init
+  .init = init
 };
 
 /*

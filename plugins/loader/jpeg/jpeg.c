@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb  5 23:13:50 2004.
- * $Id: jpeg.c,v 1.23 2004/02/14 05:20:52 sian Exp $
+ * Last Modified: Sat Mar  6 12:18:56 2004.
+ * $Id: jpeg.c,v 1.24 2004/03/06 03:43:36 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -47,14 +47,14 @@ DECLARE_LOADER_PLUGIN_METHODS;
 #define LOADER_JPEG_PLUGIN_DESCRIPTION "JPEG Loader plugin version 0.2.3"
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "JPEG",
-  description: NULL,
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "JPEG",
+  .description = NULL,
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(loader_jpeg)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 26 21:03:16 2002.
- * $Id: mng.c,v 1.21 2002/08/03 05:08:38 sian Exp $
+ * Last Modified: Sat Mar  6 12:15:10 2004.
+ * $Id: mng.c,v 1.22 2004/03/06 03:43:36 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -50,13 +50,13 @@ static PlayerStatus stop_movie(Movie *);
 #define PLAYER_MNG_PLUGIN_DESCRIPTION "MNG Player plugin version 0.1.2"
 
 static PlayerPlugin plugin = {
-  type: ENFLE_PLUGIN_PLAYER,
-  name: "MNG",
-  description: NULL,
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_PLAYER,
+  .name = "MNG",
+  .description = NULL,
+  .author = "Hiroshi Takekawa",
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(player_mng)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 21:08:57 2004.
- * $Id: stream.c,v 1.11 2004/01/19 13:15:51 sian Exp $
+ * Last Modified: Sat Mar  6 11:50:49 2004.
+ * $Id: stream.c,v 1.12 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,20 +42,19 @@ static long dummy_tell(Stream *);
 static int dummy_close(Stream *);
 
 static Stream template = {
-  data: NULL,
-  buffer: NULL,
-  ptr: NULL,
-  buffer_size: 0,
+  .data = NULL,
+  .buffer = NULL,
+  .ptr = NULL,
 
-  transfer: transfer,
-  make_memorystream: make_memorystream,
-  make_fdstream: make_fdstream,
-  make_filestream: make_filestream,
-  read: dummy_read,
-  seek: dummy_seek,
-  tell: dummy_tell,
-  close: dummy_close,
-  destroy: destroy
+  .transfer = transfer,
+  .make_memorystream = make_memorystream,
+  .make_fdstream = make_fdstream,
+  .make_filestream = make_filestream,
+  .read = dummy_read,
+  .seek = dummy_seek,
+  .tell = dummy_tell,
+  .close = dummy_close,
+  .destroy = destroy
 };
 
 Stream *

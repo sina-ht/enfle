@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb 25 00:52:35 2004.
- * $Id: normal.c,v 1.80 2004/02/24 15:55:21 sian Exp $
+ * Last Modified: Sat Mar  6 12:06:32 2004.
+ * $Id: normal.c,v 1.81 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -53,12 +53,12 @@
 static int ui_main(UIData *);
 
 static UIPlugin plugin = {
-  type: ENFLE_PLUGIN_UI,
-  name: "Normal",
-  description: "Normal UI plugin version 0.6.1",
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_UI,
+  .name = "Normal",
+  .description = "Normal UI plugin version 0.6.1",
+  .author = "Hiroshi Takekawa",
 
-  ui_main: ui_main,
+  .ui_main = ui_main,
 };
 
 ENFLE_PLUGIN_ENTRY(ui_normal)

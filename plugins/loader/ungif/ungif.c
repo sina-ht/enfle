@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 10 22:20:18 2002.
- * $Id: ungif.c,v 1.17 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Sat Mar  6 12:18:01 2004.
+ * $Id: ungif.c,v 1.18 2004/03/06 03:43:36 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -44,14 +44,14 @@ DECLARE_LOADER_PLUGIN_METHODS;
 //static const unsigned int types = IMAGE_INDEX;
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "UNGIF",
-  description: "UNGIF Loader plugin version 0.3 with libungif",
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "UNGIF",
+  .description = "UNGIF Loader plugin version 0.3 with libungif",
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(loader_ungif)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Feb 21 15:51:16 2004.
- * $Id: x11ximage.c,v 1.50 2004/02/21 07:49:36 sian Exp $
+ * Last Modified: Sat Mar  6 11:47:27 2004.
+ * $Id: x11ximage.c,v 1.51 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,11 +43,11 @@ static void put_scaled(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int
 static void destroy(X11XImage *);
 
 static X11XImage template = {
-  is_hw_scalable: is_hw_scalable,
-  convert: convert,
-  put: put,
-  put_scaled: put_scaled,
-  destroy: destroy
+  .is_hw_scalable = is_hw_scalable,
+  .convert = convert,
+  .put = put,
+  .put_scaled = put_scaled,
+  .destroy = destroy
 };
 
 X11XImage *

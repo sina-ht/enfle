@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 19:24:44 2004.
- * $Id: fifo.c,v 1.14 2004/01/12 12:11:11 sian Exp $
+ * Last Modified: Sat Mar  6 11:59:31 2004.
+ * $Id: fifo.c,v 1.15 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,16 +43,15 @@ static void invalidate(FIFO *);
 static void destroy(FIFO *);
 
 static FIFO template = {
-  ndata: 0,
-  maxdata: FIFO_DEFAULT_MAXDATA,
-  next_get: NULL,
-  last_put: NULL,
+  .maxdata = FIFO_DEFAULT_MAXDATA,
+  .next_get = NULL,
+  .last_put = NULL,
 
-  put: put,
-  get: get,
-  set_max: set_max,
-  invalidate: invalidate,
-  destroy: destroy
+  .put = put,
+  .get = get,
+  .set_max = set_max,
+  .invalidate = invalidate,
+  .destroy = destroy
 };
 
 FIFO *

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 12 14:02:06 2003.
- * $Id: spi.c,v 1.24 2003/11/08 06:14:50 sian Exp $
+ * Last Modified: Sat Mar  6 11:53:13 2004.
+ * $Id: spi.c,v 1.25 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,25 +62,25 @@ typedef struct _susie_archiver_info {
 } Susie_archiver_info;
 
 static LoaderPlugin loader_template = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: NULL,
-  description: NULL,
-  author: NULL,
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = NULL,
+  .description = NULL,
+  .author = NULL,
+  .image_private = NULL,
 
-  identify: loader_identify,
-  load: loader_load
+  .identify = loader_identify,
+  .load = loader_load
 };
 
 static ArchiverPlugin archiver_template = {
-  type: ENFLE_PLUGIN_ARCHIVER,
-  name: NULL,
-  description: NULL,
-  author: NULL,
-  archiver_private: NULL,
+  .type = ENFLE_PLUGIN_ARCHIVER,
+  .name = NULL,
+  .description = NULL,
+  .author = NULL,
+  .archiver_private = NULL,
 
-  identify: archiver_identify,
-  open: archiver_open
+  .identify = archiver_identify,
+  .open = archiver_open
 };
 
 static LoaderStatus

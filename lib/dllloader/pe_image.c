@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Nov 10 15:52:16 2003.
- * $Id: pe_image.c,v 1.25 2003/11/17 13:59:49 sian Exp $
+ * Last Modified: Sat Mar  6 11:54:21 2004.
+ * $Id: pe_image.c,v 1.26 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,14 +70,14 @@ static void *resolve(PE_image *, const char *);
 static void destroy(PE_image *);
 
 static PE_image template = {
-  filepath: NULL,
-  pe_header: IMAGE_FILE_HEADER_INITIALIZER,
-  sect_headers: NULL,
-  export_symbols: NULL,
-  image: NULL,
-  load: load,
-  resolve: resolve,
-  destroy: destroy
+  .filepath = NULL,
+  .pe_header = IMAGE_FILE_HEADER_INITIALIZER,
+  .sect_headers = NULL,
+  .export_symbols = NULL,
+  .image = NULL,
+  .load = load,
+  .resolve = resolve,
+  .destroy = destroy
 };
 
 PE_image *

@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 19 11:24:26 2002.
- * $Id: gif.c,v 1.2 2002/11/06 14:11:34 sian Exp $
+ * Last Modified: Sat Mar  6 12:19:45 2004.
+ * $Id: gif.c,v 1.3 2004/03/06 03:43:36 sian Exp $
  *
  * NOTE: This file does not include LZW code
  *
@@ -25,14 +25,14 @@
 DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
-  type: ENFLE_PLUGIN_LOADER,
-  name: "GIF",
-  description: "GIF Loader plugin version 0.1",
-  author: "Hiroshi Takekawa",
-  image_private: NULL,
+  .type = ENFLE_PLUGIN_LOADER,
+  .name = "GIF",
+  .description = "GIF Loader plugin version 0.1",
+  .author = "Hiroshi Takekawa",
+  .image_private = NULL,
 
-  identify: identify,
-  load: load
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(loader_gif)

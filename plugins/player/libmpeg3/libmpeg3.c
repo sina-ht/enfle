@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 22:13:43 2004.
- * $Id: libmpeg3.c,v 1.43 2004/01/19 13:19:08 sian Exp $
+ * Last Modified: Sat Mar  6 12:15:28 2004.
+ * $Id: libmpeg3.c,v 1.44 2004/03/06 03:43:36 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -74,12 +74,13 @@ static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
-  type: ENFLE_PLUGIN_PLAYER,
-  name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.5",
-  author: "Hiroshi Takekawa",
-  identify: identify,
-  load: load
+  .type = ENFLE_PLUGIN_PLAYER,
+  .name = "LibMPEG3",
+  .description = "LibMPEG3 Player plugin version 0.5",
+  .author = "Hiroshi Takekawa",
+
+  .identify = identify,
+  .load = load
 };
 
 ENFLE_PLUGIN_ENTRY(player_libmpeg3)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb  5 22:25:30 2003.
- * $Id: bz2.c,v 1.7 2003/02/05 15:22:16 sian Exp $
+ * Last Modified: Sat Mar  6 12:11:01 2004.
+ * $Id: bz2.c,v 1.8 2004/03/06 03:43:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,13 +39,13 @@ DECLARE_STREAMER_PLUGIN_METHODS;
 #define STREAMER_BZ2_PLUGIN_DESCRIPTION "BZ2 Streamer plugin version 0.0.6"
 
 static StreamerPlugin plugin = {
-  type: ENFLE_PLUGIN_STREAMER,
-  name: "BZ2",
-  description: NULL,
-  author: "Hiroshi Takekawa",
+  .type = ENFLE_PLUGIN_STREAMER,
+  .name = "BZ2",
+  .description = NULL,
+  .author = "Hiroshi Takekawa",
 
-  identify: identify,
-  open: open
+  .identify = identify,
+  .open = open
 };
 
 ENFLE_PLUGIN_ENTRY(streamer_bz2)
