@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 05:48:38 2000.
- * $Id: bz2.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sun Sep  2 11:37:37 2001.
+ * $Id: bz2.h,v 1.2 2001/09/02 05:47:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,11 +25,13 @@
 
 /* API functions */
 #ifdef BZAPI_NEEDS_PREFIX
+# define BZLIBVERSION BZ2_bzlibVersion
 # define BZOPEN  BZ2_bzopen
 # define BZREAD  BZ2_bzread
 # define BZERROR BZ2_bzerror
 # define BZCLOSE BZ2_bzclose
 #else
+# define BZLIBVERSION bzlibVersion
 # define BZOPEN  bzopen
 # define BZREAD  bzread
 # define BZERROR bzerror

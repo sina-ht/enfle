@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:08:27 2001.
- * $Id: png.c,v 1.6 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Sun Sep  2 11:11:54 2001.
+ * $Id: png.c,v 1.7 2001/09/02 05:47:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,7 @@
 #include "common.h"
 
 #include "enfle/loader-plugin.h"
+#include "utils/libstring.h"
 
 /* png_jmpbuf() macro is not defined prior to libpng-1.0.6. */
 #ifndef png_jmpbuf
@@ -40,10 +41,12 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.2"
+
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "PNG",
-  description: "PNG Loader plugin version 0.2",
+  description: NULL,
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -54,18 +57,31 @@ void *
 plugin_entry(void)
 {
   LoaderPlugin *lp;
+  String *s;
 
   if ((lp = (LoaderPlugin *)calloc(1, sizeof(LoaderPlugin))) == NULL)
     return NULL;
   memcpy(lp, &plugin, sizeof(LoaderPlugin));
+  s = string_create();
+  string_set(s, LOADER_PNG_PLUGIN_DESCRIPTION);
+  /* 'compiled' means that the version string is compiled in. */
+  string_cat(s, " compiled with libpng " PNG_LIBPNG_VER_STRING);
+  lp->description = strdup(string_get(s));
+  string_destroy(s);
 
   return (void *)lp;
 }
 
+#undef LOADER_PNG_PLUGIN_DESCRIPTION
+
 void
 plugin_exit(void *p)
 {
-  free(p);
+  LoaderPlugin *lp = (LoaderPlugin *)p;
+
+  if (lp->description)
+    free((unsigned char *)lp->description);
+  free(lp);
 }
 
 /* png data source functions */

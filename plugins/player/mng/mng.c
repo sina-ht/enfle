@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 21:46:14 2001.
- * $Id: mng.c,v 1.15 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Sun Sep  2 11:12:12 2001.
+ * $Id: mng.c,v 1.16 2001/09/02 05:47:03 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -29,6 +29,7 @@
 #include "common.h"
 
 #include "enfle/player-plugin.h"
+#include "utils/libstring.h"
 
 typedef struct {
   mng_handle mng;
@@ -46,10 +47,12 @@ DECLARE_PLAYER_PLUGIN_METHODS;
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
+#define PLAYER_MNG_PLUGIN_DESCRIPTION "MNG Player plugin version 0.1.2"
+
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "MNG",
-  description: "MNG Player plugin version 0.1.2",
+  description: NULL,
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -60,10 +63,17 @@ void *
 plugin_entry(void)
 {
   PlayerPlugin *pp;
+  String *s;
 
   if ((pp = (PlayerPlugin *)calloc(1, sizeof(PlayerPlugin))) == NULL)
     return NULL;
   memcpy(pp, &plugin, sizeof(PlayerPlugin));
+  s = string_create();
+  string_set(s, PLAYER_MNG_PLUGIN_DESCRIPTION);
+  /* The version string is fetched dynamically, not statically compiled-in. */
+  string_catf(s, " with libmng %s", mng_version_text());
+  pp->description = strdup(string_get(s));
+  string_destroy(s);
 
   return (void *)pp;
 }
@@ -71,8 +81,14 @@ plugin_entry(void)
 void
 plugin_exit(void *p)
 {
-  free(p);
+  PlayerPlugin *pp = (PlayerPlugin *)p;
+
+  if (pp->description)
+    free((unsigned char *)pp->description);
+  free(pp);
 }
+
+#undef PLAYER_MNG_PLUGIN_DESCRIPTION
 
 /* libmng callbacks */
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 26 02:24:45 2001.
- * $Id: libmpeg2.c,v 1.20 2001/07/29 00:39:41 sian Exp $
+ * Last Modified: Sun Sep  2 11:03:00 2001.
+ * $Id: libmpeg2.c,v 1.21 2001/09/02 05:47:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,7 +60,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.2.1",
+  description: "LibMPEG2 Player plugin version 0.2.1 with integrated libmpeg2(mpeg2dec-0.2.0)",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load

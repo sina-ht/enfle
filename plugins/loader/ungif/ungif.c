@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 29 03:28:52 2001.
- * $Id: ungif.c,v 1.13 2001/07/29 00:40:41 sian Exp $
+ * Last Modified: Sun Sep  2 11:13:39 2001.
+ * $Id: ungif.c,v 1.14 2001/09/02 05:47:04 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -46,7 +46,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "UNGIF",
-  description: "UNGIF Loader plugin version 0.3",
+  description: "UNGIF Loader plugin version 0.3 with libungif",
   author: "Hiroshi Takekawa",
 
   identify: identify,

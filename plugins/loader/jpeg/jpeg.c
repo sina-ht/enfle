@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep  1 01:04:22 2001.
- * $Id: jpeg.c,v 1.12 2001/09/01 18:41:44 sian Exp $
+ * Last Modified: Sun Sep  2 11:09:41 2001.
+ * $Id: jpeg.c,v 1.13 2001/09/02 05:47:04 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -34,6 +34,7 @@
 #include "common.h"
 
 #include "enfle/loader-plugin.h"
+#include "utils/libstring.h"
 
 #if BITS_IN_JSAMPLE != 8
 #  error BITS_IN_JSAMPLE must be 8
@@ -43,10 +44,12 @@ static const unsigned int types = (IMAGE_I420 | IMAGE_RGB24);
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
+#define LOADER_JPEG_PLUGIN_DESCRIPTION "JPEG Loader plugin version 0.2.1"
+
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "JPEG",
-  description: "JPEG Loader plugin version 0.2.1",
+  description: NULL,
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -57,18 +60,31 @@ void *
 plugin_entry(void)
 {
   LoaderPlugin *lp;
+  String *s;
 
   if ((lp = (LoaderPlugin *)calloc(1, sizeof(LoaderPlugin))) == NULL)
     return NULL;
   memcpy(lp, &plugin, sizeof(LoaderPlugin));
+  s = string_create();
+  string_set(s, LOADER_JPEG_PLUGIN_DESCRIPTION);
+  /* 'compiled' means that the version string is compiled in. */
+  string_catf(s, " compiled with libjpeg %02d", JPEG_LIB_VERSION);
+  lp->description = strdup(string_get(s));
+  string_destroy(s);
 
   return (void *)lp;
 }
 
+#undef LOADER_JPEG_PLUGIN_DESCRIPTION
+
 void
 plugin_exit(void *p)
 {
-  free(p);
+  LoaderPlugin *lp = (LoaderPlugin *)p;
+
+  if (lp->description)
+    free((unsigned char *)lp->description);
+  free(lp);
 }
 
 /* jpeg data source functions */

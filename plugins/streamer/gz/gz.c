@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:34:51 2001.
- * $Id: gz.c,v 1.5 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Sun Sep  2 11:35:04 2001.
+ * $Id: gz.c,v 1.6 2001/09/02 05:47:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,14 +31,16 @@
 #include "common.h"
 
 #include "enfle/streamer-plugin.h"
+#include "utils/libstring.h"
 
-static StreamerStatus identify(Stream *, char *);
-static StreamerStatus open(Stream *, char *);
+DECLARE_STREAMER_PLUGIN_METHODS;
+
+#define STREAMER_GZ_PLUGIN_DESCRIPTION "GZ Streamer plugin version 0.1"
 
 static StreamerPlugin plugin = {
   type: ENFLE_PLUGIN_STREAMER,
   name: "GZ",
-  description: "GZ Streamer plugin version 0.1",
+  description: NULL,
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -49,18 +51,31 @@ void *
 plugin_entry(void)
 {
   StreamerPlugin *stp;
+  String *s;
 
   if ((stp = (StreamerPlugin *)calloc(1, sizeof(StreamerPlugin))) == NULL)
     return NULL;
   memcpy(stp, &plugin, sizeof(StreamerPlugin));
+  s = string_create();
+  string_set(s, STREAMER_GZ_PLUGIN_DESCRIPTION);
+  /* 'compiled' means that the version string is compiled in. */
+  string_catf(s, " with zlib %s(compiled with %s)", zlib_version, ZLIB_VERSION);
+  stp->description = strdup(string_get(s));
+  string_destroy(s);
 
   return (void *)stp;
 }
 
+#undef STREAMER_GZ_PLUGIN_DESCRIPTION
+
 void
 plugin_exit(void *p)
 {
-  free(p);
+  StreamerPlugin *stp = (StreamerPlugin *)p;
+
+  if (stp->description)
+    free((unsigned char *)stp->description);
+  free(stp);
 }
 
 /* implementations */
@@ -119,8 +134,7 @@ close(Stream *st)
 
 /* methods */
 
-static StreamerStatus
-identify(Stream *st, char *filepath)
+DEFINE_STREAMER_PLUGIN_IDENTIFY(st, filepath)
 {
   FILE *fp;
   unsigned char buf[2];
@@ -139,8 +153,7 @@ identify(Stream *st, char *filepath)
   return STREAM_OK;
 }
 
-static StreamerStatus
-open(Stream *st, char *filepath)
+DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
 {
   gzFile gzfile;
 

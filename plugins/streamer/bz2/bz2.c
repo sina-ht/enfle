@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 23 15:27:03 2001.
- * $Id: bz2.c,v 1.3 2001/06/24 15:41:36 sian Exp $
+ * Last Modified: Sun Sep  2 11:40:13 2001.
+ * $Id: bz2.c,v 1.4 2001/09/02 05:47:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,16 +30,18 @@
 #include "common.h"
 
 #include "enfle/streamer-plugin.h"
+#include "utils/libstring.h"
 
 #include "bz2.h"
 
-static StreamerStatus identify(Stream *, char *);
-static StreamerStatus open(Stream *, char *);
+DECLARE_STREAMER_PLUGIN_METHODS;
+
+#define STREAMER_BZ2_PLUGIN_DESCRIPTION "BZ2 Streamer plugin version 0.0.5"
 
 static StreamerPlugin plugin = {
   type: ENFLE_PLUGIN_STREAMER,
   name: "BZ2",
-  description: "BZ2 Streamer plugin version 0.0.5",
+  description: NULL,
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -50,18 +52,31 @@ void *
 plugin_entry(void)
 {
   StreamerPlugin *stp;
+  String *s;
 
   if ((stp = (StreamerPlugin *)calloc(1, sizeof(StreamerPlugin))) == NULL)
     return NULL;
   memcpy(stp, &plugin, sizeof(StreamerPlugin));
+  s = string_create();
+  string_set(s, STREAMER_BZ2_PLUGIN_DESCRIPTION);
+  /* The version string is fetched dynamically, not statically compiled-in. */
+  string_catf(s, " with libbz2 %s", BZLIBVERSION());
+  stp->description = strdup(string_get(s));
+  string_destroy(s);
 
   return (void *)stp;
 }
 
+#undef STREAMER_BZ2_PLUGIN_DESCRIPTION
+
 void
 plugin_exit(void *p)
 {
-  free(p);
+  StreamerPlugin *stp = (StreamerPlugin *)p;
+
+  if (stp->description)
+    free((unsigned char *)stp->description);
+  free(stp);
 }
 
 /* for internal use */
@@ -150,8 +165,7 @@ close(Stream *st)
 
 /* methods */
 
-static StreamerStatus
-identify(Stream *st, char *filepath)
+DEFINE_STREAMER_PLUGIN_IDENTIFY(st, filepath)
 {
   FILE *fp;
   unsigned char buf[2];
@@ -170,8 +184,7 @@ identify(Stream *st, char *filepath)
   return STREAM_OK;
 }
 
-static StreamerStatus
-open(Stream *st, char *filepath)
+DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
 {
   BZFILE *bzfile;
 

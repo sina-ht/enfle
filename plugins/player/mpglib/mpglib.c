@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 21:44:11 2001.
- * $Id: mpglib.c,v 1.3 2001/06/22 16:54:12 sian Exp $
+ * Last Modified: Sun Sep  2 11:14:02 2001.
+ * $Id: mpglib.c,v 1.4 2001/09/02 05:47:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,7 +58,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "Mpglib",
-  description: "Mpglib Player plugin version 0.1",
+  description: "Mpglib Player plugin version 0.1 with integrated mpglib",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
