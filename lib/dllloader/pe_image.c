@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 21:52:32 2001.
- * $Id: pe_image.c,v 1.9 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Wed Feb  7 22:08:42 2001.
+ * $Id: pe_image.c,v 1.10 2001/02/07 17:34:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,7 +30,11 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
-#ifdef linux
+#ifndef __i386__
+# error i386 or later required
+#endif
+
+#ifdef __linux__
 # include <asm/ldt.h>
 # include <asm/unistd.h>
 #elif defined(__FreeBSD__)
