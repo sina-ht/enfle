@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 19 21:30:59 2001.
- * $Id: enfle.c,v 1.26 2001/04/20 08:10:47 sian Exp $
+ * Last Modified: Tue Apr 24 14:31:30 2001.
+ * $Id: enfle.c,v 1.27 2001/04/24 16:46:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -222,7 +222,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
       PluginType type;
 
       if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
-	fprintf(stderr, "enfle_plugin_load %s failed.\n", path);
+	warning("enfle_plugin_load %s failed.\n", path);
       } else {
 	nplugins++;
 	nplugins -= check_and_unload(eps, c, type, name);
@@ -232,18 +232,20 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
       PluginType type;
 
       if ((name = spi_load(eps, path, &type)) == NULL) {
-	fprintf(stderr, "spi_load %s failed.\n", path);
+	warning("spi_load %s failed.\n", path);
       } else {
 	nplugins++;
 	nplugins -= check_and_unload(eps, c, type, name);
       }
+#endif
+#if 0
     } else if (ext && !strcasecmp(ext, ".dll")
 	       //	       || !strcasecmp(ext, ".acm")
 	       ) {
       PluginType type;
 
       if ((name = spi_load(eps, path, &type)) == NULL) {
-	fprintf(stderr, "spi_load %s failed.\n", path);
+	warning(stderr, "spi_load %s failed.\n", path);
       } else {
 	nplugins++;
 	nplugins -= check_and_unload(eps, c, type, name);
