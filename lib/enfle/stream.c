@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 14 04:53:46 2000.
- * $Id: stream.c,v 1.3 2000/10/15 07:51:10 sian Exp $
+ * Last Modified: Sat Aug 25 07:29:15 2001.
+ * $Id: stream.c,v 1.4 2001/08/26 00:51:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -317,6 +317,8 @@ make_memorystream(Stream *s, unsigned char *p, int size)
 {
   s->buffer = p;
   s->buffer_size = size;
+
+  s->format = strdup("MEMORY");
   s->read = memorystream_read;
   s->seek = memorystream_seek;
   s->tell = memorystream_tell;
@@ -336,6 +338,7 @@ make_fdstream(Stream *s, int fd)
   s->ptr = s->buffer;
   s->buffer_used = 0;
 
+  s->format = strdup("FD");
   s->read = fdstream_read;
   s->seek = fdstream_seek;
   s->tell = fdstream_tell;
@@ -359,6 +362,7 @@ make_filestream(Stream *s, char *path)
     return 0;
   }
 
+  s->format = strdup("FILE");
   s->read = filestream_read;
   s->seek = filestream_seek;
   s->tell = filestream_tell;
@@ -374,6 +378,8 @@ destroy(Stream *s)
 {
   if (s->close)
     stream_close(s);
+  if (s->format)
+    free(s->format);
   if (s->path)
     free(s->path);
   free(s);
