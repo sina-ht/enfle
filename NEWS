@@ -1,6 +1,15 @@
-NEWS  Last Modified: Mon Jun 25 02:07:11 2001.
+NEWS  Last Modified: Sun Sep  2 14:49:29 2001.
 
-THIS IS DEVELOPING RELEASE.
+THIS IS A DEVELOPING RELEASE.
+
+20010902:
+ Upgraded autoconf to 2.52.
+ Upgraded automake to 1.5.
+ UNGIF player plugin now use Timer instead of delay_usec().
+ UNGIF player plugin parse application extensions,
+  and obey Netscape's loop count extension.
+ Customizable caption.
+ More meaningful cursor switching.
 
 20010625:
  Xv extension support.
