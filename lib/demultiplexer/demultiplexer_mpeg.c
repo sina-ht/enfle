@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Nov 24 01:34:52 2003.
- * $Id: demultiplexer_mpeg.c,v 1.25 2003/11/30 05:49:10 sian Exp $
+ * Last Modified: Fri Dec 26 12:37:36 2003.
+ * $Id: demultiplexer_mpeg.c,v 1.26 2003/12/27 14:25:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,8 +58,8 @@ demultiplexer_mpeg_create(void)
   return demux;
 }  
 
-#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536*2
-#define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536*2
+#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536*4
+#define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536*4
 
 /*
 #define MPEG_USER_DATA 0xb2
