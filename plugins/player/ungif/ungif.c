@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 12:46:00 2001.
- * $Id: ungif.c,v 1.24 2001/10/14 12:35:13 sian Exp $
+ * Last Modified: Sat Nov 17 12:28:21 2001.
+ * $Id: ungif.c,v 1.25 2001/11/17 03:53:01 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -47,13 +47,6 @@ typedef struct _ungif_info {
   unsigned int max_loop_count;
   unsigned int loop_count;
 } UNGIF_info;
-
-typedef enum {
-  _NOTHING_DISPOSAL,
-  _LEFTIMAGE,
-  _RESTOREBACKGROUND,
-  _RESTOREPREVIOUS
-} Disposal;
 
 static const unsigned int types = IMAGE_INDEX;
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:00:06 2001.
- * $Id: image.h,v 1.14 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sat Nov 17 12:17:38 2001.
+ * $Id: image.h,v 1.15 2001/11/17 03:53:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,6 +84,13 @@ typedef struct _image_data {
   Memory *image;
 } ImageData;
 
+typedef enum {
+  _NOTHING_DISPOSAL,
+  _LEFTIMAGE,
+  _RESTOREBACKGROUND,
+  _RESTOREPREVIOUS
+} ImageTransparentDisposal;
+
 typedef struct _image Image;
 struct _image {
   ImageType type;
@@ -95,6 +102,7 @@ struct _image {
   ImageData rendered;
   ImageColor background_color;
   ImageColor transparent_color;
+  ImageTransparentDisposal transparent_disposal;
   Memory *mask;
   unsigned char *comment;
   char *format;
