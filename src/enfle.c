@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 25 14:36:00 2001.
- * $Id: enfle.c,v 1.28 2001/04/25 16:12:15 sian Exp $
+ * Last Modified: Thu Apr 26 17:55:30 2001.
+ * $Id: enfle.c,v 1.29 2001/04/27 01:08:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,6 +36,7 @@
 
 #include "utils/libstring.h"
 #include "utils/libconfig.h"
+#include "utils/misc.h"
 #include "enfle/enfle-plugin.h"
 #include "enfle/ui.h"
 #include "enfle/streamer.h"
@@ -203,7 +204,7 @@ static int
 scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 {
   Archive *a;
-  char *path, *ext, *name;
+  char *path, *ext, *base_name, *name;
   int nplugins = 0;
 #ifdef USE_SPI
   char *tmp;
@@ -218,8 +219,18 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   archive_read_directory(a, plugin_path, 0);
   path = archive_iteration_start(a);
   while (path) {
+    base_name = misc_basename(path);
     ext = strrchr(path, '.');
-    if (ext && !strcasecmp(ext, ".so")) {
+    if (ext && !strcasecmp(ext, ".so") &&
+	!(strncasecmp(base_name, "ui_", 3) &&
+	  strncasecmp(base_name, "video_", 6) &&
+	  strncasecmp(base_name, "audio_", 6) &&
+	  strncasecmp(base_name, "loader_", 7) &&
+	  strncasecmp(base_name, "saver_", 6) &&
+	  strncasecmp(base_name, "player_", 7) &&
+	  strncasecmp(base_name, "streamer_", 9) &&
+	  strncasecmp(base_name, "archiver_", 9) &&
+	  strncasecmp(base_name, "effect_", 7))) {
       PluginType type;
 
       if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
