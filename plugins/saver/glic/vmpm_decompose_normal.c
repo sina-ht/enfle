@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Jul  2 17:45:42 2001.
- * $Id: vmpm_decompose_normal.c,v 1.5 2001/07/02 11:32:00 sian Exp $
+ * Last Modified: Tue Jul 10 22:02:46 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.6 2001/07/10 13:06:43 sian Exp $
  */
 
 #include <stdio.h>
@@ -139,7 +139,7 @@ encode(VMPM *vmpm)
   Arithmodel *am;
   Arithmodel *bin_am;
   unsigned int *symbol_to_index;
-  int i, n;
+  int i, n, match_found;
   unsigned int j;
 
   //debug_message(__FUNCTION__ "()\n");
@@ -161,26 +161,50 @@ encode(VMPM *vmpm)
   arithmodel_install_symbol(bin_am, 1);
   arithmodel_install_symbol(bin_am, 1);
 
+  match_found = 0;
   for (i = vmpm->I; i >= 1; i--) {
     int nsymbols = 0;
 
-    stat_message(vmpm, "Level %d (%d tokens): ", i, vmpm->token_index[i]);
-    arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-    //arithmodel_order_zero_reset(am, 1, vmpm->token_index[i]);
     for (j = 0; j < vmpm->token_index[i]; j++) {
       Token *t = vmpm->token[i][j];
       Token_value tv = t->value - 1;
 
       if (nsymbols == tv) {
-	stat_message(vmpm, "e ");
 	nsymbols++;
       } else {
-	stat_message(vmpm, "%d ", tv);
+	match_found++;
+	break;
       }
-
-      arithmodel_encode(am, t->value - 1);
     }
-    stat_message(vmpm, "\n");
+    if (match_found) {
+      stat_message(vmpm, "Match found at Level %d\n", i);
+      break;
+    }
+  }
+      
+  fprintf(vmpm->outfile, "%c", i);
+  if (match_found) {
+    for (; i >= 1; i--) {
+      int nsymbols = 0;
+
+      stat_message(vmpm, "Level %d (%d tokens): ", i, vmpm->token_index[i]);
+      arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
+      //arithmodel_order_zero_reset(am, 1, vmpm->token_index[i]);
+      for (j = 0; j < vmpm->token_index[i]; j++) {
+	Token *t = vmpm->token[i][j];
+	Token_value tv = t->value - 1;
+
+	if (nsymbols == tv) {
+	  stat_message(vmpm, "e ");
+	  nsymbols++;
+	} else {
+	  stat_message(vmpm, "%d ", tv);
+	}
+
+	arithmodel_encode(am, t->value - 1);
+      }
+      stat_message(vmpm, "\n");
+    }
   }
 
   if ((symbol_to_index = malloc(vmpm->alphabetsize * sizeof(unsigned int))) == NULL)
@@ -189,15 +213,19 @@ encode(VMPM *vmpm)
 
   n = 0;
   arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
-  stat_message(vmpm, "Level 0: %d\n", vmpm->token_index[0]);
+  stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
+      stat_message(vmpm, "e ");
       arithmodel_encode(am, n);
       symbol_to_index[(int)vmpm->token[0][j]] = n++;
       arithmodel_encode_bits(bin_am, (int)vmpm->token[0][j], vmpm->bits_per_symbol, 0, 1);
-    } else
+    } else {
+      stat_message(vmpm, "%d ", symbol_to_index[(int)vmpm->token[0][j]]);
       arithmodel_encode(am, symbol_to_index[(int)vmpm->token[0][j]]);
+    }
   }
+  stat_message(vmpm, "\n");
   free(symbol_to_index);
 
   arithmodel_encode_final(bin_am);
