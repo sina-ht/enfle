@@ -1,10 +1,10 @@
 /*
  * tar.c -- tar archiver plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:29:14 2001.
- * $Id: tar.c,v 1.3 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Sat Aug 25 05:25:29 2001.
+ * $Id: tar.c,v 1.4 2001/08/25 21:08:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ DECLARE_ARCHIVER_PLUGIN_METHODS;
 static ArchiverPlugin plugin = {
   type: ENFLE_PLUGIN_ARCHIVER,
   name: "TAR",
-  description: "TAR Archiver plugin version 0.0.5",
+  description: "TAR Archiver plugin version 0.0.6",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -149,19 +149,19 @@ tar_open(Archive *arc, Stream *st, char *path)
     return 0;
 
   if (!stream_seek(arc->st, ti->offset, _SET) < 0) {
-    show_message("tar_open: %s (at %ld %d bytes): seek failed.\n", ti->path, ti->offset, ti->size);
+    show_message(__FUNCTION__ ": %s (at %ld %d bytes): seek failed.\n", ti->path, ti->offset, ti->size);
     return 0;
   }
 
-  debug_message("tar_open: path %s offset %ld size %d\n", ti->path, ti->offset, ti->size);
+  debug_message(__FUNCTION__ ": path %s offset %ld size %d\n", ti->path, ti->offset, ti->size);
 
   if ((p = calloc(1, ti->size)) == NULL) {
-    show_message("tar_open: No enough memory.\n");
+    show_message(__FUNCTION__ ": No enough memory.\n");
     return 0;
   }
   if ((have_read = stream_read(arc->st, p, ti->size)) != ti->size) {
     free(p);
-    show_message("tar_open: No enough data(%d read, %d requested). Corrupted archive?\n", have_read, ti->size);
+    show_message(__FUNCTION__ ": No enough data(%d read, %d requested). Corrupted archive?\n", have_read, ti->size);
     return 0;
   }
 
@@ -173,6 +173,8 @@ tar_destroy(Archive *arc)
 {
   stream_destroy(arc->st);
   hash_destroy(arc->filehash, 1);
+  if (arc->path)
+    free(arc->path);
   free(arc);
 };
 
@@ -214,17 +216,17 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
     case '\0':
     case '0':
       if ((ti = calloc(1, sizeof(TarInfo))) == NULL) {
-	show_message("tar: open: No enough memory\n");
+	show_message("tar: " __FUNCTION__ ": No enough memory\n");
 	return OPEN_ERROR;
       }
       ti->path = strdup(th.name);
       ti->size = size;
       ti->offset = stream_tell(st);
-      debug_message("tar: add %s at %ld (%d bytes)\n", ti->path, ti->offset, ti->size);
+      debug_message("tar: " __FUNCTION__ ": add %s at %ld (%d bytes)\n", ti->path, ti->offset, ti->size);
       archive_add(a, th.name, (void *)ti);
       break;
     default:
-      debug_message("tar: ignore %s\n", th.name);
+      debug_message("tar: " __FUNCTION__ ": ignore %s\n", th.name);
       break;
     }
     if (size) {
@@ -232,13 +234,14 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
       if (size & 0x1ff)
 	nrecord++;
       if (!stream_seek(st, nrecord << 9, _CUR)) {
-	show_message("tar: open: Seek failed (name = %s, size = %d, nrecord = %d)\n",
+	show_message("tar: " __FUNCTION__ ": Seek failed (name = %s, size = %d, nrecord = %d)\n",
 		     th.name, size, nrecord);
 	return OPEN_ERROR;
       }
     }
   }
 
+  a->path = strdup(st->path);
   a->st = stream_transfer(st);
   a->open = tar_open;
   a->destroy = tar_destroy;
