@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 14:47:01 2004.
- * $Id: kernel32.c,v 1.25 2004/04/18 06:24:03 sian Exp $
+ * Last Modified: Thu Apr 29 15:57:54 2004.
+ * $Id: kernel32.c,v 1.26 2004/04/29 19:12:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#define MORE_DEBUG
+#undef MORE_DEBUG
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,16 +43,16 @@
 #include "common.h"
 #include "utils/cpucaps.h"
 
-#ifdef USE_PTHREAD
+#if defined(USE_PTHREAD)
 #  include <pthread.h>
 #endif
 
-#ifdef MORE_DEBUG
-#define more_debug_message(format, args...)
-#define more_debug_message_fn(format, args...)
-#else
+#if defined(MORE_DEBUG)
 #define more_debug_message(format, args...) fprintf(stderr, format, ## args)
 #define more_debug_message_fn(format, args...) fprintf(stderr, "%s", __FUNCTION__);fprintf(stderr, format, ## args)
+#else
+#define more_debug_message(format, args...)
+#define more_debug_message_fn(format, args...)
 #endif
 
 /* file related */
@@ -1319,7 +1319,7 @@ DEFINE_W32API(void, InitializeCriticalSection,
 {
   CSPrivate *csp;
 
-  debug_message_fn("(%p)\n", cs);
+  more_debug_message_fn("(%p)\n", cs);
 
   if ((csp = calloc(1, sizeof(*csp))) == NULL)
     return;
@@ -1336,7 +1336,7 @@ DEFINE_W32API(void, EnterCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message_fn("(%p)\n", cs);
+  more_debug_message_fn("(%p)\n", cs);
 
   if (csp->is_locked)
 #ifdef USE_PTHREAD
@@ -1359,7 +1359,7 @@ DEFINE_W32API(void, LeaveCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message_fn("(%p)\n", cs);
+  more_debug_message_fn("(%p)\n", cs);
 
   if (csp->is_locked) {
 #ifdef USE_PTHREAD
@@ -1376,7 +1376,7 @@ DEFINE_W32API(void, DeleteCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message_fn("(%p)\n", cs);
+  more_debug_message_fn("(%p)\n", cs);
 
 #ifdef USE_PTHREAD
   pthread_mutex_destroy(&csp->mutex);

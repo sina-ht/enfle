@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 15:40:10 2004.
- * $Id: dmo.c,v 1.3 2004/04/18 06:41:04 sian Exp $
+ * Last Modified: Thu Apr 29 15:57:07 2004.
+ * $Id: dmo.c,v 1.4 2004/04/29 19:12:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -145,7 +145,7 @@ CMediaBuffer_SetLength(IMediaBuffer *This, unsigned long cbLength)
 {
   CMediaBuffer *cmb = (CMediaBuffer *)This;
 
-  debug_message_fn("(%p, %ld)\n", This, cbLength);
+  //debug_message_fn("(%p, %ld)\n", This, cbLength);
 
   if (cbLength > cmb->maxlen)
     return E_INVALIDARG;
@@ -159,7 +159,7 @@ CMediaBuffer_GetMaxLength(IMediaBuffer* This, unsigned long *pcbMaxLength)
 {
   CMediaBuffer *cmb = (CMediaBuffer *)This;
 
-  debug_message_fn("(%p): maxlen = %ld\n", This, cmb->maxlen);
+  //debug_message_fn("(%p): maxlen = %ld\n", This, cmb->maxlen);
 
   if (!pcbMaxLength)
     return E_POINTER;
@@ -173,7 +173,7 @@ CMediaBuffer_GetBufferAndLength(IMediaBuffer *This, char **ppBuffer, unsigned lo
 {
   CMediaBuffer *cmb = (CMediaBuffer *)This;
 
-  debug_message_fn("(%p): mem = %p, len = %ld\n", This, cmb->mem, cmb->len);
+  //debug_message_fn("(%p): mem = %p, len = %ld\n", This, cmb->mem, cmb->len);
 
   if (!ppBuffer && !pcbLength)
     return E_POINTER;
@@ -188,7 +188,7 @@ CMediaBuffer_GetBufferAndLength(IMediaBuffer *This, char **ppBuffer, unsigned lo
 static void
 CMediaBuffer_Destroy(CMediaBuffer *This)
 {
-  debug_message_fn("(%p)\n", This);
+  //debug_message_fn("(%p)\n", This);
 
   if (This->freemem)
     free(This->mem);
@@ -232,7 +232,7 @@ CMediaBuffer_AddRef(IUnknown *This)
 {
   CMediaBuffer *me = (CMediaBuffer *)This;
 
-  debug_message_fn("(%p): ref = %d\n", This, me->refcount);
+  //debug_message_fn("(%p): ref = %d\n", This, me->refcount);
 
   return ++(me->refcount);
 }
@@ -242,7 +242,7 @@ CMediaBuffer_Release(IUnknown *This)
 {
   CMediaBuffer *me = (CMediaBuffer *)This;
 
-  debug_message_fn("(%p): new ref = %d\n", This, me->refcount - 1);
+  //debug_message_fn("(%p): new ref = %d\n", This, me->refcount - 1);
 
   if(--(me->refcount) == 0)
     CMediaBuffer_Destroy(me);
@@ -295,7 +295,7 @@ CMediaBufferCreate(unsigned long maxlen, void *mem, unsigned long len, int copy)
   This->interfaces[0] = iid_iunknown;
   This->interfaces[1] = iid_imb;
 
-  debug_message_fn("(maxlen = %ld, mem = %p, len = %ld, copy = %d) -> %p\n", maxlen, mem, len, copy, This);
+  //debug_message_fn("(maxlen = %ld, mem = %p, len = %ld, copy = %d) -> %p\n", maxlen, mem, len, copy, This);
 
   return This;
 }
@@ -314,7 +314,7 @@ vd_decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned i
   if (buf == NULL)
     return VD_NEED_MORE_DATA;
 
-  debug_message_fn("(%p,buf = %p, len = %d, is_key = %d)\n", vdec, buf, len, is_key);
+  //debug_message_fn("(%p,buf = %p, len = %d, is_key = %d)\n", vdec, buf, len, is_key);
 
   mb = CMediaBufferCreate(len, (void *)buf, len, 0);
   *used_r = len;
