@@ -1,10 +1,10 @@
 /*
  * fourcc.h -- Four Character Codes
- * (C)Copyright 2002, 2003 by Hiroshi Takekawa
+ * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  4 15:43:18 2004.
- * $Id: fourcc.h,v 1.6 2004/01/05 09:53:12 sian Exp $
+ * Last Modified: Tue Feb 10 22:35:03 2004.
+ * $Id: fourcc.h,v 1.7 2004/02/14 05:28:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,6 +24,10 @@
 #define _FOURCC_H
 
 #define FCC(a,b,c,d) ((((((d << 8) | c) << 8) | b) << 8) | a)
+
+/*
+ * Video Codecs
+ */
 
 // image formats
 #define FCC_YUY2 FCC('Y', 'U', 'Y', '2')
@@ -126,5 +130,24 @@
 #define FCC_FFV1 FCC('F', 'F', 'V', '1')
 #define FCC_Xxan FCC('X', 'x', 'a', 'n')
 #define FCC_cvid FCC('c', 'v', 'i', 'd')
+
+/*
+ * Audio Codecs
+ */
+
+#define WAVEFORMAT_TAG_PCM         0x01
+#define WAVEFORMAT_TAG_MS_ADPCM    0x02
+#define WAVEFORMAT_TAG_IMA_ADPCM   0x11
+#define WAVEFORMAT_TAG_MS_GSM_6_10 0x31
+#define WAVEFORMAT_TAG_MSN_Audio   0x32
+#define WAVEFORMAT_TAG_MP1         0x50
+#define WAVEFORMAT_TAG_MP2         0x50
+#define WAVEFORMAT_TAG_MP3         0x55
+#define WAVEFORMAT_TAG_Voxware     0x75
+#define WAVEFORMAT_TAG_Acelp       0x130
+#define WAVEFORMAT_TAG_DivX_WMA0   0x160
+#define WAVEFORMAT_TAG_DivX_WMA1   0x161
+#define WAVEFORMAT_TAG_IMC         0x401
+#define WAVEFORMAT_TAG_AC3         0x2000
 
 #endif
