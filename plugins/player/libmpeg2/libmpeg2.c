@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb  7 21:28:38 2001.
- * $Id: libmpeg2.c,v 1.3 2001/02/07 17:32:18 sian Exp $
+ * Last Modified: Mon Feb 19 22:44:30 2001.
+ * $Id: libmpeg2.c,v 1.4 2001/02/19 16:40:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,9 +22,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpeg2/mpeg2.h"
+#include <inttypes.h>
 #include "video_out.h"
 #include "video_out_internal.h"
+#include "yuv2rgb.h"
 
 #define REQUIRE_STRING_H
 #include "compat.h"
@@ -93,133 +94,188 @@ plugin_exit(void *p)
 
 /* vo stuff start */
 
-/* prepare video_out_enfle */
-static LIBVO_EXTERN(enfle)
+typedef struct enfle_frame_s {
+  vo_frame_t vo;
+  uint8_t *rgb_ptr;
+  int rgb_stride;
+  int yuv_stride;
+} enfle_frame_t;
 
-static vo_info_t vo_info = 
-{
-  "Enfle player plugin output",
-  "enfle",
-  "Hiroshi Takekawa <sian@big.or.jp>",
-  "This output routines are dedicated to Enfle player plugin."
-};
+typedef struct enfle_instance_s {
+  VideoWindow *vw;
+  Movie *m;
+  Image *p;
+  vo_instance_t vo;
+  int prediction_index;
+  vo_frame_t * frame_ptr[3];
+  enfle_frame_t frame[3];
+  uint8_t * rgbdata;
+  int rgbstride;
+  int width;
+  int bpp;
+} enfle_instance_t;
 
-static uint32_t image_width, image_height;
-
-/*
- * title: string for titlebar of window. May be disregarded if there
- *        is no such thing as a window to your driver. Make a copy of
- *        this string, if you need it.
- * format: desired fourCC code to use for image buffers
- * return: zero on successful initialization, non-zero on error.
- */
-static uint32_t
-init(int width, int height, int fullscreen, char *title, uint32_t format)
-{
-  image_width = width;
-  image_height = height;
-  show_message(__FUNCTION__ ": %d x %d (%s): %s\n", width, height, format, title);
-  return 0;
-}
-
-static const vo_info_t*
-get_info(void)
-{
-  show_message(__FUNCTION__ "() called\n");
-  return &vo_info;
-}
-
-/*
- * Update a section of the offscreen buffer. A "slice" is an area of
- * the video image that is 16 rows of pixels at the width of the video
- * image.  Position (0, 0) is the upper left corner of slice #0 (the
- * first slice), and position (0, 15) is the lower right. The next
- * slice, #1, is bounded by (0, 16) and (0, 31), and so on.
- *
- * Note that slices are not drawn directly to the screen, and should
- * be buffered until your implementation of display_flip_page() (see
- * below) is called.
- *
- * This may get called very rapidly, so the more efficient you can
- * make your implementation of this function, the better.
- *
- * *src[]: see display_frame(), above. The data passed in this * array
- *         is just what enough data to contain the * new slice, and
- *         NOT the entire frame.
- * slice_num: The index of the slice. Starts at 0, not 1.
- * return: zero on successful rendering, non-zero on error.  The
- *         program will probably respond to an error condition by
- *         terminating.
- */
-static uint32_t
-draw_slice(uint8_t *src[], int slice_num)
-{
-  show_message(__FUNCTION__ ": %d\n", slice_num);
-  return 0;
-}
-
-/*
- * Draw the current image buffer to the screen. There may be several
- * display_slice() calls before display_flip_page() is used. Note that
- * display_frame does an implicit page flip, so you might or might not
- * want to call this internally from your display_frame()
- * implementation.
- *
- * This may get called very rapidly, so the more efficient you can
- * make your implementation of this function, the better.
- */
 static void
-flip_page(void)
+enfle_draw_frame(vo_frame_t *frame)
 {
-  show_message(__FUNCTION__ "() called\n");
+  enfle_instance_t *instance = (enfle_instance_t *)frame->instance;
+  VideoWindow *vw = instance->vw;
+  Movie *m = instance->m;
+  Image *p = instance->p;
+
+  m->render_frame(vw, m, p);
 }
 
-/*
- * Display a new frame of the video to the screen. This may get called
- * very rapidly, so the more efficient you can make your
- * implementation of this function, the better.
- *
- * *src[]: An array with three elements. This is a YUV * stream, with
- *         the Y plane in src[0], U in src[1], * and V in
- *         src[2]. There is enough data for an image * that is (WxH)
- *         pixels, where W and H are the width * and height parameters
- *         that were previously passed * to display_init().  *
- *         Information on the YUV format can be found at:
- *         http://www.webartz.com/fourcc/fccyuv.htm#IYUV
- *
- * return: zero on successful rendering, non-zero on error.  The
- *         program will probably respond to an error condition by
- *         terminating.
- */
-static uint32_t
-draw_frame(uint8_t *src[])
+static int
+enfle_setup(vo_instance_t *instance, int width, int height)
 {
-  show_message(__FUNCTION__ "() called\n");
-  return 0;
+  return libvo_common_alloc_frames(instance, width, height,
+				   sizeof(enfle_frame_t),
+				   NULL, NULL, enfle_draw_frame);
 }
 
-/*
- * Allocate an image buffer. This may allow, for some drivers, some
- * bonus acceleration (like AGP-based transfers, etc...). If nothing
- * else, implementing this as a simple wrapper over malloc() is
- * acceptable.  This memory must be system memory as it will be read
- * often.  The image will have the format set when we init the
- * display.
- *
- * return: NULL if unable to allocate, ptr to new surface
- */
-static vo_image_buffer_t* 
-allocate_image_buffer()
+vo_instance_t *
+vo_enfle_open(void)
 {
-  show_message(__FUNCTION__ "() called\n");
-  return allocate_image_buffer_common(image_height,image_width,0x32315659);
+  enfle_instance_t *instance;
+
+  if ((instance = malloc(sizeof (enfle_instance_t))) == NULL)
+    return NULL;
+
+  instance->vo.setup = enfle_setup;
+  instance->vo.close = libvo_common_free_frames;
+  instance->vo.get_frame = libvo_common_get_frame;
+
+  return (vo_instance_t *)instance;
 }
 
-static void	
-free_image_buffer(vo_image_buffer_t* image)
+static void
+enfle_copy_slice(vo_frame_t *frame, uint8_t **src)
 {
-  show_message(__FUNCTION__ "() called\n");
-  free_image_buffer_common(image);
+}
+
+static int
+enfleslice_setup(vo_instance_t *instance, int width, int height)
+{
+  return libvo_common_alloc_frames(instance, width, height,
+				   sizeof(enfle_frame_t),
+				   enfle_copy_slice, NULL, enfle_draw_frame);
+}
+
+vo_instance_t *
+vo_enfleslice_open(void)
+{
+  enfle_instance_t *instance;
+
+  if ((instance = malloc(sizeof(enfle_instance_t))) == NULL)
+    return NULL;
+
+  instance->vo.setup = enfleslice_setup;
+  instance->vo.close = libvo_common_free_frames;
+  instance->vo.get_frame = libvo_common_get_frame;
+
+  return (vo_instance_t *)instance;
+}
+
+static vo_frame_t *
+rgb_get_frame (vo_instance_t *_instance, int flags)
+{
+  enfle_instance_t *instance;
+  enfle_frame_t *frame;
+
+  instance = (enfle_instance_t *)_instance;
+  frame = (enfle_frame_t *)libvo_common_get_frame ((vo_instance_t *)instance, flags);
+
+  frame->rgb_ptr = instance->rgbdata;
+  frame->rgb_stride = instance->rgbstride;
+  frame->yuv_stride = instance->width;
+  if ((flags & VO_TOP_FIELD) == 0)
+    frame->rgb_ptr += frame->rgb_stride;
+  if ((flags & VO_BOTH_FIELDS) != VO_BOTH_FIELDS) {
+    frame->rgb_stride <<= 1;
+    frame->yuv_stride <<= 1;
+  }
+
+  return (vo_frame_t *)frame;
+}
+
+static void
+rgb_copy_slice(vo_frame_t *_frame, uint8_t **src)
+{
+  enfle_frame_t *frame;
+  enfle_instance_t *instance;
+
+  frame = (enfle_frame_t *)_frame;
+  instance = (enfle_instance_t *)frame->vo.instance;
+
+  yuv2rgb(frame->rgb_ptr, src[0], src[1], src[2], instance->width, 16,
+	  frame->rgb_stride, frame->yuv_stride, frame->yuv_stride >> 1);
+  frame->rgb_ptr += frame->rgb_stride << 4;
+}
+
+static void
+rgb_field (vo_frame_t *_frame, int flags)
+{
+  enfle_frame_t *frame;
+  enfle_instance_t *instance;
+
+  frame = (enfle_frame_t *)_frame;
+  instance = (enfle_instance_t *)frame->vo.instance;
+
+  frame->rgb_ptr = instance->rgbdata;
+  if ((flags & VO_TOP_FIELD) == 0)
+    frame->rgb_ptr += instance->rgbstride;
+}
+
+static int
+enflergb_setup(vo_instance_t *_instance, int width, int height)
+{
+  enfle_instance_t *instance;
+
+  instance = (enfle_instance_t *)_instance;
+
+  instance->width = width;
+  instance->rgbstride = width * instance->bpp / 8;
+  instance->rgbdata = malloc(instance->rgbstride * height);
+
+  yuv2rgb_init(instance->bpp, MODE_RGB);
+
+  return libvo_common_alloc_frames((vo_instance_t *)instance,
+				   width, height, sizeof(enfle_frame_t),
+				   rgb_copy_slice, rgb_field,
+				   enfle_draw_frame);
+}
+
+vo_instance_t *
+vo_enflergb16_open(void)
+{
+  enfle_instance_t *instance;
+
+  if ((instance = malloc(sizeof(enfle_instance_t))) == NULL)
+    return NULL;
+
+  instance->vo.setup = enflergb_setup;
+  instance->vo.close = libvo_common_free_frames;
+  instance->vo.get_frame = rgb_get_frame;
+  instance->bpp = 16;
+
+  return (vo_instance_t *)instance;
+}
+
+vo_instance_t *
+vo_enflergb32_open(void)
+{
+  enfle_instance_t *instance;
+
+  if ((instance = malloc(sizeof(enfle_instance_t))) == NULL)
+    return NULL;
+
+  instance->vo.setup = enflergb_setup;
+  instance->vo.close = libvo_common_free_frames;
+  instance->vo.get_frame = rgb_get_frame;
+  instance->bpp = 32;
+
+  return (vo_instance_t *)instance;
 }
 
 /* vo stuff end */
