@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Sun Feb  4 20:02:20 2001.
+     Last Modified: Sat Feb 10 19:46:42 2001.
 
  This file is part of Enfle.
 
@@ -85,8 +85,8 @@ JPEG: jpegsrc-6b (libjpeg)
 PNG: libpng-1.0.2 or later (recommended: 1.0.9)
 gz: zlib-1.1.3 or later
 bz2: bzip2-1.0.0 or later
-ungif: libungif-3.1.0 or later (recommended: 4.1.0)
-mng: libmng
+ungif: libungif-3.1.0 or later (recommended: 4.1.0 or later)
+mng: libmng-1.0.0
 mpeg: libmpeg3 or mpeg_lib(needs patch)
 avi: avifile(may need cvs version)
 
