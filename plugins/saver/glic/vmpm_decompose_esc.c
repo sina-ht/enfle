@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_esc.c -- ESC estimatation method A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Aug  3 18:01:54 2001.
- * $Id: vmpm_decompose_esc.c,v 1.3 2001/08/04 12:54:47 sian Exp $
+ * Last Modified: Mon Aug  6 02:14:09 2001.
+ * $Id: vmpm_decompose_esc.c,v 1.4 2001/08/06 04:59:29 sian Exp $
  */
 
 #include <stdio.h>
@@ -185,7 +185,7 @@ encode(VMPM *vmpm)
       break;
     }
   }
-      
+
   fprintf(vmpm->outfile, "%c", i);
   if (match_found) {
     for (; i >= 1; i--) {
