@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- High-Low decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri May  4 20:40:35 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.4 2001/05/04 12:09:04 sian Exp $
+ * Last Modified: Wed May 23 14:06:15 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.5 2001/05/23 12:13:15 sian Exp $
  */
 
 #include <stdio.h>
@@ -140,6 +140,8 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 {
   VMPMDecomposer_HighLow *d = (VMPMDecomposer_HighLow *)vmpm->method_private;
   int i;
+
+  debug_message(__FUNCTION__ ": nlowbits = %d\n", vmpm->nlowbits);
 
   if (d->buffer_low)
     free(d->buffer_low);

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.2 2001/04/27 11:03:50 sian Exp $
+# $Id: Makefile.am,v 1.3 2001/05/23 12:13:14 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -23,6 +23,9 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib -I$(HOME)/work/m1/arith/src/libar
 saver_glic_la_LDFLAGS = -avoid-version -module -export-dynamic
 saver_glic_la_SOURCES = \
 	glic.c \
+	predict.c predict.h \
+	scan.c scan.h \
+	floorlog2.c floorlog2.h \
 	vmpm_decompose.c vmpm_decompose.h \
 	vmpm_error.c vmpm_error.h
 
