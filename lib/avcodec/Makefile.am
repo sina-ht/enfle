@@ -1,11 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Jan 18 15:43:24 2004.
-# $Id: Makefile.am,v 1.6 2004/01/18 07:11:26 sian Exp $
+# Last Modified: Wed Jan 28 01:44:53 2004.
+# $Id: Makefile.am,v 1.7 2004/01/30 12:35:11 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
 endif
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 EXTRA_DIST = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c i386/mpegvideo_mmx_template.c \

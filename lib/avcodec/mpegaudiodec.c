@@ -318,6 +318,11 @@ static int decode_init(AVCodecContext * avctx)
     static int init=0;
     int i, j, k;
 
+    if(avctx->antialias_algo == FF_AA_INT)
+        s->compute_antialias= compute_antialias_integer;
+    else
+        s->compute_antialias= compute_antialias_float;
+
     if (!init && !avctx->parse_only) {
         /* scale factors table for layer 1/2 */
         for(i=0;i<64;i++) {
@@ -395,17 +400,13 @@ static int decode_init(AVCodecContext * avctx)
         }
 
 	/* compute n ^ (4/3) and store it in mantissa/exp format */
-	{
-	  int8_t **table_4_3_exp_p = &table_4_3_exp;
-	  uint16_t **table_4_3_value_p = &table_4_3_value;
-
-	  if (!av_mallocz_static(table_4_3_exp_p,
-				 TABLE_4_3_SIZE * sizeof(table_4_3_exp[0])))
+	if (!av_mallocz_static(&table_4_3_exp,
+			       TABLE_4_3_SIZE * sizeof(table_4_3_exp[0])))
 	    return -1;
-	  if (!av_mallocz_static(table_4_3_value_p,
-				 TABLE_4_3_SIZE * sizeof(table_4_3_value[0])))
+	if (!av_mallocz_static(&table_4_3_value,
+			       TABLE_4_3_SIZE * sizeof(table_4_3_value[0])))
             return -1;
-	}
+        
         int_pow_init();
         for(i=1;i<TABLE_4_3_SIZE;i++) {
             int e, m;
@@ -467,10 +468,6 @@ static int decode_init(AVCodecContext * avctx)
             }
         }
 
-        if(avctx->antialias_algo == FF_AA_INT)
-            s->compute_antialias= compute_antialias_integer;
-        else
-            s->compute_antialias= compute_antialias_float;
         for(i=0;i<8;i++) {
             float ci, cs, ca;
             ci = ci_table[i];

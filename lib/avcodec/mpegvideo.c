@@ -795,6 +795,14 @@ int MPV_encode_init(AVCodecContext *avctx)
         av_log(avctx, AV_LOG_ERROR, "closed gop with scene change detection arent supported yet\n");
         return -1;
     }
+
+    i= ff_gcd(avctx->frame_rate, avctx->frame_rate_base);
+    if(i > 1){
+        av_log(avctx, AV_LOG_INFO, "removing common factors from framerate\n");
+        avctx->frame_rate /= i;
+        avctx->frame_rate_base /= i;
+//        return -1;
+    }
     
     if(s->codec_id==CODEC_ID_MJPEG){
         s->intra_quant_bias= 1<<(QUANT_BIAS_SHIFT-1); //(a + x/2)/x
@@ -3834,9 +3842,9 @@ static void encode_picture(MpegEncContext *s, int picture_number)
                 s->me.dia_size= s->avctx->pre_dia_size;
 
                 for(mb_y=s->mb_height-1; mb_y >=0 ; mb_y--) {
+                    s->mb_y = mb_y;
                     for(mb_x=s->mb_width-1; mb_x >=0 ; mb_x--) {
                         s->mb_x = mb_x;
-                        s->mb_y = mb_y;
                         ff_pre_estimate_p_frame_motion(s, mb_x, mb_y);
                     }
                 }
@@ -3846,13 +3854,13 @@ static void encode_picture(MpegEncContext *s, int picture_number)
 
         s->me.dia_size= s->avctx->dia_size;
         for(mb_y=0; mb_y < s->mb_height; mb_y++) {
+            s->mb_y = mb_y;
             s->block_index[0]= s->block_wrap[0]*(mb_y*2 + 1) - 1;
             s->block_index[1]= s->block_wrap[0]*(mb_y*2 + 1);
             s->block_index[2]= s->block_wrap[0]*(mb_y*2 + 2) - 1;
             s->block_index[3]= s->block_wrap[0]*(mb_y*2 + 2);
             for(mb_x=0; mb_x < s->mb_width; mb_x++) {
                 s->mb_x = mb_x;
-                s->mb_y = mb_y;
                 s->block_index[0]+=2;
                 s->block_index[1]+=2;
                 s->block_index[2]+=2;
@@ -3867,9 +3875,6 @@ static void encode_picture(MpegEncContext *s, int picture_number)
         }
     }else /* if(s->pict_type == I_TYPE) */{
         /* I-Frame */
-        //FIXME do we need to zero them?
-        memset(s->current_picture.motion_val[0][0], 0, sizeof(int16_t)*(s->mb_width*2 + 2)*(s->mb_height*2 + 2)*2);
-        memset(s->p_mv_table   , 0, sizeof(int16_t)*(s->mb_stride)*s->mb_height*2);
         for(i=0; i<s->mb_stride*s->mb_height; i++)
             s->mb_type[i]= CANDIDATE_MB_TYPE_INTRA;
         
@@ -4026,6 +4031,8 @@ static void encode_picture(MpegEncContext *s, int picture_number)
         break;
     case FMT_H264:
         break;
+    default:
+        assert(0);
     }
     bits= get_bit_count(&s->pb);
     s->header_bits= bits - s->last_bits;

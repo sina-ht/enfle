@@ -1130,6 +1130,8 @@ void h263_encode_mb(MpegEncContext * s,
                 s->misc_bits++;
                 s->last_bits++;
             }
+            s->skip_count++;
+
             return;
         }
         put_bits(&s->pb, 1, 0);	/* mb coded */
@@ -2032,7 +2034,7 @@ static void h263_encode_block(MpegEncContext * s, DCTELEM * block, int n)
         if (level == 128) //FIXME check rv10
             put_bits(&s->pb, 8, 0xff);
         else
-            put_bits(&s->pb, 8, level & 0xff);
+            put_bits(&s->pb, 8, level);
         i = 1;
     } else {
         i = 0;
@@ -2102,7 +2104,7 @@ static void h263_encode_block(MpegEncContext * s, DCTELEM * block, int n)
                 
                 assert(slevel != 0);
 
-                if(slevel < 128 && slevel > -128) 
+                if(level < 128) 
                     put_bits(&s->pb, 8, slevel & 0xff);
                 else{
                     put_bits(&s->pb, 8, 128);
@@ -2110,8 +2112,7 @@ static void h263_encode_block(MpegEncContext * s, DCTELEM * block, int n)
                     put_bits(&s->pb, 6, (slevel>>5)&0x3f);
                 }
               }else{
-                    if(slevel < 64 && slevel > -64) {
-                        /* 7-bit level */
+                if(level < 64) { // 7-bit level
                         put_bits(&s->pb, 1, 0);
                         put_bits(&s->pb, 1, last);
                         put_bits(&s->pb, 6, run);
@@ -2172,11 +2173,18 @@ void ff_set_mpeg4_time(MpegEncContext * s, int picture_number){
 
 static void mpeg4_encode_gop_header(MpegEncContext * s){
     int hours, minutes, seconds;
+    int64_t time;
     
     put_bits(&s->pb, 16, 0);
     put_bits(&s->pb, 16, GOP_STARTCODE);
     
-    seconds= s->time/s->time_increment_resolution;
+    if(s->current_picture_ptr->pts){
+        time= FFMIN(s->reordered_input_picture[1]->pts, s->current_picture_ptr->pts);
+        time= (time*s->time_increment_resolution + 500*1000)/(1000*1000);
+    }else
+        time= av_rescale(s->current_picture_ptr->coded_picture_number*(int64_t)s->avctx->frame_rate_base, s->time_increment_resolution, s->avctx->frame_rate);
+
+    seconds= time/s->time_increment_resolution;
     minutes= seconds/60; seconds %= 60;
     hours= minutes/60; minutes %= 60;
     hours%=24;
@@ -2186,8 +2194,10 @@ static void mpeg4_encode_gop_header(MpegEncContext * s){
     put_bits(&s->pb, 1, 1);
     put_bits(&s->pb, 6, seconds);
     
-    put_bits(&s->pb, 1, 0); //closed gov == NO
+    put_bits(&s->pb, 1, !!(s->flags&CODEC_FLAG_CLOSED_GOP)); 
     put_bits(&s->pb, 1, 0); //broken link == NO
+    
+    s->last_time_base= time / s->time_increment_resolution; 
 
     ff_mpeg4_stuffing(&s->pb);
 }

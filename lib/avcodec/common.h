@@ -18,6 +18,10 @@
 //#define A32_BITSTREAM_READER
 #define LIBMPEG2_BITSTREAM_READER_HACK //add BERO
 
+#ifndef M_PI
+#define M_PI    3.14159265358979323846
+#endif
+
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
 //#    include "config.h"
@@ -42,10 +46,6 @@
 #    ifndef ENODATA
 #        define ENODATA  61
 #    endif
-
-#ifndef M_PI
-#define M_PI    3.14159265358979323846
-#endif
 
 #include <stddef.h>
 #ifndef offsetof
@@ -106,6 +106,10 @@ extern const struct AVOption avoptions_workaround_bug[11];
         typedef unsigned long long uint64_t;
 #   endif /* other OS */
 #endif /* HAVE_INTTYPES_H */
+
+#ifndef INT64_MAX
+#define INT64_MAX 9223372036854775807LL
+#endif
 
 #ifdef EMULATE_FAST_INT
 /* note that we don't emulate 64bit ints */
@@ -1018,23 +1022,31 @@ static inline int av_log2_16bit(unsigned int v)
     return n;
 }
 
-
 /* median of 3 */
 static inline int mid_pred(int a, int b, int c)
 {
-    int vmin, vmax;
-    vmax = vmin = a;
-    if (b < vmin)
-        vmin = b;
-    else
-	vmax = b;
+#if 0
+    int t= (a-b)&((a-b)>>31);
+    a-=t;
+    b+=t;
+    b-= (b-c)&((b-c)>>31);
+    b+= (a-b)&((a-b)>>31);
 
-    if (c < vmin)
-        vmin = c;
-    else if (c > vmax)
-        vmax = c;
-
-    return a + b + c - vmin - vmax;
+    return b;
+#else
+    if(a>b){
+        if(c>b){
+            if(c>a) b=a;
+            else    b=c;
+        }
+    }else{
+        if(b>c){
+            if(c>a) b=c;
+            else    b=a;
+        }
+    }
+    return b;
+#endif
 }
 
 static inline int clip(int a, int amin, int amax)
