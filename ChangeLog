@@ -1,3 +1,8 @@
+2003-12-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2/libmpeg2.c: Increased fifo size for
+	vstream, avoiding dead-lock.
+
 2003-12-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/demultiplexer/demultiplexer_avi.c: Skip unknown chunk.
