@@ -1,8 +1,10 @@
 /*
  * idct_mmx.c
- * Copyright (C) 1999-2001 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
+ * Copyright (C) 2000-2002 Michel Lespinasse <walken@zoy.org>
+ * Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *
  * This file is part of mpeg2dec, a free MPEG-2 video stream decoder.
+ * See http://libmpeg2.sourceforge.net/ for updates.
  *
  * mpeg2dec is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +20,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include "compat.h"
+#include "common.h"
 
 #ifdef __i386__
 
@@ -655,13 +660,13 @@ static void block_add (int16_t * block, uint8_t * dest, int stride)
 declare_idct (mmxext_idct, mmxext_table,
 	      mmxext_row_head, mmxext_row, mmxext_row_tail, mmxext_row_mid)
 
-void idct_block_copy_mmxext (int16_t * block, uint8_t * dest, int stride)
+void mpeg2_idct_copy_mmxext (int16_t * block, uint8_t * dest, int stride)
 {
     mmxext_idct (block);
     block_copy (block, dest, stride);
 }
 
-void idct_block_add_mmxext (int16_t * block, uint8_t * dest, int stride)
+void mpeg2_idct_add_mmxext (int16_t * block, uint8_t * dest, int stride)
 {
     mmxext_idct (block);
     block_add (block, dest, stride);
@@ -671,32 +676,31 @@ void idct_block_add_mmxext (int16_t * block, uint8_t * dest, int stride)
 declare_idct (mmx_idct, mmx_table,
 	      mmx_row_head, mmx_row, mmx_row_tail, mmx_row_mid)
 
-void idct_block_copy_mmx (int16_t * block, uint8_t * dest, int stride)
+void mpeg2_idct_copy_mmx (int16_t * block, uint8_t * dest, int stride)
 {
     mmx_idct (block);
     block_copy (block, dest, stride);
 }
 
-void idct_block_add_mmx (int16_t * block, uint8_t * dest, int stride)
+void mpeg2_idct_add_mmx (int16_t * block, uint8_t * dest, int stride)
 {
     mmx_idct (block);
     block_add (block, dest, stride);
 }
 
-
-void idct_mmx_init (void)
+void mpeg2_idct_mmx_init (void)
 {
-    extern uint8_t scan_norm[64];
-    extern uint8_t scan_alt[64];
+    extern uint8_t mpeg2_scan_norm[64];
+    extern uint8_t mpeg2_scan_alt[64];
     int i, j;
 
     /* the mmx/mmxext idct uses a reordered input, so we patch scan tables */
 
     for (i = 0; i < 64; i++) {
-	j = scan_norm[i];
-	scan_norm[i] = (j & 0x38) | ((j & 6) >> 1) | ((j & 1) << 2);
-	j = scan_alt[i];
-	scan_alt[i] = (j & 0x38) | ((j & 6) >> 1) | ((j & 1) << 2);
+	j = mpeg2_scan_norm[i];
+	mpeg2_scan_norm[i] = (j & 0x38) | ((j & 6) >> 1) | ((j & 1) << 2);
+	j = mpeg2_scan_alt[i];
+	mpeg2_scan_alt[i] = (j & 0x38) | ((j & 6) >> 1) | ((j & 1) << 2);
     }
 }
 

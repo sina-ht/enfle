@@ -1,8 +1,9 @@
 /*
  * motion_comp_mlib.c
- * Copyright (C) 2000-2001 Håkan Hjort <d95hjort@dtek.chalmers.se>
+ * Copyright (C) 2000-2002 Håkan Hjort <d95hjort@dtek.chalmers.se>
  *
  * This file is part of mpeg2dec, a free MPEG-2 video stream decoder.
+ * See http://libmpeg2.sourceforge.net/ for updates.
  *
  * mpeg2dec is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +20,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "compat.h"
+#include "common.h"
+
 #ifdef LIBMPEG2_MLIB
 
-#include <inttypes.h>
 #include <mlib_types.h>
 #include <mlib_status.h>
 #include <mlib_sys.h>
 #include <mlib_video.h>
+#include <inttypes.h>
 
 #include "mpeg2_internal.h"
 
-static void MC_put_16_mlib (uint8_t * dest, uint8_t * ref,
-			    int stride, int height)
+static void MC_put_o_16_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 16) 
 	mlib_VideoCopyRef_U8_U8_16x16 (dest, ref, stride);
@@ -38,8 +42,8 @@ static void MC_put_16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoCopyRef_U8_U8_16x8 (dest, ref, stride);
 }
 
-static void MC_put_x16_mlib (uint8_t * dest, uint8_t * ref,
-			     int stride, int height)
+static void MC_put_x_16_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 16)
 	mlib_VideoInterpX_U8_U8_16x16 (dest, ref, stride, stride);
@@ -47,8 +51,8 @@ static void MC_put_x16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpX_U8_U8_16x8 (dest, ref, stride, stride);
 }
 
-static void MC_put_y16_mlib (uint8_t * dest, uint8_t * ref,
-			     int stride, int height)
+static void MC_put_y_16_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 16)
 	mlib_VideoInterpY_U8_U8_16x16 (dest, ref, stride, stride);
@@ -56,8 +60,8 @@ static void MC_put_y16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpY_U8_U8_16x8 (dest, ref, stride, stride);
 }
 
-static void MC_put_xy16_mlib (uint8_t * dest, uint8_t * ref,
-			      int stride, int height)
+static void MC_put_xy_16_mlib (uint8_t * dest, uint8_t * ref,
+			       int stride, int height)
 {
     if (height == 16)
 	mlib_VideoInterpXY_U8_U8_16x16 (dest, ref, stride, stride);
@@ -65,8 +69,8 @@ static void MC_put_xy16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpXY_U8_U8_16x8 (dest, ref, stride, stride);
 }
 
-static void MC_put_8_mlib (uint8_t * dest, uint8_t * ref,
-			   int stride, int height)
+static void MC_put_o_8_mlib (uint8_t * dest, uint8_t * ref,
+			     int stride, int height)
 {
     if (height == 8)
 	mlib_VideoCopyRef_U8_U8_8x8 (dest, ref, stride);
@@ -74,8 +78,8 @@ static void MC_put_8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoCopyRef_U8_U8_8x4 (dest, ref, stride);
 }
 
-static void MC_put_x8_mlib (uint8_t * dest, uint8_t * ref,
-			    int stride, int height)
+static void MC_put_x_8_mlib (uint8_t * dest, uint8_t * ref,
+			     int stride, int height)
 {
     if (height == 8)
 	mlib_VideoInterpX_U8_U8_8x8 (dest, ref, stride, stride);
@@ -83,8 +87,8 @@ static void MC_put_x8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpX_U8_U8_8x4 (dest, ref, stride, stride);
 }
 
-static void MC_put_y8_mlib (uint8_t * dest, uint8_t * ref,
-			    int stride, int height)
+static void MC_put_y_8_mlib (uint8_t * dest, uint8_t * ref,
+			     int stride, int height)
 {
     if (height == 8)
 	mlib_VideoInterpY_U8_U8_8x8 (dest, ref, stride, stride);
@@ -92,8 +96,8 @@ static void MC_put_y8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpY_U8_U8_8x4 (dest, ref, stride, stride);
 }
 
-static void MC_put_xy8_mlib (uint8_t * dest, uint8_t * ref,
-			     int stride, int height)
+static void MC_put_xy_8_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 8) 
 	mlib_VideoInterpXY_U8_U8_8x8 (dest, ref, stride, stride);
@@ -101,8 +105,8 @@ static void MC_put_xy8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpXY_U8_U8_8x4 (dest, ref, stride, stride);
 }
 
-static void MC_avg_16_mlib (uint8_t * dest, uint8_t * ref,
-			    int stride, int height)
+static void MC_avg_o_16_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 16)
 	mlib_VideoCopyRefAve_U8_U8_16x16 (dest, ref, stride);
@@ -110,8 +114,8 @@ static void MC_avg_16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoCopyRefAve_U8_U8_16x8 (dest, ref, stride);
 }
 
-static void MC_avg_x16_mlib (uint8_t * dest, uint8_t * ref,
-			     int stride, int height)
+static void MC_avg_x_16_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 16)
 	mlib_VideoInterpAveX_U8_U8_16x16 (dest, ref, stride, stride);
@@ -119,8 +123,8 @@ static void MC_avg_x16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpAveX_U8_U8_16x8 (dest, ref, stride, stride);
 }
 
-static void MC_avg_y16_mlib (uint8_t * dest, uint8_t * ref,
-			     int stride, int height)
+static void MC_avg_y_16_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 16)
 	mlib_VideoInterpAveY_U8_U8_16x16 (dest, ref, stride, stride);
@@ -128,8 +132,8 @@ static void MC_avg_y16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpAveY_U8_U8_16x8 (dest, ref, stride, stride);
 }
 
-static void MC_avg_xy16_mlib (uint8_t * dest, uint8_t * ref,
-			      int stride, int height)
+static void MC_avg_xy_16_mlib (uint8_t * dest, uint8_t * ref,
+			       int stride, int height)
 {
     if (height == 16)
 	mlib_VideoInterpAveXY_U8_U8_16x16 (dest, ref, stride, stride);
@@ -137,8 +141,8 @@ static void MC_avg_xy16_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpAveXY_U8_U8_16x8 (dest, ref, stride, stride);
 }
 
-static void MC_avg_8_mlib (uint8_t * dest, uint8_t * ref,
-			   int stride, int height)
+static void MC_avg_o_8_mlib (uint8_t * dest, uint8_t * ref,
+			     int stride, int height)
 {
     if (height == 8)
 	mlib_VideoCopyRefAve_U8_U8_8x8 (dest, ref, stride);
@@ -146,8 +150,8 @@ static void MC_avg_8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoCopyRefAve_U8_U8_8x4 (dest, ref, stride);
 }
 
-static void MC_avg_x8_mlib (uint8_t * dest, uint8_t * ref,
-			    int stride, int height)
+static void MC_avg_x_8_mlib (uint8_t * dest, uint8_t * ref,
+			     int stride, int height)
 {
     if (height == 8)
 	mlib_VideoInterpAveX_U8_U8_8x8 (dest, ref, stride, stride);
@@ -155,8 +159,8 @@ static void MC_avg_x8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpAveX_U8_U8_8x4 (dest, ref, stride, stride);
 }
 
-static void MC_avg_y8_mlib (uint8_t * dest, uint8_t * ref,
-			    int stride, int height)
+static void MC_avg_y_8_mlib (uint8_t * dest, uint8_t * ref,
+			     int stride, int height)
 {
     if (height == 8)
 	mlib_VideoInterpAveY_U8_U8_8x8 (dest, ref, stride, stride);
@@ -164,8 +168,8 @@ static void MC_avg_y8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpAveY_U8_U8_8x4 (dest, ref, stride, stride);
 }
 
-static void MC_avg_xy8_mlib (uint8_t * dest, uint8_t * ref,
-			     int stride, int height)
+static void MC_avg_xy_8_mlib (uint8_t * dest, uint8_t * ref,
+			      int stride, int height)
 {
     if (height == 8)
 	mlib_VideoInterpAveXY_U8_U8_8x8 (dest, ref, stride, stride);
@@ -173,6 +177,6 @@ static void MC_avg_xy8_mlib (uint8_t * dest, uint8_t * ref,
 	mlib_VideoInterpAveXY_U8_U8_8x4 (dest, ref, stride, stride);
 }
 
-MOTION_COMP_EXTERN (mlib)
+MPEG2_MC_EXTERN (mlib)
 
 #endif
