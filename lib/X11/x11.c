@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Aug 19 21:45:38 2002.
- * $Id: x11.c,v 1.20 2002/08/19 12:51:35 sian Exp $
+ * Last Modified: Sun Jan  4 16:19:11 2004.
+ * $Id: x11.c,v 1.21 2004/01/05 09:52:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,6 +69,11 @@ x11_create(void)
 }
 
 #ifdef USE_XV
+//#define more_debug_message_fnc debug_message_fnc
+//#define more_debug_message debug_message
+#define more_debug_message_fnc(f, a...)
+#define more_debug_message(f, a...)
+
 static void
 get_xvinfo(X11 *x11)
 {
@@ -104,33 +109,33 @@ get_xvinfo(X11 *x11)
       unsigned int i, j, k;
 
       for (i = 0; i < xv->nadaptors; i++) {
-	debug_message_fnc("Xv: adaptor#%d[%s]: %ld ports\n", i, adaptor_infos[i].name, adaptor_infos[i].num_ports);
-	debug_message_fnc("Xv:  operations: ");
+	more_debug_message_fnc("Xv: adaptor#%d[%s]: %ld ports\n", i, adaptor_infos[i].name, adaptor_infos[i].num_ports);
+	more_debug_message_fnc("Xv:  operations: ");
 	is_putimage = 0;
 	switch (adaptor_infos[i].type & (XvInputMask | XvOutputMask)) {
 	case XvInputMask:
 	  if (adaptor_infos[i].type & XvVideoMask)
-	    debug_message("PutVideo ");
+	    more_debug_message("PutVideo ");
 	  if (adaptor_infos[i].type & XvStillMask)
-	    debug_message("PutStill ");
+	    more_debug_message("PutStill ");
 	  if (adaptor_infos[i].type & XvImageMask) {
 	    is_putimage = 1;
-	    debug_message("PutImage ");
+	    more_debug_message("PutImage ");
 	  }
 	  break;
 	case XvOutputMask:
 	  if (adaptor_infos[i].type & XvVideoMask) 
-	    debug_message("GetVideo ");
+	    more_debug_message("GetVideo ");
 	  if (adaptor_infos[i].type & XvStillMask) 
-	    debug_message("GetStill ");
+	    more_debug_message("GetStill ");
 	  break;
 	default:
-	  debug_message("None");
+	  more_debug_message("None");
 	  break;
 	}
-	debug_message("\n");
+	more_debug_message("\n");
 	if (!is_putimage) {
-	  debug_message("Xv: No PutImage operation...\n");
+	  more_debug_message("Xv: No PutImage operation...\n");
 	  continue;
 	}
 #if 0
@@ -139,13 +144,13 @@ get_xvinfo(X11 *x11)
 #endif
 	/* XXX: Information of the last port is only stored. */
 	for (j = 0; j < adaptor_infos[i].num_ports; j++) {
-	  debug_message_fnc("Xv:  port#%d(%ld)\n", j, adaptor_infos[i].base_id + j);
+	  more_debug_message_fnc("Xv:  port#%d(%ld)\n", j, adaptor_infos[i].base_id + j);
 	  if ((result = XvQueryEncodings(x11_display(x11),
 					 adaptor_infos[i].base_id + j,
 					 &nencodings,
 					 &encoding_infos)) == Success) {
 	    for (k = 0; k < nencodings; k++) {
-	      debug_message_fnc("Xv:   encoding#%d[%s] (%ld x %ld)\n", k, encoding_infos[k].name, encoding_infos[k].width, encoding_infos[k].height);
+	      more_debug_message_fnc("Xv:   encoding#%d[%s] (%ld x %ld)\n", k, encoding_infos[k].name, encoding_infos[k].width, encoding_infos[k].height);
 	      xv->image_width  = encoding_infos[k].width;
 	      xv->image_height = encoding_infos[k].height;
 
@@ -160,11 +165,11 @@ get_xvinfo(X11 *x11)
 		int m, c;
 		char name[5] = { 0, 0, 0, 0, 0 };
 
-		debug_message_fnc("Xv:    format#%d[", l);
+		more_debug_message_fnc("Xv:    format#%d[", l);
 		memcpy(name, &formats[l].id, 4);
 		for (m = 0; m < 4; m++)
-		  debug_message("%c", isprint(name[m]) ? name[m] : '.');
-		debug_message("]: %d bpp %d planes type %s %s %s ",
+		  more_debug_message("%c", isprint(name[m]) ? name[m] : '.');
+		more_debug_message("]: %d bpp %d planes type %s %s %s ",
 			      formats[l].bits_per_pixel,
 			      formats[l].num_planes,
 			      formats[l].type == XvRGB ? "RGB" : "YUV",
@@ -227,7 +232,7 @@ get_xvinfo(X11 *x11)
 		} else {
 		  //debug_message("unsupported");
 		}
-		debug_message("\n");
+		more_debug_message("\n");
 #if 0
 		if (formats[l].type == XvRGB) {
 		  debug_message_fnc("Xv: %d RGB mask %04X,%04X,%04X\n", formats[l].depth, formats[l].red_mask, formats[l].green_mask, formats[l].blue_mask);
