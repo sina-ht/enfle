@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 14 05:25:03 2000.
- * $Id: Xlib.c,v 1.7 2000/10/15 07:47:39 sian Exp $
+ * Last Modified: Sun Oct 15 21:45:13 2000.
+ * $Id: Xlib.c,v 1.8 2000/10/15 13:03:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -170,7 +170,6 @@ render_image(UIData *uidata, Image *p)
   /* convert image so that X can display it. So far, alpha will be ignored. */
   x11ximage_convert_image(ximage, p);
 
-  debug_message("converted type: %s\n", image_type_to_string(p->type));
   debug_message("x order %s\n", ximage->byte_order == MSBFirst ? "MSB" : "LSB");
 
   XPutImage(x11_display(info->x11), info->pix, info->gc, ximage, 0, 0, 0, 0, p->width, p->height);
