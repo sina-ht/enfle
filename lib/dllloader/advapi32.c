@@ -1,0 +1,90 @@
+/*
+ * advapi32.c -- implementation of routines in advapi32.dll
+ */
+
+#include "w32api.h"
+#include "module.h"
+
+#include "advapi32.h"
+
+#include "common.h"
+
+DECLARE_W32API(DWORD, RegOpenKeyExA, (HKEY, LPCSTR, DWORD, REGSAM, LPHKEY));
+DECLARE_W32API(DWORD, RegCloseKey, (HKEY));
+DECLARE_W32API(DWORD, RegCreateKeyExA, (HKEY, LPCSTR, DWORD, LPSTR, DWORD, REGSAM, SECURITY_ATTRIBUTES *, LPHKEY, LPDWORD));
+DECLARE_W32API(DWORD, RegDeleteKeyA, (HKEY, LPCSTR));
+DECLARE_W32API(DWORD, RegQueryValueExA, (HKEY, LPCSTR, LPDWORD, LPDWORD, LPBYTE, LPDWORD));
+DECLARE_W32API(DWORD, RegSetValueExA, (HKEY, LPCSTR, DWORD, DWORD, CONST BYTE *, DWORD));
+
+static void unknown_symbol(void);
+
+static Symbol_info symbol_infos[] = {
+  { "RegOpenKeyExA", RegOpenKeyExA },
+  { "RegCloseKey", RegCloseKey },
+  { "RegCreateKeyExA", RegCreateKeyExA },
+  { "RegDeleteKeyA", RegDeleteKeyA },
+  { "RegQueryValueExA", RegQueryValueExA },
+  { "RegSetValueExA", RegSetValueExA },
+  { NULL, unknown_symbol }
+};
+
+DEFINE_W32API(DWORD, RegOpenKeyExA,
+	      (HKEY handle, LPCSTR name, DWORD reserved, REGSAM access, LPHKEY key_return))
+{
+  debug_message("RegOpenKeyExA(%s) called\n", name);
+  return 0;
+}
+
+DEFINE_W32API(DWORD, RegCloseKey,
+	      (HKEY handle))
+{
+  debug_message("RegCloseKey() called\n");
+  return 1;
+}
+
+DEFINE_W32API(DWORD, RegCreateKeyExA,
+	      (HKEY handle, LPCSTR name, DWORD reserved, LPSTR class, DWORD options,
+	       REGSAM access, SECURITY_ATTRIBUTES *sa, LPHKEY key_return, LPDWORD dispos))
+{
+  debug_message("RegCreateKeyExA(%s) called\n", name);
+  return 1;
+}
+
+DEFINE_W32API(DWORD, RegDeleteKeyA, (HKEY handle, LPCSTR name))
+{
+  debug_message("RegCreateKeyExA(%s) called\n", name);
+  return 1;
+}
+
+DEFINE_W32API(DWORD, RegQueryValueExA,
+	      (HKEY handle, LPCSTR name, LPDWORD reserved, LPDWORD type,
+	       LPBYTE data, LPDWORD count))
+{
+  debug_message("RegQueryValueExA(%s) called\n", name);
+  return 1;
+}
+
+DEFINE_W32API(DWORD, RegSetValueExA,
+	      (HKEY handle, LPCSTR name, DWORD reserved, DWORD type,
+	       CONST BYTE *data, DWORD count))
+{
+  debug_message("RegSetValueExA(%s) called\n", name);
+  return 1;
+}
+
+/* unimplemened */
+
+static void
+unknown_symbol(void)
+{
+  show_message("unknown symbol in advapi32 called\n");
+}
+
+/* export */
+
+Symbol_info *
+advapi32_get_export_symbols(void)
+{
+  module_register("advapi32.dll", symbol_infos);
+  return symbol_infos;
+}
