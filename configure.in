@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000-03 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Nov 16 22:46:07 2003.
-dnl $Id: configure.in,v 1.122 2003/11/17 14:01:47 sian Exp $
+dnl Last Modified: Sun Dec  7 02:11:27 2003.
+dnl $Id: configure.in,v 1.123 2003/12/08 01:44:49 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20031116, sian@big.or.jp)
+AC_INIT(enfle, 20031207, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -50,12 +50,16 @@ AC_PROG_LIBTOOL
 dnl Checks for libraries.
 if test -d /usr/local/lib; then
   LDFLAGS="$LDFLAGS -L/usr/local/lib"
-  AC_MSG_CHECKING(if /usr/local/include has already been specified)
-  if echo | cpp -v 2>&1 | grep "/usr/local/include" > /dev/null; then
-    AC_MSG_RESULT(yes)
+  if test "${CC}" = "icc"; then
+      CPPFLAGS="$CPPFLAGS -I/usr/local/include"
   else
-    AC_MSG_RESULT(no, added)
-    CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+    AC_MSG_CHECKING(if /usr/local/include has already been specified)
+    if echo | cpp -v 2>&1 | grep "/usr/local/include" > /dev/null; then
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_RESULT(no, added)
+      CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+    fi
   fi
 fi
 
@@ -581,9 +585,6 @@ AC_SUBST(enfle_player_plugindir)
 AC_SUBST(enfle_streamer_plugindir)
 AC_SUBST(enfle_ui_plugindir)
 AC_SUBST(enfle_video_plugindir)
-
-dnl with dmalloc
-AM_WITH_DMALLOCTH
 
 dnl do not put this line at earlier position to avoid confusing configure script.
 if test "$CC" = "gcc"; then
