@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 02:05:53 2002.
- * $Id: common.h,v 1.23 2002/02/17 19:32:58 sian Exp $
+ * Last Modified: Thu Jul 25 21:49:30 2002.
+ * $Id: common.h,v 1.24 2002/08/02 13:55:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,6 +41,9 @@
 #define warning(format, args...) printf("Warning: " format, ## args)
 #define warning_fn(format, args...) printf("Warning: %s" format, __FUNCTION__ , ## args)
 #define warning_fnc(format, args...) printf("Warning: %s: " format, __FUNCTION__ , ## args)
+#define err_message(format, args...) fprintf(stderr, "Error: " format, ## args)
+#define err_message_fn(format, args...) fprintf(stderr, "Error: %s" format, __FUNCTION__ , ## args)
+#define err_message_fnc(format, args...) fprintf(stderr, "Error: %s: " format, __FUNCTION__ , ## args)
 
 #ifdef REQUIRE_FATAL
 #include <stdarg.h>
@@ -57,7 +60,7 @@ fatal(int code, const char *format, ...)
 
   exit(code);
 }
-#define bug(code, format, args...) fatal(code, "BUG: " format, ## args)
+#define bug(code, format, args...) fatal(code, "BUG[%s:%s]: " format, __FILE__, __FUNCTION__ , ## args)
 #endif
 
 #ifdef REQUIRE_FATAL_PERROR
