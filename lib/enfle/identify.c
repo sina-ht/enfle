@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep  1 01:03:51 2001.
- * $Id: identify.c,v 1.5 2001/09/01 18:41:37 sian Exp $
+ * Last Modified: Sat Oct 13 00:50:36 2001.
+ * $Id: identify.c,v 1.6 2001/10/14 12:31:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,12 +42,12 @@
 
 /* The fourth argument 'a' can be NULL. */
 int
-identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a)
+identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a, Config *c)
 {
   struct stat statbuf;
 
   if (!a || strcmp(a->format, "NORMAL") == 0) {
-    char *fullpath;
+    char *fullpath, *tmp;
 
     if (strcmp(path, "-") == 0) {
       stream_make_fdstream(s, dup(0));
@@ -70,14 +70,19 @@ identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a)
       free(fullpath);
       return IDENTIFY_FILE_NOTREG;
     }
-    if (streamer_identify(eps, s, fullpath)) {
-      debug_message("Stream identified as %s.\n", s->format);
-      if (!streamer_open(eps, s, s->format, fullpath)) {
-	show_message("Stream %s[%s] cannot open.\n", s->format, fullpath);
-	free(fullpath);
-	return IDENTIFY_FILE_SOPEN_FAILED;
+    if ((tmp = config_get_str(c, "/enfle/identify/streamer/disabled")) == NULL ||
+	strcasecmp(tmp, "yes") != 0) {
+      if (streamer_identify(eps, s, fullpath)) {
+	debug_message("Stream identified as %s.\n", s->format);
+	if (!streamer_open(eps, s, s->format, fullpath)) {
+	  show_message("Stream %s[%s] cannot open.\n", s->format, fullpath);
+	  free(fullpath);
+	  return IDENTIFY_FILE_SOPEN_FAILED;
+	}
+	return IDENTIFY_FILE_STREAM;
       }
-    } else if (!stream_make_filestream(s, fullpath)) {
+    }
+    if (!stream_make_filestream(s, fullpath)) {
       show_message("Stream NORMAL[%s] cannot open.\n", fullpath);
       free(fullpath);
       return IDENTIFY_FILE_SOPEN_FAILED;
