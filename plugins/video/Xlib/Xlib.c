@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:51:56 2000.
- * $Id: Xlib.c,v 1.1 2000/10/20 18:09:03 sian Exp $
+ * Last Modified: Fri Nov  3 04:25:41 2000.
+ * $Id: Xlib.c,v 1.2 2000/11/02 19:34:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -166,8 +166,12 @@ static int
 close_video(void *data)
 {
   Xlib_info *p = (Xlib_info *)data;
+  int f;
 
-  return x11_close(p->x11);
+  f = x11_close(p->x11);
+  free(p);
+
+  return f;
 }
 
 static VideoWindow *
@@ -377,6 +381,7 @@ destroy_window(VideoWindow *vw)
   x11window_unmap(xw);
   x11window_destroy(xw);
 
+  free(xwi);
   free(vw);
 
   return 1;
