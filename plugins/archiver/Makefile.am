@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Wed Sep 20 10:58:55 2000.
-# $Id: Makefile.am,v 1.1 2000/09/30 17:36:36 sian Exp $
+# Last Modified: Sat Oct  5 23:46:19 2002.
+# $Id: Makefile.am,v 1.2 2002/10/05 17:18:56 sian Exp $
 
-SUBDIRS = tar
+SUBDIRS = tar arc
