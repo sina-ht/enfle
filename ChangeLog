@@ -1,3 +1,18 @@
+2000-12-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/video.h, plugins/ui/normal/normal.c,
+	plugins/video/Xlib/Xlib.c: Improved caption implementation.
+
+	* lib/enfle/video-plugin.h: open_window() now accepts Config
+	object as an argument.
+
+	* lib/enfle/memory.c: Memory reuse code clean up.
+
+	* src/enfle.rc: One more configuration example.
+
+	* lib/X11/x11ximage.c: Avoid using nasm code when
+	ximage->bytes_per_line != w * 2.
+
 2000-12-10  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.c, lib/enfle/image.[ch],
