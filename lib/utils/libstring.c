@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 01:54:37 2000.
- * $Id: libstring.c,v 1.4 2000/10/20 18:10:48 sian Exp $
+ * Last Modified: Sun Oct 29 02:55:28 2000.
+ * $Id: libstring.c,v 1.5 2000/10/28 19:07:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -170,6 +170,7 @@ cat_ch(String *s, unsigned char c)
   if (!buffer_increase(s, 1))
     return 0;
   string_buffer(s)[string_length(s)] = c;
+  string_buffer(s)[string_length(s) + 1] = '\0';
   string_length(s)++;
 
   return 1;
