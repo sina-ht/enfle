@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Feb 15 02:44:11 2002.
-# $Id: Makefile.am,v 1.4 2002/02/14 19:19:43 sian Exp $
+# Last Modified: Tue Jul  9 23:57:22 2002.
+# $Id: Makefile.am,v 1.5 2002/08/03 05:10:51 sian Exp $
 
-SUBDIRS = jpeg png bmp ungif pcx pnm xbm xpm
+SUBDIRS = jpeg png bmp ungif pcx pnm xbm xpm gif
