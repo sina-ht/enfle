@@ -1,3 +1,37 @@
+2000-12-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/Makefile.am, lib/enfle/enfle-plugintype.h:
+	New audio plugin.
+
+	* plugins/player/libmpeg3/libmpeg3.c, plugins/ui/normal/normal.c,
+	src/enfle.c, src/enfle.rc: New audio plugin support.
+
+	* plugins/player/mpeg_lib/mpeg_lib.c: Request memory as normal.
+
+	* lib/enfle/ui-extra.h: Added audio plugin.
+
+	* lib/enfle/movie.c, lib/enfle/movie.h: Pass config and audio
+	plugin.
+
+	* plugins/audio/oss/Makefile.am, plugins/audio/oss/oss.c: New OSS
+	Audio plugin.
+
+	* lib/enfle/audio-plugin.h, lib/enfle/audio.h,
+	plugins/audio/Makefile.am: New OSS audio plugin.
+
+	* lib/X11/x11ximage.c: Fixed rendering bug.
+
+2000-12-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: More caption message.
+
+	* lib/enfle/movie.h, plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mng/mng.c, plugins/player/mpeg_lib/mpeg_lib.c,
+	plugins/player/ungif/ungif.c: Enable magnified movie
+	rendering(only libmpeg3, in effect).
+
+	* lib/enfle/memory.h: Include a necessary header file.
+
 2000-12-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/video.h, plugins/ui/normal/normal.c,
