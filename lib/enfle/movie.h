@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 21:45:49 2000.
- * $Id: movie.h,v 1.7 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Thu Dec 14 20:45:29 2000.
+ * $Id: movie.h,v 1.8 2000/12/14 16:06:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,6 +46,7 @@ struct _movie {
   Timer *timer;
   void *movie_private;
   int width, height;
+  int rendering_width, rendering_height;
   int current_frame, previous_frame, num_of_frames;
   float framerate;
   int play_every_frame;

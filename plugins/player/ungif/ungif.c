@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  9 02:12:34 2000.
- * $Id: ungif.c,v 1.15 2000/12/10 13:19:08 sian Exp $
+ * Last Modified: Thu Dec 14 20:57:04 2000.
+ * $Id: ungif.c,v 1.16 2000/12/14 16:06:14 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -120,10 +120,12 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->width = info->gf->SWidth;
   m->height = info->gf->SHeight;
+  m->rendering_width  = m->width;
+  m->rendering_height = m->height;
 
   p = info->p = image_create();
-  p->width = m->width;
-  p->height = m->height;
+  p->width = m->rendering_width;
+  p->height = m->rendering_height;
   p->type = _INDEX;
   p->depth = 8;
   p->bytes_per_line = m->width;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  9 02:14:06 2000.
- * $Id: mng.c,v 1.11 2000/12/10 13:19:08 sian Exp $
+ * Last Modified: Thu Dec 14 20:56:02 2000.
+ * $Id: mng.c,v 1.12 2000/12/14 16:06:14 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -125,11 +125,13 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 
   m->width  = width;
   m->height = height;
+  m->rendering_width  = m->width;
+  m->rendering_height = m->height;
 
   p = this->p = image_create();
 
-  p->width = m->width;
-  p->height = m->height;
+  p->width  = m->rendering_width;
+  p->height = m->rendering_height;
   p->type = m->requested_type;
   switch (p->type) {
   case _ARGB32:

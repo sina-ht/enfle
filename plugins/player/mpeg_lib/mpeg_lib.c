@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  9 02:13:17 2000.
- * $Id: mpeg_lib.c,v 1.10 2000/12/10 13:19:08 sian Exp $
+ * Last Modified: Thu Dec 14 20:56:37 2000.
+ * $Id: mpeg_lib.c,v 1.11 2000/12/14 16:06:14 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -112,10 +112,12 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->width = info->img.Width;
   m->height = info->img.Height;
+  m->rendering_width  = m->width;
+  m->rendering_height = m->height;
 
   p = info->p = image_create();
-  p->width = m->width;
-  p->height = m->height;
+  p->width = m->rendering_width;
+  p->height = m->rendering_height;
   p->type = _RGBA32;
   p->depth = 24;
   p->bytes_per_line = p->width * 4;

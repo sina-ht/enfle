@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  9 02:13:41 2000.
- * $Id: libmpeg3.c,v 1.11 2000/12/10 13:19:08 sian Exp $
+ * Last Modified: Thu Dec 14 21:06:49 2000.
+ * $Id: libmpeg3.c,v 1.12 2000/12/14 16:06:14 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -57,7 +57,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.2.2",
+  description: "LibMPEG3 Player plugin version 0.2.3",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -130,12 +130,29 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->height = mpeg3_video_height(info->file, info->nstream);
   m->framerate = mpeg3_frame_rate(info->file, 0);
   m->num_of_frames = mpeg3_video_frames(info->file, 0);
-  debug_message("libmpeg3 player: (%d x %d) %f fps %d frames\n",
-		m->width, m->height, m->framerate, m->num_of_frames);
+
+  switch (vw->render_method) {
+  case _VIDEO_RENDER_NORMAL:
+    m->rendering_width  = m->width;
+    m->rendering_height = m->height;
+    break;
+  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
+    m->rendering_width  = m->width  << 1;
+    m->rendering_height = m->height << 1;
+    break;
+  default:
+    m->rendering_width  = m->width;
+    m->rendering_height = m->height;
+    break;
+  }
+
+  debug_message("libmpeg3 player: (%d,%d) -> (%d,%d) %f fps %d frames\n",
+		m->width, m->height, m->rendering_width, m->rendering_height,
+		m->framerate, m->num_of_frames);
 
   p = info->p = image_create();
-  p->width = m->width;
-  p->height = m->height;
+  p->width = m->rendering_width;
+  p->height = m->rendering_height;
   p->type = m->requested_type;
   if ((p->rendered.image = memory_create()) == NULL)
     goto error;
@@ -156,7 +173,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     }
     p->depth = 24;
     p->bits_per_pixel = 32;
-    p->bytes_per_line = m->width * 4;
+    p->bytes_per_line = p->width * 4;
     break;
   case 24:
     switch (p->type) {
@@ -172,7 +189,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     }
     p->depth = 24;
     p->bits_per_pixel = 24;
-    p->bytes_per_line = m->width * 3;
+    p->bytes_per_line = p->width * 3;
     break;
   case 16:
     switch (p->type) {
@@ -186,7 +203,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     }
     p->depth = 16;
     p->bits_per_pixel = 16;
-    p->bytes_per_line = m->width * 2;
+    p->bytes_per_line = p->width * 2;
     break;
   default:
     show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
@@ -196,16 +213,16 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   /* rewind stream */
   mpeg3_seek_percentage(info->file, 0);
 
-  if ((info->lines = calloc(m->height, sizeof(unsigned char *))) == NULL)
+  if ((info->lines = calloc(m->rendering_height, sizeof(unsigned char *))) == NULL)
     goto error;
 
   Bpp = vw->bits_per_pixel >> 3;
   /* extra 4 bytes are needed for MMX routine */
-  if (memory_alloc(p->rendered.image, m->width * m->height * Bpp + 4) == NULL)
+  if (memory_alloc(p->rendered.image, p->width * p->height * Bpp + 4) == NULL)
     goto error;
 
-  for (i = 0; i < m->height; i++)
-    info->lines[i] = memory_ptr(p->rendered.image) + i * m->width * Bpp;
+  for (i = 0; i < m->rendering_height; i++)
+    info->lines[i] = memory_ptr(p->rendered.image) + i * p->width * Bpp;
 
   m->movie_private = (void *)info;
   m->st = st;
@@ -213,7 +230,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->previous_frame = 0;
   m->current_frame = 0;
 
-  m->initialize_screen(vw, m, m->width, m->height);
+  m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
   timer_start(m->timer);
 
@@ -282,7 +299,7 @@ play_main(Movie *m, VideoWindow *vw)
   decode_error = (mpeg3_read_frame(info->file, info->lines,
 				   0, 0,
 				   m->width, m->height,
-				   m->width, m->height,
+				   m->rendering_width, m->rendering_height,
 				   info->rendering_type, info->nstream) == -1) ? 0 : 1;
 
   timer_pause(m->timer);
