@@ -128,6 +128,7 @@ int avcodec_thread_execute(AVCodecContext *avctx, action_t* func, void **arg, in
     return 0;
 }
 
+#if defined(HAVE_PTHREADS)
 int avcodec_thread_init(AVCodecContext *avctx, int thread_count) 
 {
     int i;
@@ -166,3 +167,4 @@ int avcodec_thread_init(AVCodecContext *avctx, int thread_count)
     avctx->execute = avcodec_thread_execute;
     return 0;
 }
+#endif

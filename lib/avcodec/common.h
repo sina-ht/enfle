@@ -24,6 +24,7 @@
 
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
+//#    include "config.h"
 #include "enfle-config.h"
 #undef DEBUG
 #define HAVE_LRINTF
@@ -31,7 +32,6 @@
 //#define CONFIG_ENCODERS
 #define CONFIG_DECODERS
 #define CONFIG_RISKY
-//#    include "config.h"
 
 #    include <stdlib.h>
 #    include <stdio.h>
@@ -134,6 +134,14 @@ typedef signed int  int_fast32_t;
 typedef unsigned char uint_fast8_t;
 typedef unsigned int  uint_fast16_t;
 typedef unsigned int  uint_fast32_t;
+#endif
+
+#ifndef INT_BIT
+#    if INT_MAX == INT64_MAX
+#        define INT_BIT 64
+#    else
+#        define INT_BIT 32
+#    endif
 #endif
 
 #if defined(CONFIG_OS2) || defined(CONFIG_SUNOS)
@@ -291,10 +299,6 @@ static inline uint32_t NEG_USR32(uint32_t a, int8_t s){
 #endif
 
 /* bit output */
-
-struct PutBitContext;
-
-typedef void (*WriteDataFunc)(void *, uint8_t *, int);
 
 /* buf and buf_end must be present and used by every alternative writer. */
 typedef struct PutBitContext {
@@ -1255,7 +1259,7 @@ if((y)<(x)){\
 #endif
 
 #ifdef ARCH_X86
-static inline long long rdtsc(void)
+static inline long long rdtsc()
 {
 	long long l;
 	asm volatile(	"rdtsc\n\t"
