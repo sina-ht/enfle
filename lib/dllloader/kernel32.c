@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 18:26:42 2001.
- * $Id: kernel32.c,v 1.17 2001/10/10 09:36:04 sian Exp $
+ * Last Modified: Wed Oct 10 23:15:00 2001.
+ * $Id: kernel32.c,v 1.18 2001/10/10 14:43:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,6 +21,11 @@
  */
 
 //#define MORE_DEBUG
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #define W32API_REQUEST_MEM_ALLOC
 #define W32API_REQUEST_MEM_REALLOC
@@ -330,7 +335,6 @@ DEFINE_W32API(HFILE, _lopen,
 {
   DWORD _access = 0, sharing = 0;
 
-  debug_message(__FUNCTION__ "(%s, %d) called\n", path, mode);
   return CreateFileA(path, _access, sharing, NULL, OPEN_EXISTING, 0, (HANDLE)HFILE_ERROR);
 }
 
@@ -339,7 +343,7 @@ DEFINE_W32API(BOOL, ReadFile,
 	       LPDWORD bytes_read, LPOVERLAPPED overlapped))
 {
   int _bytes_read;
-  more_debug_message(__FUNCTION__ "(%d bytes) called\n", bytes_to_read);
+  more_debug_message(__FUNCTION__ "(%p, %p, %d bytes) called\n", handle, buffer, bytes_to_read);
 
   if (bytes_read)
     *bytes_read = 0;
@@ -356,7 +360,6 @@ DEFINE_W32API(UINT, _lread,
 {
   DWORD result;
 
-  more_debug_message(__FUNCTION__ "(%d bytes) called\n", count);
   if (!ReadFile(handle, buffer, count, &result, NULL))
     return HFILE_ERROR;
   return result;
@@ -384,6 +387,7 @@ DEFINE_W32API(UINT, _lclose,
 	       (HFILE handle))
 {
   debug_message(__FUNCTION__ "(%p) called\n", handle);
+  fclose((FILE *)handle);
   return 0;
 }
 
@@ -401,7 +405,6 @@ DEFINE_W32API(DWORD, SetFilePointer,
 DEFINE_W32API(LONG, _llseek,
 	      (HFILE handle, LONG offset, INT whence))
 {
-  debug_message(__FUNCTION__ "() called\n");
   return SetFilePointer(handle, offset, NULL, whence);
 }
 
@@ -444,28 +447,45 @@ DEFINE_W32API(BOOL, FlushFileBuffers,
   return TRUE;
 }
 
-#if 0
- HANDLE mapping,    /* [in] File-mapping object to map */
- DWORD access,      /* [in] Access mode */
- DWORD offset_high, /* [in] High-order 32 bits of file offset */
- DWORD offset_low,  /* [in] Low-order 32 bits of file offset */
- DWORD count        /* [in] Number of bytes to map */
-#endif
+/*
+ HANDLE mapping:    [in] File-mapping object to map
+ DWORD access:      [in] Access mode
+ DWORD offset_high: [in] High-order 32 bits of file offset
+ DWORD offset_low:  [in] Low-order 32 bits of file offset
+ DWORD count:       [in] Number of bytes to map
+*/
 DEFINE_W32API(LPVOID, MapViewOfFile,
 	      (HANDLE mapping, DWORD acc, DWORD high, DWORD low, DWORD count))
 {
-  debug_message(__FUNCTION__ "(%p, %d, %d, %d, %d) called\n", mapping, acc, high, low, count);
-  return NULL;
+  FILE *fp = (FILE *)mapping;
+  int fd = fileno(fp);
+  struct stat st;
+  LPVOID p;
+
+  debug_message(__FUNCTION__ "(%p, %d, %d, %d, %d) called: ", mapping, acc, high, low, count);
+  if (fstat(fd, &st)) {
+    debug_message("fstat() failed.\n");
+    return NULL;
+  }
+
+  if ((p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED) {
+    debug_message("mmap() failed.\n");
+    return NULL;
+  }
+
+  debug_message("%p\n", p);
+
+  return p;
 }
 
-#if 0
- HANDLE mapping,    /* [in] File-mapping object to map */
- DWORD access,      /* [in] Access mode */
- DWORD offset_high, /* [in] High-order 32 bits of file offset */
- DWORD offset_low,  /* [in] Low-order 32 bits of file offset */
- DWORD count        /* [in] Number of bytes to map */
- LPVOID addr        /* [in] Suggested starting address for mapped view */
-#endif
+/*
+ HANDLE mapping:    [in] File-mapping object to map
+ DWORD access:      [in] Access mode
+ DWORD offset_high: [in] High-order 32 bits of file offset
+ DWORD offset_low:  [in] Low-order 32 bits of file offset
+ DWORD count:       [in] Number of bytes to map
+ LPVOID addr:       [in] Suggested starting address for mapped view
+*/
 DEFINE_W32API(LPVOID, MapViewOfFileEx,
 	      (HANDLE mapping, DWORD acc, DWORD high, DWORD low, DWORD count, LPVOID addr))
 {
@@ -477,25 +497,28 @@ DEFINE_W32API(LPVOID, MapViewOfFileEx,
 DEFINE_W32API(BOOL, UnmapViewOfFile,
 	      (LPVOID addr))
 {
-  return FALSE;
+  debug_message(__FUNCTION__ "(%p) called\n", addr);
+  return TRUE;
 }
 
-#if 0
- HANDLE hFile,   /* [in] Handle of file to map */
- SECURITY_ATTRIBUTES *sa, /* [in] Optional security attributes*/
- DWORD protect,   /* [in] Protection for mapping object */
- DWORD size_high, /* [in] High-order 32 bits of object size */
- DWORD size_low,  /* [in] Low-order 32 bits of object size */
- LPCSTR name      /* [in] Name of file-mapping object */ )
-#endif
+/*
+ HANDLE hFile:    [in] Handle of file to map
+ SECURITY_ATTRIBUTES *sa: [in] Optional security attributes
+ DWORD protect:   [in] Protection for mapping object
+ DWORD size_high: [in] High-order 32 bits of object size
+ DWORD size_low:  [in] Low-order 32 bits of object size
+ LPCSTR name:     [in] Name of file-mapping object
+*/
 DEFINE_W32API(HANDLE, CreateFileMappingA,
 	      (HANDLE h, SECURITY_ATTRIBUTES *sa, DWORD protect, DWORD high, DWORD low, LPCSTR name))
 {
-  return NULL;
+  debug_message(__FUNCTION__ "(%p, %p, %d, %d, %d, %s) called\n", h, sa, protect, high, low, name);
+  return h;
 }
 
 DEFINE_W32API(BOOL, SetEndOfFile, (HANDLE h))
 {
+  debug_message(__FUNCTION__ "(%p) called\n", h);
   return TRUE;
 }
 
@@ -505,7 +528,6 @@ DEFINE_W32API(BOOL, CreateDirectoryA,
 	      (LPCSTR path, LPSECURITY_ATTRIBUTES sa))
 {
   debug_message(__FUNCTION__ "(%s) called\n", path);
-
   return TRUE;
 }
 
@@ -513,7 +535,6 @@ DEFINE_W32API(BOOL, CreateDirectoryW,
 	      (LPCWSTR path, LPSECURITY_ATTRIBUTES sa))
 {
   debug_message(__FUNCTION__ "(%s) called\n", (char *)path);
-
   return TRUE;
 }
 
@@ -557,7 +578,14 @@ DEFINE_W32API(UINT, SetHandleCount,
 DEFINE_W32API(BOOL, CloseHandle,
 	      (HANDLE handle))
 {
+  /* XXX: Nasty workaround... */
+  static HANDLE prev = NULL;
+
   debug_message(__FUNCTION__ "(%p)\n", handle);
+  if (prev == handle)
+    return TRUE;
+  prev = handle;
+  fclose((FILE *)handle);
   return TRUE;
 }
 
@@ -601,7 +629,7 @@ DEFINE_W32API(HLOCAL, LocalAlloc,
 {
   void *p;
 
-  more_debug_message(__FUNCTION__ "(%X, %d bytes) called: ", flags, size);
+  more_debug_message(__FUNCTION__ "(0x%X, %d bytes) called: ", flags, size);
 
   p = w32api_mem_alloc(size);
   if ((flags & LMEM_ZEROINIT) && p)
@@ -615,7 +643,7 @@ DEFINE_W32API(HLOCAL, LocalAlloc,
 DEFINE_W32API(HLOCAL, LocalReAlloc,
 	      (HLOCAL handle, DWORD size, UINT flags))
 {
-  more_debug_message(__FUNCTION__ "(%p, %d, %X) called\n", handle, size, flags);
+  more_debug_message(__FUNCTION__ "(%p, %d, 0x%X) called\n", handle, size, flags);
   return w32api_mem_realloc(handle, size);
 }
 
@@ -630,7 +658,7 @@ DEFINE_W32API(HLOCAL, LocalFree,
 DEFINE_W32API(LPVOID, LocalLock,
 	      (HLOCAL handle))
 {
-  more_debug_message(__FUNCTION__ "() called\n");
+  more_debug_message(__FUNCTION__ "(%p) called\n", handle);
   return handle;
 }
 
@@ -841,21 +869,21 @@ DEFINE_W32API(BOOL, IsBadReadPtr,
 	      (LPCVOID ptr, UINT size))
 {
   debug_message(__FUNCTION__ "(%p size %d) called\n", ptr, size);
-  return TRUE;
+  return FALSE;
 }
 
 DEFINE_W32API(BOOL, IsBadWritePtr,
 	      (LPCVOID ptr, UINT size))
 {
   debug_message(__FUNCTION__ "(%p size %d) called\n", ptr, size);
-  return TRUE;
+  return FALSE;
 }
 
 DEFINE_W32API(BOOL, IsBadCodePtr,
 	      (FARPROC p))
 {
   debug_message(__FUNCTION__ "(%p) called\n", p);
-  return TRUE;
+  return FALSE;
 }
 
 /* resource related */
@@ -878,7 +906,7 @@ DEFINE_W32API(DWORD, SizeofResource, (HMODULE p, HRSRC r))
 DEFINE_W32API(HANDLE, HeapCreate,
 	      (DWORD flags, DWORD init, DWORD max))
 {
-  more_debug_message(__FUNCTION__ "(%X, %d, %d) called\n", flags, init, max);
+  more_debug_message(__FUNCTION__ "(0x%X, %d, %d) called\n", flags, init, max);
   if (init)
     return (HANDLE)w32api_mem_alloc(init);
   debug_message(__FUNCTION__ "() called with init == 0\n");
@@ -892,7 +920,7 @@ DEFINE_W32API(LPVOID, HeapAlloc,
 
   p = w32api_mem_alloc(size);
 
-  more_debug_message(__FUNCTION__ "(%p, %X, %d) called -> %p\n", handle, flags, size, p);
+  more_debug_message(__FUNCTION__ "(%p, 0x%X, %d) called -> %p\n", handle, flags, size, p);
 
   if ((flags & HEAP_ZERO_MEMORY) && p)
     memset(p, 0, size);
@@ -903,14 +931,14 @@ DEFINE_W32API(LPVOID, HeapAlloc,
 DEFINE_W32API(LPVOID, HeapReAlloc,
 	      (HANDLE handle, DWORD flags, LPVOID ptr, DWORD size))
 {
-  more_debug_message(__FUNCTION__ "(%p, %X, %p, %d) called\n", handle, flags, ptr, size);
+  more_debug_message(__FUNCTION__ "(%p, 0x%X, %p, %d) called\n", handle, flags, ptr, size);
   return w32api_mem_realloc(ptr, size);
 }
 
 DEFINE_W32API(BOOL, HeapFree,
 	      (HANDLE handle, DWORD flags, LPVOID ptr))
 {
-  more_debug_message(__FUNCTION__ "(%p, %X, %p) called\n", handle, flags, ptr);
+  more_debug_message(__FUNCTION__ "(%p, 0x%X, %p) called\n", handle, flags, ptr);
   w32api_mem_free(ptr);
 
   return TRUE;
@@ -1275,7 +1303,7 @@ DEFINE_W32API(LPSTR, GetCommandLineA,
 DEFINE_W32API(DWORD, GetEnvironmentVariableA,
 	      (LPCSTR name, LPSTR field,DWORD size))
 {
-  debug_message(__FUNCTION__ "(%s, %p, %x) called\n", name, field, size);
+  debug_message(__FUNCTION__ "(%s, %p, 0x%x) called\n", name, field, size);
   if (strcmp(name, "__MSVCRT_HEAP_SELECT") == 0) {
     strcpy(field, "__GLOBAL_HEAP_SELECTED,1");
   } else {
