@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Feb 14 01:52:17 2002.
-dnl $Id: configure.in,v 1.101 2002/02/13 16:52:26 sian Exp $
+dnl Last Modified: Thu Feb 14 09:33:46 2002.
+dnl $Id: configure.in,v 1.102 2002/02/14 00:51:29 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -24,6 +24,8 @@ dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 AC_INIT(enfle, 20020214, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
+AM_INIT_AUTOMAKE(enfle, 20020214)
+AC_CANONICAL_HOST
 
 if test "`uname -s`" = "SunOS"; then
   dnl Supress insignificant warnings
@@ -34,9 +36,6 @@ fi
 
 dnl Maintainer mode (could be uncommented for production release.)
 dnl AM_MAINTAINER_MODE
-
-AM_INIT_AUTOMAKE(enfle, 20020209)
-AC_CANONICAL_HOST
 
 dnl Checks for programs.
 AC_PROG_CC
