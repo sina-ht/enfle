@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.8 2001/09/18 05:23:04 sian Exp $
+# $Id: Makefile.am,v 1.9 2001/10/06 16:01:09 sian Exp $
 
 noinst_LTLIBRARIES = libenfleutils.la
 INCLUDES = -I$(top_srcdir)
@@ -11,7 +11,9 @@ else
 thread_libs =
 endif
 
-libenfleutils_la_LIBADD = $(thread_libs) $(top_builddir)/compat/libcompat.la
+iconv_libs = @LIBADD_ICONV@
+
+libenfleutils_la_LIBADD = $(thread_libs) $(iconv_libs) $(top_builddir)/compat/libcompat.la
 libenfleutils_la_SOURCES = \
 	misc.c misc.h \
 	cpucaps.c cpucaps.h \
@@ -21,6 +23,7 @@ libenfleutils_la_SOURCES = \
 	libconfig.c libconfig.h \
 	stdio-support.c stdio-support.h \
 	libstring.c libstring.h \
+	converter.c converter.h \
 	fifo.c fifo.h \
 	hash.c hash.h \
 	dlist.c dlist.h
