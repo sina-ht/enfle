@@ -149,6 +149,16 @@ typedef struct _memory_basic_information {
   DWORD Type;
 } MEMORY_BASIC_INFORMATION,*LPMEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
 
+#define MEM_COMMIT              0x00001000
+#define MEM_RESERVE             0x00002000
+#define MEM_DECOMMIT            0x00004000
+#define MEM_RELEASE             0x00008000
+#define MEM_FREE                0x00010000
+#define MEM_PRIVATE             0x00020000
+#define MEM_MAPPED              0x00040000
+#define MEM_RESET               0x00080000
+#define MEM_TOP_DOWN            0x00100000
+
 /* heap */
 
 #define HEAP_NO_SERIALIZE               0x00000001
