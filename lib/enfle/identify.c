@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 13 08:45:17 2004.
- * $Id: identify.c,v 1.12 2004/02/14 05:32:03 sian Exp $
+ * Last Modified: Wed Feb 25 00:40:50 2004.
+ * $Id: identify.c,v 1.13 2004/02/24 15:54:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -130,7 +130,7 @@ identify_stream(EnflePlugins *eps, Image *p, Movie *m, Stream *s, VideoWindow *v
 
   /* for mng, ungif player */
   if (m && player_identify(eps, m, s, c)) {
-    if (player_load(eps, vw, m->format, m, s, c) != PLAY_OK)
+    if (player_load(eps, vw, m->player_name, m, s, c) != PLAY_OK)
       return IDENTIFY_STREAM_MOVIE_FAILED;
     return IDENTIFY_STREAM_MOVIE;
   }
