@@ -1,8 +1,8 @@
 /*
  * scan.c -- Scanning modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 00:39:34 2001.
- * $Id: scan.c,v 1.2 2001/08/05 16:17:58 sian Exp $
+ * Last Modified: Mon Aug  6 02:01:07 2001.
+ * $Id: scan.c,v 1.3 2001/08/06 04:58:23 sian Exp $
  */
 
 #include <stdlib.h>
@@ -24,6 +24,7 @@ static void scan_quad(unsigned char *, unsigned char *, int, int, int, int, int)
 static void scan_hilbert(unsigned char *, unsigned char *, int, int, int, int, int);
 
 static struct scanner scanners[] = {
+  { NULL, NULL, _SCAN_INVALID },
   { "normal",  scan_normal,  _SCAN_NORMAL },
   { "quad",    scan_quad,    _SCAN_QUAD },
   { "hilbert", scan_hilbert, _SCAN_HILBERT },
@@ -155,7 +156,7 @@ scan_get_id_by_name(char *name)
 {
   int i;
 
-  for (i = 0; scanners[i].name; i++)
+  for (i = 1; scanners[i].id != _SCAN_INVALID_END; i++)
     if (strcasecmp(scanners[i].name, name) == 0)
       return scanners[i].id;
   return _SCAN_INVALID;

@@ -1,8 +1,8 @@
 /*
  * predict.c -- Prediction modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 00:37:34 2001.
- * $Id: predict.c,v 1.4 2001/08/05 16:17:58 sian Exp $
+ * Last Modified: Mon Aug  6 02:01:01 2001.
+ * $Id: predict.c,v 1.5 2001/08/06 04:58:23 sian Exp $
  */
 
 #include <stdlib.h>
@@ -28,6 +28,7 @@ static unsigned char *predict_paeth(unsigned char *, int, int);
 static unsigned char *predict_jpegls(unsigned char *, int, int);
 
 static struct predictor predictors[] = {
+  { NULL, NULL, _PREDICT_INVALID },
   { "none",   predict_none,   _PREDICT_NONE },
   { "sub",    predict_sub,    _PREDICT_SUB },
   { "sub2",   predict_sub2,   _PREDICT_SUB2 },
@@ -36,7 +37,7 @@ static struct predictor predictors[] = {
   { "avg2",   predict_avg2,   _PREDICT_AVG2 },
   { "paeth",  predict_paeth,  _PREDICT_PAETH },
   { "jpegls", predict_jpegls, _PREDICT_JPEGLS },
-  { NULL, NULL, _PREDICT_INVALID }
+  { NULL, NULL, _PREDICT_INVALID_END }
 };
 
 static unsigned char *
@@ -227,7 +228,7 @@ predict_get_id_by_name(char *name)
 {
   int i;
 
-  for (i = 0; predictors[i].name; i++)
+  for (i = 1; predictors[i].id != _PREDICT_INVALID_END; i++)
     if (strcasecmp(predictors[i].name, name) == 0)
       return predictors[i].id;
   return _PREDICT_INVALID;
