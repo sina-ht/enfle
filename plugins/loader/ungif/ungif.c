@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 16:00:26 2000.
- * $Id: ungif.c,v 1.4 2000/10/10 11:48:35 sian Exp $
+ * Last Modified: Tue Oct 10 21:34:19 2000.
+ * $Id: ungif.c,v 1.5 2000/10/10 17:28:51 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -170,8 +170,8 @@ load_image(Image *p, Stream *st)
       case COMMENT_EXT_FUNC_CODE:
 	debug_message("comment: ");
 	if ((p->comment = malloc(Extension[0] + 1)) == NULL) {
-	  show_message("No enough memory for comment. Try to continue.\n");
 	  debug_message("(abandoned)\n");
+	  show_message("No enough memory for comment. Try to continue.\n");
 	} else {
 	  memcpy(p->comment, &Extension[1], Extension[0]);
 	  p->comment[Extension[0]] = '\0';
@@ -243,7 +243,7 @@ load_image(Image *p, Stream *st)
     goto error_after_closed;
 
   for (i = 0; i < p->height; i++)
-    memcpy(&p->image[i * p->width], ScreenBuffer[p->top + i], p->width * sizeof(GifPixelType));
+    memcpy(&p->image[i * p->width], &ScreenBuffer[p->top + i][p->left], p->width * sizeof(GifPixelType));
 
   free(ScreenBuffer[0]);
   free(ScreenBuffer);
