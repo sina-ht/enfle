@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:10:36 2002.
- * $Id: x11ximage.c,v 1.44 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Thu Mar 21 10:31:30 2002.
+ * $Id: x11ximage.c,v 1.45 2002/03/21 01:32:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -195,9 +195,7 @@ convert(X11XImage *xi, Image *p)
   case _YV12:
     //debug_message("Image provided in YV12.\n");
     if (xi->x11->xv->capable_format & XV_YV12_FLAG) {
-      /* XXX: hmm... */
-      //t = XV_YV12;
-      t = XV_I420;
+      t = XV_YV12;
       xi->use_xv = 1;
     } else {
       fatal(4, "Xv cannot display YV12...\n");
@@ -289,6 +287,8 @@ convert(X11XImage *xi, Image *p)
 #ifdef USE_SHM
 #ifdef USE_XV
       if (xi->use_xv) {
+	debug_message_fnc("port %d  id %X  (%d, %d)\n", xi->x11->xv->image_port, xi->x11->xv->format_ids[t], w, h);
+
 	if ((xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], NULL, w, h, xi->shminfo)))
 	  xi->format_num = t;
       }
