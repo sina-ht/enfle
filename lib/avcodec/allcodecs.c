@@ -59,10 +59,12 @@ void avcodec_register_all(void)
 //    register_avcodec(&h264_encoder);
 #ifdef CONFIG_RISKY
     register_avcodec(&mpeg2video_encoder);
+    register_avcodec(&h261_encoder);
     register_avcodec(&h263_encoder);
     register_avcodec(&h263p_encoder);
     register_avcodec(&flv_encoder);
     register_avcodec(&rv10_encoder);
+    register_avcodec(&rv20_encoder);
     register_avcodec(&mpeg4_encoder);
     register_avcodec(&msmpeg4v1_encoder);
     register_avcodec(&msmpeg4v2_encoder);
@@ -73,7 +75,16 @@ void avcodec_register_all(void)
 #endif
     register_avcodec(&mjpeg_encoder);
     register_avcodec(&ljpeg_encoder);
+#ifdef CONFIG_ZLIB
+    register_avcodec(&png_encoder);
+#endif
+    register_avcodec(&ppm_encoder);
+    register_avcodec(&pgm_encoder);
+    register_avcodec(&pgmyuv_encoder);
+    register_avcodec(&pbm_encoder);
+    register_avcodec(&pam_encoder);
     register_avcodec(&huffyuv_encoder);
+    register_avcodec(&ffvhuff_encoder);
     register_avcodec(&asv1_encoder);
     register_avcodec(&asv2_encoder);
     register_avcodec(&ffv1_encoder);
@@ -109,6 +120,8 @@ void avcodec_register_all(void)
     register_avcodec(&tscc_decoder);
     register_avcodec(&ulti_decoder);
     register_avcodec(&qdraw_decoder);
+    register_avcodec(&xl_decoder);
+    register_avcodec(&qpeg_decoder);
 #ifdef CONFIG_FAAD
     register_avcodec(&aac_decoder);
     register_avcodec(&mpeg4aac_decoder);
@@ -124,11 +137,15 @@ void avcodec_register_all(void)
     register_avcodec(&mjpeg_decoder);
     register_avcodec(&mjpegb_decoder);
     register_avcodec(&sp5x_decoder);
+#ifdef CONFIG_ZLIB
+    register_avcodec(&png_decoder);
+#endif
     register_avcodec(&mp2_decoder);
     register_avcodec(&mp3_decoder);
     register_avcodec(&mace3_decoder);
     register_avcodec(&mace6_decoder);
     register_avcodec(&huffyuv_decoder);
+    register_avcodec(&ffvhuff_decoder);
     register_avcodec(&ffv1_decoder);
     register_avcodec(&snow_decoder);
     register_avcodec(&cyuv_decoder);
@@ -233,6 +250,8 @@ PCM_CODEC(CODEC_ID_ADPCM_CT, adpcm_ct);
     av_register_codec_parser(&h261_parser);
     av_register_codec_parser(&h263_parser);
     av_register_codec_parser(&h264_parser);
+    av_register_codec_parser(&mjpeg_parser);
+    av_register_codec_parser(&pnm_parser);
 
     av_register_codec_parser(&mpegaudio_parser);
 #ifdef CONFIG_AC3

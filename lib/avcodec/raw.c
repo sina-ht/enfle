@@ -64,7 +64,7 @@ static int findPixelFormat(unsigned int fourcc)
     return PIX_FMT_YUV420P;
 }
 
-static unsigned int findFourCC(int fmt)
+unsigned int avcodec_pix_fmt_to_codec_tag(enum PixelFormat fmt)
 {
     const PixelFormatTag * tags = pixelFormatTags;
     while (tags->pix_fmt >= 0) {
@@ -106,6 +106,13 @@ static int raw_init_decoder(AVCodecContext *avctx)
     return 0;
 }
 
+static void flip(AVCodecContext *avctx, AVPicture * picture){
+    if(!avctx->codec_tag && avctx->bits_per_sample && picture->linesize[1]==0){
+        picture->data[0] += picture->linesize[0] * (avctx->height-1);
+        picture->linesize[0] *= -1;
+    }
+}
+
 static int raw_decode(AVCodecContext *avctx,
 			    void *data, int *data_size,
 			    uint8_t *buf, int buf_size)
@@ -118,6 +125,7 @@ static int raw_decode(AVCodecContext *avctx,
     /* Early out without copy if packet size == frame size */
     if (buf_size == context->length  &&  context->p == context->buffer) {
         avpicture_fill(picture, buf, avctx->pix_fmt, avctx->width, avctx->height);
+        flip(avctx, picture);        
         *data_size = sizeof(AVPicture);
         return buf_size;
     }
@@ -132,6 +140,7 @@ static int raw_decode(AVCodecContext *avctx,
     memcpy(context->p, buf, bytesNeeded);
     context->p = context->buffer;
     avpicture_fill(picture, context->buffer, avctx->pix_fmt, avctx->width, avctx->height);
+    flip(avctx, picture);        
     *data_size = sizeof(AVPicture);
     return bytesNeeded;
 }
@@ -152,7 +161,7 @@ static int raw_init_encoder(AVCodecContext *avctx)
     avctx->coded_frame->pict_type = FF_I_TYPE;
     avctx->coded_frame->key_frame = 1;
     if(!avctx->codec_tag)
-        avctx->codec_tag = findFourCC(avctx->pix_fmt);
+        avctx->codec_tag = avcodec_pix_fmt_to_codec_tag(avctx->pix_fmt);
     return 0;
 }
 

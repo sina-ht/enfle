@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Oct  2 22:52:32 2004.
-# $Id: Makefile.am,v 1.21 2004/10/02 13:53:04 sian Exp $
+# Last Modified: Thu Dec 30 21:29:34 2004.
+# $Id: Makefile.am,v 1.22 2004/12/30 12:30:25 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -78,6 +78,7 @@ endif
 
 noinst_HEADERS = \
 	ac3.h \
+	bitstream.h \
 	common.h \
 	golomb.h \
 	mpeg12data.h \
@@ -111,13 +112,15 @@ noinst_HEADERS = \
 	ra288.h \
 	svq1_vlc.h \
 	integer.h \
-	ulti_cb.h
+	ulti_cb.h \
+	rangecoder.h
 
 #	a52dec.c	ac3dec.c	ac3enc.c
 #	amr.c		faac.c		faad.c
 #	mp3lameaudio.c
 #	dtsdec.c
 #	xvidff.c
+#	common.c (deprecated)
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -125,10 +128,10 @@ libavcodec_la_SOURCES = \
 	adx.c \
 	allcodecs.c \
 	asv1.c \
+	bitstream.c \
 	cabac.c \
 	cinepak.c \
 	cljr.c \
-	common.c \
 	cyuv.c \
 	dpcm.c \
 	dsputil.c \
@@ -175,11 +178,15 @@ libavcodec_la_SOURCES = \
 	opts.c \
 	parser.c \
 	pcm.c \
+	png.c \
+	pnm.c \
 	pthread.c \
 	qdrw.c \
+	qpeg.c \
 	qtrle.c \
 	ra144.c \
 	ra288.c \
+	rangecoder.c \
 	ratecontrol.c \
 	rational.c \
 	raw.c \
@@ -204,5 +211,6 @@ libavcodec_la_SOURCES = \
 	vqavideo.c \
 	wmadec.c \
 	xan.c \
+	xl.c \
 	xvmcvideo.c \
 	$(MMX_SRCS)

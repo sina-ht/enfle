@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4727
+#define LIBAVCODEC_BUILD       4736
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -38,10 +38,6 @@ enum CodecID {
     CODEC_ID_H263,
     CODEC_ID_RV10,
     CODEC_ID_RV20,
-    CODEC_ID_MP2,
-    CODEC_ID_MP3, /* prefered ID for MPEG Audio layer 1, 2 or3 decoding */
-    CODEC_ID_VORBIS,
-    CODEC_ID_AC3,
     CODEC_ID_MJPEG,
     CODEC_ID_MJPEGB,
     CODEC_ID_LJPEG,
@@ -59,19 +55,12 @@ enum CodecID {
     CODEC_ID_SVQ1,
     CODEC_ID_SVQ3,
     CODEC_ID_DVVIDEO,
-    CODEC_ID_DVAUDIO,
-    CODEC_ID_WMAV1,
-    CODEC_ID_WMAV2,
-    CODEC_ID_MACE3,
-    CODEC_ID_MACE6,
     CODEC_ID_HUFFYUV,
     CODEC_ID_CYUV,
     CODEC_ID_H264,
     CODEC_ID_INDEO3,
     CODEC_ID_VP3,
     CODEC_ID_THEORA,
-    CODEC_ID_AAC,
-    CODEC_ID_MPEG4AAC,
     CODEC_ID_ASV1,
     CODEC_ID_ASV2,
     CODEC_ID_FFV1,
@@ -94,19 +83,26 @@ enum CodecID {
     CODEC_ID_FLIC,
     CODEC_ID_TRUEMOTION1,
     CODEC_ID_VMDVIDEO,
-    CODEC_ID_VMDAUDIO,
     CODEC_ID_MSZH,
     CODEC_ID_ZLIB,
-    CODEC_ID_SONIC,
-    CODEC_ID_SONIC_LS,
     CODEC_ID_QTRLE,
     CODEC_ID_SNOW,
     CODEC_ID_TSCC,
     CODEC_ID_ULTI,
     CODEC_ID_QDRAW,
+    CODEC_ID_VIXL,
+    CODEC_ID_QPEG,
+    CODEC_ID_XVID,
+    CODEC_ID_PNG,
+    CODEC_ID_PPM,
+    CODEC_ID_PBM,
+    CODEC_ID_PGM,
+    CODEC_ID_PGMYUV,
+    CODEC_ID_PAM,
+    CODEC_ID_FFVHUFF,
 
     /* various pcm "codecs" */
-    CODEC_ID_PCM_S16LE,
+    CODEC_ID_PCM_S16LE= 0x10000,
     CODEC_ID_PCM_S16BE,
     CODEC_ID_PCM_U16LE,
     CODEC_ID_PCM_U16BE,
@@ -116,7 +112,7 @@ enum CodecID {
     CODEC_ID_PCM_ALAW,
 
     /* various adpcm codecs */
-    CODEC_ID_ADPCM_IMA_QT,
+    CODEC_ID_ADPCM_IMA_QT= 0x11000,
     CODEC_ID_ADPCM_IMA_WAV,
     CODEC_ID_ADPCM_IMA_DK3,
     CODEC_ID_ADPCM_IMA_DK4,
@@ -130,27 +126,39 @@ enum CodecID {
     CODEC_ID_ADPCM_G726,
     CODEC_ID_ADPCM_CT,
 
-	/* AMR */
-    CODEC_ID_AMR_NB,
+    /* AMR */
+    CODEC_ID_AMR_NB= 0x12000,
     CODEC_ID_AMR_WB,
 
     /* RealAudio codecs*/
-    CODEC_ID_RA_144,
+    CODEC_ID_RA_144= 0x13000,
     CODEC_ID_RA_288,
 
     /* various DPCM codecs */
-    CODEC_ID_ROQ_DPCM,
+    CODEC_ID_ROQ_DPCM= 0x14000,
     CODEC_ID_INTERPLAY_DPCM,
     CODEC_ID_XAN_DPCM,
     CODEC_ID_SOL_DPCM,
     
+    CODEC_ID_MP2= 0x15000,
+    CODEC_ID_MP3, /* prefered ID for MPEG Audio layer 1, 2 or3 decoding */
+    CODEC_ID_AAC,
+    CODEC_ID_MPEG4AAC,
+    CODEC_ID_AC3,
+    CODEC_ID_DTS,
+    CODEC_ID_VORBIS,
+    CODEC_ID_DVAUDIO,
+    CODEC_ID_WMAV1,
+    CODEC_ID_WMAV2,
+    CODEC_ID_MACE3,
+    CODEC_ID_MACE6,
+    CODEC_ID_VMDAUDIO,
+    CODEC_ID_SONIC,
+    CODEC_ID_SONIC_LS,
     CODEC_ID_FLAC,
     
-    CODEC_ID_MPEG2TS, /* _FAKE_ codec to indicate a raw MPEG2 transport
+    CODEC_ID_MPEG2TS= 0x20000, /* _FAKE_ codec to indicate a raw MPEG2 transport
                          stream (only used by libavformat) */
-
-    CODEC_ID_DTS,
-    CODEC_ID_XVID,
 };
 
 /* CODEC_ID_MP3LAME is absolete */
@@ -468,7 +476,14 @@ typedef struct AVPanScan{
     uint8_t *mbskip_table;\
 \
     /**\
-     * Motion vector table\
+     * Motion vector table.\
+     * @code\
+     * example:\
+     * int mv_sample_log2= 4 - motion_subsample_log2;\
+     * int mb_width= (width+15)>>4;\
+     * int mv_stride= (mb_width << mv_sample_log2) + 1;\
+     * motion_val[direction][x + y*mv_stride][0->mv_x, 1->mv_y];\
+     * @endcode\
      * - encoding: set by user\
      * - decoding: set by lavc\
      */\
@@ -483,7 +498,8 @@ typedef struct AVPanScan{
     uint32_t *mb_type;\
 \
     /**\
-     * Macroblock size: (0->16x16, 1->8x8, 2-> 4x4, 3-> 2x2)\
+     * log2 of the size of the block which a single vector in motion_val represents: \
+     * (4->16x16, 3->8x8, 2-> 4x4, 1-> 2x2)\
      * - encoding: unused\
      * - decoding: set by lavc\
      */\
@@ -665,6 +681,8 @@ typedef struct AVCodecContext {
      * mjpeg: huffman tables
      * rv10: additional flags
      * mpeg4: global headers (they can be in the bitstream or here)
+     * the allocated memory should be FF_INPUT_BUFFER_PADDING_SIZE bytes larger
+     * then extradata_size to avoid prolems if its read with the bitstream reader
      * - encoding: set/allocated/freed by lavc.
      * - decoding: set/allocated/freed by user.
      */
@@ -1159,6 +1177,7 @@ typedef struct AVCodecContext {
 #define FF_MM_MMXEXT	0x0002 /* SSE integer functions or AMD MMX ext */
 #define FF_MM_SSE	0x0008 /* SSE functions */
 #define FF_MM_SSE2	0x0010 /* PIV SSE2 functions */
+#define FF_MM_3DNOWEXT	0x0020 /* AMD 3DNowExt */
 #endif /* HAVE_MMX */
 
     /**
@@ -1283,6 +1302,7 @@ typedef struct AVCodecContext {
 #define FF_CMP_NSSE 10
 #define FF_CMP_W53  11
 #define FF_CMP_W97  12
+#define FF_CMP_DCTMAX 13
 #define FF_CMP_CHROMA 256
     
     /**
@@ -1673,12 +1693,40 @@ typedef struct AVCodecContext {
      int lowres;
 
     /**
-     * bistream width / height. may be different from width/height if lowres
+     * bitsream width / height. may be different from width/height if lowres
      * or other things are used
      * - encoding: unused
      * - decoding: set by user before init if known, codec should override / dynamically change if needed
      */
     int coded_width, coded_height;
+
+    /**
+     * frame skip threshold
+     * - encoding: set by user
+     * - decoding: unused
+     */
+    int frame_skip_threshold;
+
+    /**
+     * frame skip factor
+     * - encoding: set by user
+     * - decoding: unused
+     */
+    int frame_skip_factor;
+
+    /**
+     * frame skip exponent
+     * - encoding: set by user
+     * - decoding: unused
+     */
+    int frame_skip_exp;
+
+    /**
+     * frame skip comparission function
+     * - encoding: set by user.
+     * - decoding: unused
+     */
+    int frame_skip_cmp;
 } AVCodecContext;
 
 
@@ -1732,7 +1780,7 @@ int avoption_parse(void* strct, const AVOption* list, const char* opts);
 typedef struct AVCodec {
     const char *name;
     enum CodecType type;
-    int id;
+    enum CodecID id;
     int priv_data_size;
     int (*init)(AVCodecContext *);
     int (*encode)(AVCodecContext *, uint8_t *buf, int buf_size, void *data);
@@ -1785,6 +1833,7 @@ extern AVCodec faac_encoder;
 extern AVCodec xvid_encoder;
 extern AVCodec mpeg1video_encoder;
 extern AVCodec mpeg2video_encoder;
+extern AVCodec h261_encoder;
 extern AVCodec h263_encoder;
 extern AVCodec h263p_encoder;
 extern AVCodec flv_encoder;
@@ -1793,6 +1842,12 @@ extern AVCodec rv20_encoder;
 extern AVCodec dvvideo_encoder;
 extern AVCodec mjpeg_encoder;
 extern AVCodec ljpeg_encoder;
+extern AVCodec png_encoder;
+extern AVCodec ppm_encoder;
+extern AVCodec pgm_encoder;
+extern AVCodec pgmyuv_encoder;
+extern AVCodec pbm_encoder;
+extern AVCodec pam_encoder;
 extern AVCodec mpeg4_encoder;
 extern AVCodec msmpeg4v1_encoder;
 extern AVCodec msmpeg4v2_encoder;
@@ -1800,6 +1855,7 @@ extern AVCodec msmpeg4v3_encoder;
 extern AVCodec wmv1_encoder;
 extern AVCodec wmv2_encoder;
 extern AVCodec huffyuv_encoder;
+extern AVCodec ffvhuff_encoder;
 extern AVCodec h264_encoder;
 extern AVCodec asv1_encoder;
 extern AVCodec asv2_encoder;
@@ -1836,11 +1892,13 @@ extern AVCodec wmav2_decoder;
 extern AVCodec mjpeg_decoder;
 extern AVCodec mjpegb_decoder;
 extern AVCodec sp5x_decoder;
+extern AVCodec png_decoder;
 extern AVCodec mp2_decoder;
 extern AVCodec mp3_decoder;
 extern AVCodec mace3_decoder;
 extern AVCodec mace6_decoder;
 extern AVCodec huffyuv_decoder;
+extern AVCodec ffvhuff_decoder;
 extern AVCodec oggvorbis_decoder;
 extern AVCodec cyuv_decoder;
 extern AVCodec h264_decoder;
@@ -1890,6 +1948,8 @@ extern AVCodec flac_decoder;
 extern AVCodec tscc_decoder;
 extern AVCodec ulti_decoder;
 extern AVCodec qdraw_decoder;
+extern AVCodec xl_decoder;
+extern AVCodec qpeg_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -1993,6 +2053,7 @@ void avcodec_get_chroma_sub_sample(int pix_fmt, int *h_shift, int *v_shift);
 const char *avcodec_get_pix_fmt_name(int pix_fmt);
 void avcodec_set_dimensions(AVCodecContext *s, int width, int height);
 enum PixelFormat avcodec_get_pix_fmt(const char* name);
+unsigned int avcodec_pix_fmt_to_codec_tag(enum PixelFormat p);
 
 #define FF_LOSS_RESOLUTION  0x0001 /* loss due to resolution change */
 #define FF_LOSS_DEPTH       0x0002 /* loss due to color depth change */
@@ -2134,7 +2195,7 @@ typedef struct AVCodecParserContext {
 } AVCodecParserContext;
 
 typedef struct AVCodecParser {
-    int codec_ids[3]; /* several codec IDs are permitted */
+    int codec_ids[5]; /* several codec IDs are permitted */
     int priv_data_size;
     int (*parser_init)(AVCodecParserContext *s);
     int (*parser_parse)(AVCodecParserContext *s, 
@@ -2161,6 +2222,8 @@ extern AVCodecParser mpeg4video_parser;
 extern AVCodecParser h261_parser;
 extern AVCodecParser h263_parser;
 extern AVCodecParser h264_parser;
+extern AVCodecParser mjpeg_parser;
+extern AVCodecParser pnm_parser;
 extern AVCodecParser mpegaudio_parser;
 extern AVCodecParser ac3_parser;
 
@@ -2176,6 +2239,7 @@ void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size);
 /* call av_free_static to release all staticaly allocated tables */
 void av_free_static(void);
 void *av_mallocz_static(unsigned int size);
+void *av_realloc_static(void *ptr, unsigned int size);
 
 /* add by bero : in adx.c */
 int is_adx(const unsigned char *buf,size_t bufsize);

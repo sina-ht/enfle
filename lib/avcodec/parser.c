@@ -38,7 +38,9 @@ AVCodecParserContext *av_parser_init(int codec_id)
     for(parser = av_first_parser; parser != NULL; parser = parser->next) {
         if (parser->codec_ids[0] == codec_id ||
             parser->codec_ids[1] == codec_id ||
-            parser->codec_ids[2] == codec_id)
+            parser->codec_ids[2] == codec_id ||
+            parser->codec_ids[3] == codec_id ||
+            parser->codec_ids[4] == codec_id)
             goto found;
     }
     return NULL;
@@ -185,7 +187,12 @@ int ff_combine_frame(ParseContext *pc, int next, uint8_t **buf, int *buf_size)
     for(; pc->overread>0; pc->overread--){
         pc->buffer[pc->index++]= pc->buffer[pc->overread_index++];
     }
-    
+
+    /* flush remaining if EOF */
+    if(!*buf_size && next == END_NOT_FOUND){
+        next= 0;
+    }
+
     pc->last_index= pc->index;
 
     /* copy into buffer end return */
@@ -318,6 +325,7 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
                         frame_rate_ext_n = (buf[5] >> 5) & 3;
                         frame_rate_ext_d = (buf[5] & 0x1f);
                         pc->progressive_sequence = buf[1] & (1 << 3);
+                        avctx->has_b_frames= buf[5] >> 7;
 
                         pc->width  |=(horiz_size_ext << 12);
                         pc->height |=( vert_size_ext << 12);

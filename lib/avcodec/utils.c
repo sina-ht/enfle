@@ -31,6 +31,24 @@
 #include <stdarg.h>
 #include <limits.h>
 
+const uint8_t ff_sqrt_tab[128]={
+        0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,11,11,11,11,11,11,11
+};
+
+const uint8_t ff_log2_tab[256]={
+        0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+        5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+        6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+        6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+};
+
 void avcodec_default_free_buffers(AVCodecContext *s);
 
 void *av_mallocz(unsigned int size)
@@ -87,6 +105,26 @@ void *av_mallocz_static(unsigned int size)
     }
 
     return ptr;
+}
+
+/**
+ * same as above, but does realloc
+ */
+
+void *av_realloc_static(void *ptr, unsigned int size)
+{
+    int i;
+    if(!ptr)
+      return av_mallocz_static(size);
+    /* Look for the old ptr */
+    for(i = 0; i < last_static; i++) {
+        if(array_static[i] == ptr) {
+            array_static[i] = av_realloc(array_static[i], size);
+            return array_static[i];
+        }
+    }
+    return NULL;
+
 }
 
 /**
@@ -219,7 +257,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
         buf->last_pic_num= *picture_number;
     }else{
         int h_chroma_shift, v_chroma_shift;
-        int s_align, pixel_size;
+        int pixel_size;
         
         avcodec_get_chroma_sub_sample(s->pix_fmt, &h_chroma_shift, &v_chroma_shift);
         
@@ -242,11 +280,6 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
         }
 
         avcodec_align_dimensions(s, &w, &h);
-#if defined(ARCH_POWERPC) || defined(HAVE_MMI) //FIXME some cleaner check
-        s_align= 16;
-#else
-        s_align= 8;
-#endif
             
         if(!(s->flags&CODEC_FLAG_EMU_EDGE)){
             w+= EDGE_WIDTH*2;
@@ -260,7 +293,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
             const int v_shift= i==0 ? 0 : v_chroma_shift;
 
             //FIXME next ensures that linesize= 2^x uvlinesize, thats needed because some MC code assumes it
-            buf->linesize[i]= ALIGN(pixel_size*w>>h_shift, s_align<<(h_chroma_shift-h_shift)); 
+            buf->linesize[i]= ALIGN(pixel_size*w>>h_shift, STRIDE_ALIGN<<(h_chroma_shift-h_shift)); 
 
             buf->base[i]= av_mallocz((buf->linesize[i]*h>>v_shift)+16); //FIXME 16
             if(buf->base[i]==NULL) return -1;
@@ -269,7 +302,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
             if(s->flags&CODEC_FLAG_EMU_EDGE)
                 buf->data[i] = buf->base[i];
             else
-                buf->data[i] = buf->base[i] + ALIGN((buf->linesize[i]*EDGE_WIDTH>>v_shift) + (EDGE_WIDTH>>h_shift), s_align);
+                buf->data[i] = buf->base[i] + ALIGN((buf->linesize[i]*EDGE_WIDTH>>v_shift) + (EDGE_WIDTH>>h_shift), STRIDE_ALIGN);
         }
         pic->age= 256*256*256*64;
     }
@@ -866,6 +899,11 @@ int64_t av_rescale(int64_t a, int64_t b, int64_t c){
     return av_rescale_rnd(a, b, c, AV_ROUND_NEAR_INF);
 }
 
+int64_t ff_gcd(int64_t a, int64_t b){
+    if(b) return ff_gcd(b, a%b);
+    else  return a;
+}
+
 /* av_log API */
 
 static int av_log_level = AV_LOG_DEBUG;
@@ -917,7 +955,7 @@ void av_log_set_callback(void (*callback)(void*, int, const char*, va_list))
     av_log_callback = callback;
 }
 
-#if !defined(HAVE_PTHREADS) && !defined(HAVE_W32THREADS)
+#if !defined(HAVE_THREADS)
 int avcodec_thread_init(AVCodecContext *s, int thread_count){
     return -1;
 }

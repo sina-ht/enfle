@@ -279,6 +279,10 @@ void ff_init_me(MpegEncContext *s){
         c->hpel_put[2][2]= c->hpel_put[2][3]= zero_hpel;
     }
 
+    if(s->codec_id == CODEC_ID_H261){
+        c->sub_motion_search= no_sub_motion_search;
+    }
+
     c->temp= c->scratchpad;
 }
       
@@ -691,6 +695,12 @@ static inline void get_limits(MpegEncContext *s, int x, int y)
         c->ymin = - y - 16;
         c->xmax = - x + s->mb_width *16;
         c->ymax = - y + s->mb_height*16;
+    } else if (s->out_format == FMT_H261){
+        // Search range of H261 is different from other codec standards
+        c->xmin = (x > 15) ? - 15 : 0;
+        c->ymin = (y > 15) ? - 15 : 0;
+        c->xmax = (x < s->mb_width * 16 - 16) ? 15 : 0;              
+        c->ymax = (y < s->mb_height * 16 - 16) ? 15 : 0;
     } else {
         c->xmin = - x;
         c->ymin = - y;
@@ -1007,7 +1017,7 @@ static inline int check_input_motion(MpegEncContext * s, int mb_x, int mb_y, int
     
     if(p_type && USES_LIST(mb_type, 1)){
         av_log(c->avctx, AV_LOG_ERROR, "backward motion vector in P frame\n");
-        return INT_MAX;
+        return INT_MAX/4;
     }
     assert(IS_INTRA(mb_type) || USES_LIST(mb_type,0) || USES_LIST(mb_type,1));
     
@@ -1025,7 +1035,7 @@ static inline int check_input_motion(MpegEncContext * s, int mb_x, int mb_y, int
         
         if(!(s->flags & CODEC_FLAG_INTERLACED_ME)){
             av_log(c->avctx, AV_LOG_ERROR, "Interlaced macroblock selected but interlaced motion estimation disabled\n");
-            return INT_MAX;
+            return INT_MAX/4;
         }
 
         if(USES_LIST(mb_type, 0)){
@@ -1086,7 +1096,7 @@ static inline int check_input_motion(MpegEncContext * s, int mb_x, int mb_y, int
     }else if(IS_8X8(mb_type)){
         if(!(s->flags & CODEC_FLAG_4MV)){
             av_log(c->avctx, AV_LOG_ERROR, "4MV macroblock selected but 4MV encoding disabled\n");
-            return INT_MAX;
+            return INT_MAX/4;
         }
         cmpf= s->dsp.sse[1];
         chroma_cmpf= s->dsp.sse[1];

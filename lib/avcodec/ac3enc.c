@@ -24,7 +24,7 @@
 //#define DEBUG
 //#define DEBUG_BITALLOC
 #include "avcodec.h"
-
+#include "bitstream.h"
 #include "ac3.h"
 
 typedef struct AC3EncodeContext {
@@ -1359,7 +1359,7 @@ static int AC3_encode_frame(AVCodecContext *avctx,
                             unsigned char *frame, int buf_size, void *data)
 {
     AC3EncodeContext *s = avctx->priv_data;
-    short *samples = data;
+    int16_t *samples = data;
     int i, j, k, v, ch;
     int16_t input_samples[N];
     int32_t mdct_coef[NB_BLOCKS][AC3_MAX_CHANNELS][N/2];

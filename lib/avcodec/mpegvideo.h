@@ -27,6 +27,7 @@
 #define AVCODEC_MPEGVIDEO_H
 
 #include "dsputil.h"
+#include "bitstream.h"
 
 #define FRAME_SKIPED 100 ///< return value for header parsers if frame is not coded
 
@@ -263,7 +264,7 @@ typedef struct MpegEncContext {
     int h263_msmpeg4; ///< generate MSMPEG4 compatible stream (deprecated, use msmpeg4_version instead)
     int h263_flv;     ///< use flv h263 header 
     
-    int codec_id;     /* see CODEC_ID_xxx */
+    enum CodecID codec_id;     /* see CODEC_ID_xxx */
     int fixed_qscale; ///< fixed qscale if non zero 
     int encoding;     ///< true if we are encoding (vs decoding) 
     int flags;        ///< AVCodecContext.flags (HQ, MV4, ...) 
@@ -841,8 +842,8 @@ typedef struct RLTable {
     RL_VLC_ELEM *rl_vlc[32];       ///< decoding only 
 } RLTable;
 
-void init_rl(RLTable *rl);
-void init_vlc_rl(RLTable *rl);
+void init_rl(RLTable *rl, int use_static);
+void init_vlc_rl(RLTable *rl, int use_static);
 
 static inline int get_rl_index(const RLTable *rl, int last, int run, int level)
 {
@@ -865,6 +866,12 @@ extern const uint8_t ff_h263_loop_filter_strength[32];
 
 /* h261.c */
 void ff_h261_loop_filter(MpegEncContext *s);
+void ff_h261_reorder_mb_index(MpegEncContext* s);
+void ff_h261_encode_mb(MpegEncContext *s,
+                    DCTELEM block[6][64],
+                    int motion_x, int motion_y);
+void ff_h261_encode_picture_header(MpegEncContext * s, int picture_number);
+void ff_h261_encode_init(MpegEncContext *s);
 
 
 /* h263.c, h263dec.c */
@@ -926,6 +933,7 @@ int ff_mpeg4_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size);
 /* rv10.c */
 void rv10_encode_picture_header(MpegEncContext *s, int picture_number);
 int rv_decode_dc(MpegEncContext *s, int n);
+void rv20_encode_picture_header(MpegEncContext *s, int picture_number);
 
 
 /* msmpeg4.c */
