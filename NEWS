@@ -1,6 +1,14 @@
-NEWS  Last Modified: Mon Sep  3 09:44:48 2001.
+NEWS  Last Modified: Mon Sep 24 02:36:15 2001.
 
 THIS IS A DEVELOPING RELEASE.
+
+20010923:
+ Upgraded libtool to 1.4.2.
+ Supported DivX4Linux.
+ Code clean up. No warning is emitted when more -W options are enabled.
+ CPU capability detection.
+ Better libmpeg2 playback for slower CPU.
+ Eliminate gcc-3.0.1 warnings.
 
 20010902:
  Upgraded autoconf to 2.52.
