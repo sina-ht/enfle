@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Apr 20 16:25:51 2001.
- * $Id: convert.c,v 1.2 2001/04/20 07:27:18 sian Exp $
+ * $Id: convert.c,v 1.3 2001/04/21 07:26:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -115,7 +115,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Stream *s;
   Image *p;
   char *path, *format;
-  int f, dir, ret;
+  int f, dir, ret = 0;
   struct stat statbuf;
 
   s = stream_create();
