@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:08:28 2001.
- * $Id: libriff.c,v 1.5 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Tue Nov 11 00:46:31 2003.
+ * $Id: libriff.c,v 1.6 2003/11/17 13:59:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -130,7 +130,7 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
   if ((chunk_read = rf->input_func(rf->func_arg, buffer, 8)) != 8) {
     if (chunk_read == 0) {
       /* Reach end of file. */
-      rf->err = _RIFF_ERR_SUCCESS;
+      rf->err = _RIFF_ERR_EOF;
       return 0;
     }
     debug_message_fnc("need 8bytes but got only %d bytes.\n", chunk_read);
@@ -139,6 +139,7 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
   }
   memcpy(rc->name, buffer, 4);
   rc->name[4] = '\0';
+  rc->fourcc = (((((rc->name[3] << 8) | rc->name[2]) << 8) | rc->name[1]) << 8) | rc->name[0];
   rc->pos = rf->tell_func(rf->func_arg);
   rc->size = (((((buffer[7] << 8) | buffer[6]) << 8) | buffer[5]) << 8) | buffer[4];
   rc->_size = (rc->size + 1) & ~1;
@@ -156,6 +157,7 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
     }
     memcpy(rc->list_name, buffer, 4);
     rc->list_name[4] = '\0';
+    rc->list_fourcc = (((((rc->list_name[3] << 8) | rc->list_name[2]) << 8) | rc->list_name[1]) << 8) | rc->list_name[0];
     rc->list_pos = rf->tell_func(rf->func_arg);
     rc->list_size = rc->size - 4;
     rc->_list_size = rc->_size - 4;

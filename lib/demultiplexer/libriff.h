@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:13:56 2002.
- * $Id: libriff.h,v 1.2 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Tue Nov 11 23:33:14 2003.
+ * $Id: libriff.h,v 1.3 2003/11/17 13:59:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,6 +36,7 @@ enum _riff_seekwhence {
 
 enum _riff_errcode {
   _RIFF_ERR_SUCCESS = 0,      /* Success */
+  _RIFF_ERR_EOF = 0,          /* EOF reached */
   _RIFF_ERR_TOO_SMALL,        /* File size too small */
   _RIFF_ERR_NOT_RIFF,         /* RIFF tag not found */
   _RIFF_ERR_NO_ENOUGH_MEMORY, /* No enough memory */
@@ -47,7 +48,9 @@ enum _riff_errcode {
 };
 
 struct _riff_chunk {
+  unsigned int fourcc;
   char name[5];
+  unsigned int list_fourcc;
   char list_name[5];
   int is_list;
   unsigned int size;
@@ -119,6 +122,7 @@ struct _riff_file {
 #define riff_file_get_form(rf) (rf)->form
 #define riff_file_get_size(rf) (rf)->size
 #define riff_file_get_err(rf) (rf)->err
+#define riff_file_is_eof(rf) riff_file_get_err(rf) == _RIFF_ERR_EOF
 #define riff_file_set_func_input(rf, rfi) (rf)->input_func = (rfi)
 #define riff_file_set_func_seek(rf, rfs) (rf)->seek_func = (rfs)
 #define riff_file_set_func_tell(rf, rft) (rf)->tell_func = (rft)
