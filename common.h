@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 21:45:31 2001.
- * $Id: common.h,v 1.17 2001/10/10 14:40:57 sian Exp $
+ * Last Modified: Sun Oct 28 03:09:03 2001.
+ * $Id: common.h,v 1.18 2001/10/27 18:45:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -65,6 +65,25 @@ fatal_perror(int code, const char *msg)
   perror(msg);
   exit(code);
 }
+#endif
+
+#ifndef MAX
+#define MAX(a, b) \
+ ({typedef _ta = (a), _tb = (b); \
+           _ta _a = (a); _tb _b = (b); \
+           _a > _b ? _a : _b; })
+#endif
+#ifndef MIN
+#define MIN(a, b) \
+ ({typedef _ta = (a), _tb = (b); \
+           _ta _a = (a); _tb _b = (b); \
+           _a < _b ? _a : _b; })
+#endif
+#ifndef SWAP
+#define SWAP(a, b) \
+ {typedef _ta = a, _tb = b; \
+          _ta *_a = &a; _tb *_b = &b; _ta _t; \
+          _t = *_a; *_a = *_b; *_b = _t; }
 #endif
 
 #ifdef DEBUG
