@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:33:12 2001.
- * $Id: movie.c,v 1.10 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Sat Jan 31 14:49:59 2004.
+ * $Id: movie.c,v 1.11 2004/02/02 16:38:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,8 +40,6 @@ static int render_frame(VideoWindow *, Movie *, Image *);
 static int pause_usec(unsigned int);
 
 static void unload(Movie *);
-static void set_play_every_frame(Movie *, int);
-static int get_play_every_frame(Movie *);
 static void destroy(Movie *);
 
 static Movie template = {
@@ -49,8 +47,6 @@ static Movie template = {
   render_frame: render_frame,
   pause_usec: pause_usec,
   unload: unload,
-  set_play_every_frame: set_play_every_frame,
-  get_play_every_frame: get_play_every_frame,
   destroy: destroy
 };
 
@@ -104,18 +100,6 @@ unload(Movie *m)
   if (m->status != _UNLOADED && m->unload_movie)
     m->unload_movie(m);
   m->status = _UNLOADED;
-}
-
-static void
-set_play_every_frame(Movie *m, int f)
-{
-  m->play_every_frame = f;
-}
-
-static int
-get_play_every_frame(Movie *m)
-{
-  return m->play_every_frame;
 }
 
 static void

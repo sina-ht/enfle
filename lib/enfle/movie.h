@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 17:47:13 2002.
- * $Id: movie.h,v 1.19 2002/03/07 15:17:50 sian Exp $
+ * Last Modified: Sat Jan 31 14:51:34 2004.
+ * $Id: movie.h,v 1.20 2004/02/02 16:38:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,7 +54,6 @@ struct _movie {
   int has_video;
   unsigned int current_frame, num_of_frames;
   float framerate;
-  int play_every_frame;
   int direct_decode;
   int has_audio;
   unsigned int current_sample, num_of_samples;
@@ -69,8 +68,6 @@ struct _movie {
 
   /* These are methods. */
   void (*unload)(Movie *);
-  void (*set_play_every_frame)(Movie *, int);
-  int (*get_play_every_frame)(Movie *);
   void (*destroy)(Movie *);
 
   /* These are implemented by movie plugin. */
@@ -87,8 +84,6 @@ struct _movie {
 #define movie_stop(m) (m)->stop((m))
 #define movie_unload(m) (m)->unload((m))
 #define movie_resize(m) (m)->status = _RESIZING
-#define movie_set_play_every_frame(m, f) (m)->set_play_every_frame((m), (f))
-#define movie_get_play_every_frame(m) (m)->get_play_every_frame((m))
 #define movie_destroy(m) (m)->destroy((m))
 
 Movie *movie_create(void);

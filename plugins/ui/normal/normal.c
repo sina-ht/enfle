@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 06:35:04 2004.
- * $Id: normal.c,v 1.77 2004/01/11 21:42:30 sian Exp $
+ * Last Modified: Sat Jan 31 14:50:17 2004.
+ * $Id: normal.c,v 1.78 2004/02/02 16:38:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -799,10 +799,6 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
   m->ap = uidata->ap;
-
-  /* XXX: This setting should be configurable. */
-  //movie_set_play_every_frame(m, 1);
-  movie_set_play_every_frame(m, 0);
 
   path = NULL;
   ret = MAIN_LOOP_DO_NOTHING;

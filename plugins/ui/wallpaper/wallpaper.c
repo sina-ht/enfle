@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb  5 22:25:03 2003.
- * $Id: wallpaper.c,v 1.13 2003/02/05 15:22:16 sian Exp $
+ * Last Modified: Sat Jan 31 14:50:28 2004.
+ * $Id: wallpaper.c,v 1.14 2004/02/02 16:38:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -139,10 +139,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
   m->ap = uidata->ap;
-
-  /* XXX: This setting should be configurable. */
-  //movie_set_play_every_frame(m, 1);
-  movie_set_play_every_frame(m, 0);
 
   path = NULL;
   if (!(path = archive_iteration_start(a)))
