@@ -4,8 +4,8 @@
  * Adapted for newer version by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  6 01:48:49 2002.
- * $Id: arc.c,v 1.1 2002/10/05 17:16:41 sian Exp $
+ * Last Modified: Sat Oct 19 11:27:31 2002.
+ * $Id: arc.c,v 1.2 2002/11/06 14:11:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,14 +21,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <libarc/arc.h>
-
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
+
+#include <libarc/arc.h>
 
 extern struct URL_module URL_module_file;
 
@@ -41,7 +38,7 @@ DECLARE_ARCHIVER_PLUGIN_METHODS;
 static ArchiverPlugin plugin = {
   type: ENFLE_PLUGIN_ARCHIVER,
   name: "ARC",
-  description: "libarc Archiver plugin version 0.0.8",
+  description: "libarc Archiver plugin version 0.0.8 compiled with libarc-" ARC_LIB_VERSION,
   author: "Junji Hashimoto",
   archiver_private: NULL,
   identify: identify,
@@ -69,8 +66,7 @@ static int /* overrides archive::open */
 arc_open(Archive *arc, Stream *st, char *path)
 {
   int file_size = 0, get_num, mem_size = 0;
-  char *region;
-  char *read_pos;
+  unsigned char *region, *read_pos;
   URL url;
 
   // debug_message_fnc("path: %s\n", path);
@@ -89,13 +85,13 @@ arc_open(Archive *arc, Stream *st, char *path)
   }
 
   mem_size = BUFSIZ * 2;
-  region = read_pos = (char *)malloc(mem_size);
+  region = read_pos = (unsigned char *)malloc(mem_size);
   while ((get_num = url_read(url, read_pos, BUFSIZ)) > 0) {
     file_size += get_num;
     read_pos += get_num;
     if ((mem_size - file_size) < BUFSIZ) {
       mem_size *= 2;
-      region = (char *)realloc(region, mem_size);
+      region = (unsigned char *)realloc(region, mem_size);
       read_pos = region + file_size;
     }
   }
