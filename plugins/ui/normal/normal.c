@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 02:18:29 2001.
- * $Id: normal.c,v 1.35 2001/04/25 17:28:03 sian Exp $
+ * Last Modified: Thu Apr 26 18:01:24 2001.
+ * $Id: normal.c,v 1.36 2001/04/27 01:05:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,8 +32,8 @@
 #include "common.h"
 
 #include "utils/libstring.h"
+#include "utils/misc.h"
 #include "enfle/ui-plugin.h"
-#include "enfle/utils.h"
 
 static int ui_main(UIData *);
 
@@ -81,29 +81,35 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     p->rendered.height = p->magnified.height = p->height;
     break;
   case _VIDEO_RENDER_MAGNIFY_DOUBLE:
+    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method))
       show_message(__FUNCTION__ ": image_magnify() failed.\n");
     if (p->rendered.image)
       memory_destroy(p->rendered.image);
     p->rendered.image = memory_dup(p->magnified.image);
+    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
     break;
   case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? hs : ws;
+    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
     if (p->rendered.image)
       memory_destroy(p->rendered.image);
     p->rendered.image = memory_dup(p->magnified.image);
+    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
     break;
   case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
     ws = (double)vw->full_width  / (double)p->width;
     hs = (double)vw->full_height / (double)p->height;
     s = (ws * p->height > vw->full_height) ? ws : hs;
+    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
     image_magnify(p, s * p->width, s * p->height, vw->interpolate_method);
     if (p->rendered.image)
       memory_destroy(p->rendered.image);
     p->rendered.image = memory_dup(p->magnified.image);
+    video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
     break;
   default:
     show_message(__FUNCTION__ ": invalid render_method %d\n", vw->render_method);
@@ -166,7 +172,7 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
   char *outpath;
   FILE *fp;
 
-  if ((outpath = replace_ext(path, format)) == NULL) {
+  if ((outpath = misc_replace_ext(path, format)) == NULL) {
     show_message(__FUNCTION__ ": No enough memory.\n");
     return 0;
   }
@@ -427,6 +433,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 		video_window_render(vw, p);
 	      } else {
 		config_set_int(c, (char *)"/enfle/plugins/effect/gamma/index", index);
+		video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 		if ((old_p = effect_call(ef, eps, (char *)"Gamma", p, c))) {
 		  if (old_p != p)
 		    image_destroy(old_p);
@@ -435,6 +442,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 		  video_window_render(vw, p);
 		} else
 		  show_message("Gamma correction failed.\n");
+		video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 	      }
 	    }
 	    break;
