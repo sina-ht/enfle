@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 02:11:50 2002.
- * $Id: misc.h,v 1.6 2002/02/08 10:51:43 sian Exp $
+ * Last Modified: Sun Aug 18 20:55:50 2002.
+ * $Id: misc.h,v 1.7 2002/08/18 13:27:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,5 +31,6 @@ char *misc_canonical_pathname(char *);
 char **misc_str_split(char *, char);
 void misc_free_str_array(char **);
 char *misc_str_tolower(char *);
+char *misc_remove_preceding_space(char *);
 
 #endif

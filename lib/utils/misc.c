@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 02:09:04 2002.
- * $Id: misc.c,v 1.7 2002/02/08 10:51:43 sian Exp $
+ * Last Modified: Sun Aug 18 20:53:25 2002.
+ * $Id: misc.c,v 1.8 2002/08/18 13:27:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -174,12 +174,7 @@ misc_str_split(char *str, char delimiter)
       strncpy(ret[k], str + j, l);
     ret[k++][l] = '\0';
   }
-
-  if (k > count) {
-    warning_fnc("k > count\n");
-    //bug(2, "misc_str_split: k > count\n");
-    goto free_and_return;
-  }
+  bug_on(k > count);
 
   for (; k < count; k++) {
     if ((ret[k] = malloc(1)) == NULL)
@@ -223,4 +218,17 @@ misc_str_tolower(char *str)
   }
 
   return ret;
+}
+
+char *
+misc_remove_preceding_space(char *p)
+{
+  char *q, *t;
+
+  for (q = p; isspace((int)*q); q++) ;
+  if ((t = strdup(q)) == NULL)
+    return NULL;
+  free(p);
+
+  return t;
 }
