@@ -1,3 +1,18 @@
+2000-12-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Clean up. Adapted to autoconf-2.49b. More checks.
+
+	* compat.h, common.h: Avoid multiple definition of HAVE_STDLIB_H.
+
+	* plugins/audio/oss/oss.c: More compatibility.
+
+	* lib/enfle/Makefile.am: Added audio headers.
+
+2000-12-26  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audio/esd/.cvsignore, plugins/audio/oss/.cvsignore,
+	plugins/audio/.cvsignore: .cvsignore
+
 2000-12-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.c: New -I option. Plugin information printing.
