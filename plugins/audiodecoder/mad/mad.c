@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 01:41:25 2004.
- * $Id: mad.c,v 1.2 2004/02/14 05:24:20 sian Exp $
+ * Last Modified: Thu Mar  4 00:43:51 2004.
+ * $Id: mad.c,v 1.3 2004/03/03 15:46:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -131,7 +131,7 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
 	return AD_ERROR;
       }
     }
-    debug_message_fnc("recoverable error: %s)\n", mad_stream_errorstr(&adm->stream));
+    debug_message_fnc("recoverable error: %s\n", mad_stream_errorstr(&adm->stream));
   }
 
   if (adm->nframe == 0) {
