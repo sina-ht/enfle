@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 28 13:06:32 2001.
- * $Id: kernel32.c,v 1.15 2001/09/29 18:04:09 sian Exp $
+ * Last Modified: Sun Sep 30 05:12:51 2001.
+ * $Id: kernel32.c,v 1.16 2001/10/05 04:09:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -61,11 +61,14 @@ DECLARE_W32API(DWORD, SetFilePointer, (HANDLE, LONG, LONG *, DWORD));
 DECLARE_W32API(LONG, _llseek, (HFILE, LONG, INT));
 DECLARE_W32API(DWORD, GetFileSize, (HANDLE, LPDWORD));
 DECLARE_W32API(DWORD, GetFileType, (HANDLE));
+DECLARE_W32API(BOOL, DeleteFileA, (LPCSTR));
+DECLARE_W32API(BOOL, FlushFileBuffers, (HANDLE));
 /* directory related */
 DECLARE_W32API(BOOL, CreateDirectoryA, (LPCSTR, LPSECURITY_ATTRIBUTES));
 DECLARE_W32API(BOOL, CreateDirectoryW, (LPCWSTR, LPSECURITY_ATTRIBUTES));
 /* handle related */
 DECLARE_W32API(HANDLE, GetStdHandle, (DWORD));
+DECLARE_W32API(BOOL, SetStdHandle, (DWORD, HANDLE));
 DECLARE_W32API(UINT, SetHandleCount, (UINT));
 DECLARE_W32API(BOOL, CloseHandle, (HANDLE));
 /* module related */
@@ -90,6 +93,10 @@ DECLARE_W32API(BOOL, VirtualFree, (LPVOID, DWORD, DWORD));
 DECLARE_W32API(DWORD, VirtualQuery, (LPCVOID, LPMEMORY_BASIC_INFORMATION, DWORD));
 DECLARE_W32API(BOOL, IsBadReadPtr, (LPCVOID, UINT));
 DECLARE_W32API(BOOL, IsBadWritePtr, (LPCVOID, UINT));
+DECLARE_W32API(BOOL, IsBadCodePtr, (FARPROC));
+/* resource related */
+DECLARE_W32API(HRSRC, FindResourceA, (HMODULE, LPCSTR, LPCSTR));
+DECLARE_W32API(DWORD, SizeofResource, (HMODULE, HRSRC));
 /* heap related */
 DECLARE_W32API(HANDLE, HeapCreate, (DWORD, DWORD, DWORD));
 DECLARE_W32API(LPVOID, HeapAlloc, (HANDLE, DWORD, DWORD));
@@ -101,10 +108,13 @@ DECLARE_W32API(DWORD, GetProcessHeaps, (DWORD, HANDLE *));
 /* string related */
 DECLARE_W32API(INT, lstrlenA, (LPCSTR));
 DECLARE_W32API(LPSTR, lstrcpyA, (LPSTR, LPCSTR));
+DECLARE_W32API(LPSTR, lstrcatA, (LPSTR, LPCSTR));
+DECLARE_W32API(INT, lstrcmpA, (LPCSTR, LPCSTR));
 /* process related */
 DECLARE_W32API(HANDLE, GetCurrentProcess, (void));
 DECLARE_W32API(FARPROC, GetProcAddress, (HMODULE, LPCSTR));
 DECLARE_W32API(void, ExitProcess, (DWORD)) __attribute__ ((noreturn));
+DECLARE_W32API(BOOL, TerminateProcess, (HANDLE, DWORD));
 /* thread related */
 DECLARE_W32API(HANDLE, GetCurrentThread, (void));
 DECLARE_W32API(DWORD, GetCurrentThreadId, (void));
@@ -127,7 +137,9 @@ DECLARE_W32API(LONG, InterlockedIncrement, (PLONG));
 DECLARE_W32API(LONG, InterlockedDecrement, (PLONG));
 /* exception */
 DECLARE_W32API(DWORD, UnhandledExceptionFilter, (PEXCEPTION_POINTERS));
+DECLARE_W32API(LPTOP_LEVEL_EXCEPTION_FILTER, SetUnhandledExceptionFilter, (LPTOP_LEVEL_EXCEPTION_FILTER));
 DECLARE_W32API(void, RaiseException, (DWORD, DWORD, DWORD, const LPDWORD));
+DECLARE_W32API(void, RtlUnwind, (PEXCEPTION_FRAME, LPVOID, PEXCEPTION_RECORD, DWORD));
 /* Environment */
 DECLARE_W32API(LPSTR, GetCommandLineA, (void));
 DECLARE_W32API(DWORD, GetEnvironmentVariableA, (LPCSTR,LPSTR,DWORD));
@@ -141,14 +153,17 @@ DECLARE_W32API(INT, GetLocaleInfoA, (LCID, LCTYPE, LPSTR, INT));
 DECLARE_W32API(UINT, GetACP, (void));
 DECLARE_W32API(UINT, GetOEMCP, (void));
 DECLARE_W32API(BOOL, GetCPInfo, (UINT, LPCPINFO));
+DECLARE_W32API(BOOL, GetStringTypeA, (LCID, DWORD, LPCSTR, INT, LPWORD));
 DECLARE_W32API(BOOL, GetStringTypeW, (DWORD, LPCWSTR, INT, LPWORD));
 DECLARE_W32API(INT, MultiByteToWideChar, (UINT, DWORD, LPCSTR, INT, LPWSTR, INT));
 DECLARE_W32API(INT, WideCharToMultiByte, (UINT, DWORD, LPCWSTR, INT, LPSTR, INT, LPCSTR, BOOL *));
+DECLARE_W32API(INT, LCMapStringA, (LCID, DWORD, LPCSTR, INT, LPSTR, INT));
 /* date and time */
 DECLARE_W32API(BOOL, EnumCalendarInfoA, (CALINFO_ENUMPROCA, LCID, CALID, CALTYPE));
 DECLARE_W32API(VOID, GetLocalTime, (LPSYSTEMTIME));
 /* miscellaneous */
 DECLARE_W32API(DWORD, GetLastError, (void));
+DECLARE_W32API(void, SetLastError, (DWORD));
 DECLARE_W32API(LONG, GetVersion, (void));
 DECLARE_W32API(BOOL, GetVersionExA, (OSVERSIONINFOA *));
 /* unimplemented */
@@ -168,9 +183,12 @@ static Symbol_info symbol_infos[] = {
   { "_llseek", _llseek },
   { "GetFileSize", GetFileSize },
   { "GetFileType", GetFileType },
+  { "DeleteFileA", DeleteFileA },
+  { "FlushFileBuffers", FlushFileBuffers },
   { "CreateDirectoryA", CreateDirectoryA },
   { "CreateDirectoryW", CreateDirectoryW },
   { "GetStdHandle", GetStdHandle },
+  { "SetStdHandle", SetStdHandle },
   { "SetHandleCount", SetHandleCount },
   { "CloseHandle", CloseHandle },
   { "LoadLibraryA", LoadLibraryA },
@@ -193,6 +211,9 @@ static Symbol_info symbol_infos[] = {
   { "VirtualQuery", VirtualQuery },
   { "IsBadReadPtr", IsBadReadPtr },
   { "IsBadWritePtr", IsBadWritePtr },
+  { "IsBadCodePtr", IsBadCodePtr },
+  { "FindResourceA", FindResourceA },
+  { "SizeofResource", SizeofResource },
   { "HeapCreate", HeapCreate },
   { "HeapAlloc", HeapAlloc },
   { "HeapReAlloc", HeapReAlloc },
@@ -202,9 +223,12 @@ static Symbol_info symbol_infos[] = {
   { "GetProcessHeaps", GetProcessHeaps },
   { "lstrlenA", lstrlenA },
   { "lstrcpyA", lstrcpyA },
+  { "lstrcatA", lstrcatA },
+  { "lstrcmpA", lstrcmpA },
   { "GetCurrentProcess", GetCurrentProcess },
   { "GetProcAddress", GetProcAddress },
   { "ExitProcess", ExitProcess },
+  { "TerminateProcess", TerminateProcess },
   { "GetCurrentThread", GetCurrentThread },
   { "GetCurrentThreadId", GetCurrentThreadId },
   { "GetThreadLocale", GetThreadLocale },
@@ -222,7 +246,9 @@ static Symbol_info symbol_infos[] = {
   { "InterlockedIncrement", InterlockedIncrement },
   { "InterlockedDecrement", InterlockedDecrement },
   { "UnhandledExceptionFilter", UnhandledExceptionFilter },
+  { "SetUnhandledExceptionFilter", SetUnhandledExceptionFilter },
   { "RaiseException", RaiseException },
+  { "RtlUnwind", RtlUnwind },
   { "GetCommandLineA", GetCommandLineA },
   { "GetEnvironmentVariableA", GetEnvironmentVariableA },
   { "GetEnvironmentStrings", GetEnvironmentStringsA },
@@ -235,12 +261,15 @@ static Symbol_info symbol_infos[] = {
   { "GetACP", GetACP },
   { "GetOEMCP", GetOEMCP },
   { "GetCPInfo", GetCPInfo },
+  { "GetStringTypeA", GetStringTypeA },
   { "GetStringTypeW", GetStringTypeW },
   { "MultiByteToWideChar", MultiByteToWideChar },
   { "WideCharToMultiByte", WideCharToMultiByte },
+  { "LCMapStringA", LCMapStringA },
   { "EnumCalendarInfoA", EnumCalendarInfoA },
   { "GetLocalTime", GetLocalTime },
   { "GetLastError", GetLastError },
+  { "SetLastError", SetLastError },
   { "GetVersion", GetVersion },
   { "GetVersionExA", GetVersionExA },
   { NULL, unknown_symbol }
@@ -387,6 +416,20 @@ DEFINE_W32API(DWORD, GetFileType,
   return FILE_TYPE_DISK;
 }
 
+DEFINE_W32API(BOOL, DeleteFileA,
+	      (LPCSTR path))
+{
+  debug_message(__FUNCTION__ "(%s) called\n", path);
+  return FALSE;
+}
+
+DEFINE_W32API(BOOL, FlushFileBuffers,
+	      (HANDLE h))
+{
+  debug_message(__FUNCTION__ "(%p) called\n", h);
+  return TRUE;
+}
+
 /* directory related */
 
 DEFINE_W32API(BOOL, CreateDirectoryA,
@@ -427,6 +470,13 @@ DEFINE_W32API(HANDLE, GetStdHandle,
     break;
   }
   return (HANDLE)INVALID_HANDLE_VALUE;
+}
+
+DEFINE_W32API(BOOL, SetStdHandle,
+	      (DWORD std, HANDLE h))
+{
+  debug_message(__FUNCTION__ "(%d, %p) called: ", std, h);
+  return TRUE;
 }
 
 DEFINE_W32API(UINT, SetHandleCount,
@@ -732,6 +782,28 @@ DEFINE_W32API(BOOL, IsBadWritePtr,
   return TRUE;
 }
 
+DEFINE_W32API(BOOL, IsBadCodePtr,
+	      (FARPROC p))
+{
+  debug_message(__FUNCTION__ "(%p) called\n", p);
+  return TRUE;
+}
+
+/* resource related */
+
+DEFINE_W32API(HRSRC, FindResourceA,
+	      (HMODULE p, LPCSTR a, LPCSTR b))
+{
+  debug_message(__FUNCTION__ "(module %p %s %s) called\n", p, a, b);
+  return (HRSRC)0;
+}
+
+DEFINE_W32API(DWORD, SizeofResource, (HMODULE p, HRSRC r))
+{
+  debug_message(__FUNCTION__ "(module %p, HRSRC %p) called\n", p, r);
+  return (DWORD)0;
+}
+
 /* heap related */
 
 DEFINE_W32API(HANDLE, HeapCreate,
@@ -819,6 +891,22 @@ DEFINE_W32API(LPSTR, lstrcpyA,
   return dest;
 }
 
+DEFINE_W32API(LPSTR, lstrcatA,
+	      (LPSTR dest, LPCSTR src))
+{
+  debug_message(__FUNCTION__ "(%p, %s) called\n", dest, src);
+
+  memcpy(dest + strlen(dest), src, strlen(src) + 1);
+
+  return dest;
+}
+
+DEFINE_W32API(INT, lstrcmpA,
+	      (LPCSTR a, LPCSTR b))
+{
+  return strcmp(a, b);
+}
+
 /* process related */
 
 DEFINE_W32API(HANDLE, GetCurrentProcess,
@@ -853,6 +941,13 @@ DEFINE_W32API(void, ExitProcess, (DWORD status))
 {
   debug_message(__FUNCTION__ "() called\n");
   exit(status);
+}
+
+DEFINE_W32API(BOOL, TerminateProcess,
+	      (HANDLE h, DWORD d))
+{
+  debug_message(__FUNCTION__ "(%p, %d) called\n", h, d);
+  return TRUE;
 }
 
 /* thread related */
@@ -1055,10 +1150,38 @@ DEFINE_W32API(DWORD, UnhandledExceptionFilter,
   return 0;
 }
 
+DEFINE_W32API(LPTOP_LEVEL_EXCEPTION_FILTER, SetUnhandledExceptionFilter,
+	      (LPTOP_LEVEL_EXCEPTION_FILTER filter))
+{
+  debug_message(__FUNCTION__ "(%p) called\n", filter);
+  return filter;
+}
+
 DEFINE_W32API(void, RaiseException,
 	      (DWORD code, DWORD flags, DWORD nbargs, const LPDWORD args))
 {
   debug_message(__FUNCTION__ "(code %d) called\n", code);
+}
+
+/*
+*  this undocumented function is called when an exception
+*  handler wants all the frames to be unwound. RtlUnwind
+*  calls all exception handlers with the EH_UNWIND or
+*  EH_EXIT_UNWIND flags set in the exception record
+*
+*  This prototype assumes RtlUnwind takes the same
+*  parameters as OS/2 2.0 DosUnwindException
+*  Disassembling RtlUnwind shows this is true, except for
+*  the TargetEIP parameter, which is unused. There is 
+*  a fourth parameter, that is used as the eax in the 
+*  context.   
+*/
+DEFINE_W32API(void, RtlUnwind, (PEXCEPTION_FRAME pestframe,
+				LPVOID unusedEIP,
+				PEXCEPTION_RECORD pexcrec,
+				DWORD contextEAX))
+{
+  debug_message(__FUNCTION__ "() called\n");
 }
 
 /* environment */
@@ -1172,6 +1295,13 @@ DEFINE_W32API(BOOL, GetCPInfo,
   return TRUE;
 }
 
+DEFINE_W32API(BOOL, GetStringTypeA,
+	      (LCID id, DWORD type, LPCSTR src, INT count, LPWORD ctype))
+{
+  debug_message(__FUNCTION__ "() called\n");
+  return TRUE;
+}
+
 DEFINE_W32API(BOOL, GetStringTypeW, (DWORD type, LPCWSTR src, INT count, LPWORD ctype))
 {
   debug_message(__FUNCTION__ "() called\n");
@@ -1260,6 +1390,28 @@ DEFINE_W32API(INT, WideCharToMultiByte,
   return 0;
 }
 
+/*
+LCID lcid: Locale identifier created with MAKELCID;
+           LOCALE_SYSTEM_DEFAULT and LOCALE_USER_DEFAULT are
+           predefined values.
+DWORD mapflags: Flags.
+LPCSTR srcstr: Source buffer.
+INT srclen: Source length.
+LPSTR dststr: Destination buffer.
+INT dstlen: Destination buffer length.
+
+Convert a string, or generate a sort key from it.  If (mapflags &
+LCMAP_SORTKEY), the function will generate a sort key for the source
+string. Else, it will convert it accordingly to the flags
+LCMAP_UPPERCASE, LCMAP_LOWERCASE,...
+*/
+DEFINE_W32API(INT, LCMapStringA,
+	      (LCID lcid, DWORD mapflags, LPCSTR srcstr, INT srclen, LPSTR dststr, INT dstlen))
+{
+  debug_message(__FUNCTION__ "(%d, %d, %p, %d, %p, %d) called\n", lcid, mapflags, srcstr, srclen, dststr, dstlen);
+  return 0;
+}
+
 /* date and time */
 
 DEFINE_W32API(BOOL, EnumCalendarInfoA,
@@ -1282,6 +1434,11 @@ DEFINE_W32API(DWORD, GetLastError,
 {
   debug_message(__FUNCTION__ "() called: 0\n");
   return 0;
+}
+
+DEFINE_W32API(void, SetLastError, (DWORD e))
+{
+  debug_message(__FUNCTION__ "(%d) called\n", e);
 }
 
 DEFINE_W32API(LONG, GetVersion,
