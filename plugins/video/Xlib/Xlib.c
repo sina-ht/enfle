@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 05:13:29 2001.
- * $Id: Xlib.c,v 1.36 2001/06/19 08:20:30 sian Exp $
+ * Last Modified: Wed Aug  1 19:33:07 2001.
+ * $Id: Xlib.c,v 1.37 2001/08/01 10:36:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -112,7 +112,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.5",
+  description: "Xlib Video plugin version 0.5.1",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -682,7 +682,8 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	XSetClipMask(x11_display(x11), gc, None);
 	XDestroyRegion(region);
       } else {
-	x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
+	if (!xwi->xi->use_xv)
+	  x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
       }
       if (vw->if_fullscreen)
 	draw_caption(vw);
