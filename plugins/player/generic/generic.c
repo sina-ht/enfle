@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 01:22:49 2004.
- * $Id: generic.c,v 1.2 2004/02/20 17:23:26 sian Exp $
+ * Last Modified: Sat Feb 21 15:49:09 2004.
+ * $Id: generic.c,v 1.3 2004/02/21 07:50:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,13 +54,6 @@ typedef struct __generic_info {
   pthread_t audio_thread;
 } generic_info;
 
-//IMAGE_UYVY | IMAGE_YUY2 |
-static const unsigned int types =
-  (IMAGE_I420 |
-   IMAGE_BGRA32 | IMAGE_ARGB32 |
-   IMAGE_RGB24 | IMAGE_BGR24 |
-   IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
-
 DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus play(Movie *);
@@ -99,6 +92,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 {
   generic_info *info = (generic_info *)m->movie_private;
   Image *p;
+  unsigned int types;
 
   if (info)
     err_message("info should be NULL.\n");
@@ -115,13 +109,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
   info->eps = eps;
   info->c = c;
-
-  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  if (!m->direct_decode) {
-    err_message_fnc("Cannot direct decoding...\n");
-    return PLAY_ERROR;
-  }
-  debug_message("requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   if (info->nastreams == 0 && info->nvstreams == 0) {
     debug_message_fnc("No audio, No video...\n");
@@ -163,6 +150,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     if ((m->v_codec_name = videodecoder_codec_name(m->v_fourcc)) == NULL) {
       show_message("No videodecoder for %X\n", m->v_fourcc);
       warning("Video will not be played.\n");
+      m->width = 128;
+      m->height = 128;
+      m->num_of_frames = 1;
     } else {
       m->has_video = 1;
     }
@@ -172,6 +162,18 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     m->num_of_frames = 1;
     debug_message("No video streams.\n");
   }
+
+  if (videodecoder_query(info->eps, m, m->v_fourcc, &types, info->c) == 0) {
+    show_message("videodecoder for %s not found\n", m->v_codec_name);
+    return PLAY_NOT;
+  }
+
+  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
+  if (!m->direct_decode) {
+    err_message_fnc("Cannot direct decoding...\n");
+    return PLAY_ERROR;
+  }
+  debug_message("requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   p = info->p = image_create();
   image_width(p) = m->width;
@@ -201,39 +203,28 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     break;
   default:
     info->use_xv = 0;
-    switch (vw->bits_per_pixel) {
-    case 32:
+    switch (m->requested_type) {
+    case _RGB24:
+    case _BGR24:
+      p->depth = 24;
+      p->bits_per_pixel = 24;
+      image_bpl(p) = image_width(p) * 3;
+      m->out_fourcc = FCC_RGB2;
+      m->out_bitcount = 24;
+      break;
+    case _RGBA32:
+    case _ABGR32:
+    case _ARGB32:
+    case _BGRA32:
       p->depth = 24;
       p->bits_per_pixel = 32;
       image_bpl(p) = image_width(p) * 4;
       m->out_fourcc = (p->type == _BGRA32) ? 0 : FCC_ABGR;
+      m->out_fourcc = FCC_RGB2;
       m->out_bitcount = 32;
       break;
-    case 24:
-      p->depth = 24;
-      p->bits_per_pixel = 24;
-      image_bpl(p) = image_width(p) * 3;
-      m->out_fourcc = (p->type == _BGR24) ? 0 : FCC_ABGR;
-      m->out_bitcount = 24;
-      break;
-#if 0
-    case 16:
-      p->depth = 16;
-      p->bits_per_pixel = 16;
-      image_bpl(p) = image_width(p) * 2;
-      m->out_fourcc = 3; /* XXX: endian */
-      m->out_bitcount = 16;
-      break;
-    case 15:
-      p->depth = 15;
-      p->bits_per_pixel = 16;
-      image_bpl(p) = image_width(p) * 2;
-      m->out_fourcc = 0; /* XXX: endian */
-      m->out_bitcount = 16;
-      break;
-#endif
     default:
-      err_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+      err_message("Cannot render type %d\n", m->requested_type);
       return PLAY_ERROR;
     }
   }
@@ -252,11 +243,20 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
   show_message("\n");
 
   p->type = m->requested_type;
-  if ((image_rendered_image(p) = memory_create()) == NULL) {
-    err_message("No enough memory for image object.\n");
-    goto error;
+
+  if (info->use_xv) {
+    if ((image_rendered_image(p) = memory_create()) == NULL) {
+      err_message("No enough memory for image object.\n");
+      goto error;
+    }
+    memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
+  } else {
+    if ((image_image(p) = memory_create()) == NULL) {
+      err_message("No enough memory for image object.\n");
+      goto error;
+    }
+    memory_request_type(image_image(p), video_window_preferred_memory_type(vw));
   }
-  memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
 
   m->st = st;
   m->status = _STOP;
