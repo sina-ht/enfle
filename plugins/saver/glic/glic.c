@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Sun Sep  9 10:28:14 2001.
- * $Id: glic.c,v 1.18 2001/09/10 00:04:51 sian Exp $
+ * Last Modified: Mon Sep 10 11:41:18 2001.
+ * $Id: glic.c,v 1.19 2001/09/10 14:19:32 sian Exp $
  */
 
 #include <stdlib.h>
@@ -77,8 +77,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   VMPM vmpm;
   unsigned char *predicted;
   unsigned int image_size;
-  char *path;
-  char *vmpm_path;
+  char *path, *vmpm_path;
   char *predict_method, *decompose_method, *scan_method;
   PredictType predict_id;
   int scan_id;
@@ -156,7 +155,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 	debug_message("glic: I = %d underflow, clipped to 1.\n", vmpm.I);
 	vmpm.I = 1;
       } else if (vmpm.I > Imax) {
-	debug_message("glic: I = %d overflow, clipped to %d.\n", vmpm.I, Imax);
+	debug_message("glic: I = %d overflow, clipped to max(%d).\n", vmpm.I, Imax);
 	vmpm.I = Imax;
       }
       debug_message("glic: I = %d (optimized)\n", vmpm.I);

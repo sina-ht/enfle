@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:39:29 2001.
- * $Id: msvcrt.c,v 1.3 2001/01/06 23:52:52 sian Exp $
+ * Last Modified: Mon Sep 10 23:14:43 2001.
+ * $Id: msvcrt.c,v 1.4 2001/09/10 14:20:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -80,7 +80,7 @@ msvcrt_initterm(void **arg1, void **arg2)
 static void
 msvcrt_onexit(void *arg)
 {
-  debug_message("_onexit() called\n");
+  debug_message("_onexit(%p) called\n", arg);
 }
 
 static int
@@ -92,7 +92,7 @@ msvcrt_strcmpi(char *str1, char *str2)
 static char *
 msvcrt_strrchr(char *str, int c)
 {
-  debug_message("strrchr(%s, %c)\n", str, (char)c);
+  debug_message("strrchr(%s, '%c')\n", str, (char)c);
   /* XXX: hack hack hack */
   if (c == '\\')
     return strrchr(str, '/');
@@ -124,15 +124,17 @@ msvcrt_new(int size)
 static void
 msvcrt_free(void *p)
 {
-  debug_message("free(%p) called\n", p);
+  debug_message("free(%p) called: ", p);
   w32api_mem_free(p);
+  debug_message("freed.\n");
 }
 
 static void
 msvcrt_delete(void *p)
 {
-  debug_message("delete(%p) called\n", p);
+  debug_message("delete(%p) called: ", p);
   w32api_mem_free(p);
+  debug_message("deleted.\n");
 }
 
 /* unimplemened */
