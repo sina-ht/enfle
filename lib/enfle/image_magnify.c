@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 14 09:32:30 2002.
- * $Id: image_magnify.c,v 1.7 2002/02/14 00:33:14 sian Exp $
+ * Last Modified: Sat Jun  8 00:04:54 2002.
+ * $Id: image_magnify.c,v 1.8 2002/06/13 14:29:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -372,68 +372,70 @@ canonicalize(Image *p, unsigned int shrinked_bpl)
 /* public interface */
 
 int
-image_magnify_main(Image *p, int dw, int dh, ImageInterpolateMethod method)
+image_magnify_main(Image *p, int dw, int dh, ImageInterpolateMethod method, int use_hw_scale)
 {
-  switch (p->type) {
-  case _GRAY:
-  case _INDEX:
-    p->magnified.bytes_per_line = dw;
-    canonicalize(p, p->width);
-    break;
-  case _RGB_WITH_BITMASK:
-  case _BGR_WITH_BITMASK:
-    p->magnified.bytes_per_line = dw << 1;
-    canonicalize(p, p->width << 1);
-    break;
-  case _RGB24:
-  case _BGR24:
-    p->magnified.bytes_per_line = dw * 3;
-    canonicalize(p, p->width * 3);
-    break;
-  case _RGBA32:
-  case _ABGR32:
-  case _ARGB32:
-  case _BGRA32:
-    p->magnified.bytes_per_line = dw << 2;
-    canonicalize(p, p->width << 2);
-    break;
-  default:
-    show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
-    return 0;
-  }
+  if (!use_hw_scale) {
+    switch (p->type) {
+    case _GRAY:
+    case _INDEX:
+      p->magnified.bytes_per_line = dw;
+      canonicalize(p, p->width);
+      break;
+    case _RGB_WITH_BITMASK:
+    case _BGR_WITH_BITMASK:
+      p->magnified.bytes_per_line = dw << 1;
+      canonicalize(p, p->width << 1);
+      break;
+    case _RGB24:
+    case _BGR24:
+      p->magnified.bytes_per_line = dw * 3;
+      canonicalize(p, p->width * 3);
+      break;
+    case _RGBA32:
+    case _ABGR32:
+    case _ARGB32:
+    case _BGRA32:
+      p->magnified.bytes_per_line = dw << 2;
+      canonicalize(p, p->width << 2);
+      break;
+    default:
+      show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
+      return 0;
+    }
 
-  if (!p->magnified.image && ((p->magnified.image = memory_create()) == NULL)) {
-    show_message_fnc("No enough memory\n");
-    return 0;
-  }
+    if (!p->magnified.image && ((p->magnified.image = memory_create()) == NULL)) {
+      show_message_fnc("No enough memory\n");
+      return 0;
+    }
 
-  if ((memory_alloc(p->magnified.image, p->magnified.bytes_per_line * dh)) == NULL) {
-    show_message_fnc("No enough memory (%d bytes requested)\n", p->magnified.bytes_per_line * dh);
-    return 0;
-  }
+    if ((memory_alloc(p->magnified.image, p->magnified.bytes_per_line * dh)) == NULL) {
+      show_message_fnc("No enough memory (%d bytes requested)\n", p->magnified.bytes_per_line * dh);
+      return 0;
+    }
 
-  switch (p->type) {
-  case _GRAY:
-  case _INDEX:
-    magnify_generic8(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh);
-    break;
-  case _RGB_WITH_BITMASK:
-  case _BGR_WITH_BITMASK:
-    magnify_generic16((unsigned short *)memory_ptr(p->magnified.image), (unsigned short *)memory_ptr(p->image), p->width, p->height, dw, dh);
-    break;
-  case _RGB24:
-  case _BGR24:
-    magnify_generic24(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
-    break;
-  case _RGBA32:
-  case _ABGR32:
-  case _ARGB32:
-  case _BGRA32:
-    magnify_generic32(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
-    break;
-  default:
-    show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
-    return 0;
+    switch (p->type) {
+    case _GRAY:
+    case _INDEX:
+      magnify_generic8(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh);
+      break;
+    case _RGB_WITH_BITMASK:
+    case _BGR_WITH_BITMASK:
+      magnify_generic16((unsigned short *)memory_ptr(p->magnified.image), (unsigned short *)memory_ptr(p->image), p->width, p->height, dw, dh);
+      break;
+    case _RGB24:
+    case _BGR24:
+      magnify_generic24(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
+      break;
+    case _RGBA32:
+    case _ABGR32:
+    case _ARGB32:
+    case _BGRA32:
+      magnify_generic32(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
+      break;
+    default:
+      show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
+      return 0;
+    }
   }
 
   p->magnified.width  = dw;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:26:54 2002.
- * $Id: image.h,v 1.16 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Sat Jun  8 00:09:25 2002.
+ * $Id: image.h,v 1.17 2002/06/13 14:29:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,10 +39,15 @@ typedef enum _image_type {
   _ABGR32,
   _ARGB32,
   _BGRA32,
+  /* Below are hardware scaling capable formats */
   _YUY2,
   _YV12,
   _I420,
   _UYVY,
+  _RV15,
+  _RV16,
+  _RV24,
+  _RV32,
   _IMAGETYPE_TERMINATOR
 } ImageType;
 
@@ -117,13 +122,13 @@ struct _image {
 
   Image *(*duplicate)(Image *);
   int (*compare)(Image *, Image *);
-  int (*magnify)(Image *, int, int, ImageInterpolateMethod);
+  int (*magnify)(Image *, int, int, ImageInterpolateMethod, int);
   void (*destroy)(Image *);
 };
 
 #define image_dup(p) (p)->duplicate((p))
 #define image_compare(p, p2) (p)->compare((p), (p2))
-#define image_magnify(p, dw, dh, m) (p)->magnify((p), (dw), (dh), (m))
+#define image_magnify(p, dw, dh, m, uhs) (p)->magnify((p), (dw), (dh), (m), (uhs))
 #define image_destroy(p) (p)->destroy((p))
 
 Image *image_create(void);

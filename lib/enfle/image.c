@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:08:32 2002.
- * $Id: image.c,v 1.13 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Sat Jun  8 00:10:22 2002.
+ * $Id: image.c,v 1.14 2002/06/13 14:29:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,7 +28,7 @@
 
 #include "image.h"
 
-int image_magnify_main(Image *, int, int, ImageInterpolateMethod);
+int image_magnify_main(Image *, int, int, ImageInterpolateMethod, int);
 
 static const char *image_type_to_string_array[] = {
   "_BITMAP_LSBFirst",
@@ -52,7 +52,7 @@ static const char *image_type_to_string_array[] = {
 
 static Image *duplicate(Image *);
 static int compare(Image *, Image *);
-static int magnify(Image *, int, int, ImageInterpolateMethod);
+static int magnify(Image *, int, int, ImageInterpolateMethod, int);
 static void destroy(Image *);
 
 static Image template = {
@@ -127,9 +127,9 @@ compare(Image *p, Image *p2)
 }
 
 static int
-magnify(Image *p, int dw, int dh, ImageInterpolateMethod method)
+magnify(Image *p, int dw, int dh, ImageInterpolateMethod method, int use_hw_scale)
 {
-  return image_magnify_main(p, dw, dh, method);
+  return image_magnify_main(p, dw, dh, method, use_hw_scale);
 }
 
 static void
