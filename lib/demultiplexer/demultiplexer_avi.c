@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 01:32:28 2001.
- * $Id: demultiplexer_avi.c,v 1.1 2001/09/03 00:31:03 sian Exp $
+ * Last Modified: Wed Sep  5 01:31:46 2001.
+ * $Id: demultiplexer_avi.c,v 1.2 2001/09/07 04:38:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,9 +86,14 @@ tell_func(void *arg)
 #define FCC_auds 0x73647561
 
 #define _READ_CHUNK_HEADER(f, c) \
- if (!riff_file_read_chunk_header((f), (c))) { \
-  show_message(__FUNCTION__ ": riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg((f))); \
-  goto error_free; \
+ for (;;) { \
+  if (!riff_file_read_chunk_header((f), (c))) { \
+    show_message(__FUNCTION__ ": riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg((f))); \
+    goto error_free; \
+  } \
+  if (strcmp(riff_chunk_get_name((c)), "JUNK")) \
+    break; \
+  riff_file_skip_chunk_data((f), (c)); \
  }
 #define _CHECK_CHUNK_NAME(c, n) \
  if (riff_chunk_is_list((c))) { \
