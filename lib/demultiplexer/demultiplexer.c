@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 21:32:20 2001.
- * $Id: demultiplexer.c,v 1.1 2001/02/20 13:54:20 sian Exp $
+ * Last Modified: Sat Feb 24 03:43:36 2001.
+ * $Id: demultiplexer.c,v 1.2 2001/02/24 08:23:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,12 +28,20 @@
 #include "demultiplexer.h"
 
 Demultiplexer *
-demultiplexer_create(void)
+_demultiplexer_create(void)
 {
   Demultiplexer *demux;
 
   if ((demux = calloc(1, sizeof(Demultiplexer))) == NULL)
     return NULL;
+  pthread_mutex_init(&demux->io_mutex, NULL);
 
   return demux;
+}
+
+void
+_demultiplexer_destroy(Demultiplexer *demux)
+{
+  pthread_mutex_destroy(&demux->io_mutex);
+  free(demux);
 }

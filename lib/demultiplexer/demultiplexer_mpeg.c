@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 18:25:26 2001.
- * $Id: demultiplexer_mpeg.c,v 1.4 2001/02/22 17:47:58 sian Exp $
+ * Last Modified: Sat Feb 24 08:43:29 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.5 2001/02/24 08:23:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,12 +26,12 @@
 #include "compat.h"
 #include "common.h"
 
-#include "demultiplexer_mpeg.h"
-#include "enfle/utils.h"
-
 #ifndef USE_PTHREAD
 #  error pthread is mandatory for demultiplexer_mpeg
 #endif
+
+#include "demultiplexer_mpeg.h"
+#include "enfle/utils.h"
 
 DECLARE_DEMULTIPLEXER_METHODS;
 PREPARE_DEMULTIPLEXER_TEMPLATE;
@@ -42,7 +42,7 @@ demultiplexer_mpeg_create(void)
   Demultiplexer *demux;
   MpegInfo *info;
 
-  if ((demux = demultiplexer_create()) == NULL)
+  if ((demux = _demultiplexer_create()) == NULL)
     return NULL;
   memcpy(demux, &template, sizeof(Demultiplexer));
 
@@ -147,7 +147,7 @@ examine(Demultiplexer *demux)
 	show_message(__FUNCTION__ ": weird version\n");
 	goto error;
       }
-      debug_message(__FUNCTION__ ": MPEG_PACK_HEADER: version %d skip %d\n", info->ver, skip);
+      //debug_message(__FUNCTION__ ": MPEG_PACK_HEADER: version %d skip %d\n", info->ver, skip);
       break;
     case MPEG_SYSTEM_START:
       debug_message(__FUNCTION__ ": MPEG_SYSTEM_START\n");
@@ -173,14 +173,14 @@ examine(Demultiplexer *demux)
 	continue;
       if ((id & 0xe0) == 0xc0) {
 	nastream = id & 0x1f;
-	debug_message(__FUNCTION__ ": MPEG_AUDIO %d\n", nastream);
+	//debug_message(__FUNCTION__ ": MPEG_AUDIO %d\n", nastream);
 	if (!(astream & (1 << nastream))) {
 	  astream |= 1 << nastream;
 	  info->nastreams++;
 	}
       } else if ((id & 0xf0) == 0xe0) {
 	nvstream = id & 0xf;
-	debug_message(__FUNCTION__ ": MPEG_VIDEO %d\n", nvstream);
+	//debug_message(__FUNCTION__ ": MPEG_VIDEO %d\n", nvstream);
 	if (!(vstream & (1 << nvstream))) {
 	  vstream |= 1 << nvstream;
 	  info->nvstreams++;
@@ -243,18 +243,16 @@ demux_main(void *arg)
       goto error;
     }
     if (read_size == 0) {
-      demux->eof = 1;
-      break;
+      if (used_size < 4) {
+	demultiplexer_set_eof(demux, 1);
+	break;
+      }
     } else {
       used_size += read_size;
       read_total += read_size;
-      if (read_total > DEMULTIPLEXER_MPEG_DETERMINE_SIZE && info->ver == 0) {
-	debug_message(__FUNCTION__ ": determined as not MPEG.\n");
-	goto error;
-      }
-      if (used_size < 4)
-	continue;
     }
+
+    debug_message(__FUNCTION__ ": read %d bytes\n", read_size);
 
     if (buf[0]) {
       memcpy(buf, buf + 1, used_size - 1);
@@ -323,7 +321,11 @@ demux_main(void *arg)
 	if (nastream == info->nastream) {
 	  if ((buf[6] & 0xc0) == 0x80) {
 	    /* ?, flags, header_len */
+	    debug_message(__FUNCTION__ ": audio II\n");
+
 	    write(info->a_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
+
+	    debug_message(__FUNCTION__ ": audio OK\n");
 	  } else {
 	    unsigned char *p;
 
@@ -347,8 +349,13 @@ demux_main(void *arg)
 	    default:
 	      goto error;
 	    }
-	    if (p < buf + skip)
+	    if (p < buf + skip) {
+	      debug_message(__FUNCTION__ ": audio I\n");
+
 	      write(info->a_fd, p, buf + skip - p);
+
+	      debug_message(__FUNCTION__ ": audio OK\n");
+	    }
 	  }
 	}
       } else if ((id & 0xf0) == 0xe0) {
@@ -356,7 +363,11 @@ demux_main(void *arg)
 	if (nvstream == info->nvstream) {
 	  if ((buf[6] & 0xc0) == 0x80) {
 	    /* ?, flags, header_len */
+	    debug_message(__FUNCTION__ ": video II\n");
+
 	    write(info->v_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
+
+	    debug_message(__FUNCTION__ ": video OK\n");
 	  } else {
 	    unsigned char *p;
 
@@ -380,8 +391,13 @@ demux_main(void *arg)
 	    default:
 	      goto error;
 	    }
-	    if (p < buf + skip)
+	    if (p < buf + skip) {
+	      debug_message(__FUNCTION__ ": video I\n");
+
 	      write(info->v_fd, p, buf + skip - p);
+
+	      debug_message(__FUNCTION__ ": video OK\n");
+	    }
 	  }
 	}
       } else if (id < 0xb9) {
@@ -410,10 +426,14 @@ demux_main(void *arg)
 static int
 start(Demultiplexer *demux)
 {
+  debug_message(__FUNCTION__ "()\n");
+
   if (demux->running)
     return 0;
   demux->running = 1;
   pthread_create(&demux->thread, NULL, demux_main, demux);
+
+  debug_message(__FUNCTION__ ": created\n");
 
   return 1;
 }
@@ -423,10 +443,14 @@ stop(Demultiplexer *demux)
 {
   void *ret;
 
+  debug_message(__FUNCTION__ "()\n");
+
   if (!demux->running)
     return 0;
   demux->running = 0;
   pthread_join(demux->thread, &ret);
+
+  debug_message(__FUNCTION__ ": joined\n");
 
   return 1;
 }
@@ -437,5 +461,5 @@ destroy(Demultiplexer *demux)
   stop(demux);
   if (demux->private_data)
     free(demux->private_data);
-  free(demux);
+  _demultiplexer_destroy(demux);
 }
