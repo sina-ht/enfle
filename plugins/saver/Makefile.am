@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Apr 28 03:26:27 2001.
-# $Id: Makefile.am,v 1.4 2001/04/27 19:16:10 sian Exp $
+# Last Modified: Fri Dec 26 12:17:15 2003.
+# $Id: Makefile.am,v 1.5 2003/12/27 14:27:37 sian Exp $
 
-if ENABLE_PRIVATE
-SUBDIRS = png jpeg glic
-DIST_SUBDIRS = png jpeg glic
-else
+# if ENABLE_PRIVATE
+# SUBDIRS = png jpeg glic
+# DIST_SUBDIRS = png jpeg
+# else
 SUBDIRS = png jpeg
 DIST_SUBDIRS = png jpeg
-endif
+# endif
