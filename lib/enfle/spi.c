@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 15 04:12:12 2001.
- * $Id: spi.c,v 1.11 2001/01/14 19:13:07 sian Exp $
+ * Last Modified: Mon Jan 15 05:03:40 2001.
+ * $Id: spi.c,v 1.12 2001/01/14 20:07:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -88,7 +88,7 @@ static LoaderStatus
 loader_identify(Image *p, Stream *st, void *priv)
 {
   SusieLoader *sl = priv;
-#if 0
+#if 1
   PictureInfo info;
 #endif
   int err;
@@ -97,10 +97,12 @@ loader_identify(Image *p, Stream *st, void *priv)
   memset(buf, 0, 2048);
   stream_read(st, buf, 2048);
   debug_message("loader_identify() called\n");
+#if 0
   if ((err = sl->is_supported(st->path, (DWORD)buf)) != SPI_SUCCESS)
     return LOAD_ERROR;
+#endif
 
-#if 0
+#if 1
   if (st->path)
     err = sl->get_pic_info(st->path, 0, 0, &info);
   else

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:38:44 2001.
- * $Id: kernel32.c,v 1.8 2001/01/06 23:52:52 sian Exp $
+ * Last Modified: Mon Jan 15 05:06:20 2001.
+ * $Id: kernel32.c,v 1.9 2001/01/14 20:07:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,7 +38,7 @@
 #  include <pthread.h>
 #endif
 
-#if 0
+#if 1
 #define more_debug_message(format, args...)
 #else
 #define more_debug_message(format, args...) fprintf(stderr, format, ## args)
@@ -228,8 +228,13 @@ DEFINE_W32API(HANDLE, CreateFileA,
 	       LPSECURITY_ATTRIBUTES sa, DWORD creation,
 	       DWORD attributes, HANDLE template))
 {
-  debug_message("CreateFileA(%s) called\n", filename);
-  return (HANDLE)fopen(filename, "rb");
+  HANDLE handle;
+
+  debug_message("CreateFileA(%s) called: ", filename);
+  handle = (HANDLE)fopen(filename, "rb");
+  debug_message("%p\n", handle);
+
+  return handle;
 }
 
 DEFINE_W32API(HFILE, _lopen,
@@ -238,7 +243,6 @@ DEFINE_W32API(HFILE, _lopen,
   DWORD access = 0, sharing = 0;
 
   debug_message("_lopen(%s, %d) called\n", path, mode);
-  /* FILE_ConvertOFMode(mode, &access, &sharing); */
   return CreateFileA(path, access, sharing, NULL, OPEN_EXISTING, 0, (HANDLE)-1);
 }
 
@@ -355,6 +359,7 @@ DEFINE_W32API(UINT, SetHandleCount,
 DEFINE_W32API(BOOL, CloseHandle,
 	      (HANDLE handle))
 {
+  debug_message("CloseHandle(%p)\n", handle);
   return TRUE;
 }
 
@@ -396,13 +401,13 @@ DEFINE_W32API(HLOCAL, LocalAlloc,
 {
   void *p;
 
-  more_debug_message("LocalAlloc(%X, %d bytes) called ", flags, size);
+  more_debug_message("LocalAlloc(%X, %d bytes) called: ", flags, size);
 
   p = w32api_mem_alloc(size);
   if ((flags & LMEM_ZEROINIT) && p)
     memset(p, 0, size);
 
-  more_debug_message("OK.\n");
+  more_debug_message("%p\n", p);
 
   return p;
 }
@@ -417,7 +422,7 @@ DEFINE_W32API(HLOCAL, LocalReAlloc,
 DEFINE_W32API(HLOCAL, LocalFree,
 	      (HLOCAL handle))
 {
-  more_debug_message("LocalFree() called\n");
+  more_debug_message("LocalFree(%p) called\n", handle);
   w32api_mem_free(handle);
   return NULL;
 }
@@ -441,11 +446,14 @@ DEFINE_W32API(HGLOBAL, GlobalAlloc,
 {
   void *p;
 
-  more_debug_message("GlobalAlloc(0x%X, %d bytes) called\n", flags, size);
+  more_debug_message("GlobalAlloc(0x%X, %d bytes) called: ", flags, size);
 
   p = w32api_mem_alloc(size);
   if ((flags & GMEM_ZEROINIT) && p)
     memset(p, 0, size);
+
+  more_debug_message("%p\n", p);
+
   return p;
 }
 
@@ -459,7 +467,7 @@ DEFINE_W32API(HGLOBAL, GlobalReAlloc,
 DEFINE_W32API(HGLOBAL, GlobalFree,
 	      (HGLOBAL handle))
 {
-  more_debug_message("GlobalFree() called\n");
+  more_debug_message("GlobalFree(%p) called\n", handle);
   w32api_mem_free(handle);
   return NULL;
 }
