@@ -1,4 +1,9 @@
-NEWS  Last Modified: Mon Jun 21 23:04:58 2004.
+NEWS  Last Modified: Mon Nov 22 22:54:03 2004.
+
+20041122:
+ Fix for non-x86 architecture.
+ Changed -n option meaning, -n number means enfle start at number'th
+  file.  -q (formerly -n) is for disabling cache use.
 
 20040621:
  Plugin autoload
