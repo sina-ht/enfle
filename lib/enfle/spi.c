@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 31 01:03:07 2000.
- * $Id: spi.c,v 1.3 2000/10/30 16:17:34 sian Exp $
+ * Last Modified: Fri Nov  3 04:19:50 2000.
+ * $Id: spi.c,v 1.4 2000/11/02 19:38:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,7 +47,7 @@ typedef struct _susie_loader {
   GetPictureInfoFunc get_pic_info;
   GetPictureFunc get_pic;
 } SusieLoader;
-  
+
 typedef struct _susie_archiver {
   PE_image *pe;
   IsSupportedFunc is_supported;
@@ -239,6 +239,31 @@ spi_plugin_exit(void *p)
     free(ep->name);
   if (ep->description)
     free(ep->description);
+
+  switch (ep->type) {
+  case ENFLE_PLUGIN_LOADER:
+    {
+      LoaderPlugin *l = (LoaderPlugin *)p;
+      SusieLoader *sl = l->private;
+
+      peimage_destroy(sl->pe);
+      free(sl);
+    }
+    break;
+  case ENFLE_PLUGIN_ARCHIVER:
+    {
+      ArchiverPlugin *arp = (ArchiverPlugin *)p;
+      SusieArchiver *sa = arp->private;
+
+      peimage_destroy(sa->pe);
+      free(sa);
+    }
+    break;
+  default:
+    show_message("spi_plugin_exit: inappropriate type %d\n", ep->type);
+    break;
+  }
+
   free(ep);
 }
 
