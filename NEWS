@@ -1,1 +1,17 @@
+NEWS  Last Modified: Mon Jun 25 02:07:11 2001.
+
 THIS IS DEVELOPING RELEASE.
+
+20010625:
+ Xv extension support.
+  YUV rendering.
+  Arbitrary size magnification.
+ YUV image type family.
+ LibMPEG2 player plugin.
+ -c, -m option.
+ Plugin interface clean up.
+ avifile-0.6(cvs) support.
+  gcc-3.0 fails to compile avifile-0.53.5.
+ FIFO utility object.
+ demultiplexer interface and demultiplexer_mpeg implementation.
+ Eliminate gcc-3.0 warnings.
