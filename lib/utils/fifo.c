@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 22:21:49 2001.
- * $Id: fifo.c,v 1.1 2001/06/22 17:34:43 sian Exp $
+ * Last Modified: Sun Jun 24 11:35:54 2001.
+ * $Id: fifo.c,v 1.2 2001/06/24 15:43:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,6 +27,8 @@
 #include "common.h"
 #include "fifo.h"
 
+#define FIFO_DEFAULT_MAXDATA 1000
+
 static int put(FIFO *, void *, FIFO_destructor);
 static int get(FIFO *, void **);
 static int set_max(FIFO *, unsigned int);
@@ -34,7 +36,7 @@ static void destroy(FIFO *);
 
 static FIFO template = {
   ndata: 0,
-  maxdata: 0,
+  maxdata: FIFO_DEFAULT_MAXDATA,
   next_get: NULL,
   last_put: NULL,
   put: put,
