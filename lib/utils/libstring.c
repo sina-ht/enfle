@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 19 23:24:55 2000.
- * $Id: libstring.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  2 11:37:44 2000.
+ * $Id: libstring.c,v 1.2 2000/10/02 03:00:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,6 +32,7 @@ static unsigned char *get(String *);
 static unsigned int length(String *);
 static int set(String *, unsigned char *);
 static int copy(String *, String *);
+static int cat_ch(String *, unsigned char);
 static int cat(String *, unsigned char *);
 static int append(String *, String *);
 static void shrink(String *, unsigned int);
@@ -46,6 +47,7 @@ String string_template = {
   length: length,
   set: set,
   copy: copy,
+  cat_ch: cat_ch,
   cat: cat,
   shrink: shrink,
   append: append,
@@ -157,6 +159,17 @@ copy(String *s1, String *s2)
     return 0;
   strcpy(string_buffer(s1), string_buffer(s2));
   string_length(s1) = string_length(s2);
+
+  return 1;
+}
+
+static int
+cat_ch(String *s, unsigned char c)
+{
+  if (!buffer_increase(s, 1))
+    return 0;
+  string_buffer(s)[string_length(s)] = c;
+  string_length(s)++;
 
   return 1;
 }
