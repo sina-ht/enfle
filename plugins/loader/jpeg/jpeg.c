@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 05:02:00 2001.
- * $Id: jpeg.c,v 1.8 2001/06/19 08:17:26 sian Exp $
+ * Last Modified: Thu Jun 21 00:43:51 2001.
+ * $Id: jpeg.c,v 1.9 2001/06/20 15:53:19 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -205,15 +205,19 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
+//#define ENABLE_YUV
+
 DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   struct jpeg_decompress_struct *cinfo;
   struct my_error_mgr jerr;
   JSAMPROW buffer[1]; /* output row buffer */
-  ImageType requested_type;
-  int direct_decode;
   int i, j;
   unsigned char *d;
+#ifdef ENABLE_YUV
+  int direct_decode;
+  ImageType requested_type;
+#endif
 
   if ((cinfo = calloc(1, sizeof(struct jpeg_decompress_struct))) == NULL)
     return LOAD_ERROR;
@@ -245,11 +249,13 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   attach_stream_src(cinfo, st);
   (void)jpeg_read_header(cinfo, TRUE);
 
+#ifdef ENABLE_YUV
   if (vw) {
     requested_type = video_window_request_type(vw, types, &direct_decode);
     if (requested_type == _I420)
       cinfo->out_color_space = JCS_YCbCr;
   }
+#endif
 
   jpeg_calc_output_dimensions(cinfo);
 
