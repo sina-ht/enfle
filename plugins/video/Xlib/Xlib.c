@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 16 03:28:23 2001.
- * $Id: Xlib.c,v 1.33 2001/06/15 18:49:21 sian Exp $
+ * Last Modified: Mon Jun 18 05:44:55 2001.
+ * $Id: Xlib.c,v 1.34 2001/06/17 20:55:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,6 +86,7 @@ static VideoWindow *open_window(void *, VideoWindow *, unsigned int, unsigned in
 static void set_wallpaper(void *, Image *);
 
 static ImageType request_type(VideoWindow *, unsigned int, int *);
+static int calc_magnified_size(VideoWindow *, unsigned int, unsigned int, unsigned int *, unsigned int *);
 static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
 static int dispatch_event(VideoWindow *, VideoEventData *);
@@ -111,7 +112,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.4.4",
+  description: "Xlib Video plugin version 0.5",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -125,6 +126,7 @@ static VideoPlugin plugin = {
 static VideoWindow template = {
   preferred_memory_type: preferred_memory_type,
   request_type: request_type,
+  calc_magnified_size: calc_magnified_size,
   set_event_mask: set_event_mask,
   dispatch_event: dispatch_event,
   set_caption: set_caption,
@@ -452,6 +454,16 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
 
 #ifdef USE_XV
   /* YUV support for Xv extension */
+  if (types & IMAGE_YUV422) {
+    debug_message(__FUNCTION__ ": decoder can provide image in YUV422 format.\n");
+    if  (xv->capable_format & XV_YUY2_PACKED_FLAG) {
+      debug_message(__FUNCTION__ ": Xv can display YUV422 format image, good.\n");
+      *direct_decode = 1;
+      return xv->prefer_msb[XV_YUY2_PACKED] ? _YUV422 : _YVU422;
+    } else {
+      debug_message(__FUNCTION__ ": Xv cannot display YUV422 format image, bad luck.\n");
+    }
+  }
   if (types & IMAGE_YUV420_PLANAR) {
     debug_message(__FUNCTION__ ": decoder can provide image in YUV420P format.\n");
     if  (xv->capable_format & XV_YV12_PLANAR_FLAG) {
@@ -497,6 +509,64 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
 
   show_message(__FUNCTION__": No appropriate image type. should not be happened\n");
   return _IMAGETYPE_TERMINATOR;
+}
+
+static int
+calc_magnified_size(VideoWindow *vw, unsigned int sw, unsigned int sh,
+		    unsigned int *dw_return, unsigned int *dh_return)
+{
+  double s, ws, hs;
+  unsigned int fw, fh;
+#ifdef USE_XV
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+  X11Xv *xv = &x11->xv;
+#endif
+
+#ifdef USE_XV
+  if (!x11_if_xv(x11)) {
+    fw = vw->full_width;
+    fh = vw->full_height;
+  } else {
+    fw = (vw->full_width  > xv->image_width ) ? xv->image_width  : vw->full_width;
+    fh = (vw->full_height > xv->image_height) ? xv->image_height : vw->full_height;
+  }
+#else
+  fw = vw->full_width;
+  fh = vw->full_height;
+#endif
+
+  switch (vw->render_method) {
+  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
+    *dw_return = sw << 1;
+    *dh_return = sh << 1;
+    if (!(x11_if_xv(x11) && (*dw_return > fw || *dh_return > fh)))
+      break;
+    debug_message(__FUNCTION__ ": clipping.\n");
+    /* fall through */
+  case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
+    ws = (double)fw / (double)sw;
+    hs = (double)fh / (double)sh;
+    s = (ws * sh > fh) ? hs : ws;
+    *dw_return = (int)(s * sw);
+    *dh_return = (int)(s * sh);
+    break;
+  case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
+    ws = (double)fw / (double)sw;
+    hs = (double)fh / (double)sh;
+    s = (ws * sh > fh) ? ws : hs;
+    *dw_return = (int)(s * sw);
+    *dh_return = (int)(s * sh);
+    break;
+  case _VIDEO_RENDER_NORMAL:
+  default:
+    *dw_return = sw;
+    *dh_return = sh;
+    break;
+  }
+
+  return 1;
 }
 
 static int
