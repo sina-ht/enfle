@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 22:01:46 2001.
- * $Id: dlist.h,v 1.4 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Tue Jul 30 21:22:09 2002.
+ * $Id: dlist.h,v 1.5 2002/08/01 12:40:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,16 +23,17 @@
 #ifndef _DLIST_H_
 #define _DLIST_H_
 
+typedef void (*Dlist_data_destructor)(void *);
 typedef struct _dlist Dlist;
 typedef struct _dlist_data {
   void *data;
+  Dlist_data_destructor data_destructor;
   Dlist *dl;
   struct _dlist_data *prev;
   struct _dlist_data *next;
 } Dlist_data;
 
 typedef int (*Dlist_compfunc)(const void *, const void *);
-
 struct _dlist {
   Dlist_compfunc cf;
   int size;
@@ -40,7 +41,9 @@ struct _dlist {
 
   int (*attach)(Dlist *, Dlist_data *, Dlist_data *);
   Dlist_data *(*insert)(Dlist *, Dlist_data *, void *);
+  Dlist_data *(*insert_object)(Dlist *, Dlist_data *, void *, Dlist_data_destructor);
   Dlist_data *(*add)(Dlist *, void *);
+  Dlist_data *(*add_object)(Dlist *, void *, Dlist_data_destructor);
   Dlist_data *(*add_str)(Dlist *, char *);
   int (*detach)(Dlist *, Dlist_data *);
   int (*delete_item)(Dlist *, Dlist_data *);
@@ -52,7 +55,9 @@ struct _dlist {
 
 #define dlist_attach(dl, d1, d2) (dl)->attach((dl), (d1), (d2))
 #define dlist_insert(dl, dd, d) (dl)->insert((dl), (dd), (d))
+#define dlist_insert_object(dl, dd, d, dddest) (dl)->insert_object((dl), (dd), (d), (dddest))
 #define dlist_add(dl, d) (dl)->add((dl), (d))
+#define dlist_add_object(dl, d, dddest) (dl)->add_object((dl), (d), (dddest))
 #define dlist_add_str(dl, d) (dl)->add_str((dl), (d))
 #define dlist_detach(dl, dd) (dl)->detach((dl), (dd))
 #define dlist_delete(dl, dd) (dl)->delete_item((dl), (dd))
@@ -70,6 +75,7 @@ struct _dlist {
 #define dlist_next(dd) ((dd)->next)
 #define dlist_prev(dd) ((dd)->prev)
 #define dlist_data(dd) ((dd)->data)
+#define dlist_data_destructor(dd) ((dd)->data_destructor)
 
 #define dlist_iter(dl,dd) for (dd = dlist_top(dl); dd != dlist_guard(dl); dd = dlist_next((dd)))
 

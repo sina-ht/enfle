@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:24:42 2001.
- * $Id: dlist.c,v 1.7 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Tue Jul 30 21:24:33 2002.
+ * $Id: dlist.c,v 1.8 2002/08/01 12:40:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,7 +30,9 @@
 
 static int attach(Dlist *, Dlist_data *, Dlist_data *);
 static Dlist_data *insert(Dlist *, Dlist_data *, void *);
+static Dlist_data *insert_object(Dlist *, Dlist_data *, void *, Dlist_data_destructor);
 static Dlist_data *add(Dlist *, void *);
+static Dlist_data *add_object(Dlist *, void *, Dlist_data_destructor);
 static Dlist_data *add_str(Dlist *, char *);
 static int detach(Dlist *, Dlist_data *);
 static int delete_item(Dlist *, Dlist_data *);
@@ -42,7 +44,9 @@ static int destroy(Dlist *, int);
 static Dlist template = {
   attach: attach,
   insert: insert,
+  insert_object: insert_object,
   add: add,
+  add_object: add_object,
   add_str: add_str,
   detach: detach,
   delete_item: delete_item,
@@ -87,6 +91,18 @@ dlist_create(void)
   return NULL;
 }
 
+static void
+destroy_dlist_data(Dlist_data *dd)
+{
+  void *ddd = dlist_data(dd);
+  Dlist_data_destructor dddest = dlist_data_destructor(dd);
+
+  if (dddest)
+    dddest(ddd);
+  else
+    free(ddd);
+}
+
 static int
 destroy(Dlist *dl, int f)
 {
@@ -99,7 +115,7 @@ destroy(Dlist *dl, int f)
   for (dd = dd_n; dd; dd = dd_n) {
     dd_n = dlist_next(dd);
     if (f && dlist_data(dd))
-      free(dlist_data(dd));
+      destroy_dlist_data(dd);
     free(dd);
   }
   free(dl);
@@ -145,9 +161,36 @@ insert(Dlist *dl, Dlist_data *inserted, void *d)
 }
 
 static Dlist_data *
+insert_object(Dlist *dl, Dlist_data *inserted, void *d, Dlist_data_destructor dddest)
+{
+  Dlist_data *dd;
+
+  if (dlist_dlist(inserted) != dl) {
+    debug_message_fnc("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
+    raise(SIGABRT);
+    //return NULL;
+  }
+
+  if ((dd = dlist_data_create(dl)) == NULL)
+    return NULL;
+  dlist_data(dd) = d;
+  dlist_data_destructor(dd) = dddest;
+
+  attach(dl, dd, inserted);
+
+  return dd;
+}
+
+static Dlist_data *
 add(Dlist *dl, void *d)
 {
   return insert(dl, dlist_guard(dl), d);
+}
+
+static Dlist_data *
+add_object(Dlist *dl, void *d, Dlist_data_destructor dddest)
+{
+  return insert_object(dl, dlist_guard(dl), d, dddest);
 }
 
 static Dlist_data *
@@ -193,7 +236,7 @@ delete_item(Dlist *dl, Dlist_data *dd)
     return 0;
 
   if (dlist_data(dd))
-    free(dlist_data(dd));
+    destroy_dlist_data(dd);
   free(dd);
 
   return 1;
