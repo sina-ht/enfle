@@ -1,3 +1,33 @@
+2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e: Updated documentation.
+
+	* src/enfle.c: Plugins' basename check.
+
+	* plugins/video/Xlib/Xlib.c: Fixed too early free_gc bug.
+
+	* plugins/ui/wallpaper/wallpaper.c: Simplify.
+
+	* plugins/ui/normal/normal.c: Adapted to replace_ext()
+	moving. Change cursor when let the user wait to complete at more
+	points.
+
+	* plugins/ui/convert/convert.c: Adapted to replace_ext() moving.
+
+	* plugins/saver/glic/glic.c: Fixed a parameter I of MPM(r,I).
+
+	* configure.in, plugins/saver/Makefile.am: Added --enable-private.
+
+	* lib/enfle/archive.c: Use misc_basename() instead of basename().
+
+	* lib/enfle/utils.c, lib/utils/misc.c, lib/utils/misc.h: Moved
+	replace_ext() from enfle/utils.c to utils/misc.c.
+
+2001-04-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Adapted fullscreen mode code to
+	VideoWindow interface change.
+
 2001-04-25  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README, README.e: Updated documentation.
