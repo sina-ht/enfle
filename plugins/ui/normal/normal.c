@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  9 03:22:18 2000.
- * $Id: normal.c,v 1.11 2000/12/10 13:19:34 sian Exp $
+ * Last Modified: Wed Dec 13 01:49:49 2000.
+ * $Id: normal.c,v 1.12 2000/12/12 17:04:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,6 +31,7 @@
 
 #include "common.h"
 
+#include "libstring.h"
 #include "ui-plugin.h"
 
 static int ui_main(UIData *);
@@ -278,6 +279,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Stream *s;
   Image *p;
   Movie *m;
+  String *cap;
   char *path;
   int f;
   int dir = 1;
@@ -286,6 +288,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   s = stream_create();
   p = image_create();
   m = movie_create();
+  cap = string_create();
 
   m->initialize_screen = initialize_screen;
   m->render_frame = render_frame;
@@ -405,6 +408,17 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	continue;
       }
 
+      string_set(cap, PROGNAME ": ");
+      string_cat(cap, path);
+      string_cat_ch(cap, '(');
+      string_cat(cap, m->format);
+      string_cat_ch(cap, ')');
+
+      vw->render_width  = m->width;
+      vw->render_height = m->height;
+
+      video_window_set_caption(vw, string_get(cap));
+
       dir = main_loop(vw, m, NULL);
       movie_unload(m);
     } else {
@@ -417,6 +431,17 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	p->comment = NULL;
       }
 
+      string_set(cap, PROGNAME ": ");
+      string_cat(cap, path);
+      string_cat_ch(cap, '(');
+      string_cat(cap, p->format);
+      string_cat_ch(cap, ')');
+
+      vw->render_width  = p->width;
+      vw->render_height = p->height;
+
+      video_window_set_caption(vw, string_get(cap));
+
       dir = main_loop(vw, NULL, p);
       memory_destroy(p->rendered.image);
       p->rendered.image = NULL;
@@ -425,6 +450,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
     }
   }
 
+  string_destroy(cap);
   movie_destroy(m);
   image_destroy(p);
   stream_destroy(s);
@@ -449,8 +475,7 @@ ui_main(UIData *uidata)
     return 0;
   }
 
-  uidata->vw = vw = vp->open_window(disp, 600, 400);
-  video_window_set_caption(vw, (unsigned char *)PROGNAME " version " VERSION);
+  uidata->vw = vw = vp->open_window(disp, c, 600, 400);
 
   video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask);
   /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyPressMask | ENFLE_PointerMask | ENFLE_WindowMask); */
