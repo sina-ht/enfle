@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 28 03:28:14 2001.
- * $Id: normal.c,v 1.56 2001/10/27 18:47:34 sian Exp $
+ * Last Modified: Sat Nov 17 11:56:28 2001.
+ * $Id: normal.c,v 1.57 2001/11/17 03:50:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -798,7 +798,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   Movie *m;
   char *path;
   unsigned char *tmp;
-  int ret, r;
+  int ret, res, r;
 
   s = stream_create();
   p = image_create();
@@ -947,7 +947,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
     case IDENTIFY_STREAM_IMAGE:
       stream_close(s);
       debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
-      if (p->comment) {
+      if (p->comment && config_get_boolean(c, "/enfle/plugins/ui/normal/show_comment", &res)) {
 	show_message("comment: %s\n", p->comment);
 	free(p->comment);
 	p->comment = NULL;

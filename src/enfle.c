@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 13 00:44:45 2001.
- * $Id: enfle.c,v 1.44 2001/10/14 12:37:35 sian Exp $
+ * Last Modified: Sat Nov 17 12:44:35 2001.
+ * $Id: enfle.c,v 1.45 2001/11/17 03:50:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,6 +66,7 @@ static Option enfle_options[] = {
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
   { "help",      'h', _NO_ARGUMENT,       "Show help message." },
+  { "version",   'V', _NO_ARGUMENT,       "Show version." },
   { NULL , '\0', _NO_ARGUMENT, NULL }
 };
 
@@ -327,6 +328,9 @@ main(int argc, char **argv)
     case 'w':
       ui_name = strdup("Wallpaper");
       break;
+    case 'V':
+      printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n");
+      return 0;
     case '?':
     default:
       usage();
@@ -367,6 +371,8 @@ main(int argc, char **argv)
   default:
     break;
   }
+  if (print_more_info > 0)
+    config_parse(c, (char *)"/enfle/plugins/ui/normal/show_comment = yes");
 
   dlist_iter (override_config, dd) {
     void *d = dlist_data(dd);

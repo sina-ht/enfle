@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sun Oct 21 03:44:47 2001.
-; $Id: enfle.rc,v 1.24 2001/10/22 08:48:43 sian Exp $
+; Last Modified: Sat Nov 17 11:53:13 2001.
+; $Id: enfle.rc,v 1.25 2001/11/17 03:50:24 sian Exp $
 
 enfle {
   identify {
@@ -34,6 +34,7 @@ enfle {
 	;caption_template = "%p %f %xx%y"
         ; disable archiver plugin
         ;archiver/disabled = yes
+	show_comment = no
       }
       wallpaper {
 	; render = {normal|double|short|long}
