@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar 12 22:08:10 2004.
- * $Id: generic.c,v 1.7 2004/03/12 13:13:42 sian Exp $
+ * Last Modified: Sun Mar 14 20:35:01 2004.
+ * $Id: generic.c,v 1.8 2004/03/14 16:50:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -617,10 +617,12 @@ play_main(Movie *m, VideoWindow *vw)
 
     /* if too fast to display, wait before render */
     while (video_time > audio_time) {
+#if 0
       if (timer_get_milli(m->timer) > video_time + 10 * 1000 / m->framerate) {
 	warning_fnc("might have bad audio: %d (r: %d v: %d a: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time, audio_time);
 	break;
       }
+#endif
       audio_time = get_audio_time(m, info->ad);
     }
 
