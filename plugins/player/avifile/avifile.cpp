@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep  8 11:38:40 2001.
- * $Id: avifile.cpp,v 1.20 2001/09/09 23:52:37 sian Exp $
+ * Last Modified: Thu Sep 13 20:40:17 2001.
+ * $Id: avifile.cpp,v 1.21 2001/09/13 12:13:20 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -540,39 +540,35 @@ play_main(Movie *m, VideoWindow *vw)
 
   m->current_frame = info->stream->GetPos();
 
-  if (m->current_frame == 0) {
+  if (m->current_frame == 0)
     timer_start(m->timer);
-    time_elapsed = 0;
-  } else
-    time_elapsed = (int)timer_get_milli(m->timer);
 
   due_time = (int)(info->stream->GetTime() * 1000);
   //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
 
-  //if (info->ci) {
-    pthread_mutex_lock(&info->decoding_state_mutex);
-    while (info->ds != _DECODED)
-      pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
+  pthread_mutex_lock(&info->decoding_state_mutex);
+  while (info->ds != _DECODED)
+    pthread_cond_wait(&info->decoded_cond, &info->decoding_state_mutex);
 
-    /* if too fast to display, wait before render */
-    if (time_elapsed < due_time) {
-      int wait_time = (int)((due_time - timer_get_milli(m->timer)) * 1000);
-      if (wait_time > 0)
-	m->pause_usec(wait_time);
+  time_elapsed = (int)timer_get_milli(m->timer);
+  /* if too fast to display, wait before render */
+  if (time_elapsed < due_time) {
+    int wait_time = (int)((due_time - timer_get_milli(m->timer)) * 1000);
+
+    if (wait_time > 0) {
+      //debug_message("wait %d usec.\n", wait_time);
+      m->pause_usec(wait_time);
     }
+  } else if (due_time < timer_get_milli(m->timer) - info->frametime) {
+    info->skip = (int)((timer_get_milli(m->timer) - due_time) / info->frametime);
+    debug_message("Drop %d frames.\n", info->skip);
+  }
 
-    /* skip if delayed */
-    if (due_time < timer_get_milli(m->timer) - info->frametime) {
-      info->skip = (int)((timer_get_milli(m->timer) - due_time) / info->frametime) + 1;
-      debug_message("Drop %d frames.\n", info->skip);
-    }
+  info->ds = _DECODING;
+  pthread_cond_signal(&info->decoding_cond);
+  pthread_mutex_unlock(&info->decoding_state_mutex);
 
-    info->ds = _DECODING;
-    pthread_cond_signal(&info->decoding_cond);
-    pthread_mutex_unlock(&info->decoding_state_mutex);
-
-    m->render_frame(vw, m, p);
-  //}
+  m->render_frame(vw, m, p);
 
   return PLAY_OK;
 }
