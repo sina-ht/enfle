@@ -1,3 +1,13 @@
+2001-06-28 Hiroshi Takekawa <sian@fennel.org>
+
+	* plugins/saver/glic/vmpm_decompose_highlow.c: Changed to print
+	out the encoded size of the higher-bit part.
+
+	* plugins/saver/glic/glic.c, plugins/saver/glic/predict.[ch]:
+	Clean up. Prepared to implement JPEG-LS predictor.
+
+	* plugins/saver/glic/enfle.rc.additional: New file.
+
 2001-06-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/glic/vmpm_decompose_token2.c: Fixed stupid bug.
