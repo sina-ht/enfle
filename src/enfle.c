@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 13 18:50:00 2001.
- * $Id: enfle.c,v 1.37 2001/08/15 06:28:49 sian Exp $
+ * Last Modified: Sun Aug 26 09:38:09 2001.
+ * $Id: enfle.c,v 1.38 2001/08/26 01:07:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -162,15 +162,17 @@ static int
 scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 {
   Archive *a;
-  char *path, *ext, *base_name, *name;
+  char *fullpath, *path, *ext, *base_name, *name;
   int nplugins = 0;
 #ifdef USE_SPI
-  char *tmp;
   int spi_enabled = 1;
+  int tmp, result;
 
-  if ((tmp = config_get(c, "/enfle/plugins/loader/spi/disabled")) &&
-      strcasecmp(tmp, "yes") == 0)
+  tmp = config_get_boolean(c, "/enfle/plugins/loader/spi/disabled", &result);
+  if (result > 0 && tmp)
     spi_enabled = 0;
+  else if (result < 0)
+    warning("Invaid string in spi/disable.\n");
 #endif
 
   a = archive_create(ARCHIVE_ROOT);
@@ -179,6 +181,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   while (path) {
     base_name = misc_basename(path);
     ext = strrchr(path, '.');
+    fullpath = archive_getpathname(a, path);
     if (ext && !strcasecmp(ext, ".so") &&
 	!(strncasecmp(base_name, "ui_", 3) &&
 	  strncasecmp(base_name, "video_", 6) &&
@@ -191,7 +194,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 	  strncasecmp(base_name, "effect_", 7))) {
       PluginType type;
 
-      if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
+      if ((name = enfle_plugins_load(eps, fullpath, &type)) == NULL) {
 	warning("enfle_plugin_load %s failed.\n", path);
       } else {
 	nplugins++;
@@ -222,6 +225,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
       }
 #endif
     }
+    free(fullpath);
     path = archive_iteration_next(a);
   }
   archive_destroy(a);
