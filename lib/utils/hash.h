@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb  5 02:54:02 2001.
- * $Id: hash.h,v 1.3 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Tue Mar 13 09:56:41 2001.
+ * $Id: hash.h,v 1.4 2001/03/13 06:49:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,10 +62,6 @@ struct _hash {
 #define hash_delete(h, k, l, f) (h)->delete_key((h), (k), (l), (f))
 
 /* avoid side effect */
-/* #define hash_define_str(h, k, d) (h)->define((h), (k), strlen((k)), (d)) */
-/* #define hash_set_str(h, k, d) (h)->set((h), (void *)(k), strlen((k)), (d)) */
-/* #define hash_lookup_str(h, k) (h)->lookup((h), (void *)(k), strlen((k))) */
-/* #define hash_delete_str(h, k, f) (h)->delete_key((h), (void *)(k), strlen((k)), (f)) */
 #define hash_define_str(h, k, d) ({void * _k = (void *)(k); (h)->define((h), _k, strlen((const char *)_k) + 1, (d));})
 #define hash_set_str(h, k, d) ({void * _k = (void *)(k); (h)->set((h), _k, strlen((const char *)_k) + 1, (d));})
 #define hash_lookup_str(h, k) ({void * _k = (void *)(k); (h)->lookup((h), _k, strlen((const char *)_k) + 1);})
