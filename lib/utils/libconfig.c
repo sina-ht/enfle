@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 14 05:09:16 2001.
- * $Id: libconfig.c,v 1.8 2001/04/18 05:32:07 sian Exp $
+ * Last Modified: Tue Apr 24 23:02:57 2001.
+ * $Id: libconfig.c,v 1.9 2001/04/24 16:38:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,6 +41,8 @@ static unsigned char *get_str(Config *, const char *);
 static int set_str(Config *, char *, unsigned char *);
 static int get_int(Config *, const char *, int *);
 static int set_int(Config *, char *, int);
+static int get_boolean(Config *, const char *, int *);
+static int set_boolean(Config *, char *, int);
 static void destroy(Config *);
 
 #define DQUOTATION 0x22
@@ -56,6 +58,8 @@ static Config config_template = {
   set_str: set_str,
   get_int: get_int,
   set_int: set_int,
+  get_boolean: get_boolean,
+  set_boolean: set_boolean,
   destroy: destroy
 };
 
@@ -348,6 +352,36 @@ set_int(Config *c, char *path, int value)
   *((int *)(p + 4)) = value;
 
   return set(c, path, (void *)p);
+}
+
+static int
+get_boolean(Config *c, const char *path, int *is_success)
+{
+  char *tmp;
+
+  if ((tmp = get_str(c, path)) == NULL) {
+    *is_success = 0;
+    return 0;
+  } else if (strcasecmp(tmp, "yes") == 0 || strcasecmp(tmp, "true") == 0) {
+    *is_success = 1;
+    return 1;
+  } else if (strcasecmp(tmp, "no") == 0  || strcasecmp(tmp, "false") == 0) {
+    *is_success = 1;
+    return 0;
+  }
+
+  *is_success = 0;
+  return 0;
+}
+
+static int
+set_boolean(Config *c, char *path, int boolean)
+{
+  char *tmp;
+
+  if ((tmp = strdup(boolean ? "yes" : "no")) == NULL)
+    return 0;
+  return set_str(c, path, tmp);
 }
 
 static void

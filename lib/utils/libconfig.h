@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 14 05:49:52 2001.
- * $Id: libconfig.h,v 1.3 2001/04/18 05:32:07 sian Exp $
+ * Last Modified: Tue Apr 24 23:03:42 2001.
+ * $Id: libconfig.h,v 1.4 2001/04/24 16:38:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,6 +38,8 @@ struct _config {
   int (*set_str)(Config *, char *, unsigned char *);
   int (*get_int)(Config *, const char *, int *);
   int (*set_int)(Config *, char *, int);
+  int (*get_boolean)(Config *, const char *, int *);
+  int (*set_boolean)(Config *, char *, int);
   void (*destroy)(Config *);
 };
 
@@ -49,6 +51,8 @@ struct _config {
 #define config_set_str(c, p, d) (c)->set_str((c), (p), (d))
 #define config_get_int(c, p, r) (c)->get_int((c), (p), (r))
 #define config_set_int(c, p, d) (c)->set_int((c), (p), (d))
+#define config_get_boolean(c, p, r) (c)->get_boolean((c), (p), (r))
+#define config_set_boolean(c, p, d) (c)->set_boolean((c), (p), (d))
 #define config_destroy(c) (c)->destroy((c))
 
 Config *config_create(void);
