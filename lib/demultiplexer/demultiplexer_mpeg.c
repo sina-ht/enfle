@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Aug  2 22:50:54 2002.
- * $Id: demultiplexer_mpeg.c,v 1.23 2002/09/22 21:30:30 sian Exp $
+ * Last Modified: Sat Feb  8 03:33:34 2003.
+ * $Id: demultiplexer_mpeg.c,v 1.24 2003/11/17 13:59:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -216,12 +216,13 @@ examine(Demultiplexer *demux)
 	  vstream |= 1 << nvstream;
 	  info->nvstreams++;
 	}
-      } else if (id < 0xb9) {
+      } else if (id < 0xb9 && id > 0xb0) {
 	debug_message("Looks like video stream.\n");
 	vstream = 1;
 	info->nvstreams++;
       } else {
 	debug_message("Unknown id %02X %d bytes\n", id, skip - 6);
+	goto error;
       }
       break;
     }
