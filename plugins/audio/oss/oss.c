@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:36:23 2001.
- * $Id: oss.c,v 1.9 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Thu Mar  7 03:45:43 2002.
+ * $Id: oss.c,v 1.10 2002/03/06 19:31:17 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -59,7 +59,7 @@ static int close_device(AudioDevice *);
 static AudioPlugin plugin = {
   type: ENFLE_PLUGIN_AUDIO,
   name: "OSS",
-  description: "OSS Audio plugin version 0.1.2",
+  description: "OSS Audio plugin version 0.1.3",
   author: "Hiroshi Takekawa",
 
   open_device: open_device,
@@ -113,6 +113,7 @@ open_device(void *data, Config *c)
   }
 
   ioctl(ad->fd, SNDCTL_DSP_RESET);
+  ad->opened = 1;
 
   return ad;
 }
@@ -176,6 +177,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     return 0;
   }
 
+  ad->bytes_per_sample = 2;
   switch (f) {
   case AFMT_MU_LAW:
     ad->format = _AUDIO_FORMAT_MU_LAW;
@@ -188,28 +190,36 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     break;
   case AFMT_U8:
     ad->format = _AUDIO_FORMAT_U8;
+    ad->bytes_per_sample = 1;
     break;
   case AFMT_S8:
     ad->format = _AUDIO_FORMAT_S8;
+    ad->bytes_per_sample = 1;
     break;
   case AFMT_U16_LE:
     ad->format = _AUDIO_FORMAT_U16_LE;
+    ad->bytes_per_sample = 2;
     break;
   case AFMT_U16_BE:
     ad->format = _AUDIO_FORMAT_U16_BE;
+    ad->bytes_per_sample = 2;
     break;
   case AFMT_S16_LE:
     ad->format = _AUDIO_FORMAT_S16_LE;
+    ad->bytes_per_sample = 2;
     break;
   case AFMT_S16_BE:
     ad->format = _AUDIO_FORMAT_S16_BE;
+    ad->bytes_per_sample = 2;
     break;
 #if 0
   case AFMT_S32_LE:
     ad->format = _AUDIO_FORMAT_S32_LE;
+    ad->bytes_per_sample = 4;
     break;
   case AFMT_S32_BE:
     ad->format = _AUDIO_FORMAT_S32_BE;
+    ad->bytes_per_sample = 4;
     break;
 #endif
   case AFMT_MPEG:
@@ -246,6 +256,9 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
 
   *rate_p = r;
 
+  ad->channels = ch;
+  ad->speed = rate;
+
   return 1;
 }
 
@@ -278,6 +291,7 @@ close_device(AudioDevice *ad)
 {
   close(ad->fd);
   free(ad);
+  ad->opened = 0;
 
   return 1;
 }
