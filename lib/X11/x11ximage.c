@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:12:52 2002.
- * $Id: x11ximage.c,v 1.48 2002/08/18 04:19:26 sian Exp $
+ * Last Modified: Mon Jan 19 23:08:16 2004.
+ * $Id: x11ximage.c,v 1.49 2004/01/19 14:08:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -686,6 +686,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 #endif
   }
 
+  xi->if_attached = 0;
 #ifdef USE_SHM
   if (to_be_attached) {
     xi->shminfo->shmid = memory_shmid(dst_img);
