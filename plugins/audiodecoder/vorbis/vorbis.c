@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr  1 23:05:45 2004.
- * $Id: vorbis.c,v 1.4 2004/04/05 15:47:58 sian Exp $
+ * Last Modified: Sat Apr 10 18:00:58 2004.
+ * $Id: vorbis.c,v 1.5 2004/04/12 04:15:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -93,7 +93,8 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
 
   op.packet = buf;
   op.bytes = len;
-  *used_r = len;
+  if (used_r)
+    *used_r = len;
 
   switch (adm->vs) {
   case _WAIT_HEADER:
@@ -215,7 +216,7 @@ setup(AudioDecoder *adec, Movie *m)
 }
 
 static unsigned int
-query(unsigned int fourcc)
+query(unsigned int fourcc, void *priv)
 {
   switch (fourcc) {
   case 0:
@@ -228,7 +229,7 @@ query(unsigned int fourcc)
 }
 
 static AudioDecoder *
-init(unsigned int fourcc)
+init(unsigned int fourcc, void *priv)
 {
   AudioDecoder *adec;
   struct audiodecoder_vorbis *adm;

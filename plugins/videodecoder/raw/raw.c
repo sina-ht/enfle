@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:11:59 2004.
- * $Id: raw.c,v 1.2 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sat Apr 10 17:45:06 2004.
+ * $Id: raw.c,v 1.3 2004/04/12 04:15:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -127,7 +127,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 }
 
 static unsigned int
-query(unsigned int fourcc)
+query(unsigned int fourcc, void *priv)
 {
   switch (fourcc) {
   case FCC_DIB:
@@ -140,7 +140,7 @@ query(unsigned int fourcc)
 }
 
 static VideoDecoder *
-init(unsigned int fourcc)
+init(unsigned int fourcc, void *priv)
 {
   VideoDecoder *vdec;
   struct videodecoder_raw *vdm;

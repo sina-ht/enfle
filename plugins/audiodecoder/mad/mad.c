@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr  1 23:06:01 2004.
- * $Id: mad.c,v 1.6 2004/04/05 15:47:58 sian Exp $
+ * Last Modified: Sat Apr 10 18:00:02 2004.
+ * $Id: mad.c,v 1.7 2004/04/12 04:15:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -116,7 +116,8 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     mad_stream_buffer(&adm->stream, adm->input_buffer, remain + *used_r);
     adm->stream.error = 0;
   } else {
-    *used_r = 0;
+    if (used_r)
+      *used_r = 0;
   }
 
   /* Decode the next frame. */
@@ -196,7 +197,7 @@ setup(AudioDecoder *adec, Movie *m)
 }
 
 static unsigned int
-query(unsigned int fourcc)
+query(unsigned int fourcc, void *priv)
 {
   switch (fourcc) {
   case 0:
@@ -210,7 +211,7 @@ query(unsigned int fourcc)
 }
 
 static AudioDecoder *
-init(unsigned int fourcc)
+init(unsigned int fourcc, void *priv)
 {
   AudioDecoder *adec;
   struct audiodecoder_mad *adm;

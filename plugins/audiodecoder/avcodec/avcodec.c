@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr  6 00:36:31 2004.
- * $Id: avcodec.c,v 1.2 2004/04/05 15:51:22 sian Exp $
+ * Last Modified: Sat Apr 10 18:01:10 2004.
+ * $Id: avcodec.c,v 1.3 2004/04/12 04:15:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -106,7 +106,8 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     adm->buf = buf;
     adm->offset = 0;
     adm->size = len;
-    *used_r = len;
+    if (used_r)
+      *used_r = len;
     //debug_message_fnc("avcodec audio: feed %d bytes\n", adm->size);
   }
 
@@ -189,7 +190,7 @@ setup(AudioDecoder *adec, Movie *m)
 }
 
 static unsigned int
-query(unsigned int fourcc)
+query(unsigned int fourcc, void *priv)
 {
   switch (fourcc) {
   case 0:
@@ -215,7 +216,7 @@ query(unsigned int fourcc)
 }
 
 static AudioDecoder *
-init(unsigned int fourcc)
+init(unsigned int fourcc, void *priv)
 {
   AudioDecoder *adec;
   struct audiodecoder_avcodec *adm;

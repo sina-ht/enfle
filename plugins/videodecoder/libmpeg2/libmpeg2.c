@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:12:12 2004.
- * $Id: libmpeg2.c,v 1.5 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sat Apr 10 18:04:58 2004.
+ * $Id: libmpeg2.c,v 1.6 2004/04/12 04:15:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -158,7 +158,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 }
 
 static unsigned int
-query(unsigned int fourcc)
+query(unsigned int fourcc, void *priv)
 {
   switch (fourcc) {
   case FCC_mpg1:
@@ -176,7 +176,7 @@ query(unsigned int fourcc)
 }
 
 static VideoDecoder *
-init(unsigned int fourcc)
+init(unsigned int fourcc, void *priv)
 {
   VideoDecoder *vdec;
   struct videodecoder_libmpeg2 *vdm;
@@ -189,7 +189,7 @@ init(unsigned int fourcc)
   case FCC_VCR2:
     break;
   default:
-    debug_message_fnc("Not identified as any DivX format: %c%c%c%c(%08X)\n",
+    debug_message_fnc("Not identified as any libmpeg2 format: %c%c%c%c(%08X)\n",
 		       fourcc        & 0xff,
 		      (fourcc >>  8) & 0xff,
 		      (fourcc >> 16) & 0xff,
