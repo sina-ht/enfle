@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 02:42:41 2001.
- * $Id: archive.c,v 1.17 2001/05/01 17:55:26 sian Exp $
+ * Last Modified: Wed May  2 03:22:05 2001.
+ * $Id: archive.c,v 1.18 2001/05/01 18:29:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -182,6 +182,8 @@ set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnmatch)
 static void
 add(Archive *arc, char *path, void *reminder)
 {
+  debug_message("archive: " __FUNCTION__ ": %s\n", path);
+
   if (arc->pattern) {
     int result = 0;
     char *base_name;
@@ -282,7 +284,7 @@ iteration_last(Archive *arc)
 {
   Dlist *dl;
 
-  arc->direction = 1;
+  arc->direction = -1;
 
   dl = hash_get_keys(arc->filehash);
   arc->current = dlist_head(dl);
@@ -357,7 +359,7 @@ iteration_delete(Archive *arc)
   dl = hash_get_keys(arc->filehash);
 
   if (arc->current != dlist_guard(dl)) {
-    dl_n = dlist_next(arc->current);
+    dl_n = (arc->direction == 1) ? dlist_next(arc->current) : dlist_prev(arc->current);
     delete_path(arc, hash_key_key(dlist_data(arc->current)));
     arc->current = dl_n;
     if (arc->current == dlist_guard(dl))
