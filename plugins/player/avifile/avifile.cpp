@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 17 22:22:42 2001.
- * $Id: avifile.cpp,v 1.5 2001/01/17 13:24:20 sian Exp $
+ * Last Modified: Thu Jan 18 23:36:31 2001.
+ * $Id: avifile.cpp,v 1.6 2001/01/18 17:01:33 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -43,11 +43,7 @@ extern "C" {
 #include "enfle/player-plugin.h"
 }
 
-#define HAS_AUDIO 1
-#define HAS_VIDEO 2
-
 typedef struct _avifile_info {
-  int flags;
   int eof;
   int frametime;
   Image *p;
@@ -79,7 +75,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "AviFile",
-  description: (const unsigned char *)"AviFile Player plugin version 0.3",
+  description: (const unsigned char *)"AviFile Player plugin version 0.3.1",
   author: (const unsigned char *)"Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -127,7 +123,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
   m->num_of_frames = info->hdr.dwTotalFrames;
 
-  info->flags = 0;
+  m->has_video = 0;
+  m->has_audio = 0;
   if ((audiostream = info->audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
     if (m->ap == NULL)
       show_message("Cannot open audio device.\n");
@@ -143,7 +140,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       m->samplerate = info->owf.nSamplesPerSec;
       //m->num_of_samples = info->owf.nSamplesPerSec * len;
       show_message("audio: format(%d, %d bits per sample): %d ch rate %d kHz\n", m->sampleformat, info->owf.wBitsPerSample, m->channels, m->samplerate);
-      info->flags |= HAS_AUDIO;
+      m->has_audio = 1;
     }
   } else {
     show_message("No audio.\n");
@@ -163,7 +160,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     m->height = info->bmih.biHeight;
     info->frametime = (int)(stream->GetFrameTime() * 1000);
     m->framerate = 1000 / info->frametime;
-    info->flags |= HAS_VIDEO;
+    m->has_video = 1;
   } else {
     show_message("No video.\n");
   }
@@ -272,9 +269,9 @@ play(Movie *m)
   info->eof = 0;
   timer_start(m->timer);
 
-  if (info->flags & HAS_VIDEO)
+  if (m->has_video)
     pthread_create(&info->video_thread, NULL, play_video, m);
-  if (info->flags & HAS_AUDIO)
+  if (m->has_audio)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
 
   return PLAY_OK;
@@ -478,6 +475,10 @@ static PlayerStatus
 identify(Movie *m, Stream *st)
 {
   unsigned char buf[16];
+
+  /* see if this is asf by extension... */
+  if (strlen(st->path) >= 4 && !strcasecmp(st->path + strlen(st->path) - 4, ".asf"))
+    return PLAY_OK;
 
   if (stream_read(st, buf, 16) != 16)
     return PLAY_NOT;
