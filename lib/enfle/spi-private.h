@@ -26,7 +26,6 @@ typedef struct _picture_info {
 #define SPI_RESERVED           7 /* （予約） */
 #define SPI_INTERNAL_ERROR     8 /* 内部エラー */
 
-#ifdef DEBUG
 static char *spi_errormsg[] = {
   /* -1: Unimplemented */
   "Success",
@@ -39,7 +38,6 @@ static char *spi_errormsg[] = {
   "Reserved",
   "Internal error"
 };
-#endif
 
 typedef int PASCAL (*IsSupportedFunc)(LPSTR, DWORD);
 typedef int PASCAL (*GetPluginInfoFunc)(int, LPSTR, int);
@@ -71,7 +69,7 @@ typedef struct _BITMAPINFOHEADER {
   unsigned long       biClrImportant; /* 36: カラーテーブル関係 */
 } BITMAPINFOHEADER;
 
-/* typedef int PASCAL (*IsSupported)(LPSTR, DWORD); */
+/* typedef int PASCAL (*IsSupportedFunc)(LPSTR, DWORD); */
 /* typedef int PASCAL (*GetPluginInfoFunc)(int, LPSTR, int); */
 typedef int PASCAL (*GetArchiveInfoFunc)(LPSTR, long, unsigned int, HLOCAL *);
 typedef int PASCAL (*GetFileInfoFunc)(LPSTR, long, LPSTR, unsigned int, fileInfo *);

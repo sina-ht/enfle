@@ -22,12 +22,14 @@ static ArchiverStatus archiver_open(Archive *, Stream *, void *);
 
 typedef struct _susie_loader {
   PE_image *pe;
+  IsSupportedFunc is_supported;
   GetPictureInfoFunc get_pic_info;
   GetPictureFunc get_pic;
 } SusieLoader;
   
 typedef struct _susie_archiver {
   PE_image *pe;
+  IsSupportedFunc is_supported;
   GetArchiveInfoFunc get_archive_info;
   GetFileInfoFunc get_file_info;
   GetFileFunc get_file;
@@ -108,21 +110,37 @@ loader_load(Image *p, Stream *st, void *priv)
 static ArchiverStatus
 archiver_identify(Archive *p, Stream *st, void *priv)
 {
-  show_message("archiver_identify() called\n");
+  SusieArchiver *sa = priv;
+  unsigned char buffer[2048];
+
+  debug_message("archiver_identify() called\n");
+
+  memset(buffer, 0, 2048);
+  stream_read(st, buffer, 2048);
+
+  if (sa->is_supported(st->path, (DWORD)buffer))
+    return OPEN_OK;
+
   return OPEN_ERROR;
 }
 
 static ArchiverStatus
 archiver_open(Archive *p, Stream *st, void *priv)
 {
-  show_message("archiver_open() called\n");
+  show_message("archiver_open() called, but spi-to-enfle bridge not yet implemented.\n");
   return OPEN_ERROR;
 }
 
 static void
 spi_plugin_exit(void *p)
 {
-  free(p);
+  EnflePlugin *ep = (EnflePlugin *)p;
+
+  if (ep->name)
+    free(ep->name);
+  if (ep->description)
+    free(ep->description);
+  free(ep);
 }
 
 char *
@@ -140,21 +158,26 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   char buf[256];
   int err;
 
+  debug_message("spi_load %s...\n", path);
   pe = peimage_create();
   if (!peimage_load(pe, path)) {
     show_message("peimage_load() failed: %s\n", path);
     return NULL;
   }
+  debug_message("OK\n");
 
   if ((get_plugin_info = peimage_resolve(pe, "GetPluginInfo")) == NULL) {
     show_message("Cannot resolve GetPluginInfo.\n");
     goto error;
   }
 
+  memset(buf, 0, 256);
+  debug_message("GetPluginInfo 0 ");
   if ((err = get_plugin_info(0, buf, 256)) == 0) {
     show_message("GetPluginInfo returns 0\n");
     goto error;
   }
+  debug_message("OK\n");
 
   switch (buf[2]) {
   case 'I':
@@ -164,6 +187,10 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
       goto error;
     }
     sl->pe = pe;
+    if ((sl->is_supported = peimage_resolve(pe, "IsSupported")) == NULL) {
+      show_message("Cannot resolve IsSupported.\n");
+      goto error;
+    }
     if ((sl->get_pic_info = peimage_resolve(pe, "GetPictureInfo")) == NULL) {
       show_message("Cannot resolve GetPictureInfo.\n");
       goto error;
@@ -191,6 +218,10 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
       return NULL;
     }
     sa->pe = pe;
+    if ((sa->is_supported = peimage_resolve(pe, "IsSupported")) == NULL) {
+      show_message("Cannot resolve IsSupported.\n");
+      goto error;
+    }
     if ((sa->get_archive_info = peimage_resolve(pe, "GetArchiveInfo")) == NULL) {
       show_message("Cannot resolve GetArchiveInfo.\n");
       return NULL;
@@ -216,10 +247,12 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
     break;
   }
 
+  debug_message("GetPluginInfo 1 ");
   if ((err = get_plugin_info(1, buf, 256)) == 0) {
     show_message("GetPluginInfo returns 0\n");
     exit(-1);
   }
+  debug_message("OK\n");
 
   ep->name = strdup(path);
   ep->description = strdup(buf);
