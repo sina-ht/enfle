@@ -1,3 +1,26 @@
+2003-12-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* plugins/player/avcodec/avcodec.c: Adapting for new libavcodec
+	changes.
+
+	* plugins/video/Xlib/Xlib.c: Clean up and plug potential memory
+	leak.
+
+	* plugins/ui/normal/normal.c: Dirty hack to get zenkaku
+	tilde (typically used on Windows filesystems) viewable.
+
+	* plugins/archiver/tar/tar.c: Forgot to check magic...
+
+	* lib/utils/plugin.c: Now it's safe to do dlclose().
+
+	* lib/avcodec/avcodec.h, lib/avcodec/h263.c,
+	lib/avcodec/h263data.h, lib/avcodec/h264.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/ratecontrol.c, lib/avcodec/rv10.c, lib/avcodec/svq3.c:
+	libavcodec update
+
 2003-12-16  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Version up.
