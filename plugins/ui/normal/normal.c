@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:48:04 2001.
- * $Id: normal.c,v 1.47 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Sun Jul 29 04:01:30 2001.
+ * $Id: normal.c,v 1.48 2001/07/29 00:41:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,13 +22,9 @@
 
 #include <stdlib.h>
 
-#include <sys/stat.h>
-#include <errno.h>
-
-#define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
+#define REQUIRE_STRING_H
 #include "compat.h"
-
 #include "common.h"
 
 #include "utils/libstring.h"
@@ -40,13 +36,14 @@
 #include "enfle/effect.h"
 #include "enfle/streamer.h"
 #include "enfle/archiver.h"
+#include "enfle/identify.h"
 
 static int ui_main(UIData *);
 
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.4.5",
+  description: "Normal UI plugin version 0.4.7",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -661,8 +658,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Image *p;
   Movie *m;
   char *path;
-  int f, ret;
-  struct stat statbuf;
+  int ret, r;
 
   s = stream_create();
   p = image_create();
@@ -737,61 +733,30 @@ process_files_of_archive(UIData *uidata, Archive *a)
       break;
 
     video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-
-    if (strcmp(a->format, "NORMAL") == 0) {
-      if (strcmp(path, "-") == 0) {
-	stream_make_fdstream(s, dup(0));
-      } else {
-	if (stat(path, &statbuf)) {
-	  show_message("stat() failed: %s: %s\n", path, strerror(errno));
-	  break;
-	}
-	if (S_ISDIR(statbuf.st_mode)) {
-	  arc = archive_create(a);
-
-	  debug_message("reading %s\n", path);
-
-	  video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-	  if (!archive_read_directory(arc, path, 1)) {
-	    archive_destroy(arc);
-	    ret = MAIN_LOOP_DELETE_FROM_LIST;
-	    continue;
-	  }
-	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
-	  video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-	  ret = process_files_of_archive(uidata, arc);
-	  if (arc->nfiles == 0) {
-	    /* Now that all paths are deleted in this archive, should be deleted wholly. */
-	    ret = MAIN_LOOP_DELETE_FROM_LIST;
-	  }
-	  archive_destroy(arc);
-	  continue;
-	} else if (!S_ISREG(statbuf.st_mode)) {
-	  ret = MAIN_LOOP_DELETE_FROM_LIST;
-	  continue;
-	}
-
-	if (streamer_identify(eps, s, path)) {
-
-	  debug_message("Stream identified as %s\n", s->format);
-
-	  if (!streamer_open(eps, s, s->format, path)) {
-	    show_message("Stream %s [%s] cannot open\n", s->format, path);
-	    ret = MAIN_LOOP_DELETE_FROM_LIST;
-	    continue;
-	  }
-	} else if (!stream_make_filestream(s, path)) {
-	  show_message("Stream NORMAL [%s] cannot open\n", path);
-	  ret = MAIN_LOOP_DELETE_FROM_LIST;
-	  continue;
-	}
+    r = identify_file(eps, path, s, a);
+    switch (r) {
+    case IDENTIFY_FILE_DIRECTORY:
+      arc = archive_create(a);
+      debug_message("Reading %s.\n", path);
+      video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
+      if (!archive_read_directory(arc, path, 1)) {
+	archive_destroy(arc);
+	ret = MAIN_LOOP_DELETE_FROM_LIST;
+	continue;
       }
-
+      (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
+      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+      ret = process_files_of_archive(uidata, arc);
+      if (arc->nfiles == 0) {
+	/* Now that all paths are deleted in this archive, should be deleted wholly. */
+	ret = MAIN_LOOP_DELETE_FROM_LIST;
+      }
+      archive_destroy(arc);
+      continue;
+    case IDENTIFY_FILE_STREAM:
       arc = archive_create(a);
       if (archiver_identify(eps, arc, s)) {
-
 	debug_message("Archiver identified as %s\n", arc->format);
-
 	if (archiver_open(eps, arc, arc->format, s)) {
 	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
 	  ret = process_files_of_archive(uidata, arc);
@@ -800,57 +765,38 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
 	  ret = MAIN_LOOP_DELETE_FROM_LIST;
+	  archive_destroy(arc);
 	  continue;
 	}
       }
       archive_destroy(arc);
-    } else if (!archive_open(a, s, path)) {
-      show_message("File %s in %s archive cannot open\n", path, a->format);
+      break;
+    case IDENTIFY_FILE_NOTREG:
+    case IDENTIFY_FILE_SOPEN_FAILED:
+    case IDENTIFY_FILE_AOPEN_FAILED:
+    case IDENTIFY_FILE_STAT_FAILED:
+    default:
       ret = MAIN_LOOP_DELETE_FROM_LIST;
       continue;
     }
 
-    f = LOAD_NOT;
     video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-    if (loader_identify(eps, p, s, vw, c)) {
-
-#ifdef DEBUG
-      if (p->format_detail)
-	debug_message("Image identified as %s: %s\n", p->format, p->format_detail);
-      else
-	debug_message("Image identified as %s\n", p->format);
-#endif
-
-      p->image = memory_create();
-      if ((f = loader_load(eps, p->format, p, s, vw, c)) == LOAD_OK)
-	stream_close(s);
-    }
-
-    if (f != LOAD_OK) {
-      if (player_identify(eps, m, s, c)) {
-
-	debug_message("Movie identified as %s\n", m->format);
-
-	if ((f = player_load(eps, vw, m->format, m, s, c)) != PLAY_OK) {
-	  stream_close(s);
-	  show_message("%s load failed\n", path);
-	  ret = MAIN_LOOP_DELETE_FROM_LIST;
-	  continue;
-	}
-      } else {
-	stream_close(s);
-	show_message("%s identification failed\n", path);
-	ret = MAIN_LOOP_DELETE_FROM_LIST;
-	continue;
-      }
-
-      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      ret = main_loop(uidata, vw, m, NULL, path);
-      movie_unload(m);
-    } else {
-
+    r = identify_stream(eps, p, m, s, vw, c);
+    switch (r) {
+    case IDENTIFY_STREAM_MOVIE_FAILED:
+    case IDENTIFY_STREAM_IMAGE_FAILED:
+      stream_close(s);
+      show_message("%s load failed\n", path);
+      ret = MAIN_LOOP_DELETE_FROM_LIST;
+      continue;
+    case IDENTIFY_STREAM_FAILED:
+      stream_close(s);
+      show_message("%s identification failed\n", path);
+      ret = MAIN_LOOP_DELETE_FROM_LIST;
+      continue;
+    case IDENTIFY_STREAM_IMAGE:
+      stream_close(s);
       debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
-
       if (p->comment) {
 	show_message("comment: %s\n", p->comment);
 	free(p->comment);
@@ -863,6 +809,17 @@ process_files_of_archive(UIData *uidata, Archive *a)
       p->rendered.image = NULL;
       memory_destroy(p->image);
       p->image = NULL;
+      break;
+    case IDENTIFY_STREAM_MOVIE:
+      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+      ret = main_loop(uidata, vw, m, NULL, path);
+      memory_destroy(p->image);
+      p->image = NULL;
+      movie_unload(m);
+      break;
+    default:
+      ret = MAIN_LOOP_DELETE_FROM_LIST;
+      break;
     }
   }
 

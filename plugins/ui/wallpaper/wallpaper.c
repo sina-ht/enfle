@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:48:44 2001.
- * $Id: wallpaper.c,v 1.4 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Sun Jul 29 03:57:49 2001.
+ * $Id: wallpaper.c,v 1.5 2001/07/29 00:41:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,9 +22,6 @@
 
 #include <stdlib.h>
 
-#include <sys/stat.h>
-#include <errno.h>
-
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
 #include "compat.h"
@@ -38,13 +35,14 @@
 #include "enfle/player.h"
 #include "enfle/streamer.h"
 #include "enfle/archiver.h"
+#include "enfle/identify.h"
 
 static int ui_main(UIData *);
 
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Wallpaper",
-  description: "Wallpaper UI plugin version 0.1",
+  description: "Wallpaper UI plugin version 0.1.2",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -138,10 +136,6 @@ render_frame(VideoWindow *vw, Movie *m, Image *p)
 static int
 main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 {
-  //VideoPlugin *vp = uidata->vp;
-  //EnflePlugins *eps = uidata->eps;
-  //Config *c = uidata->c;
-  //Effect *ef = uidata->ef;
   int loop = 1;
 
   if (p) {
@@ -188,8 +182,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Image *p;
   Movie *m;
   char *path;
-  int f, ret;
-  struct stat statbuf;
+  int ret, r;
 
   s = stream_create();
   p = image_create();
@@ -207,49 +200,22 @@ process_files_of_archive(UIData *uidata, Archive *a)
   if (!(path = archive_iteration_start(a)))
     return 1;
 
-  if (strcmp(a->format, "NORMAL") == 0) {
-    if (strcmp(path, "-") == 0) {
-      stream_make_fdstream(s, dup(0));
-    } else {
-      if (stat(path, &statbuf)) {
-	show_message("stat() failed: %s: %s\n", path, strerror(errno));
-	return 0;
-      }
-      if (S_ISDIR(statbuf.st_mode)) {
-	arc = archive_create(a);
-
-	debug_message("reading %s\n", path);
-
-	if (!archive_read_directory(arc, path, 1)) {
-	  archive_destroy(arc);
-	  return 0;
-	}
-	ret = process_files_of_archive(uidata, arc);
-	archive_destroy(arc);
-	return ret;
-      } else if (!S_ISREG(statbuf.st_mode)) {
-	return 0;
-      }
-
-      if (streamer_identify(eps, s, path)) {
-
-	debug_message("Stream identified as %s\n", s->format);
-
-	if (!streamer_open(eps, s, s->format, path)) {
-	  show_message("Stream %s [%s] cannot open\n", s->format, path);
-	  return 0;
-	}
-      } else if (!stream_make_filestream(s, path)) {
-	show_message("Stream NORMAL [%s] cannot open\n", path);
-	return 0;
-      }
+  r = identify_file(eps, path, s, a);
+  switch (r) {
+  case IDENTIFY_FILE_DIRECTORY:
+    arc = archive_create(a);
+    debug_message("Reading %s.\n", path);
+    if (!archive_read_directory(arc, path, 1)) {
+      archive_destroy(arc);
+      return 0;
     }
-
+    ret = process_files_of_archive(uidata, arc);
+    archive_destroy(arc);
+    return ret;
+  case IDENTIFY_FILE_STREAM:
     arc = archive_create(a);
     if (archiver_identify(eps, arc, s)) {
-
       debug_message("Archiver identified as %s\n", arc->format);
-
       if (archiver_open(eps, arc, arc->format, s)) {
 	ret = process_files_of_archive(uidata, arc);
 	archive_destroy(arc);
@@ -261,53 +227,40 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
     }
     archive_destroy(arc);
-  } else if (!archive_open(a, s, path)) {
-    show_message("File %s in %s archive cannot open\n", path, a->format);
+    break;
+  case IDENTIFY_FILE_NOTREG:
+  case IDENTIFY_FILE_SOPEN_FAILED:
+  case IDENTIFY_FILE_AOPEN_FAILED:
+  case IDENTIFY_FILE_STAT_FAILED:
+  default:
     return 0;
   }
 
-  f = LOAD_NOT;
-  if (loader_identify(eps, p, s, vw, c)) {
-
-#ifdef DEBUG
-    if (p->format_detail)
-      debug_message("Image identified as %s: %s\n", p->format, p->format_detail);
-    else
-      debug_message("Image identified as %s\n", p->format);
-#endif
-
-    p->image = memory_create();
-    if ((f = loader_load(eps, p->format, p, s, vw, c)) == LOAD_OK)
-      stream_close(s);
-  }
-
-  if (f != LOAD_OK) {
-    if (player_identify(eps, m, s, c)) {
-
-      debug_message("Movie identified as %s\n", m->format);
-
-      if ((f = player_load(eps, vw, m->format, m, s, c)) != PLAY_OK) {
-	stream_close(s);
-	show_message("%s load failed\n", path);
-	return 0;
-      }
-    } else {
-      stream_close(s);
-      show_message("%s identification failed\n", path);
-      return 0;
-    }
-
-    ret = main_loop(uidata, vw, m, NULL, path);
-    movie_unload(m);
-  } else {
-
+  r = identify_stream(eps, p, m, s, vw, c);
+  switch (r) {
+  case IDENTIFY_STREAM_MOVIE_FAILED:
+  case IDENTIFY_STREAM_IMAGE_FAILED:
+    stream_close(s);
+    show_message("%s load failed\n", path);
+    return 0;
+  case IDENTIFY_STREAM_FAILED:
+    stream_close(s);
+    show_message("%s identification failed\n", path);
+    return 0;
+  case IDENTIFY_STREAM_IMAGE:
     debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
-
     ret = main_loop(uidata, vw, NULL, p, path);
     memory_destroy(p->rendered.image);
     p->rendered.image = NULL;
     memory_destroy(p->image);
     p->image = NULL;
+    break;
+  case IDENTIFY_STREAM_MOVIE:
+    ret = main_loop(uidata, vw, m, NULL, path);
+    movie_unload(m);
+    break;
+  default:
+    return 0;
   }
 
   movie_destroy(m);
@@ -339,8 +292,6 @@ ui_main(UIData *uidata)
   uidata->disp = disp;
 
   uidata->vw = vw = vp->get_root(disp);
-
-  /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask | ENFLE_PointerMask); */
 
   if ((render_method = config_get(c, "/enfle/plugins/ui/wallpaper/render")) != NULL) {
     if (!strcasecmp(render_method, "normal")) {

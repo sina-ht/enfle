@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:48:25 2001.
- * $Id: convert.c,v 1.9 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Sun Jul 29 03:52:24 2001.
+ * $Id: convert.c,v 1.10 2001/07/29 00:41:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,10 +22,7 @@
 
 #include <stdlib.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
 
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
@@ -37,16 +34,18 @@
 #include "utils/misc.h"
 #include "enfle/ui-plugin.h"
 #include "enfle/loader.h"
+#include "enfle/player.h"
 #include "enfle/saver.h"
 #include "enfle/streamer.h"
 #include "enfle/archiver.h"
+#include "enfle/identify.h"
 
 static int ui_main(UIData *);
 
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Convert",
-  description: "Convert UI plugin version 0.1.1",
+  description: "Convert UI plugin version 0.1.3",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -118,111 +117,85 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Stream *s;
   Image *p;
   char *path, *format;
-  int f, dir, ret = 0;
-  struct stat statbuf;
+  int f, ret = 0, r;
 
   s = stream_create();
   p = image_create();
   format = config_get_str(c, "/enfle/plugins/ui/convert/format");
 
   path = NULL;
-  dir = 1;
   for (;;) {
     if ((path = (path == NULL) ? archive_iteration_start(a) : archive_iteration_next(a)) == NULL)
       break;
 
-    if (strcmp(a->format, "NORMAL") == 0) {
-      if (strcmp(path, "-") == 0) {
-	stream_make_fdstream(s, dup(0));
-      } else {
-	if (stat(path, &statbuf)) {
-	  show_message("stat() failed: %s: %s\n", path, strerror(errno));
-	  break;
-	}
-	if (S_ISDIR(statbuf.st_mode)) {
-	  arc = archive_create(a);
-
-	  debug_message("reading %s\n", path);
-
-	  if (!archive_read_directory(arc, path, 1)) {
-	    archive_destroy(arc);
-	    continue;
-	  }
-	  ret = process_files_of_archive(uidata, arc);
-	  if (arc->nfiles == 0) {
-	    /* Now that all paths are deleted in this archive, should be deleted wholly. */
-	    archive_iteration_delete(a);
-	  }
-	  archive_destroy(arc);
-	  dir = 1;
-	  continue;
-	} else if (!S_ISREG(statbuf.st_mode)) {
-	  continue;
-	}
-
-	if (streamer_identify(eps, s, path)) {
-
-	  debug_message("Stream identified as %s\n", s->format);
-
-	  if (!streamer_open(eps, s, s->format, path)) {
-	    show_message("Stream %s [%s] cannot open\n", s->format, path);
-	    continue;
-	  }
-	} else if (!stream_make_filestream(s, path)) {
-	  show_message("Stream NORMAL [%s] cannot open\n", path);
-	  continue;
-	}
+    r = identify_file(eps, path, s, a);
+    switch (r) {
+    case IDENTIFY_FILE_DIRECTORY:
+      arc = archive_create(a);
+      debug_message("Reading %s.\n", path);
+      if (!archive_read_directory(arc, path, 1)) {
+	archive_destroy(arc);
+	continue;
       }
-
+      ret = process_files_of_archive(uidata, arc);
+      if (arc->nfiles == 0) {
+	/* Now that all paths are deleted in this archive, should be deleted wholly. */
+	archive_iteration_delete(a);
+      }
+      archive_destroy(arc);
+      continue;
+    case IDENTIFY_FILE_STREAM:
       arc = archive_create(a);
       if (archiver_identify(eps, arc, s)) {
-
 	debug_message("Archiver identified as %s\n", arc->format);
-
 	if (archiver_open(eps, arc, arc->format, s)) {
 	  ret = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
-	  dir = 1;
 	  continue;
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
+	  archive_destroy(arc);
+	  continue;
 	}
       }
       archive_destroy(arc);
-    } else if (!archive_open(a, s, path)) {
-      show_message("File %s in %s archive cannot open\n", path, a->format);
+      break;
+    case IDENTIFY_FILE_NOTREG:
+    case IDENTIFY_FILE_SOPEN_FAILED:
+    case IDENTIFY_FILE_AOPEN_FAILED:
+    case IDENTIFY_FILE_STAT_FAILED:
+    default:
       continue;
     }
 
     f = LOAD_NOT;
     debug_message("Image identifying...\n");
-    if (loader_identify(eps, p, s, NULL, c)) {
-
-      debug_message("Image identified as %s\n", p->format);
-
-      p->image = memory_create();
-      if ((f = loader_load(eps, p->format, p, s, NULL, c)) == LOAD_OK)
-	stream_close(s);
-    }
-
-    if (f != LOAD_OK) {
-	stream_close(s);
-	show_message("%s identification failed\n", path);
-	continue;
-    } else {
-
+    r = identify_stream(eps, p, NULL, s, NULL, c);
+    switch (r) {
+    case IDENTIFY_STREAM_MOVIE_FAILED:
+    case IDENTIFY_STREAM_IMAGE_FAILED:
+      stream_close(s);
+      show_message("%s load failed\n", path);
+      continue;
+    case IDENTIFY_STREAM_FAILED:
+      stream_close(s);
+      show_message("%s identification failed\n", path);
+      continue;
+    case IDENTIFY_STREAM_IMAGE:
       debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
-
       if (p->comment) {
 	show_message("comment:\n%s\n", p->comment);
 	free(p->comment);
 	p->comment = NULL;
       }
-
       save_image(uidata, p, format, path);
-
       memory_destroy(p->image);
       p->image = NULL;
+    case IDENTIFY_STREAM_MOVIE:
+      show_message("BUG... cannot reach here.");
+      continue;
+    default:
+      continue;
     }
   }
 
