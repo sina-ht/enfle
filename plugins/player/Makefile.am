@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Sep  3 10:08:27 2001.
-# $Id: Makefile.am,v 1.15 2001/09/03 01:44:32 sian Exp $
+# Last Modified: Thu Nov 13 22:33:08 2003.
+# $Id: Makefile.am,v 1.16 2003/11/17 13:57:15 sian Exp $
 
-SUBDIRS = ungif mpeg_lib libmpeg3 mng avifile mpglib libmpeg2 opendivx
-DIST_SUBDIRS = ungif mpeg_lib libmpeg3 mng avifile mpglib libmpeg2 opendivx
+SUBDIRS = ungif mpeg_lib libmpeg3 mng avifile mpglib libmpeg2 divx avcodec
+DIST_SUBDIRS = ungif mpeg_lib libmpeg3 mng avifile mpglib libmpeg2 divx avcodec
