@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 23 06:29:18 2002.
- * $Id: normal.c,v 1.68 2002/09/22 21:32:39 sian Exp $
+ * Last Modified: Sun Oct  6 01:14:09 2002.
+ * $Id: normal.c,v 1.69 2002/10/05 17:18:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -815,17 +815,14 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
     switch (r) {
     case IDENTIFY_STREAM_MOVIE_FAILED:
     case IDENTIFY_STREAM_IMAGE_FAILED:
-      stream_close(s);
       show_message("%s load failed\n", path);
       ret = MAIN_LOOP_DELETE_FROM_LIST;
-      continue;
+      break;
     case IDENTIFY_STREAM_FAILED:
-      stream_close(s);
       show_message("%s identification failed\n", path);
       ret = MAIN_LOOP_DELETE_FROM_LIST_DIR;
-      continue;
+      break;
     case IDENTIFY_STREAM_IMAGE:
-      stream_close(s);
       debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
       if (p->comment && config_get_boolean(c, "/enfle/plugins/ui/normal/show_comment", &res)) {
 	show_message("comment: %s\n", p->comment);
@@ -843,6 +840,8 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       ret = MAIN_LOOP_DELETE_FROM_LIST;
       break;
     }
+
+    stream_close(s);
   }
 
   movie_destroy(m);
