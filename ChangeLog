@@ -1,5 +1,8 @@
 2004-03-11  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/player/generic/generic.c: Fixed type-undefined bug when
+	no video.
+
 	* plugins/loader/jasper/Makefile.am: JasPer needs libjpeg.
 
 	* plugins/demultiplexer/*/Makefile.am: Use static libenfle.
