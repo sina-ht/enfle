@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl NOTE: autoconf should be 2.52 or later, automake 1.6 or later.
+dnl NOTE: autoconf should be 2.54 or later, automake 1.6.3 or later.
 dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Sep 23 06:32:49 2002.
-dnl $Id: configure.in,v 1.118 2002/09/22 21:33:32 sian Exp $
+dnl Last Modified: Sat Oct  5 23:32:51 2002.
+dnl $Id: configure.in,v 1.119 2002/10/05 17:19:23 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20020923, sian@big.or.jp)
+AC_INIT(enfle, 20021005, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -125,9 +125,25 @@ AC_CHECK_HEADER(math.h, [
 available_pow=yes
 LIBADD_POW=-lm
 
+dnl available_mmxjpeg=no
+dnl AC_ARG_WITH(jpeg-mmx,
+dnl         [  --with-mmxjpeg          use mmxjpeg instead of normal libjpeg.])
+dnl if test "${with_mmxjpeg}" = "yes"; then
+dnl   AC_CHECK_LIB(jpeg-mmx, jpeg_finish_decompress, [ AC_MSG_CHECKING([if jpeg-mmx is wanted and available]); AC_MSG_RESULT([wanted and available]); available_mmxjpeg=yes; LIBADD_MMXJPEG=-ljpeg-mmx], [ AC_MSG_CHECKING([if jpeg-mmx is wanted and available]); AC_MSG_RESULT([wanted but unavailable]) ])
+dnl else
+dnl   AC_MSG_CHECKING([if jpeg-mmx is wanted and available])
+dnl   AC_MSG_RESULT([not wanted])
+dnl fi
+
 available_jpeg=no
 AC_CHECK_HEADER(jpeglib.h, [
-  AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ], [], $LIBADD_POW)])
+dnl   if test "${available_mmxjpeg}" = "yes"; then
+dnl     available_jpeg=yes
+dnl     LIBADD_JPEG=$LIBADD_MMXJPEG
+dnl   else
+    AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ], [], $LIBADD_POW)
+dnl   fi
+])
 AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
 AC_SUBST(LIBADD_JPEG)
 
@@ -258,6 +274,15 @@ AC_CHECK_HEADER(bzlib.h, [
 ])
 AM_CONDITIONAL(HAVE_BZLIB, test "$available_bzlib" = "yes")
 AC_SUBST(LIBADD_BZLIB)
+
+available_libarc=no
+AC_CHECK_HEADER(libarc/arc.h, [
+  AC_CHECK_LIB(arc, url_arc_open, [
+    available_libarc=yes; LIBADD_LIBARC="-larc";
+  ])
+])
+AM_CONDITIONAL(HAVE_LIBARC, test "$available_libarc" = "yes")
+AC_SUBST(LIBADD_LIBARC)
 
 available_oss=no
 AC_CHECK_HEADER(sys/soundcard.h, [
@@ -542,6 +567,7 @@ AC_CONFIG_FILES([
     plugins/loader/xpm/Makefile
    plugins/archiver/Makefile
     plugins/archiver/tar/Makefile
+    plugins/archiver/arc/Makefile
    plugins/player/Makefile
     plugins/player/avifile/Makefile
     plugins/player/libmpeg2/Makefile
