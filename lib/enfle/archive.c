@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jul 29 21:35:16 2002.
- * $Id: archive.c,v 1.25 2002/08/03 04:54:06 sian Exp $
+ * Last Modified: Wed Aug  7 23:22:26 2002.
+ * $Id: archive.c,v 1.26 2002/08/07 15:34:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -281,14 +281,8 @@ delete_path(Archive *arc, char *path)
 static char *
 iteration_start(Archive *arc)
 {
-  Dlist *dl;
-
-  dl = hash_get_keys(arc->filehash);
   if (!arc->current)
     return iteration_first(arc);
-
-  if (arc->current == dlist_guard(dl))
-    return NULL;
 
   if (!dlist_data(arc->current))
     return NULL;
@@ -299,15 +293,13 @@ iteration_start(Archive *arc)
 static char *
 iteration_first(Archive *arc)
 {
-  Dlist *dl;
+  Dlist *dl = hash_get_keys(arc->filehash);
+
+  if (dlist_size(dl) == 0)
+    return NULL;
 
   arc->direction = 1;
-
-  dl = hash_get_keys(arc->filehash);
   arc->current = dlist_top(dl);
-
-  if (arc->current == dlist_guard(dl))
-    return NULL;
 
   if (!dlist_data(arc->current))
     return NULL;
@@ -318,15 +310,13 @@ iteration_first(Archive *arc)
 static char *
 iteration_last(Archive *arc)
 {
-  Dlist *dl;
+  Dlist *dl = hash_get_keys(arc->filehash);
+
+  if (dlist_size(dl) == 0)
+    return NULL;
 
   arc->direction = -1;
-
-  dl = hash_get_keys(arc->filehash);
   arc->current = dlist_head(dl);
-
-  if (arc->current == dlist_guard(dl))
-    return NULL;
 
   if (!dlist_data(arc->current))
     return NULL;
@@ -334,21 +324,17 @@ iteration_last(Archive *arc)
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
 
+#define __dlist_next_or_null(dl, dd) ((dlist_head(dl) != dd) ? dlist_next(dd) : NULL)
+#define __dlist_prev_or_null(dl, dd) ((dlist_top(dl) != dd) ? dlist_prev(dd) : NULL)
+
 static char *
 iteration_next(Archive *arc)
 {
-  Dlist *dl;
-  dl = hash_get_keys(arc->filehash);
+  Dlist *dl = hash_get_keys(arc->filehash);
 
-  arc->direction = 1;
-
-  if (arc->current == dlist_guard(dl))
-    return iteration_start(arc);
-
-  if (dlist_next(arc->current) == dlist_guard(dl))
+  if ((arc->current = __dlist_next_or_null(dl, arc->current)) == NULL)
     return NULL;
-
-  arc->current = dlist_next(arc->current);
+  arc->direction = 1;
 
   if (!dlist_data(arc->current))
     return NULL;
@@ -359,21 +345,11 @@ iteration_next(Archive *arc)
 static char *
 iteration_prev(Archive *arc)
 {
-  Dlist *dl;
-  dl = hash_get_keys(arc->filehash);
+  Dlist *dl = hash_get_keys(arc->filehash);
 
+  if ((arc->current = __dlist_prev_or_null(dl, arc->current)) == NULL)
+    return NULL;
   arc->direction = -1;
-
-  if (arc->current == dlist_guard(dl)) {
-    Dlist *_dl;
-
-    _dl = hash_get_keys(arc->filehash);
-    arc->current = dlist_head(_dl);
-  } else {
-    if (dlist_prev(arc->current) == dlist_guard(dl))
-      return NULL;
-    arc->current = dlist_prev(arc->current);
-  }
 
   if (!dlist_data(arc->current))
     return NULL;
@@ -390,22 +366,25 @@ iteration(Archive *arc)
 static char *
 delete_and_get(Archive *arc, int dir)
 {
-  Dlist *dl;
+  Dlist *dl = hash_get_keys(arc->filehash);
   Dlist_data *dl_n;
-  dl = hash_get_keys(arc->filehash);
 
-  if (arc->current != dlist_guard(dl)) {
-    dl_n = (dir == 1) ? dlist_next(arc->current) : dlist_prev(arc->current);
-    delete_path(arc, hash_key_key(dlist_data(arc->current)));
-    arc->current = dl_n;
-    if (arc->current == dlist_guard(dl))
-      return NULL;
-    if (!dlist_data(arc->current))
-      return NULL;
-    return hash_key_key(dlist_data(arc->current));
-  } else
+  dl_n = (dir == 1) ?
+    __dlist_next_or_null(dl, arc->current) :
+    __dlist_prev_or_null(dl, arc->current);
+  delete_path(arc, hash_key_key(dlist_data(arc->current)));
+  if (!dl_n)
     return NULL;
+  arc->current = dl_n;
+
+  if (!dlist_data(arc->current))
+    return NULL;
+
+  return hash_key_key(dlist_data(arc->current));
 }
+
+#undef __dlist_next_or_null
+#undef __dlist_prev_or_null
 
 static char *
 iteration_delete(Archive *arc)
