@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 08:01:16 2000.
- * $Id: pluginlist.c,v 1.2 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sun Dec 24 05:48:34 2000.
+ * $Id: pluginlist.c,v 1.3 2000/12/24 15:28:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -81,6 +81,8 @@ delete(PluginList *pl, char *name)
 static Dlist *
 get_names(PluginList *pl)
 {
+  if (!pl || !pl->hash)
+    return NULL;
   return hash_get_keys(pl->hash);
 }
 
