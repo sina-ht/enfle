@@ -1,3 +1,11 @@
+2002-02-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archiver.c, lib/enfle/archiver.h,
+	lib/enfle/identify.c, lib/enfle/streamer.c, lib/enfle/streamer.h,
+	plugins/archiver/tar/tar.c, plugins/ui/convert/convert.c,
+	plugins/ui/normal/normal.c, plugins/ui/wallpaper/wallpaper.c,
+	src/enfle.rc: Implemeted assoc for streamer and archiver.
+
 2002-02-08  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/loader.c, lib/enfle/player.c: Deleted
