@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 18:01:24 2001.
- * $Id: normal.c,v 1.36 2001/04/27 01:05:40 sian Exp $
+ * Last Modified: Sat Apr 28 02:43:00 2001.
+ * $Id: normal.c,v 1.37 2001/04/27 17:43:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -170,9 +170,12 @@ static int
 save_image(Image *p, UIData *uidata, char *path, char *format)
 {
   char *outpath;
+  char *ext;
   FILE *fp;
 
-  if ((outpath = misc_replace_ext(path, format)) == NULL) {
+  if ((ext = saver_get_ext(uidata->sv, uidata->eps, format, uidata->c)) == NULL)
+    return 0;
+  if ((outpath = misc_replace_ext(path, ext)) == NULL) {
     show_message(__FUNCTION__ ": No enough memory.\n");
     return 0;
   }
@@ -213,7 +216,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
   EnflePlugins *eps = uidata->eps;
   Config *c = uidata->c;
   Effect *ef = uidata->ef;
-  Image *original_p;
+  Image *original_p = NULL;
   unsigned int old_x = 0, old_y = 0;
   int first_point = 1;
   int offset_x, offset_y;
@@ -309,16 +312,21 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	      video_window_render(vw, p);
 	      set_caption_string(vw, path, p ? p->format : m->format);
 	    } else if (ev.key.modkey & ENFLE_MOD_Ctrl) {
+	      video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 	      if (!save_image(p, uidata, path, (char *)"PNG"))
 		show_message("save_image() failed.\n");
+	      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 	    } else if (ev.key.modkey & ENFLE_MOD_Alt) {
 	      char *format;
 
 	      if ((format = config_get(c, "/enfle/plugins/ui/normal/save_format")) == NULL)
 		show_message("save_format is not specified.\n");
-	      else
+	      else {
+		video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 		if (!save_image(p, uidata, path, format))
 		  show_message("save_image() failed.\n");
+		video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
+	      }
 	    }
 	    break;
 	  case ENFLE_KEY_m:
