@@ -1,3 +1,22 @@
+2002-03-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: New configuration for esd.
+
+	* plugins/player/opendivx/opendivx.c: stop() cleanly.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Cosmetic change.
+
+	* plugins/audio/oss/oss.c: Use new variables.
+
+	* plugins/audio/esd/esd.c: Implemented bytes_written().
+
+	* plugins/audio/alsa/alsa.c: Use ad->opened.
+
+	* lib/enfle/audio.h: Added variables: opened, bytes_written,
+	bytes_per_sample.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Set EOF.
+
 2002-03-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Version up. Added -std=c99 when debugging.
