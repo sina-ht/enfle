@@ -27,7 +27,7 @@ extern "C" {
 
 typedef struct vo_info_s
 {
-	/* driver name ("Matrox Millennium G200/G400" */
+	/* driver name ("Matrox Millennium G200/G400") */
 	const char *name;
 	/* short name (for config strings) ("mga") */
 	const char *short_name;
