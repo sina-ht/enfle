@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 02:06:35 2004.
- * $Id: mpglib.c,v 1.1 2004/01/30 12:38:30 sian Exp $
+ * Last Modified: Fri Feb 13 22:04:42 2004.
+ * $Id: mpglib.c,v 1.2 2004/02/14 05:24:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,7 +28,8 @@
 #include "mpglib/mpg123.h"
 #include "mpglib/mpglib.h"
 
-static AudioDecoder *init(void);
+DECLARE_AUDIODECODER_PLUGIN_METHODS;
+
 static AudioDecoderStatus decode(AudioDecoder *, Movie *, AudioDevice *, unsigned char *, unsigned int, unsigned int *);
 static void destroy(AudioDecoder *);
 
@@ -108,10 +109,19 @@ destroy(AudioDecoder *adec)
 }
 
 static AudioDecoder *
-init(void)
+init(unsigned int fourcc)
 {
   AudioDecoder *adec;
   struct audiodecoder_mpglib *adm;
+
+  switch (fourcc){
+  case 0:
+  case WAVEFORMAT_TAG_MP2:
+  case WAVEFORMAT_TAG_MP3:
+    break;
+  default:
+    return NULL;
+  }
 
   if ((adec = calloc(1, sizeof(*adec))) == NULL)
     return NULL;
@@ -119,6 +129,7 @@ init(void)
     free(adec);
     return NULL;
   }
+  adec->name = plugin.name;
   adec->decode = decode;
   adec->destroy = destroy;
   adm->param_is_set = 0;

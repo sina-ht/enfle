@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 22:21:26 2004.
- * $Id: divx.c,v 1.1 2004/01/30 12:38:04 sian Exp $
+ * Last Modified: Sat Feb 14 02:34:52 2004.
+ * $Id: divx.c,v 1.2 2004/02/14 05:26:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,19 +43,16 @@
 #include "utils/libstring.h"
 
 /* XXX: dirty... */
-int divx_get_input_format(Movie *);
 int divx_get_biCompression(Movie *);
 short divx_get_biBitCount(Movie *);
 
-static VideoDecoder *init(void);
-static VideoDecoderStatus decode(VideoDecoder *, Movie *, Image *, unsigned char *, unsigned int, unsigned int *);
-static void destroy(VideoDecoder *);
+DECLARE_VIDEODECODER_PLUGIN_METHODS;
 
 #define VIDEODECODER_DIVX_PLUGIN_DESCRIPTION "divx Video Decoder plugin version 0.1"
 
 static VideoDecoderPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEODECODER,
-  name: "divx",
+  name: "DivX",
   description: NULL,
   author: "Hiroshi Takekawa",
 
@@ -65,6 +62,7 @@ static VideoDecoderPlugin plugin = {
 struct videodecoder_divx {
   Image *p;
   unsigned char *buf;
+  int input_format;
   int offset, size, to_skip;
   void *dec_handle;
   DEC_FRAME dec_frame;
@@ -161,8 +159,13 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   DivXBitmapInfoHeader bih;
   int inst, quality;
 
+  if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
+    err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
+    return 0;
+  }
+
   memset(&dec_init, 0, sizeof(dec_init));
-  dec_init.codec_version = divx_get_input_format(m);
+  dec_init.codec_version = vdm->input_format;
   dec_init.smooth_playback = 0;
   decore(&vdm->dec_handle, DEC_OPT_INIT, &dec_init, NULL);
 
@@ -170,8 +173,8 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   quality = 0; // 0-60
   decore(vdm->dec_handle, DEC_OPT_ADJUST, &inst, &quality);
 
-  bih.biCompression = divx_get_biCompression(m);
-  bih.biBitCount = divx_get_biBitCount(m);
+  bih.biCompression = m->out_fourcc;
+  bih.biBitCount = m->out_bitcount;
   bih.biSize = sizeof(DivXBitmapInfoHeader);
   bih.biWidth = m->width;
   bih.biHeight = m->height;
@@ -181,10 +184,41 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 }
 
 static VideoDecoder *
-init(void)
+init(unsigned int fourcc)
 {
   VideoDecoder *vdec;
   struct videodecoder_divx *vdm;
+  int input_format;
+
+  switch (fourcc) {
+  case 0:
+  case FCC_DIV3:
+  case FCC_DIV4:
+  case FCC_DIV5:
+  case FCC_DIV6:
+  case FCC_MP41:
+  case FCC_MP43:
+    debug_message_fnc("Identified as DivX ;-) 3.11\n");
+    input_format = 311;
+    break;
+  case FCC_DIVX:
+  case FCC_divx:
+    debug_message_fnc("Identified as DivX 4\n");
+    input_format = 412;
+    break;
+  case FCC_DX50:
+    debug_message_fnc("Identified as DivX 5\n");
+    input_format = 500;
+    break;
+  default:
+    debug_message_fnc("Not identified as any DivX format: %c%c%c%c(%08X)\n",
+		       fourcc        & 0xff,
+		      (fourcc >>  8) & 0xff,
+		      (fourcc >> 16) & 0xff,
+		      (fourcc >> 24) & 0xff,
+		       fourcc);
+    return NULL;
+  }
 
   if ((vdec = _videodecoder_init()) == NULL)
     return NULL;
@@ -192,9 +226,11 @@ init(void)
     free(vdec);
     return NULL;
   }
+  vdec->name = plugin.name;
   vdec->setup = setup;
   vdec->decode = decode;
   vdec->destroy = destroy;
+  vdm->input_format = input_format;
 
   return vdec;
 }

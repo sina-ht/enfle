@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 22:20:58 2004.
- * $Id: avcodec.c,v 1.1 2004/01/30 12:38:04 sian Exp $
+ * Last Modified: Sat Feb 14 02:35:09 2004.
+ * $Id: avcodec.c,v 1.2 2004/02/14 05:26:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,13 +37,7 @@
 #include "avcodec/avcodec.h"
 #include "utils/libstring.h"
 
-/* XXX: dirty... */
-enum CodecID avcodec_get_vcodec_id(Movie *);
-
-static VideoDecoder *init(void);
-static int setup(VideoDecoder *, Movie *, Image *, int, int);
-static VideoDecoderStatus decode(VideoDecoder *, Movie *, Image *, unsigned char *, unsigned int, unsigned int *);
-static void destroy(VideoDecoder *);
+DECLARE_VIDEODECODER_PLUGIN_METHODS;
 
 #define VIDEODECODER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Video Decoder plugin version 0.2"
 
@@ -78,6 +72,7 @@ typedef struct __picture_buffer {
 
 struct videodecoder_avcodec {
   Image *p;
+  const char *vcodec_name;
   AVCodec *vcodec;
   AVCodecContext *vcodec_ctx;
   AVFrame *vcodec_picture;
@@ -314,12 +309,17 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 {
   struct videodecoder_avcodec *vdm = (struct videodecoder_avcodec *)vdec->opaque;
 
+  if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
+    err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
+    return 0;
+  }
+
   vdm->p = p;
   vdm->vcodec_ctx->width = w;
   vdm->vcodec_ctx->height = h;
 
-  if ((vdm->vcodec = avcodec_find_decoder(avcodec_get_vcodec_id(m))) == NULL) {
-    warning_fnc("avcodec id:%d not found\n", avcodec_get_vcodec_id(m));
+  if ((vdm->vcodec = avcodec_find_decoder_by_name(vdm->vcodec_name)) == NULL) {
+    warning_fnc("avcodec %s not found\n", vdm->vcodec_name);
     return 0;
   }
   if (vdm->vcodec->capabilities & CODEC_CAP_TRUNCATED)
@@ -349,19 +349,101 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 }
 
 static VideoDecoder *
-init(void)
+init(unsigned int fourcc)
 {
   VideoDecoder *vdec;
   struct videodecoder_avcodec *vdm;
+
+  switch (fourcc) {
+  case 0:
+  case FCC_H263: // h263
+  case FCC_I263: // h263i
+  case FCC_U263: // h263p
+  case FCC_viv1:
+  case FCC_DIVX: // mpeg4
+  case FCC_divx:
+  case FCC_DX50:
+  case FCC_XVID:
+  case FCC_MP4S:
+  case FCC_M4S2:
+  case FCC_0x04000000:
+  case FCC_DIV1:
+  case FCC_BLZ0:
+  case FCC_mp4v:
+  case FCC_UMP4:
+  case FCC_DIV3: // msmpeg4
+  case FCC_DIV4:
+  case FCC_DIV5:
+  case FCC_DIV6:
+  case FCC_MP43:
+  case FCC_MPG3:
+  case FCC_AP41:
+  case FCC_COL1:
+  case FCC_COL0:
+  case FCC_MP42: // msmpeg4v2
+  case FCC_mp42:
+  case FCC_DIV2:
+  case FCC_MP41: // msmpeg4v1
+  case FCC_MPG4:
+  case FCC_mpg4:
+  case FCC_WMV1: // wmv1
+  case FCC_WMV2: // wmv2
+  case FCC_dvsd: // dvvideo
+  case FCC_dvhd:
+  case FCC_dvsl:
+  case FCC_dv25:
+  case FCC_mpg1: // mpeg1video
+  case FCC_mpg2:
+  case FCC_PIM1:
+  case FCC_VCR2:
+  case FCC_MJPG: // mjpeg
+  case FCC_JPGL: // ljpeg
+  case FCC_LJPG:
+  case FCC_HFYU: // huffyuv
+  case FCC_CYUV: // cyuv
+  case FCC_Y422: // rawvideo
+  case FCC_I420:
+  case FCC_IV31: // indeo3
+  case FCC_IV32:
+  case FCC_VP31: // vp3
+  case FCC_ASV1: // asv1
+  case FCC_ASV2: // asv2
+  case FCC_VCR1: // vcr1
+  case FCC_FFV1: // ffv1
+  case FCC_Xxan: // xan_wc4
+  case FCC_mrle: // msrle
+  case FCC_0x01000000:
+    break;
+  case FCC_cvid: // cinepak
+    debug_message_fnc("Cinepak detected.  Disabled so far.\n");
+    return NULL;
+  case FCC_MSVC: // msvideo1
+  case FCC_msvc:
+  case FCC_CRAM:
+  case FCC_cram:
+  case FCC_WHAM:
+  case FCC_wham:
+    break;
+  default:
+    debug_message_fnc("Video [%c%c%c%c](%08X) was not identified as any avcodec supported format.\n",
+		       fourcc        & 0xff,
+		      (fourcc >>  8) & 0xff,
+		      (fourcc >> 16) & 0xff,
+		      (fourcc >> 24) & 0xff,
+		       fourcc);
+    return NULL;
+  }
 
   if ((vdec = _videodecoder_init()) == NULL)
     return NULL;
   if ((vdec->opaque = vdm = calloc(1, sizeof(*vdm))) == NULL)
     goto error_vdec;
+  vdec->name = plugin.name;
   vdec->setup = setup;
   vdec->decode = decode;
   vdec->destroy = destroy;
 
+  vdm->vcodec_name = videodecoder_codec_name(fourcc);
   if ((vdm->vcodec_ctx = avcodec_alloc_context()) == NULL)
     goto error_vdm;
   //vdm->vcodec_ctx->error_resilience = 3;
