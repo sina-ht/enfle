@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep  5 22:54:58 2002.
- * $Id: dlist.c,v 1.13 2002/09/05 14:36:12 sian Exp $
+ * Last Modified: Mon Sep  9 20:59:04 2002.
+ * $Id: dlist.c,v 1.14 2002/09/22 21:31:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,7 +33,7 @@ dlist_data_create(Dlist *dl)
 {
   Dlist_data *dd = calloc(1, sizeof(Dlist_data));
 
-  if (unlikely(dd  == NULL))
+  if (unlikely(dd == NULL))
     return NULL;
   dd->dl = dl;
 
