@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Apr 28 02:41:01 2001.
-; $Id: enfle.rc,v 1.15 2001/04/27 17:43:45 sian Exp $
+; Last Modified: Fri May 11 20:30:24 2001.
+; $Id: enfle.rc,v 1.16 2001/05/12 02:30:39 sian Exp $
 
 enfle {
   plugins {
@@ -15,6 +15,8 @@ enfle {
 	magnify_interpolate = bilinear
 	; save_format = PNG/JPEG
 	save_format = JPEG
+	;
+	deletefile_without_shift = no
       }
       wallpaper {
 	; render = {normal|double|short|long}

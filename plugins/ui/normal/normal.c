@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 03:45:35 2001.
- * $Id: normal.c,v 1.43 2001/05/01 18:50:07 sian Exp $
+ * Last Modified: Fri May 11 20:31:33 2001.
+ * $Id: normal.c,v 1.44 2001/05/12 02:30:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -447,6 +447,7 @@ static int
 main_loop_key_released(MainLoop *ml)
 {
   VideoKey key = ml->key;
+  int result;
 
   ml->key = ENFLE_KEY_Unknown;
   if (key == ml->ev.key.key) {
@@ -465,8 +466,13 @@ main_loop_key_released(MainLoop *ml)
     case ENFLE_KEY_f:
       return main_loop_toggle_fullscreen_mode(ml);
     case ENFLE_KEY_d:
-      return (ml->ev.key.modkey & ENFLE_MOD_Shift) ?
-	main_loop_delete_file(ml) : main_loop_delete_from_list(ml);
+      if (config_get_boolean(ml->uidata->c, "/enfle/plugins/ui/normal/deletefile_without_shift", &result)) {
+	return !(ml->ev.key.modkey & ENFLE_MOD_Shift) ?
+	  main_loop_delete_file(ml) : main_loop_delete_from_list(ml);
+      } else {
+	return (ml->ev.key.modkey & ENFLE_MOD_Shift) ?
+	  main_loop_delete_file(ml) : main_loop_delete_from_list(ml);
+      }
     case ENFLE_KEY_s:
       if (ml->ev.key.modkey & ENFLE_MOD_Shift) {
 	return main_loop_toggle_interpolate(ml);
