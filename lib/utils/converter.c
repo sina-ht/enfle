@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:17:46 2001.
- * $Id: converter.c,v 1.4 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Wed Jul 10 22:16:32 2002.
+ * $Id: converter.c,v 1.5 2002/08/02 13:58:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -57,7 +57,7 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
 
   if ((cd = iconv_open(to, from)) == (iconv_t)-1) {
     if (errno == EINVAL) {
-      show_message("%s: conversion from %s to %s is not supported by iconv().\n", __FUNCTION__, from, to);
+      err_message("%s: conversion from %s to %s is not supported by iconv().\n", __FUNCTION__, from, to);
       *d_r = strdup(s);
       return strlen(s);
     }
@@ -75,13 +75,13 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
   } else {
     switch (errno) {
     case E2BIG:
-      fprintf(stderr, "Increase ICONV_OUTPUT_SIZE and recompile.\n");
+      debug_message("Increase ICONV_OUTPUT_SIZE and recompile.\n");
       break;
     case EILSEQ:
-      fprintf(stderr, "Invalid sequence passed.\n");
+      debug_message("Invalid sequence passed.\n");
       break;
     case EINVAL:
-      fprintf(stderr, "Incomplete multi-byte sequence passed.\n");
+      debug_message("Incomplete multi-byte sequence passed.\n");
       break;
     default:
       perror("converter_convert");
