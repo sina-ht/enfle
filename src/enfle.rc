@@ -1,10 +1,10 @@
 ; enfle.rc
-; Last Modified: Mon Jun 25 01:58:33 2001.
-; $Id: enfle.rc,v 1.19 2001/06/24 16:59:01 sian Exp $
+; Last Modified: Mon Aug 13 17:21:20 2001.
+; $Id: enfle.rc,v 1.20 2001/08/15 06:29:16 sian Exp $
 
 enfle {
   plugins {
-    ; to use in build tree, override default path
+    ; To execute enfle in the build tree, override the default path.
     ;dir = ../plugins
     ui {
       default = Normal
@@ -69,7 +69,7 @@ enfle {
       MPEG_lib/disabled = yes
       ; libmpeg2 and libmpeg3 both can play mpeg movies.
       ; You should choose which plugin to use.
-      ;LibMPEG3/disabled = yes
+      ;LibMPEG2/disabled = yes
       LibMPEG3/disabled = yes
     }
   }
