@@ -214,7 +214,7 @@ static void deblock_horiz_default_filter(uint8_t *v, int stride, int QP) {
 
 		#ifdef PP_SELF_CHECK
 		/* no selfcheck written for this yet */
-		#endif;
+		#endif
 
 		v += stride;
 	}
@@ -804,11 +804,3 @@ void postprocess(unsigned char * src[], int src_stride,
 	}
 
 }
-
-
-
-
-
-
-
-

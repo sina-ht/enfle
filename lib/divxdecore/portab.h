@@ -46,7 +46,7 @@
 
 #endif // WIN32
 
-#ifdef linux
+#ifdef __linux__
 
 /* basic types */
 

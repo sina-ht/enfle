@@ -47,7 +47,7 @@
 **/
 
 void addblock (int comp, int bx, int by, int addflag);
-int find_pmv (int block, int comp);
+int find_pmv (int blck, int comp);
 
 static void make_edge (unsigned char *frame_pic, int width, int height, int edge);
 
@@ -270,7 +270,7 @@ void addblockInter (int comp, int bx, int by)
 // int mv comp (0: x, 1: y)
 //
 // Purpose: compute motion vector prediction
-int find_pmv (int block, int comp)
+int find_pmv (int blck, int comp)
 {
   int p1, p2, p3;
   int xin1 = 0, xin2 = 0, xin3 = 0;
@@ -280,13 +280,13 @@ int find_pmv (int block, int comp)
 	int x = mp4_hdr.mb_xpos;
 	int y = mp4_hdr.mb_ypos;
 	
-	if ((y == 0) && ((block == 0) || (block == 1)))
+	if ((y == 0) && ((blck == 0) || (blck == 1)))
 	{
-		if ((x == 0) && (block == 0))
+		if ((x == 0) && (blck == 0))
 			return 0;
-		else if (block == 1)
+		else if (blck == 1)
 			return MV[comp][0][y+1][x+1];
-		else // block == 0
+		else // blck == 0
 			return MV[comp][1][y+1][x+1-1];
 	}
 	else
@@ -295,7 +295,7 @@ int find_pmv (int block, int comp)
 		x++;
 		y++;
 
-		switch (block)
+		switch (blck)
 		{
 			case 0: 
 				vec1 = 1;	yin1 = y;		xin1 = x-1;

@@ -28,6 +28,7 @@
 **/
 // mp4_predict.c //
 
+#include <stdlib.h>
 #include <math.h>
 
 #include "mp4_decoder.h"

@@ -203,7 +203,7 @@ unsigned int getbits1 ()
 
 /* return next n bits (right adjusted) */
 
-unsigned int getbits (int n)
+unsigned int divxdecore_getbits (int n)
 {
   unsigned int l;
 
@@ -212,4 +212,3 @@ unsigned int getbits (int n)
 
   return l;
 }
-

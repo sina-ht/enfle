@@ -79,9 +79,8 @@
 /**** Function prototype - entry point for postprocessing ****/
 void postprocess(unsigned char * src[], int src_stride,
                  unsigned char * dst[], int dst_stride, 
-                 int horizontal_size,   int vertical_size, 
-                 QP_STORE_T *QP_store,  int QP_stride,
-		 					   int mode);
+                 int h_size,   int v_size, 
+                 QP_STORE_T *QP_store,  int QP_stride, int mode);
 
 /**** mode flags to control postprocessing actions ****/
 #define PP_DEBLOCK_Y_H  0x00000001  /* Luma horizontal deblocking   */

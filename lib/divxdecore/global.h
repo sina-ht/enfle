@@ -67,7 +67,8 @@ void fillbfr (void);
 unsigned int showbits (int n);
 unsigned int getbits1 (void);
 void flushbits (int n);
-unsigned int getbits (int n);
+unsigned int divxdecore_getbits (int n);
+#define getbits(n) divxdecore_getbits(n)
 
 // idct.c 
 void idct (short *block);

@@ -28,6 +28,7 @@
 **/
 // mp4_mblock.c //
 
+#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
 
