@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 11:00:24 2001.
- * $Id: opendivx.c,v 1.12 2001/09/03 02:00:56 sian Exp $
+ * Last Modified: Thu Sep 13 07:34:58 2001.
+ * $Id: opendivx.c,v 1.13 2001/09/13 12:13:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -484,9 +484,7 @@ play_main(Movie *m, VideoWindow *vw)
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
   Image *p = info->p;
   int video_time, audio_time;
-#if 1
   int i = 0;
-#endif
 
   switch (m->status) {
   case _PLAY:
@@ -519,26 +517,22 @@ play_main(Movie *m, VideoWindow *vw)
     while (video_time > audio_time)
       audio_time = get_audio_time(m, info->ad);
 
-#if 1
     /* skip if delayed */
-    i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
+    i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
       info->drop = i;
     }
-#endif
   } else {
     /* if too fast to display, wait before render */
     while (video_time > timer_get_milli(m->timer)) ;
 
-#if 1
     /* skip if delayed */
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
       info->drop = i;
     }
-#endif
   }
 
   /* tell video thread to continue decoding */
