@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr 13 20:56:12 2001.
- * $Id: enfle.c,v 1.25 2001/04/18 05:34:39 sian Exp $
+ * Last Modified: Thu Apr 19 21:30:59 2001.
+ * $Id: enfle.c,v 1.26 2001/04/20 08:10:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,11 +62,14 @@ typedef struct _option {
 } Option;
 
 static Option enfle_options[] = {
-  { "help",  'h', _NO_ARGUMENT,       "Show help message." },
-  { "ui",    'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
-  { "video", 'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
-  { "audio", 'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
-  { "info", 'I', _NO_ARGUMENT, "Print more information." },
+  { "ui",      'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
+  { "video",   'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
+  { "audio",   'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
+  { "convert", 'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG)." },
+  { "include", 'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
+  { "exclude", 'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
+  { "info",    'I', _NO_ARGUMENT,       "Print more information." },
+  { "help",    'h', _NO_ARGUMENT,       "Show help message." },
   { NULL }
 };
 
@@ -210,7 +213,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
     spi_enabled = 0;
 #endif
 
-  a = archive_create();
+  a = archive_create(ARCHIVE_ROOT);
   archive_read_directory(a, plugin_path, 0);
   path = archive_iteration_start(a);
   while (path) {
@@ -266,8 +269,12 @@ main(int argc, char **argv)
   String *rcpath;
   int i, ch;
   int print_more_info = 0;
+  int include_fnmatch = 0;
+  int exclude_fnmatch = 0;
+  char *pattern = NULL;
   char *homedir;
   char *plugin_path;
+  char *format = NULL;
   char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
   char *optstr;
 
@@ -289,8 +296,27 @@ main(int argc, char **argv)
     case 'a':
       audio_name = strdup(optarg);
       break;
+    case 'i':
+      if (include_fnmatch)
+	fatal(2, "Sorry, only one -i option is permitted.\n");
+      include_fnmatch = 1;
+      pattern = strdup(optarg);
+      break;
+    case 'x':
+      if (exclude_fnmatch)
+	fatal(2, "Sorry, only one -x option is permitted.\n");
+      exclude_fnmatch = 1;
+      pattern = strdup(optarg);
+      break;
     case 'I':
       print_more_info++;
+      break;
+    case 'C':
+      ui_name = strdup("Convert");
+      if (optarg)
+	format = strdup(optarg);
+      else
+	format = strdup("PNG");
       break;
     case '?':
     default:
@@ -316,6 +342,9 @@ main(int argc, char **argv)
     fprintf(stderr, "No configuration file. Incomplete install?\n");
   string_destroy(rcpath);
 
+  if (format)
+    config_set_str(c, (char *)"/enfle/plugins/ui/convert/format", format);
+
   eps = uidata.eps = enfle_plugins_create();
   uidata.st = streamer_create();
   ui = ui_create();
@@ -340,7 +369,7 @@ main(int argc, char **argv)
     return 0;
   }
 
-  uidata.a = archive_create();
+  uidata.a = archive_create(ARCHIVE_ROOT);
 
   if (strcmp(argv[optind], "-") == 0) {
     archive_add(uidata.a, argv[1], strdup(argv[1]));
@@ -353,6 +382,11 @@ main(int argc, char **argv)
       }
     }
   }
+
+  if (include_fnmatch)
+    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_INCLUDE);
+  else if (exclude_fnmatch)
+    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE);
 
   if (ui_name == NULL && ((ui_name = config_get(c, "/enfle/plugins/ui/default")) == NULL)) {
     fprintf(stderr, "configuration error\n");
