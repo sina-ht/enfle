@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:10:01 2002.
- * $Id: x11window.c,v 1.9 2002/02/17 19:32:58 sian Exp $
+ * Last Modified: Sat Feb 15 04:20:23 2003.
+ * $Id: x11window.c,v 1.10 2003/12/27 14:29:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -96,6 +96,8 @@ get_geometry(X11Window *xw, unsigned int *x_return, unsigned int *y_return, unsi
     return 0;
   if (child != NULL)
     XFree(child);
+  x += bw;
+  y += bw;
 
   while (root != parent) {
     if (!XGetGeometry(x11_display(x11), parent, &root, &px, &py, &w, &h, &bw, &depth))

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 25 22:21:45 2002.
- * $Id: image.h,v 1.18 2002/08/03 05:08:40 sian Exp $
+ * Last Modified: Sat Dec 20 00:22:17 2003.
+ * $Id: image.h,v 1.19 2003/12/27 14:29:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -154,6 +154,7 @@ void image_destroy(Image *);
 #define image_rendered_top(p) (image_top_by_index(p,IMAGE_INDEX_RENDERED))
 #define image_rendered_bpl(p) (image_bpl_by_index(p,IMAGE_INDEX_RENDERED))
 #define image_rendered_image(p) (image_image_by_index(p,IMAGE_INDEX_RENDERED))
+#define image_rendered_set_image(p, m) image_image_by_index(p,IMAGE_INDEX_RENDERED) = (m)
 
 #define image_width(p) image_original_width(p)
 #define image_height(p) image_original_height(p)

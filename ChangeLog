@@ -1,3 +1,29 @@
+2003-12-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* README: More documentation.
+
+	* src/enfle.c: Avoid a warning.
+
+	* plugins/saver/Makefile.am: Removed glic.
+
+	* plugins/player/avcodec/avcodec.c: Introduced pic_buf.
+
+	* lib/utils/fifo.c: Unlock before destroy.  Cleaned up.
+
+	* lib/enfle/memory.c, lib/enfle/memory.h: Changed the type of
+	functions from unsigned char * to void *.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Increase the size of
+	buffers.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Revive 'db' check for
+	video.
+
+	* config.guess, config.sub, install-sh, missing, mkinstalldirs:
+	Upgraded.
+
 2003-12-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Version up.

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 19:30:35 2001.
- * $Id: timer_gettimeofday.c,v 1.5 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Sun Nov 16 14:43:32 2003.
+ * $Id: timer_gettimeofday.c,v 1.6 2003/12/27 14:29:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -118,7 +118,7 @@ restart(Timer *timer)
 {
   struct time_data *t = (struct time_data *)timer->impl->impl_data;
 
-  t->base = get_time();
+  t->base = t->now;
 }
 
 static void
