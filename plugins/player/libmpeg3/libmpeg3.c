@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 15:55:15 2002.
- * $Id: libmpeg3.c,v 1.41 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Sat Jan 25 00:46:58 2003.
+ * $Id: libmpeg3.c,v 1.42 2003/02/05 15:21:20 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -187,44 +187,47 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->framerate = mpeg3_frame_rate(info->file, info->nvstream);
     m->num_of_frames = mpeg3_video_frames(info->file, info->nvstream);
 
-    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+    {
+      unsigned int dw, dh;
 
-    if (info->use_xv) {
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-    } else {
-      m->rendering_width  = p->magnified.width;
-      m->rendering_height = p->magnified.height;
+      video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
+
+      if (info->use_xv) {
+	m->rendering_width  = m->width;
+	m->rendering_height = m->height;
+      } else {
+	m->rendering_width  = dw;
+	m->rendering_height = dh;
+      }
     }
 
-    show_message("video(%d streams): s (%d,%d) r (%d,%d) d (%d,%d) %f fps %d frames\n", info->nvstreams,
+    show_message("video(%d streams): s (%d,%d) r (%d,%d) %f fps %d frames\n", info->nvstreams,
 		 m->width, m->height, m->rendering_width, m->rendering_height,
-		 p->magnified.width, p->magnified.height,
 		 m->framerate, m->num_of_frames);
 
-    p->width = m->rendering_width;
-    p->height = m->rendering_height;
+    image_width(p) = m->rendering_width;
+    image_height(p) = m->rendering_height;
     p->type = m->requested_type;
-    if ((p->rendered.image = memory_create()) == NULL)
+    if ((image_rendered_image(p) = memory_create()) == NULL)
       goto error;
-    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+    memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
 
     if (info->use_xv) {
       p->bits_per_pixel = 12;
-      p->bytes_per_line = p->width * 1.5;
+      image_bpl(p) = image_width(p) * 1.5;
 
-      if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+      if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
 	goto error;
-      if ((info->y = malloc(p->bytes_per_line * p->height)) == NULL)
+      if ((info->y = malloc(image_bpl(p) * image_height(p))) == NULL)
 	goto error;
       if (p->type == _I420) {
-	info->u = info->y + p->width * p->height;
-	info->v = info->u + ((p->width * p->height) >> 2);
+	info->u = info->y + image_width(p) * image_height(p);
+	info->v = info->u + ((image_width(p) * image_height(p)) >> 2);
       } else if (p->type == _YV12) {
-	info->v = info->y + p->width * p->height;
-	info->u = info->v + ((p->width * p->height) >> 2);
+	info->v = info->y + image_width(p) * image_height(p);
+	info->u = info->v + ((image_width(p) * image_height(p)) >> 2);
       } else {
-	fatal(5, "Unsupport image type %s\n", image_type_to_string(p->type));
+	fatal("Unsupport image type %s\n", image_type_to_string(p->type));
       }
     } else {
       switch (vw->bits_per_pixel) {
@@ -242,7 +245,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 	}
 	p->depth = 24;
 	p->bits_per_pixel = 32;
-	p->bytes_per_line = p->width * 4;
+	image_bpl(p) = image_width(p) * 4;
 	break;
       case 24:
 	switch (p->type) {
@@ -258,7 +261,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 	}
 	p->depth = 24;
 	p->bits_per_pixel = 24;
-	p->bytes_per_line = p->width * 3;
+	image_bpl(p) = image_width(p) * 3;
 	break;
       case 16:
 	switch (p->type) {
@@ -272,22 +275,22 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 	}
 	p->depth = 16;
 	p->bits_per_pixel = 16;
-	p->bytes_per_line = p->width * 2;
+	image_bpl(p) = image_width(p) * 2;
 	break;
       default:
 	show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
 	return PLAY_ERROR;
       }
 
-      if ((info->lines = calloc(p->height, sizeof(unsigned char *))) == NULL)
+      if ((info->lines = calloc(image_height(p), sizeof(unsigned char *))) == NULL)
 	goto error;
       /* extra 4 bytes are needed for MMX routine */
-      if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height + 4) == NULL)
+      if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p) + 4) == NULL)
 	goto error;
-      if ((info->lines[0] = malloc(p->bytes_per_line * p->height)) == NULL)
+      if ((info->lines[0] = malloc(image_bpl(p) * image_height(p))) == NULL)
 	goto error;
-      for (i = 1; i < p->height; i++)
-	info->lines[i] = info->lines[0] + i * p->bytes_per_line;
+      for (i = 1; i < image_height(p); i++)
+	info->lines[i] = info->lines[0] + i * image_bpl(p);
     }
   }
 
@@ -295,7 +298,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   m->st = st;
   m->status = _STOP;
 
-  m->initialize_screen(vw, m, p->magnified.width, p->magnified.height);
+  m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
   return  play(m);
 
@@ -368,7 +371,7 @@ play_video(void *arg)
 			  0, 0,
 			  m->width, m->height,
 			  info->nvstream) == -1) ? 0 : 1;
-      memcpy(memory_ptr(info->p->rendered.image), info->y, info->p->bytes_per_line * info->p->height);
+      memcpy(memory_ptr(image_rendered_image(info->p)), info->y, image_bpl(info->p) * image_height(info->p));
       pthread_cond_wait(&info->update_cond, &info->update_mutex);
       pthread_mutex_unlock(&info->update_mutex);
     }
@@ -387,7 +390,7 @@ play_video(void *arg)
 			  m->width, m->height,
 			  m->rendering_width, m->rendering_height,
 			  info->rendering_type, info->nvstream) == -1) ? 0 : 1;
-      memcpy(memory_ptr(info->p->rendered.image), info->lines[0], info->p->bytes_per_line * info->p->height);
+      memcpy(memory_ptr(image_rendered_image(info->p)), info->lines[0], image_bpl(info->p) * image_height(info->p));
       pthread_cond_wait(&info->update_cond, &info->update_mutex);
       pthread_mutex_unlock(&info->update_mutex);
     }
@@ -483,15 +486,19 @@ play_main(Movie *m, VideoWindow *vw)
   case _PLAY:
     break;
   case _RESIZING:
-    video_window_resize(vw, m->rendering_width, m->rendering_height);
-    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+    {
+      unsigned int dw, dh;
 
-    if (info->use_xv) {
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-    } else {
-      m->rendering_width  = p->magnified.width;
-      m->rendering_height = p->magnified.height;
+      video_window_resize(vw, m->rendering_width, m->rendering_height);
+      video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
+
+      if (info->use_xv) {
+	m->rendering_width  = m->width;
+	m->rendering_height = m->height;
+      } else {
+	m->rendering_width  = dw;
+	m->rendering_height = dh;
+      }
     }
     m->status = _PLAY;
     break;
