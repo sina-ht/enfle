@@ -1,3 +1,24 @@
+2001-07-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/convert/convert.c, plugins/ui/normal/normal.c,
+	plugins/ui/wallpaper/wallpaper.c: Use identify_*().
+
+	* plugins/loader/ungif/ungif.c: Cosmetic change.
+
+	* lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer_mpeg.c: Added demux_rewind()
+	method. Improved reading.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Use demultiplexer_rewind().
+
+	* plugins/loader/jpeg/jpeg.c: Added new ID.
+
+	* lib/enfle/Makefile.am: Added identify.[ch].
+
+	* lib/enfle/utils.h: Removed a not-existing prototype.
+
+	* lib/enfle/identify.[ch]: New files.
+
 2001-07-10 Hiroshi Takekawa <sian@fennel.org>
 
 	* lib/enfle/archiver.[ch], lib/enfle/effect.[ch],
