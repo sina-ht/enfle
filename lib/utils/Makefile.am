@@ -1,15 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.7 2001/09/13 12:24:47 sian Exp $
+# $Id: Makefile.am,v 1.8 2001/09/18 05:23:04 sian Exp $
 
 noinst_LTLIBRARIES = libenfleutils.la
 INCLUDES = -I$(top_srcdir)
 
 if HAVE_PTHREAD
-thread_sources = fifo.c fifo.h
 thread_libs = @LIBADD_PTHREAD@
 else
-thread_sources =
 thread_libs =
 endif
 
@@ -23,6 +21,6 @@ libenfleutils_la_SOURCES = \
 	libconfig.c libconfig.h \
 	stdio-support.c stdio-support.h \
 	libstring.c libstring.h \
+	fifo.c fifo.h \
 	hash.c hash.h \
-	dlist.c dlist.h \
-	$(thread_sources)
+	dlist.c dlist.h
