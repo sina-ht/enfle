@@ -1,3 +1,38 @@
+2000-11-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/mng/mng.c, plugins/ui/normal/normal.c: Cosmetic
+	change.
+
+	* plugins/video/Xlib/Xlib.c: Fixed stupid reversed logic.
+
+	* lib/X11/x11ximage.c: Plugged a memory leak.
+
+	* plugins/player/mng/mng.c: Rendering destination pixel type
+	changed to use asm 32to16 code.
+
+2000-11-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/player/Makefile.am: New mng player plugin.
+
+	* plugins/video/Xlib/Xlib.c: Memory management.
+
+	* plugins/player/mng/.cvsignore, plugins/player/mng/Makefile.am,
+	plugins/player/mng/mng.c: Added new mng player plugin.
+
+	* lib/utils/timer_gettimeofday.c: Create impl. instance.
+
+	* lib/enfle/loader.c: Auto image memory freeing.
+
+	* lib/enfle/archive.c: Fixed header includes.
+
+	* lib/utils/timer.c: Reordering includes order.
+
+	* lib/enfle/Makefile.am, lib/enfle/utils.c: Deleted utils.c.
+
+	* lib/dllloader/pe_image.c: Fixed no 'const' warning.
+
+	* lib/X11/x11ximage.c: Fixed depth24 rendering bug.
+
 2000-11-14  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/dllloader/pe_image.c, lib/dllloader/pe_image.h,
