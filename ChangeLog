@@ -1,3 +1,42 @@
+2004-01-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: More checks.  Added libmad.  Version up.
+
+	* lib/enfle/audiodecoder.h, lib/mpglib/Makefile.am,
+	lib/mpglib/audiodecoder_mpglib.c,
+	plugins/player/avcodec/Makefile.am,
+	plugins/player/avcodec/avcodec.c, plugins/player/divx/Makefile.am,
+	plugins/player/divx/divx.c, plugins/player/libmpeg2/Makefile.am,
+	plugins/player/libmpeg2/libmpeg2.c: audiodecoder implementation
+	with mad support.
+
+	* lib/Makefile.am: Added libmad.
+
+	* lib/demultiplexer/demultiplexer.c,
+	lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/demultiplexer_mpeg.c,
+	lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h:
+	Demultiplexer clean up.
+
+	* plugins/player/libmpeg2.old/libmpeg2.c: Suppress debug output.
+
+	* plugins/audio/alsa/alsa.c: Fixed bug.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/rv10.c: Updated.
+
+	* lib/mad/*: New files.
+
+2004-01-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avcodec/avcodec.c: Removed info->eof.  Bug fix.
+
+	* lib/avcodec/allcodecs.c: Exclude ac3_encoder.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.h, lib/avcodec/h263dec.c, lib/avcodec/lcl.c,
+	lib/avcodec/motion_est.c, lib/avcodec/mpegvideo.c: Updated.
+
 2004-01-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg2.old/libmpeg2.c,
