@@ -1,3 +1,25 @@
+2000-12-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/kernel32.c, lib/dllloader/pe.h,
+	lib/dllloader/user32.c, lib/dllloader/windef.h: More
+	implementation.
+
+	* lib/dllloader/pe_image.c: Handling uninitialized data,
+	ordinal(partial), DllMain().
+
+	* plugins/player/libmpeg3/libmpeg3.c: Cosmetic change.
+
+	* src/enfle.c: Added REQUIRE_FATAL. Counting loaded plugins.
+
+	* common.h, lib/X11/x11ximage.c, lib/enfle/archive.c,
+	lib/enfle/archiver.c, lib/enfle/loader.c, lib/enfle/player.c,
+	lib/enfle/spi.c, lib/enfle/streamer.c, lib/utils/libconfig.c,
+	plugins/streamer/gz/gz.c: Added REQUIRE_FATAL.
+
+2000-12-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README: More documentation.
+
 2000-12-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* common.h, lib/X11/x11ximage.c, lib/dllloader/kernel32.c,
@@ -620,9 +642,8 @@
 
 	* configure.in: Cosmetic change.
 
-	* src/enfle.c: Fixed message.
-
-	* src/enfle.c: Implemented preliminary option processor.
+	* src/enfle.c: Fixed message. Implemented preliminary option
+	processor.
 
 	* src/enfle.rc: Added Id expansion.
 
