@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:08:38 2001.
- * $Id: x11.c,v 1.14 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Thu Sep 20 14:33:44 2001.
+ * $Id: x11.c,v 1.15 2001/09/20 05:35:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -145,7 +145,6 @@ get_xvinfo(X11 *x11)
 		xv->image_height = encoding_infos[k].height;
 
 		/* XXX: Sorry, XvVideo, XvStill are unsupported */
-		/* XXX: I can't test the functions which my G450 doesn't support... */
 
 		if (!strcmp(encoding_infos[k].name, "XV_IMAGE")) {
 		  xv->image_port = adaptor_infos[i].base_id + j;
@@ -200,6 +199,7 @@ get_xvinfo(X11 *x11)
 		    if (c != -1) {
 		      xv->capable_format |= (1 << c);
 		      xv->format_ids[c] =  formats[l].id;
+		      xv->bits_per_pixel[c] = formats[l].bits_per_pixel;
 		      xv->prefer_msb[c] = (formats[l].byte_order == MSBFirst);
 		    } else {
 		      debug_message("unsupported");
