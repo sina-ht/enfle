@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 17:40:37 2001.
- * $Id: convert.c,v 1.4 2001/04/27 01:03:26 sian Exp $
+ * Last Modified: Mon Apr 30 00:48:29 2001.
+ * $Id: convert.c,v 1.5 2001/04/30 01:09:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,35 +69,39 @@ plugin_exit(void *p)
 /* for internal use */
 
 static int
-save_image(UIData *uidata, Image *p, char *format, char *path, char *ext)
+save_image(UIData *uidata, Image *p, char *format, char *path)
 {
   EnflePlugins *eps = uidata->eps;
   Saver *sv = uidata->sv;
   char *outpath;
+  char *ext;
   FILE *fp;
+  int fd;
 
+  if ((ext = saver_get_ext(uidata->sv, uidata->eps, format, uidata->c)) == NULL)
+    return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
     show_message(__FUNCTION__ ": No enough memory.\n");
     return 0;
-  } else {
-    int fd;
-
-    if ((fd = open(outpath, O_WRONLY)) >= 0) {
-      close(fd);
-      show_message(__FUNCTION__ ": file %s exists\n", outpath);
-      return 0;
-    }
-    if ((fp = fopen(outpath, "wb")) == NULL) {
-      show_message(__FUNCTION__ ": Cannot open %s for writing.\n", outpath);
-      free(outpath);
-      return 0;
-    } else {
-      if (!saver_save(sv, eps, format, p, fp, uidata->c))
-	show_message("Save failed.\n");
-      fclose(fp);
-    }
-    free(outpath);
   }
+  free(ext);
+
+  if ((fd = open(outpath, O_WRONLY)) >= 0) {
+    close(fd);
+    show_message(__FUNCTION__ ": file %s exists\n", outpath);
+    return 0;
+  }
+  if ((fp = fopen(outpath, "wb")) == NULL) {
+    show_message(__FUNCTION__ ": Cannot open %s for writing.\n", outpath);
+    free(outpath);
+    return 0;
+  } else {
+    config_set_str(uidata->c, (char *)"/enfle/plugins/ui/convert/source_path", outpath);
+    if (!saver_save(sv, eps, format, p, fp, uidata->c))
+      show_message("Save failed.\n");
+    fclose(fp);
+  }
+  free(outpath);
 
   return 1;
 }
@@ -108,7 +112,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
   EnflePlugins *eps = uidata->eps;
   Config *c = uidata->c;
   Loader *ld = uidata->ld;
-  Saver *sv = uidata->sv;
   Streamer *st = uidata->st;
   Archiver *ar = uidata->ar;
   Archive *arc;
@@ -198,6 +201,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
     }
 
     f = LOAD_NOT;
+    debug_message("Image identifying...\n");
     if (loader_identify(ld, eps, p, s)) {
 
       debug_message("Image identified as %s\n", p->format);
@@ -222,12 +226,8 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	p->comment = NULL;
       }
 
-      {
-	char *ext = saver_get_ext(sv, eps, format, c);
+      save_image(uidata, p, format, path);
 
-	save_image(uidata, p, format, path, ext);
-	free(ext);
-      }
       memory_destroy(p->image);
       p->image = NULL;
     }
@@ -244,6 +244,8 @@ process_files_of_archive(UIData *uidata, Archive *a)
 static int
 ui_main(UIData *uidata)
 {
+  debug_message("Convert: " __FUNCTION__ "()\n");
+
   process_files_of_archive(uidata, uidata->a);
 
   return 1;
