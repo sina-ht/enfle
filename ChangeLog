@@ -1,10 +1,20 @@
+2001-05-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c, src/enfle.rc: Added
+	deletefile_without_shift configuration variable.
+
+2001-05-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archive.c: Removed the annoying debug message.
+
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Fixed 'Leap bug'.
 
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/ui/normal/normal.c: Bug fix. Deleted unused dir variable.
+	* plugins/ui/normal/normal.c: Bug fix. Deleted unused dir
+	variable.
 
 	* lib/enfle/archive.c: Bug fix.
 
@@ -14,8 +24,9 @@
 
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/archive.c, lib/enfle/archive.h, plugins/ui/normal/normal.c:
-	Now iteration_delete() returns next data.
+	* lib/enfle/archive.c, lib/enfle/archive.h,
+	plugins/ui/normal/normal.c: Now iteration_delete() returns next
+	data.
 
 2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
 
