@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 01:36:43 2002.
- * $Id: compat.h,v 1.10 2002/02/17 19:32:58 sian Exp $
+ * Last Modified: Mon Nov 10 01:49:01 2003.
+ * $Id: compat.h,v 1.11 2003/11/17 13:23:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,11 @@
 /* jconfig.h defines this. */
 #undef HAVE_STDLIB_H
 #undef HAVE_STDDEF_H
+
+#include <signal.h>
+#if defined(inline)
+#undef inline
+#endif
 
 /*
  * Should check HAVE_STDLIB_H.
