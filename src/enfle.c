@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 30 07:19:28 2001.
- * $Id: enfle.c,v 1.30 2001/04/30 01:05:13 sian Exp $
+ * Last Modified: Tue Jun 12 16:43:11 2001.
+ * $Id: enfle.c,v 1.31 2001/06/12 09:07:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -57,6 +57,7 @@ static Option enfle_options[] = {
   { "audio",     'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
   { "wallpaper", 'w', _NO_ARGUMENT,       "Set the first image as wallpaper(alias for -u Wallpaper)." },
   { "convert",   'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG)." },
+  { "config",    'c', _REQUIRED_ARGUMENT, "Additional config expr. like -c '/enfle/plugins/saver/jpeg/quality = 80'." },
   { "include",   'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
@@ -242,7 +243,10 @@ main(int argc, char **argv)
   char *format = NULL;
   char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
   char *optstr;
+  Dlist *override_config;
+  Dlist_data *dd;
 
+  override_config = dlist_create();
   optstr = gen_optstring(enfle_options);
   while ((ch = getopt(argc, argv, optstr)) != -1) {
     i = 0;
@@ -283,6 +287,9 @@ main(int argc, char **argv)
       else
 	format = strdup("PNG");
       break;
+    case 'c':
+      dlist_add(override_config, strdup(optarg));
+      break;
     case 'w':
       ui_name = strdup("Wallpaper");
       break;
@@ -309,6 +316,12 @@ main(int argc, char **argv)
 	config_load(c, ENFLE_DATADIR "/enfle.rc")))
     fprintf(stderr, "No configuration file. Incomplete install?\n");
   string_destroy(rcpath);
+
+  dlist_iter (override_config, dd) {
+    void *d = dlist_data(dd);
+    config_parse(c, d);
+  }
+  dlist_destroy(override_config, 1);
 
   if (format)
     config_set_str(c, (char *)"/enfle/plugins/ui/convert/format", format);
