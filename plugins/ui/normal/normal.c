@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 18 02:21:52 2004.
- * $Id: normal.c,v 1.83 2004/09/17 17:25:51 sian Exp $
+ * Last Modified: Mon Sep 27 01:46:00 2004.
+ * $Id: normal.c,v 1.84 2004/11/22 13:56:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -202,7 +202,7 @@ convert_cat(String *cap, char *s, Config *c)
 static void
 convert_path(String *cap, char *s, Config *c)
 {
-  static char delimiters[] = { '/', '#', '\0' };
+  static char delimiters[] = { '/', '\0' };
   char *part, **parts, *used_delim;
   int i;
 
@@ -218,6 +218,7 @@ convert_path(String *cap, char *s, Config *c)
       string_cat_ch(cap, used_delim[i]);
     i++;
   }
+  misc_free_str_array(parts);
 }
 
 
