@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 28 02:43:00 2001.
- * $Id: normal.c,v 1.37 2001/04/27 17:43:32 sian Exp $
+ * Last Modified: Mon Apr 30 09:54:25 2001.
+ * $Id: normal.c,v 1.38 2001/04/30 01:10:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -179,6 +179,7 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
     show_message(__FUNCTION__ ": No enough memory.\n");
     return 0;
   }
+  free(ext);
 
   if ((fp = fopen(outpath, "wb")) == NULL) {
     show_message(__FUNCTION__ ": Cannot open %s for writing.\n", outpath);
@@ -220,6 +221,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
   unsigned int old_x = 0, old_y = 0;
   int first_point = 1;
   int offset_x, offset_y;
+  int ret;
 
   if (p) {
     vw->if_direct = 0;
@@ -250,20 +252,20 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  video_window_sync_discard(vw);
 	  switch (ev.button.button) {
 	  case ENFLE_Button_1:
-	    image_destroy(original_p);
-	    return MAIN_LOOP_NEXT;
+	    ret = MAIN_LOOP_NEXT;
+	    goto quit_main_loop;
 	  case ENFLE_Button_2:
-	    image_destroy(original_p);
-	    return MAIN_LOOP_NEXTARCHIVE;
+	    ret = MAIN_LOOP_NEXTARCHIVE;
+	    goto quit_main_loop;
 	  case ENFLE_Button_3:
-	    image_destroy(original_p);
-	    return MAIN_LOOP_PREV;
+	    ret = MAIN_LOOP_PREV;
+	    goto quit_main_loop;
 	  case ENFLE_Button_4:
-	    image_destroy(original_p);
-	    return MAIN_LOOP_NEXT;
+	    ret = MAIN_LOOP_NEXT;
+	    goto quit_main_loop;
 	  case ENFLE_Button_5:
-	    image_destroy(original_p);
-	    return MAIN_LOOP_PREV;
+	    ret = MAIN_LOOP_PREV;
+	    goto quit_main_loop;
 	  default:
 	    break;
 	  }
@@ -279,21 +281,21 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  switch (ev.key.key) {
 	  case ENFLE_KEY_n:
 	  case ENFLE_KEY_space:
-	    image_destroy(original_p);
-	    return (ev.key.modkey & ENFLE_MOD_Shift) ? MAIN_LOOP_NEXTARCHIVE :  MAIN_LOOP_NEXT;
+	    ret = (ev.key.modkey & ENFLE_MOD_Shift) ? MAIN_LOOP_NEXTARCHIVE :  MAIN_LOOP_NEXT;
+	    goto quit_main_loop;
 	  case ENFLE_KEY_b:
-	    image_destroy(original_p);
-	    return MAIN_LOOP_PREV;
+	    ret = MAIN_LOOP_PREV;
+	    goto quit_main_loop;
 	  case ENFLE_KEY_q:
-	    image_destroy(original_p);
-	    return MAIN_LOOP_QUIT;
+	    ret = MAIN_LOOP_QUIT;
+	    goto quit_main_loop;
 	  case ENFLE_KEY_f:
 	    video_window_set_fullscreen_mode(vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
 	    break;
 	  case ENFLE_KEY_d:
-	    image_destroy(original_p);
-	    return (ev.key.modkey & ENFLE_MOD_Shift) ?
+	    ret = (ev.key.modkey & ENFLE_MOD_Shift) ?
 	      MAIN_LOOP_DELETE_FILE : MAIN_LOOP_DELETE_FROM_LIST;
+	    goto quit_main_loop;
 	  case ENFLE_KEY_s:
 	    if (ev.key.modkey & ENFLE_MOD_Shift) {
 	      switch (vw->interpolate_method) {
@@ -505,9 +507,12 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
     }
   }
 
-  image_destroy(original_p);
+  ret = 0;
 
-  return 0;
+ quit_main_loop:
+  if (original_p)
+    image_destroy(original_p);
+  return ret;
 }
 
 static int
@@ -737,6 +742,8 @@ ui_main(UIData *uidata)
   Config *c = uidata->c;
   void *disp;
   char *render_method, *interpolate_method;
+
+  debug_message("Convert: " __FUNCTION__ "()\n");
 
   if ((disp = vp->open_video(NULL, c)) == NULL) {
     show_message("open_video() failed\n");
