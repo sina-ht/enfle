@@ -1,3 +1,12 @@
+2001-01-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avifile/avifile.cpp: Better identification.
+
+	* lib/divxdecore/.cvsignore, plugins/player/opendivx/.cvsignore:
+	Added .cvsignore.
+
+	* all .cvsignore: Added depcomp.
+
 2001-01-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/video/Xlib/Xlib.c, src/enfle.c: OK, XInitThreads() now
