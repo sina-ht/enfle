@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.1 2004/02/14 05:24:44 sian Exp $
+# $Id: Makefile.am,v 1.2 2004/02/20 17:18:16 sian Exp $
 
-SUBDIRS = avi mpeg
+SUBDIRS = avi mpeg ogg
