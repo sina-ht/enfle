@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:42:32 2001.
- * $Id: pcx.c,v 1.3 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Sep 18 13:51:36 2001.
+ * $Id: pcx.c,v 1.4 2001/09/18 05:22:24 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -41,6 +41,7 @@ static LoaderPlugin plugin = {
   name: "PCX",
   description: "PCX Loader plugin version 0.1",
   author: "Hiroshi Takekawa",
+  image_private: NULL,
 
   identify: identify,
   load: load
@@ -144,8 +145,9 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 
 DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
 {
-  int i, j, k, l;
-  int nplanes, ppl;
+  int j, l;
+  unsigned int i, k, ppl;
+  int nplanes;
   int xmax, ymax, xmin, ymin;
   char buf[769];
   unsigned char c, *d, *dd;

@@ -1,8 +1,8 @@
 /*
  * scan.c -- Scanning modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 02:01:07 2001.
- * $Id: scan.c,v 1.3 2001/08/06 04:58:23 sian Exp $
+ * Last Modified: Tue Sep 18 14:18:59 2001.
+ * $Id: scan.c,v 1.4 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdlib.h>
@@ -165,7 +165,7 @@ scan_get_id_by_name(char *name)
 const char *
 scan_get_name_by_id(ScanType id)
 {
-  if (id < 0 || id >= _SCAN_INVALID_END)
+  if (id >= _SCAN_INVALID_END)
     return NULL;
   return scanners[id].name;
 }
@@ -173,7 +173,7 @@ scan_get_name_by_id(ScanType id)
 int
 scan(unsigned char *d, unsigned char *s, int width, int height, ScanType id)
 {
-  if (id < 0 || id >= _SCAN_INVALID_END)
+  if (id >= _SCAN_INVALID_END)
     return 0;
   if (scanners[id].scanner) {
     scanners[id].scanner(d, s, width, width, height, 0, 0);

@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Original decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep  6 12:25:28 2001.
- * $Id: vmpm_decompose_normal.c,v 1.18 2001/09/07 04:56:33 sian Exp $
+ * Last Modified: Tue Sep 18 13:43:39 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.19 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -58,7 +58,7 @@ decomposer_init(VMPM *vmpm)
 static void
 init(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   if ((vmpm->token_hash = malloc(HASH_SIZE * sizeof(Token))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
@@ -134,9 +134,8 @@ encode(VMPM *vmpm)
   Arithcoder *ac;
   Arithmodel *am;
   Arithmodel *bin_am;
-  unsigned int *symbol_to_index;
-  int i, match_found, nsymbols;
-  unsigned int j;
+  unsigned int j, nsymbols, *symbol_to_index;
+  int i, match_found;
 
   //debug_message(__FUNCTION__ "()\n");
 
@@ -359,7 +358,7 @@ reconstruct(VMPM *vmpm)
 static void
 final(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   for (i = 0; i <= vmpm->I; i++)
     if (vmpm->token[i])

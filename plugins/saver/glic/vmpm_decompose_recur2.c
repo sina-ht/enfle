@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_recur2.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Sat Sep  8 14:34:48 2001.
- * $Id: vmpm_decompose_recur2.c,v 1.2 2001/09/10 00:03:36 sian Exp $
+ * Last Modified: Tue Sep 18 13:42:47 2001.
+ * $Id: vmpm_decompose_recur2.c,v 1.3 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -59,7 +59,7 @@ decomposer_init(VMPM *vmpm)
 static void
 init(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   if ((vmpm->token_hash = malloc(HASH_SIZE * sizeof(Token))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
@@ -125,8 +125,7 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 static inline int
 calc_highest_level(VMPM *vmpm, int pos)
 {
-  int i;
-  unsigned int r;
+  unsigned int i, r;
 
   for (i = 1, r = vmpm->r; i < vmpm->I; i++, r *= vmpm->r)
     if (pos % r)
@@ -166,7 +165,7 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel 
       arithmodel_encode(ams[i], tv);
       len = ipow(vmpm->r, i);
     } else if (arithmodel_order_zero_nsymbols(ams[i]) == tv) {
-      int k;
+      unsigned int k;
 
       /* Not found. Encode at lower level. */
       arithmodel_install_symbol(ams[i], 1);
@@ -195,9 +194,8 @@ encode(VMPM *vmpm)
   Arithmodel **ams;
   Arithmodel *bin_am;
   Arithmodel *level_am;
-  unsigned int *s_to_i;
-  int i, match_found, nsymbols;
-  unsigned int j, pos;
+  unsigned int j, pos, nsymbols, *s_to_i;
+  int i, match_found;
 
   //debug_message("Recur2: " __FUNCTION__ "()\n");
 
@@ -235,7 +233,7 @@ encode(VMPM *vmpm)
   if ((ams = calloc(vmpm->I + 1, sizeof(Arithmodel **))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
 
-  for (i = 0; i <= vmpm->I; i++) {
+  for (i = 0; i <= (int)vmpm->I; i++) {
     ams[i] = arithmodel_order_zero_create();
     arithmodel_encode_init(ams[i], ac);
     arithmodel_order_zero_reset(ams[i], 0, 0);
@@ -270,12 +268,12 @@ encode(VMPM *vmpm)
 
   free(s_to_i);
 
-  for (i = 0; i <= vmpm->I; i++)
+  for (i = 0; i <= (int)vmpm->I; i++)
     arithmodel_encode_final(ams[i]);
   arithmodel_encode_final(level_am);
   arithcoder_encode_final(ac);
 
-  for (i = 0; i <= vmpm->I; i++)
+  for (i = 0; i <= (int)vmpm->I; i++)
     arithmodel_destroy(ams[i]);
   arithmodel_destroy(level_am);
   arithcoder_destroy(ac);
@@ -362,7 +360,7 @@ reconstruct(VMPM *vmpm)
 static void
 final(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   for (i = 0; i <= vmpm->I; i++)
     if (vmpm->token[i])

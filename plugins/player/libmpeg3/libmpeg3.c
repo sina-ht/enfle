@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 21:42:12 2001.
- * $Id: libmpeg3.c,v 1.33 2001/06/22 16:54:11 sian Exp $
+ * Last Modified: Tue Sep 18 13:49:46 2001.
+ * $Id: libmpeg3.c,v 1.34 2001/09/18 05:22:24 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -108,7 +108,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
   LibMPEG3_info *info;
   Image *p;
-  int i;
+  unsigned int i;
 
   if ((info = calloc(1, sizeof(LibMPEG3_info))) == NULL) {
     show_message("LibMPEG3: play_movie: No enough memory.\n");

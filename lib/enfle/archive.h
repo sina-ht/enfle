@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 15:03:19 2001.
- * $Id: archive.h,v 1.9 2001/09/02 06:22:35 sian Exp $
+ * Last Modified: Mon Sep 17 17:26:26 2001.
+ * $Id: archive.h,v 1.10 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -59,7 +59,6 @@ struct _archive {
   char *(*iteration)(Archive *);
   char *(*iteration_delete)(Archive *);
   int (*open)(Archive *, Stream *, char *);
-
   void (*destroy)(Archive *);
 };
 

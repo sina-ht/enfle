@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 07:29:15 2001.
- * $Id: stream.c,v 1.4 2001/08/26 00:51:21 sian Exp $
+ * Last Modified: Tue Sep 18 13:58:27 2001.
+ * $Id: stream.c,v 1.5 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,6 +42,7 @@ static Stream template = {
   buffer: NULL,
   ptr: NULL,
   buffer_size: 0,
+
   transfer: transfer,
   make_memorystream: make_memorystream,
   make_fdstream: make_fdstream,
@@ -111,9 +112,9 @@ fdstream_grow(Stream *s , int size)
 static int
 memorystream_read(Stream *s, unsigned char *p, int size)
 {
-  unsigned int read_size;
+  int read_size;
 
-  read_size = s->buffer_size > size ? size : s->buffer_size;
+  read_size = (int)s->buffer_size > size ? size : (int)s->buffer_size;
   if (read_size > 0) {
     memcpy(p, s->ptr, read_size);
     s->ptr += read_size;
@@ -152,7 +153,7 @@ memorystream_seek(Stream *s, long offset, StreamWhence whence)
 {
   switch (whence) {
   case _SET:
-    if (offset < 0 || offset > s->buffer_size) {
+    if (offset < 0 || (unsigned long)offset > s->buffer_size) {
       show_message("memorystream_seek: _SET: invalid offset %ld\n", offset);
       return 0;
     }
@@ -163,19 +164,19 @@ memorystream_seek(Stream *s, long offset, StreamWhence whence)
       show_message("memorystream_seek: _CUR: underflow (offset = %ld)\n", offset);
       return 0;
     }
-    if (s->ptr - s->buffer + offset > s->buffer_size) {
+    if ((unsigned long)(s->ptr - s->buffer + offset) > s->buffer_size) {
       show_message("memorystream_seek: _CUR: overflow (offset = %ld)\n", offset);
       return 0;
     }
     s->ptr += offset;
     return 1;
   case _END:
-    if (s->buffer_size + offset < 0) {
-      show_message("memorystream_seek: _END: underflow (offset = %ld)\n", offset);
-      return 0;
-    }
     if (offset > 0) {
       show_message("memorystream_seek: _END: overflow (offset = %ld)\n", offset);
+      return 0;
+    }
+    if (s->buffer_size < (unsigned long)-offset) {
+      show_message("memorystream_seek: _END: underflow (offset = %ld)\n", offset);
       return 0;
     }
     s->ptr = s->buffer + s->buffer_size - offset;

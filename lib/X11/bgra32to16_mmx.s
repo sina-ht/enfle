@@ -3,7 +3,7 @@
 ###  by coutesy of Intel MMX Application Notes AP553
 ### This file is not part of any software package.
 ###
-### Last Modified: Fri Sep  7 22:44:07 2001.
+### Last Modified: Mon Sep 17 18:11:52 2001.
 
 ### Assumption:
 ### The number of elements allocated for the source,destination must be
@@ -45,7 +45,7 @@ rgbMask2:	.long 0x0000fc00, 0x0000fc00
 ###  Step 8: When two pairs of pixels are converted, pack the results into
 ###          one register and then store them into the destination.
 
-### void bgra32to16_mmx(unsigned char *dest, unsigned char *src, int width, int height);
+### void bgra32to16_mmx(unsigned char *dest, unsigned char *src, unsigned int width, unsigned int height);
 .text
 .global bgra32to16_mmx
 

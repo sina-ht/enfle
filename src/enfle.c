@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 10 17:02:20 2001.
- * $Id: enfle.c,v 1.40 2001/09/10 11:58:20 sian Exp $
+ * Last Modified: Mon Sep 17 18:52:52 2001.
+ * $Id: enfle.c,v 1.41 2001/09/18 05:22:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ static Option enfle_options[] = {
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
   { "help",      'h', _NO_ARGUMENT,       "Show help message." },
-  { NULL }
+  { NULL , '\0', _NO_ARGUMENT, NULL }
 };
 
 static void

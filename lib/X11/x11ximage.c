@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Sep 15 15:43:27 2001.
- * $Id: x11ximage.c,v 1.34 2001/09/16 23:10:07 sian Exp $
+ * Last Modified: Tue Sep 18 14:07:07 2001.
+ * $Id: x11ximage.c,v 1.35 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,10 +31,10 @@
 
 #include "x11ximage.h"
 
-void bgra32to16_generic(unsigned char *, unsigned char *, int, int, int, int);
+void bgra32to16_generic(unsigned char *, unsigned char *, unsigned int, unsigned int, unsigned int, unsigned int);
 #ifdef USE_MMX
-void bgra32to16_maybe_mmx(unsigned char *, unsigned char *, int, int, int, int);
-void bgra32to16_mmx(unsigned char *, unsigned char *, int, int);
+void bgra32to16_maybe_mmx(unsigned char *, unsigned char *, unsigned int, unsigned int, unsigned int, unsigned int);
+void bgra32to16_mmx(unsigned char *, unsigned char *, unsigned int, unsigned int);
 #endif
 
 static int convert(X11XImage *, Image *);
@@ -61,6 +61,12 @@ x11ximage_create(X11 *x11)
   xi->x11 = x11;
   xi->ximage = NULL;
   xi->xvimage = NULL;
+#ifdef USE_SHM
+  if ((xi->shminfo = calloc(1, sizeof(XShmSegmentInfo))) == NULL) {
+    free(xi);
+    return NULL;
+  }
+#endif
   cpucaps = cpucaps_get();
 #ifdef USE_MMX
   if (cpucaps_is_mmx(cpucaps)) {
@@ -82,7 +88,7 @@ destroy_ximage(X11XImage *xi)
     if (xi->xvimage) {
 #ifdef USE_SHM
       if (xi->if_attached) {
-	XShmDetach(x11_display(xi->x11), &xi->shminfo);
+	XShmDetach(x11_display(xi->x11), xi->shminfo);
 	xi->if_attached = 0;
 	//debug_message(__FUNCTION__ ": SHM detached\n");
       }
@@ -95,7 +101,7 @@ destroy_ximage(X11XImage *xi)
       xi->ximage->data = NULL;
 #ifdef USE_SHM
       if (xi->if_attached) {
-	XShmDetach(x11_display(xi->x11), &xi->shminfo);
+	XShmDetach(x11_display(xi->x11), xi->shminfo);
 	xi->if_attached = 0;
 	//debug_message(__FUNCTION__ ": SHM detached\n");
       }
@@ -107,7 +113,7 @@ destroy_ximage(X11XImage *xi)
 }
 
 void
-bgra32to16_generic(unsigned char *dest, unsigned char *s, int w, int h, int bpl, int bpl_s)
+bgra32to16_generic(unsigned char *dest, unsigned char *s, unsigned int w, unsigned int h, unsigned int bpl, unsigned int bpl_s)
 {
   unsigned int i, j, pix;
   unsigned char *dd;
@@ -128,7 +134,7 @@ bgra32to16_generic(unsigned char *dest, unsigned char *s, int w, int h, int bpl,
 
 #ifdef USE_MMX
 void
-bgra32to16_maybe_mmx(unsigned char *dest, unsigned char *s, int w, int h, int bpl, int bpl_s)
+bgra32to16_maybe_mmx(unsigned char *dest, unsigned char *s, unsigned int w, unsigned int h, unsigned int bpl, unsigned int bpl_s)
 {
   if (bpl == w * 2)
     bgra32to16_mmx(dest, s, w, h);
@@ -142,11 +148,9 @@ bgra32to16_maybe_mmx(unsigned char *dest, unsigned char *s, int w, int h, int bp
 static int
 convert(X11XImage *xi, Image *p)
 {
-  int i, j;
+  unsigned int i, j;
   int bits_per_pixel = 0;
   int bytes_per_line_s;
-  int is_xv = -1;
-  int has_old_ximage = 0;
   int create_ximage = 0;
 #ifdef USE_SHM
   int to_be_attached = 0;
@@ -173,24 +177,71 @@ convert(X11XImage *xi, Image *p)
   p->rendered.width  = w;
   p->rendered.height = h;
 
-  if (xi->xvimage) {
-    is_xv = 1;
-    has_old_ximage = 1;
-    if (xi->xvimage->width != w || xi->xvimage->height != h || p->type != xi->type
+  switch (p->type) {
+#ifdef USE_XV
+  case _YUY2:
+    //debug_message("Image provided in YUY2.\n");
+    if (xi->x11->xv->capable_format & XV_YUY2_FLAG) {
+      t = XV_YUY2;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display YUY2...\n");
+    }
+    break;
+  case _YV12:
+    //debug_message("Image provided in YV12.\n");
+    if (xi->x11->xv->capable_format & XV_YV12_FLAG) {
+      t = XV_YV12;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display YV12...\n");
+    }
+    break;
+  case _I420:
+    //debug_message("Image provided in I420.\n");
+    if (xi->x11->xv->capable_format & XV_I420_FLAG) {
+      t = XV_I420;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display I420...\n");
+    }
+    break;
+  case _UYVY:
+    //debug_message("Image provided in UYVY.\n");
+    if (xi->x11->xv->capable_format & XV_UYVY_FLAG) {
+      t = XV_UYVY;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display UYVY...\n");
+    }
+    break;
+#else
+  case _YUY2:
+  case _YV12:
+  case _I420:
+  case _UYVY:
+    fatal(4, "Xv cannot display ...\n");
+    break;
+#endif
+  default:
+    xi->use_xv = 0;
+    break;
+  }
+
+  if (xi->use_xv && xi->xvimage) {
+    if (xi->xvimage->width != (int)w || xi->xvimage->height != (int)h || p->type != xi->type
 #ifdef USE_SHM
-      || (memory_type(p->rendered.image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered.image))
+      || (memory_type(p->rendered.image) == _SHM && xi->shminfo->shmid != memory_shmid(p->rendered.image))
 #endif
 	) {
       xi->type = p->type;
       destroy_ximage(xi);
       create_ximage = 1;
     }
-  } else if (xi->ximage) {
-    is_xv = 0;
-    has_old_ximage = 1;
-    if (xi->ximage->width != w || xi->ximage->height != h || p->type != xi->type
+  } else if (!xi->use_xv && xi->ximage) {
+    if (xi->ximage->width != (int)w || xi->ximage->height != (int)h || p->type != xi->type
 #ifdef USE_SHM
-      || (memory_type(p->rendered.image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered.image))
+      || (memory_type(p->rendered.image) == _SHM && xi->shminfo->shmid != memory_shmid(p->rendered.image))
 #endif
 	) {
       xi->type = p->type;
@@ -198,57 +249,6 @@ convert(X11XImage *xi, Image *p)
       create_ximage = 1;
     }
   } else {
-    switch (p->type) {
-#ifdef USE_XV
-    case _YUY2:
-      //debug_message("Image provided in YUY2.\n");
-      if (xi->x11->xv.capable_format & XV_YUY2_FLAG) {
-	t = XV_YUY2;
-	xi->use_xv = 1;
-      } else {
-	fatal(4, "Xv cannot display YUY2...\n");
-      }
-      break;
-    case _YV12:
-      //debug_message("Image provided in YV12.\n");
-      if (xi->x11->xv.capable_format & XV_YV12_FLAG) {
-	t = XV_YV12;
-	xi->use_xv = 1;
-      } else {
-	fatal(4, "Xv cannot display YV12...\n");
-      }
-      break;
-    case _I420:
-      //debug_message("Image provided in I420.\n");
-      if (xi->x11->xv.capable_format & XV_I420_FLAG) {
-	t = XV_I420;
-	xi->use_xv = 1;
-      } else {
-	fatal(4, "Xv cannot display I420...\n");
-      }
-      break;
-    case _UYVY:
-      //debug_message("Image provided in UYVY.\n");
-      if (xi->x11->xv.capable_format & XV_UYVY_FLAG) {
-	t = XV_UYVY;
-	xi->use_xv = 1;
-      } else {
-	fatal(4, "Xv cannot display UYVY...\n");
-      }
-      break;
-#else
-    case _YUY2:
-    case _YV12:
-    case _I420:
-    case _UYVY:
-      fatal(4, "Xv cannot display ...\n");
-      break;
-#endif
-    default:
-      xi->use_xv = 0;
-      break;
-    }
-    is_xv = xi->use_xv;
     create_ximage = 1;
     xi->type = p->type;
   }
@@ -259,10 +259,10 @@ convert(X11XImage *xi, Image *p)
     switch (memory_type(p->rendered.image)) {
     case _NORMAL:
 #ifdef USE_XV
-      if (is_xv) {
-	xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[t], memory_ptr(p->rendered.image), w, h);
+      if (xi->use_xv) {
+	xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], memory_ptr(p->rendered.image), w, h);
       }
-      if (!is_xv || xi->xvimage == NULL) {
+      if (!xi->use_xv || xi->xvimage == NULL) {
 #endif
 	xi->ximage =
 	  x11_create_ximage(xi->x11, x11_visual(xi->x11), x11_depth(xi->x11),
@@ -275,14 +275,14 @@ convert(X11XImage *xi, Image *p)
     case _SHM:
 #ifdef USE_SHM
 #ifdef USE_XV
-      if (is_xv) {
-	xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[t], NULL, w, h, &xi->shminfo);
+      if (xi->use_xv) {
+	xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], NULL, w, h, xi->shminfo);
       }
-      if (!is_xv || xi->xvimage == NULL) {
+      if (!xi->use_xv || xi->xvimage == NULL) {
 #endif /* USE_XV */
 	xi->ximage =
 	  XShmCreateImage(x11_display(xi->x11), x11_visual(xi->x11), x11_depth(xi->x11), ZPixmap, NULL,
-			  &xi->shminfo, w, h);
+			  xi->shminfo, w, h);
 	xi->use_xv = 0;
 #ifdef USE_XV
       }
@@ -503,8 +503,6 @@ convert(X11XImage *xi, Image *p)
       break;
     case 24:
       {
-	int i;
-
 	bits_per_pixel = 24;
 
 	if (p->type == _RGB24) {
@@ -549,8 +547,6 @@ convert(X11XImage *xi, Image *p)
       break;
     case 32:
       {
-	int i;
-
 	bits_per_pixel = 32;
 
 	/* Don't use switch() */
@@ -661,10 +657,10 @@ convert(X11XImage *xi, Image *p)
 
 #ifdef USE_SHM
   if (to_be_attached) {
-    xi->shminfo.shmid = memory_shmid(p->rendered.image);
-    xi->shminfo.shmaddr = memory_ptr(p->rendered.image);
-    xi->shminfo.readOnly = False;
-    XShmAttach(x11_display(xi->x11), &xi->shminfo);
+    xi->shminfo->shmid = memory_shmid(p->rendered.image);
+    xi->shminfo->shmaddr = memory_ptr(p->rendered.image);
+    xi->shminfo->readOnly = False;
+    XShmAttach(x11_display(xi->x11), xi->shminfo);
     xi->if_attached = 1;
   }
 #endif
@@ -692,7 +688,7 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (xi->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage) {
-	XvShmPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, False);
+	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, False);
 	XSync(x11_display(xi->x11), False);
       }
 #endif /* USE_XV */
@@ -723,7 +719,7 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
     if (xi->use_xv) {
 #ifdef USE_XV
       if (xi->xvimage)
-	XvPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h);
+	XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h);
 #endif
     } else {
       if (xi->ximage)
@@ -747,7 +743,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
   if (xi->if_attached) {
 #ifdef USE_PTHREAD
     if (xi->xvimage) {
-      XvShmPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
+      XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
       XSync(x11_display(xi->x11), False);
     }
 #else /* USE_PTHREAD */
@@ -760,7 +756,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
   } else {
 #endif /* USE_SHM */
     if (xi->xvimage)
-      XvPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
+      XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
 #ifdef USE_SHM
   }
 #endif
@@ -771,5 +767,9 @@ static void
 destroy(X11XImage *xi)
 {
   destroy_ximage(xi);
+#ifdef USE_SHM
+  if (xi->shminfo)
+    free(xi->shminfo);
+#endif
   free(xi);
 }

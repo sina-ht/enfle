@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Jun 19 04:30:02 2001.
- * $Id: x11.c,v 1.13 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Sep 18 14:08:38 2001.
+ * $Id: x11.c,v 1.14 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,6 +62,12 @@ x11_create(void)
   if ((x11 = calloc(1, sizeof(X11))) == NULL)
     return NULL;
   memcpy(x11, &template, sizeof(X11));
+#ifdef USE_XV
+  if ((x11->xv = calloc(1, sizeof(X11Xv))) == NULL) {
+    free(x11);
+    return NULL;
+  }
+#endif
 
   return x11;
 }
@@ -78,7 +84,7 @@ get_xvinfo(X11 *x11)
   int nformats;
   XvImageFormatValues *formats;
 
-  xv = &x11->xv;
+  xv = x11->xv;
   if ((result = XvQueryExtension(x11_display(x11), &xv->ver, &xv->rev,
 				 &xv->req_base, &xv->ev_base,
 				 &xv->err_base)) == Success) {
@@ -96,7 +102,8 @@ get_xvinfo(X11 *x11)
     if ((result = XvQueryAdaptors(x11_display(x11), x11_root(x11),
 				  &xv->nadaptors, &adaptor_infos)) == Success) {
       if (xv->nadaptors) {
-	int i, j, k, l;
+	int i, l;
+	unsigned int j, k;
 
 	for (i = 0; i < xv->nadaptors; i++) {
 	  debug_message("x11: " __FUNCTION__ ": Xv: adaptor#%d[%s]: %ld ports\n", i, adaptor_infos[i].name, adaptor_infos[i].num_ports);
@@ -331,5 +338,9 @@ destroy(X11 *x11)
 {
   if (x11_display(x11))
     close(x11);
+#ifdef USE_XV
+  if (x11->xv)
+    free(x11->xv);
+#endif
   free(x11);
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 26 09:14:54 2001.
- * $Id: png.c,v 1.7 2001/08/26 00:53:15 sian Exp $
+ * Last Modified: Tue Sep 18 13:39:46 2001.
+ * $Id: png.c,v 1.8 2001/09/18 05:22:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,7 +30,6 @@
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
 #include "compat.h"
-
 #include "common.h"
 
 #include "utils/libstring.h"

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 24 11:35:54 2001.
- * $Id: fifo.c,v 1.2 2001/06/24 15:43:20 sian Exp $
+ * Last Modified: Tue Sep 18 13:55:20 2001.
+ * $Id: fifo.c,v 1.3 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,7 @@ static FIFO template = {
   maxdata: FIFO_DEFAULT_MAXDATA,
   next_get: NULL,
   last_put: NULL,
+
   put: put,
   get: get,
   set_max: set_max,

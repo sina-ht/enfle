@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 05:25:29 2001.
- * $Id: tar.c,v 1.4 2001/08/25 21:08:47 sian Exp $
+ * Last Modified: Tue Sep 18 13:52:37 2001.
+ * $Id: tar.c,v 1.5 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,6 +38,7 @@ static ArchiverPlugin plugin = {
   name: "TAR",
   description: "TAR Archiver plugin version 0.0.6",
   author: "Hiroshi Takekawa",
+  archiver_private: NULL,
 
   identify: identify,
   open: open
@@ -133,7 +134,7 @@ is_valid_header(TarHeader *th)
   unsigned_sum += ' ' * 8;
   signed_sum   += ' ' * 8;
 
-  return (unsigned_sum == check_sum) || (signed_sum == check_sum);
+  return (unsigned_sum == check_sum) || (signed_sum == (long)check_sum);
 }
 
 /* override methods */

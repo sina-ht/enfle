@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep 14 11:49:25 2001.
- * $Id: arithmodel_order_zero.c,v 1.11 2001/09/16 23:07:48 sian Exp $
+ * Last Modified: Tue Sep 18 13:47:36 2001.
+ * $Id: arithmodel_order_zero.c,v 1.12 2001/09/18 05:22:24 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -73,7 +73,7 @@ static void
 normalize_freq(Arithmodel *_am)
 {
   Arithmodel_order_zero *am = AMOZ(_am);
-  int i;
+  unsigned int i;
 
   if (am->freq[am->nsymbols - 1] >= FREQ_MAX) {
     Freq cum, freq;

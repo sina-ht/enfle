@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:42:05 2001.
- * $Id: bmp.c,v 1.7 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Sep 18 13:52:09 2001.
+ * $Id: bmp.c,v 1.8 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,7 @@ static LoaderPlugin plugin = {
   name: "BMP",
   description: "BMP Loader plugin version 0.2",
   author: "Hiroshi Takekawa",
+  image_private: NULL,
 
   identify: identify,
   load: load
@@ -72,8 +73,8 @@ load_image(Image *p, Stream *st)
   unsigned char buf[1024], *pp, *d;
   unsigned int file_size, header_size, image_size, offset_to_image;
   unsigned short int biPlanes;
-  int i, bytes_per_pal;
-  int compress_method;
+  unsigned int bytes_per_pal;
+  int i, compress_method;
 
   if (stream_read(st, buf, 12) != 12)
     return 0;
@@ -87,7 +88,7 @@ load_image(Image *p, Stream *st)
     return 0;
   if (header_size > 64)
     return 0;
-  if (stream_read(st, buf, header_size - 4) != header_size - 4)
+  if (stream_read(st, buf, header_size - 4) != (int)(header_size - 4))
     return 0;
 
   if (header_size >= WIN_BMP_HEADER_SIZE) {
@@ -140,9 +141,9 @@ load_image(Image *p, Stream *st)
   if (p->depth <= 8) {
     p->ncolors = 1 << p->depth;
     bytes_per_pal = (header_size >= WIN_BMP_HEADER_SIZE) ? 4 : 3;
-    if (stream_read(st, buf, p->ncolors * bytes_per_pal) != p->ncolors * bytes_per_pal)
+    if (stream_read(st, buf, p->ncolors * bytes_per_pal) != (int)(p->ncolors * bytes_per_pal))
       return 0;
-    for (i = 0; i < p->ncolors; i++) {
+    for (i = 0; i < (int)p->ncolors; i++) {
       p->colormap[i][0] = buf[bytes_per_pal * i + 2];
       p->colormap[i][1] = buf[bytes_per_pal * i + 1];
       p->colormap[i][2] = buf[bytes_per_pal * i + 0];
@@ -158,7 +159,7 @@ load_image(Image *p, Stream *st)
   stream_seek(st, offset_to_image, _SET);
   pp = d + p->bytes_per_line * (p->height - 1);
   if (!compress_method) {
-    for (i = p->height - 1; i >= 0; i--) {
+    for (i = (int)(p->height - 1); i >= 0; i--) {
       stream_read(st, pp, p->bytes_per_line);
       pp -= p->bytes_per_line;
     }

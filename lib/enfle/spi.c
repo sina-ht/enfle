@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 10 16:59:48 2001.
- * $Id: spi.c,v 1.14 2001/09/10 11:58:54 sian Exp $
+ * Last Modified: Tue Sep 18 13:59:02 2001.
+ * $Id: spi.c,v 1.15 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,12 +74,22 @@ typedef struct _susie_archiver_info {
 
 static LoaderPlugin loader_template = {
   type: ENFLE_PLUGIN_LOADER,
+  name: NULL,
+  description: NULL,
+  author: NULL,
+  image_private: NULL,
+
   identify: loader_identify,
   load: loader_load
 };
 
 static ArchiverPlugin archiver_template = {
   type: ENFLE_PLUGIN_ARCHIVER,
+  name: NULL,
+  description: NULL,
+  author: NULL,
+  archiver_private: NULL,
+
   identify: archiver_identify,
   open: archiver_open
 };
@@ -267,7 +277,7 @@ spi_plugin_exit(void *p)
   case ENFLE_PLUGIN_LOADER:
     {
       LoaderPlugin *l = (LoaderPlugin *)p;
-      SusieLoader *sl = l->private;
+      SusieLoader *sl = l->image_private;
 
       peimage_destroy(sl->pe);
       free(sl);
@@ -276,7 +286,7 @@ spi_plugin_exit(void *p)
   case ENFLE_PLUGIN_ARCHIVER:
     {
       ArchiverPlugin *arp = (ArchiverPlugin *)p;
-      SusieArchiver *sa = arp->private;
+      SusieArchiver *sa = arp->archiver_private;
 
       peimage_destroy(sa->pe);
       free(sa);
@@ -350,7 +360,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
       goto error;
     }
     memcpy(lp, &loader_template, sizeof(LoaderPlugin));
-    lp->private = sl;
+    lp->image_private = sl;
     ep = (EnflePlugin *)lp;
     break;
   case 'X':
@@ -385,7 +395,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
       goto error;
     }
     memcpy(ap, &archiver_template, sizeof(ArchiverPlugin));
-    ap->private = sa;
+    ap->archiver_private = sa;
     ep = (EnflePlugin *)ap;
     break;
   default:

@@ -1,15 +1,15 @@
 /*
  * arithcoder.h -- Arithmetic coder base class
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Mar 29 13:13:46 2001.
- * $Id: arithcoder.h,v 1.1 2001/04/18 05:43:31 sian Exp $
+ * Last Modified: Mon Sep 17 23:04:56 2001.
+ * $Id: arithcoder.h,v 1.2 2001/09/18 05:22:24 sian Exp $
  */
 
 #ifndef _ARITHCODER_H
 #define _ARITHCODER_H
 
 typedef unsigned int Arithvalue;
-typedef unsigned short int Index;
+typedef unsigned int Index;
 
 typedef struct _arithcoder Arithcoder;
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 08:29:59 2001.
- * $Id: timer.h,v 1.3 2001/08/25 21:08:07 sian Exp $
+ * Last Modified: Mon Sep 17 17:24:06 2001.
+ * $Id: timer.h,v 1.4 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,6 +37,7 @@ struct _timer {
   Timer_t time;
   Timer_t previous_time;
   TimerStatus status;
+
   void (*destroy)(Timer *);
   void (*reset)(Timer *);
   void (*start)(Timer *);

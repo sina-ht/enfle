@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar 13 09:56:41 2001.
- * $Id: hash.h,v 1.4 2001/03/13 06:49:32 sian Exp $
+ * Last Modified: Mon Sep 17 17:21:25 2001.
+ * $Id: hash.h,v 1.5 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,6 +45,7 @@ struct _hash {
   Dlist *keys;
   unsigned int (*hash_function)(void *, unsigned int);
   unsigned int (*hash_function2)(void *, unsigned int);
+
   int (*define)(Hash *, void *, unsigned int, void *);
   int (*set)(Hash *, void *, unsigned int, void *);
   void (*set_function)(Hash *, unsigned int (*)(void *, unsigned int));

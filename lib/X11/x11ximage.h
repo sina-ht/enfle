@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Sep 15 15:43:00 2001.
- * $Id: x11ximage.h,v 1.6 2001/09/16 23:10:07 sian Exp $
+ * Last Modified: Mon Sep 17 18:14:31 2001.
+ * $Id: x11ximage.h,v 1.7 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,9 +46,9 @@ struct _x11ximage {
 #endif
 #ifdef USE_SHM
   int if_attached;
-  XShmSegmentInfo shminfo;
+  XShmSegmentInfo *shminfo;
 #endif
-  void (*bgra32to16)(unsigned char *, unsigned char *, int, int, int, int);
+  void (*bgra32to16)(unsigned char *, unsigned char *, unsigned int, unsigned int, unsigned int, unsigned int);
 
   int (*convert)(X11XImage *, Image *);
   void (*put)(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int, unsigned int);

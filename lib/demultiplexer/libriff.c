@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 12 01:11:11 2001.
- * $Id: libriff.c,v 1.2 2001/09/12 11:38:57 sian Exp $
+ * Last Modified: Tue Sep 18 14:05:26 2001.
+ * $Id: libriff.c,v 1.3 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -195,7 +195,7 @@ read_data(RIFF_File *rf, RIFF_Chunk *rc)
       rf->err = _RIFF_ERR_NO_ENOUGH_MEMORY;
       return 0;
     }
-    if ((byte_read = rf->input_func(rf->func_arg, rc->data, rc->_size)) != rc->_size) {
+    if ((byte_read = rf->input_func(rf->func_arg, rc->data, rc->_size)) != (int)rc->_size) {
       debug_message(__FUNCTION__ ": requested %d bytes, but got %d bytes\n", rc->_size, byte_read);
       rf->err = _RIFF_ERR_TRUNCATED_CHUNK;
       return 0;
@@ -353,7 +353,7 @@ get_errmsg(RIFF_File *rf)
     "No list but pushed"
   };
 
-  if (rf->err < _RIFF_ERR_SUCCESS || rf->err >= _RIFF_ERR_MAXCODE)
+  if (rf->err >= _RIFF_ERR_MAXCODE)
     return "Unknown error.";
   return errmsg[rf->err];
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 20:52:39 2001.
- * $Id: image.h,v 1.13 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Sep 18 14:00:06 2001.
+ * $Id: image.h,v 1.14 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -103,7 +103,7 @@ struct _image {
   int if_magnified;
   int depth;
   int bits_per_pixel;
-  int ncolors;
+  unsigned int ncolors;
   unsigned char colormap[256][3];
   unsigned long red_mask, green_mask, blue_mask;
   Image *next;

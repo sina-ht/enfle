@@ -1,8 +1,8 @@
 /*
  * predict.c -- Prediction modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 02:01:01 2001.
- * $Id: predict.c,v 1.5 2001/08/06 04:58:23 sian Exp $
+ * Last Modified: Tue Sep 18 14:18:48 2001.
+ * $Id: predict.c,v 1.6 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdlib.h>
@@ -100,7 +100,7 @@ predict_up(unsigned char *s, int w, int h)
 {
   int i;
   unsigned char *d;
-  unsigned int size = w * h;
+  int size = w * h;
 
   if ((d = malloc(size)) == NULL)
     return NULL;
@@ -237,7 +237,7 @@ predict_get_id_by_name(char *name)
 const char *
 predict_get_name_by_id(PredictType id)
 {
-  if (id < 0 || id >= _PREDICT_INVALID_END)
+  if (id >= _PREDICT_INVALID_END)
     return NULL;
   return (char *)predictors[id].name;
 }
@@ -245,7 +245,7 @@ predict_get_name_by_id(PredictType id)
 unsigned char *
 predict(unsigned char *s, int w, int h, PredictType id)
 {
-  if (id < 0 || id >= _PREDICT_INVALID_END)
+  if (id >= _PREDICT_INVALID_END)
     return NULL;
   if (predictors[id].predictor)
     return predictors[id].predictor(s, w, h);

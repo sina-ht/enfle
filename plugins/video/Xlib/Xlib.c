@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Aug 15 15:29:41 2001.
- * $Id: Xlib.c,v 1.39 2001/08/15 06:30:38 sian Exp $
+ * Last Modified: Tue Sep 18 13:36:07 2001.
+ * $Id: Xlib.c,v 1.40 2001/09/18 05:22:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,7 +32,6 @@
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
 #include "compat.h"
-
 #include "common.h"
 
 #ifdef USE_PTHREAD
@@ -217,10 +216,10 @@ destroy(void *data)
 }
 
 static void
-clip(VideoWindow *vw, int *w_return, int *h_return)
+clip(VideoWindow *vw, unsigned int *w_return, unsigned int *h_return)
 {
-  int w = *w_return;
-  int h = *h_return;
+  unsigned int w = *w_return;
+  unsigned int h = *h_return;
 
   if (!vw->if_fullscreen) {
     if (w > vw->full_width - WINDOW_CAPTION_WIDTH)
@@ -405,7 +404,7 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
-  X11Xv *xv = &x11->xv;
+  X11Xv *xv = x11->xv;
 #endif
 
   static ImageType prefer_32_msb_direct[] = {
@@ -534,7 +533,7 @@ calc_magnified_size(VideoWindow *vw, unsigned int sw, unsigned int sh,
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 #ifdef USE_XV
-  X11Xv *xv = &x11->xv;
+  X11Xv *xv = x11->xv;
 #endif
 
 #ifdef USE_XV
@@ -935,7 +934,7 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   clip(vw, &w, &h);
 
   if (!vw->if_fullscreen) {
-    int x, y;
+    unsigned int x, y;
 
     x11window_get_geometry(xw, &vw->x, &vw->y, &vw->width, &vw->height);
     if (w == vw->width && h == vw->height)
@@ -997,7 +996,7 @@ commit_offset(VideoWindow *vw, int offset_x, int offset_y)
     if (vw->render_width > vw->width) {
       if (vw->offset_x < 0)
 	vw->offset_x = 0;
-      if (vw->offset_x > vw->render_width - vw->width)
+      if (vw->offset_x > (int)vw->render_width - (int)vw->width)
 	vw->offset_x = vw->render_width - vw->width;
     } else {
       vw->offset_x = 0;
@@ -1006,7 +1005,7 @@ commit_offset(VideoWindow *vw, int offset_x, int offset_y)
     if (vw->render_height > vw->height) {
       if (vw->offset_y < 0)
 	vw->offset_y = 0;
-      if (vw->offset_y > vw->render_height - vw->height)
+      if (vw->offset_y > (int)vw->render_height - (int)vw->height)
 	vw->offset_y = vw->render_height - vw->height;
     } else {
       vw->offset_y = 0;
@@ -1015,7 +1014,7 @@ commit_offset(VideoWindow *vw, int offset_x, int offset_y)
     if (vw->render_width > vw->width) {
       if (vw->offset_x < 0)
 	vw->offset_x = 0;
-      if (vw->offset_x > vw->render_width - vw->width)
+      if (vw->offset_x > (int)vw->render_width - (int)vw->width)
 	vw->offset_x = vw->render_width - vw->width;
     } else {
       vw->offset_x = 0;
@@ -1024,7 +1023,7 @@ commit_offset(VideoWindow *vw, int offset_x, int offset_y)
     if (vw->render_height > vw->height) {
       if (vw->offset_y < 0)
 	vw->offset_y = 0;
-      if (vw->offset_y > vw->render_height - vw->height)
+      if (vw->offset_y > (int)vw->render_height - (int)vw->height)
 	vw->offset_y = vw->render_height - vw->height;
     } else {
       vw->offset_y = 0;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 30 10:03:18 2001.
- * $Id: libconfig.c,v 1.13 2001/08/30 01:06:28 sian Exp $
+ * Last Modified: Tue Sep 18 13:54:34 2001.
+ * $Id: libconfig.c,v 1.14 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,6 +51,7 @@ static void destroy(Config *);
 
 static Config config_template = {
   hash: NULL,
+
   load: load,
   save: save,
   parse: parse,

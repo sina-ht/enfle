@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 06:22:12 2001.
- * $Id: libstring.c,v 1.7 2001/08/25 21:06:30 sian Exp $
+ * Last Modified: Tue Sep 18 13:54:19 2001.
+ * $Id: libstring.c,v 1.8 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@ static unsigned int length(String *);
 static int set(String *, const unsigned char *);
 static int copy(String *, String *);
 static int cat_ch(String *, unsigned char);
-static int ncat(String *, const unsigned char *, int);
+static int ncat(String *, const unsigned char *, unsigned int);
 static int cat(String *, const unsigned char *);
 static int catf(String *, const unsigned char *, ...);
 static int append(String *, String *);
@@ -47,6 +47,7 @@ String string_template = {
   len: 0,
   buffer_size: 0,
   buffer: NULL,
+
   get: get,
   length: length,
   set: set,
@@ -182,7 +183,7 @@ cat_ch(String *s, unsigned char c)
 }
 
 static int
-ncat(String *s, const unsigned char *p, int l)
+ncat(String *s, const unsigned char *p, unsigned int l)
 {
   if (l > strlen(p))
     l = strlen(p);

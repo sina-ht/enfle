@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 01:57:59 2001.
- * $Id: gamma.c,v 1.1 2001/04/25 17:27:17 sian Exp $
+ * Last Modified: Mon Sep 17 22:39:45 2001.
+ * $Id: gamma.c,v 1.2 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,7 +28,6 @@
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
 #include "compat.h"
-
 #include "common.h"
 
 #include "utils/libstring.h"
@@ -124,7 +123,8 @@ effect(Image *p, void *params)
 {
   Config *c = (Config *)params;
   Image *save;
-  int i, index, result;
+  int index, result;
+  unsigned int i;
   unsigned char g[256];
   double gammas[7] = { 2.2, 1.7, 1.45, 1.0, 1 / 1.45, 1 / 1.7, 1 / 2.2 };
   unsigned char *s, *d;

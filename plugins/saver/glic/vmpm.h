@@ -1,8 +1,8 @@
 /*
  * vmpm.h -- Implementation of a variation of MPM header
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Sun Sep  9 11:24:01 2001.
- * $Id: vmpm.h,v 1.7 2001/09/10 00:04:51 sian Exp $
+ * Last Modified: Mon Sep 17 23:07:43 2001.
+ * $Id: vmpm.h,v 1.8 2001/09/18 05:22:24 sian Exp $
  */
 
 #ifndef _VMPM_H
@@ -23,7 +23,7 @@ typedef struct _list_item {
 } Token;
 
 struct _vmpm {
-  int r, I;
+  unsigned int r, I;
   int nlowbits;
   int blocksize;
   int bitwise;

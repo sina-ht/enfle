@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.h -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep 13 13:59:58 2001.
- * $Id: arithmodel_order_zero.h,v 1.9 2001/09/13 12:10:44 sian Exp $
+ * Last Modified: Mon Sep 17 22:50:49 2001.
+ * $Id: arithmodel_order_zero.h,v 1.10 2001/09/18 05:22:24 sian Exp $
  */
 
 #ifndef _ARITHMODEL_ORDER_ZERO_H
@@ -26,6 +26,7 @@ struct _arithmodel_order_zero {
   int (*encode_with_range)(Arithmodel *, Index, Index, Index);
   int (*decode_with_range)(Arithmodel *, Index *, Index, Index);
   void (*set_update_escape_freq)(Arithmodel *, int (*)(Arithmodel *, Index));
+
   int (*update_escape_freq)(Arithmodel *, Index);
   void *private_data;
   int is_eof_used;

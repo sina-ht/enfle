@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_token -- Token decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep  6 12:26:01 2001.
- * $Id: vmpm_decompose_token.c,v 1.6 2001/09/07 04:56:33 sian Exp $
+ * Last Modified: Tue Sep 18 13:41:13 2001.
+ * $Id: vmpm_decompose_token.c,v 1.7 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -69,7 +69,7 @@ static void
 init(VMPM *vmpm)
 {
   VMPMDecomposer_Token *d = (VMPMDecomposer_Token *)vmpm->method_private;
-  int i;
+  unsigned int i;
 
   if ((vmpm->token_hash = malloc(HASH_SIZE * sizeof(Token))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
@@ -253,7 +253,7 @@ static void
 final(VMPM *vmpm)
 {
   VMPMDecomposer_Token *d = (VMPMDecomposer_Token *)vmpm->method_private;
-  int i;
+  unsigned int i;
 
   if (d->new_token_flag)
     free(d->new_token_flag);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:12:12 2001.
- * $Id: mng.c,v 1.16 2001/09/02 05:47:03 sian Exp $
+ * Last Modified: Tue Sep 18 13:49:27 2001.
+ * $Id: mng.c,v 1.17 2001/09/18 05:22:24 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -121,7 +121,7 @@ readdata(mng_handle mng, mng_ptr p, mng_uint32 len, mng_uint32 *readsize)
 {
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
 
-  if (stream_read(this->m->st, p, len) != len) {
+  if (stream_read(this->m->st, p, len) != (int)len) {
     *readsize = 0;
     return MNG_FALSE;
   }

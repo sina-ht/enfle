@@ -47,7 +47,7 @@ static int debug_is_on (void)
 
 static void stats_picture (uint8_t * buffer)
 {
-    const static char * picture_coding_type_str [8] = {
+    static const char * picture_coding_type_str [8] = {
 	"Invalid picture type",
 	"I-type",
 	"P-type",
@@ -77,7 +77,7 @@ static void stats_user_data (uint8_t * buffer)
 
 static void stats_sequence (uint8_t * buffer)
 {
-    const static char * aspect_ratio_information_str[8] = {
+    static const char * aspect_ratio_information_str[8] = {
 	"Invalid Aspect Ratio",
 	"1:1",
 	"4:3",
@@ -87,7 +87,7 @@ static void stats_sequence (uint8_t * buffer)
 	"Invalid Aspect Ratio",
 	"Invalid Aspect Ratio"
     };
-    const static char * frame_rate_str[16] = {
+    static const char * frame_rate_str[16] = {
 	"Invalid frame_rate_code",
 	"23.976", "24", "25" , "29.97",
 	"30" , "50", "59.94", "60" ,
@@ -155,7 +155,7 @@ static void stats_slice (uint8_t code, uint8_t * buffer)
 
 static void stats_sequence_extension (uint8_t * buffer)
 {
-    const static char * chroma_format_str[4] = {
+    static const char * chroma_format_str[4] = {
 	"Invalid Chroma Format",
 	"4:2:0 Chroma",
 	"4:2:2 Chroma",
@@ -200,7 +200,7 @@ static void stats_picture_display_extension (uint8_t * buffer)
 
 static void stats_picture_coding_extension (uint8_t * buffer)
 {
-    const static char * picture_structure_str[4] = {
+    static const char * picture_structure_str[4] = {
 	"Invalid Picture Structure",
 	"Top field",
 	"Bottom field",

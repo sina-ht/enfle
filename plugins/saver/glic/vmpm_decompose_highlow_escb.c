@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow_escb.c -- Threshold ESC-B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Sep 10 09:01:46 2001.
- * $Id: vmpm_decompose_highlow_escb.c,v 1.5 2001/09/10 00:04:51 sian Exp $
+ * Last Modified: Tue Sep 18 13:43:58 2001.
+ * $Id: vmpm_decompose_highlow_escb.c,v 1.6 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -59,7 +59,7 @@ decomposer_init(VMPM *vmpm)
 static void
 init(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   if ((vmpm->token_hash = malloc(HASH_SIZE * sizeof(Token))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
@@ -137,9 +137,8 @@ encode(VMPM *vmpm)
   Arithmodel *am;
   Arithmodel *bin_am;
   Arithmodel **low_ams;
-  unsigned int *symbol_to_index;
-  int i, match_found, nsymbols;
-  unsigned int j;
+  unsigned int i, j, nsymbols, *symbol_to_index;
+  int match_found;
 
   //debug_message(__FUNCTION__ "()\n");
 
@@ -270,20 +269,20 @@ encode(VMPM *vmpm)
 
   if ((low_ams = calloc(1 << (8 - vmpm->nlowbits), sizeof(Arithmodel *))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
-  for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++) {
+  for (i = 0; i < (1U << (8 - vmpm->nlowbits)); i++) {
     low_ams[i] = arithmodel_order_zero_create();
     arithmodel_encode_init(low_ams[i], ac);
     arithmodel_order_zero_reset(low_ams[i], 0, 0);
-    for (j = 0; j < (1 << vmpm->nlowbits); j++)
+    for (j = 0; j < (1U << vmpm->nlowbits); j++)
       arithmodel_install_symbol(low_ams[i], 1);
   }
 
   for (i = 0; i < vmpm->buffer_low_size; i++)
     arithmodel_encode(low_ams[vmpm->buffer_high[i]], vmpm->buffer_low[i]);
 
-  for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
+  for (i = 0; i < (1U << (8 - vmpm->nlowbits)); i++)
     arithmodel_encode_final(low_ams[i]);
-  for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
+  for (i = 0; i < (1U << (8 - vmpm->nlowbits)); i++)
     arithmodel_destroy(low_ams[i]);
 
   arithcoder_encode_final(ac);
@@ -393,7 +392,7 @@ reconstruct(VMPM *vmpm)
 static void
 final(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   for (i = 0; i <= vmpm->I; i++)
     if (vmpm->token[i])

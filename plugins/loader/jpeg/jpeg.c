@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 15:05:38 2001.
- * $Id: jpeg.c,v 1.14 2001/09/02 06:19:24 sian Exp $
+ * Last Modified: Tue Sep 18 13:51:52 2001.
+ * $Id: jpeg.c,v 1.15 2001/09/18 05:22:24 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -51,6 +51,7 @@ static LoaderPlugin plugin = {
   name: "JPEG",
   description: NULL,
   author: "Hiroshi Takekawa",
+  image_private: NULL,
 
   identify: identify,
   load: load
@@ -240,7 +241,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   struct jpeg_decompress_struct *cinfo;
   struct my_error_mgr jerr;
   JSAMPROW buffer[1]; /* output row buffer */
-  int i, j;
+  unsigned int i, j;
   unsigned char *d;
 #ifdef ENABLE_YUV
   int direct_decode;
@@ -335,11 +336,11 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     /* Copy colormap. Because jpeg_finish_decompress will release colormap memory */
     if (cinfo->quantize_colors == TRUE) {
       if (cinfo->out_color_components == 1)
-        for (j = 0; j < cinfo->actual_number_of_colors; j++)
+        for (j = 0; j < (unsigned int)cinfo->actual_number_of_colors; j++)
           p->colormap[j][0] = p->colormap[j][1] = p->colormap[j][2] =
 	    cinfo->colormap[0][j];
       else
-        for (j = 0; j < cinfo->actual_number_of_colors; j++)
+        for (j = 0; j < (unsigned int)cinfo->actual_number_of_colors; j++)
           for (i = 0; i < 3; i++)
             p->colormap[j][i] = cinfo->colormap[i][j];
       p->type = _INDEX;

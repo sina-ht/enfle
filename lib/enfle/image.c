@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 03:57:21 2001.
- * $Id: image.c,v 1.11 2001/06/19 08:16:45 sian Exp $
+ * Last Modified: Tue Sep 18 14:00:38 2001.
+ * $Id: image.c,v 1.12 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -77,8 +77,6 @@ image_create(void)
 const char *
 image_type_to_string(ImageType type)
 {
-  if (type < 0)
-    return "Negative ImageType";
   if (type >= _IMAGETYPE_TERMINATOR)
     return "Invalid ImageType";
   return image_type_to_string_array[(int)type];

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 20:17:51 2001.
- * $Id: pnm.c,v 1.2 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Sep 18 13:50:59 2001.
+ * $Id: pnm.c,v 1.3 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,6 +50,7 @@ static LoaderPlugin plugin = {
   name: "PNM",
   description: "PNM Loader plugin version 0.1",
   author: "Hiroshi Takekawa",
+  image_private: NULL,
 
   identify: identify,
   load: load
@@ -135,7 +136,7 @@ static int
 pnm_read_header(Stream *st, Image *p, PNMdata *data)
 {
   char *token;
-  int i;
+  unsigned int i;
 
   if ((token = get_token(st)) == NULL)
     return 0;
@@ -289,8 +290,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   PNMdata pnmdata;
-  int i, j, x, y;
-  unsigned int image_size;
+  unsigned int i, j, x, y, image_size;
   unsigned char b, *d;
   char *token;
 

@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:13:39 2001.
- * $Id: ungif.c,v 1.14 2001/09/02 05:47:04 sian Exp $
+ * Last Modified: Tue Sep 18 13:50:42 2001.
+ * $Id: ungif.c,v 1.15 2001/09/18 05:22:24 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -48,6 +48,7 @@ static LoaderPlugin plugin = {
   name: "UNGIF",
   description: "UNGIF Loader plugin version 0.3 with libungif",
   author: "Hiroshi Takekawa",
+  image_private: NULL,
 
   identify: identify,
   load: load
@@ -84,7 +85,8 @@ ungif_input_func(GifFileType *GifFile, GifByteType *p, int s)
 static LoaderStatus
 load_image(Image *p, Stream *st)
 {
-  int i, j, size, sheight, row, col, extcode;
+  int size, col, extcode;
+  unsigned int i, j, row, sheight;
   static int ioffset[] = { 0, 4, 2, 1 };
   static int ijumps[] = { 8, 8, 4, 2 };
   GifRecordType RecordType;

@@ -1,8 +1,8 @@
 /*
  * threshold.c
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Sun Sep  9 11:25:03 2001.
- * $Id: threshold.c,v 1.2 2001/09/10 00:04:51 sian Exp $
+ * Last Modified: Mon Sep 17 22:43:59 2001.
+ * $Id: threshold.c,v 1.3 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 int
 threshold(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   if (vmpm->buffer_high)
     free(vmpm->buffer_high);

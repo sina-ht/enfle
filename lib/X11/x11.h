@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Jun 18 18:14:02 2001.
- * $Id: x11.h,v 1.12 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Mon Sep 17 18:03:07 2001.
+ * $Id: x11.h,v 1.13 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ struct _x11 {
   unsigned long black;
   unsigned int extensions;
 #ifdef USE_XV
-  X11Xv xv;
+  X11Xv *xv;
 #endif
 
   int (*open)(X11 *, char *);

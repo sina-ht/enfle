@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 10 21:10:38 2001.
- * $Id: pe_image.c,v 1.13 2001/09/10 14:20:14 sian Exp $
+ * Last Modified: Mon Sep 17 14:40:43 2001.
+ * $Id: pe_image.c,v 1.14 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -64,6 +64,12 @@ static void *resolve(PE_image *, const char *symbolname);
 static void destroy(PE_image *);
 
 static PE_image template = {
+  filepath: NULL,
+  pe_header: IMAGE_FILE_HEADER_INITIALIZER,
+  opt_header: IMAGE_OPTIONAL_HEADER_INITIALIZER,
+  sect_headers: NULL,
+  export_symbols: NULL,
+  image: NULL,
   load: load,
   resolve: resolve,
   destroy: destroy
@@ -77,6 +83,10 @@ peimage_create(void)
   if ((p = calloc(1, sizeof(PE_image))) == NULL)
     return NULL;
   memcpy(p, &template, sizeof(PE_image));
+  if ((p->opt_header.DataDirectory = calloc(IMAGE_NUMBEROF_DIRECTORY_ENTRIES, sizeof(IMAGE_DATA_DIRECTORY))) == NULL) {
+    free(p);
+    return NULL;
+  }
 
   return p;
 }
@@ -246,7 +256,7 @@ load(PE_image *p, char *path)
   unsigned char dos_header[DOS_HEADER_SIZE];
   unsigned int pe_signature;
   unsigned int pe_header_start;
-  int i;
+  unsigned int i;
 #ifdef DEBUG
   static const char *data_directory_names[] = {
     "Export", "Import", "Resource", "Exception", "Security", "BaseReloc",
@@ -430,7 +440,7 @@ load(PE_image *p, char *path)
 
     while (ibr->VirtualAddress) {
       WORD *reloc = ibr->TypeOffset;
-      int nrelocs = (ibr->SizeOfBlock - sizeof(DWORD) * 2) >> 1;
+      unsigned int nrelocs = (ibr->SizeOfBlock - sizeof(DWORD) * 2) >> 1;
 
       for (i = 0; i < nrelocs; i++) {
 	int type = (reloc[i] >> 12) & 0xf;
@@ -505,6 +515,8 @@ static void
 destroy(PE_image *p)
 {
   module_deregister(misc_basename(p->filepath));
+  if (p->opt_header.DataDirectory)
+    free(p->opt_header.DataDirectory);
   if (p->export_symbols)
     hash_destroy(p->export_symbols, 0);
   if (p->image)

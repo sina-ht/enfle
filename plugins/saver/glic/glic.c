@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep 13 11:52:40 2001.
- * $Id: glic.c,v 1.21 2001/09/13 12:08:06 sian Exp $
+ * Last Modified: Tue Sep 18 13:46:52 2001.
+ * $Id: glic.c,v 1.22 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdlib.h>
@@ -38,7 +38,7 @@ DECLARE_SAVER_PLUGIN_METHODS;
 static SaverPlugin plugin = {
   type: ENFLE_PLUGIN_SAVER,
   name: "GLIC",
-  description: "GLIC(Grammar-based Lossless Image Code) Saver plugin version 0.1",
+  description: "GLIC(Grammar-based Lossless Image Code) Saver plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   save: save,
@@ -81,7 +81,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   char *predict_method, *decompose_method, *scan_method;
   PredictType predict_id;
   int scan_id;
-  int b, count, result;
+  int b, I, count, result;
 
   memset(&vmpm, 0, sizeof(vmpm));
 
@@ -91,13 +91,13 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   }
 
   b = floorlog2(p->width);
-  if ((1 << b) != p->width) {
+  if ((1U << b) != p->width) {
     show_message("width %d is not a power of 2.\n", p->width);
     return 0;
   }
 
   b = floorlog2(p->height);
-  if ((1 << b) != p->height) {
+  if ((1U << b) != p->height) {
     show_message("height %d is not a power of 2.\n", p->height);
     return 0;
   }
@@ -128,41 +128,42 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   vmpm.r = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/r", &result);
   if (!result)
     vmpm.r = 2;
-  vmpm.I = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/I", &result);
+  I = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/I", &result);
   if (!result)
-    vmpm.I = -2;
-  if (vmpm.I <= 0) {
-    unsigned int t, Imax;
+    I = -2;
+  if (I <= 0) {
+    unsigned int t;
+    int Imax;
 
     for (Imax = 0, t = image_size; t > 1; Imax++)
       t /= vmpm.r;
 
-    switch (vmpm.I) {
+    switch (I) {
     case 0:
       /* Use log log */
-      vmpm.I = log(log(image_size) / log(vmpm.r)) / log(vmpm.r);
-      debug_message("glic: I = %d (log log)\n", vmpm.I);
+      I = log(log(image_size) / log(vmpm.r)) / log(vmpm.r);
+      debug_message("glic: I = %d (log log)\n", I);
       break;
     case -1:
       /* Use Max */
-      vmpm.I = Imax;
-      debug_message("glic: I = %d (max)\n", vmpm.I);
+      I = Imax;
+      debug_message("glic: I = %d (max)\n", I);
       break;
     case -2:
       /* Use the value optimized by differentiation. */
-      vmpm.I = log(image_size) / log(vmpm.r) + log(log(vmpm.r)) / log(vmpm.r) - 1;
-      if (vmpm.I < 1) {
-	debug_message("glic: I = %d underflow, clipped to 1.\n", vmpm.I);
-	vmpm.I = 1;
-      } else if (vmpm.I > Imax) {
-	debug_message("glic: I = %d overflow, clipped to max(%d).\n", vmpm.I, Imax);
-	vmpm.I = Imax;
+      I = log(image_size) / log(vmpm.r) + log(log(vmpm.r)) / log(vmpm.r) - 1;
+      if (I < 1) {
+	debug_message("glic: I = %d underflow, clipped to 1.\n", I);
+	I = 1;
+      } else if (I > Imax) {
+	debug_message("glic: I = %d overflow, clipped to max(%d).\n", I, Imax);
+	I = Imax;
       }
-      debug_message("glic: I = %d (optimized)\n", vmpm.I);
+      debug_message("glic: I = %d (optimized)\n", I);
       break;
     default:
-      show_message("glic: Invalid I = %d, defaults to Imax = %d\n", vmpm.I, Imax);
-      vmpm.I = Imax;
+      show_message("glic: Invalid I = %d, defaults to Imax = %d\n", I, Imax);
+      I = Imax;
       break;
     }
   }
@@ -179,6 +180,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     setvbuf(vmpm.statfile, (char *)NULL, _IONBF, 0);
   }
 
+  vmpm.I = (unsigned int)I;
   debug_message("glic: (%d, %d) vmpm_path %s, decompose %s, predict %s, scan %s\n", vmpm.r, vmpm.I, vmpm_path, decompose_method, predict_method, scan_method);
 
   if ((count = decomposer_scan_and_load(&vmpm, vmpm_path)) == 0) {
@@ -253,7 +255,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     int c;
 
     fgets(tmp, 256, vmpm.outfile);
-    stat_message(&vmpm, "D:Header: %s\n", tmp);
+    stat_message(&vmpm, "D:Header: %s", tmp);
     if ((c = fgetc(vmpm.outfile)) != 0x1a) {
       stat_message(&vmpm, "Invalid character after the header: %c\n", c);
       debug_message("glic: check failed.\n");

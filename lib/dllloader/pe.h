@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:39:45 2001.
- * $Id: pe.h,v 1.3 2001/01/06 23:52:52 sian Exp $
+ * Last Modified: Tue Sep 18 14:02:08 2001.
+ * $Id: pe.h,v 1.4 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,6 +37,8 @@ typedef struct _image_file_header {
   WORD SizeOfOptionalHeader;
   WORD Characteristics;
 } IMAGE_FILE_HEADER;
+
+#define IMAGE_FILE_HEADER_INITIALIZER { 0, 0, 0, 0, 0, 0, 0 }
 
 #define IMAGE_DIRECTORY_ENTRY_EXPORT 0
 #define IMAGE_DIRECTORY_ENTRY_IMPORT 1
@@ -94,8 +96,10 @@ typedef struct _image_optional_header {
   DWORD SizeOfHeapCommit;
   DWORD LoaderFlags;
   DWORD NumberOfRvaAndSizes;
-  IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
+  IMAGE_DATA_DIRECTORY *DataDirectory;
 } IMAGE_OPTIONAL_HEADER;
+
+#define IMAGE_OPTIONAL_HEADER_INITIALIZER { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL }
 
 #define SECTION_HEADER_SIZE (sizeof(IMAGE_SECTION_HEADER))
 #define IMAGE_SIZEOF_SHORT_NAME 8

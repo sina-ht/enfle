@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 12 20:35:31 2001.
- * $Id: demultiplexer_avi.c,v 1.3 2001/09/12 11:39:17 sian Exp $
+ * Last Modified: Mon Sep 17 18:52:16 2001.
+ * $Id: demultiplexer_avi.c,v 1.4 2001/09/18 05:22:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,7 +123,7 @@ examine(Demultiplexer *demux)
   BITMAPINFOHEADER bih;
   WAVEFORMATEX wfx;
   RIFF_Chunk *rc_top, *rc;
-  int i;
+  unsigned int i;
 
   debug_message(__FUNCTION__ "()\n");
 

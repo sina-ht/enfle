@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_recur.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep  6 12:25:49 2001.
- * $Id: vmpm_decompose_recur.c,v 1.3 2001/09/07 04:56:33 sian Exp $
+ * Last Modified: Tue Sep 18 13:43:17 2001.
+ * $Id: vmpm_decompose_recur.c,v 1.4 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -59,7 +59,7 @@ decomposer_init(VMPM *vmpm)
 static void
 init(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   if ((vmpm->token_hash = malloc(HASH_SIZE * sizeof(Token))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
@@ -125,7 +125,7 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 static int
 encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel **bin_ams, unsigned int *s_to_i, int i, int j)
 {
-  int k;
+  unsigned int k;
   Token_value tv;
 
   stat_message(vmpm, __FUNCTION__ ":%d:%d\n", i, j);
@@ -133,9 +133,9 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel **bin_ams, unsigned 
   tv = vmpm->token[i][j]->value - 1;
   if (arithmodel_order_zero_nsymbols(ams[i]) > tv) {
     /* Found. Encode at this level. */
-    for (k = 0; k < i; k++)
+    for (k = 0; k < (unsigned int)i; k++)
       arithmodel_encode(bin_ams[k + 1], 1);
-    if (i < vmpm->I)
+    if (i < (int)vmpm->I)
       arithmodel_encode(bin_ams[i + 1], 0);
     arithmodel_encode(ams[i], tv);
     return 1;
@@ -173,9 +173,8 @@ encode(VMPM *vmpm)
   Arithcoder *ac;
   Arithmodel **ams;
   Arithmodel **bin_ams;
-  unsigned int *s_to_i;
-  int i, match_found, nsymbols;
-  unsigned int j;
+  unsigned int j, nsymbols, *s_to_i;
+  int i, match_found;
 
   //debug_message(__FUNCTION__ "()\n");
 
@@ -213,7 +212,7 @@ encode(VMPM *vmpm)
   if ((ams = calloc(vmpm->I + 1, sizeof(Arithmodel **))) == NULL)
     memory_error(NULL, MEMORY_ERROR);
 
-  for (i = 0; i <= vmpm->I; i++) {
+  for (i = 0; i <= (int)vmpm->I; i++) {
     ams[i] = arithmodel_order_zero_create();
     arithmodel_encode_init(ams[i], ac);
     arithmodel_order_zero_reset(ams[i], 0, 0);
@@ -224,7 +223,7 @@ encode(VMPM *vmpm)
     show_message("No enough memory.\n");
     return;
   }
-  for (i = 0; i <= vmpm->I; i++) {
+  for (i = 0; i <= (int)vmpm->I; i++) {
     bin_ams[i] = arithmodel_order_zero_create();
     arithmodel_encode_init(bin_ams[i], ac);
     arithmodel_order_zero_reset(bin_ams[i], 0, 0);
@@ -247,13 +246,13 @@ encode(VMPM *vmpm)
 
   free(s_to_i);
 
-  for (i = 0; i <= vmpm->I; i++) {
+  for (i = 0; i <= (int)vmpm->I; i++) {
     arithmodel_encode_final(bin_ams[i]);
     arithmodel_encode_final(ams[i]);
   }
   arithcoder_encode_final(ac);
 
-  for (i = 0; i <= vmpm->I; i++) {
+  for (i = 0; i <= (int)vmpm->I; i++) {
     arithmodel_destroy(bin_ams[i]);
     arithmodel_destroy(ams[i]);
   }
@@ -341,7 +340,7 @@ reconstruct(VMPM *vmpm)
 static void
 final(VMPM *vmpm)
 {
-  int i;
+  unsigned int i;
 
   for (i = 0; i <= vmpm->I; i++)
     if (vmpm->token[i])

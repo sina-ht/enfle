@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 14:45:00 2001.
- * $Id: ungif.c,v 1.22 2001/09/02 05:48:10 sian Exp $
+ * Last Modified: Tue Sep 18 13:48:20 2001.
+ * $Id: ungif.c,v 1.23 2001/09/18 05:22:24 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -210,10 +210,11 @@ play(Movie *m)
 static PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
-  int i, j, extcode, image_loaded = 0;
+  int extcode, image_loaded = 0;
+  unsigned int i, j, w, h;
   int if_transparent = 0, transparent_index = 0, delay = 0, image_disposal = 0, user_input = 0;
   int reading_netscape_ext;
-  int l, t, w, h;
+  int l, t;
   static int ioffset[] = { 0, 4, 2, 1 };
   static int ijumps[] = { 8, 8, 4, 2 };
   UNGIF_info *info = (UNGIF_info *)m->movie_private;
