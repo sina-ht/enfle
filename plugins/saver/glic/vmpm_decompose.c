@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose.c -- decompose plugin manager
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:41:52 2001.
- * $Id: vmpm_decompose.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Fri Aug  3 18:14:23 2001.
+ * $Id: vmpm_decompose.c,v 1.3 2001/08/04 12:53:58 sian Exp $
  */
 
 #include <stdio.h>
@@ -60,6 +60,11 @@ decomposer_scan_and_load(VMPM *vmpm, char *path)
   struct stat statbuf;
   int count = 0;
 
+  if (!path) {
+    fprintf(stderr, __FUNCTION__ ": path is NULL.\n");
+    return 0;
+  }
+  
   if ((dir = opendir(path)) == NULL) {
     char buf[256];
 
