@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Sep 10 11:41:18 2001.
- * $Id: glic.c,v 1.19 2001/09/10 14:19:32 sian Exp $
+ * Last Modified: Tue Sep 11 11:18:26 2001.
+ * $Id: glic.c,v 1.20 2001/09/12 11:38:01 sian Exp $
  */
 
 #include <stdlib.h>
@@ -225,8 +225,10 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   if (vmpm.bitwise)
     expand(&vmpm);
 
-  result = vmpm.decomposer->decompose(&vmpm, 0, vmpm.I, vmpm.bufferused);
-  debug_message("glic: decomposed.\n");
+  if (vmpm.bufferused > 0) {
+    result = vmpm.decomposer->decompose(&vmpm, 0, vmpm.I, vmpm.bufferused);
+    debug_message("glic: decomposed.\n");
+  }
 
   /* output header */
   fprintf(vmpm.outfile, "GC%s\n\x1a%c%c%c%c", decompose_method, scan_id, predict_id, (vmpm.nlowbits << 4) | vmpm.bits_per_symbol, vmpm.r);
