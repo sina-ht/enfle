@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sun Feb 29 23:40:04 2004.
-; $Id: enfle.rc,v 1.40 2004/02/29 14:48:37 sian Exp $
+; Last Modified: Thu Mar  4 00:56:59 2004.
+; $Id: enfle.rc,v 1.41 2004/03/03 15:57:31 sian Exp $
 
 enfle {
   identify {
@@ -119,6 +119,7 @@ enfle {
         avi := AVI:OGG:.
 	ogg := OGG:.
 	ogm := OGG:.
+        mp3 := MP3:.
         mpg := MPEG:.
         mpeg := MPEG:.
       }
