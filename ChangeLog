@@ -1,3 +1,37 @@
+2004-08-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* lib/avcodec/Makefile.am: Added snow.c, sonic.c, and tscc.c.
+
+	* lib/avcodec/snow.c, lib/avcodec/sonic.c, lib/avcodec/tscc.c: New
+	files.
+
+	* lib/mad/Makefile.am: Create mad.h in srcdir.
+
+2004-08-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
+	lib/avcodec/common.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/mjpeg.c,
+	lib/avcodec/motion_est.c, lib/avcodec/motion_est_template.c,
+	lib/avcodec/sparc/dsputil_vis.c: Updated.
+
+2004-08-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* config.guess, config.sub, install-sh, ltmain.sh: Upgraded.
+
+	* lib/avcodec/ac3enc.c, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.h, lib/avcodec/common.h,
+	lib/avcodec/dsputil.c, lib/avcodec/ffv1.c, lib/avcodec/g726.c,
+	lib/avcodec/h261.c, lib/avcodec/h263.c, lib/avcodec/h264.c,
+	lib/avcodec/huffyuv.c, lib/avcodec/imgconvert.c,
+	lib/avcodec/mem.c, lib/avcodec/mjpeg.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/raw.c,
+	lib/avcodec/resample2.c, lib/avcodec/rv10.c, lib/avcodec/svq1.c,
+	lib/avcodec/utils.c, lib/avcodec/vp3.c, lib/avcodec/wmadec.c:
+	Updated.
+
 2004-08-16  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.rc: To load such as .bmp.gz and .tar.gz, enable scan
