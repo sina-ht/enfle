@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 24 15:14:17 2004.
- * $Id: avi.c,v 1.7 2004/04/27 12:23:37 sian Exp $
+ * Last Modified: Sat May  1 19:23:46 2004.
+ * $Id: avi.c,v 1.8 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -386,14 +386,18 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	    info->vhandler = ash.fccHandler;
 	    if (info->vhandler == 0)
 	      debug_message_fnc("strh fccHandler == 0\n");
-	    if (ash.dwScale != 0)
+	    if (ash.dwScale != 0) {
 	      info->framerate = (double)ash.dwRate / (double)ash.dwScale;
-	    debug_message_fnc("rate %d / %d scale = %f\n", ash.dwRate, ash.dwScale, info->framerate);
+	      debug_message_fnc("rate %d / %d scale = %f\n", ash.dwRate, ash.dwScale, info->framerate);
+	    }
 	    info->num_of_frames = ash.dwLength;
 	  } else if (ash.fccType == FCC_auds) {
 	    /* XXX: First stream only */
 	    if (demux->nastreams == 0)
 	      info->ahandler = ash.fccHandler;
+	    if (ash.dwScale != 0) {
+	      debug_message_fnc("rate %d / %d scale = %f\n", ash.dwRate, ash.dwScale, (double)ash.dwRate / (double)ash.dwScale);
+	    }
 	  } else {
 	    show_message_fnc("Unknown fccType %X\n", ash.fccType);
 	  }
@@ -498,6 +502,7 @@ demux_main(void *arg)
   Demultiplexer *demux = (Demultiplexer *)arg;
   AVIInfo *info = (AVIInfo *)demux->private_data;
   RIFF_Chunk *rc;
+  //unsigned int nvframe = 0;
 
   if (!info->rf) {
     if (!__examine(demux, 0))
@@ -540,7 +545,10 @@ demux_main(void *arg)
 	if (riff_chunk_get_size(rc) > 0) {
 	  if ((dp = malloc(sizeof(DemuxedPacket))) == NULL)
 	    fatal("%s: No enough memory.\n", __FUNCTION__);
-	  dp->pts = dp->dts = -1;
+	  dp->ts_base = 1000;
+	  dp->pts = -1;
+	  dp->dts = -1; //nvframe * 1000 / info->framerate;
+	  //nvframe++;
 	  dp->size = riff_chunk_get_size(rc);
 	  dp->data = riff_chunk_get_data(rc);
 	  fifo_put(demux->vstream, dp, demultiplexer_destroy_packet);

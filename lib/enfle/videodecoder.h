@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 04:02:13 2004.
- * $Id: videodecoder.h,v 1.4 2004/04/18 06:26:46 sian Exp $
+ * Last Modified: Sat May  1 18:17:02 2004.
+ * $Id: videodecoder.h,v 1.5 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,7 @@
 typedef struct _video_decoder VideoDecoder;
 
 #include "enfle/enfle-plugins.h"
+#include "enfle/demultiplexer.h"
 #include "enfle/movie.h"
 
 typedef enum _video_decoder_status {
@@ -37,17 +38,19 @@ typedef enum _video_decoder_status {
 struct _video_decoder {
   const char *name;
   void *opaque;
+  unsigned long ts_base;
+  unsigned long pts;
   int to_render;
   pthread_mutex_t update_mutex;
   pthread_cond_t update_cond;
 
   int (*setup)(VideoDecoder *, Movie *, Image *, int, int);
-  VideoDecoderStatus (*decode)(VideoDecoder *, Movie *, Image *, unsigned char *, unsigned int, int, unsigned int *);
+  VideoDecoderStatus (*decode)(VideoDecoder *, Movie *, Image *, DemuxedPacket *, unsigned int, unsigned int *);
   void (*destroy)(VideoDecoder *);
 };
 
 #define videodecoder_setup(vdec,m,p,w,h) (vdec)->setup(vdec,m,p,w,h)
-#define videodecoder_decode(vdec,m,p,b,l,k,r) (vdec)->decode(vdec,m,p,b,l,k,r)
+#define videodecoder_decode(vdec,m,p,dp,l,r) (vdec)->decode(vdec,m,p,dp,l,r)
 #define videodecoder_destroy(vdec) (vdec)->destroy(vdec)
 
 /* protected */

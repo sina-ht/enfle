@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 04:01:10 2004.
- * $Id: avcodec.c,v 1.6 2004/04/18 06:26:46 sian Exp $
+ * Last Modified: Sat May  1 19:24:17 2004.
+ * $Id: avcodec.c,v 1.7 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -216,14 +216,15 @@ release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 #endif
 
 static VideoDecoderStatus
-decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, int is_key, unsigned int *used_r)
+decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int len, unsigned int *used_r)
 {
   struct videodecoder_avcodec *vdm = (struct videodecoder_avcodec *)vdec->opaque;
+  unsigned char *buf = dp->data;
   int l;
   int got_picture;
 
   if (vdm->size <= 0) {
-    if (buf == NULL)
+    if (len == 0)
       return VD_NEED_MORE_DATA;
     vdm->buf = buf;
     vdm->offset = 0;
@@ -284,6 +285,8 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int 
       memcpy(memory_ptr(image_rendered_image(p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), vdm->vcodec_picture->data[2] + vdm->vcodec_picture->linesize[2] * y, m->width >> 1);
     }
   }
+  vdec->ts_base = dp->ts_base;
+  vdec->pts = m->current_frame * 1000 / m->framerate;
   vdec->to_render++;
   while (m->status == _PLAY && vdec->to_render > 0)
     pthread_cond_wait(&vdec->update_cond, &vdec->update_mutex);

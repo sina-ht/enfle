@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr 30 04:09:59 2004.
- * $Id: generic.c,v 1.15 2004/04/29 19:13:38 sian Exp $
+ * Last Modified: Sat May  1 21:00:39 2004.
+ * $Id: generic.c,v 1.16 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -357,7 +357,6 @@ play_video(void *arg)
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
   int used;
-  int is_key;
 
   debug_message_fn("()\n");
 
@@ -379,10 +378,9 @@ play_video(void *arg)
   show_message("videodecoder %s\n", m->vdec->name);
 
   vds = VD_NEED_MORE_DATA;
-  is_key = 1;
   while (m->status == _PLAY || m->status == _RESIZING) {
     while ((m->status == _PLAY || m->status == _RESIZING) && vds == VD_OK)
-      vds = videodecoder_decode(m->vdec, m, info->p, NULL, 0, is_key, NULL);
+      vds = videodecoder_decode(m->vdec, m, info->p, dp, 0, NULL);
     if (vds == VD_NEED_MORE_DATA) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
@@ -405,8 +403,7 @@ play_video(void *arg)
       }
 #endif
 
-      is_key = dp->is_key;
-      vds = videodecoder_decode(m->vdec, m, info->p, dp->data, dp->size, is_key, &used);
+      vds = videodecoder_decode(m->vdec, m, info->p, dp, dp->size, &used);
       if (used != dp->size)
 	warning_fnc("videodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
     } else {
@@ -435,6 +432,8 @@ play_audio(void *arg)
   generic_info *info = (generic_info *)m->movie_private;
   AudioDecoderStatus ads;
   void *data;
+  unsigned char *p;
+  unsigned int remain;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
   int used;
@@ -468,21 +467,31 @@ play_audio(void *arg)
   show_message("audiodecoder %s\n", m->adec->name);
 
   ads = AD_OK;
+  remain = 0;
   while (m->status == _PLAY || m->status == _RESIZING) {
     while ((m->status == _PLAY || m->status == _RESIZING) && ads == AD_OK)
       ads = audiodecoder_decode(m->adec, m, ad, NULL, 0, NULL);
     if (ads == AD_NEED_MORE_DATA) {
-      if (!fifo_get(info->astream, &data, &destructor)) {
-	debug_message_fnc("fifo_get() failed.\n");
-	goto quit;
+      if (remain == 0) {
+	if (!fifo_get(info->astream, &data, &destructor)) {
+	  debug_message_fnc("fifo_get() failed.\n");
+	  goto quit;
+	}
+	if (dp)
+	  destructor(dp);
+	dp = (DemuxedPacket *)data;
+	p = dp->data;
+	remain = dp->size;
       }
-      if (dp)
-	destructor(dp);
-      dp = (DemuxedPacket *)data;
+#if 0
+      else {
+	debug_message_fnc("Use remaining %d bytes\n", remain);
+      }
+#endif
 
-      ads = audiodecoder_decode(m->adec, m, ad, dp->data, dp->size, &used);
-      if (used != dp->size)
-	warning_fnc("audiodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
+      ads = audiodecoder_decode(m->adec, m, ad, p, remain, &used);
+      remain -= used;
+      p += used;
     } else {
       err_message_fnc("audiodecoder_decode returned %d\n", ads);
       break;
@@ -582,9 +591,19 @@ play_main(Movie *m, VideoWindow *vw)
     info->if_initialized++;
   }
 
-  video_time = m->current_frame * 1000 / m->framerate;
+  if (m->vdec->ts_base == 0) {
+    /* videodecoder didn't provide pts */
+    video_time = m->current_frame * 1000 / m->framerate;
+  } else if (m->vdec->ts_base == 1000) {
+    /* videodecoder provided pts in milli-seconds */
+    video_time = m->vdec->pts;
+  } else {
+    /* generic form */
+    video_time = m->vdec->pts * 1000.0 / m->vdec->ts_base;
+  }
+
   if (m->has_audio == 1 && info->ad) {
-    //debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, get_audio_time(m, info->ad));
+    debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, get_audio_time(m, info->ad));
     if ((diff_time = video_time - get_audio_time(m, info->ad)) >= 0) {
       /* if too fast to display, wait before render */
 #if 1

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 04:00:49 2004.
- * $Id: raw.c,v 1.4 2004/04/18 06:26:46 sian Exp $
+ * Last Modified: Sat May  1 19:24:41 2004.
+ * $Id: raw.c,v 1.5 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,12 +70,13 @@ ENFLE_PLUGIN_EXIT(videodecoder_raw, p)
 /* videodecoder plugin methods */
 
 static VideoDecoderStatus
-decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, int is_key, unsigned int *used_r)
+decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int len, unsigned int *used_r)
 {
   //struct videodecoder_raw *vdm = (struct videodecoder_raw *)vdec->opaque;
+  unsigned char *buf = dp->data;
   int i;
 
-  if (buf == NULL)
+  if (len == 0)
     return VD_NEED_MORE_DATA;
   *used_r = len;
 
@@ -95,6 +96,8 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int 
   }
 
   m->current_frame++;
+  vdec->ts_base = dp->ts_base;
+  vdec->pts = m->current_frame * 1000 / m->framerate;
   vdec->to_render++;
   while (m->status == _PLAY && vdec->to_render > 0)
     pthread_cond_wait(&vdec->update_cond, &vdec->update_mutex);

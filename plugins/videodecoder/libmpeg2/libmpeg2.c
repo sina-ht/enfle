@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 04:00:58 2004.
- * $Id: libmpeg2.c,v 1.7 2004/04/18 06:26:46 sian Exp $
+ * Last Modified: Sat May  1 19:31:40 2004.
+ * $Id: libmpeg2.c,v 1.8 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,12 +71,13 @@ ENFLE_PLUGIN_EXIT(videodecoder_libmpeg2, p)
 /* videodecoder plugin methods */
 
 static VideoDecoderStatus
-decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, int is_key, unsigned int *used_r)
+decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int len, unsigned int *used_r)
 {
   struct videodecoder_libmpeg2 *vdm = (struct videodecoder_libmpeg2 *)vdec->opaque;
   mpeg2_state_t state;
   const mpeg2_info_t *mpeg2dec_info;
   const mpeg2_sequence_t *seq;
+  unsigned char *buf = dp->data;
   int size;
 
   state = mpeg2_parse(vdm->mpeg2dec);
@@ -85,14 +86,16 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int 
 
   switch (state) {
   case STATE_BUFFER:
-    if (buf == NULL)
+    if (len == 0)
       return VD_NEED_MORE_DATA;
+    mpeg2_tag_picture(vdm->mpeg2dec, dp->pts, dp->dts);
     mpeg2_buffer(vdm->mpeg2dec, buf, buf + len);
     if (used_r)
       *used_r = len;
-    /* dp->data should not be freed until all data in dp->data is used. */
+    /* buf (== dp->data) should not be freed until all data in dp->data is used. */
     break;
   case STATE_SEQUENCE:
+    debug_message_fnc("STATE_SEQUENCE\n");
     size = seq->width * seq->height + seq->chroma_width * seq->chroma_height * 2;
     if (m->width == 0) {
       m->width = seq->width;
@@ -115,12 +118,33 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int 
       memcpy(memory_ptr(image_rendered_image(p)) + seq->width * seq->height + seq->chroma_width * seq->chroma_height, mpeg2dec_info->display_fbuf->buf[2], seq->chroma_width * seq->chroma_height);
       vdec->to_render++;
       m->current_frame++;
+#if 1
+      vdec->ts_base = 1000;
+      vdec->pts = m->current_frame * 1000 / m->framerate;
+#else
+      {
+	const mpeg2_picture_t *mpeg2_pic = mpeg2dec_info->display_picture;
+	vdec->ts_base = 0;
+	if (mpeg2_pic) {
+	  vdec->ts_base = dp->ts_base;
+	  vdec->pts = mpeg2_pic->tag;
+#if defined(DEBUG)
+	  debug_message_fnc("pts %d, dts %d, type ", mpeg2_pic->tag, mpeg2_pic->tag2);
+	  switch (mpeg2_pic->flags & PIC_MASK_CODING_TYPE) {
+	  case 1: debug_message("I\n"); break;
+	  case 2: debug_message("P\n"); break;
+	  case 3: debug_message("B\n"); break;
+	  case 4: debug_message("D\n"); break;
+	  default: debug_message("?\n"); break;
+	  }
+#endif
+	}
+      }
+#endif
       while (m->status == _PLAY && vdec->to_render > 0)
 	pthread_cond_wait(&vdec->update_cond, &vdec->update_mutex);
       pthread_mutex_unlock(&vdec->update_mutex);
     }
-    /* XXX: skip */
-    //mpeg2_skip(info->mpeg2dec, info->to_skip);
     break;
   case STATE_SEQUENCE_REPEATED:
   case STATE_GOP:

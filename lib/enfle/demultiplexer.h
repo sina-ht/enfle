@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 24 15:19:36 2004.
- * $Id: demultiplexer.h,v 1.5 2004/04/27 12:23:37 sian Exp $
+ * Last Modified: Sat May  1 17:49:37 2004.
+ * $Id: demultiplexer.h,v 1.6 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,7 +29,6 @@ typedef struct _demultiplexer Demultiplexer;
 
 #include "enfle-plugins.h"
 #include "stream.h"
-#include "movie.h"
 #include "utils/libconfig.h"
 #include "utils/fifo.h"
 
@@ -103,6 +102,8 @@ typedef struct _demuxed_packet {
 /* protected */
 Demultiplexer *_demultiplexer_create(void);
 void _demultiplexer_destroy(Demultiplexer *);
+
+#include "movie.h"
 
 int demultiplexer_identify(EnflePlugins *, Movie *, Stream *, Config *);
 Demultiplexer *demultiplexer_examine(EnflePlugins *, char *, Movie *, Stream *, Config *);

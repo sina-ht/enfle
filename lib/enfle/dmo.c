@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 29 15:57:07 2004.
- * $Id: dmo.c,v 1.4 2004/04/29 19:12:44 sian Exp $
+ * Last Modified: Sat May  1 18:20:03 2004.
+ * $Id: dmo.c,v 1.5 2004/05/15 04:10:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -303,23 +303,24 @@ CMediaBufferCreate(unsigned long maxlen, void *mem, unsigned long len, int copy)
 // methods
 
 static VideoDecoderStatus
-vd_decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, int is_key, unsigned int *used_r)
+vd_decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int len, unsigned int *used_r)
 {
   DMOVideoDecoder *vdm = (DMOVideoDecoder *)vdec->opaque;
   CMediaBuffer *mb;
   HRESULT res;
   DMO_OUTPUT_DATA_BUFFER db;
+  unsigned char *buf = dp->data;
   unsigned long status;
 
-  if (buf == NULL)
+  if (len == 0)
     return VD_NEED_MORE_DATA;
 
-  //debug_message_fn("(%p,buf = %p, len = %d, is_key = %d)\n", vdec, buf, len, is_key);
+  //debug_message_fn("(%p,buf = %p, len = %d, is_key = %d)\n", vdec, buf, len, dp->is_key);
 
   mb = CMediaBufferCreate(len, (void *)buf, len, 0);
   *used_r = len;
 
-  res = vdm->mo->vt->ProcessInput(vdm->mo, 0, (IMediaBuffer *)mb, is_key, 0, 0);
+  res = vdm->mo->vt->ProcessInput(vdm->mo, 0, (IMediaBuffer *)mb, dp->is_key, 0, 0);
   ((IMediaBuffer *)mb)->vt->Release((IUnknown *)mb);
   if (res != S_OK) {
     if (res == S_FALSE)
@@ -361,6 +362,7 @@ vd_decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned i
 
   pthread_mutex_lock(&vdec->update_mutex);
 
+  vdec->ts_base = 0; /* XXX: set vdec->pts. */
   vdec->to_render++;
   while (m->status == _PLAY && vdec->to_render > 0)
     pthread_cond_wait(&vdec->update_cond, &vdec->update_mutex);
