@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 19 21:34:30 2002.
- * $Id: hash.c,v 1.16 2002/08/19 12:51:23 sian Exp $
+ * Last Modified: Thu Sep  5 23:20:48 2002.
+ * $Id: hash.c,v 1.17 2002/09/05 14:37:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,20 +86,24 @@ hash_create(int size)
   Hash *h;
   Hash_data *d;
 
-  if ((h = (Hash *)calloc(1, sizeof(Hash))) == NULL)
+  h = (Hash *)calloc(1, sizeof(Hash));
+  if (unlikely(h == NULL))
     return NULL;
   memcpy(h, &hash_template, sizeof(Hash));
 
-  if ((h->data = (Hash_data **)calloc(size, sizeof(Hash_data *))) == NULL)
+  h->data = (Hash_data **)calloc(size, sizeof(Hash_data *));
+  if (unlikely(h->data ==NULL))
     goto error_h;
 
-  if ((d = (Hash_data *)calloc(size, sizeof(Hash_data))) == NULL)
+  d = (Hash_data *)calloc(size, sizeof(Hash_data));
+  if (unlikely(d == NULL))
     goto error_data;
 
   for (i = 0; i < size; i++)
     h->data[i] = d++;
 
-  if ((h->keys = dlist_create()) == NULL)
+  h->keys = dlist_create();
+  if (unlikely(h->keys == NULL))
     goto error_d;
 
   h->size = size;
@@ -116,29 +120,44 @@ static unsigned int
 lookup_internal(Hash *h, void *k, unsigned int len, int flag)
 {
   int count = 0;
-  unsigned int hash = h->hash_function(k, len) % h->size;
-  unsigned int skip = h->hash_function2(k, len);
+  unsigned int hash, skip;
   Hash_key *hk;
+  Dlist_data *dd;
 
-  do {
-    if (h->data[hash]->key == HASH_DESTROYED_KEY) {
+  hash = h->hash_function(k, len) % h->size;
+  dd = h->data[hash]->key;
+  if (dd == HASH_DESTROYED_KEY) {
+    if (flag == HASH_LOOKUP_ACCEPT_DELETED)
+      return hash;
+  } else {
+    if (dd == NULL)
+      return hash;
+    hk = dlist_data(dd);
+    if (hk->len == len && memcmp(hk->key, k, len) == 0)
+      return hash;
+  }
+
+  skip = h->hash_function2(k, len);
+  hash = (hash + skip) % h->size;
+
+  for (;;) {
+    dd = h->data[hash]->key;
+    if (dd == HASH_DESTROYED_KEY) {
       if (flag == HASH_LOOKUP_ACCEPT_DELETED)
 	break;
-      hash = (hash + skip) % h->size;
-    } else if (!h->data[hash]->key) {
-      /* found empty */
-      break;
-    } else if ((hk = dlist_data(h->data[hash]->key)) &&
-	       hk->len == len && (memcmp(hk->key, k, len) == 0)) {
-      break;
     } else {
-      hash = (hash + skip) % h->size;
+      if (dd == NULL)
+	break;
+      hk = dlist_data(dd);
+      if (hk->len == len && memcmp(hk->key, k, len) == 0)
+	break;
     }
+    hash = (hash + skip) % h->size;
     count++;
 
     bug_on(count > 100000);
 
-  } while (1);
+  }
 
   return hash;
 }
@@ -148,12 +167,16 @@ hash_key_create(void *k, unsigned int len)
 {
   Hash_key *hk;
 
-  if ((hk = malloc(sizeof(Hash_key))) == NULL)
+  hk = malloc(sizeof(Hash_key));
+  if (unlikely(hk == NULL))
     return NULL;
-  if ((hk->key = malloc(len)) == NULL) {
+
+  hk->key = malloc(len);
+  if (unlikely(hk->key == NULL)) {
     free(hk);
     return NULL;
   }
+
   memcpy(hk->key, k, len);
   hk->len = len;
 
@@ -195,9 +218,12 @@ hash_define_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destru
   if (h->data[i]->key != NULL && h->data[i]->key != HASH_DESTROYED_KEY)
     return -1; /* already registered */
 
-  if ((hk = hash_key_create(k, len)) == NULL)
+  hk = hash_key_create(k, len);
+  if (unlikely(hk == NULL))
     return 0;
-  if ((h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy)) == NULL) {
+
+  h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy);
+  if (unlikely(h->data[i]->key == NULL)) {
     hash_key_destroy(hk);
     return 0;
   }
@@ -234,9 +260,11 @@ hash_set_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destructo
   Hash_key *hk;
 
   if (h->data[i]->key == NULL || h->data[i]->key == HASH_DESTROYED_KEY) {
-    if ((hk = hash_key_create(k, len)) == NULL)
+    hk = hash_key_create(k, len);
+    if (unlikely(hk == NULL))
       return 0;
-    if ((h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy)) == NULL) {
+    h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy);
+    if (unlikely(h->data[i]->key == NULL)) {
       hash_key_destroy(hk);
       return 0;
     }
@@ -285,7 +313,7 @@ destroy_datum(Hash *h, int i)
   if (d->key == HASH_DESTROYED_KEY)
     return 0;
   if (d->key != NULL) {
-    if (!dlist_delete(h->keys, d->key))
+    if (unlikely(!dlist_delete(h->keys, d->key)))
       return 0;
     d->key = HASH_DESTROYED_KEY;
   }
@@ -302,7 +330,7 @@ hash_delete(Hash *h, void *k, unsigned int len)
   if (h->data[i]->key == NULL)
     return 0;
 
-  if (!destroy_datum(h, i))
+  if (unlikely(!destroy_datum(h, i)))
     return 0;
 
   return 1;
