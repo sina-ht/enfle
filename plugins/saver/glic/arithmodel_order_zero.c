@@ -2,7 +2,7 @@
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Fri Feb 22 17:51:48 2002.
- * $Id: arithmodel_order_zero.c,v 1.17 2002/02/22 17:40:47 sian Exp $
+ * $Id: arithmodel_order_zero.c,v 1.18 2003/02/05 15:19:41 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -251,7 +251,7 @@ common_init(Arithmodel *_am, Arithcoder *ac)
   Arithmodel_order_zero *am = AMOZ(_am);
 
   if (am->freq)
-    fatal(1, "%s: am->freq != NULL\n", __FUNCTION__);
+    fatal("%s: am->freq != NULL\n", __FUNCTION__);
 
   am->ac = ac;
 
@@ -290,11 +290,11 @@ encode_bulk(Arithmodel *_am, Index idx, Index low, Index high, int use_range)
   Arithmodel_order_zero *am = AMOZ(_am);
 
   if (am->nsymbols < idx)
-    fatal(2, "%s: nsymbols %d < %d idx, start = %d, low = %d, high = %d\n", __FUNCTION__, am->nsymbols, idx, am->start_symbol, low, high);
+    fatal("%s: nsymbols %d < %d idx, start = %d, low = %d, high = %d\n", __FUNCTION__, am->nsymbols, idx, am->start_symbol, low, high);
 
   if (am->nsymbols == idx) {
     if (use_range)
-      fatal(4, "%s: nsymbols %d == %d idx, when use_range is true.\n", __FUNCTION__, am->nsymbols, idx);
+      fatal("%s: nsymbols %d == %d idx, when use_range is true.\n", __FUNCTION__, am->nsymbols, idx);
     if (IS_ESCAPE_INSTALLED(am)) {
       if (am->escape_encoded_with_rle) {
 	am->escape_run++;
@@ -304,7 +304,7 @@ encode_bulk(Arithmodel *_am, Index idx, Index low, Index high, int use_range)
       install_symbol(_am, 1);
       return 2;
     } else {
-      fatal(3, "%s: nsymbols %d == %d idx, but escape disabled\n", __FUNCTION__, am->nsymbols, idx);
+      fatal("%s: nsymbols %d == %d idx, but escape disabled\n", __FUNCTION__, am->nsymbols, idx);
     }
   }
 
@@ -398,11 +398,11 @@ decode_bulk(Arithmodel *_am, Index *index_return, Index low, Index high)
     idx = right;
     if (idx == low) {
       if (am->freq[low] <= freq)
-	fatal(6, "%s: Invalid selection of symbol: idx = %d, freq = %d, freq[%d] = %d\n", __FUNCTION__,
+	fatal("%s: Invalid selection of symbol: idx = %d, freq = %d, freq[%d] = %d\n", __FUNCTION__,
 	      low, freq, low, am->freq[low]);
     } else {
       if (am->freq[idx - 1] > freq || am->freq[idx] <= freq)
-	fatal(6, "%s: Invalid selection of symbol: idx = %d, freq = %d, freq[idx - 1] = %d, freq[idx] = %d\n", __FUNCTION__, idx, freq, am->freq[idx - 1], am->freq[idx]);
+	fatal("%s: Invalid selection of symbol: idx = %d, freq = %d, freq[idx - 1] = %d, freq[idx] = %d\n", __FUNCTION__, idx, freq, am->freq[idx - 1], am->freq[idx]);
     }
   }
 

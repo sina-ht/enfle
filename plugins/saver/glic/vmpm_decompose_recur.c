@@ -2,7 +2,7 @@
  * vmpm_decompose_recur.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:51:05 2001.
- * $Id: vmpm_decompose_recur.c,v 1.6 2001/12/26 00:57:24 sian Exp $
+ * $Id: vmpm_decompose_recur.c,v 1.7 2003/02/05 15:19:41 sian Exp $
  */
 
 #include <stdio.h>
@@ -164,7 +164,7 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel **bin_ams, unsigned 
     return 1;
   }
 
-  fatal(254, "nsymbols = %d < %d = tv\n", arithmodel_order_zero_nsymbols(ams[i]), tv);
+  fatal("nsymbols = %d < %d = tv\n", arithmodel_order_zero_nsymbols(ams[i]), tv);
 }
 
 static void
@@ -270,7 +270,7 @@ decode(VMPM *vmpm)
   unsigned int j;
 
   //debug_message_fn("()\n");
-  fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
+  fatal("DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
   arithcoder_decode_init(ac, vmpm->infile);

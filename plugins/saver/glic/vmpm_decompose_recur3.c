@@ -2,7 +2,7 @@
  * vmpm_decompose_recur3.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:53:05 2001.
- * $Id: vmpm_decompose_recur3.c,v 1.4 2001/12/26 00:57:24 sian Exp $
+ * $Id: vmpm_decompose_recur3.c,v 1.5 2003/02/05 15:19:41 sian Exp $
  */
 
 #include <stdio.h>
@@ -140,7 +140,7 @@ calc_lowest_level(VMPM *vmpm, Arithmodel **ams, int pos)
       return i;
     }
     if (ndtokens > max)
-      fatal(254, "ndtokens == %d > %d == max\n", ndtokens, max);
+      fatal("ndtokens == %d > %d == max\n", ndtokens, max);
     //debug_message_fnc("ndtokens == %d == %d == ipow(%d, %d)\n", ndtokens, max, vmpm->alphabetsize, rpow);
     rpow *= vmpm->r;
   }
@@ -172,7 +172,7 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel 
 
     //debug_message_fnc("level %d, lowest %d, highest %d, pos %d\n", i, lowest, highest, pos);
     if (!arithmodel_order_zero_encode_with_range(level_am, i, lowest, highest))
-      fatal(5, "%s: arithmodel_order_zero_encode_with_range() failed.\n", __FUNCTION__);
+      fatal("%s: arithmodel_order_zero_encode_with_range() failed.\n", __FUNCTION__);
     nsymbols = arithmodel_order_zero_nsymbols(ams[0]);
     if (s_to_i[(int)vmpm->token[0][j]] == (unsigned int)-1) {
       arithmodel_encode(ams[0], nsymbols);
@@ -195,7 +195,7 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel 
       /* Found. Encode at this level. */
       stat_message(vmpm, "(%d,%d)", i, tv);
       if (!arithmodel_order_zero_encode_with_range(level_am, i, lowest, highest))
-	fatal(5, "%s: arithmodel_order_zero_encode_with_range() failed.\n", __FUNCTION__);
+	fatal("%s: arithmodel_order_zero_encode_with_range() failed.\n", __FUNCTION__);
       arithmodel_encode(ams[i], tv);
       len = ipow(vmpm->r, i);
     } else if (arithmodel_order_zero_nsymbols(ams[i]) == tv) {
@@ -208,7 +208,7 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel 
 	len += encode_recursively(vmpm, ams, bin_am, level_am, s_to_i, i - 1, tv * vmpm->r + k, pos + len);
       return len;
     } else {
-      fatal(254, "nsymbols = %d < %d = tv\n", arithmodel_order_zero_nsymbols(ams[i]), tv);
+      fatal("nsymbols = %d < %d = tv\n", arithmodel_order_zero_nsymbols(ams[i]), tv);
     }
   }
 
@@ -324,7 +324,7 @@ decode(VMPM *vmpm)
   unsigned int j;
 
   //debug_message_fn("()\n");
-  fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
+  fatal("DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
   arithcoder_decode_init(ac, vmpm->infile);

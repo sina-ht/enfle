@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.14 2002/08/03 05:08:37 sian Exp $
+# $Id: Makefile.am,v 1.15 2003/02/05 15:19:41 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC"; else echo -n ""; fi)
@@ -47,6 +47,7 @@ saver_glic_la_SOURCES = \
 	expand.c expand.h \
 	threshold.c threshold.h \
 	vmpm_decompose.c vmpm_decompose.h \
+	vmpm_error.c vmpm_error.h \
 	vmpm.h
 
 COMMON_FILES = ipow.c ipow.h vmpm_hash.c vmpm_hash.h vmpm_error.c vmpm_error.h

@@ -2,7 +2,7 @@
  * vmpm_decompose_escb.c -- ESC estimation method B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:49:18 2001.
- * $Id: vmpm_decompose_escb.c,v 1.12 2001/12/26 00:57:25 sian Exp $
+ * $Id: vmpm_decompose_escb.c,v 1.13 2003/02/05 15:19:41 sian Exp $
  */
 
 #include <stdio.h>
@@ -281,7 +281,7 @@ decode(VMPM *vmpm)
   unsigned int j;
 
   //debug_message_fn("()\n");
-  fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
+  fatal("DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
   arithcoder_decode_init(ac, vmpm->infile);
