@@ -1,10 +1,10 @@
 /*
  * player.c -- player plugin interface
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:38:39 2001.
- * $Id: player.c,v 1.14 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Fri Feb  8 02:12:03 2002.
+ * $Id: player.c,v 1.15 2002/02/08 10:53:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,8 @@
 
 #define REQUIRE_FATAL
 #include "common.h"
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "player.h"
 #include "player-plugin.h"
@@ -36,7 +38,7 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
   PluginList *pl;
   Plugin *p;
   PlayerPlugin *pp;
-  char *ext, *pluginname;
+  char *ext, *pluginlist, *pluginname, **pluginnames;
 
   pl = eps->pls[ENFLE_PLUGIN_PLAYER];
 
@@ -45,23 +47,31 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
 
     s = string_create();
     string_catf(s, "/enfle/plugins/player/assoc/%s", ext);
-    pluginname = config_get_str(c, string_get(s));
+    pluginlist = config_get_str(c, string_get(s));
     string_destroy(s);
-    if (pluginname) {
-      if ((p = pluginlist_get(pl, pluginname))) {
-	pp = plugin_get(p);
-	stream_rewind(st);
-	debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
-	free(ext);
-	if (pp->identify(m, st, c, NULL) == PLAY_OK) {
-	  m->format = pluginname;
-	  return 1;
+    pluginnames = misc_str_split(pluginlist, ':');
+    if (pluginnames) {
+      int i;
+
+      i = 0;
+      while ((pluginname = pluginnames[i])) {
+	if ((p = pluginlist_get(pl, pluginname))) {
+	  pp = plugin_get(p);
+	  stream_rewind(st);
+	  debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
+	  if (pp->identify(m, st, c, NULL) == PLAY_OK) {
+	    m->format = strdup(pluginname);
+	    free(ext);
+	    misc_free_str_array(pluginnames);
+	    return 1;
+	  }
+	  debug_message_fnc("%s failed.\n", pluginname);
+	} else {
+	  show_message_fnc("%s (assoc'd with %s) not found.\n", pluginname, ext);
 	}
-	debug_message_fnc("%s failed.\n", pluginname);
-	return 0;
-      } else {
-	show_message_fnc("%s (assoc'd with %s) not found.\n", pluginname, ext);
+	i++;
       }
+      misc_free_str_array(pluginnames);
     }
     free(ext);
   }

@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Nov 17 11:53:13 2001.
-; $Id: enfle.rc,v 1.25 2001/11/17 03:50:24 sian Exp $
+; Last Modified: Fri Feb  8 02:19:54 2002.
+; $Id: enfle.rc,v 1.26 2002/02/08 10:53:54 sian Exp $
 
 enfle {
   identify {
@@ -34,6 +34,7 @@ enfle {
 	;caption_template = "%p %f %xx%y"
         ; disable archiver plugin
         ;archiver/disabled = yes
+	;
 	show_comment = no
       }
       wallpaper {
@@ -126,21 +127,21 @@ enfle {
       assoc {
         gif = UNGIF
         mng = MNG
-        mpg = LibMPEG2
-        mpeg = LibMPEG2
-        mp3 = Mpglib
+        mpg = LibMPEG2:LibMPEG3:MPEG_lib
+        mpeg = LibMPEG2:LibMPEG3:MPEG_lib
         m1v = MPEG_lib
+        mp3 = Mpglib
+	avi = AviFile:OpenDivX
+	asf = AviFile
       }
       ; video only stream may be played by mpeg_lib.
-      ; in this case, if you'd like to use libmpeg3 instead of mpeg_lib,
-      ; uncomment this.
       ; system stream(including video and audio) will be played by libmpeg3.
       ; mpeg_lib won't play all such streams.
       MPEG_lib/disabled = yes
       ; libmpeg2 and libmpeg3 both can play mpeg movies.
-      ; You should choose one of these.
+      ; You may choose one of these.
       ;LibMPEG2/disabled = yes
-      LibMPEG3/disabled = yes
+      ;LibMPEG3/disabled = yes
     }
   }
 }

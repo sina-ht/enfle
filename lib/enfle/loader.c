@@ -1,10 +1,10 @@
 /*
  * loader.c -- loader plugin interface
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:37:48 2001.
- * $Id: loader.c,v 1.17 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Fri Feb  8 02:11:55 2002.
+ * $Id: loader.c,v 1.18 2002/02/08 10:53:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,8 @@
 
 #define REQUIRE_FATAL
 #include "common.h"
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "loader.h"
 #include "loader-plugin.h"
@@ -36,32 +38,40 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
   PluginList *pl;
   Plugin *p;
   LoaderPlugin *lp;
-  char *ext, *pluginname;
+  char *ext, *pluginlist, *pluginname, **pluginnames;
 
   pl = eps->pls[ENFLE_PLUGIN_LOADER];
 
-  if ((ext = misc_get_ext(st->path, 1))) {
+  if ((ext = misc_str_tolower(misc_get_ext(st->path, 1)))) {
     String *s;
 
     s = string_create();
     string_catf(s, "/enfle/plugins/loader/assoc/%s", ext);
-    pluginname = config_get_str(c, string_get(s));
+    pluginlist = config_get_str(c, string_get(s));
     string_destroy(s);
-    if (pluginname) {
-      if ((p = pluginlist_get(pl, pluginname))) {
-	lp = plugin_get(p);
-	stream_rewind(st);
-	//debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
-	free(ext);
-	if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
-	  ip->format = pluginname;
-	  return 1;
+    pluginnames = misc_str_split(pluginlist, ':');
+    if (pluginnames) {
+      int i;
+
+      i = 0;
+      while ((pluginname = pluginnames[i])) {
+	if ((p = pluginlist_get(pl, pluginname))) {
+	  lp = plugin_get(p);
+	  stream_rewind(st);
+	  debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
+	  if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
+	    ip->format = strdup(pluginname);
+	    free(ext);
+	    misc_free_str_array(pluginnames);
+	    return 1;
+	  }
+	  debug_message_fnc("%s failed.\n", pluginname);
+	} else {
+	  show_message_fnc("%s (assoc'd with %s) not found.\n", pluginname, ext);
 	}
-	debug_message_fnc("%s failed.\n", pluginname);
-	return 0;
-      } else {
-	show_message_fnc("%s (assoc'd with %s) not found.\n", pluginname, ext);
+	i++;
       }
+      misc_free_str_array(pluginnames);
     }
     free(ext);
   }
@@ -75,9 +85,7 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
     lp = plugin_get(p);
 
     stream_rewind(st);
-
     //debug_message_fnc("try %s\n", pluginname);
-
     if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
       ip->format = pluginname;
       dlist_move_to_top(dl, dd);
