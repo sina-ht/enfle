@@ -1,4 +1,15 @@
+2003-12-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* plugins/saver/png/png.c: Use image_bpl().
+
+	* lib/avcodec/error_resilience.c: Updated.
+
 2003-12-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11window.c, lib/enfle/image.h,
+	lib/utils/timer_gettimeofday.c: Commited various changes.
 
 	* configure.in: Version up.
 
