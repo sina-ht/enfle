@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:09:20 2002.
- * $Id: x11.h,v 1.16 2002/02/17 19:32:58 sian Exp $
+ * Last Modified: Sat Jun  1 01:43:21 2002.
+ * $Id: x11.h,v 1.17 2002/06/13 14:32:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,12 +31,20 @@
 #define XV_YV12 1
 #define XV_I420 2
 #define XV_UYVY 3
-#define XV_FORMAT_MAX 4
+#define XV_RV15 4
+#define XV_RV16 5
+#define XV_RV24 6
+#define XV_RV32 7
+#define XV_FORMAT_MAX 8
 
 #define XV_YUY2_FLAG (1 << XV_YUY2)
 #define XV_YV12_FLAG (1 << XV_YV12)
 #define XV_I420_FLAG (1 << XV_I420)
 #define XV_UYVY_FLAG (1 << XV_UYVY)
+#define XV_RV15_FLAG (1 << XV_RV15)
+#define XV_RV16_FLAG (1 << XV_RV16)
+#define XV_RV24_FLAG (1 << XV_RV24)
+#define XV_RV32_FLAG (1 << XV_RV32)
 
 typedef struct _x11_xv {
   unsigned int ver, rev, req_base, ev_base, err_base;

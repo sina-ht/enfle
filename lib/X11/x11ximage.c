@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Mar 21 10:31:30 2002.
- * $Id: x11ximage.c,v 1.45 2002/03/21 01:32:07 sian Exp $
+ * Last Modified: Thu Jun 13 23:31:31 2002.
+ * $Id: x11ximage.c,v 1.46 2002/06/13 14:32:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -219,11 +219,51 @@ convert(X11XImage *xi, Image *p)
       fatal(4, "Xv cannot display UYVY...\n");
     }
     break;
+  case _RV15:
+    //debug_message("Image provided in RV15.\n");
+    if (xi->x11->xv->capable_format & XV_RV15_FLAG) {
+      t = XV_RV15;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display RV15...\n");
+    }
+    break;
+  case _RV16:
+    //debug_message("Image provided in RV16.\n");
+    if (xi->x11->xv->capable_format & XV_RV16_FLAG) {
+      t = XV_RV16;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display RV16...\n");
+    }
+    break;
+  case _RV24:
+    debug_message("Image provided in RV24.\n");
+    if (xi->x11->xv->capable_format & XV_RV24_FLAG) {
+      t = XV_RV24;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display RV24...\n");
+    }
+    break;
+  case _RV32:
+    //debug_message("Image provided in RV32.\n");
+    if (xi->x11->xv->capable_format & XV_RV32_FLAG) {
+      t = XV_RV32;
+      xi->use_xv = 1;
+    } else {
+      fatal(4, "Xv cannot display RV32...\n");
+    }
+    break;
 #else
   case _YUY2:
   case _YV12:
   case _I420:
   case _UYVY:
+  case _RV15:
+  case _RV16:
+  case _RV24:
+  case _RV32:
     fatal(4, "Xv cannot display ...\n");
     break;
 #endif
@@ -801,10 +841,13 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
 #endif /* USE_PTHREAD */
   } else {
 #endif /* USE_SHM */
-    if (xi->xvimage)
+    if (xi->xvimage) {
       if (xi->xvimage->width >= (int)sw && xi->xvimage->height >= (int)sh) {
 	XvPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
+      } else {
+	show_message_fnc("width %d <=> %d sw, height %d <=> %d sh\n", xi->xvimage->width, sw, xi->xvimage->height, sh);
       }
+    }
 #ifdef USE_SHM
   }
 #endif
