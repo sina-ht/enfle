@@ -1,4 +1,11 @@
-2002-08-03 Hiroshi Takekawa <sian@fennel.org>
+2002-08-04  Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/enfle/Makefile.am, plugins/player/avifile/Makefile.am: Added
+	new files.
+
+	* src/enfle.rc: Sorted in alphabetical order.
+
+2002-08-03  Hiroshi Takekawa <sian@fennel.org>
 
 	* lib/enfle/loader.c: Clear format_detail.
 
