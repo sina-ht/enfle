@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 24 06:14:21 2000.
- * $Id: oss.c,v 1.3 2000/12/24 15:17:41 sian Exp $
+ * Last Modified: Tue Dec 26 13:41:34 2000.
+ * $Id: oss.c,v 1.4 2000/12/27 19:04:40 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -39,6 +39,9 @@
 #  ifdef HAVE_MACHINE_SOUNDCARD_H
 #    include <machine/soundcard.h>
 #  endif
+#endif
+#ifndef SNDCTL_DSP_CHANNELS
+#  define SNDCTL_DSP_CHANNELS SNDCTL_DSP_STEREO
 #endif
 
 #include "common.h"
