@@ -1,3 +1,12 @@
+2001-06-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11.c, lib/X11/x11.h: More decoding and printing Xv
+	information.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c,
+	plugins/player/libmpeg2/libmpeg2.c: Decode pts and dts when
+	demultiplexing and send them to player plugins.
+
 2001-06-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, lib/X11/Makefile.am, lib/X11/x11.c, lib/X11/x11.h,
