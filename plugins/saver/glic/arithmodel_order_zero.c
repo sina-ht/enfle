@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Sep 13 13:59:49 2001.
- * $Id: arithmodel_order_zero.c,v 1.10 2001/09/13 12:10:44 sian Exp $
+ * Last Modified: Fri Sep 14 11:49:25 2001.
+ * $Id: arithmodel_order_zero.c,v 1.11 2001/09/16 23:07:48 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -440,6 +440,13 @@ decode_with_range(Arithmodel *_am, Index *index_return, Index low, Index high)
 {
   Index bulk;
   int result;
+
+  if (low > high)
+    return 0;
+  if (low == high) {
+    *index_return = low;
+    return 1;
+  }
 
   if ((result = decode_bulk(_am, &bulk, low + AMOZ_START_SYMBOL(_am), high + AMOZ_START_SYMBOL(_am))))
     *index_return = bulk - AMOZ_START_SYMBOL(_am);
