@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed Jan 28 02:10:09 2004.
-dnl $Id: configure.in,v 1.136 2004/01/30 12:42:02 sian Exp $
+dnl Last Modified: Sat Feb 14 14:32:25 2004.
+dnl $Id: configure.in,v 1.137 2004/02/14 05:32:57 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20040128, sian@big.or.jp)
+AC_INIT(enfle, 20040214, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -65,7 +65,7 @@ fi
 
 dnl plugin enablers
 
-Plugins_dirs="loader saver video audio ui player effect archiver streamer audiodecoder videodecoder"
+Plugins_dirs="loader saver video audio ui player effect archiver streamer audiodecoder videodecoder demultiplexer"
 Plugins=""
 dnl recognize available plugins
 echo -n "checking for available plugins... "
@@ -101,20 +101,27 @@ LIBADD_POW=-lm
 
 available_jpeg=no
 AC_CHECK_HEADER(jpeglib.h, [
-dnl   if test "${available_mmxjpeg}" = "yes"; then
-dnl     available_jpeg=yes
-dnl     LIBADD_JPEG=$LIBADD_MMXJPEG
-dnl   else
     AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [
       available_jpeg=yes; LIBADD_JPEG=-ljpeg;
     ], [], $LIBADD_POW)
-dnl   fi
 ])
 if test "$available_jpeg" != "yes"; then
   ENFLE_PLUGIN_DISABLE(loader/jpeg); ENFLE_PLUGIN_DISABLE(saver/jpeg);
 fi
 AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
 AC_SUBST(LIBADD_JPEG)
+
+available_jasper=no
+AC_CHECK_HEADER(jasper/jasper.h, [
+    AC_CHECK_LIB(jasper, jas_init, [
+      available_jasper=yes; LIBADD_JASPER=-ljasper;
+    ], [], [-ljpeg])
+])
+if test "$available_jasper" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(loader/jasper);
+fi
+AM_CONDITIONAL(HAVE_JASPER, test "$available_jasper" = "yes")
+AC_SUBST(LIBADD_JASPER)
 
 available_mpeg_lib=no
 AC_CHECK_HEADER(mpeg.h, [
@@ -573,6 +580,7 @@ enfle_plugindir=${libdir}/enfle/plugins
 enfle_archiver_plugindir=${enfle_plugindir}/archiver
 enfle_audio_plugindir=${enfle_plugindir}/audio
 enfle_audiodecoder_plugindir=${enfle_plugindir}/audiodecoder
+enfle_demultiplexer_plugindir=${enfle_plugindir}/demultiplexer
 enfle_effect_plugindir=${enfle_plugindir}/effect
 enfle_loader_plugindir=${enfle_plugindir}/loader
 enfle_saver_plugindir=${enfle_plugindir}/saver
@@ -586,6 +594,7 @@ AC_SUBST(enfle_plugindir)
 AC_SUBST(enfle_archiver_plugindir)
 AC_SUBST(enfle_audio_plugindir)
 AC_SUBST(enfle_audiodecoder_plugindir)
+AC_SUBST(enfle_demultiplexer_plugindir)
 AC_SUBST(enfle_effect_plugindir)
 AC_SUBST(enfle_loader_plugindir)
 AC_SUBST(enfle_saver_plugindir)
@@ -621,6 +630,7 @@ AC_CONFIG_FILES([
    lib/demultiplexer/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
+   lib/j2k/Makefile
    lib/mad/Makefile
    lib/mpeg2.old/Makefile
    lib/mpeg2/Makefile
@@ -637,6 +647,8 @@ AC_CONFIG_FILES([
     plugins/streamer/gz/Makefile
    plugins/loader/Makefile
     plugins/loader/bmp/Makefile
+    plugins/loader/j2k/Makefile
+    plugins/loader/jasper/Makefile
     plugins/loader/jpeg/Makefile
     plugins/loader/pcx/Makefile
     plugins/loader/png/Makefile
@@ -651,6 +663,7 @@ AC_CONFIG_FILES([
    plugins/player/Makefile
     plugins/player/avcodec/Makefile
     plugins/player/avifile/Makefile
+    plugins/player/generic/Makefile
     plugins/player/libmpeg2.old/Makefile
     plugins/player/libmpeg2/Makefile
     plugins/player/libmpeg3/Makefile
@@ -678,6 +691,9 @@ AC_CONFIG_FILES([
     plugins/videodecoder/avcodec/Makefile
     plugins/videodecoder/divx/Makefile
     plugins/videodecoder/libmpeg2/Makefile
+   plugins/demultiplexer/Makefile
+    plugins/demultiplexer/avi/Makefile
+    plugins/demultiplexer/mpeg/Makefile
 ])
 
 AC_OUTPUT
