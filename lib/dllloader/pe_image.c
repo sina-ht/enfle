@@ -1,10 +1,10 @@
 /*
  * pe_image.c -- PE_image implementation
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 14:40:43 2001.
- * $Id: pe_image.c,v 1.15 2001/09/29 18:02:56 sian Exp $
+ * Last Modified: Sun Sep 30 06:25:39 2001.
+ * $Id: pe_image.c,v 1.16 2001/10/05 04:07:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -407,13 +407,13 @@ load(PE_image *p, char *path)
 	    for (; ; syminfo++) {
 	      if (syminfo->name) {
 		if (strcmp(iibn->Name, syminfo->name) == 0) {
-		  debug_message(" [%s]", iibn->Name);
+		  debug_message(" %s", iibn->Name);
 		  thunk[j].u1.Function = (FARPROC)syminfo->value;
 		  break;
 		}
 	      } else {
 		thunk[j].u1.Function = (FARPROC)syminfo->value;
-		debug_message(" %s", iibn->Name);
+		debug_message(" **%s**", iibn->Name);
 		break;
 	      }
 	    }
@@ -424,6 +424,19 @@ load(PE_image *p, char *path)
 	}
       }
       debug_message("\n");
+    }
+  }
+
+  /* resource */
+  debug_message("-- Resource\n");
+  if (p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].Size) {
+    IMAGE_RESOURCE_DIRECTORY *ird = (IMAGE_RESOURCE_DIRECTORY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress];
+    unsigned int ne = ird->NumberOfNamedEntries;
+    unsigned int ie = ird->NumberOfIdEntries;
+    debug_message("%d named entries, %d id entries.\n", ne, ie);
+    for (i = ne; i < ne + ie; i++) {
+      IMAGE_RESOURCE_DIRECTORY_ENTRY *irde = (IMAGE_RESOURCE_DIRECTORY_ENTRY *)&p->image[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress + sizeof(*ird) + sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY) * i];
+      debug_message("Id: %d offset: %x\n", irde->Id, irde->OffsetToData);
     }
   }
 
