@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 22 23:13:59 2003.
- * $Id: converter.c,v 1.7 2003/09/22 14:14:32 sian Exp $
+ * Last Modified: Sun Oct 12 06:38:44 2003.
+ * $Id: converter.c,v 1.8 2003/11/17 13:51:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -73,13 +73,13 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
     *outptr = '\0';
     *d_r = strdup(d);
   } else {
-    debug_message_fnc("iconv error occurred: nconv = %d.\n", nconv);
+    //debug_message_fnc("iconv error occurred: nconv = %d.\n", nconv);
     switch (errno) {
     case E2BIG:
       debug_message("Increase ICONV_OUTPUT_SIZE and recompile.\n");
       break;
     case EILSEQ:
-      debug_message_fnc("Invalid sequence passed: %s\n", inptr);
+      //debug_message_fnc("Invalid sequence passed: %s\n", inptr);
       break;
     case EINVAL:
       debug_message("Incomplete multi-byte sequence passed.\n");
