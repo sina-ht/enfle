@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 17 12:41:56 2001.
- * $Id: png.c,v 1.10 2001/11/17 03:55:40 sian Exp $
+ * Last Modified: Sat Dec 15 02:01:08 2001.
+ * $Id: png.c,v 1.11 2001/12/17 06:17:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.3"
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.3.1"
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -113,7 +113,9 @@ error_handler(png_structp png_ptr, png_const_charp error_msg)
 static void
 warning_handler(png_structp png_ptr, png_const_charp warning_msg)
 {
-  fprintf(stderr, "enfle: png loader warning: %s\n", warning_msg);
+  Stream *st = png_get_io_ptr(png_ptr);
+
+  fprintf(stderr, "enfle: %s: png loader warning: %s\n", st->path, warning_msg);
 }
 
 /* methods */
@@ -242,7 +244,14 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
     png_set_expand(png_ptr);
 
+#if 1
+  /* XXX: Strip alpha off */
+  if (color_type & PNG_COLOR_MASK_ALPHA)
+    png_set_strip_alpha(png_ptr);
+#endif
+
   png_read_update_info(png_ptr, info_ptr);
+  color_type = png_get_color_type(png_ptr, info_ptr);
 
   /* Set the transparent color */
   if (png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values)) {
