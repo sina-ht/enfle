@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Aug  1 19:33:07 2001.
- * $Id: Xlib.c,v 1.37 2001/08/01 10:36:57 sian Exp $
+ * Last Modified: Fri Aug 10 02:25:27 2001.
+ * $Id: Xlib.c,v 1.38 2001/08/09 17:33:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -316,7 +316,7 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
 
   if (parent) {
     x11window_map(xw);
-    x11window_get_position(xw, &vw->x, &vw->y);
+    x11window_get_geometry(xw, &vw->x, &vw->y, &vw->width, &vw->height);
   }
 
   return vw;
@@ -890,6 +890,7 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
+    
     resize(vw, vw->render_width, vw->render_height);
     if (!xwi->xi->use_xv)
       x11ximage_put(xwi->xi, xwi->normal.pix, xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
@@ -940,13 +941,12 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
 
   clip(vw, &w, &h);
 
-  if (w == vw->width && h == vw->height)
-    return 1;
-
   if (!vw->if_fullscreen) {
     int x, y;
 
-    x11window_get_position(xw, &vw->x, &vw->y);
+    x11window_get_geometry(xw, &vw->x, &vw->y, &vw->width, &vw->height);
+    if (w == vw->width && h == vw->height)
+      return 1;
 
     x = vw->x;
     y = vw->y;
@@ -955,13 +955,16 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
     if (y + h > vw->full_height)
       y = vw->full_height - h;
 
-    //debug_message("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
+    debug_message("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
 
     if (x != vw->x || y != vw->y)
       x11window_moveresize(xw, x, y, w, h);
     else
       x11window_resize(xw, w, h);
   } else {
+    if (w == vw->width && h == vw->height)
+      return 1;
+
     if (vw->width > w || vw->height > h) {
       XSetForeground(x11_display(x11), xwi->full.gc, x11_black(x11));
       XFillRectangle(x11_display(x11), xwi->full.pix,  xwi->full.gc, 0, 0,
@@ -982,7 +985,7 @@ move(VideoWindow *vw, unsigned int x, unsigned int y)
 {
   if (!vw->if_fullscreen) {
     x11window_move((X11Window *)vw->private_data, x, y);
-    x11window_get_position((X11Window *)vw->private_data, &vw->x, &vw->y);
+    x11window_get_geometry((X11Window *)vw->private_data, &vw->x, &vw->y, &vw->width, &vw->height);
   }
 
   return 1;

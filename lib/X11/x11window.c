@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:34:02 2001.
- * $Id: x11window.c,v 1.5 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Fri Aug 10 02:22:45 2001.
+ * $Id: x11window.c,v 1.6 2001/08/09 17:33:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,13 +32,13 @@
 #include "x11window.h"
 
 static int set_event_mask(X11Window *, int);
-static int get_position(X11Window *, unsigned int *, unsigned int *);
+static int get_geometry(X11Window *, unsigned int *, unsigned int *, unsigned int *, unsigned int *);
 static void wait_mapped(X11Window *);
 static void destroy(X11Window *);
 
 static X11Window template = {
   set_event_mask: set_event_mask,
-  get_position: get_position,
+  get_geometry: get_geometry,
   wait_mapped: wait_mapped,
   destroy: destroy
 };
@@ -79,7 +79,7 @@ set_event_mask(X11Window *xw, int mask)
 }
 
 static int
-get_position(X11Window *xw, unsigned int *x_return, unsigned int *y_return)
+get_geometry(X11Window *xw, unsigned int *x_return, unsigned int *y_return, unsigned int *w_return, unsigned int *h_return)
 {
   X11 *x11;
   Window root, parent, *child;
@@ -87,7 +87,7 @@ get_position(X11Window *xw, unsigned int *x_return, unsigned int *y_return)
   unsigned int w, h, bw, depth;
 
   x11 = x11window_x11(xw);
-  if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &x, &y, &w, &h, &bw, &depth))
+  if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &x, &y, w_return, h_return, &bw, &depth))
     return 0;
   if (!XQueryTree(x11_display(x11), x11window_win(xw), &root, &parent, &child, &nc))
     return 0;
