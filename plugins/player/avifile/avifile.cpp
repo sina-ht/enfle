@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 13 20:40:17 2001.
- * $Id: avifile.cpp,v 1.21 2001/09/13 12:13:20 sian Exp $
+ * Last Modified: Sat Sep 15 05:36:21 2001.
+ * $Id: avifile.cpp,v 1.22 2001/09/16 23:09:37 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -369,6 +369,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     delete rf;
   if (info)
     free(info);
+  m->status = _UNLOADED;
   return PLAY_ERROR;
 }
 
@@ -643,6 +644,8 @@ unload_movie(Movie *m)
 
   debug_message("AviFile: unload_movie()\n");
 
+  if (m->status == _UNLOADED)
+    return;
   stop_movie(m);
 
   if (info) {
