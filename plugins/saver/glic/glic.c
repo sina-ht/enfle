@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:41:53 2001.
- * $Id: glic.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Thu Apr 26 14:33:56 2001.
+ * $Id: glic.c,v 1.3 2001/04/27 01:02:34 sian Exp $
  */
 
 #include <stdlib.h>
@@ -105,7 +105,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
   decompose_method = (char *)config_get(c, "/enfle/plugins/saver/glic/decompose_method");
   scan_method = (char *)config_get(c, "/enfle/plugins/saver/glic/scan_method");
   memset(&vmpm, 0, sizeof(vmpm));
-  vmpm.r = 2;
+  vmpm.r = 4;
   vmpm.I = 4;
   vmpm.outfile = fp;
 
