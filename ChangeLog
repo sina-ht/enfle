@@ -1,5 +1,10 @@
 2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/saver/Makefile.am, configure.in, lib/Makefile.am,
+	plugins/player/Makefile.am: Clean up for release.
+
+2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
+
 	* compat.h: Avoid error when use libjpeg.
 
 	* config.guess, config.sub: Upgraded config.guess and config.sub.
