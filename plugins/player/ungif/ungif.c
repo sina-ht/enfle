@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 04:58:29 2000.
- * $Id: ungif.c,v 1.9 2000/11/04 17:32:19 sian Exp $
+ * Last Modified: Sat Nov 18 12:29:48 2000.
+ * $Id: ungif.c,v 1.10 2000/11/20 12:57:32 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -101,7 +101,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   UNGIF_info *info;
 
   if ((info = calloc(1, sizeof(UNGIF_info))) == NULL) {
-    show_message("UNGIF: play_movie: No enough memory.\n");
+    show_message("UNGIF: load_movie: No enough memory.\n");
     return PLAY_ERROR;
   }
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 08:06:52 2000.
- * $Id: normal.c,v 1.4 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sat Nov 18 15:38:09 2000.
+ * $Id: normal.c,v 1.5 2000/11/20 12:57:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -77,7 +77,7 @@ render_frame(VideoWindow *vw, Movie *m, Image *p)
 {
   /* CHECK */
   if (p->width != m->width || p->height != m->height) {
-    show_message("render_frame: p(%d, %d) != m(%d, %d)\n", p->width, p->height, m->width, m->height);
+    show_message(__FUNCTION__ ": p(%d, %d) != m(%d, %d)\n", p->width, p->height, m->width, m->height);
     exit(1);
   }
 
@@ -151,7 +151,7 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
       switch (m->status) {
       case _PLAY:
 	if (movie_play_main(m, vw) != PLAY_OK) {
-	  show_message("play_movie: Error\n");
+	  show_message(__FUNCTION__ ": movie_play_main() failed.\n");
 	  return 0;
 	}
 	break;
