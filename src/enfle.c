@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 25 02:05:45 2002.
- * $Id: enfle.c,v 1.51 2002/08/25 02:39:00 sian Exp $
+ * Last Modified: Sun Dec  7 01:51:07 2003.
+ * $Id: enfle.c,v 1.52 2003/12/08 01:43:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -306,14 +306,18 @@ main(int argc, char **argv)
       audio_name = strdup(optarg);
       break;
     case 'i':
-      if (include_fnmatch)
-	fatal("Sorry, only one -i option is permitted.\n");
+      if (include_fnmatch) {
+	err_message("Sorry, only one -i option is permitted.\n");
+	return 1;
+      }
       include_fnmatch = 1;
       pattern = strdup(optarg);
       break;
     case 'x':
-      if (exclude_fnmatch)
-	fatal("Sorry, only one -x option is permitted.\n");
+      if (exclude_fnmatch) {
+	err_message("Sorry, only one -x option is permitted.\n");
+	return 1;
+      }
       exclude_fnmatch = 1;
       pattern = strdup(optarg);
       break;
@@ -342,13 +346,13 @@ main(int argc, char **argv)
     case '?':
     default:
       usage();
-      fatal("option error\n");
+      return 1;
     }
   }
   free(optstr);
 
   if ((homedir = getenv("HOME")) == NULL) {
-    fprintf(stderr, "Please set HOME environment.\n");
+    err_message("Please set HOME environment.\n");
     return 1;
   }
 
@@ -360,7 +364,7 @@ main(int argc, char **argv)
   if (!(config_load(c, "./enfle.rc") ||
 	config_load(c, string_get(rcpath)) ||
 	config_load(c, ENFLE_DATADIR "/enfle.rc")))
-    fprintf(stderr, "No configuration file. Incomplete install?\n");
+    warning("No configuration file. Incomplete install?\n");
   string_destroy(rcpath);
 
   switch (magnify_method) {
@@ -399,7 +403,7 @@ main(int argc, char **argv)
     debug_message("plugin_path defaults to %s\n", plugin_path);
   }
   if (!scan_and_load_plugins(eps, c, plugin_path)) {
-    fprintf(stderr, "scan_and_load_plugins() failed.\n");
+    err_message("scan_and_load_plugins() failed.  plugin path = %s\n", plugin_path);
     return 1;
   }
 
@@ -418,7 +422,7 @@ main(int argc, char **argv)
   } else {
     for (i = optind; i < argc; i++) {
       if (strcmp(argv[i], "-") == 0) {
-	fprintf(stderr, "Cannot specify stdin(-) with other files. ignored.\n");
+	warning("Cannot specify stdin(-) with other files. ignored.\n");
       } else {
 	archive_add(uidata.a, argv[i], strdup(argv[i]));
       }
@@ -431,7 +435,7 @@ main(int argc, char **argv)
     archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE);
 
   if (ui_name == NULL && ((ui_name = config_get_str(c, "/enfle/plugins/ui/default")) == NULL)) {
-    fprintf(stderr, "configuration error\n");
+    err_message("Cannot get UI plugin name\n");
     return 1;
   }
 
@@ -441,7 +445,7 @@ main(int argc, char **argv)
   uidata.ap = NULL;
   if (audio_name) {
     if ((uidata.ap = enfle_plugins_get(eps, ENFLE_PLUGIN_AUDIO, audio_name)) == NULL)
-      fprintf(stderr, "No %s Audio plugin\n", audio_name);
+      err_message("No %s Audio plugin\n", audio_name);
     else
       debug_message("Audio plugin %s\n", audio_name);
   } else {
@@ -449,15 +453,15 @@ main(int argc, char **argv)
   }
 
   if (video_name == NULL && ((video_name = config_get_str(c, "/enfle/plugins/video/default")) == NULL)) {
-    fprintf(stderr, "configuration error\n");
+    err_message("Cannot get Video plugin name\n");
     return 1;
   }
 
   if ((uidata.vp = enfle_plugins_get(eps, ENFLE_PLUGIN_VIDEO, video_name)) == NULL) {
-    fprintf(stderr, "No %s Video plugin\n", video_name);
+    err_message("No %s Video plugin\n", video_name);
   } else {
     if (!ui_call(eps, ui_name, &uidata))
-      fprintf(stderr, "No UI %s or UI %s initialize failed\n", ui_name, ui_name);
+      err_message("No UI %s or UI %s initialize failed\n", ui_name, ui_name);
   }
 
   archive_destroy(uidata.a);
