@@ -1,10 +1,10 @@
 /*
  * normal.c -- Normal UI plugin
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 13:59:19 2004.
- * $Id: normal.c,v 1.79 2004/02/21 07:51:39 sian Exp $
+ * Last Modified: Wed Feb 25 00:52:35 2004.
+ * $Id: normal.c,v 1.80 2004/02/24 15:55:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,7 +55,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.6",
+  description: "Normal UI plugin version 0.6.1",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -266,8 +266,15 @@ set_caption_string(MainLoop *ml)
       case 'f':
 	if (ml->p)
 	  string_cat(cap, (ml->p->format_detail != NULL) ? ml->p->format_detail : ml->p->format);
-	else if (ml->m)
-	  string_cat(cap, ml->m->format);
+	else if (ml->m) {
+	  if (ml->m->player_name)
+	    string_cat(cap, ml->m->player_name);
+	  if (ml->m->format) {
+	    string_cat_ch(cap, '(');
+	    string_cat(cap, ml->m->format);
+	    string_cat_ch(cap, ')');
+	  }
+	}
 	if (strcmp(ml->st->format, "FILE") != 0) {
 	  string_cat_ch(cap, '/');
 	  string_cat(cap, ml->st->format);
@@ -851,7 +858,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	debug_message("MAIN_LOOP_NEXT5\n");
 	{
 	  int i = 0;
-	  for (i = 0; i < 5; i++) {
+	  for (i = 0; i < 5 && path; i++) {
 	    path = archive_iteration_next(a);
 	    debug_message(" skip %s\n", path);
 	  }
@@ -861,7 +868,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	debug_message("MAIN_LOOP_PREV5\n");
 	{
 	  int i = 0;
-	  for (i = 0; i < 5; i++) {
+	  for (i = 0; i < 5 && path; i++) {
 	    path = archive_iteration_prev(a);
 	    debug_message(" skip %s\n", path);
 	  }
