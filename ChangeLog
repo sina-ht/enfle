@@ -1,3 +1,21 @@
+2001-10-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11.h, lib/X11/x11ximage.c, plugins/video/Xlib/Xlib.c,
+	src/enfle.rc: Use XLockDisplay()/XUnlockDisplay() instead of using
+	pthread_mutex_lock() by itself. Make YUV format order selectable.
+
+	* lib/X11/x11window.c: Added alarm comments.
+
+	* plugins/player/opendivx/opendivx.c: Quit video/audio loop when
+	fifo_get() fails.
+
+2001-10-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/demultiplexer/demultiplexer_avi.c: Forgot to change running
+	to 1.
+
+	* plugins/player/opendivx/opendivx.c: Cosmetic change.
+
 2001-10-14  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.rc: More configuration: stream, archive control
