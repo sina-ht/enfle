@@ -1,10 +1,10 @@
 /*
  * opendivx.c -- opendivx player plugin, which exploits libdivxdecore
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 14 14:27:46 2002.
- * $Id: opendivx.c,v 1.25 2002/03/14 18:43:30 sian Exp $
+ * Last Modified: Thu Mar 21 07:12:08 2002.
+ * $Id: opendivx.c,v 1.26 2002/03/21 01:35:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,8 @@
 #define LINUX
 #include <decore.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #ifndef USE_PTHREAD
@@ -46,6 +48,8 @@
 #include "demultiplexer/demultiplexer_avi.h"
 #include "mpglib/mpg123.h"
 #include "mpglib/mpglib.h"
+#include "utils/libstring.h"
+#include "enfle/fourcc.h"
 
 typedef struct _opendivx_info {
   Config *c;
@@ -58,6 +62,7 @@ typedef struct _opendivx_info {
   AudioDevice *ad;
   FIFO *vstream, *astream;
   struct mpstr mp;
+  int input_format;
   int output_format;
   int use_xv;
   int eof;
@@ -84,10 +89,14 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
+#define DECORE_VERSION_STRING(n) #n
+
+#define PLAYER_OPENDIVX_PLUGIN_DESCRIPTION "OpenDivX Player plugin version 0.3"
+
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "OpenDivX",
-  description: "OpenDivX Player plugin version 0.3 with libdivxdecore",
+  description: NULL,
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -97,10 +106,16 @@ void *
 plugin_entry(void)
 {
   PlayerPlugin *pp;
+  String *s;
 
   if ((pp = (PlayerPlugin *)calloc(1, sizeof(PlayerPlugin))) == NULL)
     return NULL;
   memcpy(pp, &plugin, sizeof(PlayerPlugin));
+  s = string_create();
+  string_set(s, (const char *)PLAYER_OPENDIVX_PLUGIN_DESCRIPTION);
+  string_catf(s, (const char *)" with libdivxdecore %d", DECORE_VERSION);
+  pp->description = (const unsigned char *)strdup((const char *)string_get(s));
+  string_destroy(s);
 
   return (void *)pp;
 }
@@ -116,13 +131,16 @@ plugin_exit(void *p)
 static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
-  OpenDivX_info *info;
+  OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
   AVIInfo *aviinfo;
   Image *p;
 
-  if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
-    show_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
-    return PLAY_ERROR;
+  if (!info) {
+    if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
+      show_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
+      return PLAY_ERROR;
+    }
+    m->movie_private = (void *)info;
   }
 
   info->c = c;
@@ -137,12 +155,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   }
   debug_message("OpenDivX: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
-  info->demux = demultiplexer_avi_create();
-  demultiplexer_avi_set_input(info->demux, st);
-  if (!demultiplexer_examine(info->demux))
-    return PLAY_NOT;
-  info->nvstreams = demultiplexer_avi_nvideos(info->demux);
-  info->nastreams = demultiplexer_avi_naudios(info->demux);
+  if (info->demux) {
+    info->demux = demultiplexer_avi_create();
+    demultiplexer_avi_set_input(info->demux, st);
+    if (!demultiplexer_examine(info->demux))
+      return PLAY_NOT;
+    info->nvstreams = demultiplexer_avi_nvideos(info->demux);
+    info->nastreams = demultiplexer_avi_naudios(info->demux);
+  }
   aviinfo = demultiplexer_avi_info(info->demux);
 
   if (info->nastreams == 0 && info->nvstreams == 0)
@@ -164,7 +184,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       m->samplerate = aviinfo->samples_per_sec;
       m->num_of_samples = aviinfo->num_of_samples;
 
-      show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
+      show_message("audio[%08X](%d streams): format(%d): %d ch rate %d kHz %d samples\n", aviinfo->ahandler, info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
@@ -182,6 +202,35 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->height = aviinfo->height;
     m->framerate = aviinfo->framerate;
     m->num_of_frames = aviinfo->num_of_frames;
+
+    if (!info->input_format) {
+      switch (aviinfo->vhandler) {
+      case FCC_div3:
+      case FCC_DIV3:
+      case FCC_div4:
+      case FCC_DIV4:
+      case FCC_div5:
+      case FCC_DIV5:
+      case FCC_div6:
+      case FCC_DIV6:
+      case FCC_MP41:
+      case FCC_MP43:
+	info->input_format = 311;
+	break;
+      case FCC_divx:
+      case FCC_DIVX:
+	info->input_format = 412;
+	break;
+      case FCC_DX50:
+      case FCC_dx50:
+	info->input_format = 500;
+	break;
+      default:
+	demultiplexer_destroy(info->demux);
+	free(info);
+	return PLAY_NOT;
+      }
+    }
   } else {
     m->width = 128;
     m->height = 128;
@@ -199,7 +248,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->rendering_height = p->magnified.height;
   }
 
-  debug_message("video(%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n", info->nvstreams,
+  debug_message("video[%08X](%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n",
+		aviinfo->vhandler, info->nvstreams,
 		m->width, m->height, m->rendering_width, m->rendering_height,
 		m->framerate, m->num_of_frames);
 
@@ -265,7 +315,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
     goto error;
 
-  m->movie_private = (void *)info;
   m->st = st;
   m->status = _STOP;
 
@@ -321,6 +370,9 @@ play(Movie *m)
 
     dec_param->x_dim = m->width;
     dec_param->y_dim = m->height;
+#if DECORE_VERSION >= 20020303
+    dec_param->codec_version = info->input_format;
+#endif
     dec_param->output_format = info->output_format;
     dec_param->time_incr = 15;
 
@@ -370,6 +422,7 @@ play_video(void *arg)
   void *data;
   AVIPacket *ap;
   FIFO_destructor destructor;
+  int res, opt_frame;
 
   debug_message_fn("()\n");
 
@@ -393,11 +446,33 @@ play_video(void *arg)
     info->dec_frame.bitstream = ap->data;
     info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
     info->dec_frame.render_flag = 1;
-    decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
+    opt_frame = DEC_OPT_FRAME;
+    if ((res = decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL)) != DEC_OK) {
+#ifndef DEC_OPT_FRAME_311
+#define DEC_OPT_FRAME_311 (DEC_OPT_FRAME + 1)
+#endif
+      if (res == DEC_BAD_FORMAT) {
+	opt_frame = DEC_OPT_FRAME_311;
+	if ((res = decore((long)info, DEC_OPT_FRAME_311, &info->dec_frame, NULL)) == DEC_BAD_FORMAT) {
+	  show_message("Unknown frame format\n");
+	  pthread_mutex_unlock(&info->update_mutex);
+	  m->has_video = 0;
+	  break;
+	}
+      } else {
+	show_message("OPT_FRAME returns %d\n", res);
+	pthread_mutex_unlock(&info->update_mutex);
+	m->has_video = 0;
+	break;
+      }
+    }
+
+    //debug_message_fnc("Frame format: %s\n", opt_frame == DEC_OPT_FRAME ? "DivX4 or later" : "DivX ;-) 3.11");
+
     destructor(ap);
     m->current_frame++;
 
-    /* demultiplexer should seek to next key frame... */
+    /* XXX: demultiplexer should seek to next key frame... */
     for (; info->drop; info->drop--) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
 	show_message_fnc("fifo_get() failed.\n");
@@ -411,7 +486,7 @@ play_video(void *arg)
 	info->dec_frame.bitstream = ap->data;
 	info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
 	info->dec_frame.render_flag = 1;
-	decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
+	decore((long)info, opt_frame, &info->dec_frame, NULL);
 	destructor(ap);
 	m->current_frame++;
       }
@@ -691,15 +766,60 @@ unload_movie(Movie *m)
 
 DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
-  unsigned char buf[16];
+  OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
+  AVIInfo *aviinfo;
 
-  if (stream_read(st, buf, 16) != 16)
-    return PLAY_NOT;
+  if (!info) {
+    if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
+      show_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
+      return PLAY_ERROR;
+    }
+    m->movie_private = (void *)info;
+  }
 
-  if (memcmp(buf, "RIFF", 4))
+  info->demux = demultiplexer_avi_create();
+  demultiplexer_avi_set_input(info->demux, st);
+  if (!demultiplexer_examine(info->demux)) {
+    demultiplexer_destroy(info->demux);
+    free(info);
     return PLAY_NOT;
-  if (memcmp(buf + 8, "AVI ", 4))
-    return PLAY_NOT;
+  }
+  info->nvstreams = demultiplexer_avi_nvideos(info->demux);
+  info->nastreams = demultiplexer_avi_naudios(info->demux);
+  aviinfo = demultiplexer_avi_info(info->demux);
+
+  if (info->nvstreams) {
+    switch (aviinfo->vhandler) {
+    case FCC_div3:
+    case FCC_DIV3:
+    case FCC_div4:
+    case FCC_DIV4:
+    case FCC_div5:
+    case FCC_DIV5:
+    case FCC_div6:
+    case FCC_DIV6:
+    case FCC_MP41:
+    case FCC_MP43:
+      info->input_format = 311;
+      debug_message_fnc("Identified as DivX ;-) 3.11\n");
+      break;
+    case FCC_divx:
+    case FCC_DIVX:
+      info->input_format = 412;
+      debug_message_fnc("Identified as DivX 4\n");
+      break;
+    case FCC_DX50:
+    case FCC_dx50:
+      info->input_format = 500;
+      debug_message_fnc("Identified as DivX 5\n");
+      break;
+    default:
+      debug_message_fnc("Not identified as any DivX format: %08X\n", aviinfo->vhandler);
+      demultiplexer_destroy(info->demux);
+      free(info);
+      return PLAY_NOT;
+    }
+  }
 
   return PLAY_OK;
 }
