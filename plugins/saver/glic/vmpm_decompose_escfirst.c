@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 22:20:58 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.4 2001/08/06 18:51:42 sian Exp $
+ * Last Modified: Tue Aug  7 15:31:05 2001.
+ * $Id: vmpm_decompose_escfirst.c,v 1.5 2001/08/07 09:29:05 sian Exp $
  */
 
 #include <stdio.h>
@@ -194,7 +194,8 @@ encode(VMPM *vmpm)
       /* Hence, we don't need to encode it. */
       stat_message(vmpm, "e ");
       nsymbols = 1;
-#if 1
+#if 0
+      /* It's simpler to encode simultaneously. */
       for (j = 1; j < vmpm->token_index[i]; j++) {
 	Token_value tv = vmpm->token[i][j]->value - 1;
 
@@ -209,6 +210,7 @@ encode(VMPM *vmpm)
 	}
       }
 #else
+      /* It's better to encode separately. */
       for (j = 1; j < vmpm->token_index[i]; j++) {
 	Token_value tv = vmpm->token[i][j]->value - 1;
 
