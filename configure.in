@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl NOTE: autoconf should be 2.54 or later, automake 1.6.3 or later.
+dnl NOTE: autoconf must be 2.59 or later, automake should be 1.8.2 or later.
 dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Feb 21 02:23:56 2004.
-dnl $Id: configure.in,v 1.138 2004/02/20 17:24:14 sian Exp $
+dnl Last Modified: Sat Feb 21 14:16:53 2004.
+dnl $Id: configure.in,v 1.139 2004/02/21 07:52:09 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,6 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
+AC_PREREQ(2.59)
 AC_INIT(enfle, 20040221, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
@@ -704,6 +705,7 @@ AC_CONFIG_FILES([
     plugins/videodecoder/avcodec/Makefile
     plugins/videodecoder/divx/Makefile
     plugins/videodecoder/libmpeg2/Makefile
+    plugins/videodecoder/raw/Makefile
    plugins/demultiplexer/Makefile
     plugins/demultiplexer/avi/Makefile
     plugins/demultiplexer/mpeg/Makefile
