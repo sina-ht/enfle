@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  4 07:11:01 2004.
- * $Id: alsa.c,v 1.11 2004/01/05 09:53:51 sian Exp $
+ * Last Modified: Sun Jan 18 15:32:01 2004.
+ * $Id: alsa.c,v 1.12 2004/01/18 07:11:44 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -347,7 +347,6 @@ close_device(AudioDevice *ad)
   snd_output_close(alsa->log);
   free(alsa);
   free(ad);
-  ad->opened = 0;
 
   return 1;
 }
