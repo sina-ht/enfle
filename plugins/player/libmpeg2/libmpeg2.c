@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:03:00 2001.
- * $Id: libmpeg2.c,v 1.21 2001/09/02 05:47:03 sian Exp $
+ * Last Modified: Mon Sep  3 01:46:06 2001.
+ * $Id: libmpeg2.c,v 1.22 2001/09/03 00:32:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -132,7 +132,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     if (m->ap == NULL)
       show_message("Audio not played.\n");
     else {
-      info->nastreams = demultiplexer_mpeg_naudios(info->demux);
       /* XXX: stream should be selectable */
       info->nastream = 0;
       demultiplexer_mpeg_set_audio(info->demux, info->nastream);
@@ -166,7 +165,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     info->nvstream = -1;
     demultiplexer_mpeg_set_video(info->demux, info->nvstream);
   } else {
-    if ((info->nvstreams = demultiplexer_mpeg_nvideos(info->demux)) > 1) {
+    if (info->nvstreams > 1) {
       show_message("There are %d video streams in this whole stream.\n", info->nvstreams);
       show_message("Only the first video stream will be played(so far). Sorry.\n");
     }
@@ -266,7 +265,6 @@ play(Movie *m)
   }
 
   if (m->has_audio) {
-    m->has_audio = 1;
     if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
     //fifo_set_max(info->vstream, 2000);
@@ -370,8 +368,7 @@ play_video(void *arg)
   pthread_exit((void *)PLAY_OK);
 }
 
-#define MP3_READ_BUFFER_SIZE 32
-#define MP3_DECODE_BUFFER_SIZE 8192
+#define MP3_DECODE_BUFFER_SIZE 16384
 
 static void *
 play_audio(void *arg)
@@ -473,7 +470,6 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
 
   if (demultiplexer_get_eof(info->demux)) {
-    //debug_message(__FUNCTION__ ": %d %d\n", info->vstream->ndata, info->astream->ndata);
     if (info->astream && fifo_is_empty(info->astream))
       /* Audio existed, but over. */
       m->has_audio = 2;
@@ -577,7 +573,6 @@ stop_movie(Movie *m)
   switch (m->status) {
   case _PLAY:
     m->status = _STOP;
-    timer_stop(m->timer);
     break;
   case _PAUSE:
   case _STOP:
@@ -587,6 +582,8 @@ stop_movie(Movie *m)
   default:
     return PLAY_ERROR;
   }
+
+  timer_stop(m->timer);
 
   debug_message(__FUNCTION__ ": waiting for demultiplexer thread to exit... \n");
 
@@ -632,6 +629,7 @@ unload_movie(Movie *m)
   if (info) {
     if (info->p)
       image_destroy(info->p);
+    demultiplexer_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
     free(info);
