@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Dec 28 07:21:25 2000.
- * $Id: x11ximage.c,v 1.18 2000/12/27 23:29:29 sian Exp $
+ * Last Modified: Thu Dec 28 21:58:53 2000.
+ * $Id: x11ximage.c,v 1.19 2000/12/30 07:19:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,6 +24,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#define REQUIRE_FATAL
 #include "common.h"
 
 #include "x11ximage.h"

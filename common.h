@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 07:31:52 2000.
- * $Id: common.h,v 1.7 2000/12/27 23:29:29 sian Exp $
+ * Last Modified: Thu Dec 28 21:54:17 2000.
+ * $Id: common.h,v 1.8 2000/12/30 07:19:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,9 +36,10 @@
 #include <stdio.h>
 #define show_message(format, args...) printf(format, ## args)
 
+#ifdef REQUIRE_FATAL
 #include <stdarg.h>
-static inline void fatal(int, const char *, ...) __attribute__ ((noreturn));
-static inline void
+static void fatal(int, const char *, ...) __attribute__ ((noreturn));
+static void
 fatal(int code, const char *format, ...)
 {
   va_list args;
@@ -50,7 +51,9 @@ fatal(int code, const char *format, ...)
 
   exit(code);
 }
+#endif
 
+#ifdef REQUIRE_FATAL_PERROR
 static inline void fatal_perror(int, const char *) __attribute__ ((noreturn));
 static inline void
 fatal_perror(int code, const char *msg)
@@ -58,6 +61,7 @@ fatal_perror(int code, const char *msg)
   perror(msg);
   exit(code);
 }
+#endif
 
 #ifdef DEBUG
 #  define PROGNAME PACKAGE "-debug"

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 07:27:19 2000.
- * $Id: libconfig.c,v 1.5 2000/12/27 23:29:29 sian Exp $
+ * Last Modified: Thu Dec 28 21:56:18 2000.
+ * $Id: libconfig.c,v 1.6 2000/12/30 07:19:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,7 @@
 #define REQUIRE_STRING_H
 #include "compat.h"
 
+#define REQUIRE_FATAL
 #include "common.h"
 
 #include "libstring.h"
