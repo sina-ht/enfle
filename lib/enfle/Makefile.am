@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.21 2004/04/05 15:45:43 sian Exp $
+# $Id: Makefile.am,v 1.22 2004/04/12 04:13:27 sian Exp $
 
 noinst_LTLIBRARIES = libenfle.la
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
@@ -19,6 +19,7 @@ libenfle_la_SOURCES = \
 	saver.c saver.h saver-plugin.h \
 	player.c player.h player-extra.h player-plugin.h \
 	spi.c spi.h spi-private.h \
+	dmo.c dmo.h dmo-private.h \
 	utils.c utils.h \
 	stream-utils.c stream-utils.h \
 	stream.c stream.h \
