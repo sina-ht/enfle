@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 19 16:01:15 2001.
- * $Id: normal.c,v 1.31 2001/04/20 08:08:51 sian Exp $
+ * Last Modified: Sat Apr 21 05:27:41 2001.
+ * $Id: normal.c,v 1.32 2001/04/21 07:26:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -525,10 +525,10 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  if (arc->nfiles == 0) {
 	    /* Now that all paths are deleted in this archive, should be deleted wholly. */
 	    archive_iteration_delete(a);
+	    dir = 1;
+	    ret = MAIN_LOOP_NEXT;
 	  }
 	  archive_destroy(arc);
-	  dir = 1;
-	  ret = MAIN_LOOP_NEXT;
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
 	  archive_iteration_delete(a);
