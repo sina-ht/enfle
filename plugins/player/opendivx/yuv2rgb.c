@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 24 07:02:35 2001.
- * $Id: yuv2rgb.c,v 1.3 2001/01/23 23:26:52 sian Exp $
+ * Last Modified: Wed Jan 24 08:36:18 2001.
+ * $Id: yuv2rgb.c,v 1.4 2001/01/23 23:50:02 sian Exp $
  *
  * Not optimized for speed
  *
@@ -94,7 +94,7 @@ yuv2rgb_32(uint8_t *yo, int stride_y,
 	   uint8_t *out, int width, int height)
 {
   int i, j;
-  int r, g, b, y, u, v;
+  int r, g, b;
   uint8_t *yl, *ul, *vl;
   uint32_t *outp = (uint32_t *)out;
 
@@ -108,11 +108,12 @@ yuv2rgb_32(uint8_t *yo, int stride_y,
       g = YUV2G(yl[j], ul[j >> 1], vl[j >> 1]);
       b = YUV2B(yl[j], ul[j >> 1], vl[j >> 1]);
       clip(r); clip(g); clip(b);
-      out[0] = r; out[1] = g; out[2] = b;
-      out += 3;
+      *outp++ = (r << 16) | (g << 8) | b;
     }
 #else
     for (j = 0;;) {
+      int y, u, v;
+
       y = yl[j];
       u = ul[j >> 1]; v = vl[j >> 1];
       if (j == width)
