@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 05:09:30 2000.
- * $Id: enfle.c,v 1.5 2000/10/09 20:29:56 sian Exp $
+ * Last Modified: Sat Oct 14 04:54:06 2000.
+ * $Id: enfle.c,v 1.6 2000/10/15 07:50:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -212,6 +212,10 @@ main(int argc, char **argv)
 	printf("%s by %s\n",
 	       player_get_description(player, name),
 	       player_get_author(player, name));
+	if ((strcmp(name, "MPEG_lib") == 0) && config_get(c, "/enfle/plugins/player/mpeg_lib") && strcasecmp(config_get(c, "/enfle/plugins/player/mpeg_lib"), "disabled") == 0) {
+	  player_unload(player, name);
+	  printf("unload %s (disabled)\n", name);
+	}
 	break;
       case ENFLE_PLUGIN_SAVER:
       case ENFLE_PLUGIN_EFFECT:

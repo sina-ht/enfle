@@ -1,10 +1,11 @@
 ; enfle.rc
-; Last Modified: Mon Oct  2 10:47:23 2000.
-; $Id: enfle.rc,v 1.2 2000/10/02 03:01:20 sian Exp $
+; Last Modified: Sat Oct 14 04:02:44 2000.
+; $Id: enfle.rc,v 1.3 2000/10/15 07:50:05 sian Exp $
 
 enfle {
 	plugins {
 		dir = ../plugins
 		ui/default = Xlib
+		player/mpeg_lib = disabled
 	}
 }
