@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 15 03:54:37 2001.
- * $Id: Xlib.c,v 1.20 2001/01/14 18:57:10 sian Exp $
+ * Last Modified: Wed Jan 24 08:46:10 2001.
+ * $Id: Xlib.c,v 1.21 2001/01/23 23:50:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,6 +38,7 @@
 #  include <pthread.h>
 #endif
 
+/* These are NOT official X11 headers, but enfle's. */
 #include "X11/x11.h"
 #include "X11/x11window.h"
 #include "X11/x11ximage.h"
@@ -127,6 +128,10 @@ plugin_entry(void)
   if ((vp = (VideoPlugin *)calloc(1, sizeof(VideoPlugin))) == NULL)
     return NULL;
   memcpy(vp, &plugin, sizeof(VideoPlugin));
+#ifdef USE_PTHREAD
+  if (!XInitThreads())
+    show_message("XInitThreads() failed\n");
+#endif
 
   return (void *)vp;
 }

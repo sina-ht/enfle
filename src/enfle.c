@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  7 09:16:34 2001.
- * $Id: enfle.c,v 1.20 2001/01/11 22:32:00 sian Exp $
+ * Last Modified: Wed Jan 24 08:48:38 2001.
+ * $Id: enfle.c,v 1.21 2001/01/23 23:50:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -326,14 +326,8 @@ main(int argc, char **argv)
   ar = uidata.ar = archiver_create();
   player = uidata.player = player_create();
 
-#ifdef USE_PTHREAD
-  /* ugly... */
-  if (!XInitThreads())
-    show_message("XInitThreads() failed\n");
-#endif
-
   if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
-    plugin_path = ENFLE_PLUGINDIR;
+    plugin_path = (char *)ENFLE_PLUGINDIR;
     fprintf(stderr, "plugin_path defaults to %s\n", plugin_path);
   }
   if (!scan_and_load_plugins(eps, c, plugin_path)) {
