@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Nov  4 07:40:21 2000.
- * $Id: x11window.c,v 1.3 2000/11/04 17:30:16 sian Exp $
+ * Last Modified: Tue Apr 24 22:41:34 2001.
+ * $Id: x11window.c,v 1.4 2001/04/24 16:38:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,8 +51,13 @@ x11window_create(X11 *x11, X11Window *parent, unsigned int width, unsigned heigh
   memcpy(xw, &template, sizeof(X11Window));
 
   xw->x11 = x11;
-  xw->win = x11_create_window(xw->x11, parent ? x11window_win(parent) : x11_root(x11),
-			      width, height);
+
+  if (parent) {
+    xw->win = x11_create_window(xw->x11, parent ? x11window_win(parent) : x11_root(x11),
+				width, height);
+  } else {
+    xw->win = x11_root(x11);
+  }
 
   return xw;
 }
