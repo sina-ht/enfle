@@ -365,7 +365,7 @@ void t1_dec_clnpass(int w, int h, int bpno, int orient, int segsym) {
 }
 
 double t1_getwmsedec(int nmsedec, int compno, int level, int orient, int bpno, int qmfbid, double stepsize) {
-    double w1, w2, wmsedec;
+    double w1 = 0.0, w2 = 0.0, wmsedec;
     if (qmfbid==1) {
         w1=mct_getnorm(compno);
         w2=dwt_getnorm(level, orient);
@@ -489,7 +489,7 @@ void t1_encode_cblks(tcd_tile_t *tile, j2k_tcp_t *tcp) {
                 for (precno=0; precno<res->pw*res->ph; precno++) {
                     tcd_precinct_t *prc=&band->precincts[precno];
                     for (cblkno=0; cblkno<prc->cw*prc->ch; cblkno++) {
-                        int x, y, i, j, orient;
+                        int x = 0, y = 0, i, j, orient;
                         tcd_cblk_t *cblk=&prc->cblks[cblkno];
                         if (band->bandno==0) {
                             x=res->x0+cblk->x0;
@@ -539,7 +539,7 @@ void t1_decode_cblks(tcd_tile_t *tile, j2k_tcp_t *tcp) {
                 for (precno=0; precno<res->pw*res->ph; precno++) {
                     tcd_precinct_t *prc=&band->precincts[precno];
                     for (cblkno=0; cblkno<prc->cw*prc->ch; cblkno++) {
-                        int x, y, i, j, orient;
+                        int x = 0, y = 0, i, j, orient;
                         tcd_cblk_t *cblk=&prc->cblks[cblkno];
                         orient=band->bandno; // FIXME
                         if (orient==2) orient=1;

@@ -462,7 +462,7 @@ int tcd_encode_tile(int tileno, unsigned char *dest, int len) {
 }
 
 int tcd_decode_tile(unsigned char *src, int len, int tileno) {
-    int l;
+    int l = 0;
     int compno;
     int eof=0;
     jmp_buf oldenv;
@@ -524,7 +524,7 @@ int tcd_decode_tile(unsigned char *src, int len, int tileno) {
         int i, j;
         for (j=tilec->y0; j<tilec->y1; j++) {
             for (i=tilec->x0; i<tilec->x1; i++) {
-                int v;
+                int v = 0;
                 if (tcd_tcp->tccps[compno].qmfbid==1) {
                     v=tilec->data[i-tilec->x0+(j-tilec->y0)*tw];
                 } else if (tcd_tcp->tccps[compno].qmfbid==0) {
