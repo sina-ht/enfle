@@ -1,3 +1,35 @@
+2001-04-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: More new configurations.
+
+	* src/enfle.c: Cosmetic changes.
+
+	* plugins/video/Xlib/Xlib.c: Implemented parent and root
+	VideoWindow handling. Implemented set_background(),
+	set_wallpaper().
+
+	* plugins/ui/normal/normal.c: Adapted for video plugin interface
+	changes.
+
+	* plugins/saver/png/png.c: Implemented configuration of
+	compression level, filter type and interface mode. Support _GRAY
+	type images.
+
+	* plugins/saver/png/Makefile.am: Added -lpng.
+
+	* lib/enfle/video-plugin.h, lib/enfle/video.h: Changed video
+	plugin and VideoWindow object interfaces to handle root and parent
+	VideoWindow and to implement set_background() and use it to
+	implement set_wallpaper().
+
+	* lib/enfle/enfle-plugins.c: Supress annoying message output.
+
+	* lib/utils/libconfig.c, lib/utils/libconfig.h: Implemented
+	set_boolean(), get_boolean().
+
+	* lib/X11/x11window.c: Allow NULL as parent for
+	x11window_create(). In this case, root window object created.
+
 2001-04-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/glic/*: Added rcs Id header.
