@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb  5 22:24:14 2003.
- * $Id: Xlib.c,v 1.51 2003/02/05 15:22:16 sian Exp $
+ * Last Modified: Sun Oct 12 06:16:40 2003.
+ * $Id: Xlib.c,v 1.52 2003/10/12 04:08:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -404,8 +404,12 @@ draw_caption(VideoWindow *vw)
   vw->if_caption = 1;
 
   if (!vw->if_fullscreen) {
+    XTextProperty text;
+    char *list[] = { vw->caption };
+
+    XmbTextListToTextProperty(x11_display(x11), list, 1, XCompoundTextStyle, &text);
     x11_lock(x11);
-    x11window_storename(xw, vw->caption);
+    x11window_setwmname(xw, &text);
     x11_unlock(x11);
   } else {
     int x = (vw->full_width - XTextWidth(xwi->fs, vw->caption, strlen(vw->caption))) >> 1;
