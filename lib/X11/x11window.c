@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Aug 14 16:50:58 2001.
- * $Id: x11window.c,v 1.7 2001/08/15 06:36:46 sian Exp $
+ * Last Modified: Sun Oct 21 02:38:52 2001.
+ * $Id: x11window.c,v 1.8 2001/10/22 08:40:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,6 +66,7 @@ x11window_create(X11 *x11, X11Window *parent, unsigned int width, unsigned heigh
 
 /* methods */
 
+/* Should be called with locked */
 static int
 set_event_mask(X11Window *xw, int mask)
 {
@@ -78,6 +79,7 @@ set_event_mask(X11Window *xw, int mask)
   return 1;
 }
 
+/* Should be called with locked */
 static int
 get_geometry(X11Window *xw, unsigned int *x_return, unsigned int *y_return, unsigned int *w_return, unsigned int *h_return)
 {
@@ -111,6 +113,7 @@ get_geometry(X11Window *xw, unsigned int *x_return, unsigned int *y_return, unsi
   return 1;
 }
 
+/* Should be called with locked */
 static void
 wait_mapped(X11Window *xw)
 {
