@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 31 14:50:17 2004.
- * $Id: normal.c,v 1.78 2004/02/02 16:38:50 sian Exp $
+ * Last Modified: Sat Feb 21 13:59:19 2004.
+ * $Id: normal.c,v 1.79 2004/02/21 07:51:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -745,22 +745,18 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
       case _RESIZING:
 	if (movie_play_main(m, vw) != PLAY_OK) {
 	  show_message_fnc("movie_play_main() failed.\n");
-	  if (ml.timer)
-	    timer_destroy(ml.timer);
-	  return MAIN_LOOP_NEXT;
+	  ml.ret = MAIN_LOOP_NEXT;
 	}
 	break;
       case _PAUSE:
 	break;
       case _STOP:
-	/* loop */
-	movie_play(m);
+	ml.ret = MAIN_LOOP_NEXT;
 	break;
       case _UNLOADED:
 	show_message("Movie has been already unloaded.\n");
-	if (ml.timer)
-	  timer_destroy(ml.timer);
-	return MAIN_LOOP_NEXT;
+	ml.ret = MAIN_LOOP_NEXT;
+	break;
       default:
 	break;
       }
