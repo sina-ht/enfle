@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct 12 01:01:54 2001.
- * $Id: enfle.c,v 1.43 2001/10/11 16:28:35 sian Exp $
+ * Last Modified: Sat Oct 13 00:44:45 2001.
+ * $Id: enfle.c,v 1.44 2001/10/14 12:37:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -119,7 +119,7 @@ static int
 check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
 {
   String *s = string_create();
-  char *tmp;
+  unsigned char *tmp;
   int result;
 
   string_set(s, "/enfle/plugins/");
@@ -130,7 +130,7 @@ check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
   string_cat(s, "disabled");
 
   result = 0;
-  if (((tmp = config_get(c, string_get(s))) != NULL) &&
+  if (((tmp = config_get_str(c, string_get(s))) != NULL) &&
       !strcasecmp(tmp, "yes")) {
     debug_message("unload %s (disabled)\n", name);
     enfle_plugins_unload(eps, type, name);
@@ -270,9 +270,9 @@ main(int argc, char **argv)
   int exclude_fnmatch = 0;
   char *pattern = NULL;
   char *homedir;
-  char *plugin_path;
+  unsigned char *plugin_path;
   char *format = NULL;
-  char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
+  unsigned char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
   char *optstr;
   Dlist *override_config;
   Dlist_data *dd;
@@ -379,7 +379,7 @@ main(int argc, char **argv)
 
   eps = uidata.eps = enfle_plugins_create();
 
-  if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
+  if ((plugin_path = config_get_str(c, "/enfle/plugins/dir")) == NULL) {
     plugin_path = (char *)ENFLE_PLUGINDIR;
     fprintf(stderr, "plugin_path defaults to %s\n", plugin_path);
   }
@@ -415,13 +415,13 @@ main(int argc, char **argv)
   else if (exclude_fnmatch)
     archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE);
 
-  if (ui_name == NULL && ((ui_name = config_get(c, "/enfle/plugins/ui/default")) == NULL)) {
+  if (ui_name == NULL && ((ui_name = config_get_str(c, "/enfle/plugins/ui/default")) == NULL)) {
     fprintf(stderr, "configuration error\n");
     return 1;
   }
 
   if (audio_name == NULL)
-    audio_name = config_get(c, "/enfle/plugins/audio/default");
+    audio_name = config_get_str(c, "/enfle/plugins/audio/default");
 
   uidata.ap = NULL;
   if (audio_name) {
@@ -433,7 +433,7 @@ main(int argc, char **argv)
     show_message("No audio plugin specified.\n");
   }
 
-  if (video_name == NULL && ((video_name = config_get(c, "/enfle/plugins/video/default")) == NULL)) {
+  if (video_name == NULL && ((video_name = config_get_str(c, "/enfle/plugins/video/default")) == NULL)) {
     fprintf(stderr, "configuration error\n");
     return 1;
   }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 23 04:26:42 2001.
- * $Id: avifile.cpp,v 1.25 2001/09/22 19:40:57 sian Exp $
+ * Last Modified: Sun Oct 14 12:43:15 2001.
+ * $Id: avifile.cpp,v 1.26 2001/10/14 12:34:05 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -40,6 +40,8 @@
 // only for GetAvifileVersion()...
 #include <avifile/aviplay.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #ifndef USE_PTHREAD
@@ -418,10 +420,12 @@ play(Movie *m)
   }
   info->eof = 0;
 
-  if (m->has_video)
-    pthread_create(&info->video_thread, NULL, play_video, m);
   if (m->has_audio)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
+  if (m->has_video) {
+    timer_start(m->timer);
+    pthread_create(&info->video_thread, NULL, play_video, m);
+  }
 
   pthread_mutex_lock(&info->update_mutex);
   pthread_mutex_unlock(&info->update_mutex);
@@ -466,7 +470,7 @@ play_video(void *arg)
   pthread_exit((void *)PLAY_OK);
 }
 
-#define AUDIO_BUFFER_SIZE 20000
+#define AUDIO_BUFFER_SIZE 32768
 
 static void *
 play_audio(void *arg)
@@ -498,10 +502,6 @@ play_audio(void *arg)
     info->audiostream->ReadFrames(input_buffer, samples_to_read, samples_to_read, samples, ocnt);
     //debug_message("read %d samples (%d bytes)\n", samples, ocnt);
     m->ap->write_device(ad, input_buffer, ocnt);
-    if (m->current_sample == 0) {
-      timer_stop(m->timer);
-      timer_start(m->timer);
-    }
     m->current_sample += samples;
   }
   m->ap->close_device(ad);
@@ -537,9 +537,6 @@ play_main(Movie *m, VideoWindow *vw)
   }
 
   m->current_frame = info->stream->GetPos();
-
-  if (m->current_frame == 0)
-    timer_start(m->timer);
 
   due_time = (int)(info->stream->GetTime() * 1000);
   //debug_message("v: %d %d (%d frame)\n", timer_get_milli(m->timer), due_time, m->current_frame);
