@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  7 01:51:07 2003.
- * $Id: enfle.c,v 1.52 2003/12/08 01:43:51 sian Exp $
+ * Last Modified: Sat Dec 13 02:14:26 2003.
+ * $Id: enfle.c,v 1.53 2003/12/16 16:56:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -186,6 +186,47 @@ print_plugin_info(EnflePlugins *eps, int level)
   }
 }
 
+#if defined(USE_SPI)
+static int
+scan_and_load_spi_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
+{
+  Archive *a;
+  PluginType type;
+  char *fullpath, *path, *ext, *base_name, *name;
+  int nplugins = 0;
+  int tmp, result;
+
+  tmp = config_get_boolean(c, "/enfle/plugins/spi/disabled", &result);
+  if (result > 0 && tmp)
+    return 0;
+  else if (result < 0) {
+    warning("Invalid string in spi/disable.  spi disabled.\n");
+    return 0;
+  }
+
+  a = archive_create(ARCHIVE_ROOT);
+  archive_read_directory(a, plugin_path, 0);
+  path = archive_iteration_start(a);
+  while (path) {
+    base_name = misc_basename(path);
+    fullpath = archive_getpathname(a, path);
+    if (!strcasecmp(ext, ".spi")) {
+      if ((name = spi_load(eps, fullpath, &type)) == NULL) {
+	warning("spi_load %s failed.\n", fullpath);
+      } else {
+	nplugins++;
+	nplugins -= check_and_unload(eps, c, type, name);
+      }
+    }
+    free(fullpath);
+    path = archive_iteration_next(a);
+  }
+  archive_destroy(a);
+
+  return nplugins;
+}
+#endif
+
 static int
 scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 {
@@ -193,16 +234,6 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   PluginType type;
   char *fullpath, *path, *ext, *base_name, *name;
   int nplugins = 0;
-#ifdef USE_SPI
-  int spi_enabled = 1;
-  int tmp, result;
-
-  tmp = config_get_boolean(c, "/enfle/plugins/loader/spi/disabled", &result);
-  if (result > 0 && tmp)
-    spi_enabled = 0;
-  else if (result < 0)
-    warning("Invalid string in spi/disable.\n");
-#endif
 
   /* Add static linked plugins */
   STATIC_PLUGIN_ADD
@@ -231,28 +262,6 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 	  nplugins++;
 	  nplugins -= check_and_unload(eps, c, type, name);
 	}
-#ifdef USE_SPI
-      } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
-	if ((name = spi_load(eps, fullpath, &type)) == NULL) {
-	  warning("spi_load %s failed.\n", fullpath);
-	} else {
-	  nplugins++;
-	  nplugins -= check_and_unload(eps, c, type, name);
-	}
-#endif
-#if 0
-      } else if (ext && !strcasecmp(ext, ".dll")
-		 //  || !strcasecmp(ext, ".acm")
-		 ) {
-	PluginType type;
-
-	if ((name = spi_load(eps, fullpath, &type)) == NULL) {
-	  warning(stderr, "spi_load %s failed.\n", fullpath);
-	} else {
-	  nplugins++;
-	  nplugins -= check_and_unload(eps, c, type, name);
-	}
-#endif
       }
     }
     free(fullpath);
@@ -406,6 +415,17 @@ main(int argc, char **argv)
     err_message("scan_and_load_plugins() failed.  plugin path = %s\n", plugin_path);
     return 1;
   }
+
+#if defined(USE_SPI)
+  {
+    char *spi_plugin_path;
+    if ((spi_plugin_path = config_get_str(c, "/enfle/plugins/spi/dir")) != NULL) {
+      if (!scan_and_load_spi_plugins(eps, c, spi_plugin_path)) {
+	show_message("spi requested, but no spi plugins loaded from %s.\n", spi_plugin_path);
+      }
+    }
+  }
+#endif
 
   if (argc == optind) {
     usage();
