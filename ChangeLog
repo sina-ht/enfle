@@ -1,5 +1,12 @@
 2001-02-20  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer_mpeg.c,
+	lib/demultiplexer/demultiplexer_mpeg.h,
+	plugins/player/libmpeg2/libmpeg2.c: More coding.
+
+2001-02-20  Hiroshi Takekawa  <sian@fennel.org>
+
 	* compat.h: Added memalign().
 
 	* lib/enfle/stream-utils.[ch]: Added 16bit staffs.
