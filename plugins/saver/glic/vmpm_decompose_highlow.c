@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- High-Low decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Apr 30 01:01:21 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.3 2001/04/30 01:09:08 sian Exp $
+ * Last Modified: Fri May  4 20:40:35 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.4 2001/05/04 12:09:04 sian Exp $
  */
 
 #include <stdio.h>
@@ -174,10 +174,10 @@ encode(VMPM *vmpm)
   Arithcoder *ac;
   Arithmodel *am;
   Arithmodel *bin_am;
+  Arithmodel **low_ams;
   unsigned int *symbol_to_index;
   int i, n;
   unsigned int j;
-  FILE *low_fp;
 
   //debug_message(__FUNCTION__ "()\n");
 
@@ -228,24 +228,27 @@ encode(VMPM *vmpm)
 
   arithmodel_encode_final(bin_am);
   arithmodel_encode_final(am);
-  arithcoder_encode_final(ac);
 
   arithmodel_destroy(bin_am);
   arithmodel_destroy(am);
-  arithcoder_destroy(ac);
 
-  {
-    char *path;
-
-    if ((path = malloc(strlen(vmpm->outfilepath) + 4 + 1)) == NULL)
-      return;
-    strcpy(path, vmpm->outfilepath);
-    strcat(path, ".low");
-    low_fp = fopen(path, "wb");
-    fwrite(d->buffer_low, 1, vmpm->bufferused, low_fp);
-    fclose(low_fp);
-    free(path);
+  if ((low_ams = calloc(1 << (8 - vmpm->nlowbits), sizeof(Arithmodel *))) == NULL)
+    memory_error(NULL, MEMORY_ERROR);
+  for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++) {
+    low_ams[i] = arithmodel_order_zero_create(0, 0);
+    arithmodel_encode_init(low_ams[i], ac);
+    for (j = 0; j < (1 << vmpm->nlowbits); j++)
+      arithmodel_install_symbol(low_ams[i], 1);
   }
+  for (i = 0; i < vmpm->bufferused; i++)
+    arithmodel_encode(low_ams[vmpm->buffer[i]], d->buffer_low[i]);
+  for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
+    arithmodel_encode_final(low_ams[i]);
+  for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
+    arithmodel_destroy(low_ams[i]);
+
+  arithcoder_encode_final(ac);
+  arithcoder_destroy(ac);
 
   free(d->buffer_low);
   d->buffer_low = NULL;
