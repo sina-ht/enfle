@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:39:01 2001.
- * $Id: ui.c,v 1.5 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Mon Feb 18 01:39:58 2002.
+ * $Id: ui.c,v 1.6 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include "compat.h"
 #include "common.h"
 
 #include "ui.h"

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 01:24:11 2002.
- * $Id: gz.c,v 1.7 2002/02/07 16:24:53 sian Exp $
+ * Last Modified: Mon Feb 18 03:28:20 2002.
+ * $Id: gz.c,v 1.8 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,7 +60,7 @@ plugin_entry(void)
   string_set(s, STREAMER_GZ_PLUGIN_DESCRIPTION);
   /* 'compiled' means that the version string is compiled in. */
   string_catf(s, " with zlib %s(compiled with %s)", zlib_version, ZLIB_VERSION);
-  stp->description = strdup(string_get(s));
+  stp->description = (const unsigned char *)strdup(string_get(s));
   string_destroy(s);
 
   return (void *)stp;

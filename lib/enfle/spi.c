@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:47:15 2001.
- * $Id: spi.c,v 1.18 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 03:05:24 2002.
+ * $Id: spi.c,v 1.19 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,6 +20,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#define REQUIRE_STRING_H
+#include "compat.h"
+#define REQUIRE_FATAL
+#include "common.h"
+
 #ifdef HAVE_CONFIG_H
 # ifndef CONFIG_H_INCLUDED
 #  include "enfle-config.h"
@@ -29,8 +34,6 @@
 
 #ifdef USE_SPI
 
-#include <stdlib.h>
-
 #include "dllloader/pe_image.h"
 #include "spi-private.h"
 #include "spi.h"
@@ -39,11 +42,6 @@
 #include "archiver-plugin.h"
 #include "archiver-extra.h"
 #include "utils/misc.h"
-
-#define REQUIRE_STRING_H
-#include "compat.h"
-#define REQUIRE_FATAL
-#include "common.h"
 
 static LoaderStatus loader_identify(Image *, Stream *, VideoWindow *, Config *, void *);
 static LoaderStatus loader_load(Image *, Stream *, VideoWindow *, Config *, void *);
@@ -115,7 +113,7 @@ loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
   if (st->path)
     err = sl->get_pic_info(st->path, 0, 0, &info);
   else
-    err = sl->get_pic_info(st->buffer, st->buffer_size, 1, &info);
+    err = sl->get_pic_info((LPSTR)st->buffer, st->buffer_size, 1, &info);
   if (err == SPI_SUCCESS) {
     if (info.width <= 0 || info.height <= 0) {
       debug_message("Invalid dimension (%ld, %ld)\n", info.width, info.height);
@@ -384,7 +382,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   }
   debug_message("OK\n");
 
-  if ((get_plugin_info = peimage_resolve(pe, "GetPluginInfo")) == NULL) {
+  if ((get_plugin_info = (GetPluginInfoFunc)peimage_resolve(pe, "GetPluginInfo")) == NULL) {
     show_message("Cannot resolve GetPluginInfo.\n");
     goto error;
   }
@@ -404,15 +402,15 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
       goto error;
     }
     sl->pe = pe;
-    if ((sl->is_supported = peimage_resolve(pe, "IsSupported")) == NULL) {
+    if ((sl->is_supported = (IsSupportedFunc)peimage_resolve(pe, "IsSupported")) == NULL) {
       show_message("Cannot resolve IsSupported.\n");
       goto error;
     }
-    if ((sl->get_pic_info = peimage_resolve(pe, "GetPictureInfo")) == NULL) {
+    if ((sl->get_pic_info = (GetPictureInfoFunc)peimage_resolve(pe, "GetPictureInfo")) == NULL) {
       show_message("Cannot resolve GetPictureInfo.\n");
       goto error;
     }
-    if ((sl->get_pic = peimage_resolve(pe, "GetPicture")) == NULL) {
+    if ((sl->get_pic = (GetPictureFunc)peimage_resolve(pe, "GetPicture")) == NULL) {
       show_message("Cannot resolve GetPicture.\n");
       goto error;
     }
@@ -435,19 +433,19 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
       return NULL;
     }
     sa->pe = pe;
-    if ((sa->is_supported = peimage_resolve(pe, "IsSupported")) == NULL) {
+    if ((sa->is_supported = (IsSupportedFunc)peimage_resolve(pe, "IsSupported")) == NULL) {
       show_message("Cannot resolve IsSupported.\n");
       goto error;
     }
-    if ((sa->get_archive_info = peimage_resolve(pe, "GetArchiveInfo")) == NULL) {
+    if ((sa->get_archive_info = (GetArchiveInfoFunc)peimage_resolve(pe, "GetArchiveInfo")) == NULL) {
       show_message("Cannot resolve GetArchiveInfo.\n");
       return NULL;
     }
-    if ((sa->get_file_info = peimage_resolve(pe, "GetFileInfo")) == NULL) {
+    if ((sa->get_file_info = (GetFileInfoFunc)peimage_resolve(pe, "GetFileInfo")) == NULL) {
       show_message("Cannot resolve GetFileInfo.\n");
       return NULL;
     }
-    if ((sa->get_file = peimage_resolve(pe, "GetFile")) == NULL) {
+    if ((sa->get_file = (GetFileFunc)peimage_resolve(pe, "GetFile")) == NULL) {
       show_message("Cannot resolve GetFile.\n");
       return NULL;
     }
@@ -470,7 +468,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   debug_message("OK\n");
 
   ep->name = strdup(misc_basename(path));
-  ep->description = strdup(buf);
+  ep->description = (const unsigned char *)strdup(buf);
   ep->author = (char *)"SPI author";
 
   p = plugin_create();

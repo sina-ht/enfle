@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:19:27 2001.
- * $Id: pe_image.c,v 1.21 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 04:21:14 2002.
+ * $Id: pe_image.c,v 1.22 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -454,7 +454,7 @@ load(PE_image *p, char *path)
       hash_set_str(p->export_symbols, p->image + names[i], p->image + functions[name_ordinals[i]]);
       debug_message(" %s", p->image + names[i]);
 
-      export_syminfo[i].name = p->image + names[i];
+      export_syminfo[i].name = (char *)p->image + names[i];
       export_syminfo[i].value = p->image + functions[name_ordinals[i]];
     }
     debug_message("\n");
@@ -491,10 +491,10 @@ load(PE_image *p, char *path)
 	} else {
 	  iibn = (IMAGE_IMPORT_BY_NAME *)(p->image + (int)othunk[j].u1.AddressOfData);
 	  /* import */
-	  if ((syminfo = get_dll_symbols(p->image + iid[i].Name)) != NULL) {
+	  if ((syminfo = get_dll_symbols((char *)p->image + iid[i].Name)) != NULL) {
 	    for (; ; syminfo++) {
 	      if (syminfo->name) {
-		if (strcmp(iibn->Name, syminfo->name) == 0) {
+		if (strcmp((char *)iibn->Name, syminfo->name) == 0) {
 		  debug_message(" %s", iibn->Name);
 		  thunk[j].u1.Function = (FARPROC)syminfo->value;
 		  break;
@@ -569,7 +569,7 @@ load(PE_image *p, char *path)
     DllEntryProc InitDll;
     int result;
 
-    if ((InitDll = resolve(p, "DllMain")) == NULL) {
+    if ((InitDll = (DllEntryProc)resolve(p, "DllMain")) == NULL) {
       InitDll = (DllEntryProc)(p->image + p->opt_header.AddressOfEntryPoint);
       if (p->opt_header.AddressOfEntryPoint > p->opt_header.SizeOfHeaders + p->opt_header.SizeOfImage) {
 	show_message("%s: InitDll %p is bad address\n", path, InitDll);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:56:46 2001.
- * $Id: x11.c,v 1.16 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 04:22:06 2002.
+ * $Id: x11.c,v 1.17 2002/02/17 19:32:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -102,8 +102,8 @@ get_xvinfo(X11 *x11)
     if ((result = XvQueryAdaptors(x11_display(x11), x11_root(x11),
 				  &xv->nadaptors, &adaptor_infos)) == Success) {
       if (xv->nadaptors) {
-	int i, l;
-	unsigned int j, k;
+	int l;
+	unsigned int i, j, k;
 
 	for (i = 0; i < xv->nadaptors; i++) {
 	  debug_message_fnc("Xv: adaptor#%d[%s]: %ld ports\n", i, adaptor_infos[i].name, adaptor_infos[i].num_ports);

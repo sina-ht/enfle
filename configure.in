@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Fri Feb 15 02:44:05 2002.
-dnl $Id: configure.in,v 1.103 2002/02/14 19:20:52 sian Exp $
+dnl Last Modified: Mon Feb 18 03:53:42 2002.
+dnl $Id: configure.in,v 1.104 2002/02/17 19:32:58 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -24,15 +24,8 @@ dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 AC_INIT(enfle, 20020215, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
-AM_INIT_AUTOMAKE(enfle, 20020215)
+AM_INIT_AUTOMAKE(enfle, 20020218)
 AC_CANONICAL_HOST
-
-if test "`uname -s`" = "SunOS"; then
-  dnl Supress insignificant warnings
-  CFLAGS="-Wall -Wno-implicit-int -pipe $CFLAGS"
-else
-  CFLAGS="-Wall -pipe $CFLAGS"
-fi
 
 dnl Maintainer mode (could be uncommented for production release.)
 dnl AM_MAINTAINER_MODE
@@ -273,8 +266,8 @@ AC_CHECK_HEADERS([errno.h fcntl.h inttypes.h memory.h stddef.h stdint.h stdlib.h
 dnl Checks for X libraries.
 AC_PATH_XTRA
 # last resort
-x_includes=${x_includes-/usr/X11R6/include}
-X_LIBS=${X_LIBS--L/usr/X11R6/lib}
+x_includes=${x_includes:-/usr/X11R6/include}
+X_LIBS=${X_LIBS:--L/usr/X11R6/lib}
 CPPFLAGS="$CPPFLAGS -I$x_includes"
 LDFLAGS="$LDFLAGS $X_LIBS"
 
@@ -419,7 +412,15 @@ dnl with dmalloc
 AM_WITH_DMALLOCTH
 
 dnl do not put this line at earlier position to avoid confusing configure script.
-test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+if test "$CC" = "gcc"; then
+  if test "`uname -s`" = "SunOS"; then
+    dnl Supress insignificant warnings
+    CFLAGS="-Wall -Wno-implicit-int -pipe $CFLAGS"
+  else
+    CFLAGS="-Wall -pipe $CFLAGS"
+  fi
+  test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+fi
 
 AC_CONFIG_FILES([
  Makefile

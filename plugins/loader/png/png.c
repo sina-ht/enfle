@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:22:42 2001.
- * $Id: png.c,v 1.12 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 03:30:37 2002.
+ * $Id: png.c,v 1.13 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -67,7 +67,7 @@ plugin_entry(void)
   string_set(s, LOADER_PNG_PLUGIN_DESCRIPTION);
   /* 'compiled' means that the version string is compiled in. */
   string_cat(s, " compiled with libpng " PNG_LIBPNG_VER_STRING);
-  lp->description = strdup(string_get(s));
+  lp->description = (const unsigned char *)strdup(string_get(s));
   string_destroy(s);
 
   return (void *)lp;
@@ -124,7 +124,7 @@ warning_handler(png_structp png_ptr, png_const_charp warning_msg)
 
 DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
-  char buf[PNG_BYTES_TO_CHECK];
+  unsigned char buf[PNG_BYTES_TO_CHECK];
 
   /* Read in the signature bytes */
   if (stream_read(st, buf, PNG_BYTES_TO_CHECK) != PNG_BYTES_TO_CHECK)
@@ -229,10 +229,10 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       return LOAD_ERROR;
     }
     for (i = 0; i < num_text; i++) {
-      strcat(p->comment, text_ptr[i].key);
-      strcat(p->comment, ": ");
-      strcat(p->comment, text_ptr[i].text);
-      strcat(p->comment, "\n");
+      strcat((char *)p->comment, text_ptr[i].key);
+      strcat((char *)p->comment, ": ");
+      strcat((char *)p->comment, text_ptr[i].text);
+      strcat((char *)p->comment, "\n");
     }
   }
 

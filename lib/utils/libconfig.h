@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 20:20:46 2002.
- * $Id: libconfig.h,v 1.6 2002/02/08 11:30:33 sian Exp $
+ * Last Modified: Mon Feb 18 02:58:44 2002.
+ * $Id: libconfig.h,v 1.7 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,8 +35,8 @@ struct _config {
   int (*parse)(Config *, char *);
   void *(*get)(Config *, const char *);
   int (*set)(Config *, char *, void *);
-  unsigned char *(*get_str)(Config *, const char *);
-  int (*set_str)(Config *, char *, unsigned char *);
+  char *(*get_str)(Config *, const char *);
+  int (*set_str)(Config *, char *, char *);
   int (*get_boolean)(Config *, const char *, int *);
   int (*set_boolean)(Config *, char *, int);
   int (*get_int)(Config *, const char *, int *);

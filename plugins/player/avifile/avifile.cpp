@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  6 21:48:51 2002.
- * $Id: avifile.cpp,v 1.29 2002/02/08 10:52:44 sian Exp $
+ * Last Modified: Mon Feb 18 03:24:05 2002.
+ * $Id: avifile.cpp,v 1.30 2002/02/17 19:32:56 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -113,9 +113,9 @@ plugin_entry(void)
     return NULL;
   memcpy(pp, &plugin, sizeof(PlayerPlugin));
   s = string_create();
-  string_set(s, (const unsigned char *)PLAYER_AVIFILE_PLUGIN_DESCRIPTION);
+  string_set(s, (const char *)PLAYER_AVIFILE_PLUGIN_DESCRIPTION);
   /* The version string is fetched dynamically, not statically compiled-in. */
-  string_catf(s, (const unsigned char *)" with avifile %g", GetAvifileVersion());
+  string_catf(s, (const char *)" with avifile %g", GetAvifileVersion());
   pp->description = (const unsigned char *)strdup((const char *)string_get(s));
   string_destroy(s);
 

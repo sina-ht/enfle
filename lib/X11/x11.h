@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Oct 21 03:09:40 2001.
- * $Id: x11.h,v 1.15 2001/10/22 08:48:43 sian Exp $
+ * Last Modified: Mon Feb 18 03:09:20 2002.
+ * $Id: x11.h,v 1.16 2002/02/17 19:32:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,7 +40,7 @@
 
 typedef struct _x11_xv {
   unsigned int ver, rev, req_base, ev_base, err_base;
-  int nadaptors;
+  unsigned int nadaptors;
   int image_port;
   unsigned int image_width, image_height;
   unsigned int format_ids[XV_FORMAT_MAX];

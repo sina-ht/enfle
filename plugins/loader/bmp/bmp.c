@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 14 02:19:20 2002.
- * $Id: bmp.c,v 1.9 2002/02/13 18:02:27 sian Exp $
+ * Last Modified: Mon Feb 18 03:30:53 2002.
+ * $Id: bmp.c,v 1.10 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -177,7 +177,7 @@ load_image(Image *p, Stream *st)
 
 DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
-  char buf[2];
+  unsigned char buf[2];
 
   if (stream_read(st, buf, 2) != 2)
     return LOAD_NOT;

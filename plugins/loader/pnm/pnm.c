@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:23:49 2001.
- * $Id: pnm.c,v 1.5 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 04:23:42 2002.
+ * $Id: pnm.c,v 1.6 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -152,21 +152,21 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
     p->type = _BITMAP_MSBFirst;
     p->depth = p->bits_per_pixel = 1;
     p->ncolors = 2;
-    p->format_detail = "PBM(ASCII)";
+    p->format_detail = (char *)"PBM(ASCII)";
     data->encode = _ASCII;
     break;
   case '2':
     /* ascii graymap */
     p->type = _GRAY;
     p->depth = p->bits_per_pixel = 8;
-    p->format_detail = "PGM(ASCII)";
+    p->format_detail = (char *)"PGM(ASCII)";
     data->encode = _ASCII;
     break;
   case '3':
     /* ascii pixmap */
     p->type = _RGB24;
     p->depth = p->bits_per_pixel = 24;
-    p->format_detail = "PPM(ASCII)";
+    p->format_detail = (char *)"PPM(ASCII)";
     data->encode = _ASCII;
     break;
   case '4':
@@ -174,28 +174,28 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
     p->type = _BITMAP_MSBFirst;
     p->depth = p->bits_per_pixel = 1;
     p->ncolors = 2;
-    p->format_detail = "PBM(RAW)";
+    p->format_detail = (char *)"PBM(RAW)";
     data->encode = _RAW;
     break;
   case '5':
     /* raw graymap */
     p->type = _GRAY;
     p->depth = p->bits_per_pixel = 8;
-    p->format_detail = "PGM(RAW)";
+    p->format_detail = (char *)"PGM(RAW)";
     data->encode = _RAW;
     break;
   case '6':
     /* raw pixmap */
     p->type = _RGB24;
     p->depth = p->bits_per_pixel = 24;
-    p->format_detail = "PPM(RAW)";
+    p->format_detail = (char *)"PPM(RAW)";
     data->encode = _RAW;
     break;
   case '7':
     /* xvpic */
     p->type = _INDEX;
     p->depth = p->bits_per_pixel = 8;
-    p->format_detail = "xvpic";
+    p->format_detail = (char *)"xvpic";
     data->encode = _RAW;
     free(token);
     if ((token = get_token(st)) == NULL)

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:39:12 2001.
- * $Id: module.c,v 1.5 2001/01/06 23:52:52 sian Exp $
+ * Last Modified: Mon Feb 18 01:39:10 2002.
+ * $Id: module.c,v 1.6 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,15 +20,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdlib.h>
+#define REQUIRE_STRING_H
+#include "compat.h"
+#include "common.h"
 
 #include "module.h"
 #include "utils/misc.h"
-
-#define REQUIRE_STRING_H
-#include "compat.h"
-
-#include "common.h"
 
 typedef struct _module_list ModuleList;
 struct _module_list {

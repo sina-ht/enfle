@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 14 01:18:30 2002.
- * $Id: normal.c,v 1.60 2002/02/13 16:51:42 sian Exp $
+ * Last Modified: Mon Feb 18 03:47:43 2002.
+ * $Id: normal.c,v 1.61 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -259,7 +259,7 @@ set_caption_string(MainLoop *ml)
 	string_catf(cap, "%d", vw->render_height); break;
       case 'f':
 	if (ml->p)
-	  string_cat(cap, (ml->p->format_detail != NULL) ? (unsigned char *)ml->p->format_detail : (unsigned char *)ml->p->format);
+	  string_cat(cap, (ml->p->format_detail != NULL) ? ml->p->format_detail : ml->p->format);
 	else if (ml->m)
 	  string_cat(cap, ml->m->format);
 	if (strcmp(ml->st->format, "FILE") != 0) {
@@ -796,8 +796,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   Stream *s;
   Image *p;
   Movie *m;
-  char *path;
-  unsigned char *tmp;
+  char *path, *tmp;
   int ret, res, r;
 
   s = stream_create();

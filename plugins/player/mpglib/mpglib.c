@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:28:06 2001.
- * $Id: mpglib.c,v 1.5 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 03:36:45 2002.
+ * $Id: mpglib.c,v 1.6 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -110,8 +110,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   read_size = stream_read(st, info->input_buffer, MP3_READ_BUFFER_SIZE);
   stream_rewind(st);
   decodeMP3(&info->mp,
-	    info->input_buffer, read_size,
-	    info->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+	    (char *)info->input_buffer, read_size,
+	    (char *)info->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
   m->has_audio = 1;
   m->sampleformat = _AUDIO_FORMAT_S16_LE;
   m->channels = info->mp.fr.stereo;
@@ -245,13 +245,13 @@ play_audio(void *arg)
       break;
     }
     ret = decodeMP3(&info->mp,
-		    info->input_buffer, read_size,
-		    info->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+		    (char *)info->input_buffer, read_size,
+		    (char *)info->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
     while (ret == MP3_OK) {
       m->ap->write_device(ad, info->output_buffer, write_size);
       ret = decodeMP3(&info->mp,
 		      NULL, 0,
-		      info->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+		      (char *)info->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
     }
   }
 

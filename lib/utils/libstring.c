@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:54:19 2001.
- * $Id: libstring.c,v 1.8 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Mon Feb 18 03:01:56 2002.
+ * $Id: libstring.c,v 1.9 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,14 +30,14 @@
 
 #include "libstring.h"
 
-static unsigned char *get(String *);
+static char *get(String *);
 static unsigned int length(String *);
-static int set(String *, const unsigned char *);
+static int set(String *, const char *);
 static int copy(String *, String *);
-static int cat_ch(String *, unsigned char);
-static int ncat(String *, const unsigned char *, unsigned int);
-static int cat(String *, const unsigned char *);
-static int catf(String *, const unsigned char *, ...);
+static int cat_ch(String *, char);
+static int ncat(String *, const char *, unsigned int);
+static int cat(String *, const char *);
+static int catf(String *, const char *, ...);
 static int append(String *, String *);
 static void shrink(String *, unsigned int);
 static String *dup(String *);
@@ -133,7 +133,7 @@ buffer_increase(String *s, unsigned int size)
 
 /* methods */
 
-static unsigned char *
+static char *
 get(String *s)
 {
   return string_buffer(s);
@@ -146,7 +146,7 @@ length(String *s)
 }
 
 static int
-set(String *s, const unsigned char *p)
+set(String *s, const char *p)
 {
   unsigned int l;
 
@@ -171,7 +171,7 @@ copy(String *s1, String *s2)
 }
 
 static int
-cat_ch(String *s, unsigned char c)
+cat_ch(String *s, char c)
 {
   if (!buffer_increase(s, 1))
     return 0;
@@ -183,7 +183,7 @@ cat_ch(String *s, unsigned char c)
 }
 
 static int
-ncat(String *s, const unsigned char *p, unsigned int l)
+ncat(String *s, const char *p, unsigned int l)
 {
   if (l > strlen(p))
     l = strlen(p);
@@ -196,16 +196,16 @@ ncat(String *s, const unsigned char *p, unsigned int l)
 }
 
 static int
-cat(String *s, const unsigned char *p)
+cat(String *s, const char *p)
 {
   return ncat(s, p, strlen(p));
 }
 
 static int
-catf(String *s, const unsigned char *format, ...)
+catf(String *s, const char *format, ...)
 {
   va_list args;
-  unsigned char *p, *tmp;
+  char *p, *tmp;
   int n, size, result;
 
   size = 100;

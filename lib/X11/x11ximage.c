@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:01:09 2001.
- * $Id: x11ximage.c,v 1.43 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 03:10:36 2002.
+ * $Id: x11ximage.c,v 1.44 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -697,7 +697,7 @@ convert(X11XImage *xi, Image *p)
     xvimage->data = memory_ptr(p->rendered.image);
 #endif
   } else {
-    ximage->data = dest;
+    ximage->data = (char *)dest;
     ximage->bits_per_pixel = bits_per_pixel;
   }
 

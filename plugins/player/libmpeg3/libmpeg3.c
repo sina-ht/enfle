@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:26:24 2001.
- * $Id: libmpeg3.c,v 1.36 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 03:33:24 2002.
+ * $Id: libmpeg3.c,v 1.37 2002/02/17 19:32:56 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -47,7 +47,7 @@ typedef struct _libmpeg3_info {
   Config *c;
   AudioDevice *ad;
   unsigned char **lines;
-  unsigned char *y, *u, *v;
+  char *y, *u, *v;
   int eof;
   int use_xv;
   int rendering_type;

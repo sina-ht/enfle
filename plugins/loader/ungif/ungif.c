@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:50:42 2001.
- * $Id: ungif.c,v 1.15 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Mon Feb 18 03:31:32 2002.
+ * $Id: ungif.c,v 1.16 2002/02/17 19:32:56 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -212,10 +212,10 @@ load_image(Image *p, Stream *st)
 	  {
 	    unsigned char *tmp;
 
-	    if ((tmp = realloc(p->comment, strlen(p->comment) + Extension[0] + 1)) == NULL) {
+	    if ((tmp = realloc(p->comment, strlen((const char *)p->comment) + Extension[0] + 1)) == NULL) {
 	      show_message("No enough memory for comment(append). Truncated.\n");
 	    } else {
-	      memcpy(tmp + strlen(tmp), &Extension[1], Extension[0]);
+	      memcpy(tmp + strlen((const char *)tmp), &Extension[1], Extension[0]);
 	      p->comment = tmp;
 	    }
 	  }
@@ -273,7 +273,7 @@ load_image(Image *p, Stream *st)
 
 DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
-  char buf[3];
+  unsigned char buf[3];
 
   if (stream_read(st, buf, 3) != 3)
     return LOAD_NOT;

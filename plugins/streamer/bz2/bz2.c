@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:40:13 2001.
- * $Id: bz2.c,v 1.4 2001/09/02 05:47:03 sian Exp $
+ * Last Modified: Mon Feb 18 03:28:43 2002.
+ * $Id: bz2.c,v 1.5 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -61,7 +61,7 @@ plugin_entry(void)
   string_set(s, STREAMER_BZ2_PLUGIN_DESCRIPTION);
   /* The version string is fetched dynamically, not statically compiled-in. */
   string_catf(s, " with libbz2 %s", BZLIBVERSION());
-  stp->description = strdup(string_get(s));
+  stp->description = (const unsigned char *)strdup(string_get(s));
   string_destroy(s);
 
   return (void *)stp;

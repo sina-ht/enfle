@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan  1 23:59:43 2002.
- * $Id: kernel32.c,v 1.21 2002/01/02 11:23:01 sian Exp $
+ * Last Modified: Mon Feb 18 03:19:51 2002.
+ * $Id: kernel32.c,v 1.22 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -1041,7 +1041,7 @@ DEFINE_W32API(FARPROC, GetProcAddress,
   for (i = 0; syminfo[i].name; i++)
     if (strcmp(syminfo[i].name, funcname) == 0) {
       debug_message_fnc("resolve: %s -> %p\n", funcname, syminfo[i].value);
-      return syminfo[i].value;
+      return (FARPROC)syminfo[i].value;
     }
 
   return NULL;

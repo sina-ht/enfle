@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:51:36 2001.
- * $Id: pcx.c,v 1.4 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Mon Feb 18 04:23:09 2002.
+ * $Id: pcx.c,v 1.5 2002/02/17 19:32:56 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -69,7 +69,7 @@ plugin_exit(void *p)
 
 DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 {
-  char buf[128];
+  unsigned char buf[128];
   int xmax, ymax, xmin, ymin;
 
   /* Read in the signature bytes */
@@ -83,19 +83,19 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   /* version */
   switch (buf[1]) {
   case 0:
-    p->format_detail = "Version 2.5 of PC Paintbrush";
+    p->format_detail = (char *)"Version 2.5 of PC Paintbrush";
     break;
   case 2:
-    p->format_detail = "Version 2.8 w/palette information";
+    p->format_detail = (char *)"Version 2.8 w/palette information";
     break;
   case 3:
-    p->format_detail = "Version 2.8 w/o palette information";
+    p->format_detail = (char *)"Version 2.8 w/o palette information";
     break;
   case 4:
-    p->format_detail = "PC Paintbrush for Windows(Plus for Windows uses Ver 5)";
+    p->format_detail = (char *)"PC Paintbrush for Windows(Plus for Windows uses Ver 5)";
     break;
   case 5:
-    p->format_detail =
+    p->format_detail = (char *)
       "Version 3.0 and > of PC Paintbrush and PC Paintbrush +,"
       "includes Publisher's Paintbrush . Includes 24-bit .PCX files";
     break;
@@ -149,7 +149,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
   unsigned int i, k, ppl;
   int nplanes;
   int xmax, ymax, xmin, ymin;
-  char buf[769];
+  unsigned char buf[769];
   unsigned char c, *d, *dd;
 
   debug_message("pcx loader: load() called\n");

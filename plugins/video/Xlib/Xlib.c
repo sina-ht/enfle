@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:35:26 2001.
- * $Id: Xlib.c,v 1.43 2001/12/26 00:57:24 sian Exp $
+ * Last Modified: Mon Feb 18 04:28:01 2002.
+ * $Id: Xlib.c,v 1.44 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -80,7 +80,7 @@ static int calc_magnified_size(VideoWindow *, unsigned int, unsigned int, unsign
 static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
 static int dispatch_event(VideoWindow *, VideoEventData *);
-static void set_caption(VideoWindow *, unsigned char *);
+static void set_caption(VideoWindow *, char *);
 static void set_cursor(VideoWindow *, VideoWindowCursor);
 static void set_background(VideoWindow *, Image *);
 static int set_fullscreen_mode(VideoWindow *, VideoWindowFullscreenMode);
@@ -469,7 +469,7 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
   }
 
  {
-   unsigned char *tmp = config_get(vw->c, "/enfle/plugins/video/Xlib/preferred_format");
+   char *tmp = config_get(vw->c, "/enfle/plugins/video/Xlib/preferred_format");
 
    if (strcasecmp(tmp, "planar") == 0) {
      CHECK_AND_RETURN(YV12);
@@ -796,7 +796,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 }
 
 static void
-set_caption(VideoWindow *vw, unsigned char *cap)
+set_caption(VideoWindow *vw, char *cap)
 {
   if (vw->caption) {
     erase_caption(vw);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 12 20:51:26 2001.
- * $Id: plugin.c,v 1.8 2001/09/13 12:23:18 sian Exp $
+ * Last Modified: Mon Feb 18 02:53:37 2002.
+ * $Id: plugin.c,v 1.9 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,7 +69,7 @@ load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbo
     fprintf(stderr, "No enough memory to keep a plugin filepath: %s\n", filepath);
 
   if (entry_symbol) {
-    entry = dlsym(p->handle, entry_symbol);
+    entry = (void *(*)(void))dlsym(p->handle, entry_symbol);
     if ((p->err = (char *)dlerror())) {
       dlclose(p->handle);
       return 0;
@@ -77,7 +77,7 @@ load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbo
   }
 
   if (exit_symbol) {
-    p->substance_unload = dlsym(p->handle, exit_symbol);
+    p->substance_unload = (void (*)(void *))dlsym(p->handle, exit_symbol);
     if ((p->err = (char *)dlerror())) {
       dlclose(p->handle);
       return 0;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 21:09:54 2002.
- * $Id: libconfig.c,v 1.19 2002/02/08 12:14:17 sian Exp $
+ * Last Modified: Mon Feb 18 02:59:55 2002.
+ * $Id: libconfig.c,v 1.20 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,8 +38,8 @@ static int save(Config *, char *);
 static int parse(Config *, char *);
 static void *get(Config *, const char *);
 static int set(Config *, char *, void *);
-static unsigned char *get_str(Config *, const char *);
-static int set_str(Config *, char *, unsigned char *);
+static char *get_str(Config *, const char *);
+static int set_str(Config *, char *, char *);
 static int get_boolean(Config *, const char *, int *);
 static int set_boolean(Config *, char *, int);
 static int get_int(Config *, const char *, int *);
@@ -180,7 +180,7 @@ set_internal(Config *c, String *config_path, char *path, char *remain, int is_li
     fatal(1, "libconfig: %s(): No enough memory.\n", __FUNCTION__);
   if (path != NULL) {
     string_cat(value_path, "/");
-    string_cat(value_path, path);
+    string_cat(value_path, (const char *)path);
   }
 
   if (is_list) {
@@ -189,7 +189,7 @@ set_internal(Config *c, String *config_path, char *path, char *remain, int is_li
     if (*remain == '"') {
       char *end, *quoted;
 
-      if ((end = strrchr(remain, '"')) == NULL || remain == end)
+      if ((end = strrchr((const char *)remain, '"')) == NULL || remain == end)
 	fatal(1, "libconfig: %s(): Non-terminated double quoted string.\n", __FUNCTION__);
       if ((quoted = malloc(end - remain)) == NULL)
 	fatal(1, "libconfig: %s(): No enough memory\n", __FUNCTION__);
@@ -291,7 +291,7 @@ load(Config *c, const char *filepath)
 	  string_cat(config_path, "/");
 	  string_cat(config_path, path);
 	} else if (strcmp(op, "}") == 0) {
-	  unsigned char *pos;
+	  char *pos;
 
 	  if ((pos = strrchr(string_get(config_path), '/')) == NULL) {
 	    show_message("Missing '/'.\n");
@@ -348,7 +348,7 @@ parse(Config *c, char *str)
     valuestart++;
   value = strdup(valuestart);
 
-  r = (isdigit(*value) || ((*value == '+' || *value == '-') && isdigit(*(value + 1)))) ? set_int(c, name, atoi(value)) : set_str(c, name, (unsigned char *)value);
+  r = (isdigit(*value) || ((*value == '+' || *value == '-') && isdigit(*(value + 1)))) ? set_int(c, name, atoi(value)) : set_str(c, name, (char *)value);
   free(name);
 
   return r;
@@ -357,7 +357,7 @@ parse(Config *c, char *str)
 static void *
 get(Config *c, const char *path)
 {
-  return hash_lookup_str(c->hash, (unsigned char *)path);
+  return hash_lookup_str(c->hash, (char *)path);
 }
 
 static int
@@ -366,14 +366,14 @@ set(Config *c, char *path, void *value)
   return hash_set_str(c->hash, path, value);
 }
 
-static unsigned char *
+static char *
 get_str(Config *c, const char *path)
 {
-  return (unsigned char *)hash_lookup_str(c->hash, (unsigned char *)path);
+  return hash_lookup_str(c->hash, path);
 }
 
 static int
-set_str(Config *c, char *path, unsigned char *value)
+set_str(Config *c, char *path, char *value)
 {
   return hash_set_str(c->hash, path, value);
 }

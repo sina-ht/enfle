@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Aug 15 15:34:54 2001.
- * $Id: compat.h,v 1.9 2001/08/15 06:39:58 sian Exp $
+ * Last Modified: Mon Feb 18 01:36:43 2002.
+ * $Id: compat.h,v 1.10 2002/02/17 19:32:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,12 @@
 /* jconfig.h defines this. */
 #undef HAVE_STDLIB_H
 #undef HAVE_STDDEF_H
+
+/*
+ * Should check HAVE_STDLIB_H.
+ * But autoconf bugs icc... so stdlib.h must be included before config.
+ */
+#include <stdlib.h>
 
 #ifdef HAVE_CONFIG_H
 # ifndef CONFIG_H_INCLUDED

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:38:01 2001.
- * $Id: borlndmm.c,v 1.2 2001/01/06 23:52:52 sian Exp $
+ * Last Modified: Mon Feb 18 01:39:44 2002.
+ * $Id: borlndmm.c,v 1.3 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,12 +20,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include "compat.h"
+#include "common.h"
+
 #include "w32api.h"
 #include "module.h"
 
 #include "borlndmm.h"
-
-#include "common.h"
 
 static void unknown_symbol(void);
 

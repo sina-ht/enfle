@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 14 01:06:44 2002.
- * $Id: common.h,v 1.22 2002/02/13 16:52:45 sian Exp $
+ * Last Modified: Mon Feb 18 02:05:53 2002.
+ * $Id: common.h,v 1.23 2002/02/17 19:32:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,7 +44,6 @@
 
 #ifdef REQUIRE_FATAL
 #include <stdarg.h>
-#include <stdlib.h>
 static void fatal(int, const char *, ...) __attribute__ ((__noreturn__, __format__(printf, 2, 3)));
 static void
 fatal(int code, const char *format, ...)
@@ -71,6 +70,7 @@ fatal_perror(int code, const char *msg)
 }
 #endif
 
+#if defined(__GNUC__)
 #ifndef MAX
 #define MAX(a, b) \
  ({typedef _ta = (a), _tb = (b); \
@@ -88,6 +88,12 @@ fatal_perror(int code, const char *msg)
  {typedef _ta = a, _tb = b; \
           _ta *_a = &a; _tb *_b = &b; _ta _t; \
           _t = *_a; *_a = *_b; *_b = _t; }
+#endif
+#else
+#define MAX(a,b) ((a>b)?a:b)
+#define MIX(a,b) ((a<b)?a:b)
+#define SWAP_T(a,b,t) { t __tmp = (a); a = (b); b = __tmp; }
+#define SWAP(a,b) SWAP_T(a,b,int)
 #endif
 
 #ifdef DEBUG

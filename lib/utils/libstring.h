@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 14:03:28 2001.
- * $Id: libstring.h,v 1.5 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Mon Feb 18 03:00:39 2002.
+ * $Id: libstring.h,v 1.6 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,16 +28,16 @@ typedef struct _string String;
 struct _string {
   unsigned int len;
   unsigned int buffer_size;
-  unsigned char *buffer;
+  char *buffer;
 
-  unsigned char *(*get)(String *);
+  char *(*get)(String *);
   unsigned int (*length)(String *);
-  int (*set)(String *, const unsigned char *);
+  int (*set)(String *, const char *);
   int (*copy)(String *, String *);
-  int (*cat_ch)(String *, unsigned char);
-  int (*ncat)(String *, const unsigned char *, unsigned int);
-  int (*cat)(String *, const unsigned char *);
-  int (*catf)(String *, const unsigned char *, ...);
+  int (*cat_ch)(String *, char);
+  int (*ncat)(String *, const char *, unsigned int);
+  int (*cat)(String *, const char *);
+  int (*catf)(String *, const char *, ...);
   int (*append)(String *, String *);
   void (*shrink)(String *, unsigned int);
   String *(*dup)(String *);

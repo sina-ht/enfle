@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 10 23:14:43 2001.
- * $Id: msvcrt.c,v 1.4 2001/09/10 14:20:29 sian Exp $
+ * Last Modified: Mon Feb 18 03:20:24 2002.
+ * $Id: msvcrt.c,v 1.5 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,7 +71,7 @@ msvcrt_initterm(void **arg1, void **arg2)
 
   debug_message("_initterm(%p, %p) called\n", arg1, arg2);
   for (; arg1 < arg2; arg1++)
-    if ((initterm_func = *arg1))
+    if ((initterm_func = (BOOL(*)(void))*arg1))
       initterm_func();
 
   return 0;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 17 19:00:02 2001.
- * $Id: ungif.c,v 1.26 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 03:32:41 2002.
+ * $Id: ungif.c,v 1.27 2002/02/17 19:32:56 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -392,10 +392,10 @@ play_main(Movie *m, VideoWindow *vw)
 	  {
 	    unsigned char *tmp;
 
-	    if ((tmp = realloc(p->comment, strlen(p->comment) + extension[0] + 1)) == NULL) {
+	    if ((tmp = realloc(p->comment, strlen((const char *)p->comment) + extension[0] + 1)) == NULL) {
 	      show_message("No enough memory for comment(append). Truncated.\n");
 	    } else {
-	      memcpy(tmp + strlen(tmp), &extension[1], extension[0]);
+	      memcpy(tmp + strlen((const char *)tmp), &extension[1], extension[0]);
 	      p->comment = tmp;
 	    }
 	  }
@@ -514,7 +514,7 @@ unload_movie(Movie *m)
 
 DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
-  char buf[3];
+  unsigned char buf[3];
 
   if (stream_read(st, buf, 3) != 3)
     return PLAY_NOT;

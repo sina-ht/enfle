@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 17 12:17:38 2001.
- * $Id: image.h,v 1.15 2001/11/17 03:53:01 sian Exp $
+ * Last Modified: Mon Feb 18 03:26:54 2002.
+ * $Id: image.h,v 1.16 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -105,8 +105,7 @@ struct _image {
   ImageTransparentDisposal transparent_disposal;
   Memory *mask;
   unsigned char *comment;
-  char *format;
-  const unsigned char *format_detail;
+  char *format, *format_detail;
   int alpha_enabled;
   int if_magnified;
   int depth;

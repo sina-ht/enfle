@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 28 03:05:57 2001.
- * $Id: video.h,v 1.18 2001/10/27 18:45:33 sian Exp $
+ * Last Modified: Mon Feb 18 03:42:46 2002.
+ * $Id: video.h,v 1.19 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -137,7 +137,7 @@ struct _video_window {
   int depth, bits_per_pixel;
   int if_fullscreen, if_direct, if_caption, prefer_msb;
   unsigned int displayable_colorspace;
-  unsigned char *caption;
+  char *caption;
   VideoRenderMethod render_method;
   ImageInterpolateMethod interpolate_method;
 
@@ -146,7 +146,7 @@ struct _video_window {
   int (*calc_magnified_size)(VideoWindow *, unsigned int, unsigned int, unsigned int *, unsigned int *);
   int (*set_event_mask)(VideoWindow *, int);
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
-  void (*set_caption)(VideoWindow *, unsigned char *);
+  void (*set_caption)(VideoWindow *, char *);
   void (*set_cursor)(VideoWindow *, VideoWindowCursor);
   void (*set_background)(VideoWindow *, Image *);
   int (*set_fullscreen_mode)(VideoWindow *, VideoWindowFullscreenMode);

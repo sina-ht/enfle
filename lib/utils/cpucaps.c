@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 24 02:30:15 2001.
- * $Id: cpucaps.c,v 1.5 2001/09/23 17:36:57 sian Exp $
+ * Last Modified: Mon Feb 18 02:47:55 2002.
+ * $Id: cpucaps.c,v 1.6 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,17 +20,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include "common.h"
 #define REQUIRE_STRING_H
 #include "compat.h"
+#include "common.h"
 
 #include "cpucaps.h"
 
-#ifdef __i386__
-static void
+//#if defined(__GNUC__) && defined(__i386__)
+#if defined(__i386__)
+static inline void
 cpuid(int op, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
-  __asm__ __volatile__("pushl %%ebx\n\t"
+  __asm__ ("pushl %%ebx\n\t"
 		       "cpuid\n\t"
 		       "movl %%ebx, %%esi\n\t"
 		       "popl %%ebx"

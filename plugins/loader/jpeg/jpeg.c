@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 11 01:04:30 2001.
- * $Id: jpeg.c,v 1.18 2001/12/17 06:18:09 sian Exp $
+ * Last Modified: Mon Feb 18 04:22:47 2002.
+ * $Id: jpeg.c,v 1.19 2002/02/17 19:32:56 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -70,7 +70,7 @@ plugin_entry(void)
   string_set(s, LOADER_JPEG_PLUGIN_DESCRIPTION);
   /* 'compiled' means that the version string is compiled in. */
   string_catf(s, " compiled with libjpeg %02d", JPEG_LIB_VERSION);
-  lp->description = strdup(string_get(s));
+  lp->description = (const unsigned char *)strdup(string_get(s));
   string_destroy(s);
 
   return (void *)lp;
@@ -213,21 +213,21 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   if (stream_read(st, buf, 10) != 10)
     return LOAD_NOT;
   if (memcmp(buf, "hsi1", 4) == 0) {
-    p->format_detail = "JPEG(hsi1)";
+    p->format_detail = (char *)"JPEG(hsi1)";
     return LOAD_OK;
   }
   if (memcmp(buf, id, 2) != 0)
     return LOAD_NOT;
   if (memcmp(buf + 6, "JFIF", 4) == 0) {
-    p->format_detail = "JPEG(JFIF)";
+    p->format_detail = (char *)"JPEG(JFIF)";
     return LOAD_OK;
   }
   if (memcmp(buf + 6, "Exif", 4) == 0) {
-    p->format_detail = "JPEG(Exif)";
+    p->format_detail = (char *)"JPEG(Exif)";
     return LOAD_OK;
   }
   if (memcmp(buf + 6, "Adob", 4) == 0) {
-    p->format_detail = "JPEG(Adobe)";
+    p->format_detail = (char *)"JPEG(Adobe)";
     return LOAD_OK;
   }
   if (memcmp(buf + 6, "\0" "\0" "\x1\x5", 4) == 0)

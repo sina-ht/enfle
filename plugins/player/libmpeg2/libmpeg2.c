@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:31:04 2001.
- * $Id: libmpeg2.c,v 1.29 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Feb 18 03:37:38 2002.
+ * $Id: libmpeg2.c,v 1.30 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -398,7 +398,7 @@ play_audio(void *arg)
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   AudioDevice *ad;
-  unsigned char output_buffer[MP3_DECODE_BUFFER_SIZE];
+  char output_buffer[MP3_DECODE_BUFFER_SIZE];
   int ret, write_size;
   int param_is_set = 0;
   void *data;
@@ -451,7 +451,7 @@ play_audio(void *arg)
 	param_is_set++;
       }
       while (ret == MP3_OK) {
-	m->ap->write_device(ad, output_buffer, write_size);
+	m->ap->write_device(ad, (unsigned char *)output_buffer, write_size);
 	ret = decodeMP3(&info->mp, NULL, 0,
 			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       }

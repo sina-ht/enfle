@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 23:26:51 2001.
- * $Id: libriff.h,v 1.1 2001/09/03 00:31:02 sian Exp $
+ * Last Modified: Mon Feb 18 03:13:56 2002.
+ * $Id: libriff.h,v 1.2 2002/02/17 19:32:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,8 +47,8 @@ enum _riff_errcode {
 };
 
 struct _riff_chunk {
-  unsigned char name[5];
-  unsigned char list_name[5];
+  char name[5];
+  char list_name[5];
   int is_list;
   unsigned int size;
   unsigned int list_size;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 17 12:44:35 2001.
- * $Id: enfle.c,v 1.45 2001/11/17 03:50:25 sian Exp $
+ * Last Modified: Mon Feb 18 04:18:59 2002.
+ * $Id: enfle.c,v 1.46 2002/02/17 19:32:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,7 +74,7 @@ static void
 usage(void)
 {
   const char *ext = 
-#if defined(USE_MMX) || defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI)
+#if defined(USE_MMX) || defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI) || defined(__INTEL_COMPILER)
 #ifdef USE_MMX
     "MMX "
 #endif
@@ -89,6 +89,9 @@ usage(void)
 #endif
 #ifdef USE_SPI
     "spi "
+#endif
+#ifdef __INTEL_COMPILER
+    "icc "
 #endif
 #else
     "None"
@@ -120,7 +123,7 @@ static int
 check_and_unload(EnflePlugins *eps, Config *c, PluginType type, char *name)
 {
   String *s = string_create();
-  unsigned char *tmp;
+  char *tmp;
   int result;
 
   string_set(s, "/enfle/plugins/");
@@ -148,7 +151,7 @@ print_plugin_info(EnflePlugins *eps, int level)
   int i;
   Dlist *dl;
   Dlist_data *dd;
-  const unsigned char *plugintypename;
+  const char *plugintypename;
   char *pluginname;
   const unsigned char *description, *author;
 
@@ -271,9 +274,9 @@ main(int argc, char **argv)
   int exclude_fnmatch = 0;
   char *pattern = NULL;
   char *homedir;
-  unsigned char *plugin_path;
+  char *plugin_path;
   char *format = NULL;
-  unsigned char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
+  char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
   char *optstr;
   Dlist *override_config;
   Dlist_data *dd;
