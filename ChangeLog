@@ -1,3 +1,18 @@
+2001-04-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Smoothing scroll.
+
+	* plugins/ui/normal/normal.c: Plugged memory leaks.
+
+	* plugins/ui/convert/convert.c: Correct extension replacing.
+
+	* src/Makefile.am, src/enfle.c, src/getopt-support.c,
+	src/getopt-support.h: Separated getopt-support from enfle.c.
+
+2001-04-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/loader/ungif/ungif.c: Bug fix.
+
 2001-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/Makefile.am, configure.in, lib/Makefile.am,
