@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  7 15:53:15 2001.
- * $Id: jpeg.c,v 1.17 2001/10/07 17:36:57 sian Exp $
+ * Last Modified: Tue Dec 11 01:04:30 2001.
+ * $Id: jpeg.c,v 1.18 2001/12/17 06:18:09 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -194,7 +194,8 @@ my_error_exit (j_common_ptr cinfo)
   my_error_ptr myerr = (my_error_ptr)cinfo->err;
 
   if (cinfo->err->msg_code != JERR_NO_SOI) {
-    show_message("JPEG ERROR: %s: ", myerr->path);
+    show_message("JPEG ERROR: ");
+    fflush(stdout);
     (*cinfo->err->output_message)(cinfo);
   }
 
