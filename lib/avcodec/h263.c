@@ -56,7 +56,6 @@
 #ifdef CONFIG_ENCODERS
 static void h263_encode_block(MpegEncContext * s, DCTELEM * block,
                               int n);
-static void h263_encode_motion(MpegEncContext * s, int val, int fcode);
 static void h263p_encode_umotion(MpegEncContext * s, int val);
 static inline void mpeg4_encode_block(MpegEncContext * s, DCTELEM * block,
                                int n, int dc, uint8_t *scan_table, 
@@ -76,7 +75,7 @@ static void mpeg4_encode_visual_object_header(MpegEncContext * s);
 static void mpeg4_encode_vol_header(MpegEncContext * s, int vo_number, int vol_number);
 #endif //CONFIG_ENCODERS
 static void mpeg4_decode_sprite_trajectory(MpegEncContext * s, GetBitContext *gb);
-static inline int ff_mpeg4_pred_dc(MpegEncContext * s, int n, uint16_t **dc_val_ptr, int *dir_ptr);
+static inline int ff_mpeg4_pred_dc(MpegEncContext * s, int n, int level, int *dir_ptr, int encoding);
 
 #ifdef CONFIG_ENCODERS
 static uint8_t uni_DCtab_lum_len[512];
@@ -851,23 +850,23 @@ void mpeg4_encode_mb(MpegEncContext * s,
 
             if(mb_type == 0){
                 assert(s->mv_dir & MV_DIRECT);
-                h263_encode_motion(s, motion_x, 1);
-                h263_encode_motion(s, motion_y, 1);                
+                ff_h263_encode_motion(s, motion_x, 1);
+                ff_h263_encode_motion(s, motion_y, 1);                
                 s->b_count++;
                 s->f_count++;
             }else{
                 assert(mb_type > 0 && mb_type < 4);
                 if(s->mv_type != MV_TYPE_FIELD){
                     if(s->mv_dir & MV_DIR_FORWARD){
-                        h263_encode_motion(s, s->mv[0][0][0] - s->last_mv[0][0][0], s->f_code);
-                        h263_encode_motion(s, s->mv[0][0][1] - s->last_mv[0][0][1], s->f_code);
+                        ff_h263_encode_motion(s, s->mv[0][0][0] - s->last_mv[0][0][0], s->f_code);
+                        ff_h263_encode_motion(s, s->mv[0][0][1] - s->last_mv[0][0][1], s->f_code);
                         s->last_mv[0][0][0]= s->last_mv[0][1][0]= s->mv[0][0][0];
                         s->last_mv[0][0][1]= s->last_mv[0][1][1]= s->mv[0][0][1];
                         s->f_count++;
                     }
                     if(s->mv_dir & MV_DIR_BACKWARD){
-                        h263_encode_motion(s, s->mv[1][0][0] - s->last_mv[1][0][0], s->b_code);
-                        h263_encode_motion(s, s->mv[1][0][1] - s->last_mv[1][0][1], s->b_code);
+                        ff_h263_encode_motion(s, s->mv[1][0][0] - s->last_mv[1][0][0], s->b_code);
+                        ff_h263_encode_motion(s, s->mv[1][0][1] - s->last_mv[1][0][1], s->b_code);
                         s->last_mv[1][0][0]= s->last_mv[1][1][0]= s->mv[1][0][0];
                         s->last_mv[1][0][1]= s->last_mv[1][1][1]= s->mv[1][0][1];
                         s->b_count++;
@@ -883,8 +882,8 @@ void mpeg4_encode_mb(MpegEncContext * s,
                     }
                     if(s->mv_dir & MV_DIR_FORWARD){
                         for(i=0; i<2; i++){
-                            h263_encode_motion(s, s->mv[0][i][0] - s->last_mv[0][i][0]  , s->f_code);
-                            h263_encode_motion(s, s->mv[0][i][1] - s->last_mv[0][i][1]/2, s->f_code);
+                            ff_h263_encode_motion(s, s->mv[0][i][0] - s->last_mv[0][i][0]  , s->f_code);
+                            ff_h263_encode_motion(s, s->mv[0][i][1] - s->last_mv[0][i][1]/2, s->f_code);
                             s->last_mv[0][i][0]= s->mv[0][i][0];
                             s->last_mv[0][i][1]= s->mv[0][i][1]*2;
                         }
@@ -892,8 +891,8 @@ void mpeg4_encode_mb(MpegEncContext * s,
                     }
                     if(s->mv_dir & MV_DIR_BACKWARD){
                         for(i=0; i<2; i++){
-                            h263_encode_motion(s, s->mv[1][i][0] - s->last_mv[1][i][0]  , s->b_code);
-                            h263_encode_motion(s, s->mv[1][i][1] - s->last_mv[1][i][1]/2, s->b_code);
+                            ff_h263_encode_motion(s, s->mv[1][i][0] - s->last_mv[1][i][0]  , s->b_code);
+                            ff_h263_encode_motion(s, s->mv[1][i][1] - s->last_mv[1][i][1]/2, s->b_code);
                             s->last_mv[1][i][0]= s->mv[1][i][0];
                             s->last_mv[1][i][1]= s->mv[1][i][1]*2;
                         }
@@ -993,8 +992,8 @@ void mpeg4_encode_mb(MpegEncContext * s,
                 /* motion vectors: 16x16 mode */
                 h263_pred_motion(s, 0, 0, &pred_x, &pred_y);
             
-                h263_encode_motion(s, motion_x - pred_x, s->f_code);
-                h263_encode_motion(s, motion_y - pred_y, s->f_code);
+                ff_h263_encode_motion(s, motion_x - pred_x, s->f_code);
+                ff_h263_encode_motion(s, motion_y - pred_y, s->f_code);
             }else if(s->mv_type==MV_TYPE_FIELD){
                 if(s->dquant) cbpc+= 8;
                 put_bits(&s->pb,
@@ -1021,10 +1020,10 @@ void mpeg4_encode_mb(MpegEncContext * s,
                 put_bits(&s->pb, 1, s->field_select[0][0]);
                 put_bits(&s->pb, 1, s->field_select[0][1]);
             
-                h263_encode_motion(s, s->mv[0][0][0] - pred_x, s->f_code);
-                h263_encode_motion(s, s->mv[0][0][1] - pred_y, s->f_code);
-                h263_encode_motion(s, s->mv[0][1][0] - pred_x, s->f_code);
-                h263_encode_motion(s, s->mv[0][1][1] - pred_y, s->f_code);
+                ff_h263_encode_motion(s, s->mv[0][0][0] - pred_x, s->f_code);
+                ff_h263_encode_motion(s, s->mv[0][0][1] - pred_y, s->f_code);
+                ff_h263_encode_motion(s, s->mv[0][1][0] - pred_x, s->f_code);
+                ff_h263_encode_motion(s, s->mv[0][1][1] - pred_y, s->f_code);
             }else{
                 assert(s->mv_type==MV_TYPE_8X8);
                 put_bits(&s->pb,
@@ -1045,8 +1044,8 @@ void mpeg4_encode_mb(MpegEncContext * s,
                     /* motion vectors: 8x8 mode*/
                     h263_pred_motion(s, i, 0, &pred_x, &pred_y);
 
-                    h263_encode_motion(s, s->current_picture.motion_val[0][ s->block_index[i] ][0] - pred_x, s->f_code);
-                    h263_encode_motion(s, s->current_picture.motion_val[0][ s->block_index[i] ][1] - pred_y, s->f_code);
+                    ff_h263_encode_motion(s, s->current_picture.motion_val[0][ s->block_index[i] ][0] - pred_x, s->f_code);
+                    ff_h263_encode_motion(s, s->current_picture.motion_val[0][ s->block_index[i] ][1] - pred_y, s->f_code);
                 }
             }
 
@@ -1073,15 +1072,7 @@ void mpeg4_encode_mb(MpegEncContext * s,
         int i;
 
         for(i=0; i<6; i++){
-            const int level= block[i][0];
-            uint16_t *dc_ptr;
-
-            dc_diff[i]= level - ff_mpeg4_pred_dc(s, i, &dc_ptr, &dir[i]);
-            if (i < 4) {
-                *dc_ptr = level * s->y_dc_scale;
-            } else {
-                *dc_ptr = level * s->c_dc_scale;
-            }
+            dc_diff[i]= ff_mpeg4_pred_dc(s, i, block[i][0], &dir[i], 1);
         }
 
         if(s->flags & CODEC_FLAG_AC_PRED){
@@ -1194,8 +1185,8 @@ void h263_encode_mb(MpegEncContext * s,
             h263_pred_motion(s, 0, 0, &pred_x, &pred_y);
             
             if (!s->umvplus) {  
-                h263_encode_motion(s, motion_x - pred_x, 1);
-                h263_encode_motion(s, motion_y - pred_y, 1);
+                ff_h263_encode_motion(s, motion_x - pred_x, 1);
+                ff_h263_encode_motion(s, motion_y - pred_y, 1);
             }
             else {
                 h263p_encode_umotion(s, motion_x - pred_x);
@@ -1223,8 +1214,8 @@ void h263_encode_mb(MpegEncContext * s,
                 motion_x= s->current_picture.motion_val[0][ s->block_index[i] ][0];
                 motion_y= s->current_picture.motion_val[0][ s->block_index[i] ][1];
                 if (!s->umvplus) {  
-                    h263_encode_motion(s, motion_x - pred_x, 1);
-                    h263_encode_motion(s, motion_y - pred_y, 1);
+                    ff_h263_encode_motion(s, motion_x - pred_x, 1);
+                    ff_h263_encode_motion(s, motion_y - pred_y, 1);
                 }
                 else {
                     h263p_encode_umotion(s, motion_x - pred_x);
@@ -1627,7 +1618,7 @@ int16_t *h263_pred_motion(MpegEncContext * s, int block, int dir,
 }
 
 #ifdef CONFIG_ENCODERS
-static void h263_encode_motion(MpegEncContext * s, int val, int f_code)
+void ff_h263_encode_motion(MpegEncContext * s, int val, int f_code)
 {
     int range, l, bit_size, sign, code, bits;
 
@@ -2382,14 +2373,14 @@ void ff_set_qscale(MpegEncContext * s, int qscale)
 
 /**
  * predicts the dc.
+ * encoding quantized level -> quantized diff
+ * decoding quantized diff -> quantized level  
  * @param n block index (0-3 are luma, 4-5 are chroma)
- * @param dc_val_ptr a pointer to the dc_val entry for the current MB will be stored here
  * @param dir_ptr pointer to an integer where the prediction direction will be stored
- * @return the quantized predicted dc
  */
-static inline int ff_mpeg4_pred_dc(MpegEncContext * s, int n, uint16_t **dc_val_ptr, int *dir_ptr)
+static inline int ff_mpeg4_pred_dc(MpegEncContext * s, int n, int level, int *dir_ptr, int encoding)
 {
-    int a, b, c, wrap, pred, scale;
+    int a, b, c, wrap, pred, scale, ret;
     uint16_t *dc_val;
 
     /* find prediction */
@@ -2431,10 +2422,32 @@ static inline int ff_mpeg4_pred_dc(MpegEncContext * s, int n, uint16_t **dc_val_
     /* we assume pred is positive */
     pred = FASTDIV((pred + (scale >> 1)), scale);
 
-    /* prepare address for prediction update */
-    *dc_val_ptr = &dc_val[0];
+    if(encoding){
+        ret = level - pred;
+    }else{
+        level += pred;
+        ret= level;
+        if(s->error_resilience>=3){
+            if(level<0){
+                av_log(s->avctx, AV_LOG_ERROR, "dc<0 at %dx%d\n", s->mb_x, s->mb_y);
+                return -1;
+            }
+            if(level*scale > 2048 + scale){
+                av_log(s->avctx, AV_LOG_ERROR, "dc overflow at %dx%d\n", s->mb_x, s->mb_y);
+                return -1;
+            }
+        }
+    }
+    level *=scale;
+    if(level&(~2047)){
+        if(level<0) 
+            level=0;
+        else if(!(s->workaround_bugs&FF_BUG_DC_CLIP))
+            level=2047;
+    }
+    dc_val[0]= level;
 
-    return pred;
+    return ret;
 }
 
 /**
@@ -3221,6 +3234,9 @@ static inline int get_amv(MpegEncContext *s, int n){
     int x, y, mb_v, sum, dx, dy, shift;
     int len = 1 << (s->f_code + 4);
     const int a= s->sprite_warping_accuracy;
+    
+    if(s->workaround_bugs & FF_BUG_AMV)
+        len >>= s->quarter_sample;
 
     if(s->real_sprite_warping_points==1){
         if(s->divx_version==500 && s->divx_build==413)
@@ -4534,8 +4550,7 @@ not_coded:
  */
 static inline int mpeg4_decode_dc(MpegEncContext * s, int n, int *dir_ptr)
 {
-    int level, pred, code;
-    uint16_t *dc_val;
+    int level, code;
 
     if (n < 4) 
         code = get_vlc2(&s->gb, dc_lum.table, DC_VLC_BITS, 1);
@@ -4570,30 +4585,8 @@ static inline int mpeg4_decode_dc(MpegEncContext * s, int n, int *dir_ptr)
             }
         }
     }
-    pred = ff_mpeg4_pred_dc(s, n, &dc_val, dir_ptr);
-    level += pred;
-    if (level < 0){
-        if(s->error_resilience>=3){
-            av_log(s->avctx, AV_LOG_ERROR, "dc<0 at %dx%d\n", s->mb_x, s->mb_y);
-            return -1;
-        }
-        level = 0;
-    }
-    if (n < 4) {
-        *dc_val = level * s->y_dc_scale;
-    } else {
-        *dc_val = level * s->c_dc_scale;
-    }
-    if(IS_3IV1)
-        *dc_val = level * 8;
-    
-    if(s->error_resilience>=3){
-        if(*dc_val > 2048 + s->y_dc_scale + s->c_dc_scale){
-            av_log(s->avctx, AV_LOG_ERROR, "dc overflow at %dx%d\n", s->mb_x, s->mb_y);
-            return -1;
-        }
-    }
-    return level;
+
+    return ff_mpeg4_pred_dc(s, n, level, dir_ptr, 0);
 }
 
 /**
@@ -4839,14 +4832,8 @@ static inline int mpeg4_decode_block(MpegEncContext * s, DCTELEM * block,
  not_coded:
     if (intra) {
         if(s->qscale >= s->intra_dc_threshold){
-            uint16_t *dc_val;
-            block[0] += ff_mpeg4_pred_dc(s, n, &dc_val, &dc_pred_dir);
-            if (n < 4) {
-                *dc_val = block[0] * s->y_dc_scale;
-            } else {
-                *dc_val = block[0] * s->c_dc_scale;
-            }
-
+            block[0] = ff_mpeg4_pred_dc(s, n, block[0], &dc_pred_dir, 0);
+            
             if(i == -1) i=0;
         }
 

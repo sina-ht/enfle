@@ -171,11 +171,7 @@ static int dvvideo_init(AVCodecContext *avctx)
 	free_vlc(&dv_vlc);
 
 	for (i = 0; i < NB_DV_VLC - 1; i++) {
-           if (dv_vlc_run[i] >= DV_VLC_MAP_RUN_SIZE
-#if DV_VLC_MAP_LEV_SIZE < 255
-	       || dv_vlc_level[i] >= DV_VLC_MAP_LEV_SIZE
-#endif
-	       )
+           if (dv_vlc_run[i] >= DV_VLC_MAP_RUN_SIZE || dv_vlc_level[i] >= DV_VLC_MAP_LEV_SIZE)
 	       continue;
 	   
 	   if (dv_vlc_map[dv_vlc_run[i]][dv_vlc_level[i]].size != 0)
@@ -236,12 +232,6 @@ static int dvvideo_init(AVCodecContext *avctx)
 	avctx->pix_fmt = dv_codec_profile(avctx)->pix_fmt; 
     avctx->coded_frame = &s->picture;
     
-    return 0;
-}
-
-static int dvvideo_end(AVCodecContext *avctx)
-{
-    avcodec_default_free_buffers(avctx);    
     return 0;
 }
 
@@ -958,7 +948,7 @@ AVCodec dvvideo_encoder = {
     sizeof(DVVideoContext),
     dvvideo_init,
     dvvideo_encode_frame,
-    dvvideo_end,
+    NULL,
     NULL,
     CODEC_CAP_DR1,
     NULL
@@ -971,7 +961,7 @@ AVCodec dvvideo_decoder = {
     sizeof(DVVideoContext),
     dvvideo_init,
     NULL,
-    dvvideo_end,
+    NULL,
     dvvideo_decode_frame,
     CODEC_CAP_DR1,
     NULL

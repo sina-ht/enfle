@@ -597,6 +597,11 @@ int MPV_common_init(MpegEncContext *s)
 {
     int y_size, c_size, yc_size, i, mb_array_size, mv_table_size, x, y;
 
+    if(s->avctx->thread_count > MAX_THREADS || (16*s->avctx->thread_count > s->height && s->height)){
+        av_log(s->avctx, AV_LOG_ERROR, "too many threads\n");
+        return -1;
+    }
+
     dsputil_init(&s->dsp, s->avctx);
     DCT_common_init(s);
 
@@ -842,7 +847,6 @@ void MPV_common_end(MpegEncContext *s)
         }
     }
     av_freep(&s->picture);
-    avcodec_default_free_buffers(s->avctx);
     s->context_initialized = 0;
     s->last_picture_ptr=
     s->next_picture_ptr=
@@ -885,6 +889,7 @@ int MPV_encode_init(AVCodecContext *avctx)
     s->quarter_sample= (avctx->flags & CODEC_FLAG_QPEL)!=0;
     s->mpeg_quant= avctx->mpeg_quant;
     s->rtp_mode= !!avctx->rtp_payload_size;
+    s->intra_dc_precision= avctx->intra_dc_precision;
 
     if (s->gop_size <= 1) {
         s->intra_only = 1;
@@ -987,11 +992,6 @@ int MPV_encode_init(AVCodecContext *avctx)
        && s->codec_id != CODEC_ID_MPEG1VIDEO && s->codec_id != CODEC_ID_MPEG2VIDEO 
        && (s->codec_id != CODEC_ID_H263P || !(s->flags & CODEC_FLAG_H263P_SLICE_STRUCT))){
         av_log(avctx, AV_LOG_ERROR, "multi threaded encoding not supported by codec\n");
-        return -1;
-    }
-    
-    if(s->avctx->thread_count > MAX_THREADS || 16*s->avctx->thread_count > s->height){
-        av_log(avctx, AV_LOG_ERROR, "too many threads\n");
         return -1;
     }
     
@@ -3958,7 +3958,7 @@ static int mb_var_thread(AVCodecContext *c, void *arg){
 
             s->current_picture.mb_var [s->mb_stride * mb_y + mb_x] = varc;
             s->current_picture.mb_mean[s->mb_stride * mb_y + mb_x] = (sum+128)>>8;
-            s->mb_var_sum_temp    += varc;
+            s->me.mb_var_sum_temp    += varc;
         }
     }
     return 0;
@@ -4009,7 +4009,7 @@ static int encode_thread(AVCodecContext *c, void *arg){
     for(i=0; i<3; i++){
         /* init last dc values */
         /* note: quant matrix value (8) is implied here */
-        s->last_dc[i] = 128;
+        s->last_dc[i] = 128 << s->intra_dc_precision;
         
         s->current_picture_ptr->error[i] = 0;
     }
@@ -4552,9 +4552,9 @@ static int encode_thread(AVCodecContext *c, void *arg){
 
 #define MERGE(field) dst->field += src->field; src->field=0
 static void merge_context_after_me(MpegEncContext *dst, MpegEncContext *src){
-    MERGE(scene_change_score);
-    MERGE(mc_mb_var_sum_temp);
-    MERGE(mb_var_sum_temp);
+    MERGE(me.scene_change_score);
+    MERGE(me.mc_mb_var_sum_temp);
+    MERGE(me.mb_var_sum_temp);
 }
 
 static void merge_context_after_encode(MpegEncContext *dst, MpegEncContext *src){
@@ -4595,8 +4595,8 @@ static void encode_picture(MpegEncContext *s, int picture_number)
     s->picture_number = picture_number;
     
     /* Reset the average MB variance */
-    s->mb_var_sum_temp    =
-    s->mc_mb_var_sum_temp = 0;
+    s->me.mb_var_sum_temp    =
+    s->me.mc_mb_var_sum_temp = 0;
 
 #ifdef CONFIG_RISKY
     /* we need to initialize some time vars before we can encode b-frames */
@@ -4605,7 +4605,7 @@ static void encode_picture(MpegEncContext *s, int picture_number)
         ff_set_mpeg4_time(s, s->picture_number);  //FIXME rename and use has_b_frames or similar
 #endif
         
-    s->scene_change_score=0;
+    s->me.scene_change_score=0;
     
     s->lambda= s->current_picture_ptr->quality; //FIXME qscale / ... stuff for ME ratedistoration
     
@@ -4646,11 +4646,11 @@ static void encode_picture(MpegEncContext *s, int picture_number)
     for(i=1; i<s->avctx->thread_count; i++){
         merge_context_after_me(s, s->thread_context[i]);
     }
-    s->current_picture.mc_mb_var_sum= s->current_picture_ptr->mc_mb_var_sum= s->mc_mb_var_sum_temp;
-    s->current_picture.   mb_var_sum= s->current_picture_ptr->   mb_var_sum= s->   mb_var_sum_temp;
+    s->current_picture.mc_mb_var_sum= s->current_picture_ptr->mc_mb_var_sum= s->me.mc_mb_var_sum_temp;
+    s->current_picture.   mb_var_sum= s->current_picture_ptr->   mb_var_sum= s->me.   mb_var_sum_temp;
     emms_c();
 
-    if(s->scene_change_score > s->avctx->scenechange_threshold && s->pict_type == P_TYPE){
+    if(s->me.scene_change_score > s->avctx->scenechange_threshold && s->pict_type == P_TYPE){
         s->pict_type= I_TYPE;
         for(i=0; i<s->mb_stride*s->mb_height; i++)
             s->mb_type[i]= CANDIDATE_MB_TYPE_INTRA;

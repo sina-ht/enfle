@@ -24,13 +24,14 @@
 
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
-//#    include "config.h"
 #include "enfle-config.h"
 #undef DEBUG
 #define HAVE_LRINTF
+#define HAVE_PTHREADS
 //#define CONFIG_ENCODERS
 #define CONFIG_DECODERS
 #define CONFIG_RISKY
+//#    include "config.h"
 
 #    include <stdlib.h>
 #    include <stdio.h>
@@ -119,6 +120,10 @@ extern const struct AVOption avoptions_workaround_bug[11];
 
 #ifndef INT64_MAX
 #define INT64_MAX int64_t_C(9223372036854775807)
+#endif
+
+#ifndef UINT64_MAX
+#define UINT64_MAX uint64_t_C(0xFFFFFFFFFFFFFFFF)
 #endif
 
 #ifdef EMULATE_FAST_INT
