@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Thu Feb 22 18:07:22 2001.
+     Last Modified: Mon Feb 26 18:10:16 2001.
 
  This file is part of Enfle.
 
@@ -42,9 +42,6 @@
 
  This software includes mpglib by Michael Hipp.
 
- This software includes libmpeg2 by Aaron Holtzman. For this part, you
- can apply GPL2 or later version.
-
 ***************************************************
 
 OK, legal part is over. The rest is fun.
@@ -63,11 +60,11 @@ various formatted pictures and movies.
  JPEG
  PCX
  PNG
- spi(unstable, any formats which (some of) susie plugins support)
+ spi(highly unstable, any formats which (some of) susie plugins support)
  animated GIF
  mng
- mpeg(unstable, mpeg1, mpeg2, including audio support)
- avi,asf(unstable, any formats which avifile supports)
+ mpeg(mpeg1, mpeg2)
+ avi,asf(any formats which avifile supports)
 
 This software has plugin architecture. You can write plugins to loader new formatted pictures and movies. Also, you can read irregular files, such as tar, gz,  bz2, and so on.
 
@@ -89,9 +86,10 @@ PNG: libpng-1.0.2 or later (recommended: 1.0.9)
 gz: zlib-1.1.3 or later
 bz2: bzip2-1.0.0 or later
 ungif: libungif-3.1.0 or later (recommended: 4.1.0 or later)
-mng: libmng-1.0.0
-mpeg: libmpeg3 or mpeg_lib(needs patch)
-avi: avifile(may need cvs version)
+mng: libmng-1.0.0 or later
+libmpeg3: libmpeg3-1.2.2 or later
+mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
+avifile: avifile(tested with avifile-0.53.5)
 
 
 2. Requirements
@@ -104,16 +102,15 @@ be supported sometime.
 
 These environments are checked:
 
-Linux(2.4.0-test8 w/ glibc-2.1)
-Linux(2.4.0-test11 w/ glibc-2.2)
-FreeBSD-4.1R
+Linux (kernel 2.2 or 2.4 + glibc-2.1 or 2.2, x86)
+FreeBSD (4.1R, x86)
 
 Other similar environments should work. Please let me know if you try
 on the same/other environments.
 
 My main developing environment is:
 
-Kernel: Linux-2.4.1
+Kernel: Linux-2.4.2
 CPU: Celeron/366 (running at 550)
 X server: XFree86-4.0.2
 Video: Matrox MillenniumII/AGP 8M
