@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Thu Mar  7 03:40:17 2002.
-; $Id: enfle.rc,v 1.30 2002/03/06 19:32:09 sian Exp $
+; Last Modified: Sun Aug  4 21:33:21 2002.
+; $Id: enfle.rc,v 1.31 2002/08/04 12:35:24 sian Exp $
 
 enfle {
   identify {
@@ -93,11 +93,11 @@ enfle {
       spi/disabled = yes
       ; Associate an extension with an appropriate plugin name.
       assoc {
-	jpg := JPEG
-	jpeg := JPEG
-	gif := UNGIF
-	png := PNG
 	bmp := BMP
+	gif := UNGIF
+	jpeg := JPEG
+	jpg := JPEG
+	png := PNG
       }
     }
     player {
@@ -109,17 +109,18 @@ enfle {
       loadmethod = scan_all
       ; Associate an extension with an appropriate plugin name.
       assoc {
-        gif := UNGIF
-        mng := MNG
-        mpg := LibMPEG2:LibMPEG3:MPEG_lib
-        mpeg := LibMPEG2:LibMPEG3:MPEG_lib
-        m1v := MPEG_lib
-        mp3 := Mpglib
-	avi := AviFile:OpenDivX
 	asf := AviFile
+	avi := OpenDivX:AviFile
+        gif := UNGIF
+        m1v := MPEG_lib
+        mng := MNG
+        mp3 := Mpglib
+        mpeg := LibMPEG2:LibMPEG3:MPEG_lib
+        mpg := LibMPEG2:LibMPEG3:MPEG_lib
+	wmv := AviFile
       }
       ; video only stream may be played by mpeg_lib.
-      ; system stream(including video and audio) will be played by libmpeg3.
+      ; system stream(including video and audio) will be played by libmpeg2 or 3.
       ; mpeg_lib won't play all such streams.
       MPEG_lib/disabled = yes
       ; libmpeg2 and libmpeg3 both can play mpeg movies.
@@ -148,8 +149,8 @@ enfle {
     }
     streamer {
       assoc {
-        gz := GZ
 	bz2 := BZ2
+        gz := GZ
       }
     }
     archiver {
