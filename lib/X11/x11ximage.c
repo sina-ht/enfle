@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:07:07 2001.
- * $Id: x11ximage.c,v 1.35 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Tue Sep 18 14:39:07 2001.
+ * $Id: x11ximage.c,v 1.36 2001/09/19 00:38:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -228,6 +228,7 @@ convert(X11XImage *xi, Image *p)
     break;
   }
 
+#ifdef USE_XV
   if (xi->use_xv && xi->xvimage) {
     if (xi->xvimage->width != (int)w || xi->xvimage->height != (int)h || p->type != xi->type
 #ifdef USE_SHM
@@ -238,7 +239,9 @@ convert(X11XImage *xi, Image *p)
       destroy_ximage(xi);
       create_ximage = 1;
     }
-  } else if (!xi->use_xv && xi->ximage) {
+  } else
+#endif
+  if (!xi->use_xv && xi->ximage) {
     if (xi->ximage->width != (int)w || xi->ximage->height != (int)h || p->type != xi->type
 #ifdef USE_SHM
       || (memory_type(p->rendered.image) == _SHM && xi->shminfo->shmid != memory_shmid(p->rendered.image))
@@ -730,7 +733,6 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
 #endif
 }
 
-#ifdef USE_XV
 static void
 put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned int sw, unsigned int sh, unsigned int dw, unsigned int dh)
 {
@@ -739,6 +741,7 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
     return;
   }
 
+#ifdef USE_XV
 #ifdef USE_SHM
   if (xi->if_attached) {
 #ifdef USE_PTHREAD
@@ -760,8 +763,8 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
 #ifdef USE_SHM
   }
 #endif
-}
 #endif
+}
 
 static void
 destroy(X11XImage *xi)
