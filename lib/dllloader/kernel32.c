@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 30 05:12:51 2001.
- * $Id: kernel32.c,v 1.16 2001/10/05 04:09:41 sian Exp $
+ * Last Modified: Wed Oct 10 18:26:42 2001.
+ * $Id: kernel32.c,v 1.17 2001/10/10 09:36:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,6 +63,11 @@ DECLARE_W32API(DWORD, GetFileSize, (HANDLE, LPDWORD));
 DECLARE_W32API(DWORD, GetFileType, (HANDLE));
 DECLARE_W32API(BOOL, DeleteFileA, (LPCSTR));
 DECLARE_W32API(BOOL, FlushFileBuffers, (HANDLE));
+DECLARE_W32API(LPVOID, MapViewOfFile, (HANDLE, DWORD, DWORD, DWORD, DWORD));
+DECLARE_W32API(LPVOID, MapViewOfFileEx, (HANDLE, DWORD, DWORD, DWORD, DWORD, LPVOID));
+DECLARE_W32API(BOOL, UnmapViewOfFile, (LPVOID));
+DECLARE_W32API(HANDLE, CreateFileMappingA, (HANDLE, SECURITY_ATTRIBUTES *, DWORD, DWORD, DWORD, LPCSTR));
+DECLARE_W32API(BOOL, SetEndOfFile, (HANDLE));
 /* directory related */
 DECLARE_W32API(BOOL, CreateDirectoryA, (LPCSTR, LPSECURITY_ATTRIBUTES));
 DECLARE_W32API(BOOL, CreateDirectoryW, (LPCWSTR, LPSECURITY_ATTRIBUTES));
@@ -110,6 +115,7 @@ DECLARE_W32API(INT, lstrlenA, (LPCSTR));
 DECLARE_W32API(LPSTR, lstrcpyA, (LPSTR, LPCSTR));
 DECLARE_W32API(LPSTR, lstrcatA, (LPSTR, LPCSTR));
 DECLARE_W32API(INT, lstrcmpA, (LPCSTR, LPCSTR));
+DECLARE_W32API(INT, lstrcmpiA, (LPCSTR, LPCSTR));
 /* process related */
 DECLARE_W32API(HANDLE, GetCurrentProcess, (void));
 DECLARE_W32API(FARPROC, GetProcAddress, (HMODULE, LPCSTR));
@@ -158,6 +164,7 @@ DECLARE_W32API(BOOL, GetStringTypeW, (DWORD, LPCWSTR, INT, LPWORD));
 DECLARE_W32API(INT, MultiByteToWideChar, (UINT, DWORD, LPCSTR, INT, LPWSTR, INT));
 DECLARE_W32API(INT, WideCharToMultiByte, (UINT, DWORD, LPCWSTR, INT, LPSTR, INT, LPCSTR, BOOL *));
 DECLARE_W32API(INT, LCMapStringA, (LCID, DWORD, LPCSTR, INT, LPSTR, INT));
+DECLARE_W32API(BOOL, IsDBCSLeadByte, (BYTE));
 /* date and time */
 DECLARE_W32API(BOOL, EnumCalendarInfoA, (CALINFO_ENUMPROCA, LCID, CALID, CALTYPE));
 DECLARE_W32API(VOID, GetLocalTime, (LPSYSTEMTIME));
@@ -185,6 +192,11 @@ static Symbol_info symbol_infos[] = {
   { "GetFileType", GetFileType },
   { "DeleteFileA", DeleteFileA },
   { "FlushFileBuffers", FlushFileBuffers },
+  { "MapViewOfFile", MapViewOfFile },
+  { "MapViewOfFileEx", MapViewOfFileEx },
+  { "UnmapViewOfFile", UnmapViewOfFile },
+  { "CreateFileMappingA", CreateFileMappingA },
+  { "SetEndOfFile", SetEndOfFile },
   { "CreateDirectoryA", CreateDirectoryA },
   { "CreateDirectoryW", CreateDirectoryW },
   { "GetStdHandle", GetStdHandle },
@@ -225,6 +237,7 @@ static Symbol_info symbol_infos[] = {
   { "lstrcpyA", lstrcpyA },
   { "lstrcatA", lstrcatA },
   { "lstrcmpA", lstrcmpA },
+  { "lstrcmpiA", lstrcmpiA },
   { "GetCurrentProcess", GetCurrentProcess },
   { "GetProcAddress", GetProcAddress },
   { "ExitProcess", ExitProcess },
@@ -266,6 +279,7 @@ static Symbol_info symbol_infos[] = {
   { "MultiByteToWideChar", MultiByteToWideChar },
   { "WideCharToMultiByte", WideCharToMultiByte },
   { "LCMapStringA", LCMapStringA },
+  { "IsDBCSLeadByte", IsDBCSLeadByte },
   { "EnumCalendarInfoA", EnumCalendarInfoA },
   { "GetLocalTime", GetLocalTime },
   { "GetLastError", GetLastError },
@@ -430,6 +444,61 @@ DEFINE_W32API(BOOL, FlushFileBuffers,
   return TRUE;
 }
 
+#if 0
+ HANDLE mapping,    /* [in] File-mapping object to map */
+ DWORD access,      /* [in] Access mode */
+ DWORD offset_high, /* [in] High-order 32 bits of file offset */
+ DWORD offset_low,  /* [in] Low-order 32 bits of file offset */
+ DWORD count        /* [in] Number of bytes to map */
+#endif
+DEFINE_W32API(LPVOID, MapViewOfFile,
+	      (HANDLE mapping, DWORD acc, DWORD high, DWORD low, DWORD count))
+{
+  debug_message(__FUNCTION__ "(%p, %d, %d, %d, %d) called\n", mapping, acc, high, low, count);
+  return NULL;
+}
+
+#if 0
+ HANDLE mapping,    /* [in] File-mapping object to map */
+ DWORD access,      /* [in] Access mode */
+ DWORD offset_high, /* [in] High-order 32 bits of file offset */
+ DWORD offset_low,  /* [in] Low-order 32 bits of file offset */
+ DWORD count        /* [in] Number of bytes to map */
+ LPVOID addr        /* [in] Suggested starting address for mapped view */
+#endif
+DEFINE_W32API(LPVOID, MapViewOfFileEx,
+	      (HANDLE mapping, DWORD acc, DWORD high, DWORD low, DWORD count, LPVOID addr))
+{
+  debug_message(__FUNCTION__ "(%p, %d, %d, %d, %d, %p) called\n", mapping, acc, high, low, count, addr);
+  return NULL;
+}
+
+// LPVOID addr /* [in] Address where mapped view begins */
+DEFINE_W32API(BOOL, UnmapViewOfFile,
+	      (LPVOID addr))
+{
+  return FALSE;
+}
+
+#if 0
+ HANDLE hFile,   /* [in] Handle of file to map */
+ SECURITY_ATTRIBUTES *sa, /* [in] Optional security attributes*/
+ DWORD protect,   /* [in] Protection for mapping object */
+ DWORD size_high, /* [in] High-order 32 bits of object size */
+ DWORD size_low,  /* [in] Low-order 32 bits of object size */
+ LPCSTR name      /* [in] Name of file-mapping object */ )
+#endif
+DEFINE_W32API(HANDLE, CreateFileMappingA,
+	      (HANDLE h, SECURITY_ATTRIBUTES *sa, DWORD protect, DWORD high, DWORD low, LPCSTR name))
+{
+  return NULL;
+}
+
+DEFINE_W32API(BOOL, SetEndOfFile, (HANDLE h))
+{
+  return TRUE;
+}
+
 /* directory related */
 
 DEFINE_W32API(BOOL, CreateDirectoryA,
@@ -518,7 +587,7 @@ DEFINE_W32API(HMODULE, GetModuleHandleA,
 DEFINE_W32API(DWORD, GetModuleFileNameA,
 	      (HMODULE handle, LPSTR s, DWORD size))
 {
-  debug_message(__FUNCTION__ "(%d, %p[%s], %d) called\n", (int)handle, s, s, size);
+  debug_message(__FUNCTION__ "(%p, %p[%s], %d) called\n", handle, s, s, size);
   /* XXX */
   strcpy(s, "c:\\windows\\system\\enfle.dll");
 
@@ -905,6 +974,12 @@ DEFINE_W32API(INT, lstrcmpA,
 	      (LPCSTR a, LPCSTR b))
 {
   return strcmp(a, b);
+}
+
+DEFINE_W32API(INT, lstrcmpiA,
+	      (LPCSTR a, LPCSTR b))
+{
+  return strcasecmp(a, b);
 }
 
 /* process related */
@@ -1410,6 +1485,12 @@ DEFINE_W32API(INT, LCMapStringA,
 {
   debug_message(__FUNCTION__ "(%d, %d, %p, %d, %p, %d) called\n", lcid, mapflags, srcstr, srclen, dststr, dstlen);
   return 0;
+}
+
+DEFINE_W32API(BOOL, IsDBCSLeadByte,
+	      (BYTE c))
+{
+  return FALSE;
 }
 
 /* date and time */
