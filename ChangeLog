@@ -1,3 +1,24 @@
+2004-01-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* plugins/player/avcodec/avcodec.c: Cleaned up.
+
+	* plugins/player/divx/divx.c,
+	plugins/player/libmpeg2.old/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg3/libmpeg3.c: Clear m->movie_private when
+	freed.
+
+	* lib/enfle/stream.c: Bug fix.
+
+	* lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/demultiplexer_mpeg.c,
+	lib/demultiplexer/libriff.c: Cleaned up.
+
+	* lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/wmadec.c: Updated.
+
 2004-01-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: More checks.  Added libmad.  Version up.
