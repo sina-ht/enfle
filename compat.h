@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 28 02:15:56 2001.
- * $Id: compat.h,v 1.8 2001/04/27 17:45:34 sian Exp $
+ * Last Modified: Wed Aug 15 15:34:54 2001.
+ * $Id: compat.h,v 1.9 2001/08/15 06:39:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,11 +69,13 @@
 # endif
 #endif
 
+#ifndef WITH_DMALLOCTH
 #ifdef HAVE_MEMALIGN
 #include <sys/types.h>
 void *memalign(size_t, size_t);
 #else
 #define memalign(align, size) malloc(size)
+#endif
 #endif
 
 #ifndef HAVE_GETPAGESIZE

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 02:03:33 2001.
- * $Id: common.h,v 1.14 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Mon Aug 13 18:29:48 2001.
+ * $Id: common.h,v 1.15 2001/08/15 06:39:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -82,6 +82,6 @@ fatal_perror(int code, const char *msg)
 #endif
 #define COPYRIGHT_MESSAGE "(C)Copyright 2000, 2001 by Hiroshi Takekawa"
 
-#ifdef WITH_DMALLOC
+#ifdef WITH_DMALLOCTH
 #  include <dmalloc.h>
 #endif
