@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 19 20:25:15 2001.
- * $Id: png.c,v 1.2 2001/04/20 08:09:56 sian Exp $
+ * Last Modified: Tue Apr 24 22:57:13 2001.
+ * $Id: png.c,v 1.3 2001/04/24 16:43:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,7 @@ DECLARE_SAVER_PLUGIN_METHODS;
 static SaverPlugin plugin = {
   type: ENFLE_PLUGIN_SAVER,
   name: "PNG",
-  description: "PNG Saver plugin version 0.1",
+  description: "PNG Saver plugin version 0.1.1",
   author: "Hiroshi Takekawa",
 
   save: save,
@@ -76,21 +76,58 @@ DEFINE_SAVER_PLUGIN_GET_EXT(c)
 
 DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
 {
-  //Config *c = (Config *)params;
+  Config *c = (Config *)params;
   png_structp png_ptr;
   png_infop info_ptr;
   png_text comment[2];
   png_uint_32 k;
   png_bytep *row_pointers;
+  char *tmp;
+  int compression_level;
+  int filter_flag_set, filter_flag;
+  int interlace_flag;
+  int result, b;
 
   debug_message("png: save (%s) (%d, %d) called.\n", image_type_to_string(p->type), p->width, p->height);
+
+  compression_level = config_get_int(c, "/enfle/plugins/saver/png/compression_level", &result);
+  if (!result)
+    compression_level = 9;
+  else if (compression_level < -1 || compression_level > 9) {
+    show_message("Invalid compression level %d: defaults to 9.\n", compression_level);
+    compression_level = 9;
+  }
+
+  if ((tmp = config_get_str(c, "/enfle/plugins/saver/png/filter")) == NULL)
+    filter_flag_set = 0;
+  else {
+    filter_flag_set = 1;
+    if (strcasecmp(tmp, "all") == 0)
+      filter_flag = PNG_ALL_FILTERS;
+    else if (strcasecmp(tmp, "default") == 0)
+      filter_flag_set = 0;
+    else if (strcasecmp(tmp, "paeth_only") == 0)
+      filter_flag = PNG_FILTER_PAETH | PNG_FILTER_NONE;
+    else if (strcasecmp(tmp, "none") == 0)
+      filter_flag = PNG_NO_FILTERS;
+    else {
+      show_message("Invalid filter: %s\n", tmp);
+      filter_flag_set = 0;
+    }
+  }
+
+  b = config_get_boolean(c, "/enfle/plugins/saver/png/filter", &result);
+  if (result)
+    interlace_flag = b ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
+  else
+    interlace_flag = PNG_INTERLACE_NONE;
 
   if ((png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL)) == NULL) {
     fclose(fp);
     return 0;
   }
 
-  /* Allocate/initialize the image information data. */
+  /* Allocate and initialize the image information data. */
   if ((info_ptr = png_create_info_struct(png_ptr)) == NULL) {
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     fclose(fp);
@@ -108,22 +145,25 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
   /* set up the output control. */
   png_init_io(png_ptr, fp);
 
-  /* Set the image information here.  Width and height are up to 2^31,
-   * bit_depth is one of 1, 2, 4, 8, or 16, but valid values also depend on
-   * the color_type selected. color_type is one of PNG_COLOR_TYPE_GRAY,
-   * PNG_COLOR_TYPE_GRAY_ALPHA, PNG_COLOR_TYPE_PALETTE, PNG_COLOR_TYPE_RGB,
-   * or PNG_COLOR_TYPE_RGB_ALPHA.  interlace is either PNG_INTERLACE_NONE or
-   * PNG_INTERLACE_ADAM7, and the compression_type and filter_type MUST
-   * currently be PNG_COMPRESSION_TYPE_BASE and PNG_FILTER_TYPE_BASE. REQUIRED
+  /*
+   * bit_depth: 1, 2, 4, 8, 16.
+   * but valid values also depend on the color_type selected.
+   * color_type: PNG_COLOR_TYPE_GRAY, PNG_COLOR_TYPE_GRAY_ALPHA,
+   * PNG_COLOR_TYPE_PALETTE, PNG_COLOR_TYPE_RGB, PNG_COLOR_TYPE_RGB_ALPHA.
+   * interlace: PNG_INTERLACE_NONE, PNG_INTERLACE_ADAM7.
    */
 
-  debug_message("png: " __FUNCTION__ ": %dx%d, type %d\n", p->width, p->height, p->type);
+  debug_message("png: " __FUNCTION__ ": %dx%d, type %s\n", p->width, p->height, image_type_to_string(p->type));
 
   switch (p->type) {
-  case _INDEX:
-    debug_message("depth 8 image\n");
+  case _GRAY:
     png_set_IHDR(png_ptr, info_ptr, p->width, p->height, 8,
-		 PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
+		 PNG_COLOR_TYPE_GRAY, interlace_flag,
+		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    break;
+  case _INDEX:
+    png_set_IHDR(png_ptr, info_ptr, p->width, p->height, 8,
+		 PNG_COLOR_TYPE_PALETTE, interlace_flag,
 		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     /* set the palette.  REQUIRED for indexed-color images */
     png_set_PLTE(png_ptr, info_ptr, (png_colorp)p->colormap, p->ncolors);
@@ -138,7 +178,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
 #endif
   case _RGB24:
     png_set_IHDR(png_ptr, info_ptr, p->width, p->height, 8,
-		 PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+		 PNG_COLOR_TYPE_RGB, interlace_flag,
 		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     break;
   default:
@@ -148,15 +188,20 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
     return 0;
   }
 
+  /* Compression parameter setup */
+  debug_message("Compression level %d, filter %d(is_set %d), interlace %d\n", compression_level, filter_flag, filter_flag_set, interlace_flag);
+
 #if (PNG_LIBPNG_VER > 99)
   png_set_compression_buffer_size(png_ptr, 32768L);
 #endif
-  png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
+  png_set_compression_level(png_ptr, compression_level);
+  if (filter_flag_set)
+    png_set_filter(png_ptr, 0, filter_flag);
 
   /* Write comments into the image */
   comment[0].key = (char *)"Software";
-  comment[0].text = (char *)"Created by Enfle " VERSION " / " COPYRIGHT_MESSAGE;
-  comment[0].compression = PNG_TEXT_COMPRESSION_zTXt;
+  comment[0].text = (char *)"Enfle " VERSION " / " COPYRIGHT_MESSAGE;
+  comment[0].compression = PNG_TEXT_COMPRESSION_NONE;
   png_set_text(png_ptr, info_ptr, comment, 1);
 
   /* other optional chunks like cHRM, bKGD, tRNS, tIME, oFFs, pHYs, */
@@ -174,6 +219,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
   }
 
   switch (p->type) {
+  case _GRAY:
   case _INDEX:
     for (k = 0; k < p->height; k++)
       row_pointers[k] = memory_ptr(p->image) + k * p->width;
@@ -183,7 +229,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
       row_pointers[k] = memory_ptr(p->image) + 3 * k * p->width;
     break;
   default:
-    fprintf(stderr, "png_save_image: FATAL: internal error: type %d cannot be processed\n", p->type);
+    fprintf(stderr, "png_save_image: FATAL: internal error: type %s cannot be processed\n", image_type_to_string(p->type));
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     fclose(fp);
     exit(1);
