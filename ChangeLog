@@ -1,3 +1,47 @@
+2004-04-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, src/enfle.c: Added DMO bridge support.
+
+	* plugins/player/generic/generic.c: Don't free here in case of
+	being used by audio side.
+
+	* plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/audiodecoder/vorbis/vorbis.c,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/raw/raw.c: Receive private pointer.
+
+	* lib/enfle/fourcc.h: Added FCC_WMV3.
+
+	* lib/enfle/audiodecoder-plugin.h, lib/enfle/audiodecoder.c,
+	lib/enfle/audiodecoder.h, lib/enfle/videodecoder-plugin.h,
+	lib/enfle/videodecoder.c: Pass private pointer to plugin.
+
+	* lib/enfle/Makefile.am: Added DMO to enfle bridge.
+
+	* lib/dllloader/advapi32.c, lib/dllloader/kernel32.c,
+	lib/dllloader/windef.h: More implementation for DMO bridge.
+
+	* lib/enfle/dmo-private.h, lib/enfle/dmo.c, lib/enfle/dmo.h: New
+	files.
+
+	* config.guess, config.sub, install-sh, ltmain.sh, mkinstalldirs,
+	lib/avcodec/4xm.c, lib/avcodec/apiexample.c,
+	lib/avcodec/avcodec.h, lib/avcodec/common.h, lib/avcodec/faad.c,
+	lib/avcodec/h264.c, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/imgresample.c, lib/avcodec/interplayvideo.c,
+	lib/avcodec/oggvorbis.c, lib/avcodec/ppc/mpegvideo_ppc.c,
+	lib/avcodec/smc.c, lib/avcodec/truemotion1.c, lib/avcodec/vmdav.c:
+	Updated.
+
+2004-04-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/kernel32.c, lib/dllloader/windef.h: Added more
+	APIs.
+
 2004-04-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/movie.h, plugins/audiodecoder/avcodec/avcodec.c,
