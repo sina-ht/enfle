@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 04:58:28 2000.
- * $Id: plugin.c,v 1.2 2000/10/09 20:29:56 sian Exp $
+ * Last Modified: Sat Oct 14 04:54:40 2000.
+ * $Id: plugin.c,v 1.3 2000/10/15 07:51:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -105,7 +105,10 @@ unload(Plugin *p)
   }
 
   if (p->handle) {
+#if 0
+    /* This causes segfault... */
     dlclose(p->handle);
+#endif
     p->handle = NULL;
   }
 
