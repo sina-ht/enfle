@@ -1,12 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl NOTE: autoconf should be 2.49b or later.
+dnl NOTE: autoconf should be 2.49b or later (2.49d or later recommended).
 dnl       Older autoconf needs some modifications.
 dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Mar 13 10:11:55 2001.
-dnl $Id: configure.in,v 1.57 2001/03/16 22:45:47 sian Exp $
+dnl Last Modified: Tue Mar 20 06:32:17 2001.
+dnl $Id: configure.in,v 1.58 2001/03/19 21:34:12 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010317)
+AM_INIT_AUTOMAKE(enfle, 20010320)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -55,7 +55,7 @@ AC_PROG_LN_S
 dnl AC_PROG_RANLIB
 dnl These might be commented out if autoconf is older.
 dnl AC_PROG_CC_STDC
-dnl AC_PROG_GCC_TRADITIONAL
+AC_PROG_GCC_TRADITIONAL
 
 dnl Checks for libraries.
 if test -d /usr/local/lib; then
@@ -354,11 +354,9 @@ AC_CONFIG_FILES([
  Makefile
   lib/Makefile
    lib/X11/Makefile
-   lib/demultiplexer/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
    lib/mpglib/Makefile
-   lib/mpeg2/Makefile
    lib/utils/Makefile
   src/Makefile
   plugins/Makefile
@@ -377,7 +375,6 @@ AC_CONFIG_FILES([
     plugins/archiver/tar/Makefile
    plugins/player/Makefile
     plugins/player/avifile/Makefile
-    plugins/player/libmpeg2/Makefile
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
     plugins/player/mpeg_lib/Makefile
