@@ -1,5 +1,20 @@
 2002-02-14  Hiroshi Takekawa  <sian@fennel.org>
 
+	* configure.in: Added XBM, XPM. Version up.
+
+	* lib/X11/Makefile.am: Added rgb.txt parser.
+
+	* lib/X11/rgbparse.[ch]: New files.
+
+	* lib/enfle/stream-utils.[ch]: Added stream_ngets(),
+	stream_getc().
+
+	* plugins/loader/Makefile.am: Added XBM, XPM loader.
+
+	* plugins/loader/xpm/*, plugins/loader/xbm/*: New files.
+
+2002-02-14  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/image_magnify.c: Reduced branching to increase speed.
 
 2002-02-13  Hiroshi Takekawa  <sian@fennel.org>
