@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_esc.c -- ESC estimatation method A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 02:14:09 2001.
- * $Id: vmpm_decompose_esc.c,v 1.4 2001/08/06 04:59:29 sian Exp $
+ * Last Modified: Mon Aug  6 22:21:01 2001.
+ * $Id: vmpm_decompose_esc.c,v 1.5 2001/08/06 18:51:42 sian Exp $
  */
 
 #include <stdio.h>
@@ -140,7 +140,8 @@ encode(VMPM *vmpm)
   Arithmodel *am;
   Arithmodel *bin_am;
   unsigned int *symbol_to_index;
-  int i, n, match_found;
+  int i, match_found;
+  unsigned int nsymbols;
   unsigned int j;
 
   //debug_message(__FUNCTION__ "()\n");
@@ -162,16 +163,12 @@ encode(VMPM *vmpm)
 
   bin_am = arithmodel_order_zero_create(0, 0);
   arithmodel_encode_init(bin_am, ac);
-  arithmodel_install_symbol(bin_am, 1);
-  arithmodel_install_symbol(bin_am, 1);
 
   match_found = 0;
   for (i = vmpm->I; i >= 1; i--) {
-    int nsymbols = 0;
-
+    nsymbols = 0;
     for (j = 0; j < vmpm->token_index[i]; j++) {
-      Token *t = vmpm->token[i][j];
-      Token_value tv = t->value - 1;
+      Token_value tv = vmpm->token[i][j]->value - 1;
 
       if (nsymbols == tv) {
 	nsymbols++;
@@ -186,20 +183,24 @@ encode(VMPM *vmpm)
     }
   }
 
-  fprintf(vmpm->outfile, "%c", i);
+  fputc(i, vmpm->outfile);
   if (match_found) {
     for (; i >= 1; i--) {
-      unsigned int nsymbols = 0;
-
-      stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i]);
+      stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
+      /* Encode escape symbols at once. */
       arithmodel_order_zero_reset(bin_am, 0, 0);
       arithmodel_install_symbol(bin_am, 1);
       arithmodel_install_symbol(bin_am, 1);
-#if 0
+      if (vmpm->token[i][0]->value != 1)
+	generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);
+      /* Hence, we don't need to encode it. */
+      stat_message(vmpm, "e ");
+      nsymbols = 1;
+#if 1
       arithmodel_order_zero_reset(am, 0, 0);
-      for (j = 0; j < vmpm->token_index[i]; j++) {
-	Token *t = vmpm->token[i][j];
-	Token_value tv = t->value - 1;
+      arithmodel_install_symbol(am, 1);
+      for (j = 1; j < vmpm->token_index[i]; j++) {
+	Token_value tv = vmpm->token[i][j]->value - 1;
 
 	if (nsymbols == tv) {
 	  stat_message(vmpm, "e ");
@@ -213,9 +214,8 @@ encode(VMPM *vmpm)
 	}
       }
 #else
-      for (j = 0; j < vmpm->token_index[i]; j++) {
-	Token *t = vmpm->token[i][j];
-	Token_value tv = t->value - 1;
+      for (j = 1; j < vmpm->token_index[i]; j++) {
+	Token_value tv = vmpm->token[i][j]->value - 1;
 
 	if (nsymbols == tv) {
 	  stat_message(vmpm, "e ");
@@ -227,12 +227,10 @@ encode(VMPM *vmpm)
 	}
       }
       /* Then encode non-escape symbols */
-      arithmodel_order_zero_reset(bin_am, 0, 0);
-      arithmodel_install_symbol(bin_am, 1);
-      arithmodel_install_symbol(bin_am, 1);
       arithmodel_order_zero_reset(am, 0, 0);
-      nsymbols = 0;
-      for (j = 0; j < vmpm->token_index[i]; j++) {
+      arithmodel_install_symbol(am, 1);
+      nsymbols = 1;
+      for (j = 1; j < vmpm->token_index[i]; j++) {
         Token *t = vmpm->token[i][j];
         Token_value tv = t->value - 1;
 
@@ -252,14 +250,17 @@ encode(VMPM *vmpm)
     memory_error(NULL, MEMORY_ERROR);
   memset(symbol_to_index, 255, vmpm->alphabetsize * sizeof(unsigned int));
 
-  n = 0;
+  nsymbols = 0;
+  arithmodel_order_zero_reset(bin_am, 0, 0);
+  arithmodel_install_symbol(bin_am, 1);
+  arithmodel_install_symbol(bin_am, 1);
   arithmodel_order_zero_reset(char_am, 1, vmpm->alphabetsize - 1);
   stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
       stat_message(vmpm, "e ");
-      arithmodel_encode(char_am, n);
-      symbol_to_index[(int)vmpm->token[0][j]] = n++;
+      arithmodel_encode(char_am, nsymbols);
+      symbol_to_index[(int)vmpm->token[0][j]] = nsymbols++;
       arithmodel_encode_bits(bin_am, (int)vmpm->token[0][j], vmpm->bits_per_symbol, 0, 1);
     } else {
       stat_message(vmpm, "%d ", symbol_to_index[(int)vmpm->token[0][j]]);

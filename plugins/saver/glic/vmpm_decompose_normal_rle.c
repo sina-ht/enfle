@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Original decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 02:38:52 2001.
- * $Id: vmpm_decompose_normal_rle.c,v 1.1 2001/08/06 04:57:38 sian Exp $
+ * Last Modified: Mon Aug  6 18:47:14 2001.
+ * $Id: vmpm_decompose_normal_rle.c,v 1.2 2001/08/06 18:51:42 sian Exp $
  */
 
 #include <stdio.h>
@@ -111,10 +111,8 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
       vmpm->token_index[level]++;
     }
   } else {
-    for (i = 0; i < ntokens; i++) {
-      vmpm->token[level][vmpm->token_index[level]] = (Token *)((int)vmpm->buffer[offset + i]);
-      vmpm->token_index[level]++;
-    }
+    for (i = 0; i < ntokens; i++)
+      vmpm->token[level][vmpm->token_index[level]++] = (Token *)((int)vmpm->buffer[offset + i]);
   }
 
   if (blocksize - ntokens * token_length > 0)
@@ -148,9 +146,10 @@ encode(VMPM *vmpm)
   }
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(0, 1);
-
   arithcoder_encode_init(ac, vmpm->outfile);
+
+  /* EOF won't be used. ESC will be used. */
+  am = arithmodel_order_zero_create(0, 1);
   arithmodel_encode_init(am, ac);
   arithmodel_order_zero_set_update_escape_freq(am, update_escape_freq);
 
@@ -167,8 +166,7 @@ encode(VMPM *vmpm)
     int nsymbols = 0;
 
     for (j = 0; j < vmpm->token_index[i]; j++) {
-      Token *t = vmpm->token[i][j];
-      Token_value tv = t->value - 1;
+      Token_value tv = vmpm->token[i][j]->value - 1;
 
       if (nsymbols == tv) {
 	nsymbols++;
@@ -192,11 +190,19 @@ encode(VMPM *vmpm)
       arithmodel_order_zero_reset(bin_am, 0, 0);
       arithmodel_install_symbol(bin_am, 1);
       arithmodel_install_symbol(bin_am, 1);
-      arithmodel_encode_cbt(bin_am, vmpm->token_index[i], vmpm->newtoken[i] - 1, 0, 1);
+      /* Send the number of distinct symbols. */
+      arithmodel_encode_cbt(bin_am, vmpm->newtoken[i] - 1, vmpm->token_index[i], 0, 1);
       arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-      for (j = 0; j < vmpm->token_index[i]; j++) {
-	Token *t = vmpm->token[i][j];
-	Token_value tv = t->value - 1;
+
+      /* The first token of each level must be t_0. */
+      if (vmpm->token[i][0]->value != 1)
+	generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);
+      /* Hence, we don't need to encode it. */
+      stat_message(vmpm, "e ");
+      arithmodel_install_symbol(am, 1);
+      nsymbols++;
+      for (j = 1; j < vmpm->token_index[i]; j++) {
+	Token_value tv = vmpm->token[i][j]->value - 1;
 
 	if (nsymbols == tv) {
 	  stat_message(vmpm, "e ");
@@ -257,9 +263,9 @@ decode(VMPM *vmpm)
   //debug_message(__FUNCTION__ "()\n");
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(0, 1);
-
   arithcoder_decode_init(ac, vmpm->infile);
+
+  am = arithmodel_order_zero_create(0, 1);
   arithmodel_decode_init(am, ac);
 
   bin_am = arithmodel_order_zero_create(0, 0);
@@ -280,7 +286,8 @@ decode(VMPM *vmpm)
     if ((vmpm->tokens[i] = calloc(vmpm->token_index[i], sizeof(Token))) == NULL)
       memory_error(NULL, MEMORY_ERROR);
     arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-    for (j = 0; j < vmpm->token_index[i]; j++) {
+    vmpm->tokens[i][0].value = 1;
+    for (j = 1; j < vmpm->token_index[i]; j++) {
       Index index;
 
       arithmodel_decode(am, &index);

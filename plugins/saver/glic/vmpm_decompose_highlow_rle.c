@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 02:40:14 2001.
- * $Id: vmpm_decompose_highlow_rle.c,v 1.1 2001/08/06 04:57:38 sian Exp $
+ * Last Modified: Mon Aug  6 18:30:36 2001.
+ * $Id: vmpm_decompose_highlow_rle.c,v 1.2 2001/08/06 18:51:42 sian Exp $
  */
 
 #include <stdio.h>
@@ -233,9 +233,13 @@ encode(VMPM *vmpm)
       for (; i >= 1; i--) {
 	int nsymbols = 0;
 
-	stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i]);
-	//arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-	arithmodel_order_zero_reset(am, 1, vmpm->token_index[i] >> 2);
+	stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
+	arithmodel_order_zero_reset(bin_am, 0, 0);
+	arithmodel_install_symbol(bin_am, 1);
+	arithmodel_install_symbol(bin_am, 1);
+	/* Send the number of distinct symbols. */
+	arithmodel_encode_cbt(bin_am, vmpm->newtoken[i] - 1, vmpm->token_index[i], 0, 1);
+	arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
 	for (j = 0; j < vmpm->token_index[i]; j++) {
 	  Token *t = vmpm->token[i][j];
 	  Token_value tv = t->value - 1;
@@ -259,6 +263,9 @@ encode(VMPM *vmpm)
 
     n = 0;
     arithmodel_order_zero_reset(am, 1, vmpm->alphabetsize - 1);
+    arithmodel_order_zero_reset(bin_am, 0, 0);
+    arithmodel_install_symbol(bin_am, 1);
+    arithmodel_install_symbol(bin_am, 1);
     stat_message(vmpm, "Level 0 (%d tokens): ", vmpm->token_index[0]);
     for (j = 0; j < vmpm->token_index[0]; j++) {
       if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {

@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escb.c -- ESC estimate method B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug  2 19:47:59 2001.
- * $Id: vmpm_decompose_escb.c,v 1.1 2001/08/02 11:47:01 sian Exp $
+ * Last Modified: Mon Aug  6 18:00:54 2001.
+ * $Id: vmpm_decompose_escb.c,v 1.2 2001/08/06 18:51:42 sian Exp $
  */
 
 #include <stdio.h>
@@ -197,8 +197,7 @@ encode(VMPM *vmpm)
       arithmodel_install_symbol(bin_am, 1);
       arithmodel_install_symbol(bin_am, 1);
       for (j = 0; j < vmpm->token_index[i]; j++) {
-	Token *t = vmpm->token[i][j];
-	Token_value tv = t->value - 1;
+	Token_value tv = vmpm->token[i][j]->value - 1;
 	Arithmodel_order_zero *bin_am_oz = (Arithmodel_order_zero *)bin_am;
 
 	/* calculate and assign escape symbol's probability */
@@ -214,7 +213,7 @@ encode(VMPM *vmpm)
 	  else if (bin_am_oz->freq[0] == 0)
 	    break;
 	  else {
-	    stat_message(vmpm, "BUGBUGBUG(1)\n");
+	    stat_message(vmpm, "BUG(1)\n");
 	  }
 	  arithmodel_install_symbol(am, 1);
 	} else {
@@ -222,7 +221,7 @@ encode(VMPM *vmpm)
 	  if (bin_am_oz->freq[0] > 0 && bin_am_oz->freq[1] > 0)
 	    arithmodel_encode(bin_am, 0);
 	  else if (bin_am_oz->freq[0] == 0) {
-	    stat_message(vmpm, "BUGBUGBUG(2)\n");
+	    stat_message(vmpm, "BUG(2)\n");
 	  }
 	  arithmodel_encode(am, tv);
 	}
