@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 19:35:47 2001.
- * $Id: libmpeg2.c,v 1.25 2001/09/20 10:37:45 sian Exp $
+ * Last Modified: Fri Sep 21 11:54:06 2001.
+ * $Id: libmpeg2.c,v 1.26 2001/09/21 02:57:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -460,13 +460,15 @@ play_audio(void *arg)
     }
   }
 
+  debug_message(__FUNCTION__ ": sync_device()...");
   m->ap->sync_device(ad);
+  debug_message("OK\n" __FUNCTION__ ": close_device()...");
   m->ap->close_device(ad);
   info->ad = NULL;
 
+  debug_message("OK\n" __FUNCTION__ ": ExitMP3()...");
   ExitMP3(&info->mp);
-
-  debug_message(__FUNCTION__ " exiting.\n");
+  debug_message("OK. exit.\n");
 
   pthread_exit((void *)PLAY_OK);
 }
@@ -630,6 +632,9 @@ stop_movie(Movie *m)
   debug_message(__FUNCTION__ ": waiting for demultiplexer thread to exit... \n");
 
   demultiplexer_stop(info->demux);
+
+  debug_message(__FUNCTION__ ": demultiplexer stopped\n");
+
   if (m->has_video && info->vstream) {
     fifo_destroy(info->vstream);
     info->vstream = NULL;
