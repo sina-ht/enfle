@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Oct 14 05:37:19 2000.
- * $Id: x11ximage.c,v 1.2 2000/10/15 07:50:42 sian Exp $
+ * Last Modified: Sun Oct 15 20:23:14 2000.
+ * $Id: x11ximage.c,v 1.3 2000/10/15 12:29:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,6 +37,8 @@ void
 x11ximage_convert_image(XImage *ximage, Image *p)
 {
   int i, j;
+  int bytes_per_line, bits_per_pixel;
+  unsigned char *dest, *dd;
 
 #if 0
   debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
@@ -53,7 +55,6 @@ x11ximage_convert_image(XImage *ximage, Image *p)
   switch (ximage->bits_per_pixel) {
   case 16:
     {
-      unsigned char *dest, *dd;
       unsigned short int pix;
 
       if ((dest = calloc(2, p->width * p->height)) == NULL) {
@@ -149,32 +150,21 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
 	break;
       }
-      free(p->image);
-      p->image = dest;
-      p->type = _BGR_WITH_BITMASK;
-      p->depth = 16;
-      p->bits_per_pixel = 16;
-      p->bytes_per_line = p->width * 2;
-      p->image_size = p->bytes_per_line * p->height;
-#if 0
-      /* XXX: TODO: use this info. to convert pixel written in above... */
-      p->red_mask   = 0xf800;
-      p->green_mask = 0x07e0;
-      p->blue_mask  = 0x001f;
-#endif
+      bits_per_pixel = 16;
+      bytes_per_line = p->width * 2;
     }
     break;
   case 24:
     {
-      unsigned char *dest;
-      unsigned char *dd;
       int i;
 
       if (p->type == _RGB24) {
 	ximage->byte_order = MSBFirst;
+	dest = p->image;
 	break;
       } else if (p->type == _BGR24) {
 	ximage->byte_order = LSBFirst;
+	dest = p->image;
 	break;
       }
 
@@ -199,35 +189,25 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
 	break;
       }
-      free(p->image);
-      p->image = dest;
-      p->type = _BGR24;
-      p->depth = 24;
-      p->bits_per_pixel = 24;
-      p->bytes_per_line = p->width * 3;
-      p->image_size = p->bytes_per_line * p->height;
-#if 0
-      p->red_mask   = 0xff0000;
-      p->green_mask = 0x00ff00;
-      p->blue_mask  = 0x0000ff;
-#endif
+      bits_per_pixel = 24;
+      bytes_per_line = p->width * 3;
     }
     break;
   case 32:
     {
-      unsigned char *dest;
-      unsigned char *dd;
       int i;
 
       if (p->type == _RGBA32 || p->type == _ARGB32 || p->type == _RGB24) {
 	ximage->byte_order = MSBFirst;
 	if (p->type == _RGBA32)
 	  memcpy(p->image + 1, p->image, p->image_size - 1);
+	dest = p->image;
 	break;
       } else if (p->type == _ABGR32 || p->type == _BGRA32 || p->type == _BGR24) {
 	ximage->byte_order = LSBFirst;
 	if (p->type == _ABGR32)
 	  memcpy(p->image, p->image + 1, p->image_size - 1);
+	dest = p->image;
 	break;
       }
 
@@ -251,18 +231,8 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
 	break;
       }
-      free(p->image);
-      p->image = dest;
-      p->type = _ABGR32;
-      p->depth = 24;
-      p->bits_per_pixel = 32;
-      p->bytes_per_line = p->width * 4;
-      p->image_size = p->bytes_per_line * p->height;
-#if 0
-      p->red_mask   = 0x00ff0000;
-      p->green_mask = 0x0000ff00;
-      p->blue_mask  = 0x000000ff;
-#endif
+      bits_per_pixel = 32;
+      bytes_per_line = p->width * 4;
     }
     break;
   default:
@@ -270,9 +240,9 @@ x11ximage_convert_image(XImage *ximage, Image *p)
     break;
   }
 
-  ximage->data = p->image;
-  ximage->bytes_per_line = p->bytes_per_line;
-  ximage->bits_per_pixel = p->bits_per_pixel;
+  ximage->data = dest;
+  ximage->bytes_per_line = bytes_per_line;
+  ximage->bits_per_pixel = bits_per_pixel;
 
   return;
 }
