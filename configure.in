@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000-03 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Dec 30 21:11:31 2003.
-dnl $Id: configure.in,v 1.128 2003/12/30 12:20:19 sian Exp $
+dnl Last Modified: Fri Jan  2 23:56:54 2004.
+dnl $Id: configure.in,v 1.129 2004/01/03 10:27:51 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20031230, sian@big.or.jp)
+AC_INIT(enfle, 20040102, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -612,6 +612,7 @@ AC_CONFIG_FILES([
    lib/demultiplexer/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
+   lib/mpeg2.old/Makefile
    lib/mpeg2/Makefile
    lib/mpglib/Makefile
    lib/utils/Makefile
@@ -640,6 +641,7 @@ AC_CONFIG_FILES([
    plugins/player/Makefile
     plugins/player/avcodec/Makefile
     plugins/player/avifile/Makefile
+    plugins/player/libmpeg2.old/Makefile
     plugins/player/libmpeg2/Makefile
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
