@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Sep  7 22:47:23 2001.
- * $Id: x11ximage.c,v 1.33 2001/09/09 23:56:43 sian Exp $
+ * Last Modified: Sat Sep 15 15:43:27 2001.
+ * $Id: x11ximage.c,v 1.34 2001/09/16 23:10:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,17 +39,13 @@ void bgra32to16_mmx(unsigned char *, unsigned char *, int, int);
 
 static int convert(X11XImage *, Image *);
 static void put(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int, unsigned int);
-#ifdef USE_XV
 static void put_scaled(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int, unsigned int, unsigned int, unsigned int);
-#endif
 static void destroy(X11XImage *);
 
 static X11XImage template = {
   convert: convert,
   put: put,
-#ifdef USE_XV
   put_scaled: put_scaled,
-#endif
   destroy: destroy
 };
 
@@ -63,6 +59,8 @@ x11ximage_create(X11 *x11)
     return NULL;
   memcpy(xi, &template, sizeof(X11XImage));
   xi->x11 = x11;
+  xi->ximage = NULL;
+  xi->xvimage = NULL;
   cpucaps = cpucaps_get();
 #ifdef USE_MMX
   if (cpucaps_is_mmx(cpucaps)) {
@@ -81,7 +79,6 @@ static void
 destroy_ximage(X11XImage *xi)
 {
   if (xi->use_xv) {
-#ifdef USE_XV
     if (xi->xvimage) {
 #ifdef USE_SHM
       if (xi->if_attached) {
@@ -91,8 +88,8 @@ destroy_ximage(X11XImage *xi)
       }
 #endif
       XFree(xi->xvimage);
+      xi->xvimage = NULL;
     }
-#endif
   } else {
     if (xi->ximage) {
       xi->ximage->data = NULL;
@@ -104,6 +101,7 @@ destroy_ximage(X11XImage *xi)
       }
 #endif
       x11_destroy_ximage(xi->ximage);
+      xi->ximage = NULL;
     }
   }
 }
@@ -147,6 +145,9 @@ convert(X11XImage *xi, Image *p)
   int i, j;
   int bits_per_pixel = 0;
   int bytes_per_line_s;
+  int is_xv = -1;
+  int has_old_ximage = 0;
+  int create_ximage = 0;
 #ifdef USE_SHM
   int to_be_attached = 0;
 #endif
@@ -172,58 +173,96 @@ convert(X11XImage *xi, Image *p)
   p->rendered.width  = w;
   p->rendered.height = h;
 
+  if (xi->xvimage) {
+    is_xv = 1;
+    has_old_ximage = 1;
+    if (xi->xvimage->width != w || xi->xvimage->height != h || p->type != xi->type
+#ifdef USE_SHM
+      || (memory_type(p->rendered.image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered.image))
+#endif
+	) {
+      xi->type = p->type;
+      destroy_ximage(xi);
+      create_ximage = 1;
+    }
+  } else if (xi->ximage) {
+    is_xv = 0;
+    has_old_ximage = 1;
+    if (xi->ximage->width != w || xi->ximage->height != h || p->type != xi->type
+#ifdef USE_SHM
+      || (memory_type(p->rendered.image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered.image))
+#endif
+	) {
+      xi->type = p->type;
+      destroy_ximage(xi);
+      create_ximage = 1;
+    }
+  } else {
+    switch (p->type) {
+#ifdef USE_XV
+    case _YUY2:
+      //debug_message("Image provided in YUY2.\n");
+      if (xi->x11->xv.capable_format & XV_YUY2_FLAG) {
+	t = XV_YUY2;
+	xi->use_xv = 1;
+      } else {
+	fatal(4, "Xv cannot display YUY2...\n");
+      }
+      break;
+    case _YV12:
+      //debug_message("Image provided in YV12.\n");
+      if (xi->x11->xv.capable_format & XV_YV12_FLAG) {
+	t = XV_YV12;
+	xi->use_xv = 1;
+      } else {
+	fatal(4, "Xv cannot display YV12...\n");
+      }
+      break;
+    case _I420:
+      //debug_message("Image provided in I420.\n");
+      if (xi->x11->xv.capable_format & XV_I420_FLAG) {
+	t = XV_I420;
+	xi->use_xv = 1;
+      } else {
+	fatal(4, "Xv cannot display I420...\n");
+      }
+      break;
+    case _UYVY:
+      //debug_message("Image provided in UYVY.\n");
+      if (xi->x11->xv.capable_format & XV_UYVY_FLAG) {
+	t = XV_UYVY;
+	xi->use_xv = 1;
+      } else {
+	fatal(4, "Xv cannot display UYVY...\n");
+      }
+      break;
+#else
+    case _YUY2:
+    case _YV12:
+    case _I420:
+    case _UYVY:
+      fatal(4, "Xv cannot display ...\n");
+      break;
+#endif
+    default:
+      xi->use_xv = 0;
+      break;
+    }
+    is_xv = xi->use_xv;
+    create_ximage = 1;
+    xi->type = p->type;
+  }
+
   //debug_message(__FUNCTION__ ": (%d, %d)\n", w, h);
 
-  if (!xi->ximage ||
-      xi->ximage->width != w || xi->ximage->height != h ||
-      (memory_type(p->rendered.image) == _SHM && xi->shminfo.shmid != memory_shmid(p->rendered.image))) {
-    destroy_ximage(xi);
+  if (create_ximage) {
     switch (memory_type(p->rendered.image)) {
     case _NORMAL:
 #ifdef USE_XV
-      switch (p->type) {
-      case _YUY2:
-	//debug_message("Image provided in YUY2.\n");
-	if (xi->x11->xv.capable_format & XV_YUY2_FLAG) {
-	  t = XV_YUY2;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display YUY2...\n");
-	}
-	break;
-      case _YV12:
-	//debug_message("Image provided in YV12.\n");
-	if (xi->x11->xv.capable_format & XV_YV12_FLAG) {
-	  t = XV_YV12;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display YV12...\n");
-	}
-	break;
-      case _I420:
-	//debug_message("Image provided in I420.\n");
-	if (xi->x11->xv.capable_format & XV_I420_FLAG) {
-	  t = XV_I420;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display I420...\n");
-	}
-	break;
-      case _UYVY:
-	//debug_message("Image provided in UYVY.\n");
-	if (xi->x11->xv.capable_format & XV_UYVY_FLAG) {
-	  t = XV_UYVY;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display UYVY...\n");
-	}
-	break;
-      default:
-	xi->use_xv = 0;
-	break;
+      if (is_xv) {
+	xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[t], memory_ptr(p->rendered.image), w, h);
       }
-
-      if (!xi->use_xv || !(xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[t], memory_ptr(p->rendered.image), w, h))) {
+      if (!is_xv || xi->xvimage == NULL) {
 #endif
 	xi->ximage =
 	  x11_create_ximage(xi->x11, x11_visual(xi->x11), x11_depth(xi->x11),
@@ -236,49 +275,10 @@ convert(X11XImage *xi, Image *p)
     case _SHM:
 #ifdef USE_SHM
 #ifdef USE_XV
-      switch (p->type) {
-      case _YUY2:
-	//debug_message("Image provided in YUY2(SHM).\n");
-	if (xi->x11->xv.capable_format & XV_YUY2_FLAG) {
-	  t = XV_YUY2;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display YUV2...\n");
-	}
-	break;
-      case _YV12:
-	//debug_message("Image provided in YV12(SHM).\n");
-	if (xi->x11->xv.capable_format & XV_YV12_FLAG) {
-	  t = XV_YV12;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display YV12...\n");
-	}
-	break;
-      case _I420:
-	//debug_message("Image provided in I420(SHM).\n");
-	if (xi->x11->xv.capable_format & XV_I420_FLAG) {
-	  t = XV_I420;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display I420...\n");
-	}
-	break;
-      case _UYVY:
-	//debug_message("Image provided in UYVY(SHM).\n");
-	if (xi->x11->xv.capable_format & XV_UYVY_FLAG) {
-	  t = XV_UYVY;
-	  xi->use_xv = 1;
-	} else {
-	  fatal(4, "Xv cannot display UYVY...\n");
-	}
-	break;
-      default:
-	xi->use_xv = 0;
-	break;
+      if (is_xv) {
+	xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[t], NULL, w, h, &xi->shminfo);
       }
-
-      if (!xi->use_xv || !(xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv.image_port, xi->x11->xv.format_ids[t], NULL, w, h, &xi->shminfo))) {
+      if (!is_xv || xi->xvimage == NULL) {
 #endif /* USE_XV */
 	xi->ximage =
 	  XShmCreateImage(x11_display(xi->x11), x11_visual(xi->x11), x11_depth(xi->x11), ZPixmap, NULL,
