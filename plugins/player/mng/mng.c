@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec  6 17:44:42 2000.
- * $Id: mng.c,v 1.9 2000/12/06 15:07:23 sian Exp $
+ * Last Modified: Thu Dec  7 16:44:12 2000.
+ * $Id: mng.c,v 1.10 2000/12/07 13:38:36 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -51,7 +51,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "MNG",
-  description: "MNG Player plugin version 0.1.1",
+  description: "MNG Player plugin version 0.1.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -279,8 +279,6 @@ play_main(Movie *m, VideoWindow *vw)
   case MNG_NOERROR:
     break;
   case MNG_NEEDTIMERWAIT:
-    /* XXX: hmm unless don't do this, not properly updated... why? */
-    this->m->render_frame(this->vw, this->m, this->p);
     m->pause_usec(this->delay * 1000);
     break;
   default:
