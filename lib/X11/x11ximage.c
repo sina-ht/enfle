@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Oct 16 06:43:47 2000.
- * $Id: x11ximage.c,v 1.5 2000/10/16 19:24:59 sian Exp $
+ * Last Modified: Sat Nov 18 15:55:38 2000.
+ * $Id: x11ximage.c,v 1.6 2000/11/20 12:52:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -169,6 +169,9 @@ x11ximage_convert_image(XImage *ximage, Image *p)
     {
       int i;
 
+      bits_per_pixel = 24;
+      bytes_per_line = p->width * 3;
+
       if (p->type == _RGB24) {
 	ximage->byte_order = MSBFirst;
 	dest = p->image;
@@ -206,8 +209,6 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
 	break;
       }
-      bits_per_pixel = 24;
-      bytes_per_line = p->width * 3;
     }
     break;
   case 32:
@@ -269,7 +270,7 @@ x11ximage_convert_image(XImage *ximage, Image *p)
     }
     break;
   default:
-    show_message("ximage->bits_per_pixel = %d\n", ximage->bits_per_pixel);
+    show_message(__FUNCTION__ ": ximage->bits_per_pixel = %d\n", ximage->bits_per_pixel);
     break;
   }
 
