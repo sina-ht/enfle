@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 20:10:47 2001.
- * $Id: stream-utils.c,v 1.2 2001/02/20 13:55:41 sian Exp $
+ * Last Modified: Fri Apr 13 16:49:39 2001.
+ * $Id: stream-utils.c,v 1.3 2001/04/18 05:37:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -19,6 +19,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
+
+#include <stdlib.h>
 
 #include "common.h"
 
@@ -75,4 +77,45 @@ stream_read_big_uint16(Stream *st, unsigned short int *val)
   *val = utils_get_big_uint16(buf);
 
   return 1;
+}
+
+#define ROOM_PER_ALLOC 80
+
+char *
+stream_gets(Stream *st)
+{
+  char *p = NULL, *tmp;
+  int size = 0, ptr = 0, read_size;
+
+  for (;;) {
+    /* Be sure the buffer has an additional byte for '\0'. */
+    if (ptr >= size - 1) {
+      if ((tmp = realloc(p, size + ROOM_PER_ALLOC)) == NULL) {
+	if (p)
+	  free(p);
+	return NULL;
+      }
+      p = tmp;
+      size += ROOM_PER_ALLOC;
+    }
+
+    if ((read_size = stream_read(st, p + ptr, 1)) < 0) {
+      free(p);
+      return NULL;
+    } else if (read_size == 0) {
+      break;
+    } else if (p[ptr] == '\n')
+      break;
+    ptr++;
+  }
+
+  p[ptr] = '\0';
+
+  if ((tmp = malloc(strlen(p) + 1)) == NULL) {
+    free(p);
+    return NULL;
+  }
+  strcpy(tmp, p);
+
+  return tmp;
 }

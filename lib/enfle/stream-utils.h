@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 20:10:41 2001.
- * $Id: stream-utils.h,v 1.2 2001/02/20 13:55:41 sian Exp $
+ * Last Modified: Fri Apr 13 16:49:45 2001.
+ * $Id: stream-utils.h,v 1.3 2001/04/18 05:37:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,5 +29,6 @@ int stream_read_little_uint32(Stream *, unsigned int *);
 int stream_read_big_uint32(Stream *, unsigned int *);
 int stream_read_little_uint16(Stream *, unsigned short int *);
 int stream_read_big_uint16(Stream *, unsigned short int *);
+char *stream_gets(Stream *);
 
 #endif
