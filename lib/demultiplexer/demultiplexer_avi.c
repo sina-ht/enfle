@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 16 14:35:55 2003.
- * $Id: demultiplexer_avi.c,v 1.19 2003/11/17 13:47:56 sian Exp $
+ * Last Modified: Sat Nov 29 21:26:17 2003.
+ * $Id: demultiplexer_avi.c,v 1.20 2003/11/30 05:52:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -152,8 +152,10 @@ RIFF( 'AVI' LIST ( 'hdrl'
 
   for (;;) {
     if (!riff_file_read_chunk_header(info->rf, rc)) {
-      if (riff_file_is_eof(info->rf))
-	break; /* EOF */
+      if (riff_file_is_eof(info->rf)) {
+	debug_message_fnc("EOF\n");
+	break;
+      }
       show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
       goto error_free;
     }
@@ -172,6 +174,11 @@ RIFF( 'AVI' LIST ( 'hdrl'
       break;
     case FCC_LIST:
       switch (rc->list_fourcc) {
+      case FCC_movi:
+	debug_message_fnc("Got list 'movi'\n");
+	info->movi_start = stream_tell(info->st);
+	riff_file_skip_chunk_data(info->rf, rc);
+	break;
       case FCC_hdrl:
 	debug_message_fnc("Got list 'hdrl'\n");
 	if (!riff_file_read_chunk_header(info->rf, rc)) {
@@ -227,6 +234,8 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	  riff_chunk_destroy(rc);
 	  if (ash.fccType == FCC_vids) {
 	    info->vhandler = ash.fccHandler;
+	    if (info->vhandler == 0)
+	      debug_message_fnc("strh fccHandler == 0\n");
 	    info->num_of_frames = ash.dwLength;
 	  } else if (ash.fccType == FCC_auds) {
 	    /* XXX: First stream only */
@@ -250,6 +259,10 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	  if (ash.fccType == FCC_vids) {
 	    if (info->nvstreams == 0) {
 	      memcpy(&bih, riff_chunk_get_data(rc), sizeof(BITMAPINFOHEADER));
+	      if (info->vhandler == 0) {
+		debug_message_fnc("using bih.biCompression(%x) for vhandler\n", bih.biCompression);
+		info->vhandler = bih.biCompression;
+	      }
 	      info->width = bih.biWidth;
 	      info->height = bih.biHeight;
 	    }
@@ -267,9 +280,8 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	  riff_chunk_destroy(rc);
 	}
 	break;
-      case FCC_movi:
-	debug_message_fnc("Got list 'movi'\n");
-	info->movi_start = stream_tell(info->st);
+      default:
+	debug_message_fnc("Got list '%s'... not handled\n", riff_chunk_get_list_name(rc));
 	riff_file_skip_chunk_data(info->rf, rc);
 	break;
       }
@@ -364,7 +376,7 @@ demux_main(void *arg)
 	riff_file_skip_chunk_data(info->rf, rc);
       }
     } else {
-      show_message_fnc("Got unknown chunk '%s', skipped\n", riff_chunk_get_name(rc));
+      show_message_fnc("Got unknown chunk '%s' at %d, skipped\n", riff_chunk_get_name(rc), riff_chunk_get_pos(rc));
       riff_file_skip_chunk_data(info->rf, rc);
     }
   }
