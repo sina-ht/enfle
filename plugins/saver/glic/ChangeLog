@@ -1,3 +1,29 @@
+2001-08-26  Hiroshi Takekawa  <sian@fennel.org>
+
+	* Makefile.am: Added two new decomposers.
+
+	* enfle.rc.additional: More configuration.
+
+	* glic.c: Calculate the recommended value of I. Added expansion
+	code to operate bitwise.
+
+	* vmpm_decompose_escb-bit.c, vmpm_decompose_escc.c,
+	vmpm_decompose_highlow_escb.c: New files.
+
+	* vmpm_decompose_esc.c, vmpm_decompose_escfirst.c,
+	vmpm_decompose_highlow.c, vmpm_decompose_highlow_esc.c,
+	vmpm_decompose_highlow_rle.c, vmpm_decompose_normal.c,
+	vmpm_decompose_normal_rle.c: Output the size per level.
+
+	* vmpm_decompose_escb.c: Implemented things properly.
+
+	* arithcoder_arith.c: Undefine DEBUG.
+
+	* bitstream.c: Error check.
+
+	* arithmodel_order_zero.c: Separate part of code into
+	normalize_freq().
+
 2001-08-15  Hiroshi Takekawa  <sian@fennel.org>
 
 	* vmpm_decompose_escb.c: New escape probability estimation.

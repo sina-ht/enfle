@@ -1,3 +1,54 @@
+2001-08-26  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Revived OpenDivX. Version up.
+
+	* src/enfle.c: Adapted for new archive behavior. Use
+	config_get_boolean() instead of get_str() and strcmp().
+
+	* src/enfle.rc: More configurations.
+
+	* plugins/player/Makefile.am, plugins/player/opendivx/Makefile.am,
+	plugins/player/opendivx/opendivx.c: Revived OpenDivX
+	plugin. Adapted for new API, maybe incomplete.
+
+	* plugins/ui/normal/Makefile.am, plugins/ui/normal/normal.c:
+	Cursor change timing clean up. Caption can be
+	customized. Temporary GUI related code.
+
+	* plugins/saver/png/png.c: Check get_boolean()'s result.
+
+	* lib/utils/libconfig.c: get_boolean() now returns -1 when got an
+	invalid string.
+
+	* lib/enfle/stream.c, lib/enfle/streamer.c: Set format name.
+
+	* lib/enfle/identify.[ch]: Adapted for the archive behavior
+	change.
+
+	* lib/enfle/archive.[ch]: Added new method getpathname(). Inherit
+	the path from its parent. Each pathname is registered as a
+	relative path to its parent. Use variable size auto array. After
+	deletion, the direction of the iteration was taken into
+	consideration to determine the path to read next. But now, it is
+	disregarded. We simply get the next path.
+
+	* config.guess, config.sub, missing: Upgraded.
+
+2001-08-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/ungif/ungif.c: Use Timer instead of pause_usec().
+
+	* plugins/archiver/tar/tar.c: Set member variable 'path'. Cosmetic
+	change.
+
+	* lib/utils/timer.h: New macro: timer_status().
+
+	* lib/utils/misc.c, lib/utils/misc.h: New function:
+	misc_canonical_pathname().
+
+	* lib/utils/libstring.c, lib/utils/libstring.h: New methods:
+	ncat(), catf().
+
 2001-08-15  Hiroshi Takekawa  <sian@fennel.org>
 
 	* common.h, compat.h, configure.in: Adapted dmalloc configuration
