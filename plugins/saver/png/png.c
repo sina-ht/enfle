@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 30 01:46:59 2003.
- * $Id: png.c,v 1.13 2003/12/29 16:48:22 sian Exp $
+ * Last Modified: Sat Feb 28 23:08:52 2004.
+ * $Id: png.c,v 1.14 2004/02/28 14:14:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -108,9 +108,8 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   }
 
   /* Set error handling. */
-  if (setjmp(png_ptr->jmpbuf)) {
-    /* If we get here, we had a problem writing the file */
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
     return 0;
   }
@@ -187,7 +186,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   case _RGB_WITH_BITMASK:
     if (!image_expand(p, _RGB24)) {
       fclose(fp);
-      png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+      png_destroy_write_struct(&png_ptr, &info_ptr);
       return 0;
     }
 #endif
@@ -201,7 +200,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   default:
     show_message("png: %s: Unsupported type %s.\n", __FUNCTION__, image_type_to_string(p->type));
     fclose(fp);
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     return 0;
   }
 
@@ -230,7 +229,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 
   /* Allocate memory */
   if ((row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * image_height(p))) == NULL) {
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
     return 0;
   }
@@ -242,7 +241,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   /* Write the image */
   png_write_image(png_ptr, row_pointers);
   png_write_end(png_ptr, info_ptr);
-  png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+  png_destroy_write_struct(&png_ptr, &info_ptr);
 
   return 1;
 }
