@@ -1,14 +1,13 @@
 /*
  * vmpm_decompose_token -- Token decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Jun 19 02:05:41 2001.
- * $Id: vmpm_decompose_token2.c,v 1.3 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jun 19 17:45:35 2001.
+ * $Id: vmpm_decompose_token2.c,v 1.4 2001/06/19 14:22:58 sian Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG 1
 #define REQUIRE_STRING_H
 #include "compat.h"
 
