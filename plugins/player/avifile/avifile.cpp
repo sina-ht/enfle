@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 12 23:07:49 2001.
- * $Id: avifile.cpp,v 1.4 2001/01/14 15:21:28 sian Exp $
+ * Last Modified: Wed Jan 17 22:22:42 2001.
+ * $Id: avifile.cpp,v 1.5 2001/01/17 13:24:20 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -79,7 +79,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "AviFile",
-  description: (const unsigned char *)"AviFile Player plugin version 0.1.1",
+  description: (const unsigned char *)"AviFile Player plugin version 0.3",
   author: (const unsigned char *)"Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -229,7 +229,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
     return PLAY_ERROR;
   }
-  //memory_alloc(p->rendered.image, p->bytes_per_line * p->height);
+  memory_alloc(p->rendered.image, p->bytes_per_line * p->height);
 
   m->st = st;
 
@@ -268,6 +268,7 @@ play(Movie *m)
 
   info->stream->Seek((unsigned int)0);
   info->audiostream->Seek((unsigned int)0);
+  m->current_sample = 0;
   info->eof = 0;
   timer_start(m->timer);
 
@@ -286,7 +287,6 @@ play_video(void *arg)
   AviFile_info *info = (AviFile_info *)m->movie_private;
 
   while (m->status == _PLAY) {
-    pthread_mutex_lock(&info->update_mutex);
     pthread_cond_wait(&info->update_cond, &info->update_mutex);
     if (info->stream->Eof()) {
       info->eof = 1;
@@ -294,16 +294,13 @@ play_video(void *arg)
     }
     info->stream->ReadFrame();
     info->ci = info->stream->GetFrame();
-    memory_set(info->p->rendered.image, info->ci->data(), _NORMAL,
-	       info->ci->bpl() * info->ci->height(),
-	       info->ci->bpl() * info->ci->height());
-    pthread_mutex_unlock(&info->update_mutex);
+    memcpy(memory_ptr(info->p->rendered.image), info->ci->data(), info->ci->bpl() * info->ci->height());
   }
 
   pthread_exit((void *)PLAY_OK);
 }
 
-#define AUDIO_BUFFER_SIZE 8192
+#define AUDIO_BUFFER_SIZE 20000
 
 static void *
 play_audio(void *arg)
@@ -332,7 +329,11 @@ play_audio(void *arg)
     samples = ocnt = 0;
     info->audiostream->ReadFrames(input_buffer, samples_to_read, samples_to_read, samples, ocnt);
     //debug_message("read %d samples (%d bytes)\n", samples, ocnt);
-    m->ap->write_device(ad, (unsigned char *)input_buffer, ocnt);
+    m->ap->write_device(ad, input_buffer, ocnt);
+    if (m->current_sample == 0) {
+      timer_stop(m->timer);
+      timer_start(m->timer);
+    }
     m->current_sample += samples;
   }
   m->ap->close_device(ad);
@@ -365,32 +366,32 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
   }
 
-  pthread_mutex_lock(&info->update_mutex);
-
   time_elapsed = (int)timer_get_milli(m->timer);
   m->current_frame = info->stream->GetPos();
-  due_time = info->frametime * m->current_frame;
+  due_time = (int)(info->stream->GetTime() * 1000);
   //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
-  
-  if (info->ci) {
-    if (time_elapsed < due_time) {
-      /* too fast to display, wait then render */
-      m->pause_usec((due_time - time_elapsed) * 1000);
-      m->render_frame(vw, m, p);
-    } else if (time_elapsed > due_time + info->frametime) {
-      /* too late, drop several frames */
-      debug_message("drop frames\n");
-      //info->stream->SkipTo((double)time_elapsed / 1000);
-      info->stream->ReadFrame();
-      m->render_frame(vw, m, p);
-    } else {
-      /* just in time to render */
-      m->render_frame(vw, m, p);
-    }
-  }
 
-  pthread_cond_signal(&info->update_cond);
-  pthread_mutex_unlock(&info->update_mutex);
+  if (info->ci) {
+    int i;
+
+    /* if too fast to display, wait before render */
+    if (time_elapsed < due_time)
+      m->pause_usec((due_time - time_elapsed) * 1000);
+
+    /* skip if delayed */
+    while (info->stream->GetTime() * 1000 < timer_get_milli(m->timer) - info->frametime) {
+      info->stream->ReadFrame();
+      i++;
+    }
+    if (i)
+      debug_message("dropped %d frames\n", i);
+
+    /* tell video thread to continue decoding */
+    pthread_cond_signal(&info->update_cond);
+
+    m->render_frame(vw, m, p);
+  } else
+    pthread_cond_signal(&info->update_cond);
 
   return PLAY_OK;
 }

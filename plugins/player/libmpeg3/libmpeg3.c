@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 14 07:40:54 2001.
- * $Id: libmpeg3.c,v 1.21 2001/01/14 15:22:27 sian Exp $
+ * Last Modified: Wed Jan 17 22:22:33 2001.
+ * $Id: libmpeg3.c,v 1.22 2001/01/17 13:24:21 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -43,11 +43,14 @@
 typedef struct _libmpeg3_info {
   mpeg3_t *file;
   Image *p;
+  AudioDevice *ad;
   unsigned char **lines;
+  int eof;
+  int rendering_type;
+  pthread_mutex_t update_mutex;
+  pthread_cond_t update_cond;
   int nvstreams;
   int nvstream;
-  int rendering_type;
-  VideoWindow *vw;
   pthread_t video_thread;
   int nastreams;
   int nastream;
@@ -67,7 +70,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.3.3",
+  description: "LibMPEG3 Player plugin version 0.4",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -98,7 +101,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   LibMPEG3_info *info;
   Image *p;
-  int i, Bpp;
+  int i;
 
   if ((info = calloc(1, sizeof(LibMPEG3_info))) == NULL) {
     show_message("LibMPEG3: play_movie: No enough memory.\n");
@@ -109,6 +112,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     free(info);
     return PLAY_ERROR;
   }
+
+  pthread_mutex_init(&info->update_mutex, NULL);
+  pthread_cond_init(&info->update_cond, NULL);
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
@@ -121,10 +127,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   /* mpeg3_set_cpus(info->file, 2); */
   /* mpeg3_set_mmx(info->file, 1); */
 
-  if (!mpeg3_has_video(info->file)) {
-    show_message("This stream has no video stream.\n");
-    goto error;
-  }
+  if (!mpeg3_has_video(info->file))
+    show_message("warning: This stream has no video stream.\n");
 
   if (mpeg3_has_audio(info->file)) {
     if (m->ap == NULL)
@@ -140,6 +144,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       m->num_of_samples = mpeg3_audio_samples(info->file, info->nastream);
 
       show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
+      if (m->ap->bytes_written == NULL)
+	show_message("audio sync may be incorrect.\n");
     }
   } else {
     debug_message("No audio streams.\n");
@@ -240,15 +246,15 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   if ((info->lines = calloc(m->rendering_height, sizeof(unsigned char *))) == NULL)
     goto error;
 
-  Bpp = vw->bits_per_pixel >> 3;
   /* extra 4 bytes are needed for MMX routine */
-  if (memory_alloc(p->rendered.image, p->width * p->height * Bpp + 4) == NULL)
+  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height + 4) == NULL)
     goto error;
 
-  for (i = 0; i < m->rendering_height; i++)
-    info->lines[i] = memory_ptr(p->rendered.image) + i * p->width * Bpp;
+  if ((info->lines[0] = malloc(p->bytes_per_line * p->height)) == NULL)
+    goto error;
 
-  info->vw = vw;
+  for (i = 1; i < m->rendering_height; i++)
+    info->lines[i] = info->lines[0] + i * p->bytes_per_line;
 
   m->movie_private = (void *)info;
   m->st = st;
@@ -272,6 +278,8 @@ play(Movie *m)
 {
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
+  debug_message(__FUNCTION__ "()\n");
+
   switch (m->status) {
   case _PLAY:
     return PLAY_OK;
@@ -286,12 +294,15 @@ play(Movie *m)
     return PLAY_ERROR;
   }
 
-  mpeg3_seek_percentage(info->file, 0);
+  mpeg3_set_frame(info->file, 0, info->nastream);
+  mpeg3_set_sample(info->file, 0, info->nvstream);
   m->current_frame = 0;
   m->current_sample = 0;
   timer_start(m->timer);
+  info->eof = 0;
 
-  pthread_create(&info->video_thread, NULL, play_video, m);
+  if (info->nvstreams > 0)
+    pthread_create(&info->video_thread, NULL, play_video, m);
   if (info->nastreams > 0)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
 
@@ -303,18 +314,17 @@ play_video(void *arg)
 {
   Movie *m = arg;
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
-  VideoWindow *vw = info->vw;
-  Image *p = info->p;
   int decode_error;
-  int frametime;
-  int due_time;
-  int time_elapsed;
 
-  frametime = 1000 / m->framerate;
+  debug_message(__FUNCTION__ "()\n");
 
   while (m->status == _PLAY) {
-    time_elapsed = timer_get_milli(m->timer);
-    due_time = m->current_frame * 1000 / m->framerate;
+    if (m->current_frame >= m->num_of_frames) {
+      info->eof = 1;
+      break;
+    }
+
+    pthread_mutex_lock(&info->update_mutex);
 
     decode_error =
       (mpeg3_read_frame(info->file, info->lines,
@@ -322,29 +332,12 @@ play_video(void *arg)
 			m->width, m->height,
 			m->rendering_width, m->rendering_height,
 			info->rendering_type, info->nvstream) == -1) ? 0 : 1;
-
-    //debug_message("v: %d %d\n", time_elapsed, due_time);
-
-    if (time_elapsed < due_time) {
-      /* too fast to display, wait then render */
-      m->pause_usec((due_time - time_elapsed) * 1000);
-      m->render_frame(vw, m, p);
-      m->current_frame++;
-    } else if (time_elapsed > due_time + frametime) {
-      /* too late, drop this frame */
-      m->current_frame++;
-    } else {
-      /* just in time to render */
-      m->render_frame(vw, m, p);
-      m->current_frame++;
-    }
-    if (m->current_frame >= m->num_of_frames) {
-      stop_movie(m);
-      pthread_exit((void *)PLAY_OK);
-    }
+    memcpy(memory_ptr(info->p->rendered.image), info->lines[0], info->p->bytes_per_line * info->p->height);
+    pthread_cond_wait(&info->update_cond, &info->update_mutex);
+    pthread_mutex_unlock(&info->update_mutex);
   }
 
-  video_window_sync(vw);
+  debug_message(__FUNCTION__ " exiting.\n");
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -361,10 +354,13 @@ play_audio(void *arg)
   short output_buffer[AUDIO_WRITE_SIZE];
   int samples_to_read;
 
+  debug_message(__FUNCTION__ "()\n");
+
   if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
     show_message("Cannot open device.\n");
     pthread_exit((void *)PLAY_ERROR);
   }
+  info->ad = ad;
 
   if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
     show_message("Some params are set wrong.\n");
@@ -389,16 +385,37 @@ play_audio(void *arg)
       }
       m->ap->write_device(ad, (unsigned char *)output_buffer, (samples_to_read << 1) * sizeof(short));
     }
+    if (m->current_sample == 0) {
+      timer_stop(m->timer);
+      timer_start(m->timer);
+    }
     m->current_sample += samples_to_read;
   }
 
+  m->ap->sync_device(ad);
   m->ap->close_device(ad);
+
+  debug_message(__FUNCTION__ " exiting.\n");
+
   pthread_exit((void *)PLAY_OK);
+}
+
+static int
+get_audio_time(Movie *m, AudioDevice *ad)
+{
+  if (ad && m->ap->bytes_written)
+    return (int)((unsigned int)m->ap->bytes_written(ad) / m->channels * 500 / m->samplerate);
+  return m->current_sample * 1000 / m->samplerate;
 }
 
 static PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
+  LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
+  Image *p = info->p;
+  int i = 0;
+  int audio_time;
+
   switch (m->status) {
   case _PLAY:
     break;
@@ -410,6 +427,36 @@ play_main(Movie *m, VideoWindow *vw)
   default:
     return PLAY_ERROR;
   }
+
+  if (info->eof) {
+    stop_movie(m);
+    return PLAY_OK;
+  }
+
+  pthread_mutex_lock(&info->update_mutex);
+
+  m->current_frame = mpeg3_get_frame(info->file, info->nvstream);
+  audio_time = get_audio_time(m, info->ad);
+  //debug_message("v: %d a=%d (%d frame)\n", (int)timer_get_milli(m->timer), audio_time, m->current_frame);
+
+  /* if too fast to display, wait before render */
+  while (m->current_frame * 1000 / m->framerate > audio_time)
+    audio_time = get_audio_time(m, info->ad);
+
+  /* skip if delayed */
+  {
+    i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
+    if (i > 0) {
+      debug_message("dropped %d frames\n", i);
+      mpeg3_drop_frames(info->file, i, info->nvstream);
+    }
+  }
+
+  /* tell video thread to continue decoding */
+  pthread_cond_signal(&info->update_cond);
+  pthread_mutex_unlock(&info->update_mutex);
+
+  m->render_frame(vw, m, p);
 
   return PLAY_OK;
 }
@@ -441,6 +488,8 @@ stop_movie(Movie *m)
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
   void *v, *a;
 
+  debug_message(__FUNCTION__ "()\n");
+
   switch (m->status) {
   case _PLAY:
     m->status = _STOP;
@@ -455,8 +504,14 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
-  pthread_join(info->video_thread, &v);
-  info->video_thread = 0;
+  pthread_mutex_lock(&info->update_mutex);
+  pthread_cond_signal(&info->update_cond);
+  pthread_mutex_unlock(&info->update_mutex);
+  if (info->video_thread) {
+    pthread_join(info->video_thread, &v);
+    info->video_thread = 0;
+  }
+
   if (info->audio_thread) {
     pthread_join(info->audio_thread, &a);
     info->audio_thread = 0;
@@ -470,16 +525,26 @@ unload_movie(Movie *m)
 {
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
+  debug_message(__FUNCTION__ "()\n");
+
+  stop_movie(m);
+
   if (info) {
     if (info->lines)
       free(info->lines);
     if (info->p)
       image_destroy(info->p);
 
+    pthread_mutex_destroy(&info->update_mutex);
+    pthread_cond_destroy(&info->update_cond);
+
+    debug_message(__FUNCTION__ ": closing libmpeg3 file\n");
     /* close */
     mpeg3_close(info->file);
 
+    debug_message(__FUNCTION__ ": freeing info\n");
     free(info);
+    debug_message(__FUNCTION__ ": all Ok\n");
   }
 }
 
