@@ -12,11 +12,14 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
-#ifndef linux
-#error Sorry, LDT is Linux only. Maybe *BSD will be supported.
+#ifdef linux
+# include <asm/ldt.h>
+# include <asm/unistd.h>
+#elif defined(__FreeBSD__)
+# include <machine/segments.h>
+# include <machine/sysarch.h>
 #else
-#include <asm/ldt.h>
-#include <asm/unistd.h>
+# error Sorry, LDT is not supported.
 #endif
 
 #include "pe_image.h"
@@ -96,6 +99,7 @@ get_dll_symbols(char *dllname)
 
 /* LDT related */
 
+#if defined(linux)
 #ifdef PIC
 static int
 modify_ldt(int func, struct modify_ldt_ldt_s *p, unsigned long c)
@@ -115,9 +119,12 @@ modify_ldt(int func, struct modify_ldt_ldt_s *p, unsigned long c)
 #else
 static _syscall3(int, modify_ldt, int, func, struct modify_ldt_ldt_s *, p, unsigned long, c);
 #endif
+#endif /* defined(linux) */
 
 static int fs_installed = 0;
 static char *fs_seg = NULL;
+
+#if defined(linux)
 static int
 install_fs(void)
 {
@@ -141,12 +148,10 @@ install_fs(void)
   ldt.seg_not_present = 0;
   ldt.contents = MODIFY_LDT_CONTENTS_DATA;
   ldt.limit_in_pages = 0;
-#ifdef linux
   if ((ret = modify_ldt(1, &ldt, sizeof(struct modify_ldt_ldt_s))) < 0) {
     perror("install_fs");
     show_message("modify_ldt() failed. Probably raising SIGSEGV...\n");
   }
-#endif
   __asm__("movl $0xf,%eax\n\t"
 	  "movw %ax,%fs\n\t");
   prev = malloc(8);
@@ -155,6 +160,47 @@ install_fs(void)
   fs_installed = 1;
   return 0;
 }
+#elif defined(__FreeBSD__)
+static int
+install_fs(void)
+{
+  union descriptor d;
+  int              ret;
+  caddr_t          addr;
+  size_t           psize;
+
+  psize = getpagesize();
+  addr = fs_seg = (caddr_t)mmap(0, psize * 2,
+				PROT_READ|PROT_WRITE | PROT_EXEC,
+				MAP_ANON | MAP_PRIVATE,
+				-1, 0);
+  if (addr == (void *)-1)
+    return -1;
+
+  memset(addr, 0x0, psize * 2);
+  *(uint32_t *)(addr + 0) = (uint32_t)addr + psize;
+  *(uint32_t *)(addr + 4) = (uint32_t)addr + psize * 2;
+  d.sd.sd_lolimit = 2;
+  d.sd.sd_hilimit = 0;
+  d.sd.sd_lobase = ((uint32_t)addr & 0xffffff);
+  d.sd.sd_hibase = ((uint32_t)addr >> 24) & 0xff;
+  d.sd.sd_type = 0x12;
+  d.sd.sd_dpl = SEL_UPL;
+  d.sd.sd_p = 1;
+  d.sd.sd_def32 = 1;
+  d.sd.sd_gran = 1;
+#define LDT_SEL_START	0xb
+  ret = i386_set_ldt(LDT_SEL_START, &d, 1);
+  if (ret < 0) {
+    perror("i386_set_ldt");
+    return ret;
+  }
+  __asm__("movl $0xf,%eax\n\t"
+          "movw %ax,%fs\n\t");
+
+  return 0;
+}
+#endif
 
 #if 0
 static int
