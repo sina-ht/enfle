@@ -1,3 +1,11 @@
+2001-06-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/jpeg/jpeg.c: Conditioned out YUV output related
+	code.
+
+	* lib/X11/x11ximage.c: Fallback to normal XImage from XvImage when
+	failed.
+
 2001-06-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/demultiplexer/demultiplexer_mpeg.c,
