@@ -1,8 +1,23 @@
 /*
  * gifbitio.h -- bit based I/O package
  * (C)Copyright 1998, 99, 2002 by Hiroshi Takekawa
- * Last Modified: Wed Jul 10 00:26:32 2002.
- * $Id: gifbitio.h,v 1.1 2002/08/03 05:10:17 sian Exp $
+ * This file is part of Enfle.
+ *
+ * Last Modified: Mon Jun 21 21:17:54 2004.
+ * $Id: gifbitio.h,v 1.2 2004/06/21 12:22:23 sian Exp $
+ *
+ * Enfle is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * Enfle is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
 #include <stdio.h>

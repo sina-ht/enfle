@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Mar 25 22:54:33 2004.
-# $Id: Makefile.am,v 1.4 2004/03/31 14:38:03 sian Exp $
+# Last Modified: Sat Jun 19 21:36:44 2004.
+# $Id: Makefile.am,v 1.5 2004/06/21 12:22:23 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -19,8 +19,4 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 loader_gif_la_LDFLAGS = $(MORE_LDFLAGS) -module
 loader_gif_la_CFLAGS = $(MORE_CFLAGS)
-if HAVE_GIF
 loader_gif_la_SOURCES = gif.c giflib.c giflib.h gifbitio.c gifbitio.h gifimage.c gifext.c
-else
-am__loader_gif_la_SOURCES_DIST =
-endif
