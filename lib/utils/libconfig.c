@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 13 18:52:22 2001.
- * $Id: libconfig.c,v 1.11 2001/08/15 06:32:52 sian Exp $
+ * Last Modified: Sun Aug 26 09:12:32 2001.
+ * $Id: libconfig.c,v 1.12 2001/08/26 00:52:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -403,7 +403,7 @@ get_boolean(Config *c, const char *path, int *is_success)
     return 0;
   }
 
-  *is_success = 0;
+  *is_success = -1;
   return 0;
 }
 
