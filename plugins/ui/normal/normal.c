@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan  5 18:47:58 2004.
- * $Id: normal.c,v 1.76 2004/01/05 09:56:08 sian Exp $
+ * Last Modified: Mon Jan 12 06:35:04 2004.
+ * $Id: normal.c,v 1.77 2004/01/11 21:42:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -980,9 +980,9 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
       break;
     case IDENTIFY_STREAM_MOVIE:
-      m->width = m->height = 0;
       ret = main_loop(uidata, vw, m, NULL, s, a, path, gui);
       movie_unload(m);
+      m->width = m->height = 0;
       break;
     default:
       ret = MAIN_LOOP_DELETE_FROM_LIST;
