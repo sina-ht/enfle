@@ -1,3 +1,8 @@
+2002-01-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avifile/avifile.cpp: Play asf audio. Audio only
+	movie support.
+
 2002-01-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* common.h, lib/dllloader/kernel32.c: Fixes for gcc prior to
