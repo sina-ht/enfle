@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 02:59:55 2002.
- * $Id: libconfig.c,v 1.20 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Tue Jul 30 21:37:28 2002.
+ * $Id: libconfig.c,v 1.21 2002/08/01 12:42:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -319,7 +319,7 @@ load(Config *c, const char *filepath)
 static int
 save(Config *c, char *path)
 {
-  fprintf(stderr, "Not implemented yet\n");
+  err_message("Not implemented yet\n");
   return 0;
 }
 
@@ -483,8 +483,10 @@ set_list(Config *c, char *path, char *lstr)
   /* XXX: LEAK */
   if ((list = misc_str_split(lstr, ':')) == NULL)
     return 0;
-  if ((p = setup_typed_data(c, path, "LST", sizeof(char ***))) == NULL)
+  if ((p = setup_typed_data(c, path, "LST", sizeof(char ***))) == NULL) {
+    misc_free_str_array(list);
     return 0;
+  }
   *((char ***)(p + 4)) = list;
 
   return set(c, path, (void *)p);
