@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Oct 11 01:15:15 2000.
- * $Id: x11.h,v 1.2 2000/10/10 17:26:55 sian Exp $
+ * Last Modified: Thu Oct 12 18:58:06 2000.
+ * $Id: x11.h,v 1.3 2000/10/12 15:44:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,6 +66,7 @@ struct _x11 {
 #define x11_free_pixmap(x, pix) \
                        XFreePixmap(x11_display((x)), (pix))
 #define x11_create_gc(x, p, a1, a2) XCreateGC(x11_display((x)), (p), (a1), (a2))
+#define x11_free_gc(x, gc) XFreeGC(x11_display((x)), (gc))
 #define x11_close(x) (x)->close((x))
 #define x11_destroy(x) (x)->destroy((x))
 
