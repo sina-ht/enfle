@@ -1,3 +1,34 @@
+2004-04-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/movie.h, plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/demultiplexer/asf/asf.c, plugins/demultiplexer/avi/avi.c,
+	plugins/demultiplexer/avi/demultiplexer_avi.h: Added block_align,
+	bitrate, video_extradata, video_extradata, audio_extradata,
+	m->audio_extradata_size.
+
+	* plugins/player/generic/generic.c: Rewrote play_audio().
+
+	* lib/enfle/audiodecoder.h, plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/audiodecoder/vorbis/vorbis.c: Added setup().
+
+	* lib/enfle/demultiplexer_waveformatex.h: Added
+	__attribute__((__packed__)).
+
+	* lib/enfle/Makefile.am: Added demultiplexer_bitmapinfoheader.h.
+
+	* lib/enfle/demultiplexer_bitmapinfoheader.h: New file.
+
+	* plugins/demultiplexer/avi/demultiplexer_avi_private.h: Moved
+	BITMAPINFOHEADER to demultiplexer_bitmapinfoheader.h.
+
+	* lib/enfle/identify.c: Clear m->bitrate, m->block_align.
+
+	* lib/avcodec/avcodec.h, lib/avcodec/h263.c,
+	lib/avcodec/h263dec.c, lib/avcodec/mp3lameaudio.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c, lib/avcodec/rv10.c:
+	Updated.
+
 2004-03-31  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added avcodec audiodecoder plugin.
