@@ -1,10 +1,10 @@
 /*
  * ui-extra.h -- UI plugin extra definition
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:13:47 2001.
- * $Id: ui-extra.h,v 1.4 2001/01/06 23:55:25 sian Exp $
+ * Last Modified: Wed Feb  7 22:42:00 2001.
+ * $Id: ui-extra.h,v 1.5 2001/02/07 17:35:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,6 +47,7 @@ struct _ui_data {
   Archiver *ar;
   Player *player;
   Archive *a;
+  void *disp;
   void *private;
 };
 
