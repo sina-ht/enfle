@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr  5 23:13:15 2004.
- * $Id: generic.c,v 1.11 2004/04/05 15:49:33 sian Exp $
+ * Last Modified: Sat Apr 10 18:20:40 2004.
+ * $Id: generic.c,v 1.12 2004/04/12 04:15:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -374,8 +374,6 @@ play_video(void *arg)
   if (videodecoder_select(info->eps, m, m->v_fourcc, info->c) == 0) {
     show_message("videodecoder for %s not found\n", m->v_codec_name);
     demultiplexer_destroy(m->demux);
-    free(info);
-    m->movie_private = NULL;
     return PLAY_NOT;
   }
 
