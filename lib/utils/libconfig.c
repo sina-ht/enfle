@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 22:13:33 2002.
- * $Id: libconfig.c,v 1.24 2002/08/18 13:28:20 sian Exp $
+ * Last Modified: Sun Aug 18 23:14:51 2002.
+ * $Id: libconfig.c,v 1.25 2002/08/18 14:26:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -433,7 +433,6 @@ list_destroy(void *arg)
   char **list = *((char ***)(p + 4));
 
   bug_on(*p != '\0' || memcmp(p + 1, "LST", 3));
-  show_message_fnc("OK\n");
 
   misc_free_str_array(list);
   free(p);
