@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec  5 23:59:22 2000.
- * $Id: normal.c,v 1.9 2000/12/05 15:06:45 sian Exp $
+ * Last Modified: Wed Dec  6 00:41:51 2000.
+ * $Id: normal.c,v 1.10 2000/12/05 15:51:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -330,6 +330,10 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       dir = main_loop(vw, NULL, p);
+      memory_destroy(p->rendered_image);
+      p->rendered_image = NULL;
+      memory_destroy(p->image);
+      p->image = NULL;
     }
   }
 
