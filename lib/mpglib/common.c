@@ -179,7 +179,7 @@ void print_header_compact(struct frame *fr)
 
 #endif
 
-unsigned int getbits(int number_of_bits)
+unsigned int mpglib_getbits(int number_of_bits)
 {
   unsigned long rval;
 

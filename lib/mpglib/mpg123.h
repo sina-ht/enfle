@@ -97,7 +97,8 @@ struct parameter {
 };
 
 extern unsigned int   get1bit(void);
-extern unsigned int   getbits(int);
+extern unsigned int   mpglib_getbits(int);
+#define getbits(n) mpglib_getbits(n)
 extern unsigned int   getbits_fast(int);
 extern int set_pointer(long);
 
@@ -189,5 +190,3 @@ extern real decwin[512+32];
 extern real *pnts[5];
 
 extern struct parameter param;
-
-
