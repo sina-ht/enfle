@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr  1 21:54:14 2002.
- * $Id: avifile.cpp,v 1.35 2002/04/27 13:00:35 sian Exp $
+ * Last Modified: Wed May 29 23:39:02 2002.
+ * $Id: avifile.cpp,v 1.36 2002/05/29 14:43:04 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -34,8 +34,11 @@
 
 #include <avifile/avifile.h>
 #include <avifile/version.h>
-#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6)
 # include <avifile/avifmt.h>
+#elif (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 7) || (AVIFILE_MAJOR_VERSION > 0)
+# include <avifile/infotypes.h>
+# define USE_STREAM_INFO
 #endif
 
 #undef PACKAGE_BUGREPORT
@@ -69,7 +72,11 @@ typedef struct _avifile_info {
   IAviReadFile *rf;
   IAviReadStream *stream;
   IAviReadStream *audiostream;
+#ifdef USE_STREAM_INFO
+  StreamInfo *si;
+#else
   MainAVIHeader hdr;
+#endif
   BITMAPINFOHEADER bmih;
   WAVEFORMATEX owf;
   pthread_t video_thread;
@@ -188,14 +195,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     goto error;
   }
 
-#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
-  rf->GetHeader(&info->hdr, sizeof(info->hdr));
-#else
-  rf->GetFileHeader(&info->hdr);
-#endif
-
-  m->num_of_frames = info->hdr.dwTotalFrames;
-
   m->has_video = 0;
   m->has_audio = 0;
   if ((audiostream = info->audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
@@ -227,6 +226,19 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   p = info->p = image_create();
   info->use_xv = 0;
   if ((stream = info->stream = rf->GetStream(0, IAviReadStream::Video))) {
+
+#ifdef USE_STREAM_INFO
+    info->si = stream->GetStreamInfo();
+    m->num_of_frames = info->si->GetStreamFrames();
+#else
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
+    rf->GetHeader(&info->hdr, sizeof(info->hdr));
+#else
+    rf->GetFileHeader(&info->hdr);
+#endif
+    m->num_of_frames = info->hdr.dwTotalFrames;
+#endif
+
     if ((result = stream->StartStreaming()) != 0) {
       debug_message("video stream: StartStream() failed.\n");
       stream = NULL;
@@ -303,14 +315,20 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 	stream->StopStreaming();
 	goto error;
       }
+
+#ifdef USE_STREAM_INFO
+      m->width  = info->si->GetVideoWidth();
+      m->height = info->si->GetVideoHeight();
+#else
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
       stream->GetVideoFormatInfo(&info->bmih, sizeof(info->bmih));
 #else
       stream->GetVideoFormatInfo(&info->bmih);
 #endif
-
       m->width  = info->bmih.biWidth;
       m->height = info->bmih.biHeight;
+#endif
+
       info->frametime = (int)(stream->GetFrameTime() * 1000);
       m->framerate = 1000 / info->frametime;
       m->has_video = 1;
@@ -479,7 +497,7 @@ play_video(void *arg)
     info->stream->ReadFrame();
 
     info->ci = info->stream->GetFrame();
-#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
+#if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION >= 6) || (AVIFILE_MAJOR_VERSION > 0)
     memcpy(memory_ptr(info->p->rendered.image), info->ci->Data(), info->ci->Bpl() * info->ci->Height());
 #else
     memcpy(memory_ptr(info->p->rendered.image), info->ci->data(), info->ci->bpl() * info->ci->height());
@@ -719,8 +737,10 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   AviFile_info *info;
   int result;
 
-  /* see if this is asf by extension... */
-  if (strlen(st->path) < 4 || strcasecmp(st->path + strlen(st->path) - 4, ".asf")) {
+  /* see if this is asf or wmv by extension... */
+  if (strlen(st->path) < 4 ||
+      (strcasecmp(st->path + strlen(st->path) - 4, ".asf") &&
+       strcasecmp(st->path + strlen(st->path) - 4, ".wmv"))) {
     if (stream_read(st, buf, 16) != 16)
       return PLAY_NOT;
 
@@ -730,7 +750,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
       return PLAY_NOT;
   }
 
-  debug_message("AviFile: identify: identified as avi(maybe).\n");
+  debug_message("AviFile: identify: identified as AviFile(maybe).\n");
 
   info = info_create(m);
 
