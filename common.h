@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 13 18:29:48 2001.
- * $Id: common.h,v 1.15 2001/08/15 06:39:58 sian Exp $
+ * Last Modified: Wed Sep 19 14:01:16 2001.
+ * $Id: common.h,v 1.16 2001/09/19 07:43:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,7 @@
 #ifdef REQUIRE_FATAL
 #include <stdarg.h>
 #include <stdlib.h>
-static void fatal(int, const char *, ...) __attribute__ ((noreturn));
+static void fatal(int, const char *, ...) __attribute__ ((__noreturn__, __format__(printf, 2, 3)));
 static void
 fatal(int code, const char *format, ...)
 {
@@ -58,7 +58,7 @@ fatal(int code, const char *format, ...)
 #endif
 
 #ifdef REQUIRE_FATAL_PERROR
-static inline void fatal_perror(int, const char *) __attribute__ ((noreturn));
+static inline void fatal_perror(int, const char *) __attribute__ ((__noreturn__));
 static inline void
 fatal_perror(int code, const char *msg)
 {
