@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 22 21:58:44 2001.
- * $Id: libmpeg3.c,v 1.24 2001/01/23 08:08:54 sian Exp $
+ * Last Modified: Mon Jan 29 23:28:20 2001.
+ * $Id: libmpeg3.c,v 1.25 2001/01/29 15:11:12 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <mpeg3/libmpeg3.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #ifndef USE_PTHREAD
@@ -579,8 +581,12 @@ unload_movie(Movie *m)
 static PlayerStatus
 identify(Movie *m, Stream *st)
 {
-  if (st->path)
+  if (st->path) {
+    if (strlen(st->path) >= 4 && !strcasecmp(st->path + strlen(st->path) - 4, ".mp3"))
+      return PLAY_NOT;
     return mpeg3_check_sig(st->path) ? PLAY_OK : PLAY_NOT;
+  }
+
   return PLAY_NOT;
 }
 
