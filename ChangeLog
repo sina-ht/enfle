@@ -1,3 +1,37 @@
+2001-09-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* config.guess, config.sub, ltmain.sh: Upgrade libtool to 1.4.2.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Treating zero-size
+	chunks.
+
+	* lib/demultiplexer/libriff.c: Stricter checking.
+
+2001-09-10  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/kernel32.c: GetEnvironmentStringsW() now returns
+	NULL. GetEnvirontmentStringsA() returns dummy.
+
+	* lib/dllloader/msvcrt.c: Cosmetic change.
+
+	* lib/dllloader/pe_image.c: Commented out push and pop ebx.
+
+	* lib/utils/cpucaps.c: Use __volatile__.
+
+	* lib/dllloader/kernel32.c: NEW API: GetCurrentProcess(),
+	InterlockedExchangeAdd(), InterlockedIncrement(),
+	InterlockedDecrement(), GetEnvironmentVariableA().
+
+	* lib/dllloader/pe_image.c: Use __FUNCTIN__.
+
+	* lib/dllloader/windef.h: Added PLONG, LPLONG.
+
+	* lib/enfle/spi.c: Use __FUNCTION__.
+
+	* src/enfle.c: Avoid null ext.
+
+	* lib/utils/cpucaps.c: Save ebx.
+
 2001-09-09  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Clean up. Commented out --enable-nasm related

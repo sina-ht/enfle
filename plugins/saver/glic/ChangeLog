@@ -1,3 +1,11 @@
+2001-09-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* expand.c, glic.c: Optimize for r=4. Clean up.
+
+2001-09-10  Hiroshi Takekawa  <sian@fennel.org>
+
+	* glic.c: Cosmetic change.
+
 2001-09-10  Hiroshi Takekawa  <sian@fennel.org>
 
 	* glic.c, threshold.c, vmpm.h, vmpm_decompose_highlow.c,
