@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 23:15:57 2001.
- * $Id: demultiplexer_mpeg.c,v 1.17 2001/09/21 02:22:05 sian Exp $
+ * Last Modified: Fri Sep 21 11:48:53 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.18 2001/09/21 02:56:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -438,7 +438,6 @@ demux_main(void *arg)
 	    mp->data = malloc(mp->size);
 	    memcpy(mp->data, p, mp->size);
 	    fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor);
-	    //debug_message(__FUNCTION__ ": %s: put %d bytes\n", (v_or_a == 1) ? "v" : "a", mp->size);
 	  }
 	}
       } else if (!v_or_a) {
@@ -459,6 +458,7 @@ demux_main(void *arg)
   demultiplexer_set_eof(demux, 1);
   demux->running = 0;
   free(buf);
+  debug_message(__FUNCTION__ ": exiting.\n");
   pthread_exit((void *)1);
 
  error:
@@ -483,19 +483,24 @@ start(Demultiplexer *demux)
 static int
 stop(Demultiplexer *demux)
 {
+  MpegInfo *info = (MpegInfo *)demux->private_data;
   void *ret;
+  void *p;
+  FIFO_destructor destructor;
 
-  if (!demux->running) {
-    debug_message(__FUNCTION__ " already stopped.\n");
+  if (!demux->running)
     return 0;
-  }
 
-  debug_message(__FUNCTION__ " demultiplexer_mpeg\n");
+  debug_message("demultiplexer_mpeg stop()...\n");
 
   demux->running = 0;
-  //pthread_cancel(demux->thread);
-  pthread_join(demux->thread, &ret);
+  if (info->vstream && fifo_is_full(info->vstream) && fifo_get(info->vstream, &p, &destructor))
+     destructor(p);
+  if (info->astream && fifo_is_full(info->astream) && fifo_get(info->astream, &p, &destructor))
+     destructor(p);
 
+  debug_message(__FUNCTION__ ": joining...\n");
+  pthread_join(demux->thread, &ret);
   debug_message(__FUNCTION__ ": joined\n");
 
   return 1;
