@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 25 14:55:10 2001.
- * $Id: Xlib.c,v 1.28 2001/04/25 16:11:49 sian Exp $
+ * Last Modified: Thu Apr 26 03:43:57 2001.
+ * $Id: Xlib.c,v 1.29 2001/04/25 19:16:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -786,8 +786,10 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
   } else {
     if (xwi->full.xw == NULL) {
       XSetWindowAttributes set_attr;
+      X11Window_info *p_xwi = (X11Window_info *)vw->parent->private_data;
+      X11Window *p_xw = vw->parent->if_fullscreen ? p_xwi->full.xw : p_xwi->normal.xw;
 
-      xwi->full.xw = x11window_create(x11, NULL, vw->full_width, vw->full_height);
+      xwi->full.xw = x11window_create(x11, p_xw, vw->full_width, vw->full_height);
       x11window_set_event_mask(xwi->full.xw, ExposureMask | ButtonPressMask | ButtonReleaseMask | ButtonMotionMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
       xwi->full.pix = x11_create_pixmap(x11, x11window_win(xw), vw->render_width, vw->render_height, x11_depth(x11));
       xwi->full.gc = x11_create_gc(x11, xwi->full.pix, 0, 0);
