@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  5 00:56:40 2001.
- * $Id: Xlib.c,v 1.26 2001/03/04 17:11:16 sian Exp $
+ * Last Modified: Tue Apr 24 22:48:52 2001.
+ * $Id: Xlib.c,v 1.27 2001/04/24 16:46:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -57,6 +57,8 @@ static Cursor normal_cursor, wait_cursor;
 
 typedef struct {
   X11 *x11;
+  VideoWindow *root;
+  Config *c;
 } Xlib_info;
 
 typedef struct {
@@ -77,9 +79,10 @@ typedef struct {
 #endif
 } X11Window_info;
 
-static void *open_video(void *);
+static void *open_video(void *, Config *);
 static int close_video(void *);
-static VideoWindow *open_window(void *, Config *, unsigned int, unsigned int);
+static VideoWindow *get_root(void *);
+static VideoWindow *open_window(void *, VideoWindow *, unsigned int, unsigned int);
 static void set_wallpaper(void *, Image *);
 
 static ImageType request_type(VideoWindow *, unsigned int, int *);
@@ -88,6 +91,7 @@ static int set_event_mask(VideoWindow *, int);
 static int dispatch_event(VideoWindow *, VideoEventData *);
 static void set_caption(VideoWindow *, unsigned char *);
 static void set_cursor(VideoWindow *, VideoWindowCursor);
+static void set_background(VideoWindow *, Image *);
 static int set_fullscreen_mode(VideoWindow *, VideoWindowFullscreenMode);
 static int destroy_window(VideoWindow *);
 static int resize(VideoWindow *, unsigned int, unsigned int);
@@ -106,11 +110,12 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.4.1",
+  description: "Xlib Video plugin version 0.4.2",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
   close_video: close_video,
+  get_root: get_root,
   open_window: open_window,
   set_wallpaper: set_wallpaper,
   destroy: destroy
@@ -123,6 +128,7 @@ static VideoWindow template = {
   dispatch_event: dispatch_event,
   set_caption: set_caption,
   set_cursor: set_cursor,
+  set_background: set_background,
   set_fullscreen_mode: set_fullscreen_mode,
   destroy: destroy_window,
   resize: resize,
@@ -163,7 +169,7 @@ plugin_exit(void *p)
 /* video plugin methods */
 
 static void *
-open_video(void *data)
+open_video(void *data, Config *c)
 {
   Xlib_info *p;
   char *dsp = (char *)data;
@@ -178,6 +184,9 @@ open_video(void *data)
 
   wait_cursor = XCreateFontCursor(x11_display(p->x11), WAIT_CURSOR);
   normal_cursor = XCreateFontCursor(x11_display(p->x11), NORMAL_CURSOR);
+
+  p->c = c;
+  p->root = open_window(p, NULL, 0, 0);
 
   return p;
 
@@ -230,7 +239,14 @@ clip(VideoWindow *vw, int *w_return, int *h_return)
 }
 
 static VideoWindow *
-open_window(void *data, Config *c, unsigned int w, unsigned int h)
+get_root(void *data)
+{
+  Xlib_info *p = (Xlib_info *)data;
+  return p->root;
+}
+
+static VideoWindow *
+open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
 {
   Xlib_info *p = (Xlib_info *)data;
   VideoWindow *vw;
@@ -252,7 +268,7 @@ open_window(void *data, Config *c, unsigned int w, unsigned int h)
   pthread_mutex_init(&xwi->render_mutex, NULL);
 #endif
 
-  vw->c = c;
+  vw->c = p->c;
   if ((fontname = config_get(vw->c, "/enfle/plugins/video/caption_font")) == NULL) {
     fontname = (char *)"a14";
   }
@@ -267,9 +283,19 @@ open_window(void *data, Config *c, unsigned int w, unsigned int h)
   vw->depth = x11_depth(x11);
   vw->bits_per_pixel = x11_bpp(x11);
   vw->prefer_msb = x11_prefer_msb(x11);
+  vw->parent = parent;
 
-  clip(vw, &w, &h);
-  xwi->normal.xw = xw = x11window_create(x11, NULL, w, h);
+  if (parent) {
+    X11Window_info *p_xwi = (X11Window_info *)parent->private_data;
+    X11Window *p_xw = parent->if_fullscreen ? p_xwi->full.xw : p_xwi->normal.xw;
+
+    clip(vw, &w, &h);
+    xwi->normal.xw = xw = x11window_create(x11, p_xw, w, h);
+  } else {
+    w = vw->full_width;
+    h = vw->full_height;
+    xwi->normal.xw = xw = x11window_create(x11, NULL, w, h);
+  }
   xwi->xi = x11ximage_create(x11);
 
   vw->width  = w;
@@ -281,8 +307,10 @@ open_window(void *data, Config *c, unsigned int w, unsigned int h)
   XSetForeground(x11_display(x11), xwi->normal.gc, x11_black(x11));
   XSetBackground(x11_display(x11), xwi->normal.gc, x11_black(x11));
 
-  x11window_get_position(xw, &vw->x, &vw->y);
-  x11window_map(xw);
+  if (parent) {
+    x11window_map(xw);
+    x11window_get_position(xw, &vw->x, &vw->y);
+  }
 
   return vw;
 }
@@ -291,22 +319,7 @@ static void
 set_wallpaper(void *data, Image *p)
 {
   Xlib_info *info = (Xlib_info *)data;
-  X11 *x11 = info->x11;
-  X11XImage *xi = x11ximage_create(x11);
-  Pixmap pix;
-  GC gc = x11_create_gc(x11, x11_root(x11), 0, 0);
-  
-  debug_message(__FUNCTION__ "() called\n");
-
-  x11ximage_convert(xi, p);
-  pix = x11_create_pixmap(x11, x11_root(x11), p->rendered.width, p->rendered.height, x11_depth(xi->x11));
-
-  x11ximage_put(xi, pix, gc, 0, 0, 0, 0, p->rendered.width, p->rendered.height);
-  XSetWindowBackgroundPixmap(x11_display(x11), x11_root(x11), pix);
-  XClearWindow(x11_display(x11), x11_root(x11));
-
-  x11_free_gc(x11, gc);
-  x11ximage_destroy(xi);
+  set_background(info->root, p);
 }
 
 /* video window internal */
@@ -699,6 +712,30 @@ set_cursor(VideoWindow *vw, VideoWindowCursor vc)
     XFlush(x11_display(x11));
     break;
   }
+}
+
+static void
+set_background(VideoWindow *vw, Image *p)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+  X11XImage *xi = x11ximage_create(x11);
+  Pixmap pix;
+  GC gc = vw->if_fullscreen ? xwi->full.gc : xwi->normal.gc;
+
+  debug_message(__FUNCTION__ "() called\n");
+
+  x11ximage_convert(xi, p);
+  pix = x11_create_pixmap(x11, x11window_win(xw), p->rendered.width, p->rendered.height, x11_depth(xi->x11));
+
+  x11ximage_put(xi, pix, gc, 0, 0, 0, 0, p->rendered.width, p->rendered.height);
+  XSetWindowBackgroundPixmap(x11_display(x11), x11window_win(xw), pix);
+  XClearWindow(x11_display(x11), x11window_win(xw));
+
+  x11_free_pixmap(x11, pix);
+  x11_free_gc(x11, gc);
+  x11ximage_destroy(xi);
 }
 
 static int
