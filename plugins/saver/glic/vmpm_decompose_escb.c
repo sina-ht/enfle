@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escb.c -- ESC estimation method B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 20 17:41:30 2001.
- * $Id: vmpm_decompose_escb.c,v 1.5 2001/08/26 01:00:59 sian Exp $
+ * Last Modified: Mon Aug 27 17:05:11 2001.
+ * $Id: vmpm_decompose_escb.c,v 1.6 2001/08/27 21:58:23 sian Exp $
  */
 
 #include <stdio.h>
@@ -83,8 +83,6 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
   Token **tmp;
 
   for (; level >= 0; level--) {
-    //debug_message(__FUNCTION__ "(%d, %d, %d)\n", offset, level, blocksize);
-
     token_length = ipow(vmpm->r, level);
     ntokens = blocksize / token_length;
     if (ntokens > 0)
@@ -107,8 +105,7 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 	/* newly registered token */
 	vmpm->token[level][vmpm->token_index[level]] = t;
 	vmpm->newtoken[level]++;
-	if (level > 0)
-	  result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
+	result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
       }
       vmpm->token_index[level]++;
     }
@@ -193,6 +190,11 @@ encode(VMPM *vmpm)
       arithmodel_order_zero_reset(bin_am, 0, 0);
       arithmodel_install_symbol(bin_am, 1);
       arithmodel_install_symbol(bin_am, 1);
+      /* Send the number of distinct symbols. */
+      arithmodel_encode_cbt(bin_am, vmpm->newtoken[i] - 1, vmpm->token_index[i], 0, 1);
+      arithmodel_order_zero_reset(am, 0, vmpm->newtoken[i]);
+      arithmodel_order_zero_reset(bin_am, 0, 0);
+
       /* The first token of each level must be t_0. */
       if (vmpm->token[i][0]->value != 1)
 	generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);

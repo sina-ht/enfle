@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug 16 14:34:40 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.7 2001/08/26 01:02:01 sian Exp $
+ * Last Modified: Mon Aug 27 09:21:13 2001.
+ * $Id: vmpm_decompose_escfirst.c,v 1.8 2001/08/27 21:58:23 sian Exp $
  */
 
 #include <stdio.h>
@@ -83,8 +83,6 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
   Token **tmp;
 
   for (; level >= 0; level--) {
-    //debug_message(__FUNCTION__ "(%d, %d, %d)\n", offset, level, blocksize);
-
     token_length = ipow(vmpm->r, level);
     ntokens = blocksize / token_length;
     if (ntokens > 0)
@@ -107,8 +105,7 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 	/* newly registered token */
 	vmpm->token[level][vmpm->token_index[level]] = t;
 	vmpm->newtoken[level]++;
-	if (level > 0)
-	  result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
+	result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
       }
       vmpm->token_index[level]++;
     }

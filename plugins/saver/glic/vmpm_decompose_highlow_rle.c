@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug 16 14:35:22 2001.
- * $Id: vmpm_decompose_highlow_rle.c,v 1.4 2001/08/26 01:02:00 sian Exp $
+ * Last Modified: Mon Aug 27 09:23:54 2001.
+ * $Id: vmpm_decompose_highlow_rle.c,v 1.5 2001/08/27 21:58:23 sian Exp $
  */
 
 #include <stdio.h>
@@ -85,7 +85,6 @@ init(VMPM *vmpm)
 static int
 decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
 {
-  //VMPMDecomposer_HighLow *d = (VMPMDecomposer_HighLow *)vmpm->method_private;
   int token_length = 0;
   int ntokens = 0;
   int i, result;
@@ -93,8 +92,6 @@ decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
   Token **tmp;
 
   for (; level >= 0; level--) {
-    //debug_message(__FUNCTION__ "(%d, %d, %d)\n", offset, level, blocksize);
-
     token_length = ipow(vmpm->r, level);
     ntokens = blocksize / token_length;
     if (ntokens > 0)
@@ -117,8 +114,7 @@ decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
 	/* newly registered token */
 	vmpm->token[level][vmpm->token_index[level]] = t;
 	vmpm->newtoken[level]++;
-	if (level > 0)
-	  result = decompose_recur(vmpm, offset + i * token_length, level - 1, token_length);
+	result = decompose_recur(vmpm, offset + i * token_length, level - 1, token_length);
       }
       vmpm->token_index[level]++;
     }

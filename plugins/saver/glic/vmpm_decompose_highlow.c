@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug 16 14:35:53 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.18 2001/08/26 01:02:01 sian Exp $
+ * Last Modified: Mon Aug 27 09:21:52 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.19 2001/08/27 21:58:23 sian Exp $
  */
 
 #include <stdio.h>
@@ -92,8 +92,6 @@ decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
   Token **tmp;
 
   for (; level >= 0; level--) {
-    //debug_message(__FUNCTION__ "(%d, %d, %d)\n", offset, level, blocksize);
-
     token_length = ipow(vmpm->r, level);
     ntokens = blocksize / token_length;
     if (ntokens > 0)
@@ -121,8 +119,10 @@ decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
       vmpm->token_index[level]++;
     }
   } else {
-    for (i = 0; i < ntokens; i++)
-      vmpm->token[level][vmpm->token_index[level]++] = (Token *)((int)vmpm->buffer[offset + i]);
+    for (i = 0; i < ntokens; i++) {
+      vmpm->token[level][vmpm->token_index[level]] = (Token *)((int)vmpm->buffer[offset + i]);
+      vmpm->token_index[level]++;
+    }
   }
 
   if (blocksize - ntokens * token_length > 0)
