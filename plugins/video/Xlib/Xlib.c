@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 20:41:45 2001.
- * $Id: Xlib.c,v 1.23 2001/02/05 16:08:31 sian Exp $
+ * Last Modified: Thu Feb  8 02:30:35 2001.
+ * $Id: Xlib.c,v 1.24 2001/02/07 17:38:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,6 +46,7 @@
 
 #include "enfle/video-plugin.h"
 
+/* XXX */
 #define WINDOW_CAPTION_WIDTH  0
 #define WINDOW_CAPTION_HEIGHT 30
 
@@ -79,6 +80,8 @@ typedef struct {
 static void *open_video(void *);
 static int close_video(void *);
 static VideoWindow *open_window(void *, Config *, unsigned int, unsigned int);
+static void set_wallpaper(void *, Image *);
+
 static ImageType request_type(VideoWindow *, unsigned int, int *);
 static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
@@ -103,12 +106,13 @@ static void do_sync_discard(VideoWindow *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.4",
+  description: "Xlib Video plugin version 0.4.1",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
   close_video: close_video,
   open_window: open_window,
+  set_wallpaper: set_wallpaper,
   destroy: destroy
 };
 
@@ -278,6 +282,28 @@ open_window(void *data, Config *c, unsigned int w, unsigned int h)
   x11window_map(xw);
 
   return vw;
+}
+
+static void
+set_wallpaper(void *data, Image *p)
+{
+  Xlib_info *info = (Xlib_info *)data;
+  X11 *x11 = info->x11;
+  X11XImage *xi = x11ximage_create(x11);
+  Pixmap pix;
+  GC gc = x11_create_gc(x11, x11_root(x11), 0, 0);
+  
+  debug_message(__FUNCTION__ "() called\n");
+
+  x11ximage_convert(xi, p);
+  pix = x11_create_pixmap(x11, x11_root(x11), p->rendered.width, p->rendered.height, x11_depth(xi->x11));
+
+  x11ximage_put(xi, pix, gc, 0, 0, 0, 0, p->rendered.width, p->rendered.height);
+  XSetWindowBackgroundPixmap(x11_display(x11), x11_root(x11), pix);
+  XClearWindow(x11_display(x11), x11_root(x11));
+
+  x11_free_gc(x11, gc);
+  x11ximage_destroy(xi);
 }
 
 /* video window internal */

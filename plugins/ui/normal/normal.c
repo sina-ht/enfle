@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 20:37:28 2001.
- * $Id: normal.c,v 1.20 2001/02/05 15:58:18 sian Exp $
+ * Last Modified: Thu Feb  8 00:05:58 2001.
+ * $Id: normal.c,v 1.21 2001/02/07 17:38:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,7 +39,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.3.4",
+  description: "Normal UI plugin version 0.3.5",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -160,8 +160,9 @@ set_caption_string(VideoWindow *vw, char *path, char *format)
 }
 
 static int
-main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
+main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 {
+  VideoPlugin *vp = uidata->vp;
   VideoEventData ev;
   int loop = 1;
   VideoButton button = ENFLE_Button_None;
@@ -270,6 +271,10 @@ main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
 	      video_window_render(vw, p);
 	      video_window_set_offset(vw, 0, 0);
 	    }
+	    break;
+	  case ENFLE_KEY_w:
+	    if (p) 
+	      vp->set_wallpaper(uidata->disp, p);
 	    break;
 	  default:
 	    break;
@@ -472,7 +477,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      dir = main_loop(vw, m, NULL, path);
+      dir = main_loop(uidata, vw, m, NULL, path);
       movie_unload(m);
     } else {
 
@@ -485,7 +490,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-      dir = main_loop(vw, NULL, p, path);
+      dir = main_loop(uidata, vw, NULL, p, path);
       memory_destroy(p->rendered.image);
       p->rendered.image = NULL;
       memory_destroy(p->image);
@@ -516,6 +521,7 @@ ui_main(UIData *uidata)
     free(uidata->private);
     return 0;
   }
+  uidata->disp = disp;
 
   uidata->vw = vw = vp->open_window(disp, c, 600, 400);
 
