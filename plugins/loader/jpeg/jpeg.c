@@ -1,10 +1,10 @@
 /*
  * jpeg.c -- jpeg loader plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:28:17 2001.
- * $Id: jpeg.c,v 1.5 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Mon Mar 26 00:49:31 2001.
+ * $Id: jpeg.c,v 1.6 2001/03/25 15:51:01 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -42,7 +42,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "JPEG",
-  description: "JPEG Loader plugin version 0.2",
+  description: "JPEG Loader plugin version 0.2.1",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -192,8 +192,13 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
     return LOAD_OK;
   if (memcmp(buf, id, 2) != 0)
     return LOAD_NOT;
-  if (memcmp(buf + 6, "JFIF", 4) != 0)
-    return LOAD_NOT;
+  if (memcmp(buf + 6, "JFIF", 4) == 0)
+    return LOAD_OK;
+  if (memcmp(buf + 6, "Exif", 4) == 0)
+    return LOAD_OK;
+
+  show_message("Looks like jpeg, but its ID (%c%c%c%c) is not recognized. I'll try to load. If I can load successfully, please report it.\n", buf[6], buf[7], buf[8], buf[9]);
+
   return LOAD_OK;
 }
 
