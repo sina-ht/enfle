@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Dec 26 09:46:59 2001.
- * $Id: arithmodel_order_zero.c,v 1.16 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Fri Feb 22 17:51:48 2002.
+ * $Id: arithmodel_order_zero.c,v 1.17 2002/02/22 17:40:47 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -11,10 +11,10 @@
 #define CONFIG_H_INCLUDED
 #undef DEBUG
 
-#define REQUIRE_FATAL
-#include "common.h"
 #define REQUIRE_STRING_H
 #include "compat.h"
+#define REQUIRE_FATAL
+#include "common.h"
 
 #include <stdlib.h>
 
