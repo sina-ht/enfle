@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 19 00:16:53 2000.
- * $Id: movie.h,v 1.9 2000/12/18 17:00:13 sian Exp $
+ * Last Modified: Sat Dec 23 04:59:02 2000.
+ * $Id: movie.h,v 1.10 2000/12/22 23:12:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,10 +50,13 @@ struct _movie {
   void *movie_private;
   int width, height;
   int rendering_width, rendering_height;
-  int current_frame, previous_frame, num_of_frames;
+  int current_frame, num_of_frames;
   float framerate;
   int play_every_frame;
   int direct_decode;
+  int current_sample, num_of_samples;
+  int channels;
+  int samplerate;
   char *format;
 
   /* These are callback functions which may or should be provided by UI. */
