@@ -1,3 +1,39 @@
+2004-04-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/demultiplexer/asf/asf.c: Fixed garbage_len calculation.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/amr.c,
+	lib/avcodec/avcodec.h, lib/avcodec/common.h,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h,
+	lib/avcodec/error_resilience.c, lib/avcodec/h263.c,
+	lib/avcodec/h263dec.c, lib/avcodec/h264.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/mmx.h,
+	lib/avcodec/i386/vp3dsp_mmx.c, lib/avcodec/motion_est.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mp3lameaudio.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/msmpeg4.c,
+	lib/avcodec/ppc/dsputil_altivec.c,
+	lib/avcodec/ppc/dsputil_altivec.h, lib/avcodec/ppc/dsputil_ppc.c,
+	lib/avcodec/ppc/dsputil_ppc.h,
+	lib/avcodec/ppc/mpegvideo_altivec.c,
+	lib/avcodec/ppc/mpegvideo_ppc.c, lib/avcodec/rv10.c,
+	lib/avcodec/vp3.c, lib/avcodec/vp3dsp.c, lib/avcodec/wmadec.c,
+	lib/avcodec/wmv2.c: Updated.
+
+	* lib/avcodec/i386/vp3dsp_sse2.c: New file.
+
+	* lib/avcodec/sparc/dsputil_vis.c, lib/avcodec/sparc/vis.h: New
+	files.
+
+	* lib/avcodec/avcodec.c, lib/avcodec/faandct.c: Fixes for gcc
+	3.4.0.
+
+	* lib/enfle/demultiplexer.h, plugins/demultiplexer/asf/asf.c,
+	plugins/demultiplexer/avi/avi.c, plugins/demultiplexer/mp3/mp3.c,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/demultiplexer/ogg/ogg.c, plugins/player/generic/generic.c:
+	Try to use pts.
+
 2004-04-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/Makefile.am: Fixed typo.
