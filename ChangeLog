@@ -1,3 +1,8 @@
+2001-03-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Changed the return value of
+	process_files_of_archive(). Implemented MAIN_LOOP_NEXTARCHIVE.
+
 2001-03-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/video/Xlib/Xlib.c: Delete unnecessary
