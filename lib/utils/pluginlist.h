@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 21:31:44 2001.
- * $Id: pluginlist.h,v 1.3 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Thu Aug  8 00:11:37 2002.
+ * $Id: pluginlist.h,v 1.4 2002/08/07 15:33:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,14 +40,15 @@ struct _pluginlist {
 #define PLUGINLIST_HASH_SIZE 1024
 
 #define pluginlist_hash(pl) (pl)->hash
-#define pluginlist_list(pl) hash_get_keys((pl)->hash)
 #define pluginlist_add(pl, p, n) (pl)->add((pl), (p), (n))
 #define pluginlist_get(pl, n) (pl)->get((pl), (n))
 #define pluginlist_delete(pl, n) (pl)->delete((pl), (n))
 #define pluginlist_get_names(pl) (pl)->get_names((pl))
 #define pluginlist_destroy(pl) (pl)->destroy((pl))
 
-#define pluginlist_iter(pl, dl, dd, hk, p) hash_iter((pl)->hash, (dl), (dd), (hk), (p))
+#define pluginlist_iter(pl, k, kl, p) hash_iter((pl)->hash, k, kl, p)
+#define pluginlist_move_to_top dlist_move_to_top(hash_iter_dl, hash_iter_dd)
+#define pluginlist_iter_end hash_iter_end
 
 PluginList *pluginlist_create(void);
 
