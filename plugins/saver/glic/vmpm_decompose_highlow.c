@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- High-Low decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Jul 11 13:23:37 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.11 2001/07/11 04:24:18 sian Exp $
+ * Last Modified: Mon Jul 16 19:14:46 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.12 2001/07/17 12:22:51 sian Exp $
  */
 
 #include <stdio.h>
@@ -201,6 +201,12 @@ encode(VMPM *vmpm)
     arithmodel_encode_init(bin_am, ac);
     arithmodel_install_symbol(bin_am, 1);
     arithmodel_install_symbol(bin_am, 1);
+#ifdef ESCAPE_RUN
+    {
+      Arithmodel_order_zero *am_oz = (Arithmodel_order_zero *)am;
+      am_oz->bin_am = bin_am;
+    }
+#endif
 
     match_found = 0;
     for (i = vmpm->I; i >= 1; i--) {
@@ -228,9 +234,9 @@ encode(VMPM *vmpm)
       for (; i >= 1; i--) {
 	int nsymbols = 0;
 
-	stat_message(vmpm, "Level %d (%d tokens): ", i, vmpm->token_index[i]);
-	arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
-	//arithmodel_order_zero_reset(am, 1, vmpm->token_index[i]);
+	stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i]);
+	//arithmodel_order_zero_reset(am, 1, vmpm->newtoken[i]);
+	arithmodel_order_zero_reset(am, 1, vmpm->token_index[i] >> 2);
 	for (j = 0; j < vmpm->token_index[i]; j++) {
 	  Token *t = vmpm->token[i][j];
 	  Token_value tv = t->value - 1;

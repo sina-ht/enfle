@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr 12 14:30:59 2001.
- * $Id: arithmodel_order_zero.c,v 1.1 2001/04/18 05:43:31 sian Exp $
+ * Last Modified: Mon Jul 16 16:47:31 2001.
+ * $Id: arithmodel_order_zero.c,v 1.2 2001/07/17 12:22:51 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,6 +19,7 @@
 #include "arithcoder.h"
 #include "arithmodel.h"
 #include "arithmodel_order_zero.h"
+#include "arithmodel_utils.h"
 
 typedef _Freq Freq;
 
@@ -119,6 +120,10 @@ init(Arithmodel *_am, int eof_freq, int escape_freq)
     install_symbol(_am, escape_freq);
   }
   am->start_symbol = am->nsymbols;
+
+#ifdef ESCAPE_RUN
+  am->escape_run = 0;
+#endif
 
   return 1;
 }
@@ -223,13 +228,27 @@ encode_bulk(Arithmodel *_am, Index index)
 
   if (am->nsymbols == index) {
     if (IS_ESCAPE_INSTALLED(am)) {
+#ifdef ESCAPE_RUN
+      am->escape_run++;
+#else
       encode_bulk(_am, am->escape_symbol);
+#endif
       install_symbol(_am, 1);
       return 2;
     } else {
       fatal(3, __FUNCTION__ ": nsymbols %d == %d index, but escape disabled\n", am->nsymbols, index);
     }
   }
+
+#ifdef ESCAPE_RUN
+  if (am->escape_run) {
+    int run = am->escape_run;
+
+    am->escape_run = 0;
+    encode_bulk(_am, am->escape_symbol);
+    arithmodel_encode_delta(am->bin_am, run, 0, 1);
+  }
+#endif
 
   update_region(am, index);
   arithcoder_encode_renormalize(am->ac);
@@ -254,7 +273,7 @@ encode_final(Arithmodel *_am)
   if (IS_EOF_INSTALLED(am)) {
     encode_bulk(_am, am->eof_symbol);
     encode_bulk(_am, am->eof_symbol);
-    encode_bulk(_am, am->eof_symbol);
+    //encode_bulk(_am, am->eof_symbol);
   }
 
   if (am->freq) {
