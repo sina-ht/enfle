@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 13:57:19 2000.
- * $Id: misc.c,v 1.1 2000/10/29 09:30:10 sian Exp $
+ * Last Modified: Tue Oct 31 00:37:14 2000.
+ * $Id: misc.c,v 1.2 2000/10/30 16:17:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,7 +49,7 @@ misc_trim_ext(char *path, char *ext)
 
   if ((p = strrchr(path, '.')) == NULL)
     return strdup(path);
-  if (ext && strcasecmp(p, ext))
+  if (ext && strcasecmp(p + 1, ext))
     return strdup(path);
   len = p - path;
   if ((p = (char *)malloc(len + 1)) == NULL)
