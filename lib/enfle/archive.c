@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 11 01:52:50 2002.
- * $Id: archive.c,v 1.32 2002/12/31 06:05:46 sian Exp $
+ * Last Modified: Wed Sep 24 00:04:16 2003.
+ * $Id: archive.c,v 1.33 2003/10/12 04:07:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -150,8 +150,8 @@ read_directory_recursively(Dlist *dl, char *basepath, char *addpath, int depth)
   return count;
 }
 
-static int
-key_compare(const void *a, const void *b)
+int
+archive_key_compare(const void *a, const void *b)
 {
   char **pa = (char **)a, **pb = (char **)b;
   char *sa = *pa, *sb = *pb;
@@ -180,7 +180,7 @@ read_directory(Archive *arc, char *path, int depth)
       return 0;
   }
 
-  dlist_set_compfunc(dl, key_compare);
+  dlist_set_compfunc(dl, archive_key_compare);
   dlist_sort(dl);
   dlist_iter (dl, dd) {
     add(arc, dlist_data(dd), strdup(dlist_data(dd)));

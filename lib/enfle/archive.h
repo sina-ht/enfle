@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov 22 00:11:31 2002.
- * $Id: archive.h,v 1.11 2002/11/29 15:56:21 sian Exp $
+ * Last Modified: Wed Sep 24 00:02:53 2003.
+ * $Id: archive.h,v 1.12 2003/10/12 04:07:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -88,5 +88,6 @@ struct _archive {
 #define ARCHIVE_ROOT NULL
 
 Archive *archive_create(Archive *);
+int archive_key_compare(const void *, const void *);
 
 #endif
