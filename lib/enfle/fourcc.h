@@ -3,8 +3,8 @@
  * (C)Copyright 2002, 2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 16 03:10:48 2003.
- * $Id: fourcc.h,v 1.3 2003/11/17 13:51:06 sian Exp $
+ * Last Modified: Tue Dec  9 22:24:05 2003.
+ * $Id: fourcc.h,v 1.4 2003/12/16 16:52:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -61,6 +61,7 @@
 #define FCC_MP41 FCC('M', 'P', '4', '1')
 // DivX 4
 #define FCC_DIVX FCC('D', 'I', 'V', 'X')
+#define FCC_divx FCC('d', 'i', 'v', 'x')
 // DivX 5
 #define FCC_DX50 FCC('D', 'X', '5', '0')
 
