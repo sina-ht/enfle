@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 00:43:13 2001.
- * $Id: video.h,v 1.14 2001/05/01 17:05:52 sian Exp $
+ * Last Modified: Mon Jun 18 05:35:57 2001.
+ * $Id: video.h,v 1.15 2001/06/17 20:46:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -138,6 +138,7 @@ struct _video_window {
 
   MemoryType (*preferred_memory_type)(VideoWindow *);
   ImageType (*request_type)(VideoWindow *, unsigned int, int *);
+  int (*calc_magnified_size)(VideoWindow *, unsigned int, unsigned int, unsigned int *, unsigned int *);
   int (*set_event_mask)(VideoWindow *, int);
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
   void (*set_caption)(VideoWindow *, unsigned char *);
@@ -159,6 +160,7 @@ struct _video_window {
 
 #define video_window_preferred_memory_type(vw) (vw)->preferred_memory_type((vw))
 #define video_window_request_type(vw, types, ddp) (vw)->request_type((vw), (types), (ddp))
+#define video_window_calc_magnified_size(vw, sw, sh, dw, dh) (vw)->calc_magnified_size((vw), (sw), (sh), (dw), (dh))
 #define video_window_set_event_mask(vw, m) (vw)->set_event_mask((vw), (m))
 #define video_window_dispatch_event(vw, ved) (vw)->dispatch_event((vw), (ved))
 #define video_window_set_caption(vw, c) (vw)->set_caption((vw), (c))
