@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 13 02:14:26 2003.
- * $Id: enfle.c,v 1.53 2003/12/16 16:56:07 sian Exp $
+ * Last Modified: Tue Dec 23 20:32:48 2003.
+ * $Id: enfle.c,v 1.54 2003/12/27 14:27:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -192,7 +192,7 @@ scan_and_load_spi_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 {
   Archive *a;
   PluginType type;
-  char *fullpath, *path, *ext, *base_name, *name;
+  char *fullpath, *path, *ext = NULL, *base_name, *name;
   int nplugins = 0;
   int tmp, result;
 
