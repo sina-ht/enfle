@@ -1,10 +1,10 @@
 /*
  * demultiplexer_mpeg.c -- MPEG stream demultiplexer
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:21:51 2002.
- * $Id: demultiplexer_mpeg.c,v 1.21 2002/05/04 14:36:00 sian Exp $
+ * Last Modified: Fri Aug  2 22:50:54 2002.
+ * $Id: demultiplexer_mpeg.c,v 1.22 2002/08/02 13:59:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -106,6 +106,8 @@ examine(Demultiplexer *demux)
 	show_message_fnc("read error.\n");
 	goto error;
       }
+      if (read_size == 0)
+	break;
       used_size += read_size;
       read_total += read_size;
     }
@@ -216,7 +218,8 @@ examine(Demultiplexer *demux)
 	}
       } else if (id < 0xb9) {
 	debug_message("Looks like video stream.\n");
-	goto end;
+	vstream = 1;
+	info->nvstreams++;
       } else {
 	debug_message("Unknown id %02X %d bytes\n", id, skip - 6);
       }
@@ -280,8 +283,10 @@ demux_main(void *arg)
   used_size = 0;
   read_total = 0;
 
-  demux->running = 1;
+  if (demux->running)
+    pthread_exit((void *)0);
 
+  demux->running = 1;
   do {
     if (used_size < (DEMULTIPLEXER_MPEG_BUFFER_SIZE >> 1)) {
       if ((read_size = stream_read(info->st, buf + used_size,
@@ -443,8 +448,13 @@ demux_main(void *arg)
 	}
       } else if (!v_or_a) {
 	if (id < 0xb9) {
-	  debug_message("Looks like video stream.\n");
-	  goto end;
+	  /* Video stream */
+	  mp = malloc(sizeof(MpegPacket));
+	  mp->pts_dts_flag = 0xff;
+	  mp->size = skip;
+	  mp->data = malloc(mp->size);
+	  memcpy(mp->data, buf, mp->size);
+	  fifo_put(info->vstream, mp, mpeg_packet_destructor);
 	} else {
 	  debug_message("Unknown id %02X %d bytes\n", id, skip - 6);
 	}
@@ -486,22 +496,27 @@ stop(Demultiplexer *demux)
 {
   MpegInfo *info = (MpegInfo *)demux->private_data;
   void *ret;
-  void *p;
-  FIFO_destructor destructor;
 
   debug_message("demultiplexer_mpeg stop()...\n");
 
+  if (!demux->running) {
+    if (info->vstream && !fifo_is_empty(info->vstream)) {
+      warning("demultiplexer_mpeg stop(): vstream not empty (%d left?)\n", fifo_ndata(info->vstream));
+    }
+    if (info->astream && !fifo_is_empty(info->astream)) {
+      warning("demultiplexer_mpeg stop(): astream not empty (%d left?)\n", fifo_ndata(info->astream));
+    }
+    debug_message("demultiplexer_mpeg stop() OK\n");
+    return 1;
+  }
+
   demux->running = 0;
-  if (info->vstream)
-    while (!fifo_is_empty(info->vstream)) {
-      fifo_get(info->vstream, &p, &destructor);
-      destructor(p);
-    }
-  if (info->astream)
-    while (!fifo_is_empty(info->astream)) {
-      fifo_get(info->astream, &p, &destructor);
-      destructor(p);
-    }
+  if (info->vstream) {
+    fifo_emptify(info->vstream);
+  }
+  if (info->astream) {
+    fifo_emptify(info->astream);
+  }
 
   if (demux->thread) {
     debug_message_fnc("joining...\n");
@@ -509,6 +524,8 @@ stop(Demultiplexer *demux)
     demux->thread = 0;
     debug_message_fnc("joined\n");
   }
+
+  debug_message("demultiplexer_mpeg stop() OK\n");
 
   return 1;
 }
