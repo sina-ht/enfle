@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 09:05:08 2001.
- * $Id: normal.c,v 1.51 2001/08/26 00:55:56 sian Exp $
+ * Last Modified: Sun Sep  2 15:04:16 2001.
+ * $Id: normal.c,v 1.52 2001/09/02 06:22:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,8 +84,9 @@ plugin_exit(void *p)
 #define MAIN_LOOP_LAST 3
 #define MAIN_LOOP_FIRST -3
 #define MAIN_LOOP_DELETE_FROM_LIST 4
-#define MAIN_LOOP_DELETE_FILE 5
-#define MAIN_LOOP_DO_NOTHING 6
+#define MAIN_LOOP_DELETE_FROM_LIST_DIR 5
+#define MAIN_LOOP_DELETE_FILE 6
+#define MAIN_LOOP_DO_NOTHING 7
 
 typedef struct _main_loop {
   UIData *uidata;
@@ -786,9 +787,14 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       path = archive_iteration_start(a);
     else {
       switch (ret) {
+      case MAIN_LOOP_DELETE_FROM_LIST_DIR:
+	//debug_message("MAIN_LOOP_DELETE_FROM_LIST_DIR\n");
+	path = archive_iteration_delete(a);
+	ret = (archive_direction(a) == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	break;
       case MAIN_LOOP_DELETE_FROM_LIST:
 	//debug_message("MAIN_LOOP_DELETE_FROM_LIST\n");
-	path = archive_iteration_delete(a);
+	path = archive_delete(a, 1);
 	ret = MAIN_LOOP_NEXT;
 	break;
       case MAIN_LOOP_DELETE_FILE:
@@ -797,7 +803,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	  unlink(s->path);
 	  show_message("DELETED: %s\n", s->path);
 	}
-	path = archive_iteration_delete(a);
+	path = archive_delete(a, 1);
 	ret = MAIN_LOOP_NEXT;
 	break;
       case MAIN_LOOP_NEXT:
@@ -898,7 +904,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
     case IDENTIFY_STREAM_FAILED:
       stream_close(s);
       show_message("%s identification failed\n", path);
-      ret = MAIN_LOOP_DELETE_FROM_LIST;
+      ret = MAIN_LOOP_DELETE_FROM_LIST_DIR;
       continue;
     case IDENTIFY_STREAM_IMAGE:
       stream_close(s);

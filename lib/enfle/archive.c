@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 26 09:06:53 2001.
- * $Id: archive.c,v 1.20 2001/08/26 00:50:06 sian Exp $
+ * Last Modified: Sun Sep  2 15:03:41 2001.
+ * $Id: archive.c,v 1.21 2001/09/02 06:22:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,6 +42,7 @@ static void add(Archive *, char *, void *);
 static void *get(Archive *, char *);
 static char *getpathname(Archive *, char *);
 static void delete_path(Archive *, char *);
+static char *delete_and_get(Archive *, int);
 static char *iteration_start(Archive *);
 static char *iteration_first(Archive *);
 static char *iteration_last(Archive *);
@@ -57,6 +58,7 @@ static Archive archive_template = {
   set_fnmatch: set_fnmatch,
   add: add,
   get: get,
+  delete_and_get: delete_and_get,
   getpathname: getpathname,
   iteration_start: iteration_start,
   iteration_first: iteration_first,
@@ -387,15 +389,14 @@ iteration(Archive *arc)
 }
 
 static char *
-iteration_delete(Archive *arc)
+delete_and_get(Archive *arc, int dir)
 {
   Dlist *dl;
   Dlist_data *dl_n;
   dl = hash_get_keys(arc->filehash);
 
   if (arc->current != dlist_guard(dl)) {
-    //dl_n = (arc->direction == 1) ? dlist_next(arc->current) : dlist_prev(arc->current);
-    dl_n = dlist_next(arc->current);
+    dl_n = (dir == 1) ? dlist_next(arc->current) : dlist_prev(arc->current);
     delete_path(arc, hash_key_key(dlist_data(arc->current)));
     arc->current = dl_n;
     if (arc->current == dlist_guard(dl))
@@ -405,6 +406,12 @@ iteration_delete(Archive *arc)
     return hash_key_key(dlist_data(arc->current));
   } else
     return NULL;
+}
+
+static char *
+iteration_delete(Archive *arc)
+{
+  return delete_and_get(arc, arc->direction);
 }
 
 static int

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 09:16:50 2001.
- * $Id: archive.h,v 1.8 2001/08/26 00:50:06 sian Exp $
+ * Last Modified: Sun Sep  2 15:03:19 2001.
+ * $Id: archive.h,v 1.9 2001/09/02 06:22:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,6 +49,7 @@ struct _archive {
   void (*set_fnmatch)(Archive *, char *, Archive_fnmatch);
   void (*add)(Archive *, char *, void *);
   void *(*get)(Archive *, char *);
+  char *(*delete_and_get)(Archive *, int);
   char *(*getpathname)(Archive *, char *);
   char *(*iteration_start)(Archive *);
   char *(*iteration_first)(Archive *);
@@ -69,6 +70,7 @@ struct _archive {
 #define archive_set_fnmatch(a, p, f) (a)->set_fnmatch((a), (p), (f))
 #define archive_add(a, p, rem) (a)->add((a), (p), (rem))
 #define archive_get(a, p) (a)->get((a), (p))
+#define archive_delete(a, d) (a)->delete_and_get((a), (d))
 #define archive_getpathname(a, p) (a)->getpathname((a), (p))
 #define archive_iteration_start(a) (a)->iteration_start((a))
 #define archive_iteration_first(a) (a)->iteration_first((a))
