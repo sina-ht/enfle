@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:44:28 2000.
- * $Id: streamer.c,v 1.3 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Thu Dec 28 07:25:17 2000.
+ * $Id: streamer.c,v 1.4 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -68,10 +68,8 @@ identify(EnflePlugins *eps, Stream *s, char *filepath)
     char *pluginname;
 
     pluginname = dlist_data(dd);
-    if ((p = pluginlist_get(pl, pluginname)) == NULL) {
-      fprintf(stderr, "BUG: %s streamer plugin not found but in list.\n", pluginname);
-      exit(-1);
-    }
+    if ((p = pluginlist_get(pl, pluginname)) == NULL)
+      fatal(1, "BUG: %s streamer plugin not found but in list.\n", pluginname);
     stp = plugin_get(p);
 
     if (stp->identify(s, filepath) == STREAM_OK) {

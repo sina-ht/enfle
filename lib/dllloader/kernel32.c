@@ -70,7 +70,7 @@ DECLARE_W32API(INT, lstrlenA, (LPCSTR));
 DECLARE_W32API(LPSTR, lstrcpyA, (LPSTR, LPCSTR));
 /* process related */
 DECLARE_W32API(FARPROC, GetProcAddress, (HMODULE, LPCSTR));
-DECLARE_W32API(void, ExitProcess, (DWORD));
+DECLARE_W32API(void, ExitProcess, (DWORD)) __attribute__ ((noreturn));
 /* thread related */
 DECLARE_W32API(HANDLE, GetCurrentThread, (void));
 DECLARE_W32API(DWORD, GetCurrentThreadId, (void));

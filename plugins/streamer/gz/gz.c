@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 05:50:36 2000.
- * $Id: gz.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Thu Dec 28 07:30:11 2000.
+ * $Id: gz.c,v 1.2 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -88,8 +88,7 @@ seek(Stream *st, long offset, StreamWhence whence)
     return (gzseek((gzFile)st->data, offset, SEEK_CUR) == -1) ? 0 : 1;
     break;
   case _END:
-    fprintf(stderr, "Not yet implemented.\n");
-    exit(-1);
+    fatal(1, "Not yet implemented.\n");
   }
   /* never reached */
   return -1;

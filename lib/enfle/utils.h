@@ -3,8 +3,10 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 22:56:20 2000.
- * $Id: utils.h,v 1.2 2000/10/10 17:27:56 sian Exp $
+ * Last Modified: Thu Dec 28 07:05:51 2000.
+ * $Id: utils.h,v 1.3 2000/12/27 23:29:29 sian Exp $
+ *
+ * Note: common.h should be included before including this header.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,8 +24,6 @@
 
 #ifndef _UTILS_H
 #define _UTILS_H
-
-#include "common.h"
 
 static inline unsigned int
 utils_get_little_uint32(unsigned char *p)

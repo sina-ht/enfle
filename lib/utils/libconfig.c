@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 07:59:13 2000.
- * $Id: libconfig.c,v 1.4 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Thu Dec 28 07:27:19 2000.
+ * $Id: libconfig.c,v 1.5 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,11 +70,11 @@ config_create(void)
 
 /* internal functions */
 
-static void
+static inline void parse_error(char *, String *) __attribute__ ((noreturn));
+static inline void
 parse_error(char *p, String *path)
 {
-  fprintf(stderr, "Parse error: %s in %s\n", p, string_get(path));
-  exit(1);
+  fatal(1, "Parse error: %s in %s\n", p, string_get(path));
 }
 
 static char *
@@ -156,10 +156,8 @@ set_internal(Config *c, String *config_path, char *path, char *remain)
   String *value_path;
   int f;
 
-  if ((value_path = string_dup(config_path)) == NULL) {
-    fprintf(stderr, "libconfig: set(): No enough memory\n");
-    exit(1);
-  }
+  if ((value_path = string_dup(config_path)) == NULL)
+    fatal(1, "libconfig: set(): No enough memory\n");
   if (path != NULL) {
     string_cat(value_path, "/");
     string_cat(value_path, path);

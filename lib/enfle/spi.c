@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  2 22:26:28 2000.
- * $Id: spi.c,v 1.7 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Thu Dec 28 07:26:04 2000.
+ * $Id: spi.c,v 1.8 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -382,10 +382,8 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   }
 
   debug_message("GetPluginInfo 1 ");
-  if ((err = get_plugin_info(1, buf, 256)) == 0) {
-    show_message("GetPluginInfo returns 0\n");
-    exit(-1);
-  }
+  if ((err = get_plugin_info(1, buf, 256)) == 0)
+    fatal(1, "GetPluginInfo returns 0\n");
   debug_message("OK\n");
 
   ep->name = strdup(misc_basename(path));

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 04:59:09 2000.
- * $Id: player.c,v 1.6 2000/11/04 17:31:28 sian Exp $
+ * Last Modified: Thu Dec 28 07:25:37 2000.
+ * $Id: player.c,v 1.7 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -65,10 +65,8 @@ identify(EnflePlugins *eps, Movie *m, Stream *st)
     char *pluginname;
 
     pluginname = dlist_data(dd);
-    if ((p = pluginlist_get(pl, pluginname)) == NULL) {
-      fprintf(stderr, "BUG: %s player plugin not found but in list.\n", pluginname);
-      exit(-1);
-    }
+    if ((p = pluginlist_get(pl, pluginname)) == NULL)
+      fatal(1, "BUG: %s player plugin not found but in list.\n", pluginname);
     lp = plugin_get(p);
 
     stream_rewind(st);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Dec 23 07:53:52 2000.
- * $Id: x11ximage.c,v 1.17 2000/12/22 23:11:51 sian Exp $
+ * Last Modified: Thu Dec 28 07:21:25 2000.
+ * $Id: x11ximage.c,v 1.18 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -122,8 +122,7 @@ convert(X11XImage *xi, Image *p)
       to_be_attached = 1;
       XSync(x11_display(xi->x11), False);
 #else
-      show_message("No SHM support. Should not be reached here.\n");
-      exit(-3);
+      fatal(3, "No SHM support. Should not be reached here.\n");
 #endif
       break;
     default:
@@ -164,10 +163,8 @@ convert(X11XImage *xi, Image *p)
 	break;
       }
 
-      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
-	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
-	exit(-2);
-      }
+      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
 
       dd = dest = memory_ptr(p->rendered.image);
       s = memory_ptr(to_be_rendered);
@@ -307,10 +304,8 @@ convert(X11XImage *xi, Image *p)
 	break;
       }
 
-      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
-	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
-	exit(-2);
-      }
+      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
 
       dd = dest = memory_ptr(p->rendered.image);
       s = memory_ptr(to_be_rendered);
@@ -370,10 +365,8 @@ convert(X11XImage *xi, Image *p)
 	break;
       }
 
-      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
-	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
-	exit(-2);
-      }
+      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
 
       dest = memory_ptr(p->rendered.image);
       switch (p->type) {
@@ -386,10 +379,8 @@ convert(X11XImage *xi, Image *p)
 	memcpy(dest, memory_ptr(to_be_rendered) + 1, memory_size(to_be_rendered) - 1);
 	break;
       case _INDEX:
-	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
-	  show_message(__FUNCTION__ ": No enough memory(alloc)\n");
-	  exit(-2);
-	}
+	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	  fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
 
 	dest = memory_ptr(p->rendered.image);
 	s = memory_ptr(to_be_rendered);

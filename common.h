@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 26 19:48:39 2000.
- * $Id: common.h,v 1.6 2000/12/27 19:07:46 sian Exp $
+ * Last Modified: Thu Dec 28 07:31:52 2000.
+ * $Id: common.h,v 1.7 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,6 +35,29 @@
 
 #include <stdio.h>
 #define show_message(format, args...) printf(format, ## args)
+
+#include <stdarg.h>
+static inline void fatal(int, const char *, ...) __attribute__ ((noreturn));
+static inline void
+fatal(int code, const char *format, ...)
+{
+  va_list args;
+
+  va_start(args, format);
+  fprintf(stderr, "*** " PACKAGE " FATAL: ");
+  vfprintf(stderr, format, args);
+  va_end(args);
+
+  exit(code);
+}
+
+static inline void fatal_perror(int, const char *) __attribute__ ((noreturn));
+static inline void
+fatal_perror(int code, const char *msg)
+{
+  perror(msg);
+  exit(code);
+}
 
 #ifdef DEBUG
 #  define PROGNAME PACKAGE "-debug"

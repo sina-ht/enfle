@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Nov 14 10:58:24 2000.
- * $Id: archive.c,v 1.4 2000/11/20 12:55:02 sian Exp $
+ * Last Modified: Thu Dec 28 07:23:59 2000.
+ * $Id: archive.c,v 1.5 2000/12/27 23:29:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -92,18 +92,14 @@ read_directory_recursively(Archive *arc, char *path, int depth)
   if (stat(path, &statbuf) || !S_ISDIR(statbuf.st_mode))
     return 0;
 
-  if ((dir = opendir(path)) == NULL) {
-    perror("archive.c: read_directory: ");
-    exit(-1);
-  }
+  if ((dir = opendir(path)) == NULL)
+    fatal_perror(1, "archive.c: read_directory: ");
 
   while ((ent = readdir(dir))) {
     if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
       continue;
-    if ((filepath = calloc(1, strlen(path) + strlen(ent->d_name) + 2)) == NULL) {
-      fprintf(stderr, "archive.c: read_directory: No enough memory for filepath.\n");
-      exit(-1);
-    }
+    if ((filepath = calloc(1, strlen(path) + strlen(ent->d_name) + 2)) == NULL)
+      fatal(1, "archive.c: read_directory: No enough memory for filepath.\n");
     strcpy(filepath, path);
     if (filepath[strlen(filepath) - 1] != '/')
       strcat(filepath, "/");
