@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.4 2001/10/10 14:43:57 sian Exp $
+# $Id: Makefile.am,v 1.5 2004/04/18 06:22:58 sian Exp $
 
 if USE_SPI
 noinst_LTLIBRARIES = libdllloader.la
@@ -16,4 +16,5 @@ libdllloader_la_SOURCES = \
 	user32.c user32.h \
 	advapi32.c advapi32.h \
 	msvcrt.c msvcrt.h \
-	borlndmm.c borlndmm.h
+	borlndmm.c borlndmm.h \
+	msdmo.c msdmo.h
