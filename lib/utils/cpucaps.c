@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep  7 23:24:22 2001.
- * $Id: cpucaps.c,v 1.2 2001/09/10 11:57:24 sian Exp $
+ * Last Modified: Mon Sep 10 21:07:58 2001.
+ * $Id: cpucaps.c,v 1.3 2001/09/10 14:19:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,12 +26,12 @@
 static void
 cpuid(int op, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
-  asm("pushl %%ebx\n\t"
-      "cpuid\n\t"
-      "movl %%ebx, %%esi\n\t"
-      "popl %%ebx"
-      : "=a" (*eax), "=S" (*ebx), "=c" (*ecx), "=d" (*edx)
-      : "a"  (op));
+  __asm__ __volatile__("pushl %%ebx\n\t"
+		       "cpuid\n\t"
+		       "movl %%ebx, %%esi\n\t"
+		       "popl %%ebx"
+		       : "=a" (*eax), "=S" (*ebx), "=c" (*ecx), "=d" (*edx)
+		       : "a"  (op));
 }
 
 CPUCaps
@@ -41,16 +41,16 @@ cpucaps_get(void)
   int is_amd;
   unsigned int caps = 0;
 
-  asm("pushfl\n\t"
-      "popl %0\n\t"
-      "movl %0,%1\n\t"
-      "xorl $0x200000,%0\n\t"
-      "pushl %0\n\t"
-      "popfl\n\t"
-      "pushfl\n\t"
-      "popl %0"
-      : "=a" (eax),
-        "=c" (ebx));
+  __asm__ __volatile__("pushfl\n\t"
+		       "popl %0\n\t"
+		       "movl %0,%1\n\t"
+		       "xorl $0x200000,%0\n\t"
+		       "pushl %0\n\t"
+		       "popfl\n\t"
+		       "pushfl\n\t"
+		       "popl %0"
+		       : "=a" (eax),
+		       "=c" (ebx));
 
   /* CPUID exists? */
   if (eax == ebx)
