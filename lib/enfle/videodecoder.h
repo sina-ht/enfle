@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 02:27:28 2004.
- * $Id: videodecoder.h,v 1.2 2004/02/14 05:30:10 sian Exp $
+ * Last Modified: Sat Feb 21 14:56:51 2004.
+ * $Id: videodecoder.h,v 1.3 2004/02/21 07:51:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,6 +55,7 @@ VideoDecoder *_videodecoder_init(void);
 void _videodecoder_destroy(VideoDecoder *);
 
 const char *videodecoder_codec_name(unsigned int);
+int videodecoder_query(EnflePlugins *, Movie *, unsigned int, unsigned int *, Config *);
 int videodecoder_select(EnflePlugins *, Movie *, unsigned int, Config *);
 VideoDecoder *videodecoder_create(EnflePlugins *, const char *);
 

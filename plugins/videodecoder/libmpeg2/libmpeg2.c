@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb 15 13:49:28 2004.
- * $Id: libmpeg2.c,v 1.3 2004/02/20 17:22:58 sian Exp $
+ * Last Modified: Sat Feb 21 15:12:21 2004.
+ * $Id: libmpeg2.c,v 1.4 2004/02/21 07:51:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,6 +44,7 @@ static VideoDecoderPlugin plugin = {
   description: "libmpeg2 Video Decoder plugin version 0.1 with integrated libmpeg2(mpeg2dec-0.4.0)",
   author: "Hiroshi Takekawa",
 
+  query: query,
   init: init
 };
 
@@ -154,6 +155,24 @@ static int
 setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 {
   return 1;
+}
+
+static unsigned int
+query(unsigned int fourcc)
+{
+  switch (fourcc) {
+  case FCC_mpg1:
+  case FCC_mpg2:
+  case FCC_PIM1:
+  case FCC_VCR2:
+    return (IMAGE_I420 |
+	    IMAGE_BGRA32 | IMAGE_ARGB32 |
+	    IMAGE_RGB24 | IMAGE_BGR24 |
+	    IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
+  default:
+    break;
+  }
+  return 0;
 }
 
 static VideoDecoder *

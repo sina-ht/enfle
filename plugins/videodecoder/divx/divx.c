@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 02:34:52 2004.
- * $Id: divx.c,v 1.2 2004/02/14 05:26:31 sian Exp $
+ * Last Modified: Sat Feb 21 15:12:29 2004.
+ * $Id: divx.c,v 1.3 2004/02/21 07:51:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,6 +56,7 @@ static VideoDecoderPlugin plugin = {
   description: NULL,
   author: "Hiroshi Takekawa",
 
+  query: query,
   init: init
 };
 
@@ -119,7 +120,6 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int 
     } else {
       err_message("OPT_FRAME returns %d\n", res);
     }
-    m->has_video = 0;
     pthread_mutex_unlock(&vdec->update_mutex);
     return VD_ERROR;
   }
@@ -183,6 +183,30 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   return 1;
 }
 
+static unsigned int
+query(unsigned int fourcc)
+{
+  switch (fourcc) {
+  case FCC_div3:
+  case FCC_DIV3:
+  case FCC_DIV4:
+  case FCC_DIV5:
+  case FCC_DIV6:
+  case FCC_MP41:
+  case FCC_MP43:
+  case FCC_DIVX:
+  case FCC_divx:
+  case FCC_DX50:
+    return (IMAGE_I420 |
+	    IMAGE_BGRA32 | IMAGE_ARGB32 |
+	    IMAGE_RGB24 | IMAGE_BGR24 |
+	    IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
+  default:
+    break;
+  }
+  return 0;
+}
+
 static VideoDecoder *
 init(unsigned int fourcc)
 {
@@ -192,6 +216,7 @@ init(unsigned int fourcc)
 
   switch (fourcc) {
   case 0:
+  case FCC_div3:
   case FCC_DIV3:
   case FCC_DIV4:
   case FCC_DIV5:

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 14 02:35:09 2004.
- * $Id: avcodec.c,v 1.2 2004/02/14 05:26:31 sian Exp $
+ * Last Modified: Sat Feb 21 15:11:59 2004.
+ * $Id: avcodec.c,v 1.3 2004/02/21 07:51:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,6 +47,7 @@ static VideoDecoderPlugin plugin = {
   description: NULL,
   author: "Hiroshi Takekawa",
 
+  query: query,
   init: init
 };
 
@@ -77,7 +78,7 @@ struct videodecoder_avcodec {
   AVCodecContext *vcodec_ctx;
   AVFrame *vcodec_picture;
   unsigned char *buf;
-  int offset, size, to_skip;
+  int offset, size, to_skip, if_image_alloced;
 #if defined(USE_DR1)
   Picture_buffer picture_buffer[N_PICTURE_BUFFER];
   int picture_buffer_count;
@@ -102,7 +103,6 @@ ENFLE_PLUGIN_ENTRY(videodecoder_avcodec)
   /* avcodec initialization */
   avcodec_init();
   avcodec_register_all();
-  //av_log_set_level(AV_LOG_INFO);
 
   return (void *)vdp;
 }
@@ -122,6 +122,7 @@ ENFLE_PLUGIN_EXIT(videodecoder_avcodec, p)
 static int
 get_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 {
+  VideoDecoder *vdec = (VideoDecoder *)vcodec_ctx->opaque;
   struct videodecoder_avcodec *vdm = (struct videodecoder_avcodec *)vdec->opaque;
   int width, height;
   Picture_buffer *buf;
@@ -195,7 +196,8 @@ reget_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 static void
 release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 {
-  avcodec_info *info = (avcodec_info *)vcodec_ctx->opaque;
+  VideoDecoder *vdec = (VideoDecoder *)vcodec_ctx->opaque;
+  struct videodecoder_avcodec *vdm = (struct videodecoder_avcodec *)vdec->opaque;
   struct pic_buf *pb;
   Picture_buffer *buf, *last, t;
 
@@ -235,6 +237,20 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int 
     warning_fnc("avcodec: avcodec_decode_video return %d\n", len);
     return VD_ERROR;
   }
+
+  if (!vdm->if_image_alloced && vdm->vcodec_ctx->width > 0) {
+    m->width = image_width(p) = vdm->vcodec_ctx->width;
+    m->height = image_height(p) = vdm->vcodec_ctx->height;
+    m->framerate = (double)vdm->vcodec_ctx->frame_rate / vdm->vcodec_ctx->frame_rate_base;
+    show_message_fnc("(%d, %d) fps %2.5f\n", m->width, m->height, m->framerate);
+    image_bpl(p) = vdm->vcodec_ctx->width * 2; /* XXX: hmm... */
+    if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
+      err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
+      return VD_ERROR;
+    }
+    vdm->if_image_alloced = 1;
+  }
+
   vdm->size -= l;
   vdm->offset += l;
   if (!got_picture)
@@ -309,14 +325,17 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 {
   struct videodecoder_avcodec *vdm = (struct videodecoder_avcodec *)vdec->opaque;
 
-  if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
-    err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
-    return 0;
-  }
-
   vdm->p = p;
-  vdm->vcodec_ctx->width = w;
-  vdm->vcodec_ctx->height = h;
+  vdm->if_image_alloced = 0;
+  if (image_width(p) > 0) {
+    if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
+      err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
+      return 0;
+    }
+    vdm->vcodec_ctx->width = w;
+    vdm->vcodec_ctx->height = h;
+    vdm->if_image_alloced = 1;
+  }
 
   if ((vdm->vcodec = avcodec_find_decoder_by_name(vdm->vcodec_name)) == NULL) {
     warning_fnc("avcodec %s not found\n", vdm->vcodec_name);
@@ -348,6 +367,86 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   return 1;
 }
 
+static unsigned int
+query(unsigned int fourcc)
+{
+  switch (fourcc) {
+  case 0:
+  case FCC_H263: // h263
+  case FCC_I263: // h263i
+  case FCC_U263: // h263p
+  case FCC_viv1:
+  case FCC_DIVX: // mpeg4
+  case FCC_divx:
+  case FCC_DX50:
+  case FCC_XVID:
+  case FCC_MP4S:
+  case FCC_M4S2:
+  case FCC_0x04000000:
+  case FCC_DIV1:
+  case FCC_BLZ0:
+  case FCC_mp4v:
+  case FCC_UMP4:
+  case FCC_DIV3: // msmpeg4
+  case FCC_div3:
+  case FCC_DIV4:
+  case FCC_DIV5:
+  case FCC_DIV6:
+  case FCC_MP43:
+  case FCC_MPG3:
+  case FCC_AP41:
+  case FCC_COL1:
+  case FCC_COL0:
+  case FCC_MP42: // msmpeg4v2
+  case FCC_mp42:
+  case FCC_DIV2:
+  case FCC_MP41: // msmpeg4v1
+  case FCC_MPG4:
+  case FCC_mpg4:
+  case FCC_WMV1: // wmv1
+  case FCC_WMV2: // wmv2
+  case FCC_dvsd: // dvvideo
+  case FCC_dvhd:
+  case FCC_dvsl:
+  case FCC_dv25:
+  case FCC_mpg1: // mpeg1video
+  case FCC_mpg2:
+  case FCC_PIM1:
+  case FCC_VCR2:
+  case FCC_MJPG: // mjpeg
+  case FCC_JPGL: // ljpeg
+  case FCC_LJPG:
+  case FCC_HFYU: // huffyuv
+  case FCC_CYUV: // cyuv
+  case FCC_Y422: // rawvideo
+  case FCC_I420:
+  case FCC_IV31: // indeo3
+  case FCC_IV32:
+  case FCC_VP31: // vp3
+  case FCC_ASV1: // asv1
+  case FCC_ASV2: // asv2
+  case FCC_VCR1: // vcr1
+  case FCC_FFV1: // ffv1
+  case FCC_Xxan: // xan_wc4
+  case FCC_mrle: // msrle
+  case FCC_0x01000000:
+  case FCC_cvid: // cinepak
+  case FCC_MSVC: // msvideo1
+  case FCC_msvc:
+  case FCC_CRAM:
+  case FCC_cram:
+  case FCC_WHAM:
+  case FCC_wham:
+    return (IMAGE_I420 |
+	    IMAGE_BGRA32 | IMAGE_ARGB32 |
+	    IMAGE_RGB24 | IMAGE_BGR24 |
+	    IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
+  default:
+    break;
+  }
+  return 0;
+}
+
 static VideoDecoder *
 init(unsigned int fourcc)
 {
@@ -372,6 +471,7 @@ init(unsigned int fourcc)
   case FCC_mp4v:
   case FCC_UMP4:
   case FCC_DIV3: // msmpeg4
+  case FCC_div3:
   case FCC_DIV4:
   case FCC_DIV5:
   case FCC_DIV6:

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 13 21:28:52 2004.
- * $Id: videodecoder.c,v 1.2 2004/02/14 05:30:10 sian Exp $
+ * Last Modified: Sat Feb 21 15:08:12 2004.
+ * $Id: videodecoder.c,v 1.3 2004/02/21 07:51:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,6 +84,7 @@ videodecoder_codec_name(unsigned int fourcc)
   case FCC_UMP4:
     return "mpeg4";
   case FCC_DIV3: // invalid_asf
+  case FCC_div3: // invalid_asf
   case FCC_DIV4:
   case FCC_DIV5:
   case FCC_DIV6:
@@ -154,11 +155,69 @@ videodecoder_codec_name(unsigned int fourcc)
   case FCC_WHAM:
   case FCC_wham:
     return"msvideo1";
+  case FCC_DIB:
+  case FCC_RGB2:
+    return "raw";
   default:
     break;
   }
 
   return NULL;
+}
+
+int
+videodecoder_query(EnflePlugins *eps, Movie *m, unsigned int fourcc, unsigned int *types_r, Config *c)
+{
+  PluginList *pl = eps->pls[ENFLE_PLUGIN_VIDEODECODER];
+  Plugin *p;
+  VideoDecoderPlugin *vdp;
+  String *s;
+  char *pluginname, **pluginnames;
+  int res;
+  void *k;
+  unsigned int kl;
+  const char *codec_name = videodecoder_codec_name(fourcc);
+
+  if (codec_name == NULL)
+    return 0;
+
+  s = string_create();
+  string_catf(s, "/enfle/plugins/videodecoder/preference/%s", codec_name);
+  pluginnames = config_get_list(c, string_get(s), &res);
+  string_destroy(s);
+  if (pluginnames) {
+    int i = 0;
+
+    while ((pluginname = pluginnames[i])) {
+      if (strcmp(pluginname, ".") == 0) {
+	debug_message_fnc("Failed, no further try.\n");
+	return 0;
+      }
+      if ((p = pluginlist_get(pl, pluginname))) {
+	vdp = plugin_get(p);
+	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
+	if ((*types_r = vdp->query(fourcc)) != 0)
+	  return 1;
+	debug_message_fnc("%s failed.\n", pluginname);
+      } else {
+	show_message_fnc("%s (prefered for %s) not found.\n", pluginname, codec_name);
+      }
+      i++;
+    }
+  }
+  
+  pluginlist_iter(pl, k, kl, p) {
+    vdp = plugin_get(p);
+    debug_message_fnc("try %s\n", (char *)k);
+    if ((*types_r = vdp->query(fourcc)) != 0) {
+      pluginlist_move_to_top;
+      return 1;
+    }
+    //debug_message("%s: failed\n", (char *)k);
+  }
+  pluginlist_iter_end;
+
+  return 0;
 }
 
 int
