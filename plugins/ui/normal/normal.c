@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 30 00:58:21 2002.
- * $Id: normal.c,v 1.72 2003/02/05 15:22:37 sian Exp $
+ * Last Modified: Sun Oct 12 06:41:34 2003.
+ * $Id: normal.c,v 1.73 2003/10/12 04:05:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -173,21 +173,49 @@ convert_cat(String *cap, char *s, Config *c)
   int res;
 
   if (config_get_boolean(c, "/enfle/plugins/ui/normal/filename_code_conversion", &res)) {
-    char *from = config_get_str(c, "/enfle/plugins/ui/normal/filename_code_from");
-    char *to   = config_get_str(c, "/enfle/plugins/ui/normal/filename_code_to");
+    char **froms = config_get_list(c, "/enfle/plugins/ui/normal/filename_code_from", &res);
+    char *to = config_get_str(c, "/enfle/plugins/ui/normal/filename_code_to");
+    char *from;
+    int i = 0;
 
-    if (from && to) {
-      char *tmp;
+    if (to) {
+      while ((from = froms[i++])) {
+	char *tmp;
 
-      res = converter_convert(s, &tmp, strlen(s), from, to);
-      string_cat(cap, tmp);
-      free(tmp);
-      return;
+	//debug_message("%s->%s: %s\n", from, to, s);
+	if ((res = converter_convert(s, &tmp, strlen(s), from, to)) < 0)
+	  continue;
+	string_cat(cap, tmp);
+	free(tmp);
+	return;
+      }
     }
   }
 
   string_cat(cap, s);
 }
+
+static void
+convert_path(String *cap, char *s, Config *c)
+{
+  static char delimiters[] = { '/', '#', '\0' };
+  char *part, **parts, *used_delim;
+  int i;
+
+  if ((parts = misc_str_split_delimiters(s, delimiters, &used_delim)) == NULL) {
+    show_message_fnc("No enough memory.\n");
+    return;
+  }
+
+  i = 0;
+  while ((part = parts[i])) {
+    convert_cat(cap, part, c);
+    if (used_delim[i] != '\0')
+      string_cat_ch(cap, used_delim[i]);
+    i++;
+  }
+}
+
 
 static void
 set_caption_string(MainLoop *ml)
@@ -248,10 +276,11 @@ set_caption_string(MainLoop *ml)
       case 'F':
 	string_cat(cap, ml->p->format); break;
       case 'p':
-	convert_cat(cap, ml->path, ml->uidata->c); break;
+	convert_path(cap, misc_basename(ml->a->path), ml->uidata->c);
+	convert_path(cap, ml->path, ml->uidata->c); break;
       case 'P':
-	convert_cat(cap, ml->a->path, ml->uidata->c);
-	convert_cat(cap, ml->path, ml->uidata->c); break;
+	convert_path(cap, ml->a->path, ml->uidata->c);
+	convert_path(cap, ml->path, ml->uidata->c); break;
       case 'N':
 	string_cat(cap, PROGNAME); break;
       case 'i':
