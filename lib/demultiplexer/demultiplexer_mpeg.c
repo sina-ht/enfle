@@ -1,10 +1,10 @@
 /*
  * demultiplexer_mpeg.c -- MPEG stream demultiplexer
- * (C)Copyright 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan  2 21:46:42 2004.
- * $Id: demultiplexer_mpeg.c,v 1.27 2004/01/03 10:28:48 sian Exp $
+ * Last Modified: Mon Jan 12 06:38:32 2004.
+ * $Id: demultiplexer_mpeg.c,v 1.28 2004/01/11 21:38:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -515,29 +515,11 @@ start(Demultiplexer *demux)
 static int
 stop(Demultiplexer *demux)
 {
-  MpegInfo *info = (MpegInfo *)demux->private_data;
   void *ret;
 
   debug_message("demultiplexer_mpeg stop()...\n");
 
-  if (!demux->running) {
-    if (info->vstream && !fifo_is_empty(info->vstream)) {
-      warning("demultiplexer_mpeg stop(): vstream not empty (%d left?)\n", fifo_ndata(info->vstream));
-    }
-    if (info->astream && !fifo_is_empty(info->astream)) {
-      warning("demultiplexer_mpeg stop(): astream not empty (%d left?)\n", fifo_ndata(info->astream));
-    }
-    debug_message("demultiplexer_mpeg stop() OK\n");
-    return 1;
-  }
-
   demux->running = 0;
-  if (info->vstream) {
-    fifo_emptify(info->vstream);
-  }
-  if (info->astream) {
-    fifo_emptify(info->astream);
-  }
 
   if (demux->thread) {
     debug_message_fnc("joining...\n");
