@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  3 04:47:45 2000.
- * $Id: enfle.c,v 1.11 2000/11/02 19:56:56 sian Exp $
+ * Last Modified: Sun Nov  5 01:11:56 2000.
+ * $Id: enfle.c,v 1.12 2000/11/04 17:34:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -147,9 +147,9 @@ main(int argc, char **argv)
   Archiver *ar;
   Player *player;
   Archive *a;
-  int i, ch;
+  int i, ch, spi_enabled = 1;
   char *plugin_path, *path, *ext, *name, *ui_name = NULL, *video_name = NULL;
-  char *optstr;
+  char *optstr, *tmp;
 
   optstr = gen_optstring(enfle_options);
   while ((ch = getopt(argc, argv, optstr)) != EOF) {
@@ -193,6 +193,10 @@ main(int argc, char **argv)
   ar = uidata.ar = archiver_create();
   player = uidata.player = player_create();
 
+  if ((tmp = config_get(c, "/enfle/plugins/spi/disabled")) &&
+      strcasecmp(tmp, "yes") == 0)
+    spi_enabled = 0;
+
   /* scanning... */
   if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
     fprintf(stderr, "plugins/dir not found: configuration error\n");
@@ -213,7 +217,7 @@ main(int argc, char **argv)
 	     enfle_plugins_get_description(eps, type, name),
 	     enfle_plugins_get_author(eps, type, name));
       check_and_unload(eps, c, type, name);
-    } else if (!strcasecmp(ext, ".spi")) {
+    } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
       PluginType type;
 
       if ((name = spi_load(eps, path, &type)) == NULL) {
