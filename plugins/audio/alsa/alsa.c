@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 17 22:54:48 2002.
- * $Id: alsa.c,v 1.7 2002/08/02 14:03:55 sian Exp $
+ * Last Modified: Sat Feb 22 01:12:42 2003.
+ * $Id: alsa.c,v 1.8 2003/10/12 04:03:15 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -103,9 +103,8 @@ open_device(void *data, Config *c)
 
   err = snd_output_stdio_attach(&alsa->log, stderr, 0);
 
-  if ((err = snd_pcm_open(&alsa->fd, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
-    show_message_fnc("error in opening device %s\n", device);
-    perror("ALSA");
+  if ((err = snd_pcm_open(&alsa->fd, device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK)) < 0) {
+    show_message_fnc("error in opening device \"%s\"\n", device);
     return NULL;
   }
 

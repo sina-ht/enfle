@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 15:46:10 2002.
- * $Id: oss.c,v 1.11 2002/08/02 14:03:55 sian Exp $
+ * Last Modified: Sat Feb 22 01:14:13 2003.
+ * $Id: oss.c,v 1.12 2003/10/12 04:03:15 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -103,8 +103,8 @@ open_device(void *data, Config *c)
     /* last resort */
     device = (char *)"/dev/dsp";
 
-  if ((ad->fd = open(device, O_WRONLY, 0)) == -1) {
-    show_message_fnc("in opening device %s\n", device);
+  if ((ad->fd = open(device, O_WRONLY | O_NONBLOCK, 0)) == -1) {
+    show_message_fnc("in opening device \"%s\"\n", device);
     perror("OSS");
     free(ad);
     return NULL;
