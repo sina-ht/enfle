@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 18 20:53:25 2002.
- * $Id: png.c,v 1.11 2002/04/27 13:02:31 sian Exp $
+ * Last Modified: Sun Jun 23 16:06:45 2002.
+ * $Id: png.c,v 1.12 2002/08/03 05:08:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,8 +56,7 @@ static SaverPlugin plugin = {
   get_ext: get_ext
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(saver_png)
 {
   SaverPlugin *sp;
 
@@ -68,8 +67,7 @@ plugin_entry(void)
   return (void *)sp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(saver_png, p)
 {
   free(p);
 }
@@ -95,7 +93,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   int interlace_flag;
   int result, b;
 
-  debug_message("png: save (%s) (%d, %d) called.\n", image_type_to_string(p->type), p->width, p->height);
+  debug_message("png: save (%s) (%d, %d) called.\n", image_type_to_string(p->type), image_width(p), image_height(p));
 
   if ((png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL)) == NULL) {
     fclose(fp);
@@ -170,16 +168,16 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
    * interlace: PNG_INTERLACE_NONE, PNG_INTERLACE_ADAM7.
    */
 
-  debug_message("png: %s: %dx%d, type %s\n", __FUNCTION__, p->width, p->height, image_type_to_string(p->type));
+  debug_message("png: %s: %dx%d, type %s\n", __FUNCTION__, image_width(p), image_height(p), image_type_to_string(p->type));
 
   switch (p->type) {
   case _GRAY:
-    png_set_IHDR(png_ptr, info_ptr, p->width, p->height, 8,
+    png_set_IHDR(png_ptr, info_ptr, image_width(p), image_height(p), 8,
 		 PNG_COLOR_TYPE_GRAY, interlace_flag,
 		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     break;
   case _INDEX:
-    png_set_IHDR(png_ptr, info_ptr, p->width, p->height, 8,
+    png_set_IHDR(png_ptr, info_ptr, image_width(p), image_height(p), 8,
 		 PNG_COLOR_TYPE_PALETTE, interlace_flag,
 		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     /* set the palette.  REQUIRED for indexed-color images */
@@ -196,7 +194,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   case _BGR24:
     png_set_bgr(png_ptr);
   case _RGB24:
-    png_set_IHDR(png_ptr, info_ptr, p->width, p->height, 8,
+    png_set_IHDR(png_ptr, info_ptr, image_width(p), image_height(p), 8,
 		 PNG_COLOR_TYPE_RGB, interlace_flag,
 		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     break;
@@ -231,7 +229,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   png_write_info(png_ptr, info_ptr);
 
   /* Allocate memory */
-  if ((row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * p->height)) == NULL) {
+  if ((row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * image_height(p))) == NULL) {
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     fclose(fp);
     return 0;
@@ -240,13 +238,13 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   switch (p->type) {
   case _GRAY:
   case _INDEX:
-    for (k = 0; k < p->height; k++)
-      row_pointers[k] = memory_ptr(p->image) + k * p->width;
+    for (k = 0; k < image_height(p); k++)
+      row_pointers[k] = memory_ptr(image_image(p)) + k * image_width(p);
     break;
   case _BGR24:
   case _RGB24:
-    for (k = 0; k < p->height; k++)
-      row_pointers[k] = memory_ptr(p->image) + 3 * k * p->width;
+    for (k = 0; k < image_height(p); k++)
+      row_pointers[k] = memory_ptr(image_image(p)) + 3 * k * image_width(p);
     break;
   default:
     fprintf(stderr, "png_save_image: FATAL: internal error: type %s cannot be processed\n", image_type_to_string(p->type));

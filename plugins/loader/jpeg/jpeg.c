@@ -1,10 +1,10 @@
 /*
  * jpeg.c -- jpeg loader plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 04:22:47 2002.
- * $Id: jpeg.c,v 1.19 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Wed Jul 10 22:15:41 2002.
+ * $Id: jpeg.c,v 1.20 2002/08/03 05:08:39 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -57,8 +57,7 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(loader_jpeg)
 {
   LoaderPlugin *lp;
   String *s;
@@ -78,8 +77,7 @@ plugin_entry(void)
 
 #undef LOADER_JPEG_PLUGIN_DESCRIPTION
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_jpeg, p)
 {
   LoaderPlugin *lp = (LoaderPlugin *)p;
 
@@ -194,7 +192,7 @@ my_error_exit (j_common_ptr cinfo)
   my_error_ptr myerr = (my_error_ptr)cinfo->err;
 
   if (cinfo->err->msg_code != JERR_NO_SOI) {
-    show_message("JPEG ERROR: ");
+    err_message("jpeg loader: ");
     fflush(stdout);
     (*cinfo->err->output_message)(cinfo);
   }
@@ -322,31 +320,31 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 
   jpeg_calc_output_dimensions(cinfo);
 
-  p->width  = cinfo->output_width;
-  p->height = cinfo->output_height;
-  p->left = 0;
-  p->top = 0;
+  image_width(p)  = cinfo->output_width;
+  image_height(p) = cinfo->output_height;
+  image_left(p) = 0;
+  image_top(p) = 0;
 
   /* if (info->if_quantize) cinfo->quantize_colors = TRUE; */
   jpeg_calc_output_dimensions(cinfo);
 
   if (cinfo->output_components != 1 && cinfo->output_components != 3) {
-    fprintf(stderr, "Can't read %d components-jpeg file\n", cinfo->output_components);
+    err_message("jpeg loader: Can't read %d components-jpeg file\n", cinfo->output_components);
     goto error_destroy_free;
   }
 
   (void)jpeg_start_decompress(cinfo);
 
   /* JSAMPLEs per row in output buffer */
-  p->bytes_per_line = p->width * cinfo->output_components;
+  image_bpl(p) = image_width(p) * cinfo->output_components;
 
-  //debug_message("Attempt to allocate memory %d bytes... ", p->bytes_per_line * p->height);
+  //debug_message("Attempt to allocate memory %d bytes... ", p->bytes_per_line * image_height(p));
 
-  if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
+  if ((d = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL) {
 #ifdef DEBUG
     debug_message("failed.\n");
 #else
-    show_message("No enough memory (%d bytes)\n", p->bytes_per_line * p->height);
+    err_message("No enough memory (%d bytes)\n", image_bpl(p) * image_height(p));
 #endif
     goto error_destroy_free;
   }
@@ -354,8 +352,8 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   //debug_message("Ok.\n");
 
   /* loading... */
-  while (cinfo->output_scanline < p->height) {
-    buffer[0] = (JSAMPROW)&d[cinfo->output_scanline * p->bytes_per_line];
+  while (cinfo->output_scanline < image_height(p)) {
+    buffer[0] = (JSAMPROW)&d[cinfo->output_scanline * image_bpl(p)];
     (void)jpeg_read_scanlines(cinfo, buffer, 1);
   }
 
@@ -391,33 +389,33 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       char *y, *u, *v;
       unsigned int w, h;
 
-      w = ((p->width  + 7) >> 3) << 3;
-      h = ((p->height + 7) >> 3) << 3;
+      w = ((image_width(p)  + 7) >> 3) << 3;
+      h = ((image_height(p) + 7) >> 3) << 3;
 
       if ((y = calloc(1, (w * h * 3) >> 1)) == NULL)
 	goto error_destroy_free;
       u = y + w * h;
       v = u + ((w * h) >> 2);
-      for (i = 0; i < p->height; i += 2)
-	for (j = 0; j < p->width; j += 2) {
-	  y[ i       *  w +        j      ] = d[( i      * p->width + j    ) * 3    ];
-	  y[ i       *  w +        j + 1  ] = d[( i      * p->width + j + 1) * 3    ];
-	  y[(i + 1)  *  w +        j      ] = d[((i + 1) * p->width + j    ) * 3    ];
-	  y[(i + 1)  *  w +        j + 1  ] = d[((i + 1) * p->width + j + 1) * 3    ];
-	  u[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 1];
-	  v[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * p->width + j    ) * 3 + 2];
+      for (i = 0; i < image_height(p); i += 2)
+	for (j = 0; j < image_width(p); j += 2) {
+	  y[ i       *  w +        j      ] = d[( i      * image_width(p) + j    ) * 3    ];
+	  y[ i       *  w +        j + 1  ] = d[( i      * image_width(p) + j + 1) * 3    ];
+	  y[(i + 1)  *  w +        j      ] = d[((i + 1) * image_width(p) + j    ) * 3    ];
+	  y[(i + 1)  *  w +        j + 1  ] = d[((i + 1) * image_width(p) + j + 1) * 3    ];
+	  u[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * image_width(p) + j    ) * 3 + 1];
+	  v[(i >> 1) * (w >> 1) + (j >> 1)] = d[( i      * image_width(p) + j    ) * 3 + 2];
 	}
-      if (!p->rendered.image)
-	p->rendered.image = memory_create();
+      if (!image_rendered_image(p))
+	image_rendered_image(p) = memory_create();
       if (vw)
-	memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
-      if ((d = memory_alloc(p->rendered.image, (w * h * 3) >> 1)) == NULL)
+	memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
+      if ((d = memory_alloc(image_rendered_image(p), (w * h * 3) >> 1)) == NULL)
 	goto error_destroy_free;
       memcpy(d, y, (w * h * 3) >> 1);
       free(y);
-      p->width = w;
-      p->height = h;
-      p->bytes_per_line = p->width * 1.5;
+      image_width(p) = w;
+      image_height(p) = h;
+      image_bpl(p) = image_width(p) * 1.5;
       p->bits_per_pixel = 12;
       p->type = _I420;
     }

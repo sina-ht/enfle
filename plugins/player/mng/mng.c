@@ -1,10 +1,10 @@
 /*
  * mng.c -- preliminary mng driver for enfle, using libmng
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 14 14:26:10 2002.
- * $Id: mng.c,v 1.20 2002/03/14 18:43:30 sian Exp $
+ * Last Modified: Wed Jun 26 21:03:16 2002.
+ * $Id: mng.c,v 1.21 2002/08/03 05:08:38 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -59,8 +59,7 @@ static PlayerPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_mng)
 {
   PlayerPlugin *pp;
   String *s;
@@ -78,8 +77,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_mng, p)
 {
   PlayerPlugin *pp = (PlayerPlugin *)p;
 
@@ -144,8 +142,8 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 
   p = this->p = image_create();
 
-  p->width  = m->rendering_width;
-  p->height = m->rendering_height;
+  image_width(p)  = m->rendering_width;
+  image_height(p) = m->rendering_height;
   p->type = m->requested_type;
   switch (p->type) {
   case _ARGB32:
@@ -161,17 +159,15 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 
   p->bits_per_pixel = 32;
   p->depth = 24;
-  p->bytes_per_line = p->width * (p->bits_per_pixel >> 3);
+  image_bpl(p) = image_width(p) * (p->bits_per_pixel >> 3);
+  image_rendered_image(p) = memory_create();
+  memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(this->vw));
   if (m->direct_decode) {
-    p->rendered.image = memory_create();
-    memory_request_type(p->rendered.image, video_window_preferred_memory_type(this->vw));
-    if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+    if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
       return PLAY_ERROR;
   } else {
-    p->rendered.image = memory_create();
-    memory_request_type(p->rendered.image, video_window_preferred_memory_type(this->vw));
-    p->image = memory_create();
-    if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
+    image_image(p) = memory_create();
+    if (memory_alloc(image_image(p), image_bpl(p) * image_height(p)) == NULL)
       return PLAY_ERROR;
   }
 
@@ -188,9 +184,9 @@ getcanvasline(mng_handle mng, mng_uint32 nthline)
   unsigned char *d;
 
   p = this->p;
-  d = memory_ptr(this->m->direct_decode ? p->rendered.image : p->image);
+  d = memory_ptr(this->m->direct_decode ? image_rendered_image(p) : image_image(p));
 
-  return (mng_ptr)&d[p->bytes_per_line * nthline];
+  return (mng_ptr)&d[image_bpl(p) * nthline];
 }
 
 static mng_bool
@@ -290,6 +286,9 @@ play_main(Movie *m, VideoWindow *vw)
   case MNG_NEEDTIMERWAIT:
     m->pause_usec(this->delay * 1000);
     break;
+  case MNG_ZLIBERROR:
+    show_message("MNG: %s: Zlib error\n", __FUNCTION__);
+    return PLAY_ERROR;
   default:
     show_message("MNG: %s: Error %d\n", __FUNCTION__, this->rc);
     return PLAY_ERROR;

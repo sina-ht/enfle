@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr  1 21:57:50 2002.
- * $Id: opendivx.c,v 1.27 2002/04/27 13:00:21 sian Exp $
+ * Last Modified: Wed Jul 10 22:25:10 2002.
+ * $Id: opendivx.c,v 1.28 2002/08/03 05:08:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -104,8 +104,7 @@ static PlayerPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_opendivx)
 {
   PlayerPlugin *pp;
   String *s;
@@ -122,8 +121,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_opendivx, p)
 {
   free(p);
 }
@@ -139,7 +137,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   if (!info) {
     if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
-      show_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
+      err_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
       return PLAY_ERROR;
     }
     m->movie_private = (void *)info;
@@ -152,7 +150,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
-    show_message_fnc("Cannot direct decoding...\n");
+    err_message_fnc("Cannot direct decoding...\n");
     return PLAY_ERROR;
   }
   debug_message("OpenDivX: requested type: %s direct\n", image_type_to_string(m->requested_type));
@@ -175,7 +173,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   m->has_audio = 0;
   if (info->nastreams > 0) {
     if (m->ap == NULL)
-      show_message("Audio not played.\n");
+      warning("Audio not played.\n");
     else {
       /* XXX: stream should be selectable */
       info->nastream = 1;
@@ -188,7 +186,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
       show_message("audio[%08X](%d streams): format(%d): %d ch rate %d kHz %d samples\n", aviinfo->ahandler, info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
       if (m->ap->bytes_written == NULL)
-	show_message("audio sync may be incorrect.\n");
+	warning("audio sync may be incorrect.\n");
       m->has_audio = 1;
     }
   } else {
@@ -240,14 +238,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   }
 
   p = info->p = image_create();
-  video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+  video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &image_rendered_width(p), &image_rendered_height(p));
 
   if (info->use_xv) {
     m->rendering_width  = m->width;
     m->rendering_height = m->height;
   } else {
-    m->rendering_width  = p->magnified.width;
-    m->rendering_height = p->magnified.height;
+    m->rendering_width  = image_rendered_width(p);
+    m->rendering_height = image_rendered_height(p);
   }
 
   debug_message("video[%08X](%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n",
@@ -255,29 +253,29 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 		m->width, m->height, m->rendering_width, m->rendering_height,
 		m->framerate, m->num_of_frames);
 
-  p->width = m->rendering_width;
-  p->height = m->rendering_height;
+  image_width(p) = m->rendering_width;
+  image_height(p) = m->rendering_height;
   p->type = m->requested_type;
-  if ((p->rendered.image = memory_create()) == NULL)
+  if ((image_rendered_image(p) = memory_create()) == NULL)
     goto error;
-  memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+  memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
 
   switch (m->requested_type) {
   case _I420:
     p->bits_per_pixel = 12;
-    p->bytes_per_line = p->width * 3 / 2;
+    image_bpl(p) = image_width(p) * 3 / 2;
     info->use_xv = 1;
     info->output_format = DEC_420;
     break;
   case _UYVY:
     p->bits_per_pixel = 16;
-    p->bytes_per_line = p->width << 1;
+    image_bpl(p) = image_width(p) << 1;
     info->use_xv = 1;
     info->output_format = DEC_UYVY;
     break;
   case _YUY2:
     p->bits_per_pixel = 16;
-    p->bytes_per_line = p->width << 1;
+    image_bpl(p) = image_width(p) << 1;
     info->use_xv = 1;
     info->output_format = DEC_YUY2;
     break;
@@ -287,34 +285,34 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     case 32:
       p->depth = 24;
       p->bits_per_pixel = 32;
-      p->bytes_per_line = p->width * 4;
+      image_bpl(p) = image_width(p) * 4;
       info->output_format = (p->type == _BGRA32) ? DEC_RGB32_INV : DEC_RGB32;
       break;
     case 24:
       p->depth = 24;
       p->bits_per_pixel = 24;
-      p->bytes_per_line = p->width * 3;
+      image_bpl(p) = image_width(p) * 3;
       info->output_format = (p->type == _BGR24) ? DEC_RGB24_INV : DEC_RGB24;
       break;
     case 16:
       p->depth = 16;
       p->bits_per_pixel = 16;
-      p->bytes_per_line = p->width * 2;
+      image_bpl(p) = image_width(p) * 2;
       info->output_format = (p->type == _BGR_WITH_BITMASK) ? DEC_RGB565_INV : DEC_RGB565;
       break;
     case 15:
       p->depth = 15;
       p->bits_per_pixel = 16;
-      p->bytes_per_line = p->width * 2;
+      image_bpl(p) = image_width(p) * 2;
       info->output_format = (p->type == _BGR_WITH_BITMASK) ? DEC_RGB555_INV : DEC_RGB555;
       break;
     default:
-      show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+      err_message("Cannot render bpp %d\n", vw->bits_per_pixel);
       return PLAY_ERROR;
     }
   }
 
-  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+  if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
     goto error;
 
   m->st = st;
@@ -446,7 +444,7 @@ play_video(void *arg)
     pthread_mutex_lock(&info->update_mutex);
     info->dec_frame.length = ap->size;
     info->dec_frame.bitstream = ap->data;
-    info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
+    info->dec_frame.bmp = memory_ptr(image_rendered_image(info->p));
     info->dec_frame.render_flag = 1;
     opt_frame = DEC_OPT_FRAME;
     if ((res = decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL)) != DEC_OK) {
@@ -456,13 +454,13 @@ play_video(void *arg)
       if (res == DEC_BAD_FORMAT) {
 	opt_frame = DEC_OPT_FRAME_311;
 	if ((res = decore((long)info, DEC_OPT_FRAME_311, &info->dec_frame, NULL)) == DEC_BAD_FORMAT) {
-	  show_message("Unknown frame format\n");
+	  err_message("Unknown frame format\n");
 	  pthread_mutex_unlock(&info->update_mutex);
 	  m->has_video = 0;
 	  break;
 	}
       } else {
-	show_message("OPT_FRAME returns %d\n", res);
+	err_message("OPT_FRAME returns %d\n", res);
 	pthread_mutex_unlock(&info->update_mutex);
 	m->has_video = 0;
 	break;
@@ -477,7 +475,7 @@ play_video(void *arg)
     /* XXX: demultiplexer should seek to next key frame... */
     for (; info->drop; info->drop--) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
-	show_message_fnc("fifo_get() failed.\n");
+	debug_message_fnc("fifo_get() failed.\n");
       } else {
 	if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
 	  info->eof = 1;
@@ -486,7 +484,7 @@ play_video(void *arg)
 	}
 	info->dec_frame.length = ap->size;
 	info->dec_frame.bitstream = ap->data;
-	info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
+	info->dec_frame.bmp = memory_ptr(image_rendered_image(info->p));
 	info->dec_frame.render_flag = 1;
 	decore((long)info, opt_frame, &info->dec_frame, NULL);
 	destructor(ap);
@@ -520,7 +518,7 @@ play_audio(void *arg)
   debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
-    show_message("Cannot open device.\n");
+    err_message("Cannot open device.\n");
     ExitMP3(&info->mp);
     pthread_exit((void *)PLAY_ERROR);
   }
@@ -542,7 +540,7 @@ play_audio(void *arg)
       m->channels_actual = m->channels;
       m->samplerate_actual = m->samplerate;
       if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
-	show_message("Some params are set wrong.\n");
+	err_message("Some params are set wrong.\n");
       param_is_set++;
     }
     while (ret == MP3_OK) {
@@ -585,14 +583,14 @@ play_main(Movie *m, VideoWindow *vw)
     break;
   case _RESIZING:
     video_window_resize(vw, m->rendering_width, m->rendering_height);
-    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+    video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &image_rendered_width(p), &image_rendered_height(p));
 
     if (info->use_xv) {
       m->rendering_width  = m->width;
       m->rendering_height = m->height;
     } else {
-      m->rendering_width  = p->magnified.width;
-      m->rendering_height = p->magnified.height;
+      m->rendering_width  = image_rendered_width(p);
+      m->rendering_height = image_rendered_height(p);
     }
     m->status = _PLAY;
     break;
@@ -773,7 +771,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 
   if (!info) {
     if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
-      show_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
+      err_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
       return PLAY_ERROR;
     }
     m->movie_private = (void *)info;
@@ -784,6 +782,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   if (!demultiplexer_examine(info->demux)) {
     demultiplexer_destroy(info->demux);
     free(info);
+    m->movie_private = NULL;
     return PLAY_NOT;
   }
   info->nvstreams = demultiplexer_avi_nvideos(info->demux);

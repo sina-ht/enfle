@@ -1,10 +1,10 @@
 /*
  * effect.h -- Effect header
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:24:46 2001.
- * $Id: effect.h,v 1.2 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Sun Jul  7 23:05:07 2002.
+ * $Id: effect.h,v 1.3 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,6 @@
 #include "enfle-plugins.h"
 #include "image.h"
 
-Image *effect_call(EnflePlugins *, char *, Image *, void *);
+int effect_call(EnflePlugins *, char *, Image *, int, int);
 
 #endif

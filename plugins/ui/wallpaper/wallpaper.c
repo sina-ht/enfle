@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  8 00:10:57 2002.
- * $Id: wallpaper.c,v 1.11 2002/06/13 14:32:51 sian Exp $
+ * Last Modified: Sat Jul  6 22:30:26 2002.
+ * $Id: wallpaper.c,v 1.12 2002/08/03 05:08:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -67,55 +67,6 @@ plugin_exit(void *p)
 
 /* for internal use */
 
-static void
-magnify_if_requested(VideoWindow *vw, Image *p)
-{
-  double s, ws, hs;
-
-  switch (vw->render_method) {
-  case _VIDEO_RENDER_NORMAL:
-    p->if_magnified = 0;
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    p->rendered.image = memory_dup(p->image);
-    p->rendered.width  = p->magnified.width  = p->width;
-    p->rendered.height = p->magnified.height = p->height;
-    break;
-  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method, 0))
-      show_message_fnc("image_magnify() failed.\n");
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    p->rendered.image = memory_dup(p->magnified.image);
-    break;
-  case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
-    ws = (double)vw->full_width  / (double)p->width;
-    hs = (double)vw->full_height / (double)p->height;
-    s = (ws * p->height > vw->full_height) ? hs : ws;
-    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, 0);
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    p->rendered.image = memory_dup(p->magnified.image);
-    break;
-  case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
-    ws = (double)vw->full_width  / (double)p->width;
-    hs = (double)vw->full_height / (double)p->height;
-    s = (ws * p->height > vw->full_height) ? ws : hs;
-    image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, 0);
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    p->rendered.image = memory_dup(p->magnified.image);
-    break;
-  default:
-    show_message_fnc("invalid render_method %d\n", vw->render_method);
-    p->if_magnified = 0;
-    p->rendered.image = memory_dup(p->image);
-    p->rendered.width  = p->magnified.width  = p->width;
-    p->rendered.height = p->magnified.height = p->height;
-    break;
-  }
-}
-
 static int
 initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
 {
@@ -139,7 +90,6 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 
   if (p) {
     vw->if_direct = 0;
-    magnify_if_requested(vw, p);
     video_window_set_background(vw, p);
   } else if (m) {
     vw->if_direct = 1;
@@ -174,7 +124,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 static int
 process_files_of_archive(UIData *uidata, Archive *a)
 {
-  EnflePlugins *eps = uidata->eps;
+  EnflePlugins *eps = get_enfle_plugins();
   VideoWindow *vw = uidata->vw;
   Config *c = uidata->c;
   Archive *arc;
@@ -248,12 +198,12 @@ process_files_of_archive(UIData *uidata, Archive *a)
     show_message("%s identification failed\n", path);
     return 0;
   case IDENTIFY_STREAM_IMAGE:
-    debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
+    debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
     ret = main_loop(uidata, vw, NULL, p, path);
-    memory_destroy(p->rendered.image);
-    p->rendered.image = NULL;
-    memory_destroy(p->image);
-    p->image = NULL;
+    memory_destroy(image_rendered_image(p));
+    image_rendered_image(p) = NULL;
+    memory_destroy(image_image(p));
+    image_image(p) = NULL;
     break;
   case IDENTIFY_STREAM_MOVIE:
     ret = main_loop(uidata, vw, m, NULL, path);
@@ -283,9 +233,9 @@ ui_main(UIData *uidata)
 
   if ((disp = vp->open_video(NULL, c)) == NULL) {
     show_message("open_video() failed\n");
-    if (uidata->private) {
-      free(uidata->private);
-      uidata->private = NULL;
+    if (uidata->priv) {
+      free(uidata->priv);
+      uidata->priv = NULL;
     }
     return 0;
   }

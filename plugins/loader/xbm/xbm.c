@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 15 04:17:05 2002.
- * $Id: xbm.c,v 1.1 2002/02/14 19:19:09 sian Exp $
+ * Last Modified: Mon Jul  1 21:48:11 2002.
+ * $Id: xbm.c,v 1.2 2002/08/03 05:08:39 sian Exp $
  *
  * NOTE: This plugin is not optimized for speed.
  *
@@ -47,8 +47,7 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(loader_xbm)
 {
   LoaderPlugin *lp;
 
@@ -59,8 +58,7 @@ plugin_entry(void)
   return (void *)lp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_xbm, p)
 {
   free(p);
 }
@@ -125,12 +123,12 @@ load_image(Image *p, Stream *st)
     if (s[0] == '#')
       break;
     if (!(s[0] == '/' || s[0] == '*' || isspace(s[0]))) {
-      debug_message("xbm: error(read1.1 %c)\n", s[0]);
+      //debug_message("xbm: error(read1.1 %c)\n", s[0]);
       return 0;
     }
   }
 
-  if ((p->width = parse_define(s)) == 0) {
+  if ((image_width(p) = parse_define(s)) == 0) {
     debug_message("xbm: error(width)\n");
     return 0;
   }
@@ -140,12 +138,12 @@ load_image(Image *p, Stream *st)
     return 0;
   }
 
-  if ((p->height = parse_define(s)) == 0) {
+  if ((image_height(p) = parse_define(s)) == 0) {
     debug_message("xbm: error(height)\n");
     return 0;
   }
 
-  debug_message("xbm: (%dx%d)\n", p->width, p->height);
+  debug_message("xbm: (%dx%d)\n", image_width(p), image_height(p));
 
   while (stream_getc(st) != '{') ;
 
@@ -153,18 +151,18 @@ load_image(Image *p, Stream *st)
   p->ncolors = 2;
   p->type = _BITMAP_MSBFirst;
 
-  p->bytes_per_line = (p->width * p->bits_per_pixel + 7) >> 3;
-  if (!p->image)
-    if ((p->image = memory_create()) == NULL) {
+  image_bpl(p) = (image_width(p) * p->bits_per_pixel + 7) >> 3;
+  if (!image_image(p))
+    if ((image_image(p) = memory_create()) == NULL) {
       show_message("xbm: No enough memory.\n");
       return 0;
     }
-  if ((ptr = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
+  if ((ptr = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL) {
     show_message("xbm: No enough memory for image.\n");
     return 0;
   }
 
-  for (i = 0; i < p->bytes_per_line * p->height; i++) {
+  for (i = 0; i < image_bpl(p) * image_height(p); i++) {
     while ((c = stream_getc(st)) >= 0 && c != '0') ;
 
     if (c < 0)

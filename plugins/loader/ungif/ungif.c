@@ -1,10 +1,10 @@
 /*
  * ungif.c -- gif loader plugin, which exploits libungif.
- * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
+ * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:31:32 2002.
- * $Id: ungif.c,v 1.16 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Wed Jul 10 22:20:18 2002.
+ * $Id: ungif.c,v 1.17 2002/08/03 05:08:39 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -54,8 +54,7 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(loader_ungif)
 {
   LoaderPlugin *lp;
 
@@ -66,8 +65,7 @@ plugin_entry(void)
   return (void *)lp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_ungif, p)
 {
   free(p);
 }
@@ -154,21 +152,21 @@ load_image(Image *p, Stream *st)
 
       if (DGifGetImageDesc(GifFile) == GIF_ERROR)
 	goto error;
-      p->top = row = GifFile->Image.Top;
-      p->left = col = GifFile->Image.Left;
-      p->width = GifFile->Image.Width;
-      p->height = GifFile->Image.Height;
+      image_top(p) = row = GifFile->Image.Top;
+      image_left(p) = col = GifFile->Image.Left;
+      image_width(p) = GifFile->Image.Width;
+      image_height(p) = GifFile->Image.Height;
 
-      //debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", p->left, p->top, p->width, p->height);
+      //debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", p->left, p->top, image_width(p), image_height(p));
 
       if (GifFile->Image.Interlace) {
 	for (i = 0; i < 4; i++)
-	  for (j = row + ioffset[i]; j < row + p->height; j += ijumps[i])
-	    if (DGifGetLine(GifFile, &ScreenBuffer[j][col], p->width) == GIF_ERROR)
+	  for (j = row + ioffset[i]; j < row + image_height(p); j += ijumps[i])
+	    if (DGifGetLine(GifFile, &ScreenBuffer[j][col], image_width(p)) == GIF_ERROR)
 	      goto error;
       } else {
-	for (i = 0; i < p->height; i++)
-	  if (DGifGetLine(GifFile, &ScreenBuffer[row++][col], p->width) == GIF_ERROR)
+	for (i = 0; i < image_height(p); i++)
+	  if (DGifGetLine(GifFile, &ScreenBuffer[row++][col], image_width(p)) == GIF_ERROR)
 	    goto error;
       }
       break;
@@ -181,7 +179,7 @@ load_image(Image *p, Stream *st)
 	debug_message("comment: ");
 	if ((p->comment = malloc(Extension[0] + 1)) == NULL) {
 	  debug_message("(abandoned)\n");
-	  show_message("No enough memory for comment. Try to continue.\n");
+	  warning("No enough memory for comment. Try to continue.\n");
 	} else {
 	  memcpy(p->comment, &Extension[1], Extension[0]);
 	  p->comment[Extension[0]] = '\0';
@@ -213,7 +211,7 @@ load_image(Image *p, Stream *st)
 	    unsigned char *tmp;
 
 	    if ((tmp = realloc(p->comment, strlen((const char *)p->comment) + Extension[0] + 1)) == NULL) {
-	      show_message("No enough memory for comment(append). Truncated.\n");
+	      warning("No enough memory for comment(append). Truncated.\n");
 	    } else {
 	      memcpy(tmp + strlen((const char *)tmp), &Extension[1], Extension[0]);
 	      p->comment = tmp;
@@ -245,14 +243,14 @@ load_image(Image *p, Stream *st)
   p->type = _INDEX;
   p->depth = 8;
   p->bits_per_pixel = 8;
-  p->bytes_per_line = p->width;
+  image_bpl(p) = image_width(p);
   p->next = NULL;
 
-  if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
+  if ((d = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL)
     goto error_after_closed;
 
-  for (i = 0; i < p->height; i++)
-    memcpy(&d[i * p->width], &ScreenBuffer[p->top + i][p->left], p->width * sizeof(GifPixelType));
+  for (i = 0; i < image_height(p); i++)
+    memcpy(&d[i * image_width(p)], &ScreenBuffer[image_top(p) + i][image_left(p)], image_width(p) * sizeof(GifPixelType));
 
   free(ScreenBuffer[0]);
   free(ScreenBuffer);
@@ -289,7 +287,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   if (memcmp(buf, "89a", 3) == 0)
     return LOAD_OK;
 
-  show_message("GIF detected, but version is neither 87a nor 89a.\n");
+  warning("GIF detected, but version is neither 87a nor 89a.\n");
 
   return LOAD_OK;
 }

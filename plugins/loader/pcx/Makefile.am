@@ -1,12 +1,19 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Feb  2 11:15:10 2001.
-# $Id: Makefile.am,v 1.1 2001/02/02 16:41:21 sian Exp $
+# Last Modified: Sun Jun 23 15:38:58 2002.
+# $Id: Makefile.am,v 1.2 2002/08/03 05:08:39 sian Exp $
+
+STATIC_PLUGINS = @Static_plugins@
+MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC"; else echo -n ""; fi)
+MORE_LDFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-static"; else echo -n "-avoid-version"; fi)
+
+PLUGIN_ID = loader/pcx
 
 libdir = $(enfle_loader_plugindir)
 
 lib_LTLIBRARIES = loader_pcx.la
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
-loader_pcx_la_LDFLAGS = -avoid-version -module
+loader_pcx_la_LDFLAGS = $(MORE_LDFLAGS) -module
+loader_pcx_la_CFLAGS = $(MORE_CFLAGS)
 loader_pcx_la_SOURCES = pcx.c

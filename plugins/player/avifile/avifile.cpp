@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May 29 23:39:02 2002.
- * $Id: avifile.cpp,v 1.36 2002/05/29 14:43:04 sian Exp $
+ * Last Modified: Thu Jul 25 23:04:18 2002.
+ * $Id: avifile.cpp,v 1.37 2002/08/03 05:08:39 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -33,10 +33,11 @@
 #include <pthread.h>
 
 #include <avifile/avifile.h>
+#include <avifile/except.h>
 #include <avifile/version.h>
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6)
 # include <avifile/avifmt.h>
-#elif (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 7) || (AVIFILE_MAJOR_VERSION > 0)
+#elif (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION >= 7) || (AVIFILE_MAJOR_VERSION > 0)
 # include <avifile/infotypes.h>
 # define USE_STREAM_INFO
 #endif
@@ -69,14 +70,14 @@ typedef struct _avifile_info {
   Image *p;
   Config *c;
   CImage *ci;
-  IAviReadFile *rf;
-  IAviReadStream *stream;
-  IAviReadStream *audiostream;
 #ifdef USE_STREAM_INFO
   StreamInfo *si;
 #else
   MainAVIHeader hdr;
 #endif
+  IAviReadFile *rf;
+  IAviReadStream *stream;
+  IAviReadStream *audiostream;
   BITMAPINFOHEADER bmih;
   WAVEFORMATEX owf;
   pthread_t video_thread;
@@ -109,8 +110,7 @@ static PlayerPlugin plugin = {
 };
 
 extern "C" {
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_avifile)
 {
   PlayerPlugin *pp;
   String *s;
@@ -131,8 +131,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_avifile, p)
 {
   PlayerPlugin *pp = (PlayerPlugin *)p;
 
@@ -333,19 +332,25 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       m->framerate = 1000 / info->frametime;
       m->has_video = 1;
 
-      video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+      {
+	unsigned int dw, dh;
 
-      if (info->use_xv) {
-	m->rendering_width  = m->width;
-	m->rendering_height = m->height;
-      } else {
-	m->rendering_width  = p->magnified.width;
-	m->rendering_height = p->magnified.height;
+	image_rendered_width(p) = m->width;
+	image_rendered_height(p) = m->height;
+	video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
+
+	if (info->use_xv) {
+	  m->rendering_width  = m->width;
+	  m->rendering_height = m->height;
+	} else {
+	  m->rendering_width  = dw;
+	  m->rendering_height = dh;
+	}
       }
 
       debug_message("AviFile: s (%d,%d) r (%d,%d) d (%d,%d) %f fps %d frames\n",
 		    m->width, m->height, m->rendering_width, m->rendering_height,
-		    p->magnified.width, p->magnified.height,
+		    image_rendered_width(p), image_rendered_height(p),
 		    m->framerate, m->num_of_frames);
     }
   }
@@ -357,25 +362,23 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     dest_bpp = vw->bits_per_pixel;
   }
 
-  p->width = m->rendering_width;
-  p->height = m->rendering_height;
+  image_width(p) = m->rendering_width;
+  image_height(p) = m->rendering_height;
   p->type = m->requested_type;
-  if ((p->rendered.image = memory_create()) == NULL)
-    goto error;
   if (dest_bpp == 0)
-    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+    memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
 
   if (info->use_xv) {
     switch (p->type) {
     case _YUY2:
     case _UYVY:
       p->bits_per_pixel = 16;
-      p->bytes_per_line = p->width << 1;
+      image_bpl(p) = image_width(p) << 1;
       break;
     case _YV12:
     case _I420:
       p->bits_per_pixel = 12;
-      p->bytes_per_line = p->width * 3 / 2;
+      image_bpl(p) = image_width(p) * 3 / 2;
       break;
     default:
       show_message("Cannot render %s\n", image_type_to_string(p->type));
@@ -386,31 +389,31 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     case 32:
       p->depth = 24;
       p->bits_per_pixel = 32;
-      p->bytes_per_line = p->width * 4;
+      image_bpl(p) = image_width(p) * 4;
       break;
     case 24:
       p->depth = 24;
       p->bits_per_pixel = 24;
-      p->bytes_per_line = p->width * 3;
+      image_bpl(p) = image_width(p) * 3;
       break;
     case 16:
       p->depth = 16;
       p->bits_per_pixel = 16;
-      p->bytes_per_line = p->width * 2;
+      image_bpl(p) = image_width(p) * 2;
       break;
     default:
       show_message("Cannot render bpp %d\n", dest_bpp);
       return PLAY_ERROR;
     }
   }
-  memory_alloc(p->rendered.image, p->bytes_per_line * p->height);
+  memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p));
 
   m->st = st;
   m->status = _STOP;
 
   debug_message("AviFile: initializing screen.\n");
 
-  m->initialize_screen(vw, m, p->magnified.width, p->magnified.height);
+  m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
   return play(m);
 
@@ -460,8 +463,7 @@ play(Movie *m)
   info->eof = 0;
 
   if (m->has_video) {
-    if (!m->has_audio)
-      timer_start(m->timer);
+    timer_start(m->timer);
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
   if (m->has_audio)
@@ -498,9 +500,9 @@ play_video(void *arg)
 
     info->ci = info->stream->GetFrame();
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION >= 6) || (AVIFILE_MAJOR_VERSION > 0)
-    memcpy(memory_ptr(info->p->rendered.image), info->ci->Data(), info->ci->Bpl() * info->ci->Height());
+    memcpy(memory_ptr(image_rendered_image(info->p)), info->ci->Data(), info->ci->Bpl() * info->ci->Height());
 #else
-    memcpy(memory_ptr(info->p->rendered.image), info->ci->data(), info->ci->bpl() * info->ci->height());
+    memcpy(memory_ptr(image_rendered_image(info->p)), info->ci->data(), info->ci->bpl() * info->ci->height());
 #endif
     pthread_cond_wait(&info->update_cond, &info->update_mutex);
     pthread_mutex_unlock(&info->update_mutex);
@@ -575,17 +577,21 @@ play_main(Movie *m, VideoWindow *vw)
   case _PLAY:
     break;
   case _RESIZING:
-    video_window_resize(vw, m->rendering_width, m->rendering_height);
-    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+    {
+      unsigned int dw, dh;
 
-    if (info->use_xv) {
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-    } else {
-      m->rendering_width  = p->magnified.width;
-      m->rendering_height = p->magnified.height;
+      video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
+      video_window_resize(vw, dw, dh);
+
+      if (info->use_xv) {
+	m->rendering_width  = m->width;
+	m->rendering_height = m->height;
+      } else {
+	m->rendering_width  = dw;
+	m->rendering_height = dh;
+      }
+      m->status = _PLAY;
     }
-    m->status = _PLAY;
     break;
   case _PAUSE:
   case _STOP:
@@ -755,8 +761,8 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   info = info_create(m);
 
   /* see if this avi is supported by avifile */
-  debug_message("AviFile: identify: try to CreateIAviReadFile().\n");
   if (!info->rf) {
+    debug_message("AviFile: identify: try to CreateIAviReadFile().\n");
     rf = info->rf = CreateIAviReadFile(st->path);
     debug_message("AviFile: identify: created.\n");
   } else {

@@ -1,10 +1,10 @@
 /*
  * effect.c -- Effect plugin interface
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:24:58 2001.
- * $Id: effect.c,v 1.3 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Sun Jul  7 23:05:20 2002.
+ * $Id: effect.c,v 1.4 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,16 +27,16 @@
 #include "effect.h"
 #include "effect-plugin.h"
 
-Image *
-effect_call(EnflePlugins *eps, char *pluginname, Image *src, void *params)
+int
+effect_call(EnflePlugins *eps, char *pluginname, Image *p, int src, int dst)
 {
-  Plugin *p;
+  Plugin *pl;
   EffectPlugin *ep;
 
-  if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_EFFECT], pluginname)) == NULL)
-    return NULL;
-  ep = plugin_get(p);
+  if ((pl = pluginlist_get(eps->pls[ENFLE_PLUGIN_EFFECT], pluginname)) == NULL)
+    return 0;
+  ep = plugin_get(pl);
   if (ep)
-    return ep->effect(src, params);
-  return NULL;
+    return ep->effect(p, src, dst);
+  return 0;
 }

@@ -1,10 +1,10 @@
 /*
  * image.h -- image interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  8 00:09:25 2002.
- * $Id: image.h,v 1.17 2002/06/13 14:29:44 sian Exp $
+ * Last Modified: Thu Jul 25 22:21:45 2002.
+ * $Id: image.h,v 1.18 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,15 +39,10 @@ typedef enum _image_type {
   _ABGR32,
   _ARGB32,
   _BGRA32,
-  /* Below are hardware scaling capable formats */
   _YUY2,
   _YV12,
   _I420,
   _UYVY,
-  _RV15,
-  _RV16,
-  _RV24,
-  _RV32,
   _IMAGETYPE_TERMINATOR
 } ImageType;
 
@@ -84,6 +79,7 @@ typedef struct _image_color {
 
 typedef struct _image_data {
   unsigned int width, height;
+  unsigned int swidth, sheight;
   unsigned int bytes_per_line;
   int left, top;
   Memory *image;
@@ -96,15 +92,14 @@ typedef enum {
   _RESTOREPREVIOUS
 } ImageTransparentDisposal;
 
+#define IMAGE_INDEX_ORIGINAL 0
+#define IMAGE_INDEX_RENDERED 1
+#define IMAGE_INDEX_WORK 2
+#define IMAGE_INDEX_MAX 3
 typedef struct _image Image;
 struct _image {
   ImageType type;
-  unsigned int width, height;
-  unsigned int bytes_per_line;
-  int left, top;
-  Memory *image;
-  ImageData magnified;
-  ImageData rendered;
+  ImageData data[IMAGE_INDEX_MAX];
   ImageColor background_color;
   ImageColor transparent_color;
   ImageTransparentDisposal transparent_disposal;
@@ -112,26 +107,59 @@ struct _image {
   unsigned char *comment;
   char *format, *format_detail;
   int alpha_enabled;
-  int if_magnified;
   int depth;
   int bits_per_pixel;
   unsigned int ncolors;
   unsigned char colormap[256][3];
   unsigned long red_mask, green_mask, blue_mask;
   Image *next;
-
-  Image *(*duplicate)(Image *);
-  int (*compare)(Image *, Image *);
-  int (*magnify)(Image *, int, int, ImageInterpolateMethod, int);
-  void (*destroy)(Image *);
 };
-
-#define image_dup(p) (p)->duplicate((p))
-#define image_compare(p, p2) (p)->compare((p), (p2))
-#define image_magnify(p, dw, dh, m, uhs) (p)->magnify((p), (dw), (dh), (m), (uhs))
-#define image_destroy(p) (p)->destroy((p))
 
 Image *image_create(void);
 const char *image_type_to_string(ImageType);
+
+Image *image_dup(Image *);
+int image_compare(Image *, Image *);
+int image_magnify(Image *, int, int, int, int, ImageInterpolateMethod);
+int image_data_alloc_from_other(Image *, int, int);
+int image_data_copy(Image *, int, int);
+int image_data_swap(Image *, int, int);
+void image_destroy(Image *);
+
+#define image_by_index(p, idx) ((p)->data[idx])
+#define image_width_by_index(p, idx) (image_by_index(p,idx).width)
+#define image_height_by_index(p, idx) (image_by_index(p,idx).height)
+#define image_left_by_index(p, idx) (image_by_index(p,idx).left)
+#define image_top_by_index(p, idx) (image_by_index(p,idx).top)
+#define image_bpl_by_index(p, idx) (image_by_index(p,idx).bytes_per_line)
+#define image_image_by_index(p, idx) (image_by_index(p,idx).image)
+#define image_original(p) (image_by_index(p,IMAGE_INDEX_ORIGINAL))
+#define image_original_width(p) (image_width_by_index(p,IMAGE_INDEX_ORIGINAL))
+#define image_original_height(p) (image_height_by_index(p,IMAGE_INDEX_ORIGINAL))
+#define image_original_left(p) (image_left_by_index(p,IMAGE_INDEX_ORIGINAL))
+#define image_original_top(p) (image_top_by_index(p,IMAGE_INDEX_ORIGINAL))
+#define image_original_bpl(p) (image_bpl_by_index(p,IMAGE_INDEX_ORIGINAL))
+#define image_original_image(p) (image_image_by_index(p,IMAGE_INDEX_ORIGINAL))
+#define image_work(p) (image_by_index(p,IMAGE_INDEX_WORK))
+#define image_work_width(p) (image_width_by_index(p,IMAGE_INDEX_WORK))
+#define image_work_height(p) (image_height_by_index(p,IMAGE_INDEX_WORK))
+#define image_work_left(p) (image_left_by_index(p,IMAGE_INDEX_WORK))
+#define image_work_top(p) (image_top_by_index(p,IMAGE_INDEX_WORK))
+#define image_work_bpl(p) (image_bpl_by_index(p,IMAGE_INDEX_WORK))
+#define image_work_image(p) (image_image_by_index(p,IMAGE_INDEX_WORK))
+#define image_rendered(p) (image_by_index(p,IMAGE_INDEX_RENDERED))
+#define image_rendered_width(p) (image_width_by_index(p,IMAGE_INDEX_RENDERED))
+#define image_rendered_height(p) (image_height_by_index(p,IMAGE_INDEX_RENDERED))
+#define image_rendered_left(p) (image_left_by_index(p,IMAGE_INDEX_RENDERED))
+#define image_rendered_top(p) (image_top_by_index(p,IMAGE_INDEX_RENDERED))
+#define image_rendered_bpl(p) (image_bpl_by_index(p,IMAGE_INDEX_RENDERED))
+#define image_rendered_image(p) (image_image_by_index(p,IMAGE_INDEX_RENDERED))
+
+#define image_width(p) image_original_width(p)
+#define image_height(p) image_original_height(p)
+#define image_left(p) image_original_left(p)
+#define image_top(p) image_original_top(p)
+#define image_bpl(p) image_original_bpl(p)
+#define image_image(p) image_original_image(p)
 
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb  9 12:28:37 2002.
- * $Id: identify.c,v 1.7 2002/02/09 03:45:28 sian Exp $
+ * Last Modified: Tue Jul 30 21:49:44 2002.
+ * $Id: identify.c,v 1.8 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -87,6 +87,7 @@ identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a, Config *c)
       free(fullpath);
       return IDENTIFY_FILE_SOPEN_FAILED;
     }
+    free(fullpath);
   } else if (!archive_open(a, s, path)) {
     show_message("File %s in Archive %s [%s] cannot open.\n", path, a->format, a->path);
     return IDENTIFY_FILE_AOPEN_FAILED;
@@ -108,8 +109,8 @@ identify_stream(EnflePlugins *eps, Image *p, Movie *m, Stream *s, VideoWindow *v
     else
       debug_message("Image identified as %s\n", p->format);
 #endif
-    if (!p->image)
-      p->image = memory_create();
+    if (!image_image(p))
+      image_image(p) = memory_create();
     if ((f = loader_load(eps, p->format, p, s, vw, c)) == LOAD_OK)
       return IDENTIFY_STREAM_IMAGE;
     if (f != LOAD_NOT)

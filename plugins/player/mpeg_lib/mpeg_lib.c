@@ -1,10 +1,10 @@
 /*
  * mpeg_lib.c -- mpeg_lib player plugin, which exploits mpeg_lib.
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 14 14:24:21 2002.
- * $Id: mpeg_lib.c,v 1.19 2002/03/14 18:43:30 sian Exp $
+ * Last Modified: Sun Jun 23 15:57:30 2002.
+ * $Id: mpeg_lib.c,v 1.20 2002/08/03 05:08:38 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -54,8 +54,7 @@ static PlayerPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_mpeg_lib)
 {
   PlayerPlugin *pp;
 
@@ -66,8 +65,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_mpeg_lib, p)
 {
   free(p);
 }

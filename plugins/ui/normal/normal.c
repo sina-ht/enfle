@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  8 00:56:29 2002.
- * $Id: normal.c,v 1.64 2002/06/13 14:34:03 sian Exp $
+ * Last Modified: Tue Jul 30 21:55:01 2002.
+ * $Id: normal.c,v 1.65 2002/08/03 05:08:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,10 +35,12 @@
 #include "utils/timer.h"
 #include "utils/timer_gettimeofday.h"
 #include "enfle/ui-plugin.h"
+#include "enfle/ui-action.h"
 #include "enfle/loader.h"
 #include "enfle/player.h"
 #include "enfle/saver.h"
 #include "enfle/effect.h"
+#include "enfle/effect-plugin.h"
 #include "enfle/streamer.h"
 #include "enfle/archiver.h"
 #include "enfle/identify.h"
@@ -52,14 +54,13 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.5",
+  description: "Normal UI plugin version 0.6",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(ui_normal)
 {
   UIPlugin *uip;
 
@@ -70,8 +71,7 @@ plugin_entry(void)
   return (void *)uip;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(ui_normal, p)
 {
   free(p);
 }
@@ -98,10 +98,10 @@ typedef struct _main_loop {
   VideoEventData ev;
   VideoButton button;
   VideoKey key;
-  Image *original_p;
   Image *p;
   Movie *m;
   Timer *timer;
+  //unsigned int magnified_width, magnified_height; /* For arbitrary size magnification */
   char *path;
   VideoButton pointed_button;
   unsigned int old_x, old_y;
@@ -109,87 +109,6 @@ typedef struct _main_loop {
   int offset_x, offset_y;
   int ret;
 } MainLoop;
-
-static void
-magnify_if_requested(VideoWindow *vw, Image *p)
-{
-  double s, ws, hs;
-  int use_hw_scale;
-
-  switch (p->type) {
-  case _YUY2:
-  case _YV12:
-  case _I420:
-  case _UYVY:
-  case _RV15:
-  case _RV16:
-  case _RV24:
-  case _RV32:
-    use_hw_scale = 1;
-    break;
-  default:
-    use_hw_scale = 0;
-    break;
-  }
-
-  switch (vw->render_method) {
-  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    if (!image_magnify(p, p->width << 1, p->height << 1, vw->interpolate_method, use_hw_scale))
-      show_message_fnc("image_magnify() failed.\n");
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    if (use_hw_scale) {
-      p->rendered.image = memory_dup(p->image);
-      p->rendered.width = p->width;
-      p->rendered.height = p->height;
-    } else {
-      p->rendered.image = memory_dup(p->magnified.image);
-    }
-    break;
-  case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
-    ws = (double)vw->full_width  / (double)p->width;
-    hs = (double)vw->full_height / (double)p->height;
-    s = (ws * p->height > vw->full_height) ? hs : ws;
-    if (!image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, use_hw_scale))
-      show_message_fnc("image_magnify() failed.\n");
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    if (use_hw_scale) {
-      p->rendered.image = memory_dup(p->image);
-      p->rendered.width = p->width;
-      p->rendered.height = p->height;
-    } else {
-      p->rendered.image = memory_dup(p->magnified.image);
-    }
-    break;
-  case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
-    ws = (double)vw->full_width  / (double)p->width;
-    hs = (double)vw->full_height / (double)p->height;
-    s = (ws * p->height > vw->full_height) ? ws : hs;
-    if (!image_magnify(p, s * p->width, s * p->height, vw->interpolate_method, use_hw_scale))
-      show_message_fnc("image_magnify() failed.\n");
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    if (use_hw_scale) {
-      p->rendered.image = memory_dup(p->image);
-      p->rendered.width = p->width;
-      p->rendered.height = p->height;
-    } else {
-      p->rendered.image = memory_dup(p->magnified.image);
-    }
-    break;
-  default:
-    show_message_fnc("invalid render_method %d\n", vw->render_method);
-  case _VIDEO_RENDER_NORMAL:
-    p->if_magnified = 0;
-    if (p->rendered.image)
-      memory_destroy(p->rendered.image);
-    p->rendered.image = memory_dup(p->image);
-    p->rendered.width  = p->magnified.width  = p->width;
-    p->rendered.height = p->magnified.height = p->height;
-    break;
-  }
-}
 
 static int
 initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
@@ -208,13 +127,21 @@ render_frame(VideoWindow *vw, Movie *m, Image *p)
 }
 
 static int
+render(MainLoop *ml)
+{
+  video_window_render_scaled(ml->vw, ml->p, 1, 0, 0);
+  return 1;
+}
+
+static int
 save_image(Image *p, UIData *uidata, char *path, char *format)
 {
   char *outpath;
   char *ext;
   FILE *fp;
+  EnflePlugins *eps = get_enfle_plugins();
 
-  if ((ext = saver_get_ext(uidata->eps, format, uidata->c)) == NULL)
+  if ((ext = saver_get_ext(eps, format, uidata->c)) == NULL)
     return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
     show_message_fnc("No enough memory.\n");
@@ -227,7 +154,7 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
     return 0;
   }
 
-  if (!saver_save(uidata->eps, format, p, fp, uidata->c, NULL)) {
+  if (!saver_save(eps, format, p, fp, uidata->c, NULL)) {
     show_message("Save failed.\n");
     fclose(fp);
     return 0;
@@ -322,39 +249,47 @@ set_caption_string(MainLoop *ml)
 
 /* action handler */
 
-static int main_loop_quit(MainLoop *ml) { ml->ret = MAIN_LOOP_QUIT; return 1; }
-static int main_loop_next(MainLoop *ml) { ml->ret = MAIN_LOOP_NEXT; return 1; }
-static int main_loop_nextarchive(MainLoop *ml) { ml->ret = MAIN_LOOP_NEXTARCHIVE; return 1; }
-static int main_loop_prev(MainLoop *ml) { ml->ret = MAIN_LOOP_PREV; return 1; }
-static int main_loop_prevarchive(MainLoop *ml) { ml->ret = MAIN_LOOP_PREVARCHIVE; return 1; }
-static int main_loop_last(MainLoop *ml) { ml->ret = MAIN_LOOP_LAST; return 1; }
-static int main_loop_first(MainLoop *ml) { ml->ret = MAIN_LOOP_FIRST; return 1; }
-static int main_loop_delete_file(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FILE; return 1; }
-static int main_loop_delete_from_list(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FROM_LIST; return 1;}
+static int main_loop_quit(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_QUIT; return 1; }
+static int main_loop_next(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_NEXT; return 1; }
+static int main_loop_nextarchive(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_NEXTARCHIVE; return 1; }
+static int main_loop_prev(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_PREV; return 1; }
+static int main_loop_prevarchive(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_PREVARCHIVE; return 1; }
+static int main_loop_last(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_LAST; return 1; }
+static int main_loop_first(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_FIRST; return 1; }
+static int main_loop_delete_file(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_DELETE_FILE; return 1; }
+static int main_loop_delete_from_list(void *a) { MainLoop *ml = a; ml->ret = MAIN_LOOP_DELETE_FROM_LIST; return 1;}
 
 static int
-main_loop_erase_rectangle(MainLoop *ml)
+main_loop_erase_rectangle(void *a)
 {
+  MainLoop *ml = a; 
+  
   video_window_erase_rect(ml->vw);
   return 1;
 }
 
 static int
-main_loop_toggle_fullscreen_mode(MainLoop *ml)
+main_loop_toggle_fullscreen_mode(void *a)
 {
+  MainLoop *ml = a; 
+
   video_window_set_fullscreen_mode(ml->vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
   return 1;
 }
 static int
-main_loop_set_wallpaper(MainLoop *ml)
+main_loop_set_wallpaper(void *a)
 {
+  MainLoop *ml = a; 
+
   if (ml->p) 
     ml->uidata->vp->set_wallpaper(ml->uidata->disp, ml->p);
   return 1;
 }
 static int
-main_loop_toggle_interpolate(MainLoop *ml)
+main_loop_toggle_interpolate(void *a)
 {
+  MainLoop *ml = a; 
+
   switch (ml->vw->interpolate_method) {
   case _NOINTERPOLATE:
     ml->vw->interpolate_method = _BILINEAR;
@@ -369,8 +304,7 @@ main_loop_toggle_interpolate(MainLoop *ml)
   }
   video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
 
-  magnify_if_requested(ml->vw, ml->p);
-  video_window_render(ml->vw, ml->p);
+  render(ml);
   set_caption_string(ml);
 
   video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
@@ -388,10 +322,8 @@ main_loop_magnify_main(MainLoop *ml)
   if (p) {
     video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
 
-    magnify_if_requested(vw, p);
-    //video_window_resize(vw, p->magnified.width, p->magnified.height);
     video_window_set_offset(vw, 0, 0);
-    video_window_render(vw, p);
+    render(ml);
 
     video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
   } else if (m) {
@@ -401,22 +333,28 @@ main_loop_magnify_main(MainLoop *ml)
   return 1;
 }
 static int
-main_loop_magnify_short(MainLoop *ml)
+main_loop_magnify_short(void *a)
 {
+  MainLoop *ml = a;
+
   ml->vw->render_method = (ml->vw->render_method == _VIDEO_RENDER_NORMAL) ?
     _VIDEO_RENDER_MAGNIFY_SHORT_FULL : _VIDEO_RENDER_NORMAL;
   return main_loop_magnify_main(ml);
 }
 static int
-main_loop_magnify_long(MainLoop *ml)
+main_loop_magnify_long(void *a)
 {
+  MainLoop *ml = a;
+
   ml->vw->render_method = (ml->vw->render_method == _VIDEO_RENDER_NORMAL) ?
     _VIDEO_RENDER_MAGNIFY_LONG_FULL : _VIDEO_RENDER_NORMAL;
   return main_loop_magnify_main(ml);
 }
 static int
-main_loop_magnify_double(MainLoop *ml)
+main_loop_magnify_double(void *a)
 {
+  MainLoop *ml = a;
+
   ml->vw->render_method = (ml->vw->render_method == _VIDEO_RENDER_NORMAL) ?
     _VIDEO_RENDER_MAGNIFY_DOUBLE : _VIDEO_RENDER_NORMAL;
   return main_loop_magnify_main(ml);
@@ -440,13 +378,16 @@ main_loop_save_main(MainLoop *ml, char *format)
   return result;
 }
 static int
-main_loop_save_png(MainLoop *ml)
+main_loop_save_png(void *a)
 {
+  MainLoop *ml = a;
+
   return main_loop_save_main(ml, (char *)"PNG");
 }
 static int
-main_loop_save(MainLoop *ml)
+main_loop_save(void *a)
 {
+  MainLoop *ml = a;
   char *format;
 
   if ((format = config_get(ml->uidata->c, "/enfle/plugins/ui/normal/save_format")) == NULL) {
@@ -457,85 +398,34 @@ main_loop_save(MainLoop *ml)
   return main_loop_save_main(ml, format);
 }
 
-static int
-main_loop_rotate_main(MainLoop *ml, int f)
-{
-  Image *old_p;
-  UIData *uidata = ml->uidata;
-  int result;
-
-  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
-
-  config_set_int(uidata->c, (char *)"/enfle/plugins/effect/rotate/function", f);
-  if ((old_p = effect_call(uidata->eps, (char *)"Rotate", ml->p, uidata->c))) {
-    if (old_p != ml->p) {
-      image_destroy(old_p);
-      video_window_resize(ml->vw, ml->p->width, ml->p->height);
-    }
-    magnify_if_requested(ml->vw, ml->p);
-    video_window_set_offset(ml->vw, 0, 0);
-    video_window_render(ml->vw, ml->p);
-    result = 1;
-  } else {
-    show_message("Rotate effect failed.\n");
-    result = 0;
-  }
-
-  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
-
-  return result;
-}
-static int main_loop_rotate_right(MainLoop *ml) { return main_loop_rotate_main(ml, 1); }
-static int main_loop_rotate_left(MainLoop *ml) { return main_loop_rotate_main(ml, -1); }
-static int main_loop_flip_vertical(MainLoop *ml) { return main_loop_rotate_main(ml, 2); }
-static int main_loop_flip_horizontal(MainLoop *ml) { return main_loop_rotate_main(ml, -2); }
-
-static int
-main_loop_gamma_main(MainLoop *ml, int i)
-{
-  UIData *uidata = ml->uidata;
-  int result;
-
-  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
-
-  if (i == 3) {
-    image_destroy(ml->p);
-    ml->p = image_dup(ml->original_p);
-    magnify_if_requested(ml->vw, ml->p);
-    //video_window_resize(ml->vw, ml->p->magnified.width, ml->p->magnified.height);
-    video_window_set_offset(ml->vw, 0, 0);
-    video_window_render(ml->vw, ml->p);
-    result = 1;
-  } else {
-    Image *old_p;
-
-    config_set_int(uidata->c, (char *)"/enfle/plugins/effect/gamma/index", i);
-    if ((old_p = effect_call(uidata->eps, (char *)"Gamma", ml->p, uidata->c))) {
-      if (old_p != ml->p)
-	image_destroy(old_p);
-      magnify_if_requested(ml->vw, ml->p);
-      video_window_set_offset(ml->vw, 0, 0);
-      video_window_render(ml->vw, ml->p);
-      result = 1;
-    } else {
-      show_message("Gamma correction failed.\n");
-      result = 0;
-    }
-  }
-
-  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
-
-  return result;
-}
-static int main_loop_gamma_1(MainLoop *ml) { return main_loop_gamma_main(ml, 0); }
-static int main_loop_gamma_2(MainLoop *ml) { return main_loop_gamma_main(ml, 1); }
-static int main_loop_gamma_3(MainLoop *ml) { return main_loop_gamma_main(ml, 2); }
-static int main_loop_gamma_4(MainLoop *ml) { return main_loop_gamma_main(ml, 3); }
-static int main_loop_gamma_5(MainLoop *ml) { return main_loop_gamma_main(ml, 4); }
-static int main_loop_gamma_6(MainLoop *ml) { return main_loop_gamma_main(ml, 5); }
-static int main_loop_gamma_7(MainLoop *ml) { return main_loop_gamma_main(ml, 6); }
-
-/* Event dispatcher */
+static UIAction built_in_actions[] = {
+  { "go_first", main_loop_first, NULL, ENFLE_KEY_less, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "go_last", main_loop_last, NULL, ENFLE_KEY_greater, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "quit", main_loop_quit, NULL, ENFLE_KEY_q, ENFLE_MOD_None, ENFLE_Button_None },
+  { "toggle-fullscreen", main_loop_toggle_fullscreen_mode, NULL, ENFLE_KEY_f, ENFLE_MOD_None, ENFLE_Button_None },
+  { "next", main_loop_next, NULL, ENFLE_KEY_n, ENFLE_MOD_None, ENFLE_Button_None },
+  { "next", main_loop_next, NULL, ENFLE_KEY_space, ENFLE_MOD_None, ENFLE_Button_None },
+  { "next", main_loop_next, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_1 },
+  { "next", main_loop_next, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_4 },
+  { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_n, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_space, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_2 },
+  { "prev", main_loop_prev, NULL, ENFLE_KEY_b, ENFLE_MOD_None, ENFLE_Button_None },
+  { "prev", main_loop_prev, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_3 },
+  { "prev", main_loop_prev, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_5 },
+  { "prev_archive", main_loop_prevarchive, NULL, ENFLE_KEY_b, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "delete_file", main_loop_delete_file, NULL, ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "delete_from_list", main_loop_delete_from_list, NULL, ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "toggle_interpolate", main_loop_toggle_interpolate, NULL, ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "save_png", main_loop_save_png, NULL, ENFLE_KEY_s, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  { "save", main_loop_save, NULL, ENFLE_KEY_s, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "magnify_double", main_loop_magnify_double, NULL, ENFLE_KEY_m, ENFLE_MOD_None, ENFLE_Button_None },
+  { "magnify_short",  main_loop_magnify_short, NULL, ENFLE_KEY_m, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "magnify_long",  main_loop_magnify_long, NULL, ENFLE_KEY_m, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "erase_rectangle", main_loop_erase_rectangle, NULL, ENFLE_KEY_c, ENFLE_MOD_None, ENFLE_Button_None },
+  { "set_wallpaper", main_loop_set_wallpaper, NULL, ENFLE_KEY_w, ENFLE_MOD_None, ENFLE_Button_None },
+  UI_ACTION_END
+};
 
 static int
 main_loop_button_pressed(MainLoop *ml)
@@ -563,27 +453,36 @@ main_loop_key_pressed(MainLoop *ml)
 }
 
 static int
+main_loop_do_action(MainLoop *ml, VideoKey key, VideoModifierKey modkey, VideoButton button)
+{
+  Hash *actionhash = (Hash *)ml->uidata->priv;
+  char buf[16];
+  UIAction *uia;
+  int result;
+
+  snprintf(buf, 16, "%04X%04X%04X", key, modkey, button);
+  if ((uia = hash_lookup_str(actionhash, buf)) == NULL)
+    return 0;
+  if (uia->group_id == 0) {
+    /* Self action */
+    result = uia->func((void *)ml);
+  } else {
+    /* Effect Plugin action */
+    result = uia->func(uia->arg);
+    render(ml);
+  }
+
+  return result;
+}
+
+static int
 main_loop_button_released(MainLoop *ml)
 {
   VideoButton button = ml->button;
 
   ml->button = ENFLE_Button_None;
-  if (button == ml->ev.button.button) {
-    switch (button) {
-    case ENFLE_Button_1:
-      return main_loop_next(ml);
-    case ENFLE_Button_2:
-      return main_loop_nextarchive(ml);
-    case ENFLE_Button_3:
-      return main_loop_prev(ml);
-    case ENFLE_Button_4:
-      return main_loop_next(ml);
-    case ENFLE_Button_5:
-      return main_loop_prev(ml);
-    default:
-      return 1;
-    }
-  }
+  if (button == ml->ev.button.button)
+    return main_loop_do_action(ml, ENFLE_KEY_Empty, ENFLE_MOD_None, ml->ev.button.button);
   return 0;
 }
 
@@ -591,80 +490,10 @@ static int
 main_loop_key_released(MainLoop *ml)
 {
   VideoKey key = ml->key;
-  int result;
 
-  ml->key = ENFLE_KEY_Unknown;
-  if (key == ml->ev.key.key) {
-    switch (key) {
-    case ENFLE_KEY_n:
-    case ENFLE_KEY_space:
-      return (ml->ev.key.modkey & ENFLE_MOD_Shift) ? main_loop_nextarchive(ml) : main_loop_next(ml);
-    case ENFLE_KEY_b:
-      return (ml->ev.key.modkey & ENFLE_MOD_Shift) ? main_loop_prevarchive(ml) : main_loop_prev(ml);
-    case ENFLE_KEY_less:
-      return main_loop_first(ml);
-    case ENFLE_KEY_greater:
-      return main_loop_last(ml);
-    case ENFLE_KEY_q:
-      return main_loop_quit(ml);
-    case ENFLE_KEY_f:
-      return main_loop_toggle_fullscreen_mode(ml);
-    case ENFLE_KEY_d:
-      if (config_get_boolean(ml->uidata->c, "/enfle/plugins/ui/normal/deletefile_without_shift", &result)) {
-	return !(ml->ev.key.modkey & ENFLE_MOD_Shift) ?
-	  main_loop_delete_file(ml) : main_loop_delete_from_list(ml);
-      } else {
-	return (ml->ev.key.modkey & ENFLE_MOD_Shift) ?
-	  main_loop_delete_file(ml) : main_loop_delete_from_list(ml);
-      }
-    case ENFLE_KEY_s:
-      if (ml->ev.key.modkey & ENFLE_MOD_Shift) {
-	return main_loop_toggle_interpolate(ml);
-      } else if (ml->ev.key.modkey & ENFLE_MOD_Ctrl) {
-	return main_loop_save_png(ml);
-      } else if (ml->ev.key.modkey & ENFLE_MOD_Alt) {
-	return main_loop_save(ml);
-      }
-      break;
-    case ENFLE_KEY_m:
-      if (ml->ev.key.modkey & ENFLE_MOD_Shift)
-	return main_loop_magnify_short(ml);
-      else if (ml->ev.key.modkey & ENFLE_MOD_Alt)
-	return main_loop_magnify_long(ml);
-      else
-	return main_loop_magnify_double(ml);
-      break;
-      return 1;
-    case ENFLE_KEY_c:
-      return main_loop_erase_rectangle(ml);
-    case ENFLE_KEY_w:
-      return main_loop_set_wallpaper(ml);
-    case ENFLE_KEY_l:
-      return main_loop_rotate_left(ml);
-    case ENFLE_KEY_r:
-      return main_loop_rotate_right(ml);
-    case ENFLE_KEY_v:
-      return main_loop_flip_vertical(ml);
-    case ENFLE_KEY_h:
-      return main_loop_flip_horizontal(ml);
-    case ENFLE_KEY_1:
-      return main_loop_gamma_1(ml);
-    case ENFLE_KEY_2:
-      return main_loop_gamma_2(ml);
-    case ENFLE_KEY_3:
-      return main_loop_gamma_3(ml);
-    case ENFLE_KEY_4:
-      return main_loop_gamma_4(ml);
-    case ENFLE_KEY_5:
-      return main_loop_gamma_5(ml);
-    case ENFLE_KEY_6:
-      return main_loop_gamma_6(ml);
-    case ENFLE_KEY_7:
-      return main_loop_gamma_7(ml);
-    default:
-      break;
-    }
-  }
+  ml->key = ENFLE_KEY_Empty;
+  if (key == ml->ev.key.key)
+    return main_loop_do_action(ml, ml->ev.key.key, ml->ev.key.modkey, ENFLE_Button_None);
   return 1;
 }
 
@@ -707,7 +536,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 
   memset(&ml, 0, sizeof(ml));
   ml.button = ENFLE_Button_None;
-  ml.key = ENFLE_KEY_Unknown;
+  ml.key = ENFLE_KEY_Empty;
   ml.uidata = uidata;
   ml.vw = vw;
   ml.m = m;
@@ -716,7 +545,6 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   ml.st = st;
   ml.a = a;
   ml.path = path;
-  ml.original_p = NULL;
 
   if (p) {
     switch (p->type) {
@@ -724,21 +552,15 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
     case _YV12:
     case _I420:
     case _UYVY:
-    case _RV15:
-    case _RV16:
-    case _RV24:
-    case _RV32:
       vw->if_direct = 1;
       break;
     default:
       vw->if_direct = 0;
       break;
     }
-    magnify_if_requested(vw, p);
-    video_window_render(vw, p);
+    render(&ml);
     set_caption_string(&ml);
     caption_to_be_set = 0;
-    ml.original_p = image_dup(p);
   } else if (m) {
     vw->if_direct = 1;
     caption_to_be_set = 1;
@@ -841,8 +663,6 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
     }
   }
 
-  if (ml.original_p)
-    image_destroy(ml.original_p);
   if (ml.timer)
     timer_destroy(ml.timer);
 
@@ -852,7 +672,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 static int
 process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 {
-  EnflePlugins *eps = uidata->eps;
+  EnflePlugins *eps = get_enfle_plugins();
   VideoWindow *vw = uidata->vw;
   Config *c = uidata->c;
   Archive *arc;
@@ -1005,27 +825,14 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       continue;
     case IDENTIFY_STREAM_IMAGE:
       stream_close(s);
-      debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
+      debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
       if (p->comment && config_get_boolean(c, "/enfle/plugins/ui/normal/show_comment", &res)) {
 	show_message("comment: %s\n", p->comment);
 	free(p->comment);
 	p->comment = NULL;
       }
 
-#if 0
-      /* XXX: RV24 test */
-      switch (p->type) {
-      case _RGB24:
-	p->type = _RV24;
-	break;
-      default:
-	break;
-      }
-#endif
-
       ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
-      memory_destroy(p->rendered.image);
-      p->rendered.image = NULL;
       break;
     case IDENTIFY_STREAM_MOVIE:
       ret = main_loop(uidata, vw, m, NULL, s, a, path, gui);
@@ -1044,6 +851,27 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   return ret;
 }
 
+static int
+action_register(Hash *actionhash, UIAction *actions, int group_id)
+{
+  char buf[16];
+  int id = 0;
+
+  if (!actions)
+    return 1;
+
+  while (actions->name) {
+    snprintf(buf, 16, "%04X%04X%04X", actions->key, actions->mod, actions->button);
+    actions->group_id = group_id;
+    actions->id = id++;
+    if (!hash_set_str(actionhash, buf, actions))
+      return 0;
+    actions++;
+  }
+
+  return 1;
+}
+
 /* methods */
 
 static int
@@ -1054,12 +882,17 @@ ui_main(UIData *uidata)
   Config *c = uidata->c;
   void *disp;
   char *render_method, *interpolate_method;
+  Hash *actionhash;
+  int group_id = 0;
 #ifdef ENABLE_GUI_GTK
   GUI_Gtk gui;
   pthread_t gui_thread;
 #endif
 
   debug_message("Normal: %s()\n", __FUNCTION__);
+
+  if ((actionhash = hash_create(8192)) == NULL)
+    return 0;
 
   if ((disp = vp->open_video(NULL, c)) == NULL) {
     show_message("open_video() failed\n");
@@ -1099,6 +932,29 @@ ui_main(UIData *uidata)
     }
   }
 
+  action_register(actionhash, built_in_actions, group_id++);
+  uidata->priv = actionhash;
+
+  {
+    EnflePlugins *eps = get_enfle_plugins();
+    Dlist *dl = enfle_plugins_get_names(eps, ENFLE_PLUGIN_EFFECT);
+    Dlist_data *dd;
+    Plugin *pl;
+    EffectPlugin *ep;
+    char *pname;
+
+    if (dl) {
+      dlist_iter(dl, dd) {
+	pname = hash_key_key(dlist_data(dd));
+	if ((pl = pluginlist_get(eps->pls[ENFLE_PLUGIN_EFFECT], pname)) == NULL)
+	  continue;
+	ep = plugin_get(pl);
+	debug_message("Register %s actions\n", pname);
+	action_register(actionhash, ep->actions, group_id++);
+      }
+    }
+  }
+
 #ifdef ENABLE_GUI_GTK
   gui.en = eventnotifier_create();
   gui.uidata = uidata;
@@ -1108,6 +964,7 @@ ui_main(UIData *uidata)
   process_files_of_archive(uidata, uidata->a, NULL);
 #endif
 
+  hash_destroy(actionhash, 0);
   video_window_destroy(vw);
   vp->close_video(disp);
 

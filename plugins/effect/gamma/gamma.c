@@ -1,10 +1,10 @@
 /*
  * gamma.c -- Gamma Effect plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 20:47:15 2001.
- * $Id: gamma.c,v 1.3 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Wed Jul 10 22:22:40 2002.
+ * $Id: gamma.c,v 1.4 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,7 +33,21 @@
 #include "utils/libstring.h"
 #include "enfle/effect-plugin.h"
 
-static Image *effect(Image *, void *);
+static int set_gamma(void *);
+static int effect(Image *, int, int);
+
+static UIAction actions[] = {
+  { "gamma_1", set_gamma, (void *)0, ENFLE_KEY_1, ENFLE_MOD_None, ENFLE_Button_None },
+  { "gamma_2", set_gamma, (void *)1, ENFLE_KEY_2, ENFLE_MOD_None, ENFLE_Button_None },
+  { "gamma_3", set_gamma, (void *)2, ENFLE_KEY_3, ENFLE_MOD_None, ENFLE_Button_None },
+  { "gamma_4", set_gamma, (void *)3, ENFLE_KEY_4, ENFLE_MOD_None, ENFLE_Button_None },
+  { "gamma_5", set_gamma, (void *)4, ENFLE_KEY_5, ENFLE_MOD_None, ENFLE_Button_None },
+  { "gamma_6", set_gamma, (void *)5, ENFLE_KEY_6, ENFLE_MOD_None, ENFLE_Button_None },
+  { "gamma_7", set_gamma, (void *)6, ENFLE_KEY_7, ENFLE_MOD_None, ENFLE_Button_None },
+  UI_ACTION_END
+};
+
+int gamma_idx = 3;
 
 static EffectPlugin plugin = {
   type: ENFLE_PLUGIN_EFFECT,
@@ -41,13 +55,13 @@ static EffectPlugin plugin = {
   description: "Gamma Correction Effect plugin version 0.1",
   author: "Hiroshi Takekawa",
 
+  actions: actions,
   effect: effect
 };
 
 static void calc_gamma(unsigned char *, int);
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(effect_gamma)
 {
   EffectPlugin *ep;
 
@@ -61,13 +75,20 @@ plugin_entry(void)
   return (void *)ep;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(effect_gamma, p)
 {
   free(p);
 }
 
 /* for internal use */
+
+static int
+set_gamma(void *a)
+{
+  gamma_idx = (int)a;
+
+  return 1;
+}
 
 #define GAMMA_ACCURACY 13
 
@@ -118,32 +139,30 @@ calc_gamma_fp(unsigned char g[256], double gamma)
 
 /* methods */
 
-static Image *
-effect(Image *p, void *params)
+static int
+effect(Image *p, int src, int dst)
 {
-  Config *c = (Config *)params;
-  Image *save;
-  int idx, result;
   unsigned int i;
   unsigned char g[256];
   double gammas[7] = { 2.2, 1.7, 1.45, 1.0, 1 / 1.45, 1 / 1.7, 1 / 2.2 };
   unsigned char *s, *d;
 
-  idx = config_get_int(c, "/enfle/plugins/effect/gamma/index", &result);
-  if (!result)
-    return NULL;
-  if (idx < 0 || idx > 6)
-    return NULL;
+  if (p->type == _INDEX)
+    return 2;
 
-  if ((save = image_dup(p)) == NULL)
-    return NULL;
+  if (gamma_idx < 0 || gamma_idx > 6)
+    return 0;
 
-  calc_gamma(g, gammas[idx] * (1 << GAMMA_ACCURACY));
+  if (gamma_idx == 3)
+    return 2;
 
-  s = memory_ptr(save->image);
-  d = memory_ptr(p->image);
-  for (i = 0; i < p->bytes_per_line * p->height; i++)
+  calc_gamma(g, gammas[gamma_idx] * (1 << GAMMA_ACCURACY));
+
+  image_data_alloc_from_other(p, src, dst);
+  s = memory_ptr(image_image_by_index(p, src));
+  d = memory_ptr(image_image_by_index(p, dst));
+  for (i = 0; i < image_bpl_by_index(p, src) * image_height_by_index(p, src); i++)
     d[i] = g[s[i]];
 
-  return save;
+  return 1;
 }

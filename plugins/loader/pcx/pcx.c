@@ -1,10 +1,10 @@
 /*
  * pcx.c -- pcx loader plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:23:51 2002.
- * $Id: pcx.c,v 1.6 2002/05/04 14:35:59 sian Exp $
+ * Last Modified: Sun Jun 23 15:29:04 2002.
+ * $Id: pcx.c,v 1.7 2002/08/03 05:08:39 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -48,8 +48,7 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(loader_pcx)
 {
   LoaderPlugin *lp;
 
@@ -60,8 +59,7 @@ plugin_entry(void)
   return (void *)lp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_bmp, p)
 {
   free(p);
 }
@@ -176,10 +174,10 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
   if (xmin > xmax || ymin > ymax)
     return LOAD_ERROR;
 
-  p->top = 0;
-  p->left = 0;
-  p->width  = xmax - xmin + 1;
-  p->height = ymax - ymin + 1;
+  image_top(p) = 0;
+  image_left(p) = 0;
+  image_width(p)  = xmax - xmin + 1;
+  image_height(p) = ymax - ymin + 1;
 
   /* buf[3] is bpp per plane */
   debug_message("bpp per plane: %d\n", buf[3]);
@@ -206,7 +204,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
       }
       p->depth = 8;
       p->bits_per_pixel = 8;
-      p->bytes_per_line = p->width;
+      image_bpl(p) = image_width(p);
       ppl = utils_get_little_uint16(buf + 66);
       break;
     case 3:
@@ -214,7 +212,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
       p->type = _RGB24;
       p->depth = 24;
       p->bits_per_pixel = 24;
-      p->bytes_per_line = p->width * 3;
+      image_bpl(p) = image_width(p) * 3;
       ppl = utils_get_little_uint16(buf + 66) / 3;
       break;
     case 4:
@@ -222,7 +220,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
       p->type = _RGBA32;
       p->depth = 24;
       p->bits_per_pixel = 32;
-      p->bytes_per_line = p->width * 4;
+      image_bpl(p) = image_width(p) * 4;
       ppl = utils_get_little_uint16(buf + 66) / 4;
       break;
     default:
@@ -264,13 +262,13 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
   }
 
   /* allocate memory for returned image */
-  if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
+  if (memory_alloc(image_image(p), image_bpl(p) * image_height(p)) == NULL)
     return LOAD_ERROR;
 
   debug_message("ppl: %d\n", ppl);
   /* read image */
-  d = dd = memory_ptr(p->image);
-  for (i = 0; i < p->height; i++) {
+  d = dd = memory_ptr(image_image(p));
+  for (i = 0; i < image_height(p); i++) {
     for (j = 0; j < nplanes; j++) {
       d = dd + j;
       for (k = 0; k < ppl;) {
@@ -284,7 +282,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
 	  l = 1;
 	}
 	do {
-	  if (k < p->width) {
+	  if (k < image_width(p)) {
 	    *d = c;
 	    d += nplanes;
 	  }
@@ -292,7 +290,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
 	} while (--l > 0);
       }
     }
-    dd += p->bytes_per_line;
+    dd += image_bpl(p);
   }
 
   p->next = NULL;

@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 15 04:17:52 2002.
- * $Id: xpm.c,v 1.1 2002/02/14 19:19:21 sian Exp $
+ * Last Modified: Tue Jul 30 22:08:03 2002.
+ * $Id: xpm.c,v 1.2 2002/08/03 05:08:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
   name: "XPM",
-  description: "XPM Loader plugin version 0.1",
+  description: "XPM Loader plugin version 0.1.1",
   author: "Hiroshi Takekawa",
   image_private: NULL,
 
@@ -49,8 +49,9 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+static Hash *rgbhash = NULL;
+
+ENFLE_PLUGIN_ENTRY(loader_xpm)
 {
   LoaderPlugin *lp;
 
@@ -58,12 +59,19 @@ plugin_entry(void)
     return NULL;
   memcpy(lp, &plugin, sizeof(LoaderPlugin));
 
+  /* parse rgb.txt */
+  if ((rgbhash = rgbparse((char *)RGBFILE)) == NULL) {
+    show_message("xpm: rgbparse error\n");
+    return NULL;
+  }
+
   return (void *)lp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_xpm, p)
 {
+  if (rgbhash)
+    hash_destroy(rgbhash, 1);
   free(p);
 }
 
@@ -223,15 +231,15 @@ parse_header(Stream *st, Image *p, int *cpp)
     misc_free_str_array(tokens);
     return LOAD_NOT;
   }
-  p->width = atoi(tokens[0]);
-  p->height = atoi(tokens[1]);
+  image_width(p) = atoi(tokens[0]);
+  image_height(p) = atoi(tokens[1]);
   p->ncolors = atoi(tokens[2]);
   *cpp = atoi(tokens[3]);
 
   /* optional hotspot */
   if (i > 4) {
-    p->left = atoi(tokens[4]);
-    p->top = atoi(tokens[5]);
+    image_left(p) = atoi(tokens[4]);
+    image_top(p) = atoi(tokens[5]);
   }
 
   /* check extension */
@@ -249,7 +257,7 @@ parse_header(Stream *st, Image *p, int *cpp)
 }
 
 static Hash *
-parse_color(Image *p, Stream *st, int cpp, Hash *h)
+parse_color(Image *p, Stream *st, int cpp)
 {
   Hash *colortable;
   char *chars, *line, *ptr, **tokens;
@@ -320,7 +328,7 @@ parse_color(Image *p, Stream *st, int cpp, Hash *h)
 	goto free_and_return;
       case 's':
 #if 0
-	if ((color = hash_lookup(h, tokens[i + 1])) == NULL)
+	if ((color = hash_lookup(rgbhash, tokens[i + 1])) == NULL)
 	    goto free_and_return;
 	hash_register(colortable, chars, color);
 #endif
@@ -343,7 +351,7 @@ parse_color(Image *p, Stream *st, int cpp, Hash *h)
 	  for (j = 0; j < strlen(tokens[i]); j++)
 	    if (isupper(tokens[i][j]))
 	      tokens[i][j] = tolower(tokens[i][j]);
-	  if ((lcolor = hash_lookup_str(h, tokens[i])) == NULL) {
+	  if ((lcolor = hash_lookup_str(rgbhash, tokens[i])) == NULL) {
 	    fprintf(stderr, "color %s not found\n", tokens[i]);
 	    goto free_and_return;
 	  }
@@ -407,7 +415,7 @@ parse_color(Image *p, Stream *st, int cpp, Hash *h)
 static int
 parse_body_index(Image *p, Stream *st, Hash *colortable, int cpp)
 {
-  unsigned char *d = memory_ptr(p->image);
+  unsigned char *d = memory_ptr(image_image(p));
   char *chars, *line, *ptr;
   int c, i, j;
   unsigned int linelen;
@@ -416,9 +424,9 @@ parse_body_index(Image *p, Stream *st, Hash *colortable, int cpp)
   if ((chars = malloc(cpp + 1)) == NULL)
     return 0;
   chars[cpp] = '\0';
-  linelen = p->width * cpp;
+  linelen = image_width(p) * cpp;
 
-  for (i = p->height; i > 0; i--) {
+  for (i = image_height(p); i > 0; i--) {
     while (isspace(c = stream_getc(st))) ;
     if (c != ',') {
       free(chars);
@@ -447,7 +455,7 @@ parse_body_index(Image *p, Stream *st, Hash *colortable, int cpp)
 static int
 parse_body_rgb24(Image *p, Stream *st, Hash *colortable, int cpp)
 {
-  unsigned char *d = memory_ptr(p->image);
+  unsigned char *d = memory_ptr(image_image(p));
   char *chars, *line, *ptr;
   int c, i, j;
   unsigned int linelen;
@@ -456,9 +464,9 @@ parse_body_rgb24(Image *p, Stream *st, Hash *colortable, int cpp)
   if ((chars = malloc(cpp + 1)) == NULL)
     return 0;
   chars[cpp] = '\0';
-  linelen = p->width * cpp;
+  linelen = image_width(p) * cpp;
 
-  for (i = p->height; i > 0; i--) {
+  for (i = image_height(p); i > 0; i--) {
     while (isspace(c = stream_getc(st))) ;
     if (c != ',') {
       free(chars);
@@ -505,25 +513,14 @@ parse_body_rgb24(Image *p, Stream *st, Hash *colortable, int cpp)
 static int
 load_image(Image *p, Stream *st)
 {
-  static int load_rgb = 0;
-  static Hash *h;
   Hash *colortable;
   int i, cpp;
   char buf[16];
 
-  /* parse rgb.txt */
-  if (!load_rgb) {
-    if ((h = rgbparse((char *)RGBFILE)) == NULL) {
-      fprintf(stderr, "xpm.c: rgbparse error\n");
-      return 0;
-    }
-    load_rgb++;
-  }
-
   /* see if this file is XPM */
   stream_ngets(st, buf, 16);
 
-  debug_message("XPM checking: %02X%02X%02X%02X\n", buf[0], buf[1], buf[2], buf[3]);
+  //debug_message("XPM checking: %02X%02X%02X%02X\n", buf[0], buf[1], buf[2], buf[3]);
 
   if (strncmp(buf, "/* XPM */", 9))
     return 0;
@@ -537,25 +534,25 @@ load_image(Image *p, Stream *st)
   if ((i = parse_header(st, p, &cpp)) != LOAD_OK)
     return 0;
 
-  debug_message("XPM header: %d %d %d %d\n", p->width, p->height, p->ncolors, cpp);
+  debug_message("XPM header: %d %d %d %d\n", image_width(p), image_height(p), p->ncolors, cpp);
 
   if (p->ncolors > 256) {
     p->type = _RGB24;
-    p->bytes_per_line = p->width * 3;
+    image_bpl(p) = image_width(p) * 3;
   } else {
     p->type = _INDEX;
-    p->bytes_per_line = p->width;
+    image_bpl(p) = image_width(p);
   }
-  if (!p->image)
-    if ((p->image = memory_create()) == NULL) {
+  if (!image_image(p))
+    if ((image_image(p) = memory_create()) == NULL) {
       show_message("xbm: No enough memory.\n");
       return 0;
     }
-  if ((memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
+  if ((memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL)
     return 0;
 
   /* parse colors */
-  if ((colortable = parse_color(p, st, cpp, h)) == NULL)
+  if ((colortable = parse_color(p, st, cpp)) == NULL)
     return 0;
 
   debug_message("parsing body\n");

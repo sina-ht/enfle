@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 18 20:52:55 2002.
- * $Id: png.c,v 1.14 2002/04/27 13:02:31 sian Exp $
+ * Last Modified: Wed Jul 10 22:14:16 2002.
+ * $Id: png.c,v 1.15 2002/08/03 05:08:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,8 +62,7 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(loader_png)
 {
   LoaderPlugin *lp;
   String *s;
@@ -83,8 +82,7 @@ plugin_entry(void)
 
 #undef LOADER_PNG_PLUGIN_DESCRIPTION
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_png, p)
 {
   LoaderPlugin *lp = (LoaderPlugin *)p;
 
@@ -113,7 +111,7 @@ error_handler(png_structp png_ptr, png_const_charp error_msg)
   if (!strcmp(error_msg, "incorrect data check"))
     *try_when_error = 1;
   else
-    fprintf(stderr, "enfle: png loader error: %s\n", error_msg);
+    err_message("png loader: %s\n", error_msg);
 
   longjmp(png_jmpbuf(png_ptr), 1);
 }
@@ -123,7 +121,7 @@ warning_handler(png_structp png_ptr, png_const_charp warning_msg)
 {
   Stream *st = png_get_io_ptr(png_ptr);
 
-  fprintf(stderr, "enfle: %s: png loader warning: %s\n", st->path, warning_msg);
+  warning("png loader: %s: %s\n", st->path, warning_msg);
 }
 
 /* methods */
@@ -222,10 +220,10 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   debug_message("\n");
 #endif
 
-  p->width = width;
-  p->height = height;
-  p->top = 0;
-  p->left = 0;
+  image_width(p) = width;
+  image_height(p) = height;
+  image_top(p) = 0;
+  image_left(p) = 0;
 
   /* read comment */
   if ((num_text = png_get_text(png_ptr, info_ptr, &text_ptr, 0)) > 0) {
@@ -318,34 +316,34 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     p->type = _RGB24;
     p->depth = 24;
     p->bits_per_pixel = 24;
-    p->bytes_per_line = width * 3;
+    image_bpl(p) = width * 3;
     break;
   case PNG_COLOR_TYPE_RGB_ALPHA:
     p->type = _RGBA32;
     p->depth = 24;
     p->bits_per_pixel = 32;
-    p->bytes_per_line = width * 4;
+    image_bpl(p) = width * 4;
     break;
   case PNG_COLOR_TYPE_GRAY:
     p->type = _GRAY;
     p->ncolors = 256;
     p->depth = 8;
     p->bits_per_pixel = 8;
-    p->bytes_per_line = width;
+    image_bpl(p) = width;
     break;
   case PNG_COLOR_TYPE_GRAY_ALPHA:
     p->type = _GRAY_ALPHA;
     p->ncolors = 256;
     p->depth = 8;
     p->bits_per_pixel = 16;
-    p->bytes_per_line = width * 2;
+    image_bpl(p) = width * 2;
     break;
   default:
     p->type = _INDEX;
     p->ncolors = info_ptr->num_palette;
     p->depth = 8;
     p->bits_per_pixel = 8;
-    p->bytes_per_line = width;
+    image_bpl(p) = width;
 
     for (i = 0; i < p->ncolors; i++) {
       p->colormap[i][0] = info_ptr->palette[i].red;
@@ -355,7 +353,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   }
 
   /* allocate memory for returned image */
-  if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL) {
+  if (memory_alloc(image_image(p), image_bpl(p) * image_height(p)) == NULL) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return LOAD_ERROR;
   }
@@ -367,7 +365,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   }
 
   for (i = 0; i < height; i++)
-    image_array[i] = memory_ptr(p->image) + png_get_rowbytes(png_ptr, info_ptr) * i;
+    image_array[i] = memory_ptr(image_image(p)) + png_get_rowbytes(png_ptr, info_ptr) * i;
 
   /* read image */
   png_read_image(png_ptr, image_array);

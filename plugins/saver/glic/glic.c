@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Wed Dec 26 09:40:45 2001.
- * $Id: glic.c,v 1.24 2001/12/26 00:57:25 sian Exp $
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * Last Modified: Sun Jun 23 16:05:43 2002.
+ * $Id: glic.c,v 1.25 2002/08/03 05:08:37 sian Exp $
  */
 
 #include <stdlib.h>
@@ -45,8 +45,7 @@ static SaverPlugin plugin = {
   get_ext: get_ext
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(saver_glic)
 {
   SaverPlugin *sp;
 
@@ -57,8 +56,7 @@ plugin_entry(void)
   return (void *)sp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(saver_glic, p)
 {
   free(p);
 }
@@ -85,20 +83,20 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 
   memset(&vmpm, 0, sizeof(vmpm));
 
-  if (p->width != p->height) {
-    show_message("width %d != %d height\n", p->width, p->height);
+  if (image_width(p) != image_height(p)) {
+    show_message("width %d != %d height\n", image_width(p), image_height(p));
     return 0;
   }
 
-  b = floorlog2(p->width);
-  if ((1U << b) != p->width) {
-    show_message("width %d is not a power of 2.\n", p->width);
+  b = floorlog2(image_width(p));
+  if ((1U << b) != image_width(p)) {
+    show_message("width %d is not a power of 2.\n", image_width(p));
     return 0;
   }
 
-  b = floorlog2(p->height);
-  if ((1U << b) != p->height) {
-    show_message("height %d is not a power of 2.\n", p->height);
+  b = floorlog2(image_height(p));
+  if ((1U << b) != image_height(p)) {
+    show_message("height %d is not a power of 2.\n", image_height(p));
     return 0;
   }
 
@@ -107,7 +105,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     return 0;
   }
 
-  debug_message("glic: save %s (%s) (%d, %d) called.\n", path, image_type_to_string(p->type), p->width, p->height);
+  debug_message("glic: save %s (%s) (%d, %d) called.\n", path, image_type_to_string(p->type), image_width(p), image_height(p));
 
   if (p->type != _INDEX && p->type != _GRAY) {
     show_message("glic: _INDEX or _GRAY expected.\n");
@@ -118,7 +116,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   if (!result)
     vmpm.bitwise = 0;
 
-  image_size = p->width * p->height;
+  image_size = image_width(p) * image_height(p);
   vmpm_path = (char *)config_get(c, "/enfle/plugins/saver/glic/vmpm_path");
   decompose_method = (char *)config_get(c, "/enfle/plugins/saver/glic/decompose_method");
   predict_method = (char *)config_get(c, "/enfle/plugins/saver/glic/predict_method");
@@ -207,14 +205,14 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     show_message("Invalid prediction method: %s\n", predict_method);
     return 0;
   }
-  predicted = predict(memory_ptr(p->image), p->width, p->height, predict_id);
+  predicted = predict(memory_ptr(image_image(p)), image_width(p), image_height(p), predict_id);
 
   /* scanning */
   if ((scan_id = scan_get_id_by_name(scan_method)) == 0) {
     show_message("Invalid scanning method: %s\n", scan_method);
     return 0;
   }
-  scan(vmpm.buffer, predicted, p->width, p->height, scan_id);
+  scan(vmpm.buffer, predicted, image_width(p), image_height(p), scan_id);
   free(predicted);
 
   if (vmpm.nlowbits > 0 && !threshold(&vmpm)) {

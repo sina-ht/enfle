@@ -1,10 +1,10 @@
 /*
  * spi.c -- spi to enfle bridge
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:05:24 2002.
- * $Id: spi.c,v 1.19 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Fri Jun 14 22:07:31 2002.
+ * $Id: spi.c,v 1.20 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -152,14 +152,14 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
   if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image,
 			 susie_loader_progress_callback, 0)) == SPI_SUCCESS) {
     p->depth = p->bits_per_pixel = bih->biBitCount;
-    p->width = bih->biWidth;
-    p->height = bih->biHeight;
-    debug_message_fnc("(%d, %d) depth %d\n", p->width, p->height, p->depth);
+    image_width(p) = bih->biWidth;
+    image_height(p) = bih->biHeight;
+    debug_message_fnc("(%d, %d) depth %d\n", image_width(p), image_height(p), p->depth);
     switch (p->depth) {
     case 4:
       p->type = _INDEX;
-      p->bytes_per_line = p->width;
-      bpl = (((p->width + 1) >> 1) + 3) & ~3;
+      image_bpl(p) = image_width(p);
+      bpl = (((image_width(p) + 1) >> 1) + 3) & ~3;
       for (i = 0; i < 16; i++) {
 	p->colormap[i][0] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 2);
 	p->colormap[i][1] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 1);
@@ -168,8 +168,8 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
       break;
     case 8:
       p->type = _INDEX;
-      p->bytes_per_line = p->width;
-      bpl = (p->bytes_per_line + 3) & ~3;
+      image_bpl(p) = image_width(p);
+      bpl = (image_bpl(p) + 3) & ~3;
       for (i = 0; i < 256; i++) {
 	p->colormap[i][0] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 2);
 	p->colormap[i][1] = *(unsigned char *)((void *)bih + sizeof(*bih) + i * 4 + 1);
@@ -178,8 +178,8 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
       break;
     case 24:
       p->type = _BGR24;
-      p->bytes_per_line = p->width * 3;
-      bpl = (p->bytes_per_line + 3) & ~3;
+      image_bpl(p) = image_width(p) * 3;
+      bpl = (image_bpl(p) + 3) & ~3;
       break;
     default:
       free(image);
@@ -188,7 +188,7 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
       return LOAD_ERROR;
     }
 
-    if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL) {
+    if ((d = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL) {
       free(image);
       free(bih);
       show_message("No enough memory for image\n");
@@ -198,17 +198,17 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
     switch (p->depth) {
     case 8:
     case 24:
-      for (i = p->height - 1; i >= 0; i--)
-	memcpy(d + p->bytes_per_line * (p->height - 1 - i), image + bpl * i, p->bytes_per_line);
+      for (i = image_height(p) - 1; i >= 0; i--)
+	memcpy(d + image_bpl(p) * (image_height(p) - 1 - i), image + bpl * i, image_bpl(p));
       break;
     case 4:
-      for (i = p->height - 1; i >= 0; i--) {
-	for (j = 0; j < (p->width >> 1); j++) {
-	  *(d + p->bytes_per_line * (p->height - 1 - i) + (j << 1)    ) = *(image + bpl * i + j) >> 4;
-	  *(d + p->bytes_per_line * (p->height - 1 - i) + (j << 1) + 1) = *(image + bpl * i + j) & 0xf;
+      for (i = image_height(p) - 1; i >= 0; i--) {
+	for (j = 0; j < (image_width(p) >> 1); j++) {
+	  *(d + image_bpl(p) * (image_height(p) - 1 - i) + (j << 1)    ) = *(image + bpl * i + j) >> 4;
+	  *(d + image_bpl(p) * (image_height(p) - 1 - i) + (j << 1) + 1) = *(image + bpl * i + j) & 0xf;
 	}
-	if ((j << 1) < p->width)
-	  *(d + p->bytes_per_line * (p->height - 1 - i) + (j << 1)    ) = *(image + bpl * i + j) >> 4;
+	if ((j << 1) < image_width(p))
+	  *(d + image_bpl(p) * (image_height(p) - 1 - i) + (j << 1)    ) = *(image + bpl * i + j) >> 4;
       }
       break;
     default:

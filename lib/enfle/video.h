@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 23:29:57 2002.
- * $Id: video.h,v 1.20 2002/03/07 15:17:50 sian Exp $
+ * Last Modified: Sat Jul  6 22:46:41 2002.
+ * $Id: video.h,v 1.21 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,7 +27,7 @@
 #include "utils/libconfig.h"
 
 typedef enum {
-  ENFLE_KEY_Unknown,
+  ENFLE_KEY_Empty, ENFLE_KEY_Unknown,
   ENFLE_KEY_0, ENFLE_KEY_1, ENFLE_KEY_2, ENFLE_KEY_3, ENFLE_KEY_4,
   ENFLE_KEY_5, ENFLE_KEY_6, ENFLE_KEY_7, ENFLE_KEY_8, ENFLE_KEY_9,
   ENFLE_KEY_BackSpace, ENFLE_KEY_Tab, ENFLE_KEY_Return, ENFLE_KEY_Escape, ENFLE_KEY_Delete,
@@ -44,7 +44,7 @@ typedef enum {
 } VideoKey;
 
 typedef enum {
-  ENFLE_MOD_NONE  = 0,
+  ENFLE_MOD_None  = 0,
   ENFLE_MOD_Shift = 1,
   ENFLE_MOD_Ctrl  = 2,
   ENFLE_MOD_Alt   = 4
@@ -146,7 +146,7 @@ struct _video_window {
 
   MemoryType (*preferred_memory_type)(VideoWindow *);
   ImageType (*request_type)(VideoWindow *, unsigned int, int *);
-  int (*calc_magnified_size)(VideoWindow *, unsigned int, unsigned int, unsigned int *, unsigned int *);
+  int (*calc_magnified_size)(VideoWindow *, int, unsigned int, unsigned int, unsigned int *, unsigned int *);
   int (*set_event_mask)(VideoWindow *, int);
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
   void (*set_caption)(VideoWindow *, char *);
@@ -161,6 +161,7 @@ struct _video_window {
   void (*erase_rect)(VideoWindow *);
   void (*draw_rect)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   int (*render)(VideoWindow *, Image *);
+  int (*render_scaled)(VideoWindow *, Image *, int, unsigned int, unsigned int);
   void (*update)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   void (*do_sync)(VideoWindow *);
   void (*discard_key_event)(VideoWindow *);
@@ -175,7 +176,7 @@ struct _video_window {
 
 #define video_window_preferred_memory_type(vw) (vw)->preferred_memory_type((vw))
 #define video_window_request_type(vw, types, ddp) (vw)->request_type((vw), (types), (ddp))
-#define video_window_calc_magnified_size(vw, sw, sh, dw, dh) (vw)->calc_magnified_size((vw), (sw), (sh), (dw), (dh))
+#define video_window_calc_magnified_size(vw, uhs, sw, sh, dw, dh) (vw)->calc_magnified_size((vw), (uhs), (sw), (sh), (dw), (dh))
 #define video_window_set_event_mask(vw, m) (vw)->set_event_mask((vw), (m))
 #define video_window_dispatch_event(vw, ved) (vw)->dispatch_event((vw), (ved))
 #define video_window_set_caption(vw, c) (vw)->set_caption((vw), (c))
@@ -190,6 +191,7 @@ struct _video_window {
 #define video_window_erase_rect(vw) (vw)->erase_rect((vw))
 #define video_window_draw_rect(vw, lx, uy, rx, dy) (vw)->draw_rect((vw), (lx), (uy), (rx), (dy))
 #define video_window_render(vw, p) (vw)->render((vw), (p))
+#define video_window_render_scaled(vw, p, ac, dw, dh) (vw)->render_scaled((vw), (p), (ac), (dw), (dh))
 #define video_window_update(vw, x, y, w, h) (vw)->update((vw), (x), (y), (w), (h))
 #define video_window_sync(vw) (vw)->do_sync((vw))
 #define video_window_discard_key_event(vw) (vw)->discard_key_event((vw))

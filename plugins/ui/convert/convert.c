@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb  9 12:27:49 2002.
- * $Id: convert.c,v 1.15 2002/02/09 03:45:28 sian Exp $
+ * Last Modified: Mon Jul  1 22:22:03 2002.
+ * $Id: convert.c,v 1.16 2002/08/03 05:08:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,13 +74,13 @@ plugin_exit(void *p)
 static int
 save_image(UIData *uidata, Image *p, char *format, char *path)
 {
-  EnflePlugins *eps = uidata->eps;
+  EnflePlugins *eps = get_enfle_plugins();
   char *outpath;
   char *ext;
   FILE *fp;
   int fd;
 
-  if ((ext = saver_get_ext(uidata->eps, format, uidata->c)) == NULL)
+  if ((ext = saver_get_ext(eps, format, uidata->c)) == NULL)
     return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
     show_message_fnc("No enough memory.\n");
@@ -113,7 +113,7 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
 static int
 process_files_of_archive(UIData *uidata, Archive *a)
 {
-  EnflePlugins *eps = uidata->eps;
+  EnflePlugins *eps = get_enfle_plugins();
   Config *c = uidata->c;
   Archive *arc;
   Stream *s;
@@ -184,7 +184,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       show_message("%s identification failed\n", path);
       continue;
     case IDENTIFY_STREAM_IMAGE:
-      debug_message("%s: (%d, %d) %s\n", path, p->width, p->height, image_type_to_string(p->type));
+      debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
       if (p->comment) {
 	show_message("comment:\n%s\n", p->comment);
 	free(p->comment);
@@ -195,8 +195,8 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	save_image(uidata, p, format, fullpath);
 	free(fullpath);
       }
-      memory_destroy(p->image);
-      p->image = NULL;
+      memory_destroy(image_image(p));
+      image_image(p) = NULL;
       continue;
     case IDENTIFY_STREAM_MOVIE:
       show_message("BUG... cannot reach here.\n");

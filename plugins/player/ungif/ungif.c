@@ -1,10 +1,10 @@
 /*
  * ungif.c -- gif player plugin, which exploits libungif.
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 14 00:23:32 2002.
- * $Id: ungif.c,v 1.29 2002/06/14 09:39:51 sian Exp $
+ * Last Modified: Sun Jun 23 16:00:35 2002.
+ * $Id: ungif.c,v 1.30 2002/08/03 05:08:37 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -67,8 +67,7 @@ static PlayerPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_ungif)
 {
   PlayerPlugin *pp;
 
@@ -79,8 +78,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_ungif, p)
 {
   free(p);
 }
@@ -122,24 +120,24 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->rendering_height = m->height;
 
   p = info->p = image_create();
-  p->width = m->rendering_width;
-  p->height = m->rendering_height;
+  image_width(p) = m->rendering_width;
+  image_height(p) = m->rendering_height;
   p->type = _INDEX;
   p->depth = 8;
-  p->bytes_per_line = m->width;
+  image_bpl(p) = m->width;
   p->bits_per_pixel = 8;
   p->next = NULL;
 
   if (m->direct_decode) {
-    p->rendered.image = memory_create();
-    //memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
-    if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+    image_rendered_image(p) = memory_create();
+    //memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
+    if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
       return PLAY_ERROR;
   } else {
-    p->rendered.image = memory_create();
-    //memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
-    p->image = memory_create();
-    if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
+    image_rendered_image(p) = memory_create();
+    //memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
+    image_image(p) = memory_create();
+    if (memory_alloc(image_image(p), image_bpl(p) * image_height(p)) == NULL)
       return PLAY_ERROR;
   }
 
@@ -329,13 +327,13 @@ play_main(Movie *m, VideoWindow *vw)
       }
 
       if (m->direct_decode) {
-	if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+	if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
 	  return PLAY_ERROR;
-	memcpy(memory_ptr(p->rendered.image), info->buffer[0], memory_used(p->rendered.image));
+	memcpy(memory_ptr(image_rendered_image(p)), info->buffer[0], memory_used(image_rendered_image(p)));
       } else {
-	if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
+	if (memory_alloc(image_image(p), image_bpl(p) * image_height(p)) == NULL)
 	  return PLAY_ERROR;
-	memcpy(memory_ptr(p->image), info->buffer[0], memory_used(p->image));
+	memcpy(memory_ptr(image_image(p)), info->buffer[0], memory_used(image_image(p)));
       }
 
       m->current_frame++;

@@ -1,10 +1,10 @@
 /*
  * image.c -- image interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  8 00:10:22 2002.
- * $Id: image.c,v 1.14 2002/06/13 14:29:44 sian Exp $
+ * Last Modified: Thu Jul 25 22:22:08 2002.
+ * $Id: image.c,v 1.15 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,8 +28,6 @@
 
 #include "image.h"
 
-int image_magnify_main(Image *, int, int, ImageInterpolateMethod, int);
-
 static const char *image_type_to_string_array[] = {
   "_BITMAP_LSBFirst",
   "_BITMAP_MSBFirst",
@@ -50,28 +48,10 @@ static const char *image_type_to_string_array[] = {
   "_UYVY"
 };
 
-static Image *duplicate(Image *);
-static int compare(Image *, Image *);
-static int magnify(Image *, int, int, ImageInterpolateMethod, int);
-static void destroy(Image *);
-
-static Image template = {
-  duplicate: duplicate,
-  compare: compare,
-  magnify: magnify,
-  destroy: destroy
-};
-
 Image *
 image_create(void)
 {
-  Image *p;
-
-  if ((p = calloc(1, sizeof(Image))) == NULL)
-    return NULL;
-  memcpy(p, &template, sizeof(Image));
-
-  return p;
+  return calloc(1, sizeof(Image));
 }
 
 const char *
@@ -84,8 +64,8 @@ image_type_to_string(ImageType type)
 
 /* methods */
 
-static Image *
-duplicate(Image *p)
+Image *
+image_dup(Image *p)
 {
   Image *new;
 
@@ -93,13 +73,15 @@ duplicate(Image *p)
     return NULL;
   memcpy(new, p, sizeof(Image));
 
-  if (p->rendered.image && (new->rendered.image = memory_dup_as_shm(p->rendered.image)) == NULL)
+  if (image_rendered_image(p) &&
+      (image_rendered_image(new) = memory_dup_as_shm(image_rendered_image(p))) == NULL)
     goto error;
 
-  if (p->magnified.image && (new->magnified.image = memory_dup(p->magnified.image)) == NULL)
+  if (image_work_image(p) &&
+      (image_work_image(new) = memory_dup(image_work_image(p))) == NULL)
     goto error;
 
-  if (p->image && (new->image = memory_dup(p->image)) == NULL)
+  if (image_image(p) && (image_image(new) = memory_dup(image_image(p))) == NULL)
     goto error;
 
   if (p->mask && (new->mask = memory_dup(p->mask)) == NULL)
@@ -108,39 +90,93 @@ duplicate(Image *p)
   if (p->comment && (new->comment = (unsigned char *)strdup((const char *)p->comment)) == NULL)
     goto error;
 
-  if (p->next && (new->next = duplicate(p->next)) == NULL)
+  if (p->next && (new->next = image_dup(p->next)) == NULL)
     goto error;
 
   return new;
 
  error:
-  destroy(new);
+  image_destroy(new);
   return NULL;
 }
 
-static int
-compare(Image *p, Image *p2)
+int
+image_compare(Image *p, Image *p2)
 {
-  if (p->width != p2->width || p->height != p2->height || p->type != p2->type)
+  if (image_width(p) != image_width(p2) || image_height(p) != image_height(p2) || p->type != p2->type)
     return 0;
   return 1;
 }
 
-static int
-magnify(Image *p, int dw, int dh, ImageInterpolateMethod method, int use_hw_scale)
+int
+image_data_alloc_from_other(Image *p, int src, int dst)
 {
-  return image_magnify_main(p, dw, dh, method, use_hw_scale);
+  Memory *s, *d;
+
+  s = image_image_by_index(p, src);
+  if (!(d = image_image_by_index(p, dst))) {
+    d = image_image_by_index(p, dst) = memory_create();
+    if (!d)
+      return 0;
+  }
+  if (!memory_alloc(d, memory_used(s)))
+    return 0;
+  
+  image_width_by_index(p, dst) = image_width_by_index(p, src);
+  image_height_by_index(p, dst) = image_height_by_index(p, src);
+  image_left_by_index(p, dst) = image_left_by_index(p, src);
+  image_top_by_index(p, dst) = image_top_by_index(p, src);
+  image_bpl_by_index(p, dst) = image_bpl_by_index(p, src);
+
+  return 1;
 }
 
-static void
-destroy(Image *p)
+int
+image_data_copy(Image *p, int src, int dst)
 {
-  if (p->rendered.image)
-    memory_destroy(p->rendered.image);
-  if (p->magnified.image)
-    memory_destroy(p->magnified.image);
-  if (p->image)
-    memory_destroy(p->image);
+  Memory *s, *d;
+
+  s = image_image_by_index(p, src);
+  if (image_image_by_index(p, dst))
+    memory_destroy(image_image_by_index(p, dst));
+  d = image_image_by_index(p, dst) = memory_dup(s);
+  if (!d)
+    return 0;
+
+  image_width_by_index(p, dst) = image_width_by_index(p, src);
+  image_height_by_index(p, dst) = image_height_by_index(p, src);
+  image_left_by_index(p, dst) = image_left_by_index(p, src);
+  image_top_by_index(p, dst) = image_top_by_index(p, src);
+  image_bpl_by_index(p, dst) = image_bpl_by_index(p, src);
+
+  return 1;
+}
+
+int
+image_data_swap(Image *p, int idx1, int idx2)
+{
+  ImageData tmp;
+
+  memcpy(&tmp, &image_by_index(p, idx1), sizeof(ImageData));
+  memcpy(&image_by_index(p, idx1), &image_by_index(p, idx2), sizeof(ImageData));
+  memcpy(&image_by_index(p, idx2), &tmp, sizeof(ImageData));
+
+  return 1;
+}
+
+void
+image_destroy(Image *p)
+{
+  if (p->next) {
+    image_destroy(p->next);
+    p->next = NULL;
+  }
+  if (image_rendered_image(p))
+    memory_destroy(image_rendered_image(p));
+  if (image_work_image(p))
+    memory_destroy(image_work_image(p));
+  if (image_image(p))
+    memory_destroy(image_image(p));
   if (p->mask)
     memory_destroy(p->mask);
   if (p->comment)

@@ -1,10 +1,10 @@
 /*
  * pnm.c -- pnm loader plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 04:23:42 2002.
- * $Id: pnm.c,v 1.6 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Sun Jun 23 15:32:30 2002.
+ * $Id: pnm.c,v 1.7 2002/08/03 05:08:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,8 +56,7 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(loader_pnm)
 {
   LoaderPlugin *lp;
 
@@ -68,8 +67,7 @@ plugin_entry(void)
   return (void *)lp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_pnm, p)
 {
   free(p);
 }
@@ -216,16 +214,16 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
 
   if ((token = get_token(st)) == NULL)
     return 0;
-  p->width = atoi(token);
+  image_width(p) = atoi(token);
   free(token);
-  if (!p->width)
+  if (!image_width(p))
     return 0;
 
   if ((token = get_token(st)) == NULL)
     return 0;
-  p->height = atoi(token);
+  image_height(p) = atoi(token);
   free(token);
-  if (!p->height)
+  if (!image_height(p))
     return 0;
 
   if (p->type != _BITMAP_MSBFirst) {
@@ -238,11 +236,11 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
 
   switch (p->type) {
   case _BITMAP_MSBFirst:
-    p->bytes_per_line = (p->width + 7) >> 3;
+    image_bpl(p) = (image_width(p) + 7) >> 3;
     break;
   case _GRAY:
     p->ncolors = data->maxval + 1;
-    p->bytes_per_line = p->width;
+    image_bpl(p) = image_width(p);
     break;
   case _INDEX:
     p->ncolors = data->maxval + 1;
@@ -251,23 +249,23 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
       p->colormap[i][1] = (i & 0x1c) << 3;
       p->colormap[i][2] = (i & 3) << 6;
     }
-    p->bytes_per_line = p->width;
+    image_bpl(p) = image_width(p);
     break;
   case _RGB24:
     p->ncolors = 1 << 24;
-    p->bytes_per_line = p->width * 3;
+    image_bpl(p) = image_width(p) * 3;
     break;
   default:
     show_message_fnc("unexpected image type %s\n", image_type_to_string(p->type));
     return 0;
   }
 
-  if (p->width <= 0 || p->height <= 0 || p->ncolors <= 0) {
-    debug_message("This file seems to be PNM. But invalid parameters %d %d %d.\n", p->width, p->height, p->ncolors);
+  if (image_width(p) <= 0 || image_height(p) <= 0 || p->ncolors <= 0) {
+    debug_message("This file seems to be PNM. But invalid parameters %d %d %d.\n", image_width(p), image_height(p), p->ncolors);
     return 0;
   }
 
-  debug_message_fnc("max %d ncolors %d (%d, %d) %s\n", data->maxval, p->ncolors, p->width, p->height, image_type_to_string(p->type));
+  debug_message_fnc("max %d ncolors %d (%d, %d) %s\n", data->maxval, p->ncolors, image_width(p), image_height(p), image_type_to_string(p->type));
 
   return 1;
 }
@@ -301,9 +299,9 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     goto error;
   }
 
-  image_size = p->bytes_per_line * p->height;
+  image_size = image_bpl(p) * image_height(p);
   debug_message("pnm: %s: allocate memory %d bytes for image\n", __FUNCTION__, image_size);
-  if ((d = memory_alloc(p->image, image_size)) == NULL)
+  if ((d = memory_alloc(image_image(p), image_size)) == NULL)
     goto error;
 
   switch (pnmdata.encode) {
@@ -312,9 +310,9 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     break;
   case _ASCII:
     if (p->type == _BITMAP_MSBFirst) {
-      for (y = 0; y < p->height; y++) {
+      for (y = 0; y < image_height(p); y++) {
 	b = 0;
-	for (x = 0; x < p->width; x++) {
+	for (x = 0; x < image_width(p); x++) {
 	  if ((token = get_token(st)) == NULL)
 	    goto error;
 	  j = atoi(token);

@@ -1,10 +1,10 @@
 /*
  * libmpeg3.c -- libmpeg3 player plugin, which exploits libmpeg3.
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 14 14:19:06 2002.
- * $Id: libmpeg3.c,v 1.40 2002/03/14 18:43:30 sian Exp $
+ * Last Modified: Sun Jun 23 15:55:15 2002.
+ * $Id: libmpeg3.c,v 1.41 2002/08/03 05:08:39 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -82,8 +82,7 @@ static PlayerPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_libmpeg3)
 {
   PlayerPlugin *pp;
 
@@ -94,8 +93,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_libmpeg3, p)
 {
   free(p);
 }

@@ -1,10 +1,10 @@
 /*
  * jpeg.c -- JPEG Saver plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 02:00:25 2001.
- * $Id: jpeg.c,v 1.2 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Sun Jun 23 16:03:16 2002.
+ * $Id: jpeg.c,v 1.3 2002/08/03 05:08:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -78,8 +78,7 @@ my_error_exit (j_common_ptr cinfo)
   longjmp(myerr->setjmp_buffer, 1);
 }
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(saver_jpeg)
 {
   SaverPlugin *sp;
 
@@ -90,8 +89,7 @@ plugin_entry(void)
   return (void *)sp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(saver_jpeg, p)
 {
   free(p);
 }
@@ -110,7 +108,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   JSAMPROW buffer[1]; /* output row buffer */
   int quality, result;
 
-  debug_message("jpeg: save (%s) (%d, %d) called.\n", image_type_to_string(p->type), p->width, p->height);
+  debug_message("jpeg: save (%s) (%d, %d) called.\n", image_type_to_string(p->type), image_width(p), image_height(p));
 
   if (cinfo == NULL)
     return 0;
@@ -158,8 +156,8 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   jpeg_create_compress(cinfo);
   jpeg_stdio_dest(cinfo, fp);
 
-  cinfo->image_width = p->width;
-  cinfo->image_height = p->height;
+  cinfo->image_width = image_width(p);
+  cinfo->image_height = image_height(p);
   if (p->type == _GRAY) {
     cinfo->input_components = 1;
     cinfo->in_color_space = JCS_GRAYSCALE;
@@ -173,7 +171,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   jpeg_start_compress(cinfo, TRUE);
 
   while (cinfo->next_scanline < cinfo->image_height) {
-    buffer[0] = (JSAMPROW)(memory_ptr(p->image) + p->bytes_per_line * cinfo->next_scanline);
+    buffer[0] = (JSAMPROW)(memory_ptr(image_image(p)) + image_bpl(p) * cinfo->next_scanline);
     (void)jpeg_write_scanlines(cinfo, buffer, 1);
   }
 

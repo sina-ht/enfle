@@ -1,10 +1,10 @@
 /*
  * bmp.c -- bmp loader plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:23:23 2002.
- * $Id: bmp.c,v 1.11 2002/05/04 14:36:00 sian Exp $
+ * Last Modified: Sun Jun 23 15:25:40 2002.
+ * $Id: bmp.c,v 1.12 2002/08/03 05:08:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,8 +48,7 @@ static LoaderPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(loader_bmp)
 {
   LoaderPlugin *lp;
 
@@ -60,8 +59,7 @@ plugin_entry(void)
   return (void *)lp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(loader_bmp, p)
 {
   free(p);
 }
@@ -94,13 +92,13 @@ load_image(Image *p, Stream *st)
     return 0;
 
   if (header_size >= WIN_BMP_HEADER_SIZE) {
-    p->width = utils_get_little_uint32(&buf[0]);
-    p->height = utils_get_little_uint32(&buf[4]);
+    image_width(p) = utils_get_little_uint32(&buf[0]);
+    image_height(p) = utils_get_little_uint32(&buf[4]);
     biPlanes = utils_get_little_uint16(&buf[8]);
     p->bits_per_pixel = utils_get_little_uint16(&buf[10]);
   } else {
-    p->width = utils_get_little_uint16(&buf[0]);
-    p->height = utils_get_little_uint16(&buf[2]);
+    image_width(p) = utils_get_little_uint16(&buf[0]);
+    image_height(p) = utils_get_little_uint16(&buf[2]);
     biPlanes = utils_get_little_uint16(&buf[4]);
     p->bits_per_pixel = utils_get_little_uint16(&buf[6]);
   }
@@ -152,18 +150,18 @@ load_image(Image *p, Stream *st)
     }
   }
 
-  p->bytes_per_line = (p->width * p->bits_per_pixel) >> 3;
-  p->bytes_per_line += (4 - (p->bytes_per_line % 4)) % 4;
+  image_bpl(p) = (image_width(p) * p->bits_per_pixel) >> 3;
+  image_bpl(p) += (4 - (image_bpl(p) % 4)) % 4;
 
-  if ((d = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
+  if ((d = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL)
     return 0;
 
   stream_seek(st, offset_to_image, _SET);
-  pp = d + p->bytes_per_line * (p->height - 1);
+  pp = d + image_bpl(p) * (image_height(p) - 1);
   if (!compress_method) {
-    for (i = (int)(p->height - 1); i >= 0; i--) {
-      stream_read(st, pp, p->bytes_per_line);
-      pp -= p->bytes_per_line;
+    for (i = (int)(image_height(p) - 1); i >= 0; i--) {
+      stream_read(st, pp, image_bpl(p));
+      pp -= image_bpl(p);
     }
   } else {
     show_message("Compressed bitmap not yet supported.\n");

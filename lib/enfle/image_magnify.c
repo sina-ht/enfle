@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  8 00:04:54 2002.
- * $Id: image_magnify.c,v 1.8 2002/06/13 14:29:44 sian Exp $
+ * Last Modified: Mon Jul  8 23:19:45 2002.
+ * $Id: image_magnify.c,v 1.9 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -355,92 +355,89 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 }
 
 static void
-canonicalize(Image *p, unsigned int shrinked_bpl)
+canonicalize(Image *p, int src, unsigned int shrinked_bpl)
 {
-  unsigned char *s = memory_ptr(p->image);
+  unsigned char *s = memory_ptr(image_image_by_index(p, src));
   unsigned int i;
 
-  if (p->bytes_per_line <= shrinked_bpl)
+  if (image_bpl_by_index(p, src) <= shrinked_bpl)
     return;
 
-  for (i = 1; i < p->height; i++)
-    memmove(s + i * shrinked_bpl, s + i * p->bytes_per_line, shrinked_bpl);
-  p->bytes_per_line = shrinked_bpl;
-  memory_alloc(p->image, shrinked_bpl * p->height);
+  for (i = 1; i < image_height_by_index(p, src); i++)
+    memmove(s + i * shrinked_bpl, s + i * image_bpl_by_index(p, src), shrinked_bpl);
+  image_bpl_by_index(p, src) = shrinked_bpl;
+  memory_alloc(image_image_by_index(p, src), shrinked_bpl * image_height_by_index(p, src));
 }
 
 /* public interface */
 
 int
-image_magnify_main(Image *p, int dw, int dh, ImageInterpolateMethod method, int use_hw_scale)
+image_magnify(Image *p, int src, int dst, int dw, int dh, ImageInterpolateMethod method)
 {
-  if (!use_hw_scale) {
-    switch (p->type) {
-    case _GRAY:
-    case _INDEX:
-      p->magnified.bytes_per_line = dw;
-      canonicalize(p, p->width);
-      break;
-    case _RGB_WITH_BITMASK:
-    case _BGR_WITH_BITMASK:
-      p->magnified.bytes_per_line = dw << 1;
-      canonicalize(p, p->width << 1);
-      break;
-    case _RGB24:
-    case _BGR24:
-      p->magnified.bytes_per_line = dw * 3;
-      canonicalize(p, p->width * 3);
-      break;
-    case _RGBA32:
-    case _ABGR32:
-    case _ARGB32:
-    case _BGRA32:
-      p->magnified.bytes_per_line = dw << 2;
-      canonicalize(p, p->width << 2);
-      break;
-    default:
-      show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
-      return 0;
-    }
-
-    if (!p->magnified.image && ((p->magnified.image = memory_create()) == NULL)) {
-      show_message_fnc("No enough memory\n");
-      return 0;
-    }
-
-    if ((memory_alloc(p->magnified.image, p->magnified.bytes_per_line * dh)) == NULL) {
-      show_message_fnc("No enough memory (%d bytes requested)\n", p->magnified.bytes_per_line * dh);
-      return 0;
-    }
-
-    switch (p->type) {
-    case _GRAY:
-    case _INDEX:
-      magnify_generic8(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh);
-      break;
-    case _RGB_WITH_BITMASK:
-    case _BGR_WITH_BITMASK:
-      magnify_generic16((unsigned short *)memory_ptr(p->magnified.image), (unsigned short *)memory_ptr(p->image), p->width, p->height, dw, dh);
-      break;
-    case _RGB24:
-    case _BGR24:
-      magnify_generic24(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
-      break;
-    case _RGBA32:
-    case _ABGR32:
-    case _ARGB32:
-    case _BGRA32:
-      magnify_generic32(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
-      break;
-    default:
-      show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
-      return 0;
-    }
+  switch (p->type) {
+  case _GRAY:
+  case _INDEX:
+    image_bpl_by_index(p, dst) = dw;
+    canonicalize(p, src, image_width_by_index(p, src));
+    break;
+  case _RGB_WITH_BITMASK:
+  case _BGR_WITH_BITMASK:
+    image_bpl_by_index(p, dst) = dw << 1;
+    canonicalize(p, src, image_width_by_index(p, src) << 1);
+    break;
+  case _RGB24:
+  case _BGR24:
+    image_bpl_by_index(p, dst) = dw * 3;
+    canonicalize(p, src, image_width_by_index(p, src) * 3);
+    break;
+  case _RGBA32:
+  case _ABGR32:
+  case _ARGB32:
+  case _BGRA32:
+    image_bpl_by_index(p, dst) = dw << 2;
+    canonicalize(p, src, image_width_by_index(p, src) << 2);
+    break;
+  default:
+    show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
+    return 0;
   }
 
-  p->magnified.width  = dw;
-  p->magnified.height = dh;
-  p->if_magnified = 1;
+  if (!image_image_by_index(p, dst) && ((image_image_by_index(p, dst) = memory_create()) == NULL)) {
+    show_message_fnc("No enough memory\n");
+    return 0;
+  }
+
+  if ((memory_alloc(image_image_by_index(p, dst), image_bpl_by_index(p, dst) * dh)) == NULL) {
+    show_message_fnc("No enough memory (%d bytes requested)\n", image_bpl_by_index(p, dst) * dh);
+    return 0;
+  }
+
+  switch (p->type) {
+  case _GRAY:
+  case _INDEX:
+    magnify_generic8(memory_ptr(image_image_by_index(p, dst)), memory_ptr(image_image_by_index(p, src)), image_width_by_index(p, src), image_height_by_index(p, src), dw, dh);
+    break;
+  case _RGB_WITH_BITMASK:
+  case _BGR_WITH_BITMASK:
+    magnify_generic16((unsigned short *)memory_ptr(image_image_by_index(p, dst)), (unsigned short *)memory_ptr(image_image_by_index(p, src)), image_width_by_index(p, src), image_height_by_index(p, src), dw, dh);
+    break;
+  case _RGB24:
+  case _BGR24:
+    magnify_generic24(memory_ptr(image_image_by_index(p, dst)), memory_ptr(image_image_by_index(p, src)), image_width_by_index(p, src), image_height_by_index(p, src), dw, dh, method);
+    break;
+  case _RGBA32:
+  case _ABGR32:
+  case _ARGB32:
+  case _BGRA32:
+    magnify_generic32(memory_ptr(image_image_by_index(p, dst)), memory_ptr(image_image_by_index(p, src)), image_width_by_index(p, src), image_height_by_index(p, src), dw, dh, method);
+    break;
+  default:
+    show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
+    return 0;
+  }
+
+  image_width_by_index(p, dst)  = dw;
+  image_height_by_index(p, dst) = dh;
 
   return 1;
 }

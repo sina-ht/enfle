@@ -1,10 +1,10 @@
 /*
  * libmpeg2_vo.c -- video output routine for libmpeg2 player plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:32:13 2001.
- * $Id: libmpeg2_vo.c,v 1.7 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Wed Jul  3 23:17:01 2002.
+ * $Id: libmpeg2_vo.c,v 1.8 2002/08/03 05:08:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,7 +49,7 @@ enfle_draw(vo_frame_t *_frame)
     }
 
     pthread_mutex_lock(&info->update_mutex);
-    memcpy(memory_ptr(p->rendered.image), frame->rgb_ptr_base, instance->image_size);
+    memcpy(memory_ptr(image_rendered_image(p)), frame->rgb_ptr_base, instance->image_size);
     info->to_render++;
     m->current_frame++;
     while (info->to_render > 0)
@@ -69,14 +69,16 @@ enfle_alloc_frames(vo_instance_t *_instance, int width, int height, int frame_si
   uint8_t *alloc;
   int i;
 
-  debug_message_fn("(%d, %d) ", width, height);
+  debug_message_fn("(%d, %d)\n", width, height);
 
   instance = (enfle_instance_t *)_instance;
   instance->prediction_index = 1;
   size = width * height >> 2;
-  if ((alloc = memalign(16, 18 * size)) == NULL) {
-    debug_message("ERROR\n");
+  if ((alloc = memalign(ATTRIBUTE_ALIGNED_MAX, 18 * size)) == NULL) {
+    debug_message_fnc("memalign() ERROR\n");
     return 1;
+  } else {
+    debug_message_fnc("memalign(%d, %d) = %p\n", ATTRIBUTE_ALIGNED_MAX, 18 * size, alloc);
   }
 
   for (i = 0; i < 3; i++) {
@@ -92,7 +94,7 @@ enfle_alloc_frames(vo_instance_t *_instance, int width, int height, int frame_si
     alloc += 6 * size;
   }
 
-  debug_message("OK\n");
+  debug_message_fnc("OK\n");
 
   return 0;
 }
@@ -102,10 +104,12 @@ enfle_free_frames (vo_instance_t *_instance)
 {
   enfle_instance_t *instance;
 
-  debug_message_fn("() ");
+  debug_message_fn("()\n");
 
   instance = (enfle_instance_t *)_instance;
+  debug_message_fnc("freeing %p\n", instance->frame_ptr[0]->base[0]);
   free(instance->frame_ptr[0]->base[0]);
+  debug_message_fnc("OK\n");
 }
 
 static vo_frame_t *
@@ -200,14 +204,14 @@ enfle_rgb_setup(vo_instance_t *_instance, int width, int height)
   m->height = instance->height = height;
   m->rendering_width  = m->width;
   m->rendering_height = m->height;
-  p->width  = m->rendering_width;
-  p->height = m->rendering_height;
-  p->bytes_per_line = (p->width * vw->bits_per_pixel) >> 3;
-  instance->rgbstride = (p->width * vw->bits_per_pixel) >> 3;
+  image_width(p)  = m->rendering_width;
+  image_height(p) = m->rendering_height;
+  image_bpl(p) = (image_width(p) * vw->bits_per_pixel) >> 3;
+  instance->rgbstride = (image_width(p) * vw->bits_per_pixel) >> 3;
   instance->image_size = instance->rgbstride * height;
 
-  debug_message_fnc("allocating %d bytes\n", p->bytes_per_line * p->height);
-  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+  debug_message_fnc("allocating %d bytes\n", image_bpl(p) * image_height(p));
+  if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
     return 0;
 
   debug_message("video: (%d,%d) -> (%d,%d)\n",
@@ -216,7 +220,7 @@ enfle_rgb_setup(vo_instance_t *_instance, int width, int height)
   yuv2rgb_init(vw->bits_per_pixel, MODE_RGB);
 
   return enfle_alloc_frames((vo_instance_t *)instance,
-			    p->width, p->height, sizeof(enfle_frame_t),
+			    image_width(p), image_height(p), sizeof(enfle_frame_t),
 			    rgb_copy_slice, rgb_field,
 			    enfle_draw);
 }
@@ -256,7 +260,7 @@ enfle_yuv_draw(vo_frame_t *_frame)
     }
 
     pthread_mutex_lock(&info->update_mutex);
-    memcpy(memory_ptr(p->rendered.image), frame->vo.base[0], instance->image_size);
+    memcpy(memory_ptr(image_rendered_image(p)), frame->vo.base[0], instance->image_size);
     info->to_render++;
     m->current_frame++;
     while (info->to_render > 0)
@@ -274,14 +278,17 @@ enfle_yuv_alloc_frames(vo_instance_t *_instance, int width, int height, int fram
   uint8_t *alloc;
   int i;
 
-  debug_message_fn("(%d, %d) ", width, height);
+  debug_message_fn("(%d, %d)\n", width, height);
 
   instance = (enfle_instance_t *)_instance;
   instance->prediction_index = 1;
   size = (width * height) >> 2;
-  if ((alloc = memalign(16, 18 * size)) == NULL) {
-    debug_message("ERROR\n");
+
+  if ((alloc = memalign(ATTRIBUTE_ALIGNED_MAX, 18 * size)) == NULL) {
+    debug_message_fnc("memalign() ERROR\n");
     return 1;
+  } else {
+    debug_message_fnc("memalign(%d, %d) = %p\n", ATTRIBUTE_ALIGNED_MAX, 18 * size, alloc);
   }
 
   for (i = 0; i < 3; i++) {
@@ -296,7 +303,7 @@ enfle_yuv_alloc_frames(vo_instance_t *_instance, int width, int height, int fram
     alloc += 6 * size;
   }
 
-  debug_message("OK\n");
+  debug_message_fnc("OK\n");
 
   return 0;
 }
@@ -334,22 +341,22 @@ enfle_yuv_setup(vo_instance_t *_instance, int width, int height)
   m->height = instance->height = height;
   m->rendering_width  = m->width;
   m->rendering_height = m->height;
-  p->width  = m->rendering_width;
-  p->height = m->rendering_height;
-  p->bytes_per_line = (p->width * 3) >> 1;
-  instance->rgbstride = (p->width * vw->bits_per_pixel) >> 3;
-  instance->yuvstride = p->width;
-  instance->image_size = p->bytes_per_line * p->height;
+  image_width(p)  = m->rendering_width;
+  image_height(p) = m->rendering_height;
+  image_bpl(p) = (image_width(p) * 3) >> 1;
+  instance->rgbstride = (image_width(p) * vw->bits_per_pixel) >> 3;
+  instance->yuvstride = image_width(p);
+  instance->image_size = image_bpl(p) * image_height(p);
 
-  debug_message_fnc("allocating %d bytes\n", p->bytes_per_line * p->height);
-  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+  debug_message_fnc("allocating %d bytes\n", image_bpl(p) * image_height(p));
+  if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
     return 0;
 
   debug_message("video: (%d,%d) -> (%d,%d)\n",
 		m->width, m->height, m->rendering_width, m->rendering_height);
 
   return enfle_yuv_alloc_frames((vo_instance_t *)instance,
-			    p->width, p->height, sizeof(enfle_frame_t),
+			    image_width(p), image_height(p), sizeof(enfle_frame_t),
 			    enfle_yuv_draw);
 }
 

@@ -1,10 +1,10 @@
 /*
  * x11ximage.c -- X11 XImage related functions
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Jun 13 23:31:31 2002.
- * $Id: x11ximage.c,v 1.46 2002/06/13 14:32:30 sian Exp $
+ * Last Modified: Sun Jul 28 22:14:18 2002.
+ * $Id: x11ximage.c,v 1.47 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,12 +37,14 @@ void bgra32to16_maybe_mmx(unsigned char *, unsigned char *, unsigned int, unsign
 void bgra32to16_mmx(unsigned char *, unsigned char *, unsigned int, unsigned int);
 #endif
 
-static int convert(X11XImage *, Image *);
+static int is_hw_scalable(X11XImage *, Image *, int *);
+static int convert(X11XImage *, Image *, int, int);
 static void put(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int, unsigned int);
 static void put_scaled(X11XImage *, Pixmap, GC, int, int, int, int, unsigned int, unsigned int, unsigned int, unsigned int);
 static void destroy(X11XImage *);
 
 static X11XImage template = {
+  is_hw_scalable: is_hw_scalable,
   convert: convert,
   put: put,
   put_scaled: put_scaled,
@@ -150,7 +152,46 @@ bgra32to16_maybe_mmx(unsigned char *dest, unsigned char *s, unsigned int w, unsi
 /* methods */
 
 static int
-convert(X11XImage *xi, Image *p)
+is_hw_scalable(X11XImage *xi, Image *p, int *t_return)
+{
+  int t;
+
+#ifdef USE_XV
+  switch (p->type) {
+  case _YUY2:
+    t = XV_YUY2;
+    break;
+  case _YV12:
+    t = XV_YV12;
+    break;
+  case _I420:
+    t = XV_I420;
+    break;
+  case _UYVY:
+    t = XV_UYVY;
+    break;
+#if 0
+  case _RGB24:
+    t = XV_RV24;
+    break;
+  case _RGBA32:
+    t = XV_RV32;
+    break;
+#endif
+  default:
+    t = XV_OTHER;
+    break;
+  }
+  if (t_return)
+    *t_return = t;
+  return XV_ABLE_TO_RENDER(xi->x11->xv, t);
+#else
+  return 0;
+#endif
+}
+
+static int
+convert(X11XImage *xi, Image *p, int src, int dst)
 {
   unsigned int i, j;
   int bits_per_pixel = 0;
@@ -165,118 +206,21 @@ convert(X11XImage *xi, Image *p)
   XvImage *xvimage = NULL;
   int t = 0;
 #endif
-  Memory *to_be_rendered;
+  Memory *src_img, *dst_img;
   unsigned int w, h;
 
-  if (p->if_magnified) {
-    to_be_rendered = p->magnified.image;
-    w = p->magnified.width;
-    h = p->magnified.height;
-  } else {
-    to_be_rendered = p->image;
-    w = p->width;
-    h = p->height;
-  }
+  src_img = image_image_by_index(p, src);
+  w = image_width_by_index(p, src);
+  h = image_height_by_index(p, src);
+  dst_img = image_image_by_index(p, dst);
 
-  p->rendered.width  = w;
-  p->rendered.height = h;
-
-  switch (p->type) {
-#ifdef USE_XV
-  case _YUY2:
-    //debug_message("Image provided in YUY2.\n");
-    if (xi->x11->xv->capable_format & XV_YUY2_FLAG) {
-      t = XV_YUY2;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display YUY2...\n");
-    }
-    break;
-  case _YV12:
-    //debug_message("Image provided in YV12.\n");
-    if (xi->x11->xv->capable_format & XV_YV12_FLAG) {
-      t = XV_YV12;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display YV12...\n");
-    }
-    break;
-  case _I420:
-    //debug_message("Image provided in I420.\n");
-    if (xi->x11->xv->capable_format & XV_I420_FLAG) {
-      t = XV_I420;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display I420...\n");
-    }
-    break;
-  case _UYVY:
-    //debug_message("Image provided in UYVY.\n");
-    if (xi->x11->xv->capable_format & XV_UYVY_FLAG) {
-      t = XV_UYVY;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display UYVY...\n");
-    }
-    break;
-  case _RV15:
-    //debug_message("Image provided in RV15.\n");
-    if (xi->x11->xv->capable_format & XV_RV15_FLAG) {
-      t = XV_RV15;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display RV15...\n");
-    }
-    break;
-  case _RV16:
-    //debug_message("Image provided in RV16.\n");
-    if (xi->x11->xv->capable_format & XV_RV16_FLAG) {
-      t = XV_RV16;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display RV16...\n");
-    }
-    break;
-  case _RV24:
-    debug_message("Image provided in RV24.\n");
-    if (xi->x11->xv->capable_format & XV_RV24_FLAG) {
-      t = XV_RV24;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display RV24...\n");
-    }
-    break;
-  case _RV32:
-    //debug_message("Image provided in RV32.\n");
-    if (xi->x11->xv->capable_format & XV_RV32_FLAG) {
-      t = XV_RV32;
-      xi->use_xv = 1;
-    } else {
-      fatal(4, "Xv cannot display RV32...\n");
-    }
-    break;
-#else
-  case _YUY2:
-  case _YV12:
-  case _I420:
-  case _UYVY:
-  case _RV15:
-  case _RV16:
-  case _RV24:
-  case _RV32:
-    fatal(4, "Xv cannot display ...\n");
-    break;
-#endif
-  default:
-    xi->use_xv = 0;
-    break;
-  }
+  xi->use_xv = is_hw_scalable(xi, p, &t);
 
 #ifdef USE_XV
   if (xi->use_xv && xi->xvimage) {
     if (xi->xvimage->width != (int)w || xi->xvimage->height != (int)h || p->type != xi->type
 #ifdef USE_SHM
-      || (memory_type(p->rendered.image) == _SHM && xi->shminfo->shmid != memory_shmid(p->rendered.image))
+	|| (memory_type(dst_img) == _SHM && xi->shminfo->shmid != memory_shmid(dst_img))
 #endif
 	) {
       xi->type = p->type;
@@ -288,7 +232,7 @@ convert(X11XImage *xi, Image *p)
   if (!xi->use_xv && xi->ximage) {
     if (xi->ximage->width != (int)w || xi->ximage->height != (int)h || p->type != xi->type
 #ifdef USE_SHM
-      || (memory_type(p->rendered.image) == _SHM && xi->shminfo->shmid != memory_shmid(p->rendered.image))
+	|| (memory_type(dst_img) == _SHM && xi->shminfo->shmid != memory_shmid(dst_img))
 #endif
 	) {
       xi->type = p->type;
@@ -307,18 +251,18 @@ convert(X11XImage *xi, Image *p)
 
   if (create_ximage) {
     x11_lock(xi->x11);
-    switch (memory_type(p->rendered.image)) {
+    switch (memory_type(dst_img)) {
     case _NORMAL:
 #ifdef USE_XV
       if (xi->use_xv) {
-	if ((xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], memory_ptr(p->rendered.image), w, h)))
+	if ((xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], memory_ptr(dst_img), w, h)))
 	  xi->format_num = t;
       }
       if (!xi->use_xv || xi->xvimage == NULL) {
 #endif
 	xi->ximage =
 	  x11_create_ximage(xi->x11, x11_visual(xi->x11), x11_depth(xi->x11),
-			    memory_ptr(p->rendered.image), w, h, 8, 0);
+			    memory_ptr(dst_img), w, h, 8, 0);
 #ifdef USE_XV
       }
 #endif
@@ -349,21 +293,22 @@ convert(X11XImage *xi, Image *p)
     default:
       return 0;
     }
-    /* debug_message("ximage->bpl = %d\n", xi->ximage->bytes_per_line); */
+    //debug_message_fnc("ximage->bpl = %d\n", xi->ximage->bytes_per_line);
     x11_unlock(xi->x11);
   }
 
   if (!xi->use_xv) {
     ximage = xi->ximage;
-    p->rendered.bytes_per_line = ximage->bytes_per_line;
+    image_bpl_by_index(p, dst) = ximage->bytes_per_line;
 #if 0
     debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
-    debug_message("p type: %s p bpl: %d x bpl: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel);
+    debug_message("p type: %s p bpp: %d x bpp: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel);
 #endif
   }
 
   /* _GRAY -> _INDEX */
   if (p->type == _GRAY) {
+    debug_message_fnc("_GRAY -> _INDEX\n");
     for (i = 0; i < p->ncolors; i++)
       p->colormap[i][0] = p->colormap[i][1] = p->colormap[i][2] = 255 * i / (p->ncolors - 1);
     p->type = _INDEX;
@@ -375,21 +320,23 @@ convert(X11XImage *xi, Image *p)
     unsigned char *ss, *dd, b;
     int k, obpl, remain;
 
-    m = memory_dup(p->image);
+    debug_message_fnc("_BITMAP -> _INDEX\n");
+
+    m = memory_dup(src_img);
     ss = memory_ptr(m);
-    obpl = p->bytes_per_line;
-    p->bytes_per_line = p->width;
+    obpl = image_bpl_by_index(p, src);
+    image_bpl_by_index(p, src) = image_width_by_index(p, src);
     p->depth = p->bits_per_pixel = 8;
     p->ncolors = 2;
-    if ((dd = memory_alloc(p->image, p->bytes_per_line * p->height)) == NULL)
+    if ((dd = memory_alloc(src_img, image_bpl_by_index(p, src) * h)) == NULL)
       fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
     p->colormap[0][0] = p->colormap[0][1] = p->colormap[0][2] = 255;
     p->colormap[1][0] = p->colormap[1][1] = p->colormap[1][2] = 0;
-    remain = p->width & 7;
+    remain = w & 7;
 
     if (p->type == _BITMAP_LSBFirst) {
-      for (j = 0; j < p->height; j++) {
-	for (i = 0; i < (p->width >> 3); i++) {
+      for (j = 0; j < h; j++) {
+	for (i = 0; i < (w >> 3); i++) {
 	  b = ss[i];
 	  for (k = 8; k > 0; k--) {
 	    *dd++ = b & 1;
@@ -406,8 +353,8 @@ convert(X11XImage *xi, Image *p)
 	ss += obpl;
       }
     } else {
-      for (j = 0; j < p->height; j++) {
-	for (i = 0; i < (p->width >> 3); i++) {
+      for (j = 0; j < h; j++) {
+	for (i = 0; i < (w >> 3); i++) {
 	  b = ss[i];
 	  for (k = 8; k > 0; k--) {
 	    *dd++ = (b & 0x80) ? 1 : 0;
@@ -428,7 +375,7 @@ convert(X11XImage *xi, Image *p)
     memory_destroy(m);
   }
 
-  bytes_per_line_s = p->if_magnified ? p->magnified.bytes_per_line : p->bytes_per_line;
+  bytes_per_line_s = image_bpl_by_index(p, src);
 
   if (!xi->use_xv) {
     switch (ximage->bits_per_pixel) {
@@ -440,18 +387,18 @@ convert(X11XImage *xi, Image *p)
 
 	if (p->type == _RGB_WITH_BITMASK) {
 	  ximage->byte_order = MSBFirst;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	} else if (p->type == _BGR_WITH_BITMASK) {
 	  ximage->byte_order = LSBFirst;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	}
 
-	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
 	  fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
-	dest = memory_ptr(p->rendered.image);
-	s = memory_ptr(to_be_rendered);
+	dest = memory_ptr(dst_img);
+	s = memory_ptr(src_img);
 
 	ximage->byte_order = LSBFirst;
 	switch (p->type) {
@@ -548,7 +495,7 @@ convert(X11XImage *xi, Image *p)
 	  }
 	  break;
 	default:
-	  show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
+	  show_message("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	}
       }
@@ -559,19 +506,19 @@ convert(X11XImage *xi, Image *p)
 
 	if (p->type == _RGB24) {
 	  ximage->byte_order = MSBFirst;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	} else if (p->type == _BGR24) {
 	  ximage->byte_order = LSBFirst;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	}
 
-	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
 	  fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
 
-	dest = memory_ptr(p->rendered.image);
-	s = memory_ptr(to_be_rendered);
+	dest = memory_ptr(dst_img);
+	s = memory_ptr(src_img);
 	ximage->byte_order = LSBFirst;
 	switch (p->type) {
 	case _INDEX:
@@ -586,13 +533,33 @@ convert(X11XImage *xi, Image *p)
 	  }
 	  break;
 	case _RGBA32:
+	  for (j = 0; j < h; j++) {
+	    d = dest + j * ximage->bytes_per_line;
+	    for (i = 0; i < w; i++) {
+	      *d++ = s[i * 4 + 2];
+	      *d++ = s[i * 4 + 1];
+	      *d++ = s[i * 4 + 0];
+	    }
+	    s += bytes_per_line_s;
+	  }
+	  break;
 	case _BGRA32:
+	  for (j = 0; j < h; j++) {
+	    d = dest + j * ximage->bytes_per_line;
+	    for (i = 0; i < w; i++) {
+	      *d++ = s[i * 4 + 0];
+	      *d++ = s[i * 4 + 1];
+	      *d++ = s[i * 4 + 2];
+	    }
+	    s += bytes_per_line_s;
+	  }
+	  break;
 	case _ARGB32:
 	case _ABGR32:
-	  show_message("render image [type %s] is not implemented yet.\n", image_type_to_string(p->type));
+	  show_message("render image [type %s] is not implemented yet. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	default:
-	  show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
+	  show_message("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	}
       }
@@ -607,44 +574,44 @@ convert(X11XImage *xi, Image *p)
 	  bits_per_pixel = 24;
 	  /* invalid */
 	  ximage->bytes_per_line = bytes_per_line_s;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	} else if (p->type == _BGR24) {
 	  ximage->byte_order = LSBFirst;
 	  bits_per_pixel = 24;
 	  /* invalid */
 	  ximage->bytes_per_line = bytes_per_line_s;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	} else if (p->type == _ARGB32) {
 	  ximage->byte_order = MSBFirst;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	} else if (p->type == _BGRA32) {
 	  ximage->byte_order = LSBFirst;
-	  dest = memory_ptr(p->rendered.image);
+	  dest = memory_ptr(dst_img);
 	  break;
 	}
 
-	if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
 	  fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
 
-	dest = memory_ptr(p->rendered.image);
+	dest = memory_ptr(dst_img);
 	switch (p->type) {
 	case _RGBA32:
 	  ximage->byte_order = MSBFirst;
-	  memcpy(dest + 1, memory_ptr(to_be_rendered), memory_used(to_be_rendered) - 1);
+	  memcpy(dest + 1, memory_ptr(src_img), memory_used(src_img) - 1);
 	  break;
 	case _ABGR32:
 	  ximage->byte_order = LSBFirst;
-	  memcpy(dest, memory_ptr(to_be_rendered) + 1, memory_used(to_be_rendered) - 1);
+	  memcpy(dest, memory_ptr(src_img) + 1, memory_used(src_img) - 1);
 	  break;
 	case _INDEX:
-	  if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL)
+	  if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
 	    fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
 
-	  dest = memory_ptr(p->rendered.image);
-	  s = memory_ptr(to_be_rendered);
+	  dest = memory_ptr(dst_img);
+	  s = memory_ptr(src_img);
 	  ximage->byte_order = LSBFirst;
 	  for (j = 0; j < h; j++) {
 	    d = dest + j * ximage->bytes_per_line;
@@ -658,7 +625,7 @@ convert(X11XImage *xi, Image *p)
 	  }
 	  break;
 	default:
-	  show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
+	  show_message("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	}
       }
@@ -680,29 +647,29 @@ convert(X11XImage *xi, Image *p)
       debug_message("%d/%d ", xvimage->pitches[i], xvimage->offsets[i]);
     debug_message("\n");
 
-    if (memory_alloc(p->rendered.image, xvimage->data_size) == NULL)
+    if (memory_alloc(dst_img, xvimage->data_size) == NULL)
       fatal(2, "%s: No enough memory(alloc)\n", __FUNCTION__);
     if (xvimage->num_planes == 3) {
-      if (xvimage->pitches[0] == (int)p->width &&
-	  xvimage->pitches[1] == (int)p->width >> 1 &&
-	  xvimage->pitches[2] == (int)p->width >> 1) {
+      if (xvimage->pitches[0] == (int)w &&
+	  xvimage->pitches[1] == (int)w >> 1 &&
+	  xvimage->pitches[2] == (int)w >> 1) {
 	debug_message_fnc("XvImage:  pitch OK\n");
 	if (xvimage->offsets[0] == 0 &&
-	    xvimage->offsets[1] == (int)(p->width * p->height) &&
-	    xvimage->offsets[2] == (int)(p->width * p->height + ((p->width * p->height) >> 2))) {
+	    xvimage->offsets[1] == (int)(w * h) &&
+	    xvimage->offsets[2] == (int)(w * h + ((w * h) >> 2))) {
 	  debug_message_fnc("XvImage:  offset OK\n");
 	} else {
 	  fatal(4, "%s: XvImage:  offset NG: %d %d %d <-> %d %d %d\n", __FUNCTION__,
 		xvimage->offsets[0], xvimage->offsets[1], xvimage->offsets[2],
-		0, p->width * p->height, p->width * p->height + ((p->width * p->height) >> 2));
+		0, w * h, w * h + ((w * h) >> 2));
 	}
       } else {
 	fatal(4, "%s: XvImage:  pitch NG: %d %d %d <-> %d %d %d\n", __FUNCTION__,
 	      xvimage->pitches[0], xvimage->pitches[1], xvimage->pitches[2],
-	      p->width, p->width >> 1, p->width >> 1);
+	      w, w >> 1, w >> 1);
       }
     } else if (xvimage->num_planes == 1) {
-      if (xvimage->pitches[0] == (int)p->width << 1) {
+      if (xvimage->pitches[0] == (int)w << 1) {
 	debug_message_fnc("XvImage:  pitch OK\n");
 	if (xvimage->offsets[0] == 0) {
 	  debug_message_fnc("XvImage:  offset OK\n");
@@ -711,7 +678,7 @@ convert(X11XImage *xi, Image *p)
 	}
       } else {
 	fatal(4, "%s: XvImage:  pitch NG: %d <-> %d\n", __FUNCTION__,
-	      xvimage->pitches[0], p->width << 1);
+	      xvimage->pitches[0], w << 1);
       }
     } else {
       fatal(4, "%s: Unknown nplanes == %d\n", __FUNCTION__, xvimage->num_planes);
@@ -722,8 +689,8 @@ convert(X11XImage *xi, Image *p)
 
 #ifdef USE_SHM
   if (to_be_attached) {
-    xi->shminfo->shmid = memory_shmid(p->rendered.image);
-    xi->shminfo->shmaddr = memory_ptr(p->rendered.image);
+    xi->shminfo->shmid = memory_shmid(dst_img);
+    xi->shminfo->shmaddr = memory_ptr(dst_img);
     xi->shminfo->readOnly = False;
     x11_lock(xi->x11);
     XShmAttach(x11_display(xi->x11), xi->shminfo);
@@ -734,7 +701,7 @@ convert(X11XImage *xi, Image *p)
 
   if (xi->use_xv) {
 #ifdef USE_XV
-    xvimage->data = memory_ptr(p->rendered.image);
+    xvimage->data = memory_ptr(dst_img);
 #endif
   } else {
     ximage->data = (char *)dest;

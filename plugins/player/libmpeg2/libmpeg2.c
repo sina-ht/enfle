@@ -1,10 +1,10 @@
 /*
  * libmpeg2.c -- libmpeg2 player plugin, which exploits libmpeg2.
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:28:10 2002.
- * $Id: libmpeg2.c,v 1.36 2002/05/04 14:36:20 sian Exp $
+ * Last Modified: Fri Aug  2 22:52:56 2002.
+ * $Id: libmpeg2.c,v 1.37 2002/08/03 05:08:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,8 +66,7 @@ static PlayerPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_libmpeg2)
 {
   PlayerPlugin *pp;
 
@@ -78,8 +77,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_libmpeg2, p)
 {
   free(p);
 }
@@ -148,9 +146,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   p = info->p = image_create();
   p->type = m->requested_type;
-  if ((p->rendered.image = memory_create()) == NULL)
+  if ((image_rendered_image(p) = memory_create()) == NULL)
     goto error;
-  memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+
+  memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
 
   m->has_video = 1;
   if (!info->nvstreams) {
@@ -187,7 +186,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   if (info->use_xv) {
     p->bits_per_pixel = 12;
-    p->bytes_per_line = p->width * 1.5;
+    image_bpl(p) = image_width(p) * 1.5;
   } else {
     switch (vw->bits_per_pixel) {
     case 32:
@@ -496,17 +495,21 @@ play_main(Movie *m, VideoWindow *vw)
   case _PLAY:
     break;
   case _RESIZING:
-    video_window_resize(vw, m->rendering_width, m->rendering_height);
-    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+    {
+      unsigned int dw, dh;
 
-    if (info->use_xv) {
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-    } else {
-      m->rendering_width  = p->magnified.width;
-      m->rendering_height = p->magnified.height;
+      video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
+      video_window_resize(vw, dw, dh);
+
+      if (info->use_xv) {
+	m->rendering_width  = m->width;
+	m->rendering_height = m->height;
+      } else {
+	m->rendering_width  = dw;
+	m->rendering_height = dh;
+      }
+      m->status = _PLAY;
     }
-    m->status = _PLAY;
     break;
   case _PAUSE:
   case _STOP:
@@ -536,15 +539,19 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
 
   if (!info->if_initialized && m->width && m->height) {
-    m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
-    video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+    unsigned int dw, dh;
+
+    image_rendered_width(p) = m->width;
+    image_rendered_height(p) = m->height;
+    video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
+    m->initialize_screen(vw, m, dw, dh);
 
     if (info->use_xv) {
       m->rendering_width  = m->width;
       m->rendering_height = m->height;
     } else {
-      m->rendering_width  = p->magnified.width;
-      m->rendering_height = p->magnified.height;
+      m->rendering_width  = dw;
+      m->rendering_height = dh;
     }
     info->if_initialized++;
   }
@@ -554,7 +561,7 @@ play_main(Movie *m, VideoWindow *vw)
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1) {
     audio_time = get_audio_time(m, info->ad);
-    // debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
+    debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
 
     /* if too fast to display, wait before render */
     while (video_time > audio_time)
@@ -567,13 +574,13 @@ play_main(Movie *m, VideoWindow *vw)
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       if (!dropping) {
-	//debug_message("drop on\n");
+	debug_message("drop on\n");
 	dropping++;
       }
       mpeg2_drop(&info->mpeg2dec, 1);
     } else {
       if (dropping) {
-	//debug_message("drop off\n");
+	debug_message("drop off\n");
 	dropping--;
       }
       mpeg2_drop(&info->mpeg2dec, 0);
@@ -667,11 +674,13 @@ stop_movie(Movie *m)
     fifo_destroy(info->vstream);
     debug_message_fnc("fifo for video destroyed\n");
     info->vstream = NULL;
+    demultiplexer_mpeg_set_vst(info->demux, NULL);
   }
   if (m->has_audio && info->astream) {
     fifo_destroy(info->astream);
     debug_message_fnc("fifo for audio destroyed\n");
     info->astream = NULL;
+    demultiplexer_mpeg_set_ast(info->demux, NULL);
   }
 
   debug_message_fnc("waiting for video thread to exit... \n");

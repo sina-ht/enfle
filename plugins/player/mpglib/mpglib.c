@@ -1,10 +1,10 @@
 /*
  * mpglib.c -- mpglib player plugin, which exploits mpglib.
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 14 14:26:50 2002.
- * $Id: mpglib.c,v 1.8 2002/03/14 18:43:30 sian Exp $
+ * Last Modified: Sun Jun 23 15:58:30 2002.
+ * $Id: mpglib.c,v 1.9 2002/08/03 05:08:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -64,8 +64,7 @@ static PlayerPlugin plugin = {
   load: load
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(player_mpglib)
 {
   PlayerPlugin *pp;
 
@@ -76,8 +75,7 @@ plugin_entry(void)
   return (void *)pp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(player_mpglib, p)
 {
   free(p);
 }
@@ -135,35 +133,35 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   m->rendering_height = m->height;
 
   p = info->p = image_create();
-  p->width = m->rendering_width;
-  p->height = m->rendering_height;
+  image_width(p) = m->rendering_width;
+  image_height(p) = m->rendering_height;
   p->type = m->requested_type;
-  if ((p->rendered.image = memory_create()) == NULL)
+  if ((image_rendered_image(p) = memory_create()) == NULL)
     goto error;
-  memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+  memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
 
   switch (vw->bits_per_pixel) {
   case 32:
     p->depth = 24;
     p->bits_per_pixel = 32;
-    p->bytes_per_line = p->width * 4;
+    image_bpl(p) = image_width(p) * 4;
     break;
   case 24:
     p->depth = 24;
     p->bits_per_pixel = 24;
-    p->bytes_per_line = p->width * 3;
+    image_bpl(p) = image_width(p) * 3;
     break;
   case 16:
     p->depth = 16;
     p->bits_per_pixel = 16;
-    p->bytes_per_line = p->width * 2;
+    image_bpl(p) = image_width(p) * 2;
     break;
   default:
     show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
     return PLAY_ERROR;
   }
 
-  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+  if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
     goto error;
 
   m->movie_private = (void *)info;
