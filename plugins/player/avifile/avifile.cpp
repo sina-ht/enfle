@@ -1,10 +1,10 @@
 /*
  * avifile.cpp -- avifile player plugin, which exploits avifile.
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 12 07:16:53 2001.
- * $Id: avifile.cpp,v 1.2 2001/01/11 22:33:21 sian Exp $
+ * Last Modified: Fri Jan 12 21:08:44 2001.
+ * $Id: avifile.cpp,v 1.3 2001/01/12 13:22:55 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -31,44 +31,37 @@
 #include <errno.h>
 
 #include <avifile.h>
-#include <aviplay.h>
 
 #include "common.h"
+
+#ifndef USE_PTHREAD
+#  error pthread is mandatory for avifile plugin
+#endif
 
 extern "C" {
 #include "enfle/memory.h"
 #include "enfle/player-plugin.h"
 }
 
-class AviFileLoader {
-  static void stopfunc(int);
-  static void drawfunc(CImage *);
-  static int audiofunc(void *, int);
-
-  /* XXX: hack */
-  static Image *setimage(Image *p) { static Image *_p = NULL; if (!_p) _p = p; return _p; }
-  static int store_updated(int f) { static int _f = 0; if (f == -1) return _f; _f = f; return _f; }
-
-public:
-  PlayerStatus load_movie(VideoWindow *, Movie *, Stream *);
-  AviFileLoader();
-  ~AviFileLoader();
-  static Image *getimage() { return setimage(NULL); }
-  static int set_updated() { int dummy = store_updated(1); }
-  static int unset_updated() { int dummy = store_updated(0); }
-  static int is_updated() { return store_updated(-1); }
-
-  IAviPlayer *player;
-  AudioDevice *ad;
-  WAVEFORMATEX owf;
-};
+#define HAS_AUDIO 1
+#define HAS_VIDEO 2
 
 typedef struct _avifile_info {
-  AviFileLoader *afl;
-  int rendering_type;
-#ifdef USE_PTHREAD
-  pthread_mutex_t render_mutex;
-#endif
+  int flags;
+  int eof;
+  int frametime;
+  Image *p;
+  CImage *ci;
+  IAviReadFile *rf;
+  IAviReadStream *stream;
+  IAviReadStream *audiostream;
+  MainAVIHeader hdr;
+  BITMAPINFOHEADER bmih;
+  WAVEFORMATEX owf;
+  pthread_t video_thread;
+  pthread_t audio_thread;
+  pthread_mutex_t update_mutex;
+  pthread_cond_t update_cond;
 } AviFile_info;
 
 static const unsigned int types =
@@ -114,66 +107,66 @@ plugin_exit(void *p)
 
 /* for internal use */
 
-AviFileLoader::AviFileLoader()
-{
-  debug_message("AviFileLoader constructor\n");
-}
-
-AviFileLoader::~AviFileLoader()
-{
-  debug_message("AviFileLoader destructor\n");
-}
-
-void
-AviFileLoader::stopfunc(int value)
-{
-  debug_message("AviFileLoader::stopfunc(%d)\n", value);
-}
-
-void
-AviFileLoader::drawfunc(CImage *ci)
-{
-  if (!ci)
-    return;
-
-  Image *p = getimage();
-
-  //debug_message("drawfunc(%p): %p, (%d, %d), bpl %d\n", ci, ci->data(), ci->width(), ci->height(), ci->bpl());
-
-  memory_set(p->rendered.image, ci->data(), _NORMAL, ci->bpl() * ci->height(), ci->bpl() * ci->height());
-  //memcpy(memory_ptr(p->rendered.image), ci->data(), ci->bpl() * ci->height());
-  set_updated();
-}
-
-int
-AviFileLoader::audiofunc(void *data, int size)
-{
-  debug_message("AviFileLoader::audiofunc(%p, %d)\n", data, size);
-  return size;
-}
-
 PlayerStatus
-AviFileLoader::load_movie(VideoWindow *vw, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   AviFile_info *info = (AviFile_info *)m->movie_private;
   IAviReadFile *rf;
-  MainAVIHeader hdr;
+  IAviReadStream *audiostream, *stream;
+  int result;
 
-  rf = CreateIAviReadFile(st->path);
+  pthread_mutex_init(&info->update_mutex, NULL);
+  pthread_cond_init(&info->update_cond, NULL);
+
+  rf = info->rf = CreateIAviReadFile(st->path);
   if (!rf)
     return PLAY_ERROR;
-  if (!rf->StreamCount() || rf->GetFileHeader(&hdr)) {
+  if (!rf->StreamCount() || rf->GetFileHeader(&info->hdr)) {
     delete rf;
     return PLAY_ERROR;
   }
-  m->num_of_frames = hdr.dwTotalFrames;
-  delete rf;
+  m->num_of_frames = info->hdr.dwTotalFrames;
 
-  //player = new AviPlayer();
-  player = CreateAviPlayer(st->path, vw->bits_per_pixel, NULL);
-  player->setKillHandler(&stopfunc);
-  player->setDrawCallback2(&drawfunc);
-  //player->setAudioFunc(&audiofunc);
+  info->flags = 0;
+  if ((audiostream = info->audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
+    if (m->ap == NULL)
+      show_message("Cannot open audio device.\n");
+    else {
+      if ((result = audiostream->StartStreaming()) != 0) {
+	show_message("audio: StartStream() failed.\n");
+	return PLAY_ERROR;
+      }
+      debug_message("Get output format.\n");
+      audiostream->GetOutputFormat(&info->owf, sizeof info->owf);
+      m->sampleformat = _AUDIO_FORMAT_S16_LE;
+      m->channels = info->owf.nChannels;
+      m->samplerate = info->owf.nSamplesPerSec;
+      //m->num_of_samples = info->owf.nSamplesPerSec * len;
+      show_message("audio: format(%d, %d bits per sample): %d ch rate %d kHz\n", m->sampleformat, info->owf.wBitsPerSample, m->channels, m->samplerate);
+      info->flags |= HAS_AUDIO;
+    }
+  } else {
+    show_message("No audio.\n");
+  }
+
+  if ((stream = info->stream = rf->GetStream(0, IAviReadStream::Video))) {
+    if ((result = stream->StartStreaming()) != 0) {
+      show_message("video: StartStream() failed.\n");
+      return PLAY_ERROR;
+    }
+    if ((result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel)) != 0) {
+      show_message("SetDestFmt() failed.\n");
+      return PLAY_ERROR;
+    }
+    stream->GetVideoFormatInfo(&info->bmih);
+    m->width  = info->bmih.biWidth;
+    m->height = info->bmih.biHeight;
+    info->frametime = (int)(stream->GetFrameTime() * 1000);
+    m->framerate = 1000 / info->frametime;
+    info->flags |= HAS_VIDEO;
+  } else {
+    show_message("No video.\n");
+  }
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
@@ -181,33 +174,6 @@ AviFileLoader::load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
   debug_message("AviFile: requested type: %s direct\n", image_type_to_string(m->requested_type));
-
-  //player->initPlayer(st->path, vw->bits_per_pixel, NULL);
-
-#if 0
-  if ((audiostream = player->audiostream)) {
-    if ((m->ap == NULL) || (ad = m->ap->open_device(NULL, m->c)) == NULL)
-      show_message("Cannot open audio device.\n");
-    else {
-      audiostream->GetOutputFormat(&owf, sizeof owf);
-      m->sampleformat = _AUDIO_FORMAT_S16_LE;
-      m->channels = owf.nChannels;
-      m->samplerate = owf.nSamplesPerSec;
-      //m->num_of_samples = owf.nSamplesPerSec * len;
-
-      if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
-	show_message("Some params are set wrong.\n");
-
-      show_message("audio: format(%d, %d bits per sample): %d ch rate %d kHz\n", m->sampleformat, owf.wBitsPerSample, m->channels, m->samplerate);
-    }
-  } else {
-    show_message("No audio.\n");
-  }
-#endif
-
-  m->width = player->width();
-  m->height = player->height();
-  m->framerate = player->fps();
 
 #if 1
   m->rendering_width = m->width;
@@ -235,7 +201,7 @@ AviFileLoader::load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   Image *p;
 
-  p = image_create();
+  p = info->p = image_create();
   p->width = m->rendering_width;
   p->height = m->rendering_height;
   p->type = m->requested_type;
@@ -267,8 +233,6 @@ AviFileLoader::load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->st = st;
 
-  setimage(p);
-
   m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
   play(m);
@@ -280,12 +244,13 @@ AviFileLoader::load_movie(VideoWindow *vw, Movie *m, Stream *st)
   return PLAY_ERROR;
 }
 
+static void *play_video(void *);
+static void *play_audio(void *);
+
 static PlayerStatus
 play(Movie *m)
 {
   AviFile_info *info = (AviFile_info *)m->movie_private;
-  AviFileLoader *afl = info->afl;
-  IAviPlayer *player = afl->player;
 
   switch (m->status) {
   case _PLAY:
@@ -301,17 +266,72 @@ play(Movie *m)
     return PLAY_ERROR;
   }
 
-  player->start();
+  info->stream->Seek((unsigned int)0);
+  info->audiostream->Seek((unsigned int)0);
+  info->eof = 0;
+  timer_start(m->timer);
+
+  if (info->flags & HAS_VIDEO)
+    pthread_create(&info->video_thread, NULL, play_video, m);
+  if (info->flags & HAS_AUDIO)
+    pthread_create(&info->audio_thread, NULL, play_audio, m);
 
   return PLAY_OK;
 }
 
-static PlayerStatus
+static void *
+play_video(void *arg)
+{
+  Movie *m = (Movie *)arg;
+  AviFile_info *info = (AviFile_info *)m->movie_private;
+
+  while (m->status == _PLAY) {
+    pthread_mutex_lock(&info->update_mutex);
+    pthread_cond_wait(&info->update_cond, &info->update_mutex);
+    if (info->stream->Eof()) {
+      info->eof = 1;
+      break;
+    }
+    info->stream->ReadFrame();
+    info->ci = info->stream->GetFrame();
+    memory_set(info->p->rendered.image, info->ci->data(), _NORMAL,
+	       info->ci->bpl() * info->ci->height(),
+	       info->ci->bpl() * info->ci->height());
+    pthread_mutex_unlock(&info->update_mutex);
+  }
+
+  pthread_exit((void *)PLAY_OK);
+}
+
+static void *
+play_audio(void *arg)
+{
+  Movie *m = (Movie *)arg;
+  AviFile_info *info = (AviFile_info *)m->movie_private;
+  AudioDevice *ad;
+
+  show_message("play_audio() is not yet implemented.\n");
+
+  if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
+    show_message("Cannot open device.\n");
+    pthread_exit((void *)PLAY_ERROR);
+  }
+
+  if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+    show_message("Some params are set wrong.\n");
+
+  m->ap->close_device(ad);
+
+  pthread_exit((void *)PLAY_OK);
+}
+
+PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
   AviFile_info *info = (AviFile_info *)m->movie_private;
-  AviFileLoader *afl = info->afl;
-  IAviPlayer *player = afl->player;
+  Image *p = info->p;
+  int due_time;
+  int time_elapsed;
 
   switch (m->status) {
   case _PLAY:
@@ -325,15 +345,36 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  if (player->isStopped()) {
-    m->status = _STOP;
+  if (info->eof) {
+    stop_movie(m);
     return PLAY_OK;
   }
 
-  if (afl->is_updated()) {
-    m->render_frame(vw, m, afl->getimage());
-    afl->unset_updated();
+  pthread_mutex_lock(&info->update_mutex);
+
+  time_elapsed = (int)timer_get_milli(m->timer);
+  m->current_frame = info->stream->GetPos();
+  due_time = info->frametime * m->current_frame;
+  debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
+  
+  if (info->ci) {
+    if (time_elapsed < due_time) {
+      /* too fast to display, wait then render */
+      m->pause_usec((due_time - time_elapsed) * 1000);
+      m->render_frame(vw, m, p);
+    } else if (time_elapsed > due_time + info->frametime) {
+      /* too late, drop several frames */
+      debug_message("drop frames\n");
+      info->stream->SkipTo((double)time_elapsed / 1000);
+      m->render_frame(vw, m, p);
+    } else {
+      /* just in time to render */
+      m->render_frame(vw, m, p);
+    }
   }
+
+  pthread_cond_signal(&info->update_cond);
+  pthread_mutex_unlock(&info->update_mutex);
 
   return PLAY_OK;
 }
@@ -342,19 +383,17 @@ static PlayerStatus
 pause_movie(Movie *m)
 {
   AviFile_info *info = (AviFile_info *)m->movie_private;
-  AviFileLoader *afl = info->afl;
-  IAviPlayer *player = afl->player;
 
   debug_message("AviFile: pause_movie()\n");
 
   switch (m->status) {
   case _PLAY:
-    player->pause(1);
     m->status = _PAUSE;
+    timer_pause(m->timer);
     return PLAY_OK;
   case _PAUSE:
-    player->play();
     m->status = _PLAY;
+    timer_restart(m->timer);
     return PLAY_OK;
   case _STOP:
     return PLAY_OK;
@@ -369,15 +408,14 @@ static PlayerStatus
 stop_movie(Movie *m)
 {
   AviFile_info *info = (AviFile_info *)m->movie_private;
-  AviFileLoader *afl = info->afl;
-  IAviPlayer *player = afl->player;
+  void *v, *a;
 
   debug_message("AviFile: stop_movie()\n");
 
   switch (m->status) {
   case _PLAY:
-    player->stop();
     m->status = _STOP;
+    timer_stop(m->timer);
     break;
   case _PAUSE:
   case _STOP:
@@ -386,6 +424,16 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   default:
     return PLAY_ERROR;
+  }
+
+  pthread_cond_signal(&info->update_cond);
+  if (info->video_thread) {
+    pthread_join(info->video_thread, &v);
+    info->video_thread = 0;
+  }
+  if (info->audio_thread) {
+    pthread_join(info->audio_thread, &v);
+    info->audio_thread = 0;
   }
 
   return PLAY_OK;
@@ -397,23 +445,10 @@ unload_movie(Movie *m)
   AviFile_info *info = (AviFile_info *)m->movie_private;
 
   if (info) {
-    AviFileLoader *afl = info->afl;
-
-    if (afl) {
-      if (afl->getimage())
-	image_destroy(afl->getimage());
-
-      if (afl->ad)
-	m->ap->close_device(afl->ad);
-
-      IAviPlayer *player = afl->player;
-      if (player)
-	delete player;
-      delete afl;
-    }
-#ifdef USE_PTHREAD
-    pthread_mutex_destroy(&info->render_mutex);
-#endif
+    if (info->p)
+      image_destroy(info->p);
+    pthread_mutex_destroy(&info->update_mutex);
+    pthread_cond_destroy(&info->update_cond);
     free(info);
   }
 }
@@ -467,16 +502,6 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   }
   m->movie_private = (void *)info;
 
-  info->afl = new AviFileLoader();
-#ifdef USE_PTHREAD
-  pthread_mutex_init(&info->render_mutex, NULL);
-#endif
-
-  PlayerStatus ps = info->afl->load_movie(vw, m, st);
-  if (ps != PLAY_OK) {
-    delete info->afl;
-    free(info);
-  }
-  return ps;
+  return load_movie(vw, m, st);
 }
 }
