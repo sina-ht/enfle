@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 14 20:56:37 2000.
- * $Id: mpeg_lib.c,v 1.11 2000/12/14 16:06:14 sian Exp $
+ * Last Modified: Tue Dec 19 02:00:52 2000.
+ * $Id: mpeg_lib.c,v 1.12 2000/12/18 17:01:27 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -126,14 +126,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   if (m->direct_decode) {
     p->rendered.image = memory_create();
-    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
-    if (memory_alloc(p->rendered.image, m->height * m->width * 4) == NULL)
+    //memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+    if (memory_alloc(p->rendered.image, p->width * p->height * 4) == NULL)
       return PLAY_ERROR;
   } else {
     p->rendered.image = memory_create();
-    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+    //memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
     p->image = memory_create();
-    if (memory_alloc(p->image, m->height * m->width * 4) == NULL)
+    if (memory_alloc(p->image, p->width * p->height * 4) == NULL)
       return PLAY_ERROR;
   }
 
@@ -142,7 +142,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->status = _PLAY;
   m->current_frame = 0;
 
-  m->initialize_screen(vw, m, m->width, m->height);
+  m->initialize_screen(vw, m, p->width, p->height);
 
   return PLAY_OK;
 }
