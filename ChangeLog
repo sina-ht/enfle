@@ -1,3 +1,13 @@
+2001-10-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e: More documentation.
+
+	* src/enfle.c: Added an informative message.
+
+	* lib/dllloader/user32.c: Use UCS-2LE instead of UNICODE.
+
+	* lib/utils/converter.c: Added an informative message.
+
 2001-10-10  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/dllloader/Makefile.am: Added mm.c.
