@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Jun 25 05:56:01 2001.
- * $Id: x11ximage.c,v 1.32 2001/06/24 20:59:08 sian Exp $
+ * Last Modified: Fri Sep  7 22:47:23 2001.
+ * $Id: x11ximage.c,v 1.33 2001/09/09 23:56:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,8 +31,10 @@
 
 #include "x11ximage.h"
 
-#ifdef WITH_NASM
-void bgra32to16(unsigned char *dest, unsigned char *src, int width, int height);
+void bgra32to16_generic(unsigned char *, unsigned char *, int, int, int, int);
+#ifdef USE_MMX
+void bgra32to16_maybe_mmx(unsigned char *, unsigned char *, int, int, int, int);
+void bgra32to16_mmx(unsigned char *, unsigned char *, int, int);
 #endif
 
 static int convert(X11XImage *, Image *);
@@ -55,11 +57,20 @@ X11XImage *
 x11ximage_create(X11 *x11)
 {
   X11XImage *xi;
+  CPUCaps cpucaps;
 
   if ((xi = calloc(1, sizeof(X11XImage))) == NULL)
     return NULL;
   memcpy(xi, &template, sizeof(X11XImage));
   xi->x11 = x11;
+  cpucaps = cpucaps_get();
+#ifdef USE_MMX
+  if (cpucaps_is_mmx(cpucaps)) {
+    debug_message(__FUNCTION__ ": MMX is available.\n");
+    xi->bgra32to16 = bgra32to16_maybe_mmx;
+  } else
+#endif
+    xi->bgra32to16 = bgra32to16_generic;
 
   return xi;
 }
@@ -96,6 +107,37 @@ destroy_ximage(X11XImage *xi)
     }
   }
 }
+
+void
+bgra32to16_generic(unsigned char *dest, unsigned char *s, int w, int h, int bpl, int bpl_s)
+{
+  unsigned int i, j, pix;
+  unsigned char *dd;
+
+  for (j = 0; j < h; j++) {
+    dd = dest + j * bpl;
+    for (i = 0; i < w; i++) {
+      pix =
+	((s[i * 4 + 2] & 0xf8) << 8) |
+	((s[i * 4 + 1] & 0xfc) << 3) |
+	((s[i * 4 + 0] & 0xf8) >> 3);
+      *dd++ = pix & 0xff;
+      *dd++ = pix >> 8;
+    }
+    s += bpl_s;
+  }
+}
+
+#ifdef USE_MMX
+void
+bgra32to16_maybe_mmx(unsigned char *dest, unsigned char *s, int w, int h, int bpl, int bpl_s)
+{
+  if (bpl == w * 2)
+    bgra32to16_mmx(dest, s, w, h);
+  else
+    bgra32to16_generic(dest, s, w, h, bpl, bpl_s);
+}
+#endif
 
 /* methods */
 
@@ -432,26 +474,7 @@ convert(X11XImage *xi, Image *p)
 	  }
 	  break;
 	case _BGRA32:
-#ifdef WITH_NASM
-	  if (ximage->bytes_per_line == w * 2)
-	    bgra32to16(dest, s, w, h);
-	  else {
-#endif
-	    for (j = 0; j < h; j++) {
-	      dd = dest + j * ximage->bytes_per_line;
-	      for (i = 0; i < w; i++) {
-		pix =
-		  ((s[i * 4 + 2] & 0xf8) << 8) |
-		  ((s[i * 4 + 1] & 0xfc) << 3) |
-		  ((s[i * 4 + 0] & 0xf8) >> 3);
-		*dd++ = pix & 0xff;
-		*dd++ = pix >> 8;
-	      }
-	      s += bytes_per_line_s;
-	    }
-#ifdef WITH_NASM
-	  }
-#endif
+	  xi->bgra32to16(dest, s, w, h, ximage->bytes_per_line, bytes_per_line_s);
 	  break;
 	case _INDEX:
 	  {
