@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 20 05:49:46 2001.
- * $Id: demultiplexer_mpeg.c,v 1.10 2001/06/19 20:50:34 sian Exp $
+ * Last Modified: Fri Jun 22 22:19:43 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.11 2001/06/22 17:34:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -145,7 +145,7 @@ examine(Demultiplexer *demux)
 	  continue;
 	info->ver = 1;
       } else {
-	show_message(__FUNCTION__ ": weird version\n");
+	show_message(__FUNCTION__ ": MPEG neither I nor II.\n");
 	goto error;
       }
       //debug_message(__FUNCTION__ ": MPEG_PACK_HEADER: version %d skip %d\n", info->ver, skip);
@@ -208,21 +208,6 @@ examine(Demultiplexer *demux)
   return 0;
 }
 
-static void
-close_sockets(Demultiplexer *demux)
-{
-  MpegInfo *info = (MpegInfo *)demux->private_data;
-
-  if (info->v_fd) {
-    close(info->v_fd);
-    info->v_fd = 0;
-  }
-  if (info->a_fd) {
-    close(info->a_fd);
-    info->a_fd = 0;
-  }
-}
-
 static unsigned long
 get_timestamp(unsigned char *p)
 {
@@ -237,17 +222,16 @@ get_timestamp(unsigned char *p)
   return t;
 }
 
-static int
-put_timestamp(int fd, unsigned long ts)
+static void
+mpeg_packet_destructor(void *d)
 {
-  unsigned char b[4];
+  MpegPacket *mp = (MpegPacket *)d;
 
-  b[0] = (ts >> 24) & 0xff;
-  b[1] = (ts >> 16) & 0xff;
-  b[2] = (ts >>  8) & 0xff;
-  b[3] =  ts        & 0xff;
-
-  return write(fd, b, 4);
+  if (mp) {
+    if (mp->data)
+      free(mp->data);
+    free(mp);
+  }
 }
 
 #define CONTINUE_IF_RUNNING if (demux->running) continue; else break
@@ -257,12 +241,11 @@ demux_main(void *arg)
 {
   Demultiplexer *demux = (Demultiplexer *)arg;
   MpegInfo *info = (MpegInfo *)demux->private_data;
+  MpegPacket *mp;
   unsigned char *buf, id;
-  unsigned long pts = 0, dts = 0;
   int read_total, read_size, used_size, skip;
   int nvstream, nastream;
-
-  debug_message(__FUNCTION__ "() v_fd %d a_fd %d\n", info->v_fd, info->a_fd);
+  int v_or_a;
 
   if ((buf = malloc(DEMULTIPLEXER_MPEG_BUFFER_SIZE)) == NULL)
     pthread_exit((void *)0);
@@ -326,7 +309,7 @@ demux_main(void *arg)
 	}
 	info->ver = 1;
       } else {
-	show_message(__FUNCTION__ ": weird version\n");
+	show_message(__FUNCTION__ ": MPEG neither I nor II.\n");
 	goto error;
       }
       break;
@@ -356,142 +339,72 @@ demux_main(void *arg)
       }
       if ((id & 0xe0) == 0xc0) {
 	nastream = id & 0x1f;
-	if (nastream == info->nastream) {
-	  if ((buf[6] & 0xc0) == 0x80) {
-	    char c = 0xff;
-
-	    write(info->a_fd, &c, 1);
-	    /* ?, flags, header_len */
-	    put_timestamp(info->a_fd, skip - 9 - buf[8]);
-	    write(info->a_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
-	  } else {
-	    unsigned char *p;
-	    unsigned char pts_dts_flag;
-
-	    for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
-	    if ((*p & 0xc0) == 0x40) {
-	      /* buffer scale, buffer size */
-	      p += 2;
-	    }
-	    pts_dts_flag = (*p & 0xf0) >> 4;
-	    //debug_message(__FUNCTION__ ": pd_flag(a) %d\n", pts_dts_flag);
-	    switch ((int)pts_dts_flag) {
-	    case 0:
-	      p++;
-	      break;
-	    case 2:
-	      /* presentation time stamp */
-	      pts = get_timestamp(p);
-	      p += 5;
-	      break;
-	    case 3:
-	      /* presentation time stamp, decoding time stamp */
-	      pts = get_timestamp(p);
-	      dts = get_timestamp(p + 5);
-	      p += 10;
-	      break;
-	    default:
-	      goto error;
-	    }
-	    if (p < buf + skip) {
-	      write(info->a_fd, &pts_dts_flag, 1);
-	      switch ((int)pts_dts_flag) {
-	      case 2:
-		put_timestamp(info->a_fd, pts);
-		break;
-	      case 3:
-		put_timestamp(info->a_fd, pts);
-		put_timestamp(info->a_fd, dts);
-		break;
-	      default:
-		break;
-	      }
-	      put_timestamp(info->a_fd, buf + skip - p);
-#if 0
-	      write(info->a_fd, p, buf + skip - p);
-#else
-	      {
-		unsigned char *d = malloc(buf + skip - p);
-
-		memcpy(d, p, buf + skip - p);
-		//debug_message(__FUNCTION__ ": %p\n", d);
-		write(info->a_fd, &d, sizeof(d));
-	      }
-#endif
-	    }
-	  }
-	}
+	v_or_a = 2;
       } else if ((id & 0xf0) == 0xe0) {
-	nvstream = id & 0xf;
-	if (nvstream == info->nvstream) {
-	  if ((buf[6] & 0xc0) == 0x80) {
-	    char c = 0xff;
+	nvstream = id & 0x0f;
+	v_or_a = 1;
+      } else {
+	v_or_a = 0;
+      }
 
-	    write(info->v_fd, &c, 1);
-	    /* ?, flags, header_len */
-	    put_timestamp(info->v_fd, skip - 9 - buf[8]);
-	    write(info->v_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
-	  } else {
-	    unsigned char *p;
-	    unsigned char pts_dts_flag;
+      if ((v_or_a == 1 && nvstream == info->nvstream) ||
+	  (v_or_a == 2 && nastream == info->nastream)) {
+	if ((buf[6] & 0xc0) == 0x80) {
+	  /* MPEG II */
+	  mp = malloc(sizeof(MpegPacket));
+	  mp->pts_dts_flag = 0xff;
+	  mp->size = skip - 9 - buf[8];
+	  mp->data = malloc(mp->size);
+	  memcpy(mp->data, buf + 9 + buf[8], mp->size);
+	  while (!fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor)) ;
+	} else {
+	  unsigned char *p;
+	  int pts_dts_flag;
+	  unsigned long pts, dts;
 
-	    for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
-	    if ((*p & 0xc0) == 0x40) {
-	      /* buffer scale, buffer size */
-	      p += 2;
-	    }
-	    pts_dts_flag = (*p & 0xf0) >> 4;
-	    //debug_message(__FUNCTION__ ": pd_flag(v) %d\n", pts_dts_flag);
-	    switch ((int)pts_dts_flag) {
-	    case 0:
-	      p++;
-	      break;
-	    case 2:
-	      /* presentation time stamp */
-	      pts = get_timestamp(p);
-	      p += 5;
-	      break;
-	    case 3:
-	      /* presentation time stamp, decoding time stamp */
-	      pts = get_timestamp(p);
-	      dts = get_timestamp(p + 5);
-	      p += 10;
-	      break;
-	    default:
-	      goto error;
-	    }
-	    if (p < buf + skip) {
-	      write(info->v_fd, &pts_dts_flag, 1);
-	      switch ((int)pts_dts_flag) {
-	      case 2:
-		put_timestamp(info->v_fd, pts);
-		break;
-	      case 3:
-		put_timestamp(info->v_fd, pts);
-		put_timestamp(info->v_fd, dts);
-		break;
-	      default:
-		break;
-	      }
-	      put_timestamp(info->v_fd, buf + skip - p);
-#if 0
-	      write(info->v_fd, p, buf + skip - p);
-#else
-	      {
-		unsigned char *d = malloc(buf + skip - p);
-		memcpy(d, p, buf + skip - p);
-		//debug_message(__FUNCTION__ ": %p\n", d);
-		write(info->v_fd, &d, sizeof(d));
-	      }
-#endif
-	    }
+	  for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
+	  if ((*p & 0xc0) == 0x40) {
+	    /* buffer scale, buffer size */
+	    p += 2;
+	  }
+	  pts_dts_flag = (*p & 0xf0) >> 4;
+	  switch (pts_dts_flag) {
+	  case 0:
+	    p++;
+	    break;
+	  case 2:
+	    /* presentation time stamp */
+	    pts = get_timestamp(p);
+	    p += 5;
+	    break;
+	  case 3:
+	    /* presentation time stamp, decoding time stamp */
+	    pts = get_timestamp(p);
+	    dts = get_timestamp(p + 5);
+	    p += 10;
+	    break;
+	  default:
+	    goto error;
+	  }
+	  if (p < buf + skip) {
+	    mp = malloc(sizeof(MpegPacket));
+	    mp->pts_dts_flag = pts_dts_flag;
+	    mp->pts = pts;
+	    mp->dts = dts;
+	    mp->size = buf + skip - p;
+	    mp->data = malloc(mp->size);
+	    memcpy(mp->data, p, mp->size);
+	    while (!fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor)) ;
+	    //debug_message(__FUNCTION__ ": %s: put %d bytes\n", (v_or_a == 1) ? "v" : "a", mp->size);
 	  }
 	}
-      } else if (id < 0xb9) {
-	debug_message("Looks like video stream.\n");
-	goto end;
-      } else {
-	debug_message("Unknown id %02X %d bytes\n", id, skip - 6);
+      } else if (!v_or_a) {
+	if (id < 0xb9) {
+	  debug_message("Looks like video stream.\n");
+	  goto end;
+	} else {
+	  debug_message("Unknown id %02X %d bytes\n", id, skip - 6);
+	}
       }
       break;
     }
@@ -502,13 +415,11 @@ demux_main(void *arg)
  end:
   demux->running = 0;
   free(buf);
-  close_sockets(demux);
   pthread_exit((void *)1);
 
  error:
   demux->running = 0;
   free(buf);
-  close_sockets(demux);
   pthread_exit((void *)0);
 }
 
@@ -518,11 +429,9 @@ start(Demultiplexer *demux)
   if (demux->running)
     return 0;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message(__FUNCTION__ " demultiplexer_mpeg\n");
 
   pthread_create(&demux->thread, NULL, demux_main, demux);
-
-  debug_message(__FUNCTION__ ": demultiplexer created\n");
 
   return 1;
 }
@@ -538,7 +447,7 @@ stop(Demultiplexer *demux)
   debug_message(__FUNCTION__ " demultiplexer_mpeg\n");
 
   demux->running = 0;
-  pthread_cancel(demux->thread);
+  //pthread_cancel(demux->thread);
   pthread_join(demux->thread, &ret);
 
   debug_message(__FUNCTION__ ": joined\n");

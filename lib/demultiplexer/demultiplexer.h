@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 24 03:43:29 2001.
- * $Id: demultiplexer.h,v 1.4 2001/02/24 08:23:31 sian Exp $
+ * Last Modified: Fri Jun 22 18:32:42 2001.
+ * $Id: demultiplexer.h,v 1.5 2001/06/22 17:34:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

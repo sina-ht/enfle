@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 20 05:45:13 2001.
- * $Id: libmpeg2.c,v 1.16 2001/06/19 20:50:34 sian Exp $
+ * Last Modified: Fri Jun 22 22:19:36 2001.
+ * $Id: libmpeg2.c,v 1.17 2001/06/22 17:34:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -91,7 +91,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   unsigned int accel;
 
   if ((info = calloc(1, sizeof(Libmpeg2_info))) == NULL) {
-    show_message("LibMPEG2: play_movie: No enough memory.\n");
+    show_message("LibMPEG2: " __FUNCTION__ ": No enough memory.\n");
     return PLAY_ERROR;
   }
 
@@ -154,7 +154,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->num_of_frames = 1;
     m->rendering_width = m->width;
     m->rendering_height = m->height;
-    show_message("warning: This stream has no video stream.\n");
+    show_message("This stream has no video stream.\n");
     info->nvstream = -1;
     demultiplexer_mpeg_set_video(info->demux, info->nvstream);
   } else {
@@ -199,9 +199,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   m->st = st;
   m->status = _STOP;
 
-  play(m);
-
-  return PLAY_OK;
+  return play(m);
 
  error:
   if (info->demux)
@@ -217,7 +215,6 @@ static PlayerStatus
 play(Movie *m)
 {
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
-  int fds[2];
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -243,34 +240,16 @@ play(Movie *m)
   stream_rewind(m->st);
 
   if (m->has_video) {
-    if (socketpair(PF_LOCAL, SOCK_STREAM, 0, fds) != 0) {
-      perror("LibMPEG2");
+    if ((info->vstream = fifo_create()) == NULL)
       return PLAY_ERROR;
-    }
-    info->v_fd_in = fds[0];
-    info->v_fd_out = fds[1];
-    if (fcntl(info->v_fd_in, F_SETFL, O_NONBLOCK)) {
-      perror("LibMPEG2: ");
-      close(fds[0]);
-      close(fds[1]);
-      return PLAY_ERROR;
-    }
-    demultiplexer_mpeg_set_vfd(info->demux, info->v_fd_out);
+    demultiplexer_mpeg_set_vst(info->demux, info->vstream);
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
 
   if (m->has_audio) {
-    if (socketpair(PF_LOCAL, SOCK_STREAM, 0, fds) != 0)
+    if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
-    info->a_fd_in = fds[0];
-    info->a_fd_out = fds[1];
-    if (fcntl(info->a_fd_in, F_SETFL, O_NONBLOCK)) {
-      perror("LibMPEG2: ");
-      close(fds[0]);
-      close(fds[1]);
-      return PLAY_ERROR;
-    }
-    demultiplexer_mpeg_set_afd(info->demux, info->a_fd_out);
+    demultiplexer_mpeg_set_ast(info->demux, info->astream);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
 
@@ -282,18 +261,9 @@ play(Movie *m)
 static int
 get_audio_time(Movie *m, AudioDevice *ad)
 {
-#if 1
   if (ad && m->ap->bytes_written)
     return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
   return (int)((double)m->current_sample * 1000 / m->samplerate);
-#else
-  if (ad && m->ap->bytes_written) {
-    int bw = m->ap->bytes_written(ad);
-    debug_message(__FUNCTION__ ": %d\n", bw);
-    return (int)((double)bw / m->samplerate * 500.0 / m->channels);
-  }
-  return (int)((double)m->current_sample * 1000 / m->samplerate);
-#endif
 }
 
 static inline unsigned long
@@ -329,79 +299,38 @@ play_video(void *arg)
 {
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
-  unsigned char buf[MPEG_VIDEO_DECODE_BUFFER_SIZE];
-  unsigned char *data;
-  unsigned long pts, dts, size;
-  int read_size;
-  int buf_used = 0;
+  void *data;
+  MpegPacket *mp;
+  //unsigned long pts, dts, size;
   int nframe_decoded;
-  int s;
 
   debug_message(__FUNCTION__ "()\n");
 
-  size = 0;
   while (m->status == _PLAY) {
-    if ((read_size = read(info->v_fd_in, buf + buf_used, MPEG_VIDEO_DECODE_BUFFER_SIZE - buf_used)) < 0) {
+    if (fifo_get(info->vstream, &data)) {
+      mp = (MpegPacket *)data;
 #if 0
-      int errnum = errno;
-
-      debug_message(__FUNCTION__ ": errno %d EAGAIN %d\n", errnum, EAGAIN);
-      if (errnum == EAGAIN) {
-	continue;
+      switch (mp->pts_dts_flag) {
+      case 2:
+	pts = mp->pts;
+	dts = -1;
+	size = mp->size;
+	break;
+      case 3:
+	pts = mp->pts;
+	dts = mp->dts;
+	size = mp->size;
+	break;
+      default:
+	pts = dts = -1;
+	size = mp->size;
+	break;
       }
-      perror("LibMPEG2: play_video");
-      demultiplexer_set_eof(info->demux, 1);
-      break;
 #endif
-      continue;
-    } else if (read_size == 0) {
-      demultiplexer_set_eof(info->demux, 1);
-      break;
-    } else {
-      buf_used += read_size;
-      //debug_message(__FUNCTION__ ": buf_used = %d\n", buf_used);
-
-      if (size == 0) {
-	switch ((int)buf[0]) {
-	case 2:
-	  if (buf_used < 9)
-	    continue;
-	  pts = get_timestamp(buf + 1);
-	  dts = -1;
-	  size = get_timestamp(buf + 5);
-	  s = 9;
-	  break;
-	case 3:
-	  if (buf_used < 13)
-	    continue;
-	  pts = get_timestamp(buf + 1);
-	  dts = get_timestamp(buf + 5);
-	  size = get_timestamp(buf + 9);
-	  s = 13;
-	  break;
-	default:
-	  if (buf_used < 5)
-	    continue;
-	  pts = dts = -1;
-	  size = get_timestamp(buf + 1);
-	  s = 5;
-	  break;
-	}
-	//debug_message(__FUNCTION__ ": size = %ld\n", size);
-      }
-      if (buf_used < s + sizeof(unsigned char *))
-	continue;
-      data = get_ptr(buf + s);
-      //debug_message(__FUNCTION__ ": %p\n", data);
-      s += sizeof(data);
-      //debug_message(__FUNCTION__ ": pts = %ld, dts = %ld\n", pts, dts);
-      nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, data, data + size);
-      free(data);
+      nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, mp->data, mp->data + mp->size);
       //debug_message(__FUNCTION__ ": %d frames decoded\n", nframe_decoded);
-      buf_used -= s;
-      if (buf_used)
-	memmove(buf, buf + s, buf_used);
-      size = 0;
+      free(mp->data);
+      free(mp);
     }
   }
 
@@ -415,7 +344,6 @@ play_video(void *arg)
 
   debug_message(__FUNCTION__ ": exiting.\n");
 
-  close(info->v_fd_in);
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -428,71 +356,44 @@ play_audio(void *arg)
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   AudioDevice *ad;
-  unsigned char input_buffer[MP3_READ_BUFFER_SIZE];
   unsigned char output_buffer[MP3_DECODE_BUFFER_SIZE];
-  unsigned char *data;
-  unsigned long pts, dts, size;
-  int read_size;
-  int buf_used = 0;
-  int write_size, ret;
+  //unsigned long pts, dts, size;
+  int ret, write_size;
   int param_is_set = 0;
-  int s;
+  void *data;
+  MpegPacket *mp;
 
   debug_message(__FUNCTION__ "()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
     ExitMP3(&info->mp);
-    close(info->a_fd_in);
     pthread_exit((void *)PLAY_ERROR);
   }
   info->ad = ad;
 
-  size = 0;
   while (m->status == _PLAY) {
-    if ((read_size = read(info->a_fd_in, input_buffer + buf_used, MP3_READ_BUFFER_SIZE - buf_used)) < 0)
-      continue;
-    else if (read_size == 0) {
-      demultiplexer_set_eof(info->demux, 1);
-      break;
-    } else {
-      buf_used += read_size;
-      if (size == 0) {
-	switch ((int)input_buffer[0]) {
-	case 2:
-	  if (buf_used < 9)
-	    continue;
-	  pts = get_timestamp(input_buffer + 1);
-	  dts = -1;
-	  size = get_timestamp(input_buffer + 5);
-	  s = 9;
-	  break;
-	case 3:
-	  if (buf_used < 13)
-	    continue;
-	  pts = get_timestamp(input_buffer + 1);
-	  dts = get_timestamp(input_buffer + 5);
-	  size = get_timestamp(input_buffer + 9);
-	  s = 13;
-	  break;
-	default:
-	  if (buf_used < 5)
-	    continue;
-	  pts = dts = -1;
-	  size = get_timestamp(input_buffer + 1);
-	  s = 5;
-	  break;
-	}
-	//debug_message(__FUNCTION__ ": size = %ld\n", size);
+    if (fifo_get(info->astream, &data)) {
+      mp = (MpegPacket *)data;
+#if 0
+      switch (mp->pts_dts_flag) {
+      case 2:
+	pts = mp->pts;
+	dts = -1;
+	size = mp->size;
+	break;
+      case 3:
+	pts = mp->pts;
+	dts = mp->dts;
+	size = mp->size;
+	break;
+      default:
+	pts = dts = -1;
+	size = mp->size;
+	break;
       }
-      if (buf_used < s + sizeof(unsigned char *))
-	continue;
-      data = get_ptr(input_buffer + s);
-      //debug_message(__FUNCTION__ ": %p\n", data);
-      s += sizeof(data);
-      //debug_message(__FUNCTION__ ": pts = %ld, dts = %ld\n", pts, dts);
-      ret = decodeMP3(&info->mp,
-		      data, size,
+#endif
+      ret = decodeMP3(&info->mp, mp->data, mp->size,
 		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       if (!param_is_set) {
 	m->sampleformat = _AUDIO_FORMAT_S16_LE;
@@ -504,16 +405,12 @@ play_audio(void *arg)
       }
       while (ret == MP3_OK) {
 	m->ap->write_device(ad, output_buffer, write_size);
-	//debug_message(__FUNCTION__ ": write %d\n", write_size);
-	ret = decodeMP3(&info->mp,
-			NULL, 0,
+	//debug_message(__FUNCTION__ ": %d bytes written.\n", write_size);
+	ret = decodeMP3(&info->mp, NULL, 0,
 			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       }
-      buf_used -= s;
-      if (buf_used)
-	memmove(input_buffer, input_buffer + s, buf_used);
-      size = 0;
-      free(data);
+      free(mp->data);
+      free(mp);
     }
   }
 
@@ -525,7 +422,6 @@ play_audio(void *arg)
 
   debug_message(__FUNCTION__ " exiting.\n");
 
-  close(info->a_fd_in);
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -655,6 +551,14 @@ stop_movie(Movie *m)
   debug_message(__FUNCTION__ ": waiting for demultiplexer thread to exit... \n");
 
   demultiplexer_stop(info->demux);
+  if (m->has_video && info->vstream) {
+    fifo_destroy(info->vstream);
+    info->vstream = NULL;
+  }
+  if (m->has_audio && info->astream) {
+    fifo_destroy(info->astream);
+    info->astream = NULL;
+  }
 
   debug_message(__FUNCTION__ ": waiting for video thread to exit... \n");
 
