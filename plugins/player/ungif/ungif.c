@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 11 01:40:52 2000.
- * $Id: ungif.c,v 1.4 2000/10/10 17:30:14 sian Exp $
+ * Last Modified: Wed Oct 11 16:40:30 2000.
+ * $Id: ungif.c,v 1.5 2000/10/12 03:46:24 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -57,7 +57,7 @@ static PlayerStatus pause_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "UNGIF",
-  description: "UNGIF Player plugin version 0.1",
+  description: "UNGIF Player plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
