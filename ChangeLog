@@ -1,3 +1,11 @@
+2001-09-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/opendivx/opendivx.c: Added needed unlock(). More
+	debug messages.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Fixed frame rate
+	calculation bug.
+
 2001-09-22  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/avifile/avifile.cpp: Hack for RGB output, but
