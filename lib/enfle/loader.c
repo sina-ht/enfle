@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 19:00:02 2001.
- * $Id: loader.c,v 1.15 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sat Oct 13 02:34:32 2001.
+ * $Id: loader.c,v 1.16 2001/10/14 12:32:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,6 +25,8 @@
 
 #include "loader.h"
 #include "loader-plugin.h"
+#include "utils/misc.h"
+#include "utils/libstring.h"
 
 int
 loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Config *c)
@@ -32,23 +34,49 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
   Dlist *dl;
   Dlist_data *dd;
   PluginList *pl;
+  Plugin *p;
+  LoaderPlugin *lp;
+  char *ext, *pluginname;
 
   pl = eps->pls[ENFLE_PLUGIN_LOADER];
+
+  if ((ext = misc_get_ext(st->path, 1))) {
+    String *s;
+
+    s = string_create();
+    string_catf(s, "/enfle/plugins/loader/assoc/%s", ext);
+    pluginname = config_get_str(c, string_get(s));
+    string_destroy(s);
+    if (pluginname) {
+      if ((p = pluginlist_get(pl, pluginname))) {
+	lp = plugin_get(p);
+	stream_rewind(st);
+	//debug_message(__FUNCTION__ ": try %s (assoc'd with %s)\n", pluginname, ext);
+	free(ext);
+	if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
+	  ip->format = pluginname;
+	  return 1;
+	}
+	debug_message(__FUNCTION__ ": %s failed.\n", pluginname);
+	return 0;
+      } else {
+	show_message(__FUNCTION__ ": %s (assoc'd with %s) not found.\n", pluginname, ext);
+      }
+    }
+    free(ext);
+  }
+
   dl = pluginlist_list(pl);
   ip->format_detail = NULL;
   dlist_iter(dl, dd) {
-    Plugin *p;
-    LoaderPlugin *lp;
-    char *pluginname;
-
     pluginname = hash_key_key(dlist_data(dd));
     if ((p = pluginlist_get(pl, pluginname)) == NULL)
-      fatal(1, "BUG: %s loader plugin not found but in list.\n", pluginname);
+      bug(1, "%s loader plugin not found but in list.\n", pluginname);
     lp = plugin_get(p);
 
     stream_rewind(st);
 
-    //debug_message("loader: identify: try %s\n", pluginname);
+    //debug_message(__FUNCTION__ ": try %s\n", pluginname);
 
     if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
       ip->format = pluginname;
