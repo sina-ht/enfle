@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 23 20:32:48 2003.
- * $Id: enfle.c,v 1.54 2003/12/27 14:27:54 sian Exp $
+ * Last Modified: Fri Jan  2 10:46:46 2004.
+ * $Id: enfle.c,v 1.55 2004/01/03 10:32:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -438,7 +438,7 @@ main(int argc, char **argv)
   uidata.a = archive_create(ARCHIVE_ROOT);
 
   if (strcmp(argv[optind], "-") == 0) {
-    archive_add(uidata.a, argv[1], strdup(argv[1]));
+    archive_add(uidata.a, argv[optind], strdup(argv[optind]));
   } else {
     for (i = optind; i < argc; i++) {
       if (strcmp(argv[i], "-") == 0) {
