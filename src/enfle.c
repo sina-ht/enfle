@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jul 29 21:40:26 2002.
- * $Id: enfle.c,v 1.48 2002/08/02 14:03:55 sian Exp $
+ * Last Modified: Thu Aug 15 11:17:59 2002.
+ * $Id: enfle.c,v 1.49 2002/08/15 12:47:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -152,36 +152,40 @@ static void
 print_plugin_info(EnflePlugins *eps, int level)
 {
   int i;
-  Dlist *dl;
-  Dlist_data *dd;
+  PluginList *pl;
+  EnflePlugin *ep;
+  Plugin *p;
+  void *k;
+  unsigned int kl;
   const char *plugintypename;
   char *pluginname;
   const unsigned char *description, *author;
 
   printf("Plugins:\n");
   for (i = 0; i < ENFLE_PLUGIN_END; i++) {
+    pl = eps->pls[i];
     plugintypename = enfle_plugin_type_to_name((PluginType)i);
-    if ((dl = enfle_plugins_get_names(eps, i))) {
-      printf(" %s:", plugintypename);
+    printf(" %s:", plugintypename);
+    pluginlist_iter(pl, k, kl, p) {
+      ep = plugin_get(p);
+      pluginname = (char *)k;
       if (level >= 1)
 	printf("\n");
-      dlist_iter(dl, dd) {
-	pluginname = hash_key_key(dlist_data(dd));
-	if (level == 0) {
-	  printf(" %s", pluginname);
-	} else {
-	  description = enfle_plugins_get_description(eps, i, pluginname);
-	  printf("  %s", description);
-	  if (level >= 2) {
-	    author = enfle_plugins_get_author(eps, i, pluginname);
-	    printf(" by %s", author);
-	  }
-	  printf("\n");
+      if (level == 0) {
+	printf(" %s", pluginname);
+      } else {
+	description = enfle_plugin_description(ep);
+	printf("  %s", description);
+	if (level >= 2) {
+	  author = enfle_plugin_author(ep);
+	  printf(" by %s", author);
 	}
-      }
-      if (level == 0)
 	printf("\n");
+      }
     }
+    pluginlist_iter_end
+    if (level == 0)
+      printf("\n");
   }
 }
 
@@ -330,7 +334,7 @@ main(int argc, char **argv)
       magnify_method = atoi(optarg);
       break;
     case 'c':
-      dlist_add(override_config, strdup(optarg));
+      dlist_add_str(override_config, optarg);
       break;
     case 'w':
       ui_name = strdup("Wallpaper");
@@ -385,7 +389,7 @@ main(int argc, char **argv)
     void *d = dlist_data(dd);
     config_parse(c, d);
   }
-  dlist_destroy(override_config, 1);
+  dlist_destroy(override_config);
 
   if (format)
     config_set_str(c, (char *)"/enfle/plugins/ui/convert/format", format);
