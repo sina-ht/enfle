@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:39:07 2001.
- * $Id: x11ximage.c,v 1.36 2001/09/19 00:38:12 sian Exp $
+ * Last Modified: Thu Sep 20 00:29:04 2001.
+ * $Id: x11ximage.c,v 1.37 2001/09/20 05:36:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -88,6 +88,7 @@ destroy_ximage(X11XImage *xi)
     if (xi->xvimage) {
 #ifdef USE_SHM
       if (xi->if_attached) {
+	XSync(x11_display(xi->x11), False);
 	XShmDetach(x11_display(xi->x11), xi->shminfo);
 	xi->if_attached = 0;
 	//debug_message(__FUNCTION__ ": SHM detached\n");
@@ -101,6 +102,7 @@ destroy_ximage(X11XImage *xi)
       xi->ximage->data = NULL;
 #ifdef USE_SHM
       if (xi->if_attached) {
+	XSync(x11_display(xi->x11), False);
 	XShmDetach(x11_display(xi->x11), xi->shminfo);
 	xi->if_attached = 0;
 	//debug_message(__FUNCTION__ ": SHM detached\n");
@@ -256,21 +258,24 @@ convert(X11XImage *xi, Image *p)
     xi->type = p->type;
   }
 
-  //debug_message(__FUNCTION__ ": (%d, %d)\n", w, h);
+#ifdef DEBUG
+  if (create_ximage)
+    debug_message(__FUNCTION__ ": (%d, %d) use_xv %d ximage %p xvimage %p\n", w, h, xi->use_xv, xi->ximage, xi->xvimage);
+#endif
 
   if (create_ximage) {
     switch (memory_type(p->rendered.image)) {
     case _NORMAL:
 #ifdef USE_XV
       if (xi->use_xv) {
-	xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], memory_ptr(p->rendered.image), w, h);
+	if ((xi->xvimage = x11_xv_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], memory_ptr(p->rendered.image), w, h)))
+	  xi->format_num = t;
       }
       if (!xi->use_xv || xi->xvimage == NULL) {
 #endif
 	xi->ximage =
 	  x11_create_ximage(xi->x11, x11_visual(xi->x11), x11_depth(xi->x11),
 			    memory_ptr(p->rendered.image), w, h, 8, 0);
-	xi->use_xv = 0;
 #ifdef USE_XV
       }
 #endif
@@ -279,14 +284,14 @@ convert(X11XImage *xi, Image *p)
 #ifdef USE_SHM
 #ifdef USE_XV
       if (xi->use_xv) {
-	xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], NULL, w, h, xi->shminfo);
+	if ((xi->xvimage = x11_xv_shm_create_ximage(xi->x11, xi->x11->xv->image_port, xi->x11->xv->format_ids[t], NULL, w, h, xi->shminfo)))
+	  xi->format_num = t;
       }
       if (!xi->use_xv || xi->xvimage == NULL) {
 #endif /* USE_XV */
 	xi->ximage =
 	  XShmCreateImage(x11_display(xi->x11), x11_visual(xi->x11), x11_depth(xi->x11), ZPixmap, NULL,
 			  xi->shminfo, w, h);
-	xi->use_xv = 0;
 #ifdef USE_XV
       }
 #endif
@@ -305,12 +310,11 @@ convert(X11XImage *xi, Image *p)
   if (!xi->use_xv) {
     ximage = xi->ximage;
     p->rendered.bytes_per_line = ximage->bytes_per_line;
-  }
-
 #if 0
-  debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
-  debug_message("p type: %s p bpl: %d x bpl: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel);
+    debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
+    debug_message("p type: %s p bpl: %d x bpl: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel);
 #endif
+  }
 
   /* _GRAY -> _INDEX */
   if (p->type == _GRAY) {
@@ -625,10 +629,10 @@ convert(X11XImage *xi, Image *p)
 
     xvimage = xi->xvimage;
     i = 0;
-#if 0 // defined(DEBUG)
-    debug_message(__FUNCTION__ ": XvImage: id %04X (%d x %d) %d bytes %d plane\n",
+#if 0
+    debug_message(__FUNCTION__ ": XvImage: id %04X (%d x %d) %d bytes, %d plane, %d bpl\n",
 		  xvimage->id, xvimage->width, xvimage->height,
-		  xvimage->data_size, xvimage->num_planes);
+		  xvimage->data_size, xvimage->num_planes, xi->x11->xv->bits_per_pixel[xi->format_num]);
     debug_message(__FUNCTION__ ": XvImage:  pitch/offset: ");
     for (i = 0; i < xvimage->num_planes; i++)
       debug_message("%d/%d ", xvimage->pitches[i], xvimage->offsets[i]);
@@ -636,23 +640,39 @@ convert(X11XImage *xi, Image *p)
 
     if (memory_alloc(p->rendered.image, xvimage->data_size) == NULL)
       fatal(2, __FUNCTION__ ": No enough memory(alloc)\n");
-    if (xvimage->pitches[0] == p->width &&
-	xvimage->pitches[1] == p->width >> 1 &&
-	xvimage->pitches[2] == p->width >> 1) {
-      debug_message(__FUNCTION__ ": XvImage:  pitch OK\n");
-      if (xvimage->offsets[0] == 0 &&
-	  xvimage->offsets[1] == p->width * p->height &&
-	  xvimage->offsets[2] == p->width * p->height + ((p->width * p->height) >> 2)) {
-	debug_message(__FUNCTION__ ": XvImage:  offset OK\n");
+    if (xvimage->num_planes == 3) {
+      if (xvimage->pitches[0] == p->width &&
+	  xvimage->pitches[1] == p->width >> 1 &&
+	  xvimage->pitches[2] == p->width >> 1) {
+	debug_message(__FUNCTION__ ": XvImage:  pitch OK\n");
+	if (xvimage->offsets[0] == 0 &&
+	    xvimage->offsets[1] == p->width * p->height &&
+	    xvimage->offsets[2] == p->width * p->height + ((p->width * p->height) >> 2)) {
+	  debug_message(__FUNCTION__ ": XvImage:  offset OK\n");
+	} else {
+	  fatal(4, __FUNCTION__ ": XvImage:  offset NG: %d %d %d <-> %d %d %d\n",
+		xvimage->offsets[0], xvimage->offsets[1], xvimage->offsets[2],
+		0, p->width * p->height, p->width * p->height + ((p->width * p->height) >> 2));
+	}
       } else {
-	fatal(4, __FUNCTION__ ": XvImage:  offset NG: %d %d %d <-> %d %d %d\n",
-	      xvimage->offsets[0], xvimage->offsets[1], xvimage->offsets[2],
-	      p->width * p->height, (p->width * p->height) >> 2, (p->width * p->height) >> 2);
+	fatal(4, __FUNCTION__ ": XvImage:  pitch NG: %d %d %d <-> %d %d %d\n",
+	      xvimage->pitches[0], xvimage->pitches[1], xvimage->pitches[2],
+	      p->width, p->width >> 1, p->width >> 1);
+      }
+    } else if (xvimage->num_planes == 1) {
+      if (xvimage->pitches[0] == p->width << 1) {
+	debug_message(__FUNCTION__ ": XvImage:  pitch OK\n");
+	if (xvimage->offsets[0] == 0) {
+	  debug_message(__FUNCTION__ ": XvImage:  offset OK\n");
+	} else {
+	  fatal(4, __FUNCTION__ ": XvImage:  offset NG: %d <-> %d\n", xvimage->offsets[0], 0);
+	}
+      } else {
+	fatal(4, __FUNCTION__ ": XvImage:  pitch NG: %d <-> %d\n",
+	      xvimage->pitches[0], p->width << 1);
       }
     } else {
-      fatal(4,__FUNCTION__ ": XvImage:  pitch NG: %d %d %d <-> %d %d %d\n",
-	    xvimage->pitches[0], xvimage->pitches[1], xvimage->pitches[2],
-	    p->width, p->width >> 1, p->width >> 1);
+      fatal(4, __FUNCTION__ ": Unknown nplanes == %d\n", xvimage->num_planes);
     }
 #endif
 #endif

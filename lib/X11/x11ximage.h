@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Mon Sep 17 18:14:31 2001.
- * $Id: x11ximage.h,v 1.7 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Wed Sep 19 20:05:20 2001.
+ * $Id: x11ximage.h,v 1.8 2001/09/20 05:36:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,6 +41,7 @@ struct _x11ximage {
   ImageType type;
 #ifdef USE_XV
   XvImage *xvimage;
+  int format_num; /* not ID */
 #else
   void *xvimage;
 #endif
