@@ -1,5 +1,10 @@
 2001-02-05  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/video/Xlib/Xlib.c: Added do_sync_discard() to avoid key
+	event buffering.
+
+2001-02-05  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/dllloader/pe_image.c, lib/enfle/archive.c,
 	lib/enfle/archiver.c, lib/enfle/loader.c, lib/enfle/player.c,
 	lib/enfle/streamer.c, lib/utils/dlist.[ch], lib/utils/hash.[ch],
