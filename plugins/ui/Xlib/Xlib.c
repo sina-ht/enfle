@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 05:22:32 2000.
- * $Id: Xlib.c,v 1.10 2000/10/16 20:23:50 sian Exp $
+ * Last Modified: Tue Oct 17 22:56:04 2000.
+ * $Id: Xlib.c,v 1.11 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -312,6 +312,7 @@ main_loop(UIData *uidata, Movie *m, Image *p)
 static int
 process_files_of_archive(UIData *uidata, Archive *a)
 {
+  EnflePlugins *eps = uidata->eps;
   Loader *ld = uidata->ld;
   Streamer *st = uidata->st;
   Archiver *ar = uidata->ar;
@@ -382,11 +383,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  continue;
 	}
 
-	if (streamer_identify(st, s, path)) {
+	if (streamer_identify(st, eps, s, path)) {
 
 	  debug_message("Stream identified as %s\n", s->format);
 
-	  if (!streamer_open(st, s, s->format, path)) {
+	  if (!streamer_open(st, eps, s, s->format, path)) {
 	    show_message("Stream %s [%s] cannot open\n", s->format, path);
 	    archive_iteration_delete(a);
 	    continue;
@@ -399,11 +400,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
       }
 
       arc = archive_create();
-      if (archiver_identify(ar, arc, s)) {
+      if (archiver_identify(ar, eps, arc, s)) {
 
 	debug_message("Archiver identified as %s\n", a->format);
 
-	if (archiver_open(ar, arc, arc->format, s)) {
+	if (archiver_open(ar, eps, arc, arc->format, s)) {
 	  dir = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
 	  continue;
@@ -420,20 +421,20 @@ process_files_of_archive(UIData *uidata, Archive *a)
     }
 
     f = LOAD_NOT;
-    if (loader_identify(ld, p, s)) {
+    if (loader_identify(ld, eps, p, s)) {
 
       debug_message("Image identified as %s\n", p->format);
 
-      if ((f = loader_load_image(ld, p->format, p, s)) == LOAD_OK)
+      if ((f = loader_load_image(ld, eps, p->format, p, s)) == LOAD_OK)
 	stream_close(s);
     }
 
     if (f != LOAD_OK) {
-      if (player_identify(player, m, s)) {
+      if (player_identify(player, eps, m, s)) {
 
 	debug_message("Movie(Animation) identified as %s\n", m->format);
 
-	if ((f = player_load_movie(player, uidata, m->format, m, s)) != PLAY_OK) {
+	if ((f = player_load_movie(player, eps, uidata, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
 	  show_message("%s load failed\n", path);
 	  archive_iteration_delete(a);

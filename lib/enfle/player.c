@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 12 19:18:29 2000.
- * $Id: player.c,v 1.3 2000/10/12 15:47:02 sian Exp $
+ * Last Modified: Tue Oct 17 22:47:13 2000.
+ * $Id: player.c,v 1.4 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,96 +28,52 @@
 #include "stream.h"
 #include "player.h"
 
-static char *load(Player *, Plugin *);
-static int unload(Player *, char *);
-static int identify(Player *, Movie *, Stream *);
-static PlayerStatus load_movie(Player *, UIData *, char *, Movie *, Stream *);
-static void destroy(Player *);
-static Dlist *get_names(Player *);
-static unsigned char *get_description(Player *, char *);
-static unsigned char *get_author(Player *, char *);
+static int identify(EnflePlugins *, Movie *, Stream *);
+static PlayerStatus load_movie(EnflePlugins *, UIData *, char *, Movie *, Stream *);
 
-static Player player_template = {
-  pl: NULL,
-  load: load,
-  unload: unload,
+static Player template = {
   identify: identify,
-  load_movie: load_movie,
-  destroy: destroy,
-  get_names: get_names,
-  get_description: get_description,
-  get_author: get_author
+  load_movie: load_movie
 };
 
 Player *
 player_create(void)
 {
-  Player *l;
+  Player *p;
 
-  if ((l = (Player *)calloc(1, sizeof(Player))) == NULL)
+  if ((p = (Player *)calloc(1, sizeof(Player))) == NULL)
     return NULL;
-  memcpy(l, &player_template, sizeof(Player));
+  memcpy(p, &template, sizeof(Player));
 
-  if ((l->pl = pluginlist_create()) == NULL) {
-    free(l);
-    return NULL;
-  }
-
-  return l;
+  return p;
 }
 
 /* methods */
 
-static char *
-load(Player *l, Plugin *p)
-{
-  PluginList *pl = l->pl;
-  PlayerPlugin *lp;
-
-  lp = plugin_get(p);
-
-  if (!pluginlist_add(pl, p, lp->name)) {
-    plugin_unload(p);
-    return NULL;
-  }
-
-  return lp->name;
-}
-
 static int
-unload(Player *l, char *pluginname)
-{
-  Plugin *p;
-
-  if ((p = pluginlist_get(l->pl, pluginname)) == NULL)
-    return 0;
-  plugin_unload(p);
-
-  return pluginlist_delete(l->pl, pluginname);
-}
-
-static int
-identify(Player *l, Movie *mp, Stream *st)
+identify(EnflePlugins *eps, Movie *m, Stream *st)
 {
   Dlist *dl;
   Dlist_data *dd;
+  PluginList *pl;
 
-  dl = pluginlist_list(l->pl);
+  pl = eps->pls[ENFLE_PLUGIN_PLAYER];
+  dl = pluginlist_list(pl);
   dlist_iter(dl, dd) {
     Plugin *p;
     PlayerPlugin *lp;
     char *pluginname;
 
     pluginname = dlist_data(dd);
-    if ((p = pluginlist_get(l->pl, pluginname)) == NULL) {
+    if ((p = pluginlist_get(pl, pluginname)) == NULL) {
       fprintf(stderr, "BUG: %s player plugin not found but in list.\n", pluginname);
       exit(-1);
     }
     lp = plugin_get(p);
 
     stream_rewind(st);
-    if (lp->identify(mp, st) == PLAY_OK) {
-      mp->format = pluginname;
+    if (lp->identify(m, st) == PLAY_OK) {
+      m->format = pluginname;
       dlist_move_to_top(dl, dd);
       return 1;
     }
@@ -127,54 +83,15 @@ identify(Player *l, Movie *mp, Stream *st)
 }
 
 static PlayerStatus
-load_movie(Player *l, UIData *uidata, char *pluginname, Movie *m, Stream *st)
+load_movie(EnflePlugins *eps, UIData *uidata, char *pluginname, Movie *m, Stream *st)
 {
   Plugin *p;
   PlayerPlugin *pp;
 
-  if ((p = pluginlist_get(l->pl, pluginname)) == NULL)
+  if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_PLAYER], pluginname)) == NULL)
     return 0;
   pp = plugin_get(p);
 
   stream_rewind(st);
   return pp->load(uidata, m, st);
-}
-
-static void
-destroy(Player *l)
-{
-  pluginlist_destroy(l->pl);
-  free(l);
-}
-
-static Dlist *
-get_names(Player *l)
-{
-  return pluginlist_get_names(l->pl);
-}
-
-static unsigned char *
-get_description(Player *l, char *pluginname)
-{
-  Plugin *p;
-  PlayerPlugin *lp;
-
-  if ((p = pluginlist_get(l->pl, pluginname)) == NULL)
-    return NULL;
-  lp = plugin_get(p);
-
-  return lp->description;
-}
-
-static unsigned char *
-get_author(Player *l, char *pluginname)
-{
-  Plugin *p;
-  PlayerPlugin *lp;
-
-  if ((p = pluginlist_get(l->pl, pluginname)) == NULL)
-    return NULL;
-  lp = plugin_get(p);
-
-  return lp->author;
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 07:17:20 2000.
- * $Id: loader-plugin.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Tue Oct 17 22:07:49 2000.
+ * $Id: loader-plugin.h,v 1.2 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,12 +26,7 @@
 #include "enfle-plugin.h"
 #include "stream.h"
 #include "image.h"
-
-typedef enum {
-  LOAD_ERROR = -1,
-  LOAD_NOT,
-  LOAD_OK
-} LoaderStatus;
+#include "loader-extra.h"
 
 typedef struct _loader_plugin {
   ENFLE_PLUGIN_COMMON_DATA;

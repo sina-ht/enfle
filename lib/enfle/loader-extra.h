@@ -1,10 +1,10 @@
 /*
- * ui.c -- UI plugin interface
+ * loader-extra.h -- Loader plugin extra definition
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:45:52 2000.
- * $Id: ui.c,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Tue Oct 17 22:08:26 2000.
+ * $Id: loader-extra.h,v 1.1 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,40 +20,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdlib.h>
+#ifndef _LOADER_EXTRA_H
+#define _LOADER_EXTRA_H
 
-#include "common.h"
+typedef enum {
+  LOAD_ERROR = -1,
+  LOAD_NOT,
+  LOAD_OK
+} LoaderStatus;
 
-#include "ui.h"
-#include "ui-plugin.h"
-
-static int call(EnflePlugins *, char *, UIData *);
-
-static UI template = {
-  call: call
-};
-
-UI *
-ui_create(void)
-{
-  UI *ui;
-
-  if ((ui = (UI *)calloc(1, sizeof(UI))) == NULL)
-    return NULL;
-  memcpy(ui, &template, sizeof(UI));
-
-  return ui;
-}
-
-static int
-call(EnflePlugins *eps, char *pluginname, UIData *uidata)
-{
-  Plugin *p;
-  UIPlugin *uip;
-
-  if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_UI], pluginname)) == NULL)
-    return 0;
-  uip = plugin_get(p);
-
-  return uip->ui_main(uidata);
-}
+#endif

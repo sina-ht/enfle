@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 07:16:50 2000.
- * $Id: enfle-plugin.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Tue Oct 17 22:58:12 2000.
+ * $Id: enfle-plugin.h,v 1.2 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,15 +23,7 @@
 #ifndef _ENFLE_PLUGIN_H
 #define _ENFLE_PLUGIN_H
 
-typedef enum {
-  ENFLE_PLUGIN_UI,
-  ENFLE_PLUGIN_LOADER,
-  ENFLE_PLUGIN_STREAMER,
-  ENFLE_PLUGIN_ARCHIVER,
-  ENFLE_PLUGIN_SAVER,
-  ENFLE_PLUGIN_EFFECT,
-  ENFLE_PLUGIN_PLAYER
-} PluginType;
+#include "enfle-plugintype.h"
 
 #define ENFLE_PLUGIN_COMMON_DATA \
   PluginType type; \
@@ -47,6 +39,6 @@ typedef struct _enfle_plugin {
   void *plugin_entry(void); \
   void plugin_exit(void *)
 
-void *enfle_plugin_load(char *, PluginType *);
+void *enfle_plugin_load(char *);
 
 #endif

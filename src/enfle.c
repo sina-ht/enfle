@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 14 04:54:06 2000.
- * $Id: enfle.c,v 1.6 2000/10/15 07:50:05 sian Exp $
+ * Last Modified: Tue Oct 17 22:50:46 2000.
+ * $Id: enfle.c,v 1.7 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -116,6 +116,7 @@ main(int argc, char **argv)
   extern char *optarg;
   extern int optind;
   UIData uidata;
+  EnflePlugins *eps;
   UI *ui;
   Config *c;
   Streamer *st;
@@ -159,6 +160,7 @@ main(int argc, char **argv)
   c = uidata.c = config_create();
   config_load(c, "enfle.rc");
 
+  eps = uidata.eps = enfle_plugins_create();
   st = uidata.st = streamer_create();
   ui = ui_create();
   ld = uidata.ld = loader_create();
@@ -176,54 +178,17 @@ main(int argc, char **argv)
   while (path) {
     if ((ext = strrchr(path, '.')) && !strncmp(ext, ".so", 3)) {
       PluginType type;
-      void *plugin;
 
-      if ((plugin = enfle_plugin_load(path, &type)) == NULL) {
+      if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
 	fprintf(stderr, "enfle_plugin_load %s failed.\n", path);
 	return 1;
       }
-      switch (type) {
-      case ENFLE_PLUGIN_LOADER:
-	name = loader_load(ld, plugin);
-	printf("%s by %s\n",
-	       loader_get_description(ld, name),
-	       loader_get_author(ld, name));
-	break;
-      case ENFLE_PLUGIN_STREAMER:
-	name = streamer_load(st, plugin);
-	printf("%s by %s\n",
-	       streamer_get_description(st, name),
-	       streamer_get_author(st, name));
-	break;
-      case ENFLE_PLUGIN_UI:
-	name = ui_load(ui, plugin);
-	printf("%s by %s\n",
-	       ui_get_description(ui, name),
-	       ui_get_author(ui, name));
-	break;
-      case ENFLE_PLUGIN_ARCHIVER:
-	name = archiver_load(ar, plugin);
-	printf("%s by %s\n",
-	       archiver_get_description(ar, name),
-	       archiver_get_author(ar, name));
-	break;
-      case ENFLE_PLUGIN_PLAYER:
-	name = player_load(player, plugin);
-	printf("%s by %s\n",
-	       player_get_description(player, name),
-	       player_get_author(player, name));
-	if ((strcmp(name, "MPEG_lib") == 0) && config_get(c, "/enfle/plugins/player/mpeg_lib") && strcasecmp(config_get(c, "/enfle/plugins/player/mpeg_lib"), "disabled") == 0) {
-	  player_unload(player, name);
-	  printf("unload %s (disabled)\n", name);
-	}
-	break;
-      case ENFLE_PLUGIN_SAVER:
-      case ENFLE_PLUGIN_EFFECT:
-	fprintf(stderr, "not yet implemented.\n");
-	break;
-      default:
-	fprintf(stderr, "unknown plugin type or not enfle plugin.\n");
-	break;
+      printf("%s by %s\n",
+	     enfle_plugins_get_description(eps, type, name),
+	     enfle_plugins_get_author(eps, type, name));
+      if ((strcmp(name, "MPEG_lib") == 0) && config_get(c, "/enfle/plugins/player/mpeg_lib") && strcasecmp(config_get(c, "/enfle/plugins/player/mpeg_lib"), "disabled") == 0) {
+	enfle_plugins_unload(eps, ENFLE_PLUGIN_PLAYER, name);
+	printf("unload %s (disabled)\n", name);
       }
     }
     path = archive_iteration_next(a);
@@ -249,7 +214,7 @@ main(int argc, char **argv)
     return 1;
   }
 
-  if (!ui_call(ui, ui_name, &uidata))
+  if (!ui_call(ui, eps, ui_name, &uidata))
     fprintf(stderr, "No UI %s or UI %s initialize failed\n", ui_name, ui_name);
 
   archive_destroy(uidata.a);
@@ -258,6 +223,7 @@ main(int argc, char **argv)
   config_destroy(c);
   loader_destroy(ld);
   ui_destroy(ui);
+  enfle_plugins_destroy(eps);
 
   return 0;
 }

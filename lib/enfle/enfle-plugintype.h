@@ -1,10 +1,10 @@
 /*
- * ui.c -- UI plugin interface
+ * enfle-plugintype.h -- enfle plugin type definition
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:45:52 2000.
- * $Id: ui.c,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Tue Oct 17 22:57:43 2000.
+ * $Id: enfle-plugintype.h,v 1.1 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,40 +20,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdlib.h>
+#ifndef _ENFLE_PLUGINTYPE_H
+#define _ENFLE_PLUGINTYPE_H
 
-#include "common.h"
+typedef enum {
+  ENFLE_PLUGIN_UI,
+  ENFLE_PLUGIN_LOADER,
+  ENFLE_PLUGIN_STREAMER,
+  ENFLE_PLUGIN_ARCHIVER,
+  ENFLE_PLUGIN_SAVER,
+  ENFLE_PLUGIN_EFFECT,
+  ENFLE_PLUGIN_PLAYER,
+  ENFLE_PLUGIN_END
+} PluginType;
 
-#include "ui.h"
-#include "ui-plugin.h"
-
-static int call(EnflePlugins *, char *, UIData *);
-
-static UI template = {
-  call: call
-};
-
-UI *
-ui_create(void)
-{
-  UI *ui;
-
-  if ((ui = (UI *)calloc(1, sizeof(UI))) == NULL)
-    return NULL;
-  memcpy(ui, &template, sizeof(UI));
-
-  return ui;
-}
-
-static int
-call(EnflePlugins *eps, char *pluginname, UIData *uidata)
-{
-  Plugin *p;
-  UIPlugin *uip;
-
-  if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_UI], pluginname)) == NULL)
-    return 0;
-  uip = plugin_get(p);
-
-  return uip->ui_main(uidata);
-}
+#endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 04:56:28 2000.
- * $Id: streamer.c,v 1.2 2000/10/09 20:29:56 sian Exp $
+ * Last Modified: Tue Oct 17 22:44:28 2000.
+ * $Id: streamer.c,v 1.3 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,25 +31,12 @@
 #include "streamer.h"
 #include "streamer-plugin.h"
 
-static char *load(Streamer *, Plugin *);
-static int unload(Streamer *, char *);
-static int identify(Streamer *, Stream *, char *);
-static int open(Streamer *, Stream *, char *, char *);
-static void destroy(Streamer *);
-static Dlist *get_names(Streamer *);
-static unsigned char *get_description(Streamer *, char *);
-static unsigned char *get_author(Streamer *, char *);
+static int identify(EnflePlugins *, Stream *, char *);
+static int open(EnflePlugins *, Stream *, char *, char *);
 
-static Streamer streamer_template = {
-  pl: NULL,
-  load: load,
-  unload: unload,
+static Streamer template = {
   identify: identify,
-  open: open,
-  destroy: destroy,
-  get_names: get_names,
-  get_description: get_description,
-  get_author: get_author
+  open: open
 };
 
 Streamer *
@@ -59,60 +46,29 @@ streamer_create(void)
 
   if ((st = (Streamer *)calloc(1, sizeof(Streamer))) == NULL)
     return NULL;
-  memcpy(st, &streamer_template, sizeof(Streamer));
-
-  if ((st->pl = pluginlist_create()) == NULL) {
-    free(st);
-    return NULL;
-  }
+  memcpy(st, &template, sizeof(Streamer));
 
   return st;
 }
 
 /* methods */
 
-static char *
-load(Streamer *st, Plugin *p)
-{
-  PluginList *pl = st->pl;
-  StreamerPlugin *stp;
-
-  stp = plugin_get(p);
-
-  if (!pluginlist_add(pl, p, stp->name)) {
-    plugin_unload(p);
-    return NULL;
-  }
-
-  return stp->name;
-}
-
 static int
-unload(Streamer *st, char *pluginname)
-{
-  Plugin *p;
-
-  if ((p = pluginlist_get(st->pl, pluginname)) == NULL)
-    return 0;
-  plugin_unload(p);
-
-  return pluginlist_delete(st->pl, pluginname);
-}
-
-static int
-identify(Streamer *st, Stream *s, char *filepath)
+identify(EnflePlugins *eps, Stream *s, char *filepath)
 {
   Dlist *dl;
   Dlist_data *dd;
+  PluginList *pl;
 
-  dl = pluginlist_list(st->pl);
+  pl = eps->pls[ENFLE_PLUGIN_STREAMER];
+  dl = pluginlist_list(pl);
   dlist_iter(dl, dd) {
     Plugin *p;
     StreamerPlugin *stp;
     char *pluginname;
 
     pluginname = dlist_data(dd);
-    if ((p = pluginlist_get(st->pl, pluginname)) == NULL) {
+    if ((p = pluginlist_get(pl, pluginname)) == NULL) {
       fprintf(stderr, "BUG: %s streamer plugin not found but in list.\n", pluginname);
       exit(-1);
     }
@@ -129,54 +85,15 @@ identify(Streamer *st, Stream *s, char *filepath)
 }
 
 static int
-open(Streamer *st, Stream *s, char *pluginname, char *filepath)
+open(EnflePlugins *eps, Stream *s, char *pluginname, char *filepath)
 {
   Plugin *p;
   StreamerPlugin *stp;
 
-  if ((p = pluginlist_get(st->pl, pluginname)) == NULL)
+  if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_STREAMER], pluginname)) == NULL)
     return 0;
   stp = plugin_get(p);
 
   s->path = strdup(filepath);
   return stp->open(s, filepath);
-}
-
-static void
-destroy(Streamer *st)
-{
-  pluginlist_destroy(st->pl);
-  free(st);
-}
-
-static Dlist *
-get_names(Streamer *st)
-{
-  return pluginlist_get_names(st->pl);
-}
-
-static unsigned char *
-get_description(Streamer *st, char *pluginname)
-{
-  Plugin *p;
-  StreamerPlugin *stp;
-
-  if ((p = pluginlist_get(st->pl, pluginname)) == NULL)
-    return NULL;
-  stp = plugin_get(p);
-
-  return stp->description;
-}
-
-static unsigned char *
-get_author(Streamer *st, char *pluginname)
-{
-  Plugin *p;
-  StreamerPlugin *stp;
-
-  if ((p = pluginlist_get(st->pl, pluginname)) == NULL)
-    return NULL;
-  stp = plugin_get(p);
-
-  return stp->author;
 }

@@ -1,10 +1,10 @@
 /*
- * ui.c -- UI plugin interface
+ * ui-extra.h -- UI plugin extra definition
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:45:52 2000.
- * $Id: ui.c,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Tue Oct 17 22:45:33 2000.
+ * $Id: ui-extra.h,v 1.1 2000/10/17 14:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,40 +20,33 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdlib.h>
+#ifndef _UI_EXTRA_H
+#define _UI_EXTRA_H
 
-#include "common.h"
+#include "libconfig.h"
+#include "enfle-plugins.h"
+#include "streamer.h"
+#include "loader.h"
+#include "archiver.h"
+#include "player.h"
+#include "archive.h"
 
-#include "ui.h"
-#include "ui-plugin.h"
-
-static int call(EnflePlugins *, char *, UIData *);
-
-static UI template = {
-  call: call
+struct _ui_screen {
+  unsigned int width, height;
+  int depth, bits_per_pixel;
+  void *private;
 };
 
-UI *
-ui_create(void)
-{
-  UI *ui;
+struct _ui_data {
+  Config *c;
+  EnflePlugins *eps;
+  Streamer *st;
+  Loader *ld;
+  Archiver *ar;
+  Player *player;
+  Archive *a;
+  UIScreen *screen;
+  void *private;
+};
 
-  if ((ui = (UI *)calloc(1, sizeof(UI))) == NULL)
-    return NULL;
-  memcpy(ui, &template, sizeof(UI));
-
-  return ui;
-}
-
-static int
-call(EnflePlugins *eps, char *pluginname, UIData *uidata)
-{
-  Plugin *p;
-  UIPlugin *uip;
-
-  if ((p = pluginlist_get(eps->pls[ENFLE_PLUGIN_UI], pluginname)) == NULL)
-    return 0;
-  uip = plugin_get(p);
-
-  return uip->ui_main(uidata);
-}
+#endif
