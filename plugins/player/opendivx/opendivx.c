@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:14:28 2001.
- * $Id: opendivx.c,v 1.9 2001/09/02 05:47:03 sian Exp $
+ * Last Modified: Mon Sep  3 01:45:57 2001.
+ * $Id: opendivx.c,v 1.10 2001/09/03 00:33:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,17 +43,21 @@
 
 #include "utils/timer.h"
 #include "enfle/player-plugin.h"
+#include "demultiplexer/demultiplexer_avi.h"
+#include "mpglib/mpg123.h"
+#include "mpglib/mpglib.h"
 
 typedef struct _opendivx_info {
-  RIFF_File *rf;
-  RIFF_Chunk *rc;
-  AviFileReader *afr;
+  Config *c;
+  Demultiplexer *demux;
   DEC_MEM_REQS dec_memreqs;
   DEC_PARAM dec_param;
   DEC_SET   dec_set;
   DEC_FRAME dec_frame;
   Image *p;
   AudioDevice *ad;
+  FIFO *vstream, *astream;
+  struct mpstr mp;
   int output_format;
   int use_xv;
   int eof;
@@ -83,7 +87,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "OpenDivX",
-  description: "OpenDivX Player plugin version 0.2 with libdivxdecore",
+  description: "OpenDivX Player plugin version 0.3 with libdivxdecore",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -109,26 +113,11 @@ plugin_exit(void *p)
 
 /* for internal use */
 
-static int
-input_func(void *arg, void *ptr, int size)
-{
-  Stream *st = (Stream *)arg;
-
-  return stream_read(st, ptr, size);
-}
-
-static int
-seek_func(void *arg, unsigned int pos, int whence)
-{
-  Stream *st = (Stream *)arg;
-
-  return stream_seek(st, pos, whence);
-}
-
 static PlayerStatus
-load_movie(VideoWindow *vw, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
   OpenDivX_info *info;
+  AVIInfo *aviinfo;
   Image *p;
 
   if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
@@ -136,20 +125,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
-  info->rf = riff_file_create();
-  riff_file_set_func_input(info->rf, input_func);
-  riff_file_set_func_seek(info->rf, seek_func);
-  riff_file_set_func_arg(info->rf, (void *)st);
-  if (!riff_file_open(info->rf)) {
-    show_message("riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
-    return PLAY_ERROR;
-  }
-
-  info->afr = avifilereader_create();
-  if (!avifilereader_open(info->afr, info->rf)) {
-    show_message("avifilereader_open() failed.\n");
-    return PLAY_ERROR;
-  }
+  info->c = c;
 
   pthread_mutex_init(&info->update_mutex, NULL);
   pthread_cond_init(&info->update_cond, NULL);
@@ -161,40 +137,56 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
   debug_message("OpenDivX: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
+  info->demux = demultiplexer_avi_create();
+  demultiplexer_avi_set_input(info->demux, st);
+  if (!demultiplexer_examine(info->demux))
+    return PLAY_NOT;
+  info->nastreams = demultiplexer_avi_naudios(info->demux);
+  info->nvstreams = demultiplexer_avi_naudios(info->demux);
+  aviinfo = demultiplexer_avi_info(info->demux);
+
+  if (info->nastreams == 0 && info->nvstreams == 0)
+    return PLAY_NOT;
+  if (info->nvstreams != 1)
+    return PLAY_NOT;
+
   m->has_audio = 0;
-  if (info->afr->header.dwStreams == 2) {
+  if (info->nastreams > 0) {
     if (m->ap == NULL)
       show_message("Audio not played.\n");
     else {
-      info->nastreams = info->afr->header.dwStreams - 1;
       /* XXX: stream should be selectable */
-      info->nastream = 0;
+      info->nastream = 1;
+      demultiplexer_avi_set_audio(info->demux, info->nastream);
 
       m->sampleformat = _AUDIO_FORMAT_S16_LE;
-      m->channels = info->afr->aformat.nChannels;
-      m->samplerate = info->afr->aformat.nSamplesPerSec;
-      m->num_of_samples = info->afr->aformat.cbSize;
+      m->channels = aviinfo->nchannels;
+      m->samplerate = aviinfo->samples_per_sec;
+      m->num_of_samples = aviinfo->num_of_samples;
 
       show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
-
-      show_message("Audio support is not yet implemented.\n");
-      m->has_audio = 0;
     }
   } else {
     debug_message("No audio streams.\n");
   }
 
-  m->has_video = 1;
-  info->nvstreams = 1;
-  info->nvstream = 0;
+  if (info->nvstreams) {
+    m->has_video = 1;
+    info->nvstream = 0;
+    demultiplexer_avi_set_video(info->demux, info->nvstream);
 
-  m->width = info->afr->vformat.biWidth;
-  m->height = info->afr->vformat.biHeight;
-  m->framerate = 1000000 / info->afr->header.dwMicroSecPerFrame;
-  m->num_of_frames = info->afr->vsheader.dwLength;
+    m->width = aviinfo->width;
+    m->height = aviinfo->height;
+    m->framerate = aviinfo->framerate;
+    m->num_of_frames = aviinfo->num_of_frames;
+  } else {
+    m->width = 128;
+    m->height = 128;
+    m->num_of_frames = 1;
+  }
 
   p = info->p = image_create();
   video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
@@ -282,14 +274,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   return play(m);
 
  error:
+  if (info->demux)
+    demultiplexer_destroy(info->demux);
   free(info);
   return PLAY_ERROR;
 }
 
 static void *play_video(void *);
-#if 0
 static void *play_audio(void *);
-#endif
 
 static PlayerStatus
 play(Movie *m)
@@ -317,40 +309,52 @@ play(Movie *m)
   m->current_frame = 0;
   m->current_sample = 0;
   timer_start(m->timer);
-  info->eof = 0;
+  demultiplexer_set_eof(info->demux, 0);
+  demultiplexer_rewind(info->demux);
 
-  dec_param->x_dim = m->width;
-  dec_param->y_dim = m->height;
-  dec_param->output_format = info->output_format;
-  dec_param->time_incr = 15;
+  if (m->has_video) {
+    if ((info->vstream = fifo_create()) == NULL)
+      return PLAY_ERROR;
+    demultiplexer_avi_set_vst(info->demux, info->vstream);
 
-  decore((long)info, DEC_OPT_MEMORY_REQS, dec_param, dec_memreqs);
+    dec_param->x_dim = m->width;
+    dec_param->y_dim = m->height;
+    dec_param->output_format = info->output_format;
+    dec_param->time_incr = 15;
 
-  dec_param->buffers.mp4_edged_ref_buffers = malloc(dec_memreqs->mp4_edged_ref_buffers_size);
-  dec_param->buffers.mp4_edged_for_buffers = malloc(dec_memreqs->mp4_edged_for_buffers_size);
-  dec_param->buffers.mp4_edged_back_buffers = malloc(dec_memreqs->mp4_edged_back_buffers_size);
-  dec_param->buffers.mp4_display_buffers = malloc(dec_memreqs->mp4_display_buffers_size);
-  dec_param->buffers.mp4_state = malloc(dec_memreqs->mp4_state_size);
-  dec_param->buffers.mp4_tables = malloc(dec_memreqs->mp4_tables_size);
-  dec_param->buffers.mp4_stream = malloc(dec_memreqs->mp4_stream_size);
-  dec_param->buffers.mp4_reference = malloc(dec_memreqs->mp4_reference_size);
+    decore((long)info, DEC_OPT_MEMORY_REQS, dec_param, dec_memreqs);
 
-  memset(dec_param->buffers.mp4_state, 0, dec_memreqs->mp4_state_size);
-  memset(dec_param->buffers.mp4_tables, 0, dec_memreqs->mp4_tables_size);
-  memset(dec_param->buffers.mp4_stream, 0, dec_memreqs->mp4_stream_size);
-  memset(dec_param->buffers.mp4_reference, 0, dec_memreqs->mp4_reference_size);
+    dec_param->buffers.mp4_edged_ref_buffers = malloc(dec_memreqs->mp4_edged_ref_buffers_size);
+    dec_param->buffers.mp4_edged_for_buffers = malloc(dec_memreqs->mp4_edged_for_buffers_size);
+    dec_param->buffers.mp4_edged_back_buffers = malloc(dec_memreqs->mp4_edged_back_buffers_size);
+    dec_param->buffers.mp4_display_buffers = malloc(dec_memreqs->mp4_display_buffers_size);
+    dec_param->buffers.mp4_state = malloc(dec_memreqs->mp4_state_size);
+    dec_param->buffers.mp4_tables = malloc(dec_memreqs->mp4_tables_size);
+    dec_param->buffers.mp4_stream = malloc(dec_memreqs->mp4_stream_size);
+    dec_param->buffers.mp4_reference = malloc(dec_memreqs->mp4_reference_size);
 
-  decore((long)info, DEC_OPT_INIT, dec_param, NULL);
+    memset(dec_param->buffers.mp4_state, 0, dec_memreqs->mp4_state_size);
+    memset(dec_param->buffers.mp4_tables, 0, dec_memreqs->mp4_tables_size);
+    memset(dec_param->buffers.mp4_stream, 0, dec_memreqs->mp4_stream_size);
+    memset(dec_param->buffers.mp4_reference, 0, dec_memreqs->mp4_reference_size);
 
-  info->dec_set.postproc_level = 0;
-  decore((long)info, DEC_OPT_SETPP, &info->dec_set, NULL);
+    decore((long)info, DEC_OPT_INIT, dec_param, NULL);
 
-  if (m->has_video)
+    info->dec_set.postproc_level = 0;
+    decore((long)info, DEC_OPT_SETPP, &info->dec_set, NULL);
+
     pthread_create(&info->video_thread, NULL, play_video, m);
-#if 0
-  if (m->has_audio)
+  }
+
+  if (m->has_audio) {
+    if ((info->astream = fifo_create()) == NULL)
+      return PLAY_ERROR;
+    demultiplexer_avi_set_ast(info->demux, info->astream);
+    InitMP3(&info->mp);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
-#endif
+  }
+
+  demultiplexer_start(info->demux);
 
   return PLAY_OK;
 }
@@ -360,7 +364,9 @@ play_video(void *arg)
 {
   Movie *m = arg;
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
+  void *data;
   int i;
+  AVIPacket *ap;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -369,19 +375,31 @@ play_video(void *arg)
       info->eof = 1;
       break;
     }
+    if (fifo_get(info->vstream, &data)) {
+      ap = (AVIPacket *)data;
 
-    pthread_mutex_lock(&info->update_mutex);
+      pthread_mutex_lock(&info->update_mutex);
 
-    for (i = -1; i < info->drop; i++) {
-      info->rc = info->afr->vchunks[m->current_frame];
-      riff_file_read_data(info->rf, info->rc);
-      info->dec_frame.length = riff_chunk_get_size(info->rc);
-      info->dec_frame.bitstream = riff_chunk_get_data(info->rc);
+      info->dec_frame.length = ap->size;
+      info->dec_frame.bitstream = ap->data;
       info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
       info->dec_frame.render_flag = 1;
       decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
-      riff_chunk_destroy(info->rc);
+      free(ap->data);
+      free(ap);
       m->current_frame++;
+
+      for (i = 0; i < info->drop; i++) {
+	while (!fifo_get(info->vstream, &data)) ;
+	info->dec_frame.length = ap->size;
+	info->dec_frame.bitstream = ap->data;
+	info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
+	info->dec_frame.render_flag = 1;
+	decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
+	free(ap->data);
+	free(ap);
+	m->current_frame++;
+      }
     }
     info->drop = 0;
     pthread_cond_wait(&info->update_cond, &info->update_mutex);
@@ -392,9 +410,7 @@ play_video(void *arg)
   pthread_exit((void *)PLAY_OK);
 }
 
-#if 0
-#define AUDIO_READ_SIZE 2048
-#define AUDIO_WRITE_SIZE 4096
+#define MP3_DECODE_BUFFER_SIZE 16384
 
 static void *
 play_audio(void *arg)
@@ -402,57 +418,56 @@ play_audio(void *arg)
   Movie *m = arg;
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
   AudioDevice *ad;
-  short input_buffer[AUDIO_WRITE_SIZE];
-  short output_buffer[AUDIO_WRITE_SIZE];
-  int samples_to_read;
+  unsigned char output_buffer[MP3_DECODE_BUFFER_SIZE];
+  int ret, write_size;
+  int param_is_set = 0;
+  void *data;
+  AVIPacket *ap;
 
   debug_message(__FUNCTION__ "()\n");
 
-  if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
+  if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
+    ExitMP3(&info->mp);
     pthread_exit((void *)PLAY_ERROR);
   }
   info->ad = ad;
 
-  if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
-    show_message("Some params are set wrong.\n");
-
-  samples_to_read = AUDIO_READ_SIZE;
-
   while (m->status == _PLAY) {
-    if (m->current_sample >= m->num_of_samples)
-      break;
-    if (m->num_of_samples < m->current_sample + samples_to_read)
-      samples_to_read = m->num_of_samples - m->current_sample;
-    mpeg3_read_audio(info->file, NULL, input_buffer, 0, samples_to_read, info->nastream);
-    if (m->channels == 1) {
-      m->ap->write_device(ad, (unsigned char *)input_buffer, samples_to_read * sizeof(short));
-    } else {
-      int i;
-
-      mpeg3_reread_audio(info->file, NULL, input_buffer + AUDIO_READ_SIZE, 1, samples_to_read, info->nastream);
-      for (i = 0; i < samples_to_read; i++) {
-	output_buffer[i * 2    ] = input_buffer[i];
-	output_buffer[i * 2 + 1] = input_buffer[i + AUDIO_READ_SIZE];
+    /* XXX: Should I use wait and singal? */
+    if (fifo_get(info->astream, &data)) {
+      ap = (AVIPacket *)data;
+      ret = decodeMP3(&info->mp, ap->data, ap->size,
+		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+      if (!param_is_set) {
+	m->sampleformat = _AUDIO_FORMAT_S16_LE;
+	m->channels = info->mp.fr.stereo;
+	m->samplerate = freqs[info->mp.fr.sampling_frequency];
+	if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+	  show_message("Some params are set wrong.\n");
+	param_is_set++;
       }
-      m->ap->write_device(ad, (unsigned char *)output_buffer, (samples_to_read << 1) * sizeof(short));
+      while (ret == MP3_OK) {
+	m->ap->write_device(ad, output_buffer, write_size);
+	//debug_message(__FUNCTION__ ": %d bytes written.\n", write_size);
+	ret = decodeMP3(&info->mp, NULL, 0,
+			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+      }
+      free(ap->data);
+      free(ap);
     }
-    if (m->current_sample == 0) {
-      timer_stop(m->timer);
-      timer_start(m->timer);
-    }
-    m->current_sample += samples_to_read;
   }
 
   m->ap->sync_device(ad);
   m->ap->close_device(ad);
   info->ad = NULL;
 
+  ExitMP3(&info->mp);
+
   debug_message(__FUNCTION__ " exiting.\n");
 
   pthread_exit((void *)PLAY_OK);
 }
-#endif
 
 static int
 get_audio_time(Movie *m, AudioDevice *ad)
@@ -614,18 +629,11 @@ unload_movie(Movie *m)
   stop_movie(m);
 
   if (info) {
-    if (info->afr)
-      avifilereader_destroy(info->afr);
     if (info->p)
       image_destroy(info->p);
-
+    demultiplexer_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
-
-    debug_message(__FUNCTION__ ": closing opendivx file\n");
-    /* close */
-    riff_file_destroy(info->rf);
-
     debug_message(__FUNCTION__ ": freeing info\n");
     free(info);
     debug_message(__FUNCTION__ ": all Ok\n");
@@ -651,7 +659,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 
 DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
-  debug_message("opendivx player: load() called\n");
+  debug_message("OpenDivX: " __FUNCTION__ "() called\n");
 
 #ifdef IDENTIFY_BEFORE_PLAY
   {
@@ -669,5 +677,5 @@ DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(vw, m, st);
+  return load_movie(vw, m, st, c);
 }
