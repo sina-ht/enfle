@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.4 2001/07/02 11:30:51 sian Exp $
+# $Id: Makefile.am,v 1.5 2001/07/31 20:26:14 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -14,6 +14,8 @@ libarith_la_SOURCES = \
 lib_LTLIBRARIES = \
 	saver_glic.la \
 	vmpm_decompose_normal.la \
+	vmpm_decompose_escfirst.la \
+	vmpm_decompose_esc.la \
 	vmpm_decompose_highlow.la \
 	vmpm_decompose_token.la \
 	vmpm_decompose_token2.la
@@ -36,6 +38,12 @@ COMMON_FILES = ipow.c vmpm_hash.c vmpm_hash.h
 vmpm_decompose_normal_la_LIBADD = libarith.la
 vmpm_decompose_normal_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_normal_la_SOURCES = vmpm_decompose_normal.c $(COMMON_FILES)
+vmpm_decompose_escfirst_la_LIBADD = libarith.la
+vmpm_decompose_escfirst_la_LDFLAGS = -avoid-version -module
+vmpm_decompose_escfirst_la_SOURCES = vmpm_decompose_escfirst.c $(COMMON_FILES)
+vmpm_decompose_esc_la_LIBADD = libarith.la
+vmpm_decompose_esc_la_LDFLAGS = -avoid-version -module
+vmpm_decompose_esc_la_SOURCES = vmpm_decompose_esc.c $(COMMON_FILES)
 vmpm_decompose_highlow_la_LIBADD = libarith.la
 vmpm_decompose_highlow_la_LDFLAGS = -avoid-version -module
 vmpm_decompose_highlow_la_SOURCES = vmpm_decompose_highlow.c $(COMMON_FILES)
