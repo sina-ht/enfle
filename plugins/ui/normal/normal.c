@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 30 23:17:54 2000.
- * $Id: normal.c,v 1.2 2000/10/30 16:19:26 sian Exp $
+ * Last Modified: Sat Nov  4 05:24:16 2000.
+ * $Id: normal.c,v 1.3 2000/11/04 17:33:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -65,15 +65,15 @@ plugin_exit(void *p)
 /* for internal use */
 
 static int
-initialize_screen(VideoWindow *vw, VideoPlugin *vp, Movie *m, int w, int h)
+initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
 {
-  vp->resize_window(vw, w, h);
+  video_window_resize(vw, w, h);
 
   return 1;
 }
 
 static int
-render_frame(VideoWindow *vw, VideoPlugin *vp, Movie *m, Image *p)
+render_frame(VideoWindow *vw, Movie *m, Image *p)
 {
   /* CHECK */
   if (p->width != m->width || p->height != m->height) {
@@ -81,31 +81,32 @@ render_frame(VideoWindow *vw, VideoPlugin *vp, Movie *m, Image *p)
     exit(1);
   }
 
-  vp->render_frame(vw, p);
+  video_window_render(vw, p);
 
   return 1;
 }
 
 static int
-main_loop(VideoWindow *vw, VideoPlugin *vp, Movie *m, Image *p)
+main_loop(VideoWindow *vw, Movie *m, Image *p)
 {
   VideoEventData ev;
   int loop = 1;
-  VideoButton pressed = ENFLE_Button_None;
+  VideoButton button = ENFLE_Button_None;
+  VideoKey key;
 
   if (p) {
-    vp->resize_window(vw, p->width, p->height);
-    vp->render_frame(vw, p);
+    video_window_resize(vw, p->width, p->height);
+    video_window_render(vw, p);
   }
 
   while (loop) {
-    if (vp->dispatch_event(vw, &ev)) {
+    if (video_window_dispatch_event(vw, &ev)) {
       switch (ev.type) {
       case ENFLE_Event_ButtonPressed:
-	pressed = ev.button.button;
+	button = ev.button.button;
 	break;
       case ENFLE_Event_ButtonReleased:
-	if (pressed == ev.button.button)
+	if (button == ev.button.button)
 	  switch (ev.button.button) {
 	  case ENFLE_Button_1:
 	    return 1;
@@ -116,7 +117,29 @@ main_loop(VideoWindow *vw, VideoPlugin *vp, Movie *m, Image *p)
 	  default:
 	    break;
 	  }
-	pressed = ENFLE_Button_None;
+	button = ENFLE_Button_None;
+	break;
+      case ENFLE_Event_KeyPressed:
+	key = ev.key.key;
+	break;
+      case ENFLE_Event_KeyReleased:
+	if (key == ev.key.key) {
+	  switch (ev.key.key) {
+	  case ENFLE_KEY_n:
+	  case ENFLE_KEY_space:
+	    return 1;
+	  case ENFLE_KEY_b:
+	    return -1;
+	  case ENFLE_KEY_q:
+	    return 0;
+	  case ENFLE_KEY_f:
+	    video_window_set_fullscreen_mode(vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
+	    break;
+	  default:
+	    break;
+	  }
+	}
+	key = ENFLE_KEY_Unknown;
 	break;
       default:
 	break;
@@ -126,7 +149,7 @@ main_loop(VideoWindow *vw, VideoPlugin *vp, Movie *m, Image *p)
     if (m) {
       switch (m->status) {
       case _PLAY:
-	if (movie_play_main(m, vw, vp) != PLAY_OK) {
+	if (movie_play_main(m, vw) != PLAY_OK) {
 	  show_message("play_movie: Error\n");
 	  return 0;
 	}
@@ -156,7 +179,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Archiver *ar = uidata->ar;
   Player *player = uidata->player;
   VideoWindow *vw = uidata->vw;
-  VideoPlugin *vp = uidata->vp;
   Archive *arc;
   Stream *s;
   Image *p;
@@ -274,7 +296,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
 	debug_message("Movie(Animation) identified as %s\n", m->format);
 
-	if ((f = player_load_movie(player, eps, vw, vp, m->format, m, s)) != PLAY_OK) {
+	if ((f = player_load_movie(player, eps, vw, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
 	  show_message("%s load failed\n", path);
 	  archive_iteration_delete(a);
@@ -287,7 +309,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	continue;
       }
 
-      dir = main_loop(vw, vp, m, NULL);
+      dir = main_loop(vw, m, NULL);
       movie_unload(m);
     } else {
 
@@ -299,7 +321,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	p->comment = NULL;
       }
 
-      dir = main_loop(vw, vp, NULL, p);
+      dir = main_loop(vw, NULL, p);
     }
   }
 
@@ -326,14 +348,14 @@ ui_main(UIData *uidata)
   }
 
   uidata->vw = vw = vp->open_window(disp, 600, 400);
-  vp->set_window_caption(vw, PROGNAME " version " VERSION);
+  video_window_set_caption(vw, PROGNAME " version " VERSION);
 
-  vp->set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask);
-  /* vp->set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyPressMask | ENFLE_PointerMask | ENFLE_WindowMask); */
+  video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask);
+  /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyPressMask | ENFLE_PointerMask | ENFLE_WindowMask); */
 
   process_files_of_archive(uidata, uidata->a);
 
-  vp->destroy_window(vw);
+  video_window_destroy(vw);
   vp->close_video(disp);
 
   return 1;
