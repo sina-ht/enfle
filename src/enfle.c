@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep  7 17:58:43 2001.
- * $Id: enfle.c,v 1.39 2001/09/09 23:50:33 sian Exp $
+ * Last Modified: Mon Sep 10 17:02:20 2001.
+ * $Id: enfle.c,v 1.40 2001/09/10 11:58:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -183,50 +183,51 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   path = archive_iteration_start(a);
   while (path) {
     base_name = misc_basename(path);
-    ext = strrchr(path, '.');
     fullpath = archive_getpathname(a, path);
-    if (ext && !strcasecmp(ext, ".so") &&
-	!(strncasecmp(base_name, "ui_", 3) &&
-	  strncasecmp(base_name, "video_", 6) &&
-	  strncasecmp(base_name, "audio_", 6) &&
-	  strncasecmp(base_name, "loader_", 7) &&
-	  strncasecmp(base_name, "saver_", 6) &&
-	  strncasecmp(base_name, "player_", 7) &&
-	  strncasecmp(base_name, "streamer_", 9) &&
-	  strncasecmp(base_name, "archiver_", 9) &&
-	  strncasecmp(base_name, "effect_", 7))) {
-      PluginType type;
+    if ((ext = strrchr(path, '.'))) {
+      if (!strcasecmp(ext, ".so") &&
+	  !(strncasecmp(base_name, "ui_", 3) &&
+	    strncasecmp(base_name, "video_", 6) &&
+	    strncasecmp(base_name, "audio_", 6) &&
+	    strncasecmp(base_name, "loader_", 7) &&
+	    strncasecmp(base_name, "saver_", 6) &&
+	    strncasecmp(base_name, "player_", 7) &&
+	    strncasecmp(base_name, "streamer_", 9) &&
+	    strncasecmp(base_name, "archiver_", 9) &&
+	    strncasecmp(base_name, "effect_", 7))) {
+	PluginType type;
 
-      if ((name = enfle_plugins_load(eps, fullpath, &type)) == NULL) {
-	warning("enfle_plugin_load %s failed.\n", path);
-      } else {
-	nplugins++;
-	nplugins -= check_and_unload(eps, c, type, name);
-      }
+	if ((name = enfle_plugins_load(eps, fullpath, &type)) == NULL) {
+	  warning("enfle_plugin_load %s failed.\n", fullpath);
+	} else {
+	  nplugins++;
+	  nplugins -= check_and_unload(eps, c, type, name);
+	}
 #ifdef USE_SPI
-    } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
-      PluginType type;
+      } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
+	PluginType type;
 
-      if ((name = spi_load(eps, path, &type)) == NULL) {
-	warning("spi_load %s failed.\n", path);
-      } else {
-	nplugins++;
-	nplugins -= check_and_unload(eps, c, type, name);
-      }
+	if ((name = spi_load(eps, fullpath, &type)) == NULL) {
+	  warning("spi_load %s failed.\n", fullpath);
+	} else {
+	  nplugins++;
+	  nplugins -= check_and_unload(eps, c, type, name);
+	}
 #endif
 #if 0
-    } else if (ext && !strcasecmp(ext, ".dll")
-	       //	       || !strcasecmp(ext, ".acm")
-	       ) {
-      PluginType type;
+      } else if (ext && !strcasecmp(ext, ".dll")
+		 //  || !strcasecmp(ext, ".acm")
+		 ) {
+	PluginType type;
 
-      if ((name = spi_load(eps, path, &type)) == NULL) {
-	warning(stderr, "spi_load %s failed.\n", path);
-      } else {
-	nplugins++;
-	nplugins -= check_and_unload(eps, c, type, name);
-      }
+	if ((name = spi_load(eps, fullpath, &type)) == NULL) {
+	  warning(stderr, "spi_load %s failed.\n", fullpath);
+	} else {
+	  nplugins++;
+	  nplugins -= check_and_unload(eps, c, type, name);
+	}
 #endif
+      }
     }
     free(fullpath);
     path = archive_iteration_next(a);
