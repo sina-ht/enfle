@@ -1,12 +1,21 @@
 ; enfle.rc
-; Last Modified: Mon Aug 13 17:21:20 2001.
-; $Id: enfle.rc,v 1.20 2001/08/15 06:29:16 sian Exp $
+; Last Modified: Sun Aug 26 09:38:03 2001.
+; $Id: enfle.rc,v 1.21 2001/08/26 01:06:18 sian Exp $
 
 enfle {
   plugins {
     ; To execute enfle in the build tree, override the default path.
     ;dir = ../plugins
+    ; How to find plugins. (NOT IMPLEMENTED YET)
+    ;  scan_all: Scan the specified directory and load all plugins found.
+    ;  custom: Custom loading, can be set per plugin type.
+    loadmethod = scan_all
     ui {
+      ; How to find plugins.
+      ;  scan_all: Scan the UI directory and load all plugins found.
+      ;  ondemand: On-demand loading.
+      ;  load: Load only specified plugins.
+      loadmethod = ondemand
       default = Normal
       normal {
 	; render = {normal|double|short|long}
@@ -17,6 +26,8 @@ enfle {
 	save_format = JPEG
 	;
 	deletefile_without_shift = no
+	;
+	;caption_template = "%p %f %xx%y"
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -27,18 +38,39 @@ enfle {
       convert/format = PNG
     }
     video {
+      ; How to find plugins.
+      ;  scan_all: Scan the video directory and load all plugins found.
+      ;  ondemand: On-demand loading.
+      ;  load: Load only specified plugins.
+      loadmethod = ondemand
       default = Xlib
       ; caption font for full screen mode
       caption_font = a14
     }
     audio {
+      ; How to find plugins.
+      ;  scan_all: Scan the audio directory and load all plugins found.
+      ;  ondemand: On-demand loading.
+      ;  load: Load only specified plugins.
+      loadmethod = ondemand
       default = OSS
       oss/device_path = /dev/dsp
     }
     loader {
+      ; How to find plugins.
+      ;  scan_all: Scan the audio directory and load all plugins found.
+      ;  ondemand: On-demand loading. (assoc needed).
+      ;  load: Load only specified plugins.
+      ;loadmethod = load(jpeg,ungif,png)
+      loadmethod = scan_all
       spi/disabled = yes
     }
     saver {
+      ; How to find plugins.
+      ;  scan_all: Scan the audio directory and load all plugins found.
+      ;  ondemand: On-demand loading.
+      ;  load: Load only specified plugins.
+      loadmethod = ondemand
       png {
         compression_level = 9
 	; filter = {all|default|paeth|avg|sub|up|none}
@@ -53,12 +85,20 @@ enfle {
       }
     }
     player {
-      ;; assoc is not implemented yet
+      ; How to find plugins.
+      ;  scan_all: Scan the audio directory and load all plugins found.
+      ;  ondemand: On-demand loading. (assoc needed)
+      ;  load: Load only specified plugins.
+      ;loadmethod = load(libmpeg2,avifile,ungif)
+      loadmethod = scan_all
+      ; Associate an extension with a appropriate plugin filename. (NOT IMPLEMENTED YET)
       ;assoc {
-      ;  .mpg = LibMPEG3
-      ;  .mpeg = LibMPEG3
+      ;  .gif = ungif
+      ;  .mng = mng
+      ;  .mpg = libmpeg2
+      ;  .mpeg = libmpeg2
       ;  .mp3 = mpglib
-      ;  .m1v = MPEG_lib
+      ;  .m1v = mpeg_lib
       ;}
       ;
       ; video only stream may be played by mpeg_lib.
@@ -68,7 +108,7 @@ enfle {
       ; mpeg_lib won't play all such streams.
       MPEG_lib/disabled = yes
       ; libmpeg2 and libmpeg3 both can play mpeg movies.
-      ; You should choose which plugin to use.
+      ; You should choose one of these.
       ;LibMPEG2/disabled = yes
       LibMPEG3/disabled = yes
     }
