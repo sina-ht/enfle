@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 22:02:20 2004.
- * $Id: libmpeg2.c,v 1.50 2004/01/30 12:41:31 sian Exp $
+ * Last Modified: Sat Jan 31 14:55:59 2004.
+ * $Id: libmpeg2.c,v 1.51 2004/02/02 16:39:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,6 @@
  */
 
 #define REQUIRE_STRING_H
-#define REQUIRE_UNISTD_H
 #include "compat.h"
 #include "common.h"
 
@@ -32,21 +31,9 @@
 #include <pthread.h>
 
 #include "enfle/player-plugin.h"
-#include "enfle/videodecoder.h"
 #include "enfle/audiodecoder.h"
+#include "enfle/videodecoder.h"
 #include "demultiplexer/demultiplexer_mpeg.h"
-
-static const unsigned int types =
-  (IMAGE_I420 |
-   IMAGE_RGBA32 | IMAGE_BGRA32 |
-   IMAGE_RGB24 | IMAGE_BGR24 |
-   IMAGE_BGR_WITH_BITMASK);
-
-DECLARE_PLAYER_PLUGIN_METHODS;
-
-static PlayerStatus play(Movie *);
-static PlayerStatus pause_movie(Movie *);
-static PlayerStatus stop_movie(Movie *);
 
 typedef struct _libmpeg2_info {
   EnflePlugins *eps;
@@ -68,6 +55,18 @@ typedef struct _libmpeg2_info {
   FIFO *astream;
   pthread_t audio_thread;
 } Libmpeg2_info;
+
+static const unsigned int types =
+  (IMAGE_I420 |
+   IMAGE_BGRA32 | IMAGE_RGBA32 |
+   IMAGE_RGB24 | IMAGE_BGR24 |
+   IMAGE_BGR_WITH_BITMASK);
+
+DECLARE_PLAYER_PLUGIN_METHODS;
+
+static PlayerStatus play(Movie *);
+static PlayerStatus pause_movie(Movie *);
+static PlayerStatus stop_movie(Movie *);
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
@@ -103,7 +102,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
   Image *p;
 
   if ((info = calloc(1, sizeof(Libmpeg2_info))) == NULL) {
-    show_message("LibMPEG2: %s: No enough memory.\n", __FUNCTION__);
+    show_message_fnc("No enough memory.\n");
     return PLAY_ERROR;
   }
 
@@ -112,10 +111,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
-    show_message_fnc("Cannot do direct decoding...\n");
+    err_message_fnc("Cannot direct decoding...\n");
     goto error;
   }
-  debug_message("LibMPEG2: requested type: %s direct\n", image_type_to_string(m->requested_type));
+  debug_message("requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   info->use_xv = (m->requested_type == _I420) ? 1 : 0;
 
@@ -134,9 +133,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     return PLAY_NOT;
 
   m->has_audio = 0;
-  if (info->nastreams) {
+  if (info->nastreams > 0) {
     if (m->ap == NULL)
-      show_message("Audio not played.\n");
+      warning("Audio not played.\n");
     else {
       /* XXX: stream should be selectable */
       info->nastream = 0;
@@ -145,7 +144,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       show_message("audio(%d streams)\n", info->nastreams);
 
       if (m->ap->bytes_written == NULL)
-	show_message("audio sync may be incorrect.\n");
+	warning("audio sync may be incorrect.\n");
       m->has_audio = 1;
     }
   } else {
@@ -217,6 +216,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
   if (info->demux)
     demultiplexer_destroy(info->demux);
   free(info);
+  m->movie_private = NULL;
   return PLAY_ERROR;
 }
 
@@ -313,7 +313,7 @@ play_video(void *arg)
 
   info->vdec = videodecoder_create(info->eps, "libmpeg2");
   if (info->vdec == NULL) {
-    warning_fnc("libmpeg2 videodecoder plugin not found.\n");
+    warning_fnc("videodecoder plugin not found.\n");
     return (void *)VD_ERROR;
   }
 
@@ -383,7 +383,7 @@ play_audio(void *arg)
   //info->adec = audiodecoder_create(info->eps, "mpglib");
   info->adec = audiodecoder_create(info->eps, "mad");
   if (info->adec == NULL) {
-    err_message("mad audiodecoder plugin not found. Audio disabled.\n");
+    err_message("audiodecoder plugin not found. Audio disabled.\n");
     return (void *)PLAY_OK;
   }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
@@ -497,11 +497,11 @@ play_main(Movie *m, VideoWindow *vw)
   if (demultiplexer_get_eof(info->demux)) {
     if (info->astream && fifo_is_empty(info->astream)) {
       /* Audio existed, but over. */
-#if defined(DEBUG)
-      if (m->has_audio != 2)
-	debug_message_fnc("Audio over.  Using normal timer instead of audio timer.\n");
-#endif
-      m->has_audio = 2;
+      if (m->has_audio != 2) {
+	debug_message_fnc("Audio over.\n");
+	m->has_audio = 2;
+	fifo_invalidate(info->astream);
+      }
     }
     if ((!info->vstream || fifo_is_empty(info->vstream)) &&
 	(!info->astream || fifo_is_empty(info->astream))) {
@@ -509,6 +509,9 @@ play_main(Movie *m, VideoWindow *vw)
       return PLAY_OK;
     }
   }
+
+  if (info->vdec == NULL)
+    return PLAY_OK;
 
   if (info->vdec->to_render == 0)
     return PLAY_OK;
@@ -645,12 +648,12 @@ stop_movie(Movie *m)
     debug_message_fnc("demultiplexer stopped\n");
   }
 
-  if (m->has_video && info->vstream) {
+  if (info->vstream) {
     fifo_destroy(info->vstream);
     info->vstream = NULL;
     demultiplexer_mpeg_set_vst(info->demux, NULL);
   }
-  if (m->has_audio && info->astream) {
+  if (info->astream) {
     fifo_destroy(info->astream);
     info->astream = NULL;
     demultiplexer_mpeg_set_ast(info->demux, NULL);
@@ -675,10 +678,11 @@ unload_movie(Movie *m)
       image_destroy(info->p);
     if (info->demux)
       demultiplexer_destroy(info->demux);
-
     free(info);
     m->movie_private = NULL;
   }
+
+  debug_message_fn("() Ok\n");
 }
 
 /* methods */
@@ -697,7 +701,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 
 DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, eps)
 {
-  debug_message("libmpeg2 player: load() called\n");
+  debug_message_fn("()\n");
 
 #ifdef IDENTIFY_BEFORE_PLAY
   {

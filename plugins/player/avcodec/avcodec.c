@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 22:21:00 2004.
- * $Id: avcodec.c,v 1.15 2004/01/30 12:41:31 sian Exp $
+ * Last Modified: Sat Jan 31 14:55:23 2004.
+ * $Id: avcodec.c,v 1.16 2004/02/02 16:39:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,9 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
@@ -34,11 +31,11 @@
 #include <pthread.h>
 
 #include "enfle/player-plugin.h"
-#include "avcodec/avcodec.h"
 #include "enfle/audiodecoder.h"
 #include "enfle/videodecoder.h"
 #include "demultiplexer/demultiplexer_avi.h"
 #include "enfle/fourcc.h"
+#include "avcodec/avcodec.h"
 
 typedef struct __avcodec_info {
   EnflePlugins *eps;
@@ -65,9 +62,9 @@ typedef struct __avcodec_info {
 
 //IMAGE_UYVY | IMAGE_YUY2 |
 static const unsigned int types =
-  (IMAGE_I420 | 
-   IMAGE_BGRA32 | IMAGE_BGR24 |
-   IMAGE_ARGB32 | IMAGE_RGB24 |
+  (IMAGE_I420 |
+   IMAGE_BGRA32 | IMAGE_ARGB32 |
+   IMAGE_RGB24 | IMAGE_BGR24 |
    IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
 
 DECLARE_PLAYER_PLUGIN_METHODS;
@@ -122,12 +119,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     identify(m, st, c, eps);
     info = (avcodec_info *)m->movie_private;
     if (!info) {
-      err_message("avcodec: %s: No enough memory.\n", __FUNCTION__);
+      err_message("%s: No enough memory.\n", __FUNCTION__);
       return PLAY_ERROR;
     }
   }
   aviinfo = demultiplexer_avi_info(info->demux);
 
+  info->eps = eps;
   info->c = c;
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
@@ -135,7 +133,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     err_message_fnc("Cannot direct decoding...\n");
     return PLAY_ERROR;
   }
-  debug_message("avcodec: requested type: %s direct\n", image_type_to_string(m->requested_type));
+  debug_message("requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   if (info->nastreams == 0 && info->nvstreams == 0)
     return PLAY_NOT;
@@ -151,15 +149,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       info->nastream = 1;
       demultiplexer_avi_set_audio(info->demux, info->nastream);
 
-      m->sampleformat = _AUDIO_FORMAT_S16_LE;
-      m->channels = aviinfo->nchannels;
-      m->samplerate = aviinfo->samples_per_sec;
-      m->num_of_samples = aviinfo->num_of_samples;
+      show_message("audio(%d streams)\n", info->nastreams);
 
-      show_message("audio[%s%08X](%d streams): format(%d): %d ch rate %d kHz %d samples\n",
-		   aviinfo->ahandler == 0x55 ? "mp3:" : "",
-		   aviinfo->ahandler, info->nastreams,
-		   m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
       if (m->ap->bytes_written == NULL)
 	warning("audio sync may be incorrect.\n");
       m->has_audio = 1;
@@ -477,7 +468,7 @@ play_video(void *arg)
 
   info->vdec = videodecoder_create(info->eps, "avcodec");
   if (info->vdec == NULL) {
-    warning_fnc("avcodec videodecoder plugin not found.\n");
+    warning_fnc("videodecoder plugin not found.\n");
     return (void *)VD_ERROR;
   }
   if (!videodecoder_setup(info->vdec, m, info->p, m->width, m->height)) {
@@ -541,6 +532,9 @@ play_audio(void *arg)
   void *data;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
+#ifdef USE_TS
+  unsigned long pts, dts, size;
+#endif
 
   debug_message_fn("()\n");
 
@@ -548,7 +542,7 @@ play_audio(void *arg)
   //info->adec = audiodecoder_create(info->eps, "mpglib");
   info->adec = audiodecoder_create(info->eps, "mad");
   if (info->adec == NULL) {
-    err_message("mad audiodecoder plugin not found. Audio disabled.\n");
+    err_message("audiodecoder plugin not found. Audio disabled.\n");
     return (void *)PLAY_OK;
   }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
@@ -569,6 +563,24 @@ play_audio(void *arg)
       used = 0;
     }
     if (ad) {
+#ifdef USE_TS
+      switch (dp->pts_dts_flag) {
+      case 2:
+	pts = dp->pts;
+	dts = -1;
+	size = dp->size;
+	break;
+      case 3:
+	pts = dp->pts;
+	dts = dp->dts;
+	size = dp->size;
+	break;
+      default:
+	pts = dts = -1;
+	size = dp->size;
+	break;
+      }
+#endif
       ads = audiodecoder_decode(info->adec, m, ad, dp->data + used, dp->size - used, &u);
       used += u;
       while (ads == AD_OK) {
@@ -687,13 +699,11 @@ play_main(Movie *m, VideoWindow *vw)
     while (video_time > timer_get_milli(m->timer)) ;
 
     /* skip if delayed */
-#if 0
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       //debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
       info->to_skip = i;
     }
-#endif
   }
 
   m->render_frame(vw, m, p);
@@ -793,7 +803,7 @@ stop_movie(Movie *m)
     demultiplexer_avi_set_ast(info->demux, NULL);
   }
 
-  debug_message_fn("() OK\n");
+  debug_message_fnc("OK\n");
 
   return PLAY_OK;
 }
@@ -827,14 +837,13 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
   AVIInfo *aviinfo;
 
   if (!info) {
-    if ((info = calloc(1, sizeof(avcodec_info))) == NULL) {
-      err_message("avcodec: %s: No enough memory.\n", __FUNCTION__);
+    if ((info = calloc(1, sizeof(*info))) == NULL) {
+      err_message("%s: No enough memory.\n", __FUNCTION__);
       return PLAY_ERROR;
     }
     m->movie_private = (void *)info;
   }
 
-  info->eps = eps;
   info->demux = demultiplexer_avi_create();
   demultiplexer_avi_set_input(info->demux, st);
   if (!demultiplexer_examine(info->demux)) {
@@ -939,7 +948,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 
 DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, eps)
 {
-  debug_message("avcodec: %s()\n", __FUNCTION__);
+  debug_message_fn("()\n");
 
 #ifdef IDENTIFY_BEFORE_PLAY
   {

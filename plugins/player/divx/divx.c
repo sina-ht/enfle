@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 22:21:27 2004.
- * $Id: divx.c,v 1.6 2004/01/30 12:41:31 sian Exp $
+ * Last Modified: Sat Jan 31 14:55:32 2004.
+ * $Id: divx.c,v 1.7 2004/02/02 16:39:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,9 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
@@ -34,8 +31,8 @@
 #include <pthread.h>
 
 #include "enfle/player-plugin.h"
-#include "enfle/videodecoder.h"
 #include "enfle/audiodecoder.h"
+#include "enfle/videodecoder.h"
 #include "demultiplexer/demultiplexer_avi.h"
 #include "enfle/fourcc.h"
 
@@ -132,10 +129,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
   Image *p;
 
   if (!info) {
-    identify(m, st, c, NULL);
+    identify(m, st, c, eps);
     info = (DivX_info *)m->movie_private;
     if (!info) {
-      err_message("DivX: %s: No enough memory.\n", __FUNCTION__);
+      err_message("%s: No enough memory.\n", __FUNCTION__);
       return PLAY_ERROR;
     }
   }
@@ -149,7 +146,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     err_message_fnc("Cannot direct decoding...\n");
     return PLAY_ERROR;
   }
-  debug_message("DivX: requested type: %s direct\n", image_type_to_string(m->requested_type));
+  debug_message("requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   if (info->nastreams == 0 && info->nvstreams == 0)
     return PLAY_NOT;
@@ -165,15 +162,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       info->nastream = 1;
       demultiplexer_avi_set_audio(info->demux, info->nastream);
 
-      m->sampleformat = _AUDIO_FORMAT_S16_LE;
-      m->channels = aviinfo->nchannels;
-      m->samplerate = aviinfo->samples_per_sec;
-      m->num_of_samples = aviinfo->num_of_samples;
+      show_message("audio(%d streams)\n", info->nastreams);
 
-      show_message("audio[%s%08X](%d streams): format(%d): %d ch rate %d kHz %d samples\n",
-		   aviinfo->ahandler == 0x55 ? "mp3:" : "",
-		   aviinfo->ahandler, info->nastreams,
-		   m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
       if (m->ap->bytes_written == NULL)
 	warning("audio sync may be incorrect.\n");
       m->has_audio = 1;
@@ -341,6 +331,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     info->demux = NULL;
   }
   free(info);
+  m->movie_private = NULL;
   return PLAY_ERROR;
 }
 
@@ -398,6 +389,24 @@ play(Movie *m)
   return PLAY_OK;
 }
 
+static int
+get_audio_time(Movie *m, AudioDevice *ad)
+{
+  if (ad && m->ap->bytes_written)
+    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
+  return (int)((double)m->current_sample * 1000 / m->samplerate);
+}
+
+//#define USE_TS
+#undef USE_TS
+
+#ifdef USE_TS
+#define TS_BASE 90000
+#define TS_TO_CLOCK(sec, usec, ts) \
+  sec  =  ts / TS_BASE; \
+  usec = (ts % TS_BASE) * (1000000 / TS_BASE);
+#endif
+
 static void *
 play_video(void *arg)
 {
@@ -419,7 +428,7 @@ play_video(void *arg)
 
   info->vdec = videodecoder_create(info->eps, "divx");
   if (info->vdec == NULL) {
-    warning_fnc("divx videodecoder plugin not found.\n");
+    warning_fnc("videodecoder plugin not found.\n");
     return (void *)VD_ERROR;
   }
   if (!videodecoder_setup(info->vdec, m, info->p, m->width, m->height)) {
@@ -472,8 +481,6 @@ play_video(void *arg)
   return (void *)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
 }
 
-#define MP3_DECODE_BUFFER_SIZE 16384
-
 static void *
 play_audio(void *arg)
 {
@@ -492,7 +499,7 @@ play_audio(void *arg)
   //info->adec = audiodecoder_create(info->eps, "mpglib");
   info->adec = audiodecoder_create(info->eps, "mad");
   if (info->adec == NULL) {
-    err_message("mad audiodecoder plugin not found. Audio disabled.\n");
+    err_message("audiodecoder plugin not found. Audio disabled.\n");
     return (void *)PLAY_OK;
   }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
@@ -544,14 +551,6 @@ play_audio(void *arg)
   return (void *)PLAY_OK;
 }
 
-static int
-get_audio_time(Movie *m, AudioDevice *ad)
-{
-  if (ad && m->ap->bytes_written)
-    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
-  return (int)((double)m->current_sample * 1000 / m->samplerate);
-}
-
 static PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
@@ -590,9 +589,14 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
 
   if (demultiplexer_get_eof(info->demux)) {
-    if (info->astream && fifo_is_empty(info->astream))
+    if (info->astream && fifo_is_empty(info->astream)) {
       /* Audio existed, but over. */
-      m->has_audio = 2;
+      if (m->has_audio != 2) {
+	debug_message_fnc("Audio over.\n");
+	m->has_audio = 2;
+	fifo_invalidate(info->astream);
+      }
+    }
     if ((!info->vstream || fifo_is_empty(info->vstream)) &&
 	(!info->astream || fifo_is_empty(info->astream))) {
       stop_movie(m);
@@ -600,40 +604,54 @@ play_main(Movie *m, VideoWindow *vw)
     }
   }
 
+  if (info->vdec == NULL)
+    return PLAY_OK;
+
+  if (info->vdec->to_render == 0)
+    return PLAY_OK;
+
   pthread_mutex_lock(&info->vdec->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
     audio_time = get_audio_time(m, info->ad);
-    //debug_message("%d frames(v: %d a: %d)\n", i, video_time, audio_time);
+    //debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, audio_time);
 
     /* if too fast to display, wait before render */
-    while (video_time > audio_time)
+    while (video_time > audio_time) {
+      if (timer_get_milli(m->timer) > video_time + 10 * 1000 / m->framerate) {
+	warning_fnc("might have bad audio: %d (r: %d v: %d a: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time, audio_time);
+	break;
+      }
       audio_time = get_audio_time(m, info->ad);
+    }
 
     /* skip if delayed */
     i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
-      debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
+      //debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
       info->to_skip = i;
     }
   } else {
+    //debug_message("%d (r: %d v: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time);
     /* if too fast to display, wait before render */
     while (video_time > timer_get_milli(m->timer)) ;
 
     /* skip if delayed */
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
-      debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
+      //debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
       info->to_skip = i;
     }
   }
 
-  /* tell video thread to continue decoding */
-  pthread_cond_signal(&info->vdec->update_cond);
-  pthread_mutex_unlock(&info->vdec->update_mutex);
-
   m->render_frame(vw, m, p);
+  info->vdec->to_render--;
+
+  /* tell video thread to continue decoding */
+  if (info->vdec->to_render == 0)
+    pthread_cond_signal(&info->vdec->update_cond);
+  pthread_mutex_unlock(&info->vdec->update_mutex);
 
   return PLAY_OK;
 }
@@ -724,7 +742,7 @@ stop_movie(Movie *m)
     demultiplexer_avi_set_ast(info->demux, NULL);
   }
 
-  debug_message_fn("() OK\n");
+  debug_message_fnc("OK\n");
 
   return PLAY_OK;
 }
@@ -758,8 +776,8 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
   AVIInfo *aviinfo;
 
   if (!info) {
-    if ((info = calloc(1, sizeof(DivX_info))) == NULL) {
-      err_message("DivX: %s: No enough memory.\n", __FUNCTION__);
+    if ((info = calloc(1, sizeof(*info))) == NULL) {
+      err_message("%s: No enough memory.\n", __FUNCTION__);
       return PLAY_ERROR;
     }
     m->movie_private = (void *)info;
@@ -816,7 +834,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
 
 DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, eps)
 {
-  debug_message("DivX: %s()\n", __FUNCTION__);
+  debug_message_fn("()\n");
 
 #ifdef IDENTIFY_BEFORE_PLAY
   {
