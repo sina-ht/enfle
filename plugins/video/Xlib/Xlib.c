@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 23 07:35:24 2000.
- * $Id: Xlib.c,v 1.14 2000/12/22 23:13:38 sian Exp $
+ * Last Modified: Sun Dec 24 02:23:22 2000.
+ * $Id: Xlib.c,v 1.15 2000/12/24 15:29:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -241,9 +241,13 @@ open_window(void *data, Config *c, unsigned int w, unsigned int h)
   xwi->normal.gc  = xwi->current.gc;
 
   x11window_get_position(xw, &vw->x, &vw->y);
+#if 1
+  x11window_map(xw);
+#else
   x11window_set_event_mask(xw, StructureNotifyMask);
   x11window_map_raised(xw);
   x11window_wait_mapped(xw);
+#endif
 
   return vw;
 }
