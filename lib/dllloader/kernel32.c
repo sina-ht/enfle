@@ -1,10 +1,10 @@
 /*
  * kernel32.c -- implementation of routines in kernel32.dll
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 19:35:03 2001.
- * $Id: kernel32.c,v 1.14 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Fri Sep 28 13:06:32 2001.
+ * $Id: kernel32.c,v 1.15 2001/09/29 18:04:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -19,6 +19,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
+
+//#define MORE_DEBUG
 
 #define W32API_REQUEST_MEM_ALLOC
 #define W32API_REQUEST_MEM_REALLOC
@@ -39,23 +41,29 @@
 #  include <pthread.h>
 #endif
 
-#if 1
+#ifdef MORE_DEBUG
 #define more_debug_message(format, args...)
 #else
 #define more_debug_message(format, args...) fprintf(stderr, format, ## args)
 #endif
 
 /* file related */
-DECLARE_W32API(HANDLE, CreateFileA, (LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE));
+DECLARE_W32API(HANDLE, CreateFileA, (LPCSTR,  DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE));
+DECLARE_W32API(HANDLE, CreateFileW, (LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE));
+DECLARE_W32API(HFILE, _lcreat, (LPCSTR, INT));
 DECLARE_W32API(HFILE, _lopen, (LPCSTR, INT));
 DECLARE_W32API(BOOL, ReadFile, (HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED));
 DECLARE_W32API(UINT, _lread, (HFILE, LPVOID, UINT));
 DECLARE_W32API(BOOL, WriteFile, (HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED));
+DECLARE_W32API(UINT, _lwrite, (HFILE, LPCSTR, UINT));
 DECLARE_W32API(UINT, _lclose, (HFILE));
 DECLARE_W32API(DWORD, SetFilePointer, (HANDLE, LONG, LONG *, DWORD));
 DECLARE_W32API(LONG, _llseek, (HFILE, LONG, INT));
 DECLARE_W32API(DWORD, GetFileSize, (HANDLE, LPDWORD));
 DECLARE_W32API(DWORD, GetFileType, (HANDLE));
+/* directory related */
+DECLARE_W32API(BOOL, CreateDirectoryA, (LPCSTR, LPSECURITY_ATTRIBUTES));
+DECLARE_W32API(BOOL, CreateDirectoryW, (LPCWSTR, LPSECURITY_ATTRIBUTES));
 /* handle related */
 DECLARE_W32API(HANDLE, GetStdHandle, (DWORD));
 DECLARE_W32API(UINT, SetHandleCount, (UINT));
@@ -148,15 +156,20 @@ DECLARE_W32API(void, unknown_symbol, (void));
 
 static Symbol_info symbol_infos[] = {
   { "CreateFileA", CreateFileA },
+  { "CreateFileW", CreateFileW },
+  { "_lcreat", _lcreat },
   { "_lopen", _lopen },
   { "ReadFile", ReadFile },
   { "_lread", _lread },
   { "WriteFile", WriteFile },
+  { "_lwrite", _lwrite },
   { "_lclose", _lclose },
   { "SetFilePointer", SetFilePointer },
   { "_llseek", _llseek },
   { "GetFileSize", GetFileSize },
   { "GetFileType", GetFileType },
+  { "CreateDirectoryA", CreateDirectoryA },
+  { "CreateDirectoryW", CreateDirectoryW },
   { "GetStdHandle", GetStdHandle },
   { "SetHandleCount", SetHandleCount },
   { "CloseHandle", CloseHandle },
@@ -249,13 +262,33 @@ DEFINE_W32API(HANDLE, CreateFileA,
   return handle;
 }
 
+DEFINE_W32API(HANDLE, CreateFileW,
+	      (LPCWSTR filename, DWORD _access, DWORD sharing,
+	       LPSECURITY_ATTRIBUTES sa, DWORD creation, DWORD attributes, HANDLE template))
+{
+  HANDLE handle;
+
+  debug_message(__FUNCTION__ "(%s) called: ", (char *)filename);
+  handle = (HANDLE)fopen((char *)filename, "rb");
+  debug_message("%p\n", handle);
+
+  return handle;
+}
+
+DEFINE_W32API(HFILE, _lcreat,
+	      (LPCSTR path, INT mode))
+{
+  debug_message(__FUNCTION__ "(%s, %d) called\n", path, mode);
+  return NULL;
+}
+
 DEFINE_W32API(HFILE, _lopen,
 	      (LPCSTR path, INT mode))
 {
   DWORD _access = 0, sharing = 0;
 
   debug_message(__FUNCTION__ "(%s, %d) called\n", path, mode);
-  return CreateFileA(path, _access, sharing, NULL, OPEN_EXISTING, 0, (HANDLE)-1);
+  return CreateFileA(path, _access, sharing, NULL, OPEN_EXISTING, 0, (HANDLE)HFILE_ERROR);
 }
 
 DEFINE_W32API(BOOL, ReadFile,
@@ -282,7 +315,7 @@ DEFINE_W32API(UINT, _lread,
 
   more_debug_message(__FUNCTION__ "(%d bytes) called\n", count);
   if (!ReadFile(handle, buffer, count, &result, NULL))
-    return -1;
+    return HFILE_ERROR;
   return result;
 }
 
@@ -292,7 +325,16 @@ DEFINE_W32API(BOOL, WriteFile,
 {
   debug_message(__FUNCTION__ "(handle %p, buffer %p, to_write %d) called\n", handle, buffer, bytes_to_write);
 
-  return TRUE;
+  //return TRUE;
+  return FALSE;
+}
+
+DEFINE_W32API(UINT, _lwrite,
+	      (HFILE handle, LPCSTR buffer, UINT len))
+{
+  debug_message(__FUNCTION__ "(handle %p, buffer %p, to_write %d) called\n", handle, buffer, len);
+
+  return HFILE_ERROR;
 }
 
 DEFINE_W32API(UINT, _lclose,
@@ -343,6 +385,24 @@ DEFINE_W32API(DWORD, GetFileType,
   debug_message(__FUNCTION__ "(%p) called\n", handle);
 
   return FILE_TYPE_DISK;
+}
+
+/* directory related */
+
+DEFINE_W32API(BOOL, CreateDirectoryA,
+	      (LPCSTR path, LPSECURITY_ATTRIBUTES sa))
+{
+  debug_message(__FUNCTION__ "(%s) called\n", path);
+
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, CreateDirectoryW,
+	      (LPCWSTR path, LPSECURITY_ATTRIBUTES sa))
+{
+  debug_message(__FUNCTION__ "(%s) called\n", (char *)path);
+
+  return TRUE;
 }
 
 /* handle related */
@@ -839,7 +899,7 @@ DEFINE_W32API(DWORD, TlsAlloc,
 
   debug_message(__FUNCTION__ "() called\n");
   if ((p = w32api_mem_alloc(sizeof(void *))) == NULL)
-    return -1;
+    return HFILE_ERROR;
   return (DWORD)p;
 }
 
