@@ -82,15 +82,19 @@
 
 /* global declarations */
 void init_idct (void);
+#ifndef USE_MMX
 void idct (short *block);
+#endif
 
 /* private data */
 static short iclip[1024];       /* clipping table */
 static short *iclp;
 
 /* private prototypes */
+#ifndef USE_MMX
 static void idctrow (short *blk);
 static void idctcol (short *blk);
+#endif
 
 /* row (horizontal) IDCT
  * 
@@ -99,6 +103,7 @@ static void idctcol (short *blk);
  * 
  * where: c[0]    = 128 c[1..7] = 128*sqrt(2) */
 
+#ifndef USE_MMX
 static void idctrow (short *blk)
 {
   int x0, x1, x2, x3, x4, x5, x6, x7, x8;
@@ -219,6 +224,7 @@ void idct (short *block)
   for (i = 0; i < 8; i++)
     idctcol (block + i);
 }
+#endif
 
 void init_idct ()
 {

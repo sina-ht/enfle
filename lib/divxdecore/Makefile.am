@@ -1,17 +1,26 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for libdivxdecore
-# $Id: Makefile.am,v 1.1 2001/01/23 08:10:53 sian Exp $
+# $Id: Makefile.am,v 1.2 2001/01/28 03:47:29 sian Exp $
 
 noinst_LTLIBRARIES = libdivxdecore.la
-DEFS = -D_DECORE
 #INCLUDES =
+
+if USE_MMX
+transferIDCT=transferIDCT_mmx.c
+idct=idct.c idct_mmx.c
+AM_CFLAGS = -D_DECORE -DUSE_MMX
+else
+transferIDCT=transferIDCT.c
+idct=idct.c
+AM_CFLAGS = -D_DECORE
+endif
 
 libdivxdecore_la_SOURCES = \
 	basic_prediction.c basic_prediction.h \
 	decore.c decore.h \
 	getbits.c \
 	global.h \
-	idct.c idct.h \
+	$(idct) idct.h \
 	mp4_block.c mp4_block.h \
 	mp4_decoder.c mp4_decoder.h \
 	mp4_header.c mp4_header.h \
@@ -22,5 +31,5 @@ libdivxdecore_la_SOURCES = \
 	mp4_vld.c mp4_vld.h \
 	portab.h \
 	postprocess.c postprocess.h \
-	transferIDCT.c transferIDCT.h \
-	yuv2rgb.h
+	$(transferIDCT) transferIDCT.h \
+	yuv2rgb.c yuv2rgb_mmx.c yuv2rgb.h

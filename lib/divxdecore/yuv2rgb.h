@@ -37,6 +37,10 @@
 #ifndef _YUVRGB_H_
 #define _YUVRGB_H_
 
+#define YUV2RGB_32_MMX
+#define YUV2RGB_24_MMX
+#define YUV2RGB_16_MMX
+
 void (*convert_yuv)(unsigned char *puc_y, int stride_y,
 	unsigned char *puc_u, unsigned char *puc_v, int stride_uv,
 	unsigned char *bmp, int width_y, int height_y);
@@ -45,18 +49,18 @@ void yuv2rgb_16(
 	uint8_t *puc_y, int stride_y, 
 	uint8_t *puc_u, 
 	uint8_t *puc_v, int stride_uv, 
-	uint8_t *puc_out, 
+  uint8_t *puc_out, 
 	int width_y, int height_y);
 void yuv2rgb_24(
 	uint8_t *puc_y, int stride_y, 
 	uint8_t *puc_u, 
 	uint8_t *puc_v, int stride_uv, 
-	uint8_t *puc_out, 
+  uint8_t *puc_out, 
 	int width_y, int height_y);
 void yuv2rgb_32(
 	uint8_t *puc_y, int stride_y, 
-	uint8_t *puc_u, uint8_t *puc_v, int stride_uv, 
-	uint8_t *puc_out, 
+  uint8_t *puc_u, uint8_t *puc_v, int stride_uv, 
+  uint8_t *puc_out, 
 	int width_y, int height_y);
 
 #endif // _YUVRGB_H_
