@@ -1,10 +1,10 @@
 /*
- * player-plugin.h -- player plugin interface header
+ * player-extra.h -- player plugin extra definition
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan  4 05:48:49 2001.
- * $Id: player-plugin.h,v 1.8 2001/01/06 23:54:33 sian Exp $
+ * Last Modified: Thu Jan  4 04:09:44 2001.
+ * $Id: player-extra.h,v 1.1 2001/01/06 23:54:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,23 +20,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-// Far from complete...
+#ifndef _PLAYER_EXTRA_H
+#define _PLAYER_EXTRA_H
 
-#ifndef _PLAYER_PLUGIN_H
-#define _PLAYER_PLUGIN_H
+enum _player_status {
+  PLAY_ERROR = -1,
+  PLAY_NOT,
+  PLAY_OK
+};
 
-#include "player-extra.h"
-#include "enfle-plugin.h"
-#include "stream.h"
-#include "movie.h"
-
-typedef struct _player_plugin {
-  ENFLE_PLUGIN_COMMON_DATA;
-
-  PlayerStatus (*identify)(Movie *, Stream *);
-  PlayerStatus (*load)(VideoWindow *, Movie *, Stream *);
-} PlayerPlugin;
-
-ENFLE_PLUGIN_ENTRIES;
+typedef enum _player_status PlayerStatus;
 
 #endif
