@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 10 22:35:06 2004.
- * $Id: demultiplexer_avi_private.h,v 1.1 2004/02/14 05:22:04 sian Exp $
+ * Last Modified: Sat Mar 20 18:03:24 2004.
+ * $Id: demultiplexer_avi_private.h,v 1.2 2004/03/24 14:54:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,10 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-typedef unsigned int DWORD;
-typedef unsigned int LONG;
-typedef unsigned int FOURCC;
-typedef unsigned short int WORD;
+#include "enfle/demultiplexer_types.h"
 
 /*
 AVIF_HASINDEX
@@ -119,16 +116,7 @@ struct __bitmapinfoheader {
   DWORD biClrImportant; /* ditto */
 };
 
-typedef struct __waveformatex WAVEFORMATEX;
-struct __waveformatex {
-  WORD wFormatTag;
-  WORD nChannels;
-  DWORD nSamplesPerSec;
-  DWORD nAvgBytesPerSec;
-  WORD nBlockAlign;
-  WORD wBitsPerSample;
-  WORD cbSize;
-};
+#include "enfle/demultiplexer_waveformatex.h"
 
 #define AVIIF_LIST     0x00000001 // chunk is LIST
 #define AVIIF_KEYFRAME 0x00000010 // key frame.
