@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 01:09:12 2001.
- * $Id: avifile.cpp,v 1.24 2001/09/20 05:30:27 sian Exp $
+ * Last Modified: Sun Sep 23 04:26:42 2001.
+ * $Id: avifile.cpp,v 1.25 2001/09/22 19:40:57 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -162,7 +162,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   AviFile_info *info = (AviFile_info *)m->movie_private;
   IAviReadFile *rf;
   IAviReadStream *audiostream, *stream;
-  int result;
+  int result, dest_bpp = 0;
   int tmp_types;
 
   if (!info->rf)
@@ -262,8 +262,22 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       info->use_xv = 1;
       break;
     default:
-      debug_message("SetDestFmt(%d);\n", vw->bits_per_pixel);
-      result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel);
+      if (vw->bits_per_pixel == 32) {
+	if ((result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel)) != 0) {
+	  /* XXX: hack */
+	  debug_message("vw bpp == 32, but is not supported. Try 24.\n");
+	  result = stream->GetDecoder()->SetDestFmt(24);
+	  dest_bpp = 24;
+	  m->requested_type = _RGB24;
+	  m->direct_decode = 0;
+	} else {
+	  dest_bpp = 32;
+	}
+      } else {
+	debug_message("SetDestFmt(%d);\n", vw->bits_per_pixel);
+	result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel);
+	dest_bpp = vw->bits_per_pixel;
+      }
       break;
     }
     if (result != 0) {
@@ -308,7 +322,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   p->type = m->requested_type;
   if ((p->rendered.image = memory_create()) == NULL)
     goto error;
-  memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+  if (dest_bpp == 0)
+    memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
 
   if (info->use_xv) {
     switch (p->type) {
@@ -327,7 +342,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       return PLAY_ERROR;
     }
   } else {
-    switch (vw->bits_per_pixel) {
+    switch (dest_bpp) {
     case 32:
       p->depth = 24;
       p->bits_per_pixel = 32;
