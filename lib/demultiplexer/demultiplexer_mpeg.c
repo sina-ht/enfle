@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Aug  2 22:50:54 2002.
- * $Id: demultiplexer_mpeg.c,v 1.22 2002/08/02 13:59:05 sian Exp $
+ * $Id: demultiplexer_mpeg.c,v 1.23 2002/09/22 21:30:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -475,7 +475,7 @@ demux_main(void *arg)
  error:
   demux->running = 0;
   free(buf);
-  pthread_exit((void *)0);
+  return (void *)0;
 }
 
 static int

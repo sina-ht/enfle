@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Aug 18 13:13:17 2002.
- * $Id: demultiplexer_avi.c,v 1.15 2002/08/18 04:19:26 sian Exp $
+ * $Id: demultiplexer_avi.c,v 1.16 2002/09/22 21:30:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -333,7 +333,7 @@ demux_main(void *arg)
   demultiplexer_set_eof(demux, 1);
   demux->running = 0;
 
-  pthread_exit((void *)1);
+  return (void *)1;
 }
 
 static int
