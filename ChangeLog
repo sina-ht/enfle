@@ -1,3 +1,32 @@
+2001-09-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Delayed set_caption().
+
+	* plugins/player/libmpeg2/libmpeg2.c: More debug messages.
+
+	* lib/utils/stdio-support.c: Rewrite using libstring.
+
+	* lib/utils/libconfig.c: Added informative message.
+
+	* lib/utils/fifo.c: Destroy pthread things.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Prevent fifo_put() from
+	freezing stop().
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Added code to handle two
+	more ID.
+
+	* lib/X11/x11ximage.c: Added fail-safe image size checking code.
+
+2001-09-20  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+
+	* plugins/player/libmpeg2/libmpeg2.c: Current frame counting bug,
+	which occurs when dropping, is fixed. Added time-stamp convertion
+	code.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: A little more precise
+	demultiplexing.
+
 2001-09-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.[ch]: Bug fix. Added several debug messages.
