@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 29 23:28:20 2001.
- * $Id: libmpeg3.c,v 1.25 2001/01/29 15:11:12 sian Exp $
+ * Last Modified: Sun Mar  4 04:34:23 2001.
+ * $Id: libmpeg3.c,v 1.26 2001/03/04 17:09:31 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -119,7 +119,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
-    show_message(__FUNCTION__ ": Cannot direct decoding...\n");
+    show_message(__FUNCTION__ ": Cannot do direct decoding...\n");
     return PLAY_ERROR;
   }
   debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
