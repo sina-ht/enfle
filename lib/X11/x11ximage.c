@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Jun 23 02:35:30 2001.
- * $Id: x11ximage.c,v 1.30 2001/06/22 17:35:47 sian Exp $
+ * Last Modified: Mon Jun 25 01:39:46 2001.
+ * $Id: x11ximage.c,v 1.31 2001/06/24 16:52:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -539,12 +539,12 @@ convert(X11XImage *xi, Image *p)
       break;
     }
   } else {
-#if defined(USE_XV) && defined(DEBUG)
+#if defined(USE_XV)
     int i;
 
     xvimage = xi->xvimage;
     i = 0;
-#if 0
+#if 0 // defined(DEBUG)
     debug_message(__FUNCTION__ ": XvImage: id %04X (%d x %d) %d bytes %d plane\n",
 		  xvimage->id, xvimage->width, xvimage->height,
 		  xvimage->data_size, xvimage->num_planes);
