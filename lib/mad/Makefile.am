@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Mar 12 08:13:01 2004.
-# $Id: Makefile.am,v 1.6 2004/03/11 23:13:58 sian Exp $
+# Last Modified: Sun Aug 29 15:37:46 2004.
+# $Id: Makefile.am,v 1.7 2004/08/29 06:54:17 sian Exp $
 
 AM_CFLAGS = -Dasm=__asm__
 EXTRA_DIST = mad.h.sed CHANGES COPYRIGHT CREDITS README TODO VERSION
@@ -64,7 +64,7 @@ if ARCH_PPC
 FPM=-DFPM_PPC
 endif
 
-mad.h: Makefile.am $(srcdir)/COPYRIGHT $(srcdir)/mad.h.sed $(exported_headers)
+$(srcdir)/mad.h: Makefile.am $(srcdir)/COPYRIGHT $(srcdir)/mad.h.sed $(exported_headers)
 	(sed -e '1s|.*|/*|' -e '1b' -e '$$s|.*| */|' -e '$$b'  \
 		-e 's/^.*/ *&/' $(srcdir)/COPYRIGHT; echo;  \
 	echo "# ifdef __cplusplus";  \
@@ -89,5 +89,6 @@ mad.h: Makefile.am $(srcdir)/COPYRIGHT $(srcdir)/mad.h.sed $(exported_headers)
 	echo '}';  \
 	echo "# endif") >$@
 
+all: $(srcdir)/mad.h
 .c.s:
 	$(COMPILE) -S $<
