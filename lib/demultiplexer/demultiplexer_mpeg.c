@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  5 01:30:05 2001.
- * $Id: demultiplexer_mpeg.c,v 1.6 2001/03/04 17:08:15 sian Exp $
+ * Last Modified: Thu Jun 14 01:26:45 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.7 2001/06/13 18:16:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -221,6 +221,33 @@ close_sockets(Demultiplexer *demux)
   }
 }
 
+static unsigned long
+get_timestamp(unsigned char *p)
+{
+  unsigned long t;
+
+  t = (p[0] >> 1) & 7;
+  t <<= 15;
+  t |= ((p[1] << 8) | p[2]) >> 1;
+  t <<= 15;
+  t |= ((p[3] << 8) | p[4]) >> 1;
+
+  return t;
+}
+
+static int
+put_timestamp(int fd, unsigned long ts)
+{
+  unsigned char b[4];
+
+  b[0] = (ts >> 24) & 0xff;
+  b[1] = (ts >> 16) & 0xff;
+  b[2] = (ts >>  8) & 0xff;
+  b[3] =  ts        & 0xff;
+
+  return write(fd, b, 4);
+}
+
 #define CONTINUE_IF_RUNNING if (demux->running) continue; else break
 
 static void *
@@ -229,6 +256,7 @@ demux_main(void *arg)
   Demultiplexer *demux = (Demultiplexer *)arg;
   MpegInfo *info = (MpegInfo *)demux->private_data;
   unsigned char *buf, id;
+  unsigned long pts = 0, dts = 0;
   int read_total, read_size, used_size, skip;
   int nvstream, nastream;
 
@@ -328,32 +356,52 @@ demux_main(void *arg)
 	nastream = id & 0x1f;
 	if (nastream == info->nastream) {
 	  if ((buf[6] & 0xc0) == 0x80) {
+	    char c = 0xff;
+
+	    write(info->a_fd, &c, 1);
 	    /* ?, flags, header_len */
 	    write(info->a_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
 	  } else {
 	    unsigned char *p;
+	    unsigned char pts_dts_flag;
 
 	    for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
 	    if ((*p & 0xc0) == 0x40) {
 	      /* buffer scale, buffer size */
 	      p += 2;
 	    }
-	    switch ((*p & 0xf0) >> 4) {
+	    pts_dts_flag = (*p & 0xf0) >> 4;
+	    switch ((int)pts_dts_flag) {
 	    case 0:
 	      p++;
 	      break;
 	    case 2:
 	      /* presentation time stamp */
+	      pts = get_timestamp(p);
 	      p += 5;
 	      break;
 	    case 3:
 	      /* presentation time stamp, decoding time stamp */
+	      pts = get_timestamp(p);
+	      dts = get_timestamp(p + 5);
 	      p += 10;
 	      break;
 	    default:
 	      goto error;
 	    }
 	    if (p < buf + skip) {
+	      write(info->a_fd, &pts_dts_flag, 1);
+	      switch ((int)pts_dts_flag) {
+	      case 2:
+		put_timestamp(info->a_fd, pts);
+		break;
+	      case 3:
+		put_timestamp(info->a_fd, pts);
+		put_timestamp(info->a_fd, dts);
+		break;
+	      default:
+		break;
+	      }
 	      write(info->a_fd, p, buf + skip - p);
 	    }
 	  }
@@ -362,33 +410,53 @@ demux_main(void *arg)
 	nvstream = id & 0xf;
 	if (nvstream == info->nvstream) {
 	  if ((buf[6] & 0xc0) == 0x80) {
+	    char c = 0xff;
+
+	    write(info->a_fd, &c, 1);
 	    /* ?, flags, header_len */
 	    write(info->v_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
 	  } else {
 	    unsigned char *p;
+	    unsigned char pts_dts_flag;
 
 	    for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
 	    if ((*p & 0xc0) == 0x40) {
 	      /* buffer scale, buffer size */
 	      p += 2;
 	    }
-	    switch ((*p & 0xf0) >> 4) {
+	    pts_dts_flag = (*p & 0xf0) >> 4;
+	    switch ((int)pts_dts_flag) {
 	    case 0:
 	      p++;
 	      break;
 	    case 2:
 	      /* presentation time stamp */
+	      pts = get_timestamp(p);
 	      p += 5;
 	      break;
 	    case 3:
 	      /* presentation time stamp, decoding time stamp */
+	      pts = get_timestamp(p);
+	      dts = get_timestamp(p + 5);
 	      p += 10;
 	      break;
 	    default:
 	      goto error;
 	    }
 	    if (p < buf + skip) {
-	      write(info->v_fd, p, buf + skip - p);
+	      write(info->a_fd, &pts_dts_flag, 1);
+	      switch ((int)pts_dts_flag) {
+	      case 2:
+		put_timestamp(info->a_fd, pts);
+		break;
+	      case 3:
+		put_timestamp(info->a_fd, pts);
+		put_timestamp(info->a_fd, dts);
+		break;
+	      default:
+		break;
+	      }
+	      write(info->a_fd, p, buf + skip - p);
 	    }
 	  }
 	}

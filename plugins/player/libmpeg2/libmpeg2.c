@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  5 02:00:08 2001.
- * $Id: libmpeg2.c,v 1.12 2001/03/04 17:10:41 sian Exp $
+ * Last Modified: Thu Jun 14 01:27:13 2001.
+ * $Id: libmpeg2.c,v 1.13 2001/06/13 18:16:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -286,6 +286,16 @@ get_audio_time(Movie *m, AudioDevice *ad)
   return (int)((double)m->current_sample * 1000 / m->samplerate);
 }
 
+static inline unsigned long
+get_timestamp(unsigned char *p)
+{
+  unsigned long t;
+
+  t = (((((p[0] << 8) | p[1]) << 8) | p[2]) << 8) | p[3];
+
+  return t;
+}
+
 static void *
 play_video(void *arg)
 {
@@ -315,8 +325,26 @@ play_video(void *arg)
       demultiplexer_set_eof(info->demux, 1);
       break;
     } else {
+      unsigned long pts, dts;
+      int s;
+
+      switch ((int)buf[0]) {
+      case 2:
+	pts = get_timestamp(buf + 1);
+	s = 5;
+	break;
+      case 3:
+	pts = get_timestamp(buf + 1);
+	dts = get_timestamp(buf + 5);
+	s = 9;
+	break;
+      default:
+	s = 1;
+	break;
+      }
       //debug_message(__FUNCTION__ ": <decode %d bytes>", read_size);
-      nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, buf, buf + read_size);
+      debug_message(__FUNCTION__ ": pts = %ld, dts = %ld\n", pts, dts);
+      nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, buf + s, buf + read_size - s);
       //debug_message("</decode %d frames>\n", nframe_decoded);
     }
   }
