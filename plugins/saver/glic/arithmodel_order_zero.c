@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 17:11:36 2001.
- * $Id: arithmodel_order_zero.c,v 1.5 2001/08/07 09:28:20 sian Exp $
+ * Last Modified: Tue Aug  7 22:10:12 2001.
+ * $Id: arithmodel_order_zero.c,v 1.6 2001/08/09 17:28:48 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,8 +24,8 @@
 typedef _Freq Freq;
 
 #define FREQ_MAX (((Freq)~0) >> 2)
-#define IS_EOF_INSTALLED(am) ((am)->initial_eof_freq > 0)
-#define IS_ESCAPE_INSTALLED(am) ((am)->initial_escape_freq > 0)
+#define IS_EOF_INSTALLED(am) ((am)->is_eof_used)
+#define IS_ESCAPE_INSTALLED(am) ((am)->is_escape_used)
 
 ARITHMODEL_METHOD_DECLARE;
 static int my_reset(Arithmodel *, int, int);
@@ -76,7 +76,7 @@ set_update_region(Arithmodel *_am, void (*func)(Arithmodel *, Index))
 }
 
 Arithmodel *
-arithmodel_order_zero_create(int default_initial_eof_freq, int default_initial_escape_freq)
+arithmodel_order_zero_create(void)
 {
   Arithmodel_order_zero *am;
 
@@ -95,8 +95,6 @@ arithmodel_order_zero_create(int default_initial_eof_freq, int default_initial_e
   am->my_reset = my_reset;
   am->set_update_escape_freq = set_update_escape_freq;
   am->set_update_region = set_update_region;
-  am->default_initial_eof_freq = default_initial_eof_freq;
-  am->default_initial_escape_freq = default_initial_escape_freq;
   set_update_escape_freq((Arithmodel *)am, default_update_escape_freq);
   set_update_region((Arithmodel *)am, default_update_region);
 
@@ -157,21 +155,19 @@ init(Arithmodel *_am, int eof_freq, int escape_freq)
 
   am->nsymbols = 0;
 
-  if (!eof_freq)
-    eof_freq = am->default_initial_eof_freq;
-  if (!escape_freq)
-    escape_freq = am->default_initial_escape_freq;
-
-  am->initial_eof_freq = eof_freq;
-  am->initial_escape_freq = escape_freq;
-
   if (eof_freq) {
+    am->is_eof_used = 1;
     am->eof_symbol = am->nsymbols;
     install_symbol(_am, eof_freq);
+  } else {
+    am->is_eof_used = 0;
   }
   if (escape_freq) {
+    am->is_escape_used = 1;
     am->escape_symbol = am->nsymbols;
     install_symbol(_am, escape_freq);
+  } else {
+    am->is_escape_used = 0;
   }
   am->start_symbol = am->nsymbols;
   am->escape_run = 0;
