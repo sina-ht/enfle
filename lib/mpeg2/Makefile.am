@@ -1,9 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Feb 22 18:06:28 2001.
-# $Id: Makefile.am,v 1.3 2001/02/22 17:48:18 sian Exp $
-
-#AM_CFLAGS =
+# Last Modified: Sat Mar  3 03:22:26 2001.
+# $Id: Makefile.am,v 1.4 2001/03/02 18:37:27 sian Exp $
 
 noinst_LTLIBRARIES = libenflempeg2.la
 INCLUDES = -I$(top_srcdir)
@@ -20,5 +18,3 @@ libenflempeg2_la_SOURCES = \
 	yuv2rgb.c yuv2rgb.h yuv2rgb_mlib.c yuv2rgb_mmx.c \
 	video_out.c video_out.h video_out_internal.h \
 	cpu_accel.c
-
-#libenflempeg2_la_LIBADD = -lm
