@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 17 22:22:33 2001.
- * $Id: libmpeg3.c,v 1.22 2001/01/17 13:24:21 sian Exp $
+ * Last Modified: Fri Jan 19 01:32:20 2001.
+ * $Id: libmpeg3.c,v 1.23 2001/01/18 17:01:11 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -37,7 +37,6 @@
 #endif
 
 #include "utils/timer.h"
-#include "utils/timer_gettimeofday.h"
 #include "enfle/player-plugin.h"
 
 typedef struct _libmpeg3_info {
@@ -70,7 +69,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.4",
+  description: "LibMPEG3 Player plugin version 0.4.1",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -127,9 +126,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   /* mpeg3_set_cpus(info->file, 2); */
   /* mpeg3_set_mmx(info->file, 1); */
 
-  if (!mpeg3_has_video(info->file))
-    show_message("warning: This stream has no video stream.\n");
-
+  m->has_audio = 0;
   if (mpeg3_has_audio(info->file)) {
     if (m->ap == NULL)
       show_message("Audio not played.\n");
@@ -146,40 +143,53 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       show_message("audio(%d streams): format(%d): %d ch rate %d kHz %d samples\n", info->nastreams, m->sampleformat, m->channels, m->samplerate, m->num_of_samples);
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
+      m->has_audio = 1;
     }
   } else {
     debug_message("No audio streams.\n");
   }
 
-  if ((info->nvstreams = mpeg3_total_vstreams(info->file)) > 1) {
-    show_message("There are %d video streams in this whole stream.\n", info->nvstreams);
-    show_message("Only the first video stream will be played(so far). Sorry.\n");
+  m->has_video = 1;
+  if (!mpeg3_has_video(info->file)) {
+    m->has_video = 0;
+    m->width = 120;
+    m->height = 80;
+    m->framerate = 0;
+    m->num_of_frames = 1;
+    m->rendering_width = m->width;
+    m->rendering_height = m->height;
+    show_message("warning: This stream has no video stream.\n");
+  } else {
+    if ((info->nvstreams = mpeg3_total_vstreams(info->file)) > 1) {
+      show_message("There are %d video streams in this whole stream.\n", info->nvstreams);
+      show_message("Only the first video stream will be played(so far). Sorry.\n");
+    }
+
+    /* XXX: stream should be selectable */
+    info->nvstream = 0;
+
+    m->width = mpeg3_video_width(info->file, info->nvstream);
+    m->height = mpeg3_video_height(info->file, info->nvstream);
+    m->framerate = mpeg3_frame_rate(info->file, 0);
+    m->num_of_frames = mpeg3_video_frames(info->file, 0);
+
+    switch (vw->render_method) {
+    case _VIDEO_RENDER_NORMAL:
+      m->rendering_width  = m->width;
+      m->rendering_height = m->height;
+      break;
+    case _VIDEO_RENDER_MAGNIFY_DOUBLE:
+      m->rendering_width  = m->width  << 1;
+      m->rendering_height = m->height << 1;
+      break;
+    default:
+      m->rendering_width  = m->width;
+      m->rendering_height = m->height;
+      break;
+    }
   }
 
-  /* XXX: stream should be selectable */
-  info->nvstream = 0;
-
-  m->width = mpeg3_video_width(info->file, info->nvstream);
-  m->height = mpeg3_video_height(info->file, info->nvstream);
-  m->framerate = mpeg3_frame_rate(info->file, 0);
-  m->num_of_frames = mpeg3_video_frames(info->file, 0);
-
-  switch (vw->render_method) {
-  case _VIDEO_RENDER_NORMAL:
-    m->rendering_width  = m->width;
-    m->rendering_height = m->height;
-    break;
-  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    m->rendering_width  = m->width  << 1;
-    m->rendering_height = m->height << 1;
-    break;
-  default:
-    m->rendering_width  = m->width;
-    m->rendering_height = m->height;
-    break;
-  }
-
-  debug_message("libmpeg3 player: (%d,%d) -> (%d,%d) %f fps %d frames\n",
+  debug_message("video(%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n", info->nvstreams,
 		m->width, m->height, m->rendering_width, m->rendering_height,
 		m->framerate, m->num_of_frames);
 
@@ -258,6 +268,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->movie_private = (void *)info;
   m->st = st;
+  m->status = _STOP;
 
   m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
@@ -301,9 +312,9 @@ play(Movie *m)
   timer_start(m->timer);
   info->eof = 0;
 
-  if (info->nvstreams > 0)
+  if (m->has_video)
     pthread_create(&info->video_thread, NULL, play_video, m);
-  if (info->nastreams > 0)
+  if (m->has_audio)
     pthread_create(&info->audio_thread, NULL, play_audio, m);
 
   return PLAY_OK;
@@ -394,6 +405,7 @@ play_audio(void *arg)
 
   m->ap->sync_device(ad);
   m->ap->close_device(ad);
+  info->ad = NULL;
 
   debug_message(__FUNCTION__ " exiting.\n");
 
@@ -404,8 +416,8 @@ static int
 get_audio_time(Movie *m, AudioDevice *ad)
 {
   if (ad && m->ap->bytes_written)
-    return (int)((unsigned int)m->ap->bytes_written(ad) / m->channels * 500 / m->samplerate);
-  return m->current_sample * 1000 / m->samplerate;
+    return (int)((double)m->ap->bytes_written(ad) / m->samplerate * 500 / m->channels);
+  return (int)((double)m->current_sample * 1000 / m->samplerate);
 }
 
 static PlayerStatus
@@ -414,7 +426,7 @@ play_main(Movie *m, VideoWindow *vw)
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
   Image *p = info->p;
   int i = 0;
-  int audio_time;
+  int video_time, audio_time;
 
   switch (m->status) {
   case _PLAY:
@@ -433,19 +445,33 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
   }
 
+  if (!m->has_video)
+    return PLAY_OK;
+
   pthread_mutex_lock(&info->update_mutex);
 
   m->current_frame = mpeg3_get_frame(info->file, info->nvstream);
-  audio_time = get_audio_time(m, info->ad);
-  //debug_message("v: %d a=%d (%d frame)\n", (int)timer_get_milli(m->timer), audio_time, m->current_frame);
-
-  /* if too fast to display, wait before render */
-  while (m->current_frame * 1000 / m->framerate > audio_time)
+  video_time = m->current_frame * 1000 / m->framerate;
+  if (m->has_audio) {
     audio_time = get_audio_time(m, info->ad);
+    //debug_message("v: %d a=%d (%d frame)\n", (int)timer_get_milli(m->timer), audio_time, m->current_frame);
 
-  /* skip if delayed */
-  {
+    /* if too fast to display, wait before render */
+    while (video_time > audio_time)
+      audio_time = get_audio_time(m, info->ad);
+
+    /* skip if delayed */
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
+    if (i > 0) {
+      debug_message("dropped %d frames\n", i);
+      mpeg3_drop_frames(info->file, i, info->nvstream);
+    }
+  } else {
+    /* if too fast to display, wait before render */
+    while (video_time > timer_get_milli(m->timer)) ;
+
+    /* skip if delayed */
+    i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
       mpeg3_drop_frames(info->file, i, info->nvstream);
