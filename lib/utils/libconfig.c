@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 26 09:12:32 2001.
- * $Id: libconfig.c,v 1.12 2001/08/26 00:52:18 sian Exp $
+ * Last Modified: Thu Aug 30 10:03:18 2001.
+ * $Id: libconfig.c,v 1.13 2001/08/30 01:06:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -190,7 +190,7 @@ set_internal(Config *c, String *config_path, char *path, char *remain)
     memcpy(quoted, remain + 1, end - remain - 1);
     quoted[end - remain - 1] = '\0';
     f = set_str(c, string_get(value_path), quoted);
-  } else if (isdigit(*remain)) {
+  } else if (isdigit(*remain) || ((*remain == '+' || *remain == '-') && isdigit(*(remain + 1)))) {
     f = set_int(c, string_get(value_path), atoi(remain));
   } else {
     f = set_str(c, string_get(value_path), strdup(remain));
@@ -328,7 +328,7 @@ parse(Config *c, char *str)
     valuestart++;
   value = strdup(valuestart);
 
-  r = isdigit(*value) ? set_int(c, name, atoi(value)) : set_str(c, name, (unsigned char *)value);
+  r = (isdigit(*value) || ((*value == '+' || *value == '-') && isdigit(*(value + 1)))) ? set_int(c, name, atoi(value)) : set_str(c, name, (unsigned char *)value);
   free(name);
 
   return r;
