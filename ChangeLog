@@ -1,3 +1,58 @@
+2004-04-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/Makefile.am: Fixed typo.
+
+	* src/enfle.rc: More configurations.
+
+	* src/enfle.c: Don't load spi and dmo plugins in creating cache.
+
+	* plugins/demultiplexer/asf/asf.c: Skip garbage.
+
+2004-04-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/dmo.c: Make compiler happy.
+
+	* lib/enfle/dmo-private.h, lib/enfle/dmo.c: First successful DMO
+	implementation.
+
+	* lib/utils/cpucaps.c, lib/utils/cpucaps.h: Added CPU frequency
+	and TSC check.
+
+	* plugins/player/generic/generic.c: Receive is_key.
+
+	* lib/enfle/movie.h, plugins/demultiplexer/asf/asf.c: Pass
+	video_header.  Windows related codecs needs BITMAPINFOHEADER +
+	alpha.
+
+	* lib/enfle/demultiplexer.h, lib/enfle/videodecoder.h,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/raw/raw.c: DemuxedPacket now includes is_key
+	member.  Passed it to videodecoders.
+
+	* lib/dllloader/windef.h: Added more defines and declarations.
+
+	* lib/dllloader/user32.c: Added more APIs.
+
+	* lib/dllloader/pe_image.c: Added msdmo.dll.
+
+	* lib/dllloader/msvcrt.c: Suppressed debug messages.
+
+	* lib/dllloader/mm.c: Use calloc() to zero-clear allocated memory.
+
+	* lib/dllloader/kernel32.c: Handle implementation.  Added more
+	APIs.
+
+	* lib/dllloader/advapi32.c: advapi implementation.
+
+	* lib/dllloader/Makefile.am: Added msdmo.
+
+	* lib/dllloader/msdmo.c, lib/dllloader/msdmo.h: msdmo.dll
+	implementation.
+
+	* lib/X11/x11ximage.c: Use _fnc.
+
 2004-04-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, src/enfle.c: Added DMO bridge support.
