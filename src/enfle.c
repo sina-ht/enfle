@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 12 16:43:11 2001.
- * $Id: enfle.c,v 1.31 2001/06/12 09:07:19 sian Exp $
+ * Last Modified: Wed Jun 13 01:07:12 2001.
+ * $Id: enfle.c,v 1.32 2001/06/12 17:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,10 +71,13 @@ usage(void)
   printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n\n");
   printf("usage: enfle [options] [path...]\n");
 
-#if defined(USE_SHM) || defined(USE_PTHREAD) || defined(USE_SPI)
+#if defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI)
   printf("Extension: "
 #ifdef USE_SHM
  "SHM "
+#endif
+#ifdef USE_XV
+ "Xv "
 #endif
 #ifdef USE_PTHREAD
  "pthread "

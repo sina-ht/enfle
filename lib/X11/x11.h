@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Dec  3 19:57:09 2000.
- * $Id: x11.h,v 1.7 2000/12/03 11:03:30 sian Exp $
+ * Last Modified: Wed Jun 13 02:49:49 2001.
+ * $Id: x11.h,v 1.8 2001/06/12 17:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,7 +23,24 @@
 #ifndef _ENFLE_X11_H
 #define _ENFLE_X11_H
 
-#define X11_EXT_SHM 0x1
+#ifdef USE_XV
+#include <X11/extensions/Xvlib.h>
+#endif
+
+#define X11_EXT_SHM (1 << 0)
+#define X11_EXT_XV  (1 << 1)
+
+#ifdef USE_XV
+typedef struct _x11_xv {
+  unsigned int ver, rev, req_base, ev_base, err_base;
+  int nadaptors;
+  XvAdaptorInfo *adaptor_infos;
+  unsigned int nencodings;
+  XvEncodingInfo *encoding_infos;
+  int nformats;
+  XvImageFormatValues *formats;
+} X11Xv;
+#endif
 
 typedef struct _x11 X11;
 struct _x11 {
@@ -38,6 +55,9 @@ struct _x11 {
   unsigned long white;
   unsigned long black;
   unsigned int extensions;
+#ifdef USE_XV
+  X11Xv xv;
+#endif
 
   int (*open)(X11 *, char *);
   int (*close)(X11 *);
