@@ -1,10 +1,10 @@
 /*
  * common.h -- common header file, which is included by almost all files.
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar 13 15:23:12 2001.
- * $Id: common.h,v 1.12 2001/03/13 06:51:26 sian Exp $
+ * Last Modified: Fri Apr 13 20:55:58 2001.
+ * $Id: common.h,v 1.13 2001/04/18 05:40:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -79,6 +79,7 @@ fatal_perror(int code, const char *msg)
 /* #  define IDENTIFY_BEFORE_LOAD */
 /* #  define IDENTIFY_BEFORE_PLAY */
 #endif
+#define COPYRIGHT_MESSAGE "(C)Copyright 2000, 2001 by Hiroshi Takekawa"
 
 #ifdef WITH_DMALLOC
 #  include <dmalloc.h>
