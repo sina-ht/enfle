@@ -1,5 +1,13 @@
 2001-09-19  Hiroshi Takekawa  <sian@fennel.org>
 
+	* src/enfle.c: Show whether MMX routine is available.
+
+	* lib/utils/cpucaps.[ch]: More CPU capability detection.
+
+	* common.h: Added __format__ attribute to fatal().
+
+2001-09-19  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/X11/x11ximage.c: Added necessary #ifdef's.
 
 	* lib/utils/fifo.c: Dropped a useless inline function.

@@ -1,3 +1,7 @@
+2001-09-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* arithmodel_order_zero.c: Pass arguments to fatal() correctly.
+
 2001-09-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* arithcoder.h, arithmodel_order_zero.[ch], glic.c, predict.c,
