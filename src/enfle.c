@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 13 01:07:12 2001.
- * $Id: enfle.c,v 1.32 2001/06/12 17:59:24 sian Exp $
+ * Last Modified: Sat Jun 16 03:35:08 2001.
+ * $Id: enfle.c,v 1.33 2001/06/15 18:49:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,7 +56,8 @@ static Option enfle_options[] = {
   { "video",     'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
   { "audio",     'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
   { "wallpaper", 'w', _NO_ARGUMENT,       "Set the first image as wallpaper(alias for -u Wallpaper)." },
-  { "convert",   'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG)." },
+  { "convert",   'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG, for Convert UI)." },
+  { "magnify",   'm', _REQUIRED_ARGUMENT, "Specify magnification method(for Normal UI)." },
   { "config",    'c', _REQUIRED_ARGUMENT, "Additional config expr. like -c '/enfle/plugins/saver/jpeg/quality = 80'." },
   { "include",   'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
@@ -238,6 +239,7 @@ main(int argc, char **argv)
   String *rcpath;
   int i, ch;
   int print_more_info = 0;
+  int magnify_method = 0;
   int include_fnmatch = 0;
   int exclude_fnmatch = 0;
   char *pattern = NULL;
@@ -290,6 +292,9 @@ main(int argc, char **argv)
       else
 	format = strdup("PNG");
       break;
+    case 'm':
+      magnify_method = atoi(optarg);
+      break;
     case 'c':
       dlist_add(override_config, strdup(optarg));
       break;
@@ -319,6 +324,23 @@ main(int argc, char **argv)
 	config_load(c, ENFLE_DATADIR "/enfle.rc")))
     fprintf(stderr, "No configuration file. Incomplete install?\n");
   string_destroy(rcpath);
+
+  switch (magnify_method) {
+  case 0:
+    config_parse(c, (char *)"/enfle/plugins/ui/normal/render = normal");
+    break;
+  case 1:
+    config_parse(c, (char *)"/enfle/plugins/ui/normal/render = double");
+    break;
+  case 2:
+    config_parse(c, (char *)"/enfle/plugins/ui/normal/render = short");
+    break;
+  case 3:
+    config_parse(c, (char *)"/enfle/plugins/ui/normal/render = long");
+    break;
+  default:
+    break;
+  }
 
   dlist_iter (override_config, dd) {
     void *d = dlist_data(dd);
