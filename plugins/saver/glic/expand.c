@@ -1,12 +1,14 @@
 /*
  * expand.c
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug 28 16:07:48 2001.
- * $Id: expand.c,v 1.1 2001/08/29 08:37:25 sian Exp $
+ * Last Modified: Thu Sep  6 12:00:38 2001.
+ * $Id: expand.c,v 1.2 2001/09/07 04:43:26 sian Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "common.h"
 
 #include "expand.h"
 #include "vmpm_error.h"
@@ -18,14 +20,16 @@ expand(VMPM *vmpm)
   unsigned int i;
   int b;
 
-  if ((tmp = malloc(vmpm->buffersize)) == NULL)
+  debug_message(__FUNCTION__ "() called\n");
+
+  if ((tmp = malloc(vmpm->bufferused)) == NULL)
     memory_error(NULL, MEMORY_ERROR);
-  memcpy(tmp, vmpm->buffer, vmpm->buffersize);
+  memcpy(tmp, vmpm->buffer, vmpm->bufferused);
   free(vmpm->buffer);
-  if ((vmpm->buffer = malloc(vmpm->buffersize << 3)) == NULL)
+  if ((vmpm->buffer = malloc(vmpm->bufferused << 3)) == NULL)
     memory_error(NULL, MEMORY_ERROR);
   /* Expand into bits. */
-  for (i = 0; i < vmpm->buffersize; i++) {
+  for (i = 0; i < vmpm->bufferused; i++) {
     unsigned char c = tmp[i];
     for (b = 0; b < 8; b++) {
       vmpm->buffer[i * 8 + b] = (c & 0x80) ? 1 : 0;
@@ -33,7 +37,9 @@ expand(VMPM *vmpm)
     }
   }
   free(tmp);
+
   vmpm->alphabetsize = 2;
   vmpm->bits_per_symbol = 1;
-  vmpm->buffersize <<= 3;
+  vmpm->bufferused <<= 3;
+  vmpm->buffersize = vmpm->bufferused;
 }
