@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan 18 23:36:31 2001.
- * $Id: avifile.cpp,v 1.6 2001/01/18 17:01:33 sian Exp $
+ * Last Modified: Wed Jan 24 10:53:07 2001.
+ * $Id: avifile.cpp,v 1.7 2001/01/24 10:14:14 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -75,7 +75,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "AviFile",
-  description: (const unsigned char *)"AviFile Player plugin version 0.3.1",
+  description: (const unsigned char *)"AviFile Player plugin version 0.3.2",
   author: (const unsigned char *)"Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -116,22 +116,20 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   rf = info->rf = CreateIAviReadFile(st->path);
   if (!rf)
-    return PLAY_ERROR;
-  if (!rf->StreamCount() || rf->GetFileHeader(&info->hdr)) {
-    delete rf;
-    return PLAY_ERROR;
-  }
+    goto error;
+  if (!rf->StreamCount() || rf->GetFileHeader(&info->hdr))
+    goto error;
   m->num_of_frames = info->hdr.dwTotalFrames;
 
   m->has_video = 0;
   m->has_audio = 0;
   if ((audiostream = info->audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
     if (m->ap == NULL)
-      show_message("Cannot open audio device.\n");
+      show_message("Audio plugin is not available.\n");
     else {
       if ((result = audiostream->StartStreaming()) != 0) {
 	show_message("audio: StartStream() failed.\n");
-	return PLAY_ERROR;
+	goto error;
       }
       debug_message("Get output format.\n");
       audiostream->GetOutputFormat(&info->owf, sizeof info->owf);
@@ -149,11 +147,11 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   if ((stream = info->stream = rf->GetStream(0, IAviReadStream::Video))) {
     if ((result = stream->StartStreaming()) != 0) {
       show_message("video: StartStream() failed.\n");
-      return PLAY_ERROR;
+      goto error;
     }
     if ((result = stream->GetDecoder()->SetDestFmt(vw->bits_per_pixel)) != 0) {
       show_message("SetDestFmt() failed.\n");
-      return PLAY_ERROR;
+      goto error;
     }
     stream->GetVideoFormatInfo(&info->bmih);
     m->width  = info->bmih.biWidth;
@@ -168,7 +166,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
     show_message("AviFile: load_movie: Cannot direct decoding...\n");
-    return PLAY_ERROR;
+    goto error;
   }
   debug_message("AviFile: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
@@ -237,7 +235,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   return PLAY_OK;
 
  error:
-  free(info);
+  if (rf)
+    delete rf;
+  if (info)
+    free(info);
   return PLAY_ERROR;
 }
 
@@ -475,20 +476,48 @@ static PlayerStatus
 identify(Movie *m, Stream *st)
 {
   unsigned char buf[16];
+  IAviReadFile *rf;
+  IAviReadStream *audiostream, *stream;
+  int result;
 
   /* see if this is asf by extension... */
-  if (strlen(st->path) >= 4 && !strcasecmp(st->path + strlen(st->path) - 4, ".asf"))
-    return PLAY_OK;
+  if (strlen(st->path) < 4 || strcasecmp(st->path + strlen(st->path) - 4, ".asf")) {
+    if (stream_read(st, buf, 16) != 16)
+      return PLAY_NOT;
 
-  if (stream_read(st, buf, 16) != 16)
-    return PLAY_NOT;
+    if (memcmp(buf, "RIFF", 4))
+      return PLAY_NOT;
+    if (memcmp(buf + 8, "AVI ", 4))
+      return PLAY_NOT;
+  }
 
-  if (memcmp(buf, "RIFF", 4))
-    return PLAY_NOT;
-  if (memcmp(buf + 8, "AVI ", 4))
-    return PLAY_NOT;
+  debug_message("avifile: identify: identified as avi.\n");
+
+  /* see if this avi is supported by avifile */
+  rf = CreateIAviReadFile(st->path);
+  if (!rf)
+    goto not;
+  if (!rf->StreamCount())
+    goto not;
+
+  if ((audiostream = rf->GetStream(0, IAviReadStream::Audio))) {
+    if ((result = audiostream->StartStreaming()) != 0)
+      goto not;
+  }
+
+  if ((stream = rf->GetStream(0, IAviReadStream::Video))) {
+    if ((result = stream->StartStreaming()) != 0)
+      goto not;
+  }
+  delete rf;
 
   return PLAY_OK;
+
+ not:
+  debug_message("avifile: identify: but not supported by avifile.\n");
+  if (rf)
+    delete rf;
+  return PLAY_NOT;
 }
 
 static PlayerStatus
