@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 12 06:16:40 2003.
- * $Id: Xlib.c,v 1.52 2003/10/12 04:08:46 sian Exp $
+ * Last Modified: Thu Nov  6 23:56:44 2003.
+ * $Id: Xlib.c,v 1.53 2003/11/17 13:58:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -852,7 +852,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
       break;
     case ConfigureNotify:
       {
-	XConfigureEvent *xcev = (XConfigureEvent *)&ev;
+	XConfigureEvent *xcev = (XConfigureEvent *)&xev;
 	ev->type = ENFLE_Event_WindowConfigured;
 	ev->window.width = xcev->width;
 	ev->window.height = xcev->height;
@@ -1350,7 +1350,7 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
   vw->render_height = dh;
   resize(vw, dw, dh);
 
-  //debug_message_fnc("sw,sh (%d, %d)  dw,dh (%d, %d)  full: %d direct: %d\n", sw, sh, dw, dh, vw->if_fullscreen, vw->if_direct);
+  //debug_message_fnc("sw,sh (%d, %d)  dw,dh (%d, %d)  use_xv: %d, full: %d, direct: %d\n", sw, sh, dw, dh, xwi->xi->use_xv, vw->if_fullscreen, vw->if_direct);
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
