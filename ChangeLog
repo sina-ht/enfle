@@ -1,3 +1,23 @@
+2001-03-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Delete unnecessary
+	video_window_sync_discard().
+
+	* plugins/player/libmpeg2/Makefile.am,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.c,
+	plugins/player/libmpeg2/libmpeg2_vo.h: Make libmpeg2 plugin
+	working, but there is still the synchronizing problem.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Fixed typo.
+
+	* lib/mpeg2/Makefile.am, lib/mpeg2/decode.c, lib/mpeg2/idct.c,
+	lib/mpeg2/idct_mmx.c, lib/mpeg2/motion_comp.c,
+	lib/mpeg2/motion_comp_mmx.c, lib/mpeg2/mpeg2.h,
+	lib/mpeg2/yuv2rgb.c, lib/mpeg2/yuv2rgb_mmx.c: More integration.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: stop() is now working.
+
 2001-03-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg2/libmpeg2_vo.c: Added several
