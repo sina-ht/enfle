@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 20:01:02 2001.
- * $Id: normal.c,v 1.54 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Sat Oct 13 01:03:10 2001.
+ * $Id: normal.c,v 1.55 2001/10/14 12:37:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -770,6 +770,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   Image *p;
   Movie *m;
   char *path;
+  unsigned char *tmp;
   int ret, r;
 
   s = stream_create();
@@ -850,7 +851,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       break;
 
     video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-    r = identify_file(eps, path, s, a);
+    r = identify_file(eps, path, s, a, c);
     switch (r) {
     case IDENTIFY_FILE_DIRECTORY:
       arc = archive_create(a);
@@ -871,22 +872,28 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       archive_destroy(arc);
       continue;
     case IDENTIFY_FILE_STREAM:
-      arc = archive_create(a);
-      if (archiver_identify(eps, arc, s)) {
-	debug_message("Archiver identified as %s\n", arc->format);
-	if (archiver_open(eps, arc, arc->format, s)) {
-	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
-	  ret = process_files_of_archive(uidata, arc, gui);
-	  archive_destroy(arc);
-	  continue;
-	} else {
-	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
-	  ret = MAIN_LOOP_DELETE_FROM_LIST;
-	  archive_destroy(arc);
-	  continue;
+      if ((tmp = config_get_str(c, "/enfle/plugins/ui/normal/archiver/disabled")) == NULL ||
+	  strcasecmp(tmp, "yes") != 0) {
+
+	debug_message("tmp = %s\n", tmp);
+
+	arc = archive_create(a);
+	if (archiver_identify(eps, arc, s)) {
+	  debug_message("Archiver identified as %s\n", arc->format);
+	  if (archiver_open(eps, arc, arc->format, s)) {
+	    (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
+	    ret = process_files_of_archive(uidata, arc, gui);
+	    archive_destroy(arc);
+	    continue;
+	  } else {
+	    show_message("Archive %s [%s] cannot open\n", arc->format, path);
+	    ret = MAIN_LOOP_DELETE_FROM_LIST;
+	    archive_destroy(arc);
+	    continue;
+	  }
 	}
+	archive_destroy(arc);
       }
-      archive_destroy(arc);
       break;
     case IDENTIFY_FILE_NOTREG:
     case IDENTIFY_FILE_SOPEN_FAILED:
