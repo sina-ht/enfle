@@ -1,10 +1,10 @@
 /*
  * enfle.c -- graphic loader Enfle main program
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Dec 29 03:34:28 2000.
- * $Id: enfle.c,v 1.18 2000/12/30 07:20:40 sian Exp $
+ * Last Modified: Sat Jan  6 01:50:32 2001.
+ * $Id: enfle.c,v 1.19 2001/01/06 23:57:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,15 +34,17 @@
 #define REQUIRE_FATAL
 #include "common.h"
 
-#include "libstring.h"
-#include "libconfig.h"
-#include "enfle-plugin.h"
-#include "ui.h"
-#include "streamer.h"
-#include "loader.h"
-#include "archiver.h"
-#include "player.h"
-#include "spi.h"
+#include "utils/libstring.h"
+#include "utils/libconfig.h"
+#include "enfle/enfle-plugin.h"
+#include "enfle/ui.h"
+#include "enfle/streamer.h"
+#include "enfle/loader.h"
+#include "enfle/archiver.h"
+#include "enfle/player.h"
+#ifdef USE_SPI
+#  include "enfle/spi.h"
+#endif
 
 typedef enum _argument_requirement {
   _NO_ARGUMENT,
@@ -75,13 +77,16 @@ usage(void)
   printf("(C)Copyright 2000 by Hiroshi Takekawa\n\n");
   printf("usage: enfle [options] [path...]\n");
 
-#if defined(USE_SHM) || defined (USE_PTHREAD)
+#if defined(USE_SHM) || defined(USE_PTHREAD) || defined(USE_SPI)
   printf("Extension: "
 #ifdef USE_SHM
  "SHM "
 #endif
 #ifdef USE_PTHREAD
  "pthread "
+#endif
+#ifdef USE_SPI
+ "spi "
 #endif
 	 "\n");
 #endif
@@ -190,18 +195,26 @@ print_plugin_info(EnflePlugins *eps, int level)
 }
 
 static int
-scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path, int spi_enabled)
+scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 {
   Archive *a;
   char *path, *ext, *name;
+  char *tmp;
   int nplugins = 0;
+#ifdef USE_SPI
+  int spi_enabled = 1;
 
-  /* scanning... */
+  if ((tmp = config_get(c, "/enfle/plugins/spi/disabled")) &&
+      strcasecmp(tmp, "yes") == 0)
+    spi_enabled = 0;
+#endif
+
   a = archive_create();
   archive_read_directory(a, plugin_path, 0);
   path = archive_iteration_start(a);
   while (path) {
-    if ((ext = strrchr(path, '.')) && !strncmp(ext, ".so", 3)) {
+    ext = strrchr(path, '.');
+    if (ext && !strncmp(ext, ".so", 3)) {
       PluginType type;
 
       if ((name = enfle_plugins_load(eps, path, &type)) == NULL) {
@@ -210,6 +223,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path, int spi_e
 	nplugins++;
 	nplugins -= check_and_unload(eps, c, type, name);
       }
+#ifdef USE_SPI
     } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
       PluginType type;
 
@@ -230,6 +244,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path, int spi_e
 	nplugins++;
 	nplugins -= check_and_unload(eps, c, type, name);
       }
+#endif
     }
     path = archive_iteration_next(a);
   }
@@ -252,12 +267,12 @@ main(int argc, char **argv)
   Archiver *ar;
   Player *player;
   String *rcpath;
-  int i, ch, spi_enabled = 1;
+  int i, ch;
   int print_more_info = 0;
   char *homedir;
   char *plugin_path;
   char *ui_name = NULL, *video_name = NULL, *audio_name = NULL;
-  char *optstr, *tmp;
+  char *optstr;
 
   optstr = gen_optstring(enfle_options);
   while ((ch = getopt(argc, argv, optstr)) != -1) {
@@ -311,15 +326,17 @@ main(int argc, char **argv)
   ar = uidata.ar = archiver_create();
   player = uidata.player = player_create();
 
-  if ((tmp = config_get(c, "/enfle/plugins/spi/disabled")) &&
-      strcasecmp(tmp, "yes") == 0)
-    spi_enabled = 0;
+#ifdef USE_PTHREAD
+  /* ugly... */
+  if (!XInitThreads())
+    show_message("XInitThreads() failed\n");
+#endif
 
   if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
     plugin_path = ENFLE_PLUGINDIR;
     fprintf(stderr, "plugin_path defaults to %s\n", plugin_path);
   }
-  if (!scan_and_load_plugins(eps, c, plugin_path, spi_enabled)) {
+  if (!scan_and_load_plugins(eps, c, plugin_path)) {
     fprintf(stderr, "scan_and_load_plugins() failed.\n");
     return 1;
   }
