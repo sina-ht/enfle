@@ -1,3 +1,18 @@
+2001-01-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added OpenDivX.
+
+	* lib/Makefile.am: Added OpenDivX decore.
+
+	* lib/divxdecore/*: OpenDivX decore.
+
+	* plugins/player/Makefile.am: Added new OpenDivX player plugin.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Fixed (future) potential
+	bug.
+
+	* plugins/player/opendivx/*: New OpenDivX player plugin.
+
 2001-01-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Some(non shared?) libpng and libmpeg3 needs pow,
