@@ -1,10 +1,10 @@
 /*
  * converter.c -- Character code converter
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 12 06:38:44 2003.
- * $Id: converter.c,v 1.8 2003/11/17 13:51:49 sian Exp $
+ * Last Modified: Sun Mar  6 12:21:18 2005.
+ * $Id: converter.c,v 1.9 2005/03/06 03:26:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,6 +70,8 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
   avail = ICONV_OUTPUT_SIZE - 1;
 
   if ((nconv = iconv(cd, (ICONV_CONST char **)&inptr, &insize, &outptr, &avail)) != (size_t)-1) {
+    /* For state-dependent character sets we have to flush the state now. */
+    iconv(cd, NULL, NULL, &outptr, &avail);
     *outptr = '\0';
     *d_r = strdup(d);
   } else {
