@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 04:56:19 2000.
- * $Id: movie.c,v 1.7 2000/11/04 17:31:28 sian Exp $
+ * Last Modified: Mon Dec 18 23:37:05 2000.
+ * $Id: movie.c,v 1.8 2000/12/18 17:00:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,7 +54,7 @@ static Movie template = {
 };
 
 Movie *
-movie_create(void)
+movie_create(Config *c)
 {
   Movie *m;
 
@@ -63,6 +63,7 @@ movie_create(void)
   memcpy(m, &template, sizeof(Movie));
 
   m->timer = enfle_timer_create(timer_gettimeofday());
+  m->c = c;
 
   return m;
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 14 20:45:29 2000.
- * $Id: movie.h,v 1.8 2000/12/14 16:06:14 sian Exp $
+ * Last Modified: Tue Dec 19 00:16:53 2000.
+ * $Id: movie.h,v 1.9 2000/12/18 17:00:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,9 +25,10 @@
 
 typedef struct _movie Movie;
 
+#include "libconfig.h"
 #include "image.h"
-#include "video.h"
 #include "video-plugin.h"
+#include "audio-plugin.h"
 #include "stream.h"
 #include "timer.h"
 #include "timer_gettimeofday.h"
@@ -41,6 +42,8 @@ typedef enum {
 
 struct _movie {
   Stream *st;
+  Config *c;
+  AudioPlugin *ap;
   MovieStatus status;
   ImageType requested_type;
   Timer *timer;
@@ -83,6 +86,6 @@ struct _movie {
 #define movie_get_play_every_frame(m) (m)->get_play_every_frame((m))
 #define movie_destroy(m) (m)->destroy((m))
 
-Movie *movie_create(void);
+Movie *movie_create(Config *);
 
 #endif
