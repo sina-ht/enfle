@@ -1,10 +1,10 @@
 /*
  * memory.c -- memory object
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:54:14 2001.
- * $Id: memory.c,v 1.7 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Sat Jun 22 16:39:39 2002.
+ * $Id: memory.c,v 1.8 2002/06/22 07:56:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -73,7 +73,9 @@ alloc_normal(Memory *mem, unsigned int s)
 {
   unsigned char *tmp;
 
-  if ((tmp = realloc(mem->ptr, s)) == NULL)
+  free_both(mem);
+
+  if ((tmp = memalign(ATTRIBUTE_ALIGNED_MAX, s)) == NULL)
     return NULL;
 
   mem->ptr = tmp;
