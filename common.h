@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 02:11:41 2002.
- * $Id: common.h,v 1.21 2002/02/08 10:50:50 sian Exp $
+ * Last Modified: Thu Feb 14 01:06:44 2002.
+ * $Id: common.h,v 1.22 2002/02/13 16:52:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,11 +36,11 @@
 
 #include <stdio.h>
 #define show_message(format, args...) printf(format, ## args)
-#define show_message_fn(format, args...) printf("%s", __FUNCTION__);printf(format, ## args)
-#define show_message_fnc(format, args...) printf("%s: ", __FUNCTION__);printf(format, ## args)
+#define show_message_fn(format, args...) printf("%s" format, __FUNCTION__ , ## args)
+#define show_message_fnc(format, args...) printf("%s: " format, __FUNCTION__ , ## args)
 #define warning(format, args...) printf("Warning: " format, ## args)
-#define warning_fn(format, args...) printf("Warning: %s", __FUNCTION__);printf(format, ## args)
-#define warning_fnc(format, args...) printf("Warning: %s: ", __FUNCTION__);printf(format, ## args)
+#define warning_fn(format, args...) printf("Warning: %s" format, __FUNCTION__ , ## args)
+#define warning_fnc(format, args...) printf("Warning: %s: " format, __FUNCTION__ , ## args)
 
 #ifdef REQUIRE_FATAL
 #include <stdarg.h>
@@ -93,8 +93,8 @@ fatal_perror(int code, const char *msg)
 #ifdef DEBUG
 #  define PROGNAME PACKAGE "-debug"
 #  define debug_message(format, args...) fprintf(stderr, format, ## args)
-#  define debug_message_fn(format, args...) fprintf(stderr, "%s", __FUNCTION__);fprintf(stderr, format, ## args); 
-#  define debug_message_fnc(format, args...) fprintf(stderr, "%s: ", __FUNCTION__);fprintf(stderr, format, ## args)
+#  define debug_message_fn(format, args...) fprintf(stderr, "%s" format, __FUNCTION__ , ## args)
+#  define debug_message_fnc(format, args...) fprintf(stderr, "%s: " format, __FUNCTION__ , ## args)
 #  define IDENTIFY_BEFORE_OPEN
 #  define IDENTIFY_BEFORE_LOAD
 #  define IDENTIFY_BEFORE_PLAY
