@@ -1,5 +1,17 @@
 2002-03-07  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/movie.h, lib/enfle/video.h,
+	plugins/player/avifile/avifile.cpp,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/opendivx/opendivx.c, plugins/ui/normal/normal.c,
+	plugins/video/Xlib/Xlib.c: Movie on-the-fly magnification
+	support. Implemented invisible cursor feature.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Added one debug_message.
+
+2002-03-07  Hiroshi Takekawa  <sian@fennel.org>
+
 	* INSTALL, config.guess, config.sub, configure.in, install-sh,
 	missing, mkinstalldirs: Upgraded to autoconf-2.52i, automake-1.6.
 
