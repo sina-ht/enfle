@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 06:21:18 2001.
- * $Id: misc.c,v 1.5 2001/08/25 21:07:07 sian Exp $
+ * Last Modified: Sat Oct 13 01:09:10 2001.
+ * $Id: misc.c,v 1.6 2001/10/14 12:32:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,6 +21,7 @@
  */
 
 #include <stdlib.h>
+#include <ctype.h>
 
 #define REQUIRE_STRING_H
 #include "compat.h"
@@ -39,6 +40,27 @@ misc_basename(char *path)
     ptr++;
 
   return ptr;
+}
+
+char *
+misc_get_ext(const char *path, int if_lower)
+{
+  char *p, *ret, *r;
+
+  if ((p = strrchr(path, '.')) == NULL)
+    return NULL;
+  p++;
+
+  ret = r = malloc(strlen(p) + 1);
+  if (!if_lower)
+    return strcpy(r, p);
+  while (*p) {
+    *r++ = (char)tolower((int)*p);
+    p++;
+  }
+  *r = '\0';
+
+  return ret;
 }
 
 char *
