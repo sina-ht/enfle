@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Fri Oct 12 01:28:18 2001.
-dnl $Id: configure.in,v 1.95 2001/10/11 16:28:54 sian Exp $
+dnl Last Modified: Sat Nov 17 12:42:57 2001.
+dnl $Id: configure.in,v 1.96 2001/11/17 03:55:59 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (could be uncommented for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20011012)
+AM_INIT_AUTOMAKE(enfle, 20011117)
 AC_CANONICAL_HOST
 
 dnl Checks for programs.
@@ -69,9 +69,15 @@ AC_CHECK_LIB(dl, dlopen, [ available_dlopen=yes; LIBADD_DLOPEN=-ldl; ], [
 AM_CONDITIONAL(HAVE_DLOPEN, test "$available_dlopen" = "yes")
 AC_SUBST(LIBADD_DLOPEN)
 
+available_pow=no
+AC_CHECK_HEADER(math.h, [
+  AC_CHECK_LIB(m, pow, [ available_pow=yes; LIBADD_POW=-lm; ]) ])
+available_pow=yes
+LIBADD_POW=-lm
+
 available_jpeg=no
 AC_CHECK_HEADER(jpeglib.h, [
-  AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ])])
+  AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ], [], $LIBADD_POW)])
 AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
 AC_SUBST(LIBADD_JPEG)
 
@@ -94,13 +100,6 @@ if test "$available_pthread" = "yes"; then
 fi
 AM_CONDITIONAL(HAVE_PTHREAD, test "$available_pthread" = "yes")
 AC_SUBST(LIBADD_PTHREAD)
-
-dnl need checking?
-dnl available_pow=no
-dnl AC_CHECK_HEADER(math.h, [
-dnl   AC_CHECK_LIB(m, pow, [ available_pow=yes; LIBADD_POW=-lm; ]) ])
-available_pow=yes
-LIBADD_POW=-lm
 
 available_libmpeg3=no
 dnl Some libmpeg3 needs -lm
