@@ -388,18 +388,16 @@ static int decode_init(AVCodecContext * avctx)
 
 	/* compute n ^ (4/3) and store it in mantissa/exp format */
 	{
-	  /* avoid 'dereferencing type-punned pointer will break strict-aliasing rules' */
-	  int8_t **tmp = &table_4_3_exp;
-	  uint16_t **tmp2 = &table_4_3_value;
-
-	  if (!av_mallocz_static(tmp,
+	  int8_t **table_4_3_exp_p = &table_4_3_exp;
+	  uint16_t **table_4_3_value_p = &table_4_3_value;
+	  if (!av_mallocz_static(table_4_3_exp_p,
 				 TABLE_4_3_SIZE * sizeof(table_4_3_exp[0])))
 	    return -1;
-	  if (!av_mallocz_static(tmp2,
+	  if (!av_mallocz_static(table_4_3_value_p,
 				 TABLE_4_3_SIZE * sizeof(table_4_3_value[0])))
             return -1;
-        }
-
+	}
+ 
         int_pow_init();
         for(i=1;i<TABLE_4_3_SIZE;i++) {
             int e, m;

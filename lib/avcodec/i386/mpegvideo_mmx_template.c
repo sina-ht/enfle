@@ -57,13 +57,13 @@ static int RENAME(dct_quantize)(MpegEncContext *s,
         /* note: block[0] is assumed to be positive */
         if (!s->h263_aic) {
 #if 1
-        asm volatile (
+        __asm __volatile (
         	"imul %%ecx		\n\t"
         	: "=d" (level), "=a"(dummy)
         	: "a" ((block[0]>>2) + q), "c" (inverse[q<<1])
         );
 #else
-        asm volatile (
+        __asm __volatile (
         	"xorl %%edx, %%edx	\n\t"
         	"divw %%cx		\n\t"
         	"movzwl %%ax, %%eax	\n\t"
@@ -89,7 +89,7 @@ static int RENAME(dct_quantize)(MpegEncContext *s,
 
     if(s->out_format == FMT_H263 && s->mpeg_quant==0){
     
-        asm volatile(
+        __asm __volatile(
             "movd %%eax, %%mm3			\n\t" // last_non_zero_p1
             SPREADW(%%mm3)
             "pxor %%mm7, %%mm7			\n\t" // 0
@@ -131,7 +131,7 @@ static int RENAME(dct_quantize)(MpegEncContext *s,
               "r" (inv_zigzag_direct16+64), "r" (temp_block+64)
         );
         // note the asm is split cuz gcc doesnt like that many operands ...
-        asm volatile(
+        __asm __volatile(
             "movd %1, %%mm1			\n\t" // max_qcoeff
 	    SPREADW(%%mm1)
             "psubusw %%mm1, %%mm4		\n\t" 
@@ -141,7 +141,7 @@ static int RENAME(dct_quantize)(MpegEncContext *s,
         : "g" (s->max_qcoeff)
         );
     }else{ // FMT_H263
-        asm volatile(
+        __asm __volatile(
             "movd %%eax, %%mm3			\n\t" // last_non_zero_p1
             SPREADW(%%mm3)
             "pxor %%mm7, %%mm7			\n\t" // 0

@@ -22,6 +22,8 @@
 #include "../dsputil.h"
 #include "../simple_idct.h"
 
+extern const uint8_t ff_h263_loop_filter_strength[32];
+
 int mm_flags; /* multimedia extension flags */
 
 /* pixel operations */
@@ -33,6 +35,8 @@ static const uint64_t ff_pw_20 __attribute__ ((aligned(8))) = 0x0014001400140014
 static const uint64_t ff_pw_3  __attribute__ ((aligned(8))) = 0x0003000300030003ULL;
 static const uint64_t ff_pw_16 __attribute__ ((aligned(8))) = 0x0010001000100010ULL;
 static const uint64_t ff_pw_15 __attribute__ ((aligned(8))) = 0x000F000F000F000FULL;
+
+static const uint64_t ff_pb_FC __attribute__ ((aligned(8))) = 0xFCFCFCFCFCFCFCFCULL;
 
 #define JUMPALIGN() __asm __volatile (".balign 8"::)
 #define MOVQ_ZERO(regd)  __asm __volatile ("pxor %%" #regd ", %%" #regd ::)
@@ -174,7 +178,7 @@ static const uint64_t ff_pw_15 __attribute__ ((aligned(8))) = 0x000F000F000F000F
 #ifdef CONFIG_ENCODERS
 static void get_pixels_mmx(DCTELEM *block, const uint8_t *pixels, int line_size)
 {
-    asm volatile(
+    __asm __volatile(
         "movl $-128, %%eax	\n\t"
         "pxor %%mm7, %%mm7	\n\t"
         ".balign 16		\n\t"
@@ -202,7 +206,7 @@ static void get_pixels_mmx(DCTELEM *block, const uint8_t *pixels, int line_size)
 
 static inline void diff_pixels_mmx(DCTELEM *block, const uint8_t *s1, const uint8_t *s2, int stride)
 {
-    asm volatile(
+    __asm __volatile(
         "pxor %%mm7, %%mm7	\n\t"
         "movl $-128, %%eax	\n\t"
         ".balign 16		\n\t"
@@ -445,7 +449,7 @@ static int pix_sum16_mmx(uint8_t * pix, int line_size){
 
 static void add_bytes_mmx(uint8_t *dst, uint8_t *src, int w){
     int i=0;
-    asm volatile(
+    __asm __volatile(
         "1:				\n\t"
         "movq  (%1, %0), %%mm0		\n\t"
         "movq  (%2, %0), %%mm1		\n\t"
@@ -465,10 +469,184 @@ static void add_bytes_mmx(uint8_t *dst, uint8_t *src, int w){
         dst[i+0] += src[i+0];
 }
 
+#define H263_LOOP_FILTER \
+        "pxor %%mm7, %%mm7		\n\t"\
+        "movq  %0, %%mm0		\n\t"\
+        "movq  %0, %%mm1		\n\t"\
+        "movq  %3, %%mm2		\n\t"\
+        "movq  %3, %%mm3		\n\t"\
+        "punpcklbw %%mm7, %%mm0		\n\t"\
+        "punpckhbw %%mm7, %%mm1		\n\t"\
+        "punpcklbw %%mm7, %%mm2		\n\t"\
+        "punpckhbw %%mm7, %%mm3		\n\t"\
+        "psubw %%mm2, %%mm0		\n\t"\
+        "psubw %%mm3, %%mm1		\n\t"\
+        "movq  %1, %%mm2		\n\t"\
+        "movq  %1, %%mm3		\n\t"\
+        "movq  %2, %%mm4		\n\t"\
+        "movq  %2, %%mm5		\n\t"\
+        "punpcklbw %%mm7, %%mm2		\n\t"\
+        "punpckhbw %%mm7, %%mm3		\n\t"\
+        "punpcklbw %%mm7, %%mm4		\n\t"\
+        "punpckhbw %%mm7, %%mm5		\n\t"\
+        "psubw %%mm2, %%mm4		\n\t"\
+        "psubw %%mm3, %%mm5		\n\t"\
+        "psllw $2, %%mm4		\n\t"\
+        "psllw $2, %%mm5		\n\t"\
+        "paddw %%mm0, %%mm4		\n\t"\
+        "paddw %%mm1, %%mm5		\n\t"\
+        "pxor %%mm6, %%mm6		\n\t"\
+        "pcmpgtw %%mm4, %%mm6		\n\t"\
+        "pcmpgtw %%mm5, %%mm7		\n\t"\
+        "pxor %%mm6, %%mm4		\n\t"\
+        "pxor %%mm7, %%mm5		\n\t"\
+        "psubw %%mm6, %%mm4		\n\t"\
+        "psubw %%mm7, %%mm5		\n\t"\
+        "psrlw $3, %%mm4		\n\t"\
+        "psrlw $3, %%mm5		\n\t"\
+        "packuswb %%mm5, %%mm4		\n\t"\
+        "packsswb %%mm7, %%mm6		\n\t"\
+        "pxor %%mm7, %%mm7		\n\t"\
+        "movd %4, %%mm2			\n\t"\
+        "punpcklbw %%mm2, %%mm2		\n\t"\
+        "punpcklbw %%mm2, %%mm2		\n\t"\
+        "punpcklbw %%mm2, %%mm2		\n\t"\
+        "psubusb %%mm4, %%mm2		\n\t"\
+        "movq %%mm2, %%mm3		\n\t"\
+        "psubusb %%mm4, %%mm3		\n\t"\
+        "psubb %%mm3, %%mm2		\n\t"\
+        "movq %1, %%mm3			\n\t"\
+        "movq %2, %%mm4			\n\t"\
+        "pxor %%mm6, %%mm3		\n\t"\
+        "pxor %%mm6, %%mm4		\n\t"\
+        "paddusb %%mm2, %%mm3		\n\t"\
+        "psubusb %%mm2, %%mm4		\n\t"\
+        "pxor %%mm6, %%mm3		\n\t"\
+        "pxor %%mm6, %%mm4		\n\t"\
+        "paddusb %%mm2, %%mm2		\n\t"\
+        "packsswb %%mm1, %%mm0		\n\t"\
+        "pcmpgtb %%mm0, %%mm7		\n\t"\
+        "pxor %%mm7, %%mm0		\n\t"\
+        "psubb %%mm7, %%mm0		\n\t"\
+        "movq %%mm0, %%mm1		\n\t"\
+        "psubusb %%mm2, %%mm0		\n\t"\
+        "psubb %%mm0, %%mm1		\n\t"\
+        "pand %5, %%mm1			\n\t"\
+        "psrlw $2, %%mm1		\n\t"\
+        "pxor %%mm7, %%mm1		\n\t"\
+        "psubb %%mm7, %%mm1		\n\t"\
+        "movq %0, %%mm5			\n\t"\
+        "movq %3, %%mm6			\n\t"\
+        "psubb %%mm1, %%mm5		\n\t"\
+        "paddb %%mm1, %%mm6		\n\t"
+
+static void h263_v_loop_filter_mmx(uint8_t *src, int stride, int qscale){
+    const int strength= ff_h263_loop_filter_strength[qscale];
+
+    __asm __volatile(
+    
+        H263_LOOP_FILTER
+        
+        "movq %%mm3, %1			\n\t"
+        "movq %%mm4, %2			\n\t"
+        "movq %%mm5, %0			\n\t"
+        "movq %%mm6, %3			\n\t"
+        : "+m" (*(uint64_t*)(src - 2*stride)),
+          "+m" (*(uint64_t*)(src - 1*stride)),
+          "+m" (*(uint64_t*)(src + 0*stride)),
+          "+m" (*(uint64_t*)(src + 1*stride))
+        : "g" (2*strength), "m"(ff_pb_FC)
+    );
+}
+
+static inline void transpose4x4(uint8_t *dst, uint8_t *src, int dst_stride, int src_stride){
+    __asm __volatile( //FIXME could save 1 instruction if done as 8x4 ...
+        "movd  %4, %%mm0		\n\t"
+        "movd  %5, %%mm1		\n\t"
+        "movd  %6, %%mm2		\n\t"
+        "movd  %7, %%mm3		\n\t"
+        "punpcklbw %%mm1, %%mm0		\n\t"
+        "punpcklbw %%mm3, %%mm2		\n\t"
+        "movq %%mm0, %%mm1		\n\t"
+        "punpcklwd %%mm2, %%mm0		\n\t"
+        "punpckhwd %%mm2, %%mm1		\n\t"
+        "movd  %%mm0, %0		\n\t"
+        "punpckhdq %%mm0, %%mm0		\n\t"
+        "movd  %%mm0, %1		\n\t"
+        "movd  %%mm1, %2		\n\t"
+        "punpckhdq %%mm1, %%mm1		\n\t"
+        "movd  %%mm1, %3		\n\t"
+        
+        : "=m" (*(uint32_t*)(dst + 0*dst_stride)),
+          "=m" (*(uint32_t*)(dst + 1*dst_stride)),
+          "=m" (*(uint32_t*)(dst + 2*dst_stride)),
+          "=m" (*(uint32_t*)(dst + 3*dst_stride))
+        :  "m" (*(uint32_t*)(src + 0*src_stride)),
+           "m" (*(uint32_t*)(src + 1*src_stride)),
+           "m" (*(uint32_t*)(src + 2*src_stride)),
+           "m" (*(uint32_t*)(src + 3*src_stride))
+    );
+}
+
+static void h263_h_loop_filter_mmx(uint8_t *src, int stride, int qscale){
+    const int strength= ff_h263_loop_filter_strength[qscale];
+    uint64_t temp[4] __attribute__ ((aligned(8)));
+    uint8_t *btemp= (uint8_t*)temp;
+    
+    src -= 2;
+
+    transpose4x4(btemp  , src           , 8, stride);
+    transpose4x4(btemp+4, src + 4*stride, 8, stride);
+    __asm __volatile(
+        H263_LOOP_FILTER // 5 3 4 6
+        
+        : "+m" (temp[0]),
+          "+m" (temp[1]),
+          "+m" (temp[2]),
+          "+m" (temp[3])
+        : "g" (2*strength), "m"(ff_pb_FC)
+    );
+
+    __asm __volatile(
+        "movq %%mm5, %%mm1		\n\t"
+        "movq %%mm4, %%mm0		\n\t"
+        "punpcklbw %%mm3, %%mm5		\n\t"
+        "punpcklbw %%mm6, %%mm4		\n\t"
+        "punpckhbw %%mm3, %%mm1		\n\t"
+        "punpckhbw %%mm6, %%mm0		\n\t"
+        "movq %%mm5, %%mm3		\n\t"
+        "movq %%mm1, %%mm6		\n\t"
+        "punpcklwd %%mm4, %%mm5		\n\t"
+        "punpcklwd %%mm0, %%mm1		\n\t"
+        "punpckhwd %%mm4, %%mm3		\n\t"
+        "punpckhwd %%mm0, %%mm6		\n\t"
+        "movd %%mm5, %0			\n\t"
+        "punpckhdq %%mm5, %%mm5		\n\t"
+        "movd %%mm5, %1			\n\t"
+        "movd %%mm3, %2			\n\t"
+        "punpckhdq %%mm3, %%mm3		\n\t"
+        "movd %%mm3, %3			\n\t"
+        "movd %%mm1, %4			\n\t"
+        "punpckhdq %%mm1, %%mm1		\n\t"
+        "movd %%mm1, %5			\n\t"
+        "movd %%mm6, %6			\n\t"
+        "punpckhdq %%mm6, %%mm6		\n\t"
+        "movd %%mm6, %7			\n\t"
+        : "=m" (*(uint32_t*)(src + 0*stride)),
+          "=m" (*(uint32_t*)(src + 1*stride)),
+          "=m" (*(uint32_t*)(src + 2*stride)),
+          "=m" (*(uint32_t*)(src + 3*stride)),
+          "=m" (*(uint32_t*)(src + 4*stride)),
+          "=m" (*(uint32_t*)(src + 5*stride)),
+          "=m" (*(uint32_t*)(src + 6*stride)),
+          "=m" (*(uint32_t*)(src + 7*stride))
+    );
+}
+
 #ifdef CONFIG_ENCODERS
 static int pix_norm1_mmx(uint8_t *pix, int line_size) {
     int tmp;
-  asm volatile (
+  __asm __volatile (
       "movl $16,%%ecx\n"
       "pxor %%mm0,%%mm0\n"
       "pxor %%mm7,%%mm7\n"
@@ -511,7 +689,7 @@ static int pix_norm1_mmx(uint8_t *pix, int line_size) {
 
 static int sse16_mmx(void *v, uint8_t * pix1, uint8_t * pix2, int line_size) {
     int tmp;
-  asm volatile (
+  __asm __volatile (
       "movl $16,%%ecx\n"
       "pxor %%mm0,%%mm0\n"	/* mm0 = 0 */
       "pxor %%mm7,%%mm7\n"	/* mm7 holds the sum */
@@ -569,7 +747,7 @@ static int sse16_mmx(void *v, uint8_t * pix1, uint8_t * pix2, int line_size) {
 
 static void diff_bytes_mmx(uint8_t *dst, uint8_t *src1, uint8_t *src2, int w){
     int i=0;
-    asm volatile(
+    __asm __volatile(
         "1:				\n\t"
         "movq  (%2, %0), %%mm0		\n\t"
         "movq  (%1, %0), %%mm1		\n\t"
@@ -593,7 +771,7 @@ static void sub_hfyu_median_prediction_mmx2(uint8_t *dst, uint8_t *src1, uint8_t
     int i=0;
     uint8_t l, lt;
 
-    asm volatile(
+    __asm __volatile(
         "1:				\n\t"
         "movq  -1(%1, %0), %%mm0	\n\t" // LT
         "movq  (%1, %0), %%mm1		\n\t" // T
@@ -694,7 +872,7 @@ static int hadamard8_diff_mmx(void *s, uint8_t *src1, uint8_t *src2, int stride)
 
     diff_pixels_mmx((DCTELEM*)temp, src1, src2, stride);
 
-    asm volatile(
+    __asm __volatile(
         LOAD4(0 , %%mm0, %%mm1, %%mm2, %%mm3)
         LOAD4(64, %%mm4, %%mm5, %%mm6, %%mm7)
         
@@ -779,7 +957,7 @@ static int hadamard8_diff_mmx2(void *s, uint8_t *src1, uint8_t *src2, int stride
 
     diff_pixels_mmx((DCTELEM*)temp, src1, src2, stride);
 
-    asm volatile(
+    __asm __volatile(
         LOAD4(0 , %%mm0, %%mm1, %%mm2, %%mm3)
         LOAD4(64, %%mm4, %%mm5, %%mm6, %%mm7)
         
@@ -891,7 +1069,7 @@ WARPER88_1616(hadamard8_diff_mmx2, hadamard8_diff16_mmx2)
 static void OPNAME ## mpeg4_qpel16_h_lowpass_mmx2(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h){\
     uint64_t temp;\
 \
-    asm volatile(\
+    __asm __volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq  (%0), %%mm0		\n\t" /* ABCDEFGH */\
@@ -1030,7 +1208,7 @@ static void OPNAME ## mpeg4_qpel16_h_lowpass_3dnow(uint8_t *dst, uint8_t *src, i
         temp[13]= (src[13]+src[14])*20 - (src[12]+src[15])*6 + (src[11]+src[16])*3 - (src[10]+src[16]);\
         temp[14]= (src[14]+src[15])*20 - (src[13]+src[16])*6 + (src[12]+src[16])*3 - (src[11]+src[15]);\
         temp[15]= (src[15]+src[16])*20 - (src[14]+src[16])*6 + (src[13]+src[15])*3 - (src[12]+src[14]);\
-        asm volatile(\
+        __asm __volatile(\
             "movq (%0), %%mm0		\n\t"\
             "movq 8(%0), %%mm1		\n\t"\
             "paddw %2, %%mm0		\n\t"\
@@ -1058,7 +1236,7 @@ static void OPNAME ## mpeg4_qpel16_h_lowpass_3dnow(uint8_t *dst, uint8_t *src, i
 static void OPNAME ## mpeg4_qpel8_h_lowpass_mmx2(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h){\
     uint64_t temp;\
 \
-    asm volatile(\
+    __asm __volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq  (%0), %%mm0		\n\t" /* ABCDEFGH */\
@@ -1135,7 +1313,7 @@ static void OPNAME ## mpeg4_qpel8_h_lowpass_3dnow(uint8_t *dst, uint8_t *src, in
         temp[ 5]= (src[ 5]+src[ 6])*20 - (src[ 4]+src[ 7])*6 + (src[ 3]+src[ 8])*3 - (src[ 2]+src[ 8]);\
         temp[ 6]= (src[ 6]+src[ 7])*20 - (src[ 5]+src[ 8])*6 + (src[ 4]+src[ 8])*3 - (src[ 3]+src[ 7]);\
         temp[ 7]= (src[ 7]+src[ 8])*20 - (src[ 6]+src[ 8])*6 + (src[ 5]+src[ 7])*3 - (src[ 4]+src[ 6]);\
-        asm volatile(\
+        __asm __volatile(\
             "movq (%0), %%mm0		\n\t"\
             "movq 8(%0), %%mm1		\n\t"\
             "paddw %2, %%mm0		\n\t"\
@@ -1160,7 +1338,7 @@ static void OPNAME ## mpeg4_qpel16_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src,
     int count= 17;\
 \
     /*FIXME unroll */\
-    asm volatile(\
+    __asm __volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\
@@ -1188,7 +1366,7 @@ static void OPNAME ## mpeg4_qpel16_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src,
     count=4;\
     \
 /*FIXME reorder for speed */\
-    asm volatile(\
+    __asm __volatile(\
         /*"pxor %%mm7, %%mm7		\n\t"*/\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\
@@ -1238,7 +1416,7 @@ static void OPNAME ## mpeg4_qpel8_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src, 
     int count= 9;\
 \
     /*FIXME unroll */\
-    asm volatile(\
+    __asm __volatile(\
         "pxor %%mm7, %%mm7		\n\t"\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\
@@ -1260,7 +1438,7 @@ static void OPNAME ## mpeg4_qpel8_v_lowpass_ ## MMX(uint8_t *dst, uint8_t *src, 
     count=2;\
     \
 /*FIXME reorder for speed */\
-    asm volatile(\
+    __asm __volatile(\
         /*"pxor %%mm7, %%mm7		\n\t"*/\
         "1:				\n\t"\
         "movq (%0), %%mm0		\n\t"\
@@ -1691,6 +1869,9 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
 	c->pix_norm1 = pix_norm1_mmx;
 	c->sse[0] = sse16_mmx;
 #endif //CONFIG_ENCODERS
+
+        c->h263_v_loop_filter= h263_v_loop_filter_mmx;
+        c->h263_h_loop_filter= h263_h_loop_filter_mmx;
         
         if (mm_flags & MM_MMXEXT) {
             c->put_pixels_tab[0][1] = put_pixels16_x2_mmx2;
@@ -1756,7 +1937,9 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
             SET_QPEL_FUNC(qpel_pixels_tab[1][15], qpel8_mc33_mmx2)
 #endif
 
+#ifdef CONFIG_ENCODERS
             c->sub_hfyu_median_prediction= sub_hfyu_median_prediction_mmx2;
+#endif //CONFIG_ENCODERS
         } else if (mm_flags & MM_3DNOW) {
             c->put_pixels_tab[0][1] = put_pixels16_x2_3dnow;
             c->put_pixels_tab[0][2] = put_pixels16_y2_3dnow;

@@ -80,12 +80,11 @@ extern const struct AVOption avoptions_workaround_bug[11];
 #    define restrict
 #endif
 
-//#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
+#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
 #    define always_inline __attribute__((always_inline)) inline
-//#else
-//#    define always_inline inline
-//#    define always_inline
-//#endif
+#else
+#    define always_inline inline
+#endif
 
 #ifdef EMULATE_FAST_INT
 /* note that we don't emulate 64bit ints */
@@ -279,12 +278,11 @@ typedef struct PutBitContext {
     int bit_left;
     uint8_t *buf, *buf_ptr, *buf_end;
 #endif
-    int64_t data_out_size; /* in bytes */
 } PutBitContext;
 
 void init_put_bits(PutBitContext *s, uint8_t *buffer, int buffer_size);
 
-int64_t get_bit_count(PutBitContext *s); /* XXX: change function name */
+int get_bit_count(PutBitContext *s); /* XXX: change function name */
 void align_put_bits(PutBitContext *s);
 void flush_put_bits(PutBitContext *s);
 void put_string(PutBitContext * pbc, char *s);

@@ -123,8 +123,7 @@ short *block;
 
 /* perform IDCT matrix multiply for 8x8 coefficient block */
 
-void idct(block)
-short *block;
+void idct(short *block)
 {
   int i, j, k, v;
   double partial_product;

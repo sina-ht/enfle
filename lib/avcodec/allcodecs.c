@@ -40,7 +40,7 @@ void avcodec_register_all(void)
 
     /* encoders */
 #ifdef CONFIG_ENCODERS
-    register_avcodec(&ac3_encoder);
+    //register_avcodec(&ac3_encoder);
     register_avcodec(&mp2_encoder);
 #ifdef CONFIG_MP3LAME
     register_avcodec(&mp3lame_encoder);
@@ -90,6 +90,7 @@ void avcodec_register_all(void)
     register_avcodec(&h263i_decoder);
     register_avcodec(&flv_decoder);
     register_avcodec(&rv10_decoder);
+    register_avcodec(&rv20_decoder);
     register_avcodec(&svq1_decoder);
     register_avcodec(&svq3_decoder);
     register_avcodec(&wmav1_decoder);
@@ -137,6 +138,8 @@ void avcodec_register_all(void)
     register_avcodec(&idcin_decoder);
     register_avcodec(&eightbps_decoder);
     register_avcodec(&smc_decoder);
+    //register_avcodec(&flic_decoder);
+    register_avcodec(&truemotion1_decoder);
 #ifdef CONFIG_AC3
     register_avcodec(&ac3_decoder);
 #endif
@@ -206,4 +209,3 @@ PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
     av_register_codec_parser(&ac3_parser);
 #endif
 }
-

@@ -245,6 +245,9 @@ typedef struct DSPContext {
     void (*sub_hfyu_median_prediction)(uint8_t *dst, uint8_t *src1, uint8_t *src2, int w, int *left, int *left_top);
     void (*bswap_buf)(uint32_t *dst, uint32_t *src, int w);
     
+    void (*h263_v_loop_filter)(uint8_t *src, int stride, int qscale);
+    void (*h263_h_loop_filter)(uint8_t *src, int stride, int qscale);
+
     /* (I)DCT */
     void (*fdct)(DCTELEM *block/* align 16*/);
     void (*fdct248)(DCTELEM *block/* align 16*/);
@@ -318,15 +321,15 @@ static inline uint32_t no_rnd_avg32(uint32_t a, uint32_t b)
    one or more MultiMedia extension */
 int mm_support(void);
 
+#if defined(HAVE_MMX)
+
+#undef emms_c
+
 #define MM_MMX    0x0001 /* standard MMX */
 #define MM_3DNOW  0x0004 /* AMD 3DNOW */
 #define MM_MMXEXT 0x0002 /* SSE integer functions or AMD MMX ext */
 #define MM_SSE    0x0008 /* SSE functions */
 #define MM_SSE2   0x0010 /* PIV SSE2 functions */
-
-#if defined(HAVE_MMX)
-
-#undef emms_c
 
 extern int mm_flags;
 
@@ -378,7 +381,9 @@ void dsputil_init_alpha(DSPContext* c, AVCodecContext *avctx);
 extern int mm_flags;
 
 #if defined(HAVE_ALTIVEC) && !defined(CONFIG_DARWIN)
+#define pixel altivec_pixel
 #include <altivec.h>
+#undef pixel
 #endif
 
 #define __align8 __attribute__ ((aligned (16)))
