@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 22:21:49 2002.
- * $Id: loader.c,v 1.25 2002/08/18 13:25:29 sian Exp $
+ * Last Modified: Mon Aug 19 20:56:33 2002.
+ * $Id: loader.c,v 1.26 2002/08/19 12:22:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,25 +32,23 @@
 int
 loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Config *c)
 {
-  PluginList *pl;
+  PluginList *pl = eps->pls[ENFLE_PLUGIN_LOADER];
   Plugin *p;
   LoaderPlugin *lp;
   char *ext, *pluginname, **pluginnames;
   int res;
-
-  pl = eps->pls[ENFLE_PLUGIN_LOADER];
+  void *k;
+  unsigned int kl;
 
   if ((ext = misc_str_tolower(misc_get_ext(st->path, 1)))) {
-    String *s;
+    String *s = string_create();
 
-    s = string_create();
     string_catf(s, "/enfle/plugins/loader/assoc/%s", ext);
     pluginnames = config_get_list(c, string_get(s), &res);
     string_destroy(s);
     if (pluginnames) {
-      int i;
+      int i = 0;
 
-      i = 0;
       while ((pluginname = pluginnames[i])) {
 	if ((p = pluginlist_get(pl, pluginname))) {
 	  lp = plugin_get(p);
@@ -72,24 +70,19 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
     free(ext);
   }
 
-  {
-    void *k;
-    unsigned int kl;
-
-    ip->format_detail = NULL;
-    pluginlist_iter(pl, k, kl, p) {
-      lp = plugin_get(p);
-      //debug_message("loader: identify: try %s\n", (char *)k);
-      stream_rewind(st);
-      if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
-	ip->format = (char *)k;
-	pluginlist_move_to_top;
-	return 1;
-      }
-      //debug_message("loader: identify: %s: failed\n", (char *)k);
+  ip->format_detail = NULL;
+  pluginlist_iter(pl, k, kl, p) {
+    lp = plugin_get(p);
+    //debug_message("loader: identify: try %s\n", (char *)k);
+    stream_rewind(st);
+    if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
+      ip->format = (char *)k;
+      pluginlist_move_to_top;
+      return 1;
     }
-    pluginlist_iter_end;
+    //debug_message("loader: identify: %s: failed\n", (char *)k);
   }
+  pluginlist_iter_end;
 
   return 0;
 }

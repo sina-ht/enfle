@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:07:54 2002.
- * $Id: spi.c,v 1.22 2002/08/18 04:19:26 sian Exp $
+ * Last Modified: Mon Aug 19 21:02:02 2002.
+ * $Id: spi.c,v 1.23 2002/08/19 12:22:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,13 +23,6 @@
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
-
-#ifdef HAVE_CONFIG_H
-# ifndef CONFIG_H_INCLUDED
-#  include "enfle-config.h"
-#  define CONFIG_H_INCLUDED
-# endif
-#endif
 
 #ifdef USE_SPI
 

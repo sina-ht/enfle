@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug  8 00:26:53 2002.
- * $Id: player.c,v 1.20 2002/08/07 15:34:20 sian Exp $
+ * Last Modified: Mon Aug 19 20:59:53 2002.
+ * $Id: player.c,v 1.21 2002/08/19 12:22:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,25 +32,23 @@
 int
 player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
 {
-  PluginList *pl;
+  PluginList *pl = eps->pls[ENFLE_PLUGIN_PLAYER];
   Plugin *p;
   PlayerPlugin *pp;
   char *ext, *pluginname, **pluginnames;
   int res;
-
-  pl = eps->pls[ENFLE_PLUGIN_PLAYER];
+  void *k;
+  unsigned int kl;
 
   if ((ext = misc_get_ext(st->path, 1))) {
-    String *s;
+    String *s = string_create();
 
-    s = string_create();
     string_catf(s, "/enfle/plugins/player/assoc/%s", ext);
     pluginnames = config_get_list(c, string_get(s), &res);
     string_destroy(s);
     if (pluginnames) {
-      int i;
+      int i = 0;
 
-      i = 0;
       while ((pluginname = pluginnames[i])) {
 	if ((p = pluginlist_get(pl, pluginname))) {
 	  pp = plugin_get(p);
@@ -71,23 +69,18 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
     free(ext);
   }
 
-  {
-    void *k;
-    unsigned int kl;
-
-    pluginlist_iter(pl, k, kl, p) {
-      pp = plugin_get(p);
-      //debug_message("player: identify: try %s\n", (char *)k);
-      stream_rewind(st);
-      if (pp->identify(m, st, c, NULL) == PLAY_OK) {
-	m->format = (char *)k;
-	pluginlist_move_to_top;
-	return 1;
-      }
-      //debug_message("player: identify: %s: failed\n", (char *)k);
+  pluginlist_iter(pl, k, kl, p) {
+    pp = plugin_get(p);
+    //debug_message("player: identify: try %s\n", (char *)k);
+    stream_rewind(st);
+    if (pp->identify(m, st, c, NULL) == PLAY_OK) {
+      m->format = (char *)k;
+      pluginlist_move_to_top;
+      return 1;
     }
-    pluginlist_iter_end;
+    //debug_message("player: identify: %s: failed\n", (char *)k);
   }
+  pluginlist_iter_end;
 
   return 0;
 }
