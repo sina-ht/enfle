@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:39:55 2001.
- * $Id: pe_image.h,v 1.3 2001/01/06 23:52:52 sian Exp $
+ * Last Modified: Fri Oct  5 15:28:53 2001.
+ * $Id: pe_image.h,v 1.4 2001/10/05 11:55:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,8 @@
 #include "pe.h"
 #include "utils/hash.h"
 
+#define PE_EXPORT_HASH_SIZE 4096
+#define PE_RESOURCE_HASH_SIZE 4096
 typedef struct _pe_image PE_image;
 struct _pe_image {
   char *filepath;
@@ -30,6 +32,7 @@ struct _pe_image {
   IMAGE_OPTIONAL_HEADER opt_header;
   IMAGE_SECTION_HEADER *sect_headers;
   Hash *export_symbols;
+  Hash *resource;
   unsigned char *image;
 
   /* methods */

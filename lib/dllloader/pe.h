@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 30 06:22:21 2001.
- * $Id: pe.h,v 1.6 2001/10/05 04:06:36 sian Exp $
+ * Last Modified: Fri Oct  5 14:16:29 2001.
+ * $Id: pe.h,v 1.7 2001/10/05 11:56:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -178,3 +178,10 @@ typedef struct _image_resource_directory_entry {
   DWORD Id;
   DWORD OffsetToData;
 } IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;
+
+typedef struct _image_resource_data_entry {
+  DWORD OffsetToData;
+  DWORD Size;
+  DWORD CodePage; /* obsolete */
+  DWORD dummy; /* unused */
+} IMAGE_RESOURCE_DATA_ENTRY, *PIMAGE_RESOURCE_DATA_ENTRY;
