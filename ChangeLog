@@ -1,3 +1,54 @@
+2000-12-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: New -I option. Plugin information printing.
+
+	* configure.in: More soundcard.h check. Add new EsounD audio
+	plugin and libesd check.
+
+	* lib/enfle/audio-plugin.h: Changed audio plugin interface.
+
+	* lib/enfle/enfle-plugin.c: Added audio plugin.
+
+	* lib/enfle/movie.h: New one variable, sampleformat.
+
+	* lib/utils/pluginlist.c: NULL check.
+
+	* plugins/audio/Makefile.am, plugins/audio/esd/Makefile.am,
+	plugins/audio/esd/esd.c: New EsounD audio plugin.
+
+	* plugins/audio/oss/oss.c: Changed audio plugin interface.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Adapted for audio plugin
+	interface change.
+
+	* plugins/video/Xlib/Xlib.c: Cosmetic change.
+
+2000-12-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: More pthread checking. Version up.
+
+	* lib/enfle/audio-plugin.h: Added new sync_device().
+
+	* lib/enfle/movie.h: Added audio related variables.
+
+	* plugins/audio/oss/oss.c: Added new sync_device().
+
+	* plugins/player/libmpeg3/libmpeg3.c: Better audio support using
+	pthread.
+
+	* plugins/video/Xlib/Xlib.c: Multi-thread support.
+
+	* lib/X11/x11ximage.c: Changed Sync timing.
+
+	* lib/utils/timer.c: Fixed timer interface.
+
+	* plugins/player/mpeg_lib/mpeg_lib.c: Initialize in play(), not
+	stop().
+
+2000-12-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* enfle.c, enfle.rc: New audio plugin support.
+
 2000-12-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, plugins/Makefile.am, lib/enfle/enfle-plugintype.h:
