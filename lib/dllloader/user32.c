@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 19:36:37 2001.
- * $Id: user32.c,v 1.7 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Fri Oct  5 20:30:39 2001.
+ * $Id: user32.c,v 1.8 2001/10/05 11:57:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,13 @@ DEFINE_W32API(INT, MessageBoxA, (HWND handle, LPCSTR text, LPCSTR title, UINT ty
 
 DEFINE_W32API(INT, LoadStringA, (HINSTANCE handle, UINT id, LPSTR buffer, INT len))
 {
+  IMAGE_RESOURCE_DIRECTORY *ird = (IMAGE_RESOURCE_DIRECTORY *)handle[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress];
+  unsigned int ne = ird->NumberOfNamedEntries;
+  unsigned int ie = ird->NumberOfIdEntries;
+  unsigned int i;
+
   debug_message("LoadStringA(%p, %d, %p, %d) called\n", handle, id, buffer, len);
+  debug_message("LoadStringA: (%d named entries, %d id entries)\n", ne, ie);
 
   if (buffer && len > 0)
     *buffer = 0;
