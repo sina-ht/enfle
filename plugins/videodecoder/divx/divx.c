@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  1 19:24:30 2004.
- * $Id: divx.c,v 1.7 2004/05/15 04:10:16 sian Exp $
+ * Last Modified: Sat Jun 12 13:13:48 2004.
+ * $Id: divx.c,v 1.8 2004/06/12 06:11:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -200,6 +200,8 @@ query(unsigned int fourcc, void *priv)
   case FCC_DIVX:
   case FCC_divx:
   case FCC_DX50:
+  case FCC_XVID:
+  case FCC_xvid:
     return (IMAGE_I420 |
 	    IMAGE_BGRA32 | IMAGE_ARGB32 |
 	    IMAGE_RGB24 | IMAGE_BGR24 |
@@ -235,6 +237,8 @@ init(unsigned int fourcc, void *priv)
     input_format = 412;
     break;
   case FCC_DX50:
+  case FCC_XVID:
+  case FCC_xvid:
     debug_message_fnc("Identified as DivX 5\n");
     input_format = 500;
     break;

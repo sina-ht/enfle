@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 18:03:52 2004.
- * $Id: videodecoder.c,v 1.4 2004/04/12 04:14:10 sian Exp $
+ * Last Modified: Sat Jun 12 13:21:50 2004.
+ * $Id: videodecoder.c,v 1.5 2004/06/12 06:11:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -64,6 +64,8 @@ const char *
 videodecoder_codec_name(unsigned int fourcc)
 {
   switch (fourcc) {
+  case FCC_H261:
+    return "h261";
   case FCC_H263:
     return "h263";
   case FCC_I263:
@@ -71,9 +73,12 @@ videodecoder_codec_name(unsigned int fourcc)
   case FCC_U263:
   case FCC_viv1:
     return "h263p";
+  case FCC_H264:
+    return "h264";
   case FCC_DIVX: // invalid_asf
   case FCC_divx: // invalid_asf
   case FCC_DX50: // invalid_asf
+  case FCC_xvid: // invalid_asf
   case FCC_XVID: // invalid_asf
   case FCC_MP4S:
   case FCC_M4S2:

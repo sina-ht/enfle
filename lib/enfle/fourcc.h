@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 17:58:10 2004.
- * $Id: fourcc.h,v 1.11 2004/04/12 04:14:28 sian Exp $
+ * Last Modified: Sat Jun 12 13:21:56 2004.
+ * $Id: fourcc.h,v 1.12 2004/06/12 06:11:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,8 +43,10 @@
 #define FCC_CYUV FCC('C', 'Y', 'U', 'V')
 #define FCC_HFYU FCC('H', 'F', 'Y', 'U')
 
-// H263
+// H26?
+#define FCC_H261 FCC('H', '2', '6', '1')
 #define FCC_H263 FCC('H', '2', '6', '3')
+#define FCC_H264 FCC('H', '2', '6', '4')
 #define FCC_I263 FCC('I', '2', '6', '3')
 #define FCC_U263 FCC('U', '2', '6', '3')
 #define FCC_viv1 FCC('v', 'i', 'v', '1')
@@ -58,6 +60,7 @@
 #define FCC_mp4v FCC('m', 'p', '4', 'v')
 #define FCC_UMP4 FCC('U', 'M', 'P', '4')
 #define FCC_XVID FCC('X', 'V', 'I', 'D')
+#define FCC_xvid FCC('x', 'v', 'i', 'd')
 
 // DivX ;-) 3.11 (MS-MPEG4v3)
 #define FCC_div3 FCC('d', 'i', 'v', '3')
