@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 19 17:35:04 2001.
- * $Id: libmpeg2.c,v 1.23 2001/09/19 08:37:13 sian Exp $
+ * Last Modified: Thu Sep 20 14:22:09 2001.
+ * $Id: libmpeg2.c,v 1.24 2001/09/20 05:31:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -311,24 +311,23 @@ get_ptr(unsigned char *p)
   return (unsigned char *)t;
 }
 
-#define MPEG_VIDEO_DECODE_BUFFER_SIZE 2048
-//#define MPEG_VIDEO_DECODE_BUFFER_SIZE 128
-
 static void *
 play_video(void *arg)
 {
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   void *data;
-  MpegPacket *mp;
   //unsigned long pts, dts, size;
   int nframe_decoded;
+  MpegPacket *mp;
+  FIFO_destructor destructor;
 
   debug_message(__FUNCTION__ "()\n");
 
   while (m->status == _PLAY) {
-    /* XXX: Should I use wait and singal? */
-    if (fifo_get(info->vstream, &data)) {
+    if (!fifo_get(info->vstream, &data, &destructor)) {
+      show_message(__FUNCTION__ ": fifo_get() failed.\n");
+    } else {
       mp = (MpegPacket *)data;
 #if 0
       switch (mp->pts_dts_flag) {
@@ -349,9 +348,7 @@ play_video(void *arg)
       }
 #endif
       nframe_decoded = mpeg2_decode_data(&info->mpeg2dec, mp->data, mp->data + mp->size);
-      //debug_message(__FUNCTION__ ": %d frames decoded\n", nframe_decoded);
-      free(mp->data);
-      free(mp);
+      destructor(mp);
     }
   }
 
@@ -382,6 +379,7 @@ play_audio(void *arg)
   int param_is_set = 0;
   void *data;
   MpegPacket *mp;
+  FIFO_destructor destructor;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -393,8 +391,9 @@ play_audio(void *arg)
   info->ad = ad;
 
   while (m->status == _PLAY) {
-    /* XXX: Should I use wait and singal? */
-    if (fifo_get(info->astream, &data)) {
+    if (!fifo_get(info->astream, &data, &destructor)) {
+      show_message(__FUNCTION__ ": fifo_get() failed.\n");
+    } else {
       mp = (MpegPacket *)data;
 #if 0
       switch (mp->pts_dts_flag) {
@@ -426,12 +425,10 @@ play_audio(void *arg)
       }
       while (ret == MP3_OK) {
 	m->ap->write_device(ad, output_buffer, write_size);
-	//debug_message(__FUNCTION__ ": %d bytes written.\n", write_size);
 	ret = decodeMP3(&info->mp, NULL, 0,
 			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       }
-      free(mp->data);
-      free(mp);
+      destructor(mp);
     }
   }
 

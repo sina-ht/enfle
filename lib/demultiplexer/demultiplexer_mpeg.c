@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 26 02:35:20 2001.
- * $Id: demultiplexer_mpeg.c,v 1.14 2001/07/29 00:40:19 sian Exp $
+ * Last Modified: Thu Sep 20 14:32:21 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.15 2001/09/20 05:32:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -362,7 +362,7 @@ demux_main(void *arg)
 	  mp->size = skip - 9 - buf[8];
 	  mp->data = malloc(mp->size);
 	  memcpy(mp->data, buf + 9 + buf[8], mp->size);
-	  while (!fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor)) ;
+	  fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor);
 	} else {
 	  unsigned char *p;
 	  int pts_dts_flag;
@@ -400,7 +400,7 @@ demux_main(void *arg)
 	    mp->size = buf + skip - p;
 	    mp->data = malloc(mp->size);
 	    memcpy(mp->data, p, mp->size);
-	    while (!fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor)) ;
+	    fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor);
 	    //debug_message(__FUNCTION__ ": %s: put %d bytes\n", (v_or_a == 1) ? "v" : "a", mp->size);
 	  }
 	}
