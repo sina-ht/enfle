@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 24 00:03:34 2003.
- * $Id: tar.c,v 1.11 2003/10/12 04:02:37 sian Exp $
+ * Last Modified: Sun Oct 12 14:07:29 2003.
+ * $Id: tar.c,v 1.12 2003/11/08 06:15:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -198,7 +198,7 @@ DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
 DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
 {
   TarHeader th;
-  TarInfo *ti;
+  TarInfo *ti = NULL;
   unsigned int size, nrecord;
   Dlist *dl;
   Dlist_data *dd;

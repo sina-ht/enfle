@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 13 02:52:41 2003.
- * $Id: misc.c,v 1.9 2003/10/12 04:00:40 sian Exp $
+ * Last Modified: Sun Oct 12 13:57:55 2003.
+ * $Id: misc.c,v 1.10 2003/11/08 06:15:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -219,7 +219,7 @@ misc_str_split_delimiters(char *str, char *delimiters, char **used_delim_r)
 {
   int i, j, k, l;
   int count;
-  char delimiter, *used_delim, **ret;
+  char delimiter = '\0', *used_delim, **ret;
 
   if (str == NULL)
     return NULL;

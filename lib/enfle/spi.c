@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 19 21:02:02 2002.
- * $Id: spi.c,v 1.23 2002/08/19 12:22:33 sian Exp $
+ * Last Modified: Sun Oct 12 14:02:06 2003.
+ * $Id: spi.c,v 1.24 2003/11/08 06:14:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -139,9 +139,11 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
   BITMAPINFOHEADER *bih;
   int i, err, bpl;
   unsigned int j;
-
+  BITMAPINFOHEADER **bih_p = &bih;
+  unsigned char **image_p = &image;
+  
   debug_message_fn("()\n");
-  if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image,
+  if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)bih_p, (HANDLE *)image_p,
 			 susie_loader_progress_callback, 0)) == SPI_SUCCESS) {
     p->depth = p->bits_per_pixel = bih->biBitCount;
     image_width(p) = bih->biWidth;
@@ -283,8 +285,9 @@ archiver_open(Archive *a, Stream *st, void *priv)
   SusieArchiver *sa = priv;
   Susie_archiver_info *sai;
   fileInfo *info;
+  fileInfo **ii = &info;
 
-  if ((err = sa->get_archive_info(st->path, 0, 0, (HLOCAL *)&info)) != SPI_SUCCESS) {
+  if ((err = sa->get_archive_info(st->path, 0, 0, (HLOCAL *)ii)) != SPI_SUCCESS) {
     show_message_fnc("Susie plugin error: %s: %s\n", st->path, spi_errormsg[err]);
     debug_message_fnc("Susie plugin error: %s: %s(%d)\n", st->path, spi_errormsg[err], err);
     return OPEN_ERROR;
