@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct  5 20:30:39 2001.
- * $Id: user32.c,v 1.8 2001/10/05 11:57:08 sian Exp $
+ * Last Modified: Sun Oct  7 00:51:30 2001.
+ * $Id: user32.c,v 1.9 2001/10/06 16:02:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,11 +20,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <stdlib.h>
 #include <stdarg.h>
 
 #include "w32api.h"
 #include "module.h"
 
+#include "utils/converter.h"
+#include "pe_image.h"
 #include "user32.h"
 
 #define REQUIRE_STRING_H
@@ -51,41 +54,69 @@ static Symbol_info symbol_infos[] = {
 
 DEFINE_W32API(BOOL, EnumThreadWindows, (DWORD id, WNDENUMPROC func, LPARAM param))
 {
-  debug_message("EnumThreadWindows(%d, %p) called\n", id, func);
+  debug_message(__FUNCTION__ "(%d, %p) called\n", id, func);
   return TRUE;
 }
 
 DEFINE_W32API(INT, MessageBoxA, (HWND handle, LPCSTR text, LPCSTR title, UINT type))
 {
-  debug_message("MessageBoxA(%s: %s) called\n", title, text);
+  debug_message(__FUNCTION__ "(%s: %s) called\n", title, text);
   return 1;
 }
 
 DEFINE_W32API(INT, LoadStringA, (HINSTANCE handle, UINT id, LPSTR buffer, INT len))
 {
-  IMAGE_RESOURCE_DIRECTORY *ird = (IMAGE_RESOURCE_DIRECTORY *)handle[p->opt_header.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress];
-  unsigned int ne = ird->NumberOfNamedEntries;
-  unsigned int ie = ird->NumberOfIdEntries;
-  unsigned int i;
+  PE_image *p = (PE_image *)handle;
+  unsigned int rid = ((id >> 4) & 0xffff) + 1;
+  unsigned int sid = id & 0xf;
+  //unsigned int size;
+  char buf[256];
+  void *d;
 
-  debug_message("LoadStringA(%p, %d, %p, %d) called\n", handle, id, buffer, len);
-  debug_message("LoadStringA: (%d named entries, %d id entries)\n", ne, ie);
+  debug_message(__FUNCTION__ "(%p, %d(rid: %d, sid: %d), %p, %d) called\n", handle, id, rid, sid, buffer, len);
 
-  if (buffer && len > 0)
-    *buffer = 0;
+  if (len == 0 || buffer == NULL)
+    return 0;
 
-  return 0;
+  memset(buffer, 0, len);
+  
+  snprintf(buf, 256, "/0x6/0x%x/0x%x", rid, 0);
+  if ((d = hash_lookup_str(p->resource, buf)) == NULL) {
+    /* Japanese */
+    snprintf(buf, 256, "/0x6/0x%x/0x%x", rid, 0x411);
+    d = hash_lookup_str(p->resource, buf);
+  }
+
+  if (d) {
+    unsigned char *data = d;
+    char *s, *dest;
+    unsigned int i;
+    int l, L;
+
+    //size = (((((data[0] << 8) | data[1]) << 8) | data[2]) << 8) | data[3];
+    data += 4;
+    for (i = 0; i < sid; i++)
+      data += (*data + 1) << 1;
+    l = *data << 1;
+    s = calloc(1, l + 2);
+    memcpy(s, data + 2, l);
+    L = converter_convert(s, &dest, l, (char *)"UNICODE", (char *)"EUC-JP");
+    strncpy(buffer, dest, len);
+    free(dest);
+  }
+
+  return strlen(buffer);
 }
 
 DEFINE_W32API(INT, GetSystemMetrics, (INT i))
 {
-  debug_message("GetSystemMetrics(%d) called\n", i);
+  debug_message(__FUNCTION__ "(%d) called\n", i);
   return 0;
 }
 
 DEFINE_W32API(INT, GetKeyboardType, (INT type))
 {
-  debug_message("GetKeyboardType(%d) called\n", type);
+  debug_message(__FUNCTION__ "(%d) called\n", type);
 
   switch (type) {
   case 0:
@@ -107,7 +138,7 @@ DEFINE_W32API(INT, wsprintfA, (LPSTR buf, LPCSTR format, ...))
   vsnprintf(buf, 1024, format, va);
   va_end(va);
 
-  debug_message("wsprintfA: formatted: %s", buf);
+  debug_message(__FUNCTION__ ": formatted: %s", buf);
 
   return strlen(buf);
 }
