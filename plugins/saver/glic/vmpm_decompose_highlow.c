@@ -2,13 +2,12 @@
  * vmpm_decompose_highlow.c -- High-Low decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Fri Apr 27 20:01:01 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.1 2001/04/27 11:07:01 sian Exp $
+ * $Id: vmpm_decompose_highlow.c,v 1.2 2001/04/28 12:56:10 sian Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG 1
 #define REQUIRE_FATAL
 #include "common.h"
 #define REQUIRE_STRING_H

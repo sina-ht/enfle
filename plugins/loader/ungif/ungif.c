@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Jan  6 01:28:06 2001.
- * $Id: ungif.c,v 1.9 2001/01/06 23:56:06 sian Exp $
+ * $Id: ungif.c,v 1.10 2001/04/28 12:56:10 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -92,7 +92,7 @@ load_image(Image *p, Stream *st)
   unsigned char *d;
 
   if ((GifFile = DGifOpen(st, ungif_input_func)) == NULL) {
-#if DEBUG
+#ifdef DEBUG
     PrintGifError();
 #endif
     return LOAD_ERROR;

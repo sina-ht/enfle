@@ -2,13 +2,12 @@
  * vmpm_decompose_normal.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Fri Apr 20 18:43:41 2001.
- * $Id: vmpm_decompose_normal.c,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * $Id: vmpm_decompose_normal.c,v 1.3 2001/04/28 12:56:10 sian Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG 1
 #define REQUIRE_FATAL
 #include "common.h"
 
