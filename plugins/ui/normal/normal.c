@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb  9 12:27:38 2002.
- * $Id: normal.c,v 1.59 2002/02/09 03:45:28 sian Exp $
+ * Last Modified: Thu Feb 14 01:18:30 2002.
+ * $Id: normal.c,v 1.60 2002/02/13 16:51:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -901,9 +901,6 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
     case IDENTIFY_FILE_STREAM:
       if ((tmp = config_get_str(c, "/enfle/plugins/ui/normal/archiver/disabled")) == NULL ||
 	  strcasecmp(tmp, "yes") != 0) {
-
-	debug_message("tmp = %s\n", tmp);
-
 	arc = archive_create(a);
 	if (archiver_identify(eps, arc, s, c)) {
 	  debug_message("Archiver identified as %s\n", arc->format);
