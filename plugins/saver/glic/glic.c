@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 20 19:06:01 2001.
- * $Id: glic.c,v 1.13 2001/08/26 01:05:24 sian Exp $
+ * Last Modified: Tue Aug 28 02:27:17 2001.
+ * $Id: glic.c,v 1.14 2001/08/27 21:57:29 sian Exp $
  */
 
 #include <stdlib.h>
@@ -152,6 +152,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
       perror(__FUNCTION__ ": Cannot open %s for writting");
       return 0;
     }
+    setlinebuf(vmpm.statfile);
   }
 
   debug_message("glic: (%d, %d) vmpm_path %s, decompose %s, predict %s, scan %s\n", vmpm.r, vmpm.I, vmpm_path, decompose_method, predict_method, scan_method);
