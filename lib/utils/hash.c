@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep  5 23:20:48 2002.
- * $Id: hash.c,v 1.17 2002/09/05 14:37:03 sian Exp $
+ * Last Modified: Wed Sep 24 00:05:16 2003.
+ * $Id: hash.c,v 1.18 2003/10/12 03:59:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -346,7 +346,10 @@ hash_destroy(Hash *h)
   while (hash_get_key_size(h) > 0) {
     t = dlist_top(keys);
     hk = dlist_data(t);
-    hash_delete(h, hk->key, hk->len);
+    if (unlikely(!hash_delete(h, hk->key, hk->len))) {
+      err_message_fnc("size = %d\n", hash_get_key_size(h));
+      break;
+    }
   }
 
   dlist_destroy(keys);
