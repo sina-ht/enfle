@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow_esc.c -- Threshold ESC-A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 13 17:59:31 2001.
- * $Id: vmpm_decompose_highlow_esc.c,v 1.2 2001/08/15 06:41:53 sian Exp $
+ * Last Modified: Thu Aug 16 14:35:04 2001.
+ * $Id: vmpm_decompose_highlow_esc.c,v 1.3 2001/08/26 01:02:00 sian Exp $
  */
 
 #include <stdio.h>
@@ -250,6 +250,7 @@ encode(VMPM *vmpm)
 	  }
 	}
 	stat_message(vmpm, "\n");
+	stat_message(vmpm, "Level %d: %ld bytes\n", i, ftell(vmpm->outfile));
       }
     }
 

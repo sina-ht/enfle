@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 21:51:49 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.6 2001/08/09 17:32:07 sian Exp $
+ * Last Modified: Thu Aug 16 14:34:40 2001.
+ * $Id: vmpm_decompose_escfirst.c,v 1.7 2001/08/26 01:02:01 sian Exp $
  */
 
 #include <stdio.h>
@@ -239,6 +239,7 @@ encode(VMPM *vmpm)
       }
 #endif
       stat_message(vmpm, "\n");
+      stat_message(vmpm, "Level %d: %ld bytes\n", i, ftell(vmpm->outfile));
     }
   }
 

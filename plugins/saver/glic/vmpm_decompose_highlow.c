@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 13 17:58:58 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.17 2001/08/15 06:41:53 sian Exp $
+ * Last Modified: Thu Aug 16 14:35:53 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.18 2001/08/26 01:02:01 sian Exp $
  */
 
 #include <stdio.h>
@@ -246,6 +246,7 @@ encode(VMPM *vmpm)
 	  arithmodel_encode(am, tv);
 	}
 	stat_message(vmpm, "\n");
+	stat_message(vmpm, "Level %d: %ld bytes\n", i, ftell(vmpm->outfile));
       }
     }
 

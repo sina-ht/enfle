@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Original decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Aug  8 04:04:19 2001.
- * $Id: vmpm_decompose_normal.c,v 1.14 2001/08/09 17:32:07 sian Exp $
+ * Last Modified: Thu Aug 16 14:34:23 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.15 2001/08/26 01:02:00 sian Exp $
  */
 
 #include <stdio.h>
@@ -173,7 +173,7 @@ encode(VMPM *vmpm)
       break;
     }
   }
-      
+
   fputc(i, vmpm->outfile);
   if (match_found) {
     for (; i >= 1; i--) {
@@ -219,6 +219,7 @@ encode(VMPM *vmpm)
       stat_message(vmpm, "\n");
       if (jj != -1)
 	stat_message(vmpm, "Level %d: Escape is uninstalled at %d\n", i, jj);
+      stat_message(vmpm, "Level %d: %ld bytes\n", i, ftell(vmpm->outfile));
     }
   }
 
