@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 18:20:55 2002.
- * $Id: demultiplexer_avi.c,v 1.10 2002/03/07 15:15:51 sian Exp $
+ * Last Modified: Wed Mar 20 14:56:10 2002.
+ * $Id: demultiplexer_avi.c,v 1.11 2002/03/21 01:32:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -184,7 +184,7 @@ examine(Demultiplexer *demux)
       if (info->nastreams == 0)
 	info->ahandler = ash.fccHandler;
     } else {
-      show_message_fnc("Unknow fccType %X\n", ash.fccType);
+      show_message_fnc("Unknown fccType %X\n", ash.fccType);
     }
 
     _READ_CHUNK_HEADER(info->rf, rc);
