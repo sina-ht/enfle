@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf should be 2.54 or later, automake 1.6.3 or later.
 dnl
-dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
+dnl (C)Copyright 1999, 2000-03 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Nov 30 01:02:53 2002.
-dnl $Id: configure.in,v 1.120 2002/11/29 16:03:00 sian Exp $
+dnl Last Modified: Wed Feb  5 23:58:04 2003.
+dnl $Id: configure.in,v 1.121 2003/02/05 15:23:35 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20021130, sian@big.or.jp)
+AC_INIT(enfle, 20030205, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -81,36 +81,6 @@ for kind in $Plugins_dirs; do
 done
 echo "$Plugins"
 
-Static_plugin_objs=""
-Static_plugin_proto=""
-Static_plugin_add=""
-AC_ARG_ENABLE(all-static,
-    [  --enable-all-static     Link all plugins statically.],
-    [ for p in $Plugins; do
-        kind=`echo $p | sed 's/\/.*$//'`
-        p=`echo $p | sed 's/^.*\///'`
-        ENFLE_PLUGIN_ENABLE(Static_plugins, $p, $kind)
-      done],
-    [ Static_plugins=""])
-
-ENFLE_LINKED_PLUGIN_ENABLER(loader, [        ])
-ENFLE_LINKED_PLUGIN_ENABLER(saver, [         ])
-ENFLE_LINKED_PLUGIN_ENABLER(video, [         ])
-ENFLE_LINKED_PLUGIN_ENABLER(audio, [         ])
-ENFLE_LINKED_PLUGIN_ENABLER(ui, [            ])
-ENFLE_LINKED_PLUGIN_ENABLER(player, [        ])
-ENFLE_LINKED_PLUGIN_ENABLER(effect, [        ])
-ENFLE_LINKED_PLUGIN_ENABLER(archiver, [      ])
-ENFLE_LINKED_PLUGIN_ENABLER(streamer, [      ])
-
-echo "Static plugins: $Static_plugins"
-echo "Static plugin objs: $Static_plugin_objs"
-
-AC_SUBST(Static_plugins)
-AC_SUBST(Static_plugin_objs)
-AC_DEFINE_UNQUOTED(STATIC_PLUGIN_PROTO, $Static_plugin_proto, [Define static plugin prototypes])
-AC_DEFINE_UNQUOTED(STATIC_PLUGIN_ADD, $Static_plugin_add, [Define static plugin add calls])
-
 dnl checks
 
 available_dlopen=no
@@ -141,17 +111,30 @@ dnl   if test "${available_mmxjpeg}" = "yes"; then
 dnl     available_jpeg=yes
 dnl     LIBADD_JPEG=$LIBADD_MMXJPEG
 dnl   else
-    AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ], [], $LIBADD_POW)
+    AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [
+      available_jpeg=yes; LIBADD_JPEG=-ljpeg;
+    ], [], $LIBADD_POW)
 dnl   fi
 ])
+if test "$available_jpeg" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(loader/jpeg); ENFLE_PLUGIN_DISABLE(saver/jpeg);
+fi
 AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
 AC_SUBST(LIBADD_JPEG)
 
 available_mpeg_lib=no
 AC_CHECK_HEADER(mpeg.h, [
   AC_CHECK_LIB(mpeg, OpenMPEG, [
-    AC_CHECK_LIB(mpeg, OpenMPEGStream, [ available_mpeg_lib=yes; LIBADD_MPEG_LIB=-lmpeg ],
-                                       [ AC_MSG_WARN([*** mpeg_lib requires a patch.]) ]) ]) ])
+    AC_CHECK_LIB(mpeg, OpenMPEGStream, [
+      available_mpeg_lib=yes; LIBADD_MPEG_LIB=-lmpeg
+    ], [
+      AC_MSG_WARN([*** mpeg_lib requires a patch.]);
+    ])
+  ], [])
+])
+if test "$available_mpeg_lib" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(player/mpeg_lib)
+fi
 AM_CONDITIONAL(HAVE_MPEG_LIB, test "$available_mpeg_lib" = "yes")
 AC_SUBST(LIBADD_MPEG_LIB)
 
@@ -176,9 +159,12 @@ if test "$available_pthread" = "yes"; then
     ], [], [$LIBADD_POW $LIBADD_PTHREAD])
   ], [
     AC_CHECK_HEADER(libmpeg3.h, [
-      AC_MSG_WARN([*** please put libmpeg3 headers in (/usr/local/)include/mpeg3/.])
+      AC_MSG_WARN([*** please put libmpeg3 headers in (/usr/local/)include/mpeg3/.]);
     ])
   ])
+fi
+if test "$available_libmpeg3" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(player/libmpeg3)
 fi
 AM_CONDITIONAL(HAVE_LIBMPEG3, test "$available_libmpeg3" = "yes")
 AC_SUBST(LIBADD_LIBMPEG3)
@@ -187,7 +173,12 @@ available_opendivx=no
 if test "$available_pthread" = "yes"; then
   AC_CHECK_HEADER(decore.h, [
     AC_CHECK_LIB(divxdecore, decore, [
-      available_opendivx=yes; LIBADD_DIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD"; ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
+      available_opendivx=yes;
+      LIBADD_DIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD";
+    ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
+fi
+if test "$available_opendivx" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(player/opendivx)
 fi
 AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_opendivx" = "yes")
 AC_SUBST(LIBADD_DIVXDECORE)
@@ -216,6 +207,9 @@ if test "$available_zlib" = "yes"; then
       ], [], [$LIBADD_POW $LIBADD_ZLIB])
   fi
 fi
+if test "$available_png" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(loader/png); ENFLE_PLUGIN_DISABLE(saver/png);
+fi
 AM_CONDITIONAL(HAVE_PNG, test "$available_png" = "yes")
 AC_SUBST(LIBADD_PNG)
 
@@ -226,6 +220,9 @@ if test "$available_zlib" = "yes" -a "$available_jpeg" = "yes"; then
     AC_CHECK_LIB(mng, mng_initialize, [ available_mng=yes; LIBADD_MNG="$LIBADD_MNG -lmng"; ], [], $LIBADD_MNG )])
 else
   AC_MSG_WARN([*** mng requires libz and libjpeg.])
+fi
+if test "$available_mng" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(player/mng)
 fi
 AM_CONDITIONAL(HAVE_MNG, test "$available_mng" = "yes")
 AC_SUBST(LIBADD_MNG)
@@ -256,6 +253,9 @@ AC_PROG_CXX
 AC_CHECK_HEADER(avifile.h, [ available_avifile=yes; LIBADD_AVIFILE="-laviplay" ])
 LIBADD_STDCC=-lstdc++
 AC_LANG_C
+if test "$available_avifile" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(player/avifile)
+fi
 AM_CONDITIONAL(HAVE_AVIFILE, test "$available_avifile" = "yes")
 AC_SUBST(LIBADD_AVIFILE)
 AC_SUBST(LIBADD_STDCC)
@@ -272,6 +272,9 @@ AC_CHECK_HEADER(bzlib.h, [
     ])
   ])
 ])
+if test "$available_bzlib" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(streamer/bz2)
+fi
 AM_CONDITIONAL(HAVE_BZLIB, test "$available_bzlib" = "yes")
 AC_SUBST(LIBADD_BZLIB)
 
@@ -282,6 +285,9 @@ AC_CHECK_HEADER(libarc/arc.h, [
     AC_DEFINE(USE_LIBARC, 1, [Define if you have libarc and want to use it.])
   ])
 ])
+if test "$available_libarc" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(archiver/arc)
+fi
 AM_CONDITIONAL(HAVE_LIBARC, test "$available_libarc" = "yes")
 AC_SUBST(LIBADD_LIBARC)
 
@@ -302,17 +308,26 @@ if test "${ac_cv_header_soundcard_h}" = "yes" -o \
         "${ac_cv_header_machine_soundcard_h}" = "yes"; then
   available_oss=yes
 fi
+if test "$available_oss" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(audio/oss)
+fi
 AM_CONDITIONAL(HAVE_OSS, test "$available_oss" = "yes")
 
 available_alsa=no
 AC_CHECK_HEADER(alsa/asoundlib.h, [
   AC_CHECK_LIB(asound, snd_pcm_hw_params, [ available_alsa=yes; LIBADD_ALSA="-lasound" ], [], [-lm])])
+if test "$available_alsa" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(audio/alsa)
+fi
 AM_CONDITIONAL(HAVE_ALSA, test "$available_alsa" = "yes")
 AC_SUBST(LIBADD_ALSA)
 
 available_esd=no
 AC_CHECK_HEADER(esd.h,
   AC_CHECK_LIB(esd, esd_play_stream_fallback, [ available_esd=yes; LIBADD_ESD="-lesd" ], [], [-lm]))
+if test "$available_esd" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(audio/esd)
+fi
 AM_CONDITIONAL(HAVE_ESD, test "$available_esd" = "yes")
 AC_SUBST(LIBADD_ESD)
 
@@ -398,6 +413,9 @@ elif test "$with_ungif" = "yes"; then
     AC_CHECK_LIB(ungif, DGifOpen, [ available_ungif=yes; LIBADD_UNGIF=-lungif; ]))
   AC_SUBST(LIBADD_UNGIF)
 fi
+if test "$available_ungif" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(loader/ungif); ENFLE_PLUGIN_DISABLE(player/ungif);
+fi
 AM_CONDITIONAL(HAVE_UNGIF, test "$available_ungif" = "yes")
 
 available_gif=no
@@ -411,6 +429,9 @@ elif test "$enable_gif" = "yes"; then
   else
     echo "*** GIF plugin source is not included in this distribution to avoid infamous LZW patent problem"
   fi
+fi
+if test "$available_gif" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(loader/gif);
 fi
 AM_CONDITIONAL(HAVE_GIF, test "$available_gif" = "yes")
 
@@ -485,6 +506,36 @@ dnl   fi
 dnl else
 dnl   AC_MSG_RESULT(no)
 dnl fi
+
+Static_plugin_objs=""
+Static_plugin_proto=""
+Static_plugin_add=""
+AC_ARG_ENABLE(all-static,
+    [  --enable-all-static     Link all plugins statically.],
+    [ for p in $Plugins; do
+        kind=`echo $p | sed 's/\/.*$//'`
+        p=`echo $p | sed 's/^.*\///'`
+        ENFLE_PLUGIN_ENABLE(Static_plugins, $p, $kind)
+      done],
+    [ Static_plugins=""])
+
+ENFLE_LINKED_PLUGIN_ENABLER(loader, [        ])
+ENFLE_LINKED_PLUGIN_ENABLER(saver, [         ])
+ENFLE_LINKED_PLUGIN_ENABLER(video, [         ])
+ENFLE_LINKED_PLUGIN_ENABLER(audio, [         ])
+ENFLE_LINKED_PLUGIN_ENABLER(ui, [            ])
+ENFLE_LINKED_PLUGIN_ENABLER(player, [        ])
+ENFLE_LINKED_PLUGIN_ENABLER(effect, [        ])
+ENFLE_LINKED_PLUGIN_ENABLER(archiver, [      ])
+ENFLE_LINKED_PLUGIN_ENABLER(streamer, [      ])
+
+echo "Static plugins: $Static_plugins"
+echo "Static plugin objs: $Static_plugin_objs"
+
+AC_SUBST(Static_plugins)
+AC_SUBST(Static_plugin_objs)
+AC_DEFINE_UNQUOTED(STATIC_PLUGIN_PROTO, $Static_plugin_proto, [Define static plugin prototypes])
+AC_DEFINE_UNQUOTED(STATIC_PLUGIN_ADD, $Static_plugin_add, [Define static plugin add calls])
 
 dnl more warning
 AC_ARG_ENABLE(warnings,
