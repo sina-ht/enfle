@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:26:32 2002.
- * $Id: demultiplexer_avi.c,v 1.12 2002/05/04 14:34:54 sian Exp $
+ * Last Modified: Sat May  4 23:46:12 2002.
+ * $Id: demultiplexer_avi.c,v 1.13 2002/05/06 11:03:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -137,7 +137,7 @@ examine(Demultiplexer *demux)
   riff_file_set_func_tell(info->rf, tell_func);
   riff_file_set_func_arg(info->rf, (void *)info->st);
   if (!riff_file_open(info->rf)) {
-    show_message_fnc("riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
+    debug_message_fnc("riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
     goto error_destroy;
   }
   rc_top = rc = riff_chunk_create();

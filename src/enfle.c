@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 04:18:59 2002.
- * $Id: enfle.c,v 1.46 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Sat May  4 23:47:07 2002.
+ * $Id: enfle.c,v 1.47 2002/05/06 11:03:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -390,7 +390,7 @@ main(int argc, char **argv)
 
   if ((plugin_path = config_get_str(c, "/enfle/plugins/dir")) == NULL) {
     plugin_path = (char *)ENFLE_PLUGINDIR;
-    fprintf(stderr, "plugin_path defaults to %s\n", plugin_path);
+    debug_message("plugin_path defaults to %s\n", plugin_path);
   }
   if (!scan_and_load_plugins(eps, c, plugin_path)) {
     fprintf(stderr, "scan_and_load_plugins() failed.\n");
