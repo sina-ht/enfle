@@ -1,5 +1,15 @@
 2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/player/libmpeg2/libmpeg2.c: Change timing issues. play()
+	now initialize codecs.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Slightly changed.
+
+	* lib/X11/x11ximage.c: Fixed a stupid bug which turns up in
+	optimized code.
+
+2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
+
 	* plugins/player/libmpeg2/libmpeg2.c,
 	plugins/player/libmpeg2/libmpeg2_vo.[ch]: YUV and magnification
 	support.
