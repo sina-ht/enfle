@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar  9 23:23:47 2004.
- * $Id: enfle.c,v 1.59 2004/03/09 14:25:07 sian Exp $
+ * Last Modified: Fri Mar 12 00:01:35 2004.
+ * $Id: enfle.c,v 1.60 2004/03/11 15:10:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -238,7 +238,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   int nplugins = 0;
 
   /* Add static linked plugins */
-  STATIC_PLUGIN_ADD
+  STATIC_PLUGIN_ADD;
 
   if (eps->cache_path) {
     if (eps->cache_to_be_created) {
@@ -307,7 +307,7 @@ main(int argc, char **argv)
   EnflePlugins *eps;
   Config *c;
   String *rcpath;
-  int i, ch;
+  int i, ch, result;
   int print_more_info = 0;
   int magnify_method = 0;
   int include_fnmatch = 0;
@@ -448,8 +448,7 @@ main(int argc, char **argv)
     }
   }
 
-  // 1 means using cache
-  eps = enfle_plugins_create(plugin_path, 1);
+  eps = enfle_plugins_create(plugin_path, config_get_boolean(c, "/enfle/use_cache", &result));
   set_enfle_plugins(eps);
 
   if (!scan_and_load_plugins(eps, c, plugin_path)) {
