@@ -24,7 +24,14 @@
 
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
-#    include "config.h"
+#include "enfle-config.h"
+#undef DEBUG
+#define HAVE_LRINTF
+#define HAVE_PTHREADS
+//#define CONFIG_ENCODERS
+#define CONFIG_DECODERS
+#define CONFIG_RISKY
+//#    include "config.h"
 
 #    include <stdlib.h>
 #    include <stdio.h>
