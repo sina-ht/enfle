@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 02:58:42 2000.
- * $Id: enfle.c,v 1.9 2000/10/28 19:07:16 sian Exp $
+ * Last Modified: Fri Nov  3 04:27:58 2000.
+ * $Id: enfle.c,v 1.10 2000/11/02 19:34:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -254,6 +254,7 @@ main(int argc, char **argv)
       fprintf(stderr, "No UI %s or UI %s initialize failed\n", ui_name, ui_name);
   }
 
+  player_destroy(uidata.player);
   archive_destroy(uidata.a);
   archiver_destroy(ar);
   streamer_destroy(st);
