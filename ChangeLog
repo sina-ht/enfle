@@ -1,3 +1,45 @@
+2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.[ch]: YUV and magnification
+	support.
+
+	* lib/utils/fifo.h: Added fifo_is_empty() macro.
+
+	* lib/utils/fifo.c: Default maxdata specified.
+
+	* plugins/player/avifile/avifile.cpp: Proper video thread
+	termination.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Fixed EOF detection.
+
+	* lib/enfle/movie.h: Clean up.
+
+	* plugins/audio/esd/esd.c, plugins/streamer/bz2/bz2.c: Avoid
+	gcc-3.0 warnings.
+
+2001-06-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: Cannot use cpp directives in arguments of macros,
+	such as printf.
+
+	* lib/X11/x11ximage.c: Avoid a warning.
+
+	* lib/utils/Makefile.am, lib/utils/fifo.[ch],
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.h,
+	lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer_mpeg.[ch]: Use FIFO.
+
+	* plugins/player/mpglib/mpglib.c,
+	plugins/player/opendivx/opendivx.c,
+	plugins/player/avifile/avifile.cpp,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpeg_lib/mpeg_lib.c: Return the return value of
+	play() as the return value of load_movie().
+
+	* lib/X11/x11ximage.c: USE_XV protection.
+
 2001-06-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/loader/jpeg/jpeg.c: Conditioned out YUV output related
