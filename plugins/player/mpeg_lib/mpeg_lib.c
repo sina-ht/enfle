@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 12 21:09:03 2000.
- * $Id: mpeg_lib.c,v 1.2 2000/10/12 15:43:47 sian Exp $
+ * Last Modified: Sat Oct 14 05:48:07 2000.
+ * $Id: mpeg_lib.c,v 1.3 2000/10/15 07:45:59 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -183,13 +183,20 @@ play_main(Movie *m, UIData *uidata)
   p->bits_per_pixel = 32;
   p->next = NULL;
   p->image_size = p->bytes_per_line * p->height;
+#if 0
   if ((p->image = malloc(p->image_size)) == NULL)
     goto error;
   memcpy(p->image, info->buffer, p->image_size);
+#else
+  p->image = info->buffer;
+#endif
 
   m->nthframe++;
 
   m->render_frame(uidata, m, p);
+#if 1
+  p->image = NULL;
+#endif
 
   image_destroy(p);
 
@@ -245,7 +252,7 @@ stop_movie(Movie *m)
   RewindMPEGStream(m->st, &info->img, mpeg_lib_rewind_func);
   m->nthframe = 0;
 
-  return PLAY_ERROR;
+  return PLAY_OK;
 }
 
 static void
