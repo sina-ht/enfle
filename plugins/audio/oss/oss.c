@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 19 01:02:44 2000.
- * $Id: oss.c,v 1.1 2000/12/18 16:59:26 sian Exp $
+ * Last Modified: Sat Dec 23 06:36:39 2000.
+ * $Id: oss.c,v 1.2 2000/12/22 23:12:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,12 +40,13 @@ static AudioFormat set_format(AudioDevice *, AudioFormat);
 static int set_channels(AudioDevice *, int);
 static int set_speed(AudioDevice *, int);
 static int write_device(AudioDevice *, unsigned char *, int);
+static int sync_device(AudioDevice *);
 static int close_device(AudioDevice *);
 
 static AudioPlugin plugin = {
   type: ENFLE_PLUGIN_AUDIO,
   name: "OSS",
-  description: "OSS Audio plugin version 0.1",
+  description: "OSS Audio plugin version 0.1.1",
   author: "Hiroshi Takekawa",
 
   open_device: open_device,
@@ -53,6 +54,7 @@ static AudioPlugin plugin = {
   set_channels: set_channels,
   set_speed: set_speed,
   write_device: write_device,
+  sync_device: sync_device,
   close_device: close_device
 };
 
@@ -250,6 +252,13 @@ static int
 write_device(AudioDevice *ad, unsigned char *data, int size)
 {
   return write(ad->fd, data, size);
+}
+
+static int
+sync_device(AudioDevice *ad)
+{
+  ioctl(ad->fd, SNDCTL_DSP_SYNC, 0);
+  return 1;
 }
 
 static int
