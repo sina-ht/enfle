@@ -1,10 +1,10 @@
 /*
  * compat.h -- for compatibility
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 01:41:00 2001.
- * $Id: compat.h,v 1.5 2001/02/21 17:56:29 sian Exp $
+ * Last Modified: Fri Apr 13 14:58:09 2001.
+ * $Id: compat.h,v 1.6 2001/04/18 05:41:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,4 +70,8 @@
 void *memalign(size_t, size_t);
 #else
 #define memalign(align, size) malloc(size)
+#endif
+
+#ifndef HAVE_GETPAGESIZE
+# define getpagesize() 1024
 #endif
