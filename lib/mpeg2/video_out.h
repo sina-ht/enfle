@@ -24,6 +24,8 @@
 #ifndef VIDEO_OUT_H
 #define VIDEO_OUT_H
 
+#include "compat.h"
+
 typedef struct vo_frame_s vo_frame_t;
 typedef struct vo_instance_s vo_instance_t;
 
