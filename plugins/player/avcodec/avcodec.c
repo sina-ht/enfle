@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan  2 22:11:39 2004.
- * $Id: avcodec.c,v 1.7 2004/01/03 10:31:30 sian Exp $
+ * Last Modified: Mon Jan  5 18:52:51 2004.
+ * $Id: avcodec.c,v 1.8 2004/01/05 09:53:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -257,6 +257,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     case FCC_COL0:
       info->vcodec_id = CODEC_ID_MSMPEG4V3; info->vcodec_name = "msmpeg4"; break;
     case FCC_MP42:
+    case FCC_mp42:
     case FCC_DIV2:
       info->vcodec_id = CODEC_ID_MSMPEG4V2; info->vcodec_name = "msmpeg4v2"; break;
     case FCC_MP41:
@@ -564,6 +565,7 @@ play(Movie *m)
 
     /* XXX: decoder initialize */
     info->vcodec_ctx = avcodec_alloc_context();
+    //info->vcodec_ctx->error_resilience = 3;
     info->vcodec_ctx->pix_fmt = -1;
     info->vcodec_ctx->opaque = info;
     info->vcodec_picture = avcodec_alloc_frame();
@@ -699,8 +701,10 @@ play_video(void *arg)
 	pthread_mutex_unlock(&info->update_mutex);
       }
     }
-    if (ap)
+    if (ap) {
       destructor(ap);
+      ap = NULL;
+    }
   }
 
   debug_message_fn(" exiting.\n");
@@ -1057,6 +1061,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_COL1:
     case FCC_COL0:
     case FCC_MP42: // msmpeg4v2
+    case FCC_mp42:
     case FCC_DIV2:
       break;
     case FCC_MP41: // msmpeg4v1
