@@ -1,3 +1,8 @@
+2002-01-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h, lib/dllloader/kernel32.c: Fixes for gcc prior to
+	3.0.3.
+
 2001-12-26  Hiroshi Takekawa  <sian@fennel.org>
 
 	* common.h, lib/X11/x11.c, lib/X11/x11ximage.c,
