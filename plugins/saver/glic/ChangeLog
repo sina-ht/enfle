@@ -1,3 +1,14 @@
+2001-07-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/arithmodel_order_zero.[ch],
+	plugins/saver/glic/vmpm_decompose_highlow.c,
+	plugins/saver/glic/vmpm_decompose_normal.c: Added ESCAPE_RUN.
+
+2001-07-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/vmpm_decompose_highlow.c: Fixed a stupid bug,
+	again.
+
 2001-07-11 Hiroshi Takekawa <sian@fennel.org>
 
 	* plugins/saver/glic/vmpm_decompose_highlow.c: Fixed a stupid bug.
