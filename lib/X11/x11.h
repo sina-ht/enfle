@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Jun 13 02:49:49 2001.
- * $Id: x11.h,v 1.8 2001/06/12 17:59:24 sian Exp $
+ * Last Modified: Thu Jun 14 03:00:22 2001.
+ * $Id: x11.h,v 1.9 2001/06/13 18:17:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,6 +31,25 @@
 #define X11_EXT_XV  (1 << 1)
 
 #ifdef USE_XV
+#define XV_YUY2_PACKED 0
+#define XV_YUY2_PLANAR 1
+#define XV_YV12_PACKED 2
+#define XV_YV12_PLANAR 3
+#define XV_I420_PACKED 4
+#define XV_I420_PLANAR 5
+#define XV_UYVY_PACKED 6
+#define XV_UYVY_PLANAR 7
+#define XV_FORMAT_MAX 8
+
+#define XV_YUY2_PACKED_FLAG (1 << XV_YUY2_PACKED)
+#define XV_YUY2_PLANAR_FLAG (1 << XV_YUY2_PLANAR)
+#define XV_YV12_PACKED_FLAG (1 << XV_YV12_PACKED)
+#define XV_YV12_PLANAR_FLAG (1 << XV_YU12_PLANAR)
+#define XV_I420_PACKED_FLAG (1 << XV_I420_PACKED)
+#define XV_I420_PLANAR_FLAG (1 << XV_I420_PLANAR)
+#define XV_UYVY_PACKED_FLAG (1 << XV_UYVY_PACKED)
+#define XV_UYVY_PLANAR_FLAG (1 << XV_UYVY_PLANAR)
+
 typedef struct _x11_xv {
   unsigned int ver, rev, req_base, ev_base, err_base;
   int nadaptors;
@@ -39,6 +58,9 @@ typedef struct _x11_xv {
   XvEncodingInfo *encoding_infos;
   int nformats;
   XvImageFormatValues *formats;
+  int image_port;
+  unsigned int format_ids[XV_FORMAT_MAX];
+  int capable_format;
 } X11Xv;
 #endif
 

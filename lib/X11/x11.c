@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Jun 13 02:52:54 2001.
- * $Id: x11.c,v 1.8 2001/06/12 17:59:24 sian Exp $
+ * Last Modified: Thu Jun 14 03:13:29 2001.
+ * $Id: x11.c,v 1.9 2001/06/13 18:17:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -187,24 +187,64 @@ open(X11 *x11, char *dispname)
 					     &xv->nencodings,
 					     &xv->encoding_infos)) == Success) {
 		for (k = 0; k < xv->nencodings; k++) {
-		  debug_message("x11: " __FUNCTION__ ": Xv:   encoding#%d[%s]\n", k, xv->encoding_infos[k].name);
+		  debug_message("x11: " __FUNCTION__ ": Xv:   encoding#%d[%s] (%ld x %ld)\n", k, xv->encoding_infos[k].name, xv->encoding_infos[k].width, xv->encoding_infos[k].height);
+
+		  /* XXX: Sorry, XvVideo, XvStill are unsupported */
+		  /* XXX: I can't test the functions which my G450 doesn't support... */
+
 		  if (!strcmp(xv->encoding_infos[k].name, "XV_IMAGE")) {
+		    xv->image_port = xv->adaptor_infos[i].base_id + j;
+		    debug_message("x11: " __FUNCTION__ ": Xv:   Image port %d detected\n", xv->image_port);
 		    xv->formats = XvListImageFormats(x11_display(x11),
 						     xv->adaptor_infos[i].base_id + j,
 						     &xv->nformats);
+		    xv->capable_format = 0;
 		    for (l = 0; l < xv->nformats; l++) {
-		      int m;
+		      int m, c;
 		      char name[5] = { 0, 0, 0, 0, 0 };
 
 		      debug_message("x11: " __FUNCTION__ ": Xv:    format#%d[", l);
 		      memcpy(name, &xv->formats[l].id, 4);
 		      for (m = 0; m < 4; m++)
 			debug_message("%c", isprint(name[m]) ? name[m] : '.');
-		      debug_message("]: %d bpp %d planes type %s (%s)\n",
+		      debug_message("]: %d bpp %d planes type %s %s %s ",
 				    xv->formats[l].bits_per_pixel,
 				    xv->formats[l].num_planes,
 				    xv->formats[l].type == XvRGB ? "RGB" : "YUV",
-				    xv->formats[l].format == XvPacked ? "packed" : "planar");
+				    xv->formats[l].format == XvPacked ? "packed" : "planar",
+				    xv->formats[l].byte_order == LSBFirst ? "LSBFirst" : "MSBFirst");
+		      c = -1;
+		      if (strcmp(name, "YUY2") == 0)
+			c = xv->formats[l].format == XvPacked ? XV_YUY2_PACKED : XV_YUY2_PLANAR;
+		      else if (strcmp(name, "YV12") == 0)
+			c = xv->formats[l].format == XvPacked ? XV_YV12_PACKED : XV_YV12_PLANAR;
+		      else if (strcmp(name, "I420") == 0)
+			c = xv->formats[l].format == XvPacked ? XV_I420_PACKED : XV_I420_PLANAR;
+		      else if (strcmp(name, "UYVY") == 0)
+			c = xv->formats[l].format == XvPacked ? XV_UYVY_PACKED : XV_UYVY_PLANAR;
+
+		      if (c != -1) {
+			xv->capable_format |= (1 << c);
+			xv->format_ids[c] = xv->formats[l].id;
+		      } else {
+			debug_message("unsupported");
+		      }
+		      debug_message("\n");
+		      if (xv->formats[l].type == XvRGB) {
+			debug_message("x11: " __FUNCTION__ ": Xv: %d RGB mask %04X,%04X,%04X\n", xv->formats[l].depth, xv->formats[l].red_mask, xv->formats[l].green_mask, xv->formats[l].blue_mask);
+		      } else {
+			debug_message("x11: " __FUNCTION__ ": Xv:     bits %d %d %d horz %d %d %d vert %d %d %d order %s\n",
+				      xv->formats[l].y_sample_bits,
+				      xv->formats[l].u_sample_bits,
+				      xv->formats[l].v_sample_bits,
+				      xv->formats[l].horz_y_period,
+				      xv->formats[l].horz_u_period,
+				      xv->formats[l].horz_v_period,
+				      xv->formats[l].vert_y_period,
+				      xv->formats[l].vert_u_period,
+				      xv->formats[l].vert_v_period,
+				      xv->formats[l].scanline_order == XvTopToBottom ? "TopToBottom" : "BottomToTop");
+		      }
 		    }
 		  }
 		}
