@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:33:24 2002.
- * $Id: libmpeg3.c,v 1.37 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Mon Mar  4 22:34:31 2002.
+ * $Id: libmpeg3.c,v 1.38 2002/03/04 20:22:42 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -419,7 +419,10 @@ play_audio(void *arg)
   }
   info->ad = ad;
 
-  if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+  m->sampleformat_actual = m->sampleformat;
+  m->channels_actual = m->channels;
+  m->samplerate_actual = m->samplerate;
+  if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
     show_message("Some params are set wrong.\n");
 
   show_message("audio device configured: %d ch %d Hz\n", m->channels, m->samplerate);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 23 15:38:12 2001.
- * $Id: movie.h,v 1.17 2001/06/24 15:42:02 sian Exp $
+ * Last Modified: Mon Mar  4 22:35:02 2002.
+ * $Id: movie.h,v 1.18 2002/03/04 20:22:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -57,8 +57,8 @@ struct _movie {
   int direct_decode;
   int has_audio;
   unsigned int current_sample, num_of_samples;
-  AudioFormat sampleformat;
-  int channels, samplerate;
+  AudioFormat sampleformat, sampleformat_actual;
+  int channels, channels_actual, samplerate, samplerate_actual;
   char *format;
 
   /* These are callback functions which may or should be provided by UI. */

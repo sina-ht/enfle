@@ -1,10 +1,10 @@
 /*
  * avifile.cpp -- avifile player plugin, which exploits avifile.
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:24:05 2002.
- * $Id: avifile.cpp,v 1.30 2002/02/17 19:32:56 sian Exp $
+ * Last Modified: Mon Mar  4 22:33:08 2002.
+ * $Id: avifile.cpp,v 1.31 2002/03/04 20:22:42 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -507,11 +507,12 @@ play_audio(void *arg)
     pthread_exit((void *)PLAY_ERROR);
   }
 
-  if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
+  m->sampleformat_actual = m->sampleformat;
+  m->channels_actual = m->channels;
+  m->samplerate_actual = m->samplerate;
+  if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
     show_message("Some params are set wrong.\n");
 
-  samples_to_read = info->audiostream->GetFrameSize();
-  unsigned char *input_buffer = new unsigned char [samples_to_read];
   while (m->status == _PLAY) {
     if (info->audiostream->Eof()) {
       if (!m->has_video)
@@ -520,11 +521,14 @@ play_audio(void *arg)
       break;
     }
     samples = ocnt = 0;
+    samples_to_read = info->audiostream->GetFrameSize();
+    unsigned char *input_buffer = new unsigned char [samples_to_read];
     info->audiostream->ReadFrames(input_buffer, samples_to_read, samples_to_read, samples, ocnt);
     //debug_message("AviFile: play_audio: read %d samples (%d bytes)\n", samples, ocnt);
     if (m->current_sample == 0 && m->has_video)
       timer_start(m->timer);
     m->ap->write_device(ad, input_buffer, ocnt);
+    delete input_buffer;
     m->current_sample += samples;
   }
   debug_message_fnc("sync_device()...");
@@ -533,7 +537,6 @@ play_audio(void *arg)
   debug_message_fnc("close_device()...");
   m->ap->close_device(ad);
   debug_message("OK\n");
-  delete input_buffer;
 
   debug_message("AviFile: play_audio() exit\n");
 
