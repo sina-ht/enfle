@@ -2250,8 +2250,8 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
     s->resync_mb_x=
     s->resync_mb_y= -1;
 
-    if (mb_y >= s->mb_height){
-        av_log(s->avctx, AV_LOG_ERROR, "slice below image (%d >= %d)\n", s->mb_y, s->mb_height);
+    if (mb_y<<field_pic >= s->mb_height){
+        av_log(s->avctx, AV_LOG_ERROR, "slice below image (%d >= %d)\n", mb_y, s->mb_height);
         return -1;
     }
     
@@ -2324,8 +2324,8 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
             return -1;
 
         if(s->current_picture.motion_val[0] && !s->encoding){ //note motion_val is normally NULL unless we want to extract the MVs
-            const int wrap = field_pic ? 2*s->block_wrap[0] : s->block_wrap[0];
-            int xy = s->mb_x*2 + 1 + (s->mb_y*2 +1)*wrap;
+            const int wrap = field_pic ? 2*s->b8_stride : s->b8_stride;
+            int xy = s->mb_x*2 + s->mb_y*2*wrap;
             int motion_x, motion_y, dir, i;
             if(field_pic && !s->first_field)
                 xy += wrap/2;
@@ -2334,18 +2334,20 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
                 for(dir=0; dir<2; dir++){
                     if (s->mb_intra || (dir==1 && s->pict_type != B_TYPE)) {
                         motion_x = motion_y = 0;
-                    }else if (s->mv_type == MV_TYPE_16X16){
+                    }else if (s->mv_type == MV_TYPE_16X16 || (s->mv_type == MV_TYPE_FIELD && field_pic)){
                         motion_x = s->mv[dir][0][0];
                         motion_y = s->mv[dir][0][1];
                     } else /*if ((s->mv_type == MV_TYPE_FIELD) || (s->mv_type == MV_TYPE_16X8))*/ {
                         motion_x = s->mv[dir][i][0];
                         motion_y = s->mv[dir][i][1];
                     }
-                    
+
                     s->current_picture.motion_val[dir][xy    ][0] = motion_x;
                     s->current_picture.motion_val[dir][xy    ][1] = motion_y;
                     s->current_picture.motion_val[dir][xy + 1][0] = motion_x;
                     s->current_picture.motion_val[dir][xy + 1][1] = motion_y;
+                    s->current_picture.ref_index [dir][xy    ]=
+                    s->current_picture.ref_index [dir][xy + 1]= s->field_select[dir][i];
                 }
                 xy += wrap;
             }
