@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 30 04:22:28 2003.
- * $Id: alsa.c,v 1.10 2003/12/29 19:26:55 sian Exp $
+ * Last Modified: Sun Jan  4 07:11:01 2004.
+ * $Id: alsa.c,v 1.11 2004/01/05 09:53:51 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -46,7 +46,7 @@ static int close_device(AudioDevice *);
 static AudioPlugin plugin = {
   type: ENFLE_PLUGIN_AUDIO,
   name: "ALSA",
-  description: "ALSA Audio plugin version 0.2",
+  description: "ALSA Audio plugin version 0.2.1",
   author: "Hiroshi Takekawa",
 
   open_device: open_device,
@@ -121,7 +121,7 @@ static int
 set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
 {
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
-  int r, err, dir;
+  int r, err;
   snd_pcm_format_t f;
   AudioFormat format = *format_p;
   snd_pcm_hw_params_t *hwparams;
@@ -184,10 +184,12 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     show_message_fnc("snd_pcm_hw_params_any() failed.\n");
     return 0;
   }
+
   if ((err = snd_pcm_hw_params_set_access(alsa->fd, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_access() failed.\n");
     return 0;
   }
+
   if ((err = snd_pcm_hw_params_set_format(alsa->fd, hwparams, f)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_format() failed.\n");
     return 0;
@@ -203,7 +205,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   *ch_p = ch;
 
   /* rate part */
-  if ((err = snd_pcm_hw_params_set_rate_near(alsa->fd, hwparams, &rate, &dir)) < 0) {
+  if ((err = snd_pcm_hw_params_set_rate_near(alsa->fd, hwparams, &rate, 0)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_rate_near() failed.\n");
     return 0;
   }
@@ -212,24 +214,26 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   /* buffer & period */
   buffer = 500000;
   period = 500000 / 4;
-  if ((err = snd_pcm_hw_params_set_buffer_time_near(alsa->fd, hwparams, &buffer, &dir)) < 0) {
+  if ((err = snd_pcm_hw_params_set_buffer_time_near(alsa->fd, hwparams, &buffer, 0)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_buffer_near() failed.\n");
     return 0;
   }
   r = snd_pcm_hw_params_get_buffer_size(hwparams, &alsa->buffer_size);
-  if ((err = snd_pcm_hw_params_set_period_time_near(alsa->fd, hwparams, &period, &dir)) < 0) {
+  if ((err = snd_pcm_hw_params_set_period_time_near(alsa->fd, hwparams, &period, 0)) < 0) {
     show_message_fnc("snd_pcm_hw_params_set_period_near() failed.\n");
     return 0;
   }
-  r = snd_pcm_hw_params_get_period_size(hwparams, &alsa->period_size, &dir);
+  r = snd_pcm_hw_params_get_period_size(hwparams, &alsa->period_size, 0);
 
   if ((err = snd_pcm_hw_params(alsa->fd, hwparams)) < 0) {
-    show_message_fnc("snd_pcm_hw_params() failed.\n");
+    perror("snd_pcm_hw_params");
+    err_message_fnc("snd_pcm_hw_params() failed.\n");
+    snd_pcm_hw_params_dump(hwparams, alsa->log);
     return 0;
   }
 
   r = snd_pcm_hw_params_get_channels(hwparams, &ad->channels);
-  r = snd_pcm_hw_params_get_rate(hwparams, &ad->speed, &dir);
+  r = snd_pcm_hw_params_get_rate(hwparams, &ad->speed, 0);
 
 #ifdef DEBUG
   {
@@ -265,7 +269,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   }
   if ((err = snd_pcm_sw_params(alsa->fd, swparams)) < 0) {
     show_message_fnc("snd_pcm_sw_params() failed.\n");
-    return err;
+    return 0;
   }
 
   debug_message_fnc("1 sample -> %d bytes\n", snd_pcm_samples_to_bytes(alsa->fd, 1));
