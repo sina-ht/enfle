@@ -226,7 +226,7 @@ load(PE_image *p, char *path)
   unsigned int pe_header_start;
   int i;
 #ifdef DEBUG
-  static char *data_directory_names[] = {
+  static const char *data_directory_names[] = {
     "Export", "Import", "Resource", "Exception", "Security", "BaseReloc",
     "Debug", "Copyright", "GlobalPtr", "TLS", "Load config", "Bound import", "IAT"
   };
