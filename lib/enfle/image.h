@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 01:35:54 2000.
- * $Id: image.h,v 1.2 2000/10/08 17:22:16 sian Exp $
+ * Last Modified: Tue Oct 10 20:47:06 2000.
+ * $Id: image.h,v 1.3 2000/10/10 11:47:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,6 +41,19 @@ typedef enum _image_type {
 } ImageType;
 
 typedef enum {
+  _DONOTHING,
+  _TRANSPARENT,
+  _SHAPE
+} Transparent;
+
+typedef enum {
+  _NOTHING_DISPOSAL,
+  _LEFTIMAGE,
+  _RESTOREBACKGROUND,
+  _RESTOREPREVIOUS
+} Disposal;
+
+typedef enum {
   _NORMAL,
   _BILINEAR
 } ImageInterpolateMethod;
@@ -66,6 +79,8 @@ struct _image {
   ImageType type;
   ImageColor background_color;
   ImageColor transparent_color;
+  Transparent transparent_disposal;
+  Disposal image_disposal;
   int alpha_enabled;
   int depth;
   int bits_per_pixel;
