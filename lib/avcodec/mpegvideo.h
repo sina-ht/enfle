@@ -369,8 +369,6 @@ typedef struct MpegEncContext {
     int last_non_b_pict_type;   ///< used for mpeg4 gmc b-frames & ratecontrol 
     int dropable;
     int frame_rate_index;
-    int frame_rate_ext_n;       ///< MPEG-2 specific framerate modificators (numerator)
-    int frame_rate_ext_d;       ///< MPEG-2 specific framerate modificators (denominator)
 
     /* motion compensation */
     int unrestricted_mv;        ///< mv can point outside of the coded picture 
@@ -806,7 +804,11 @@ void ff_fix_long_mvs(MpegEncContext * s, uint8_t *field_select_table, int field_
                      int16_t (*mv_table)[2], int f_code, int type, int truncate);
 void ff_init_me(MpegEncContext *s);
 int ff_pre_estimate_p_frame_motion(MpegEncContext * s, int mb_x, int mb_y);
-
+inline int ff_epzs_motion_search(MpegEncContext * s, int *mx_ptr, int *my_ptr,
+                             int P[10][2], int src_index, int ref_index, int16_t (*last_mv)[2], 
+                             int ref_mv_scale, int size, int h);                             
+int inline ff_get_mb_score(MpegEncContext * s, int mx, int my, int src_index,
+                               int ref_index, int size, int h, int add_rate);
 
 /* mpeg12.c */
 extern const int16_t ff_mpeg1_default_intra_matrix[64];

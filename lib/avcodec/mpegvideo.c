@@ -860,9 +860,12 @@ void MPV_common_end(MpegEncContext *s)
     s->last_picture_ptr=
     s->next_picture_ptr=
     s->current_picture_ptr= NULL;
+    s->linesize= s->uvlinesize= 0;
 
     for(i=0; i<3; i++)
         av_freep(&s->visualization_buffer[i]);
+
+    avcodec_default_free_buffers(s->avctx);
 }
 
 #ifdef CONFIG_ENCODERS
@@ -1542,6 +1545,7 @@ void MPV_frame_end(MpegEncContext *s)
     memset(&s->next_picture, 0, sizeof(Picture));
     memset(&s->current_picture, 0, sizeof(Picture));
 #endif
+    s->avctx->coded_frame= (AVFrame*)s->current_picture_ptr;
 }
 
 /**
@@ -4233,7 +4237,7 @@ static int encode_thread(AVCodecContext *c, void *arg){
             s->mb_skiped=0;
             s->dquant=0; //only for QP_RD
 
-            if(mb_type & (mb_type-1) || (s->flags & CODEC_FLAG_QP_RD)){ // more than 1 MB type possible
+            if(mb_type & (mb_type-1) || (s->flags & CODEC_FLAG_QP_RD)){ // more than 1 MB type possible or CODEC_FLAG_QP_RD
                 int next_block=0;
                 int pb_bits_count, pb2_bits_count, tex_pb_bits_count;
 
@@ -4407,7 +4411,7 @@ static int encode_thread(AVCodecContext *c, void *arg){
                             if(qp < s->avctx->qmin || qp > s->avctx->qmax)
                                 break;
                             backup_s.dquant= dquant;
-                            if(s->mb_intra){
+                            if(s->mb_intra && s->dc_val[0]){
                                 for(i=0; i<6; i++){
                                     dc[i]= s->dc_val[0][ s->block_index[i] ];
                                     memcpy(ac[i], s->ac_val[0][s->block_index[i]], sizeof(DCTELEM)*16);
@@ -4417,7 +4421,7 @@ static int encode_thread(AVCodecContext *c, void *arg){
                             encode_mb_hq(s, &backup_s, &best_s, CANDIDATE_MB_TYPE_INTER /* wrong but unused */, pb, pb2, tex_pb, 
                                          &dmin, &next_block, s->mv[mvdir][0][0], s->mv[mvdir][0][1]);
                             if(best_s.qscale != qp){
-                                if(s->mb_intra){
+                                if(s->mb_intra && s->dc_val[0]){
                                     for(i=0; i<6; i++){
                                         s->dc_val[0][ s->block_index[i] ]= dc[i];
                                         memcpy(s->ac_val[0][s->block_index[i]], ac[i], sizeof(DCTELEM)*16);
@@ -4841,7 +4845,9 @@ static void encode_picture(MpegEncContext *s, int picture_number)
     }
     
     //FIXME var duplication
+    s->current_picture_ptr->key_frame=
     s->current_picture.key_frame= s->pict_type == I_TYPE; //FIXME pic_ptr
+    s->current_picture_ptr->pict_type=
     s->current_picture.pict_type= s->pict_type;
 
     if(s->current_picture.key_frame)

@@ -324,10 +324,8 @@ static inline void put_vlc_symbol(PutBitContext *pb, VlcState * const state, int
      code= v ^ ((2*state->drift + state->count)>>31);
 #endif
     
-    code = -2*code-1;
-    code^= (code>>31);
 //printf("v:%d/%d bias:%d error:%d drift:%d count:%d k:%d\n", v, code, state->bias, state->error_sum, state->drift, state->count, k);
-    set_ur_golomb(pb, code, k, 12, bits);
+    set_sr_golomb(pb, code, k, 12, bits);
 
     update_vlc_state(state, v);
 }
@@ -344,12 +342,8 @@ static inline int get_vlc_symbol(GetBitContext *gb, VlcState * const state, int 
 
     assert(k<=8);
 
-    v= get_ur_golomb(gb, k, 12, bits);
+    v= get_sr_golomb(gb, k, 12, bits);
 //printf("v:%d bias:%d error:%d drift:%d count:%d k:%d", v, state->bias, state->error_sum, state->drift, state->count, k);
-
-    v++;
-    if(v&1) v=  (v>>1);
-    else    v= -(v>>1);
 
 #if 0 // JPEG LS
     if(k==0 && 2*state->drift <= - state->count) v ^= (-1);
@@ -543,6 +537,12 @@ static int encode_init(AVCodecContext *avctx)
     FFV1Context *s = avctx->priv_data;
     int i;
 
+    if(avctx->strict_std_compliance >= 0){
+        av_log(avctx, AV_LOG_ERROR, "this codec is under development, files encoded with it wont be decodeable with future versions!!!\n"
+               "use vstrict=-1 to use it anyway\n");
+        return -1;
+    }
+        
     common_init(avctx);
  
     s->version=0;
@@ -635,12 +635,6 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
     AVFrame * const p= &f->picture;
     int used_count= 0;
 
-    if(avctx->strict_std_compliance >= 0){
-        av_log(avctx, AV_LOG_ERROR, "this codec is under development, files encoded with it wont be decodeable with future versions!!!\n"
-               "use vstrict=-1 to use it anyway\n");
-        return -1;
-    }
-        
     ff_init_cabac_encoder(c, buf, buf_size);
     ff_init_cabac_states(c, ff_h264_lps_range, ff_h264_mps_state, ff_h264_lps_state, 64);
     c->lps_state[2] = 1;
