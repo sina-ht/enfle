@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:43:38 2000.
- * $Id: video.h,v 1.1 2000/10/20 18:09:29 sian Exp $
+ * Last Modified: Sat Nov  4 05:19:54 2000.
+ * $Id: video.h,v 1.2 2000/11/04 17:31:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,13 +22,6 @@
 
 #ifndef _VIDEO_H
 #define _VIDEO_H
-
-typedef struct _video_window {
-  void *private;
-  unsigned int x, y;
-  unsigned int width, height;
-  int depth, bits_per_pixel;
-} VideoWindow;
 
 typedef enum {
   ENFLE_KEY_Unknown,
@@ -67,6 +60,7 @@ typedef enum {
   ENFLE_Event_ButtonPressed,
   ENFLE_Event_ButtonReleased,
   ENFLE_Event_KeyPressed,
+  ENFLE_Event_KeyReleased,
   ENFLE_Event_PointerMoved,
   ENFLE_Event_WindowConfigured
 } VideoEventType;
@@ -96,5 +90,40 @@ typedef union {
     unsigned int x, y;
   } window;
 } VideoEventData;
+
+typedef enum _videowindowfullscreenmode {
+  _VIDEO_WINDOW_FULLSCREEN_ON,
+  _VIDEO_WINDOW_FULLSCREEN_OFF,
+  _VIDEO_WINDOW_FULLSCREEN_TOGGLE
+} VideoWindowFullscreenMode;
+
+typedef struct _video_window VideoWindow;
+struct _video_window {
+  void *private;
+  unsigned int x, y;
+  unsigned int width, height;
+  int depth, bits_per_pixel;
+  int if_fullscreen;
+
+  int (*set_event_mask)(VideoWindow *, int);
+  int (*dispatch_event)(VideoWindow *, VideoEventData *);
+  void (*set_caption)(VideoWindow *, unsigned char *);
+  int (*set_fullscreen_mode)(VideoWindow *, VideoWindowFullscreenMode);
+  int (*resize)(VideoWindow *, unsigned int, unsigned int);
+  int (*move)(VideoWindow *, unsigned int, unsigned int);
+  int (*render)(VideoWindow *, Image *);
+  void (*update)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
+  int (*destroy)(VideoWindow *);
+};
+
+#define video_window_set_event_mask(vw, m) (vw)->set_event_mask((vw), (m))
+#define video_window_dispatch_event(vw, ved) (vw)->dispatch_event((vw), (ved))
+#define video_window_set_caption(vw, c) (vw)->set_caption((vw), (c))
+#define video_window_set_fullscreen_mode(vw, m) (vw)->set_fullscreen_mode((vw), (m))
+#define video_window_resize(vw, w, h) (vw)->resize((vw), (w), (h))
+#define video_window_move(vw, x, y) (vw)->move((vw), (x), (y))
+#define video_window_render(vw, p) (vw)->render((vw), (p))
+#define video_window_update(vw, x, y, w, h) (vw)->update((vw), (x), (y), (w), (h))
+#define video_window_destroy(vw) (vw)->destroy((vw))
 
 #endif

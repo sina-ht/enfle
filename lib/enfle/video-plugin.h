@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:43:55 2000.
- * $Id: video-plugin.h,v 1.1 2000/10/20 18:09:29 sian Exp $
+ * Last Modified: Sat Nov  4 04:38:42 2000.
+ * $Id: video-plugin.h,v 1.2 2000/11/04 17:31:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,14 +32,6 @@ typedef struct _video_plugin {
   void *(*open_video)(void *);
   int (*close_video)(void *);
   VideoWindow *(*open_window)(void *, unsigned int, unsigned int);
-  int (*set_event_mask)(VideoWindow *, int);
-  int (*dispatch_event)(VideoWindow *, VideoEventData *);
-  void (*set_window_caption)(VideoWindow *, unsigned char *);
-  int (*destroy_window)(VideoWindow *);
-  int (*resize_window)(VideoWindow *, unsigned int, unsigned int);
-  int (*move_window)(VideoWindow *, unsigned int, unsigned int);
-  int (*render_frame)(VideoWindow *, Image *);
-  void (*update_screen)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   void (*destroy)(void *);
 } VideoPlugin;
 
