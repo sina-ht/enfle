@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Thu Apr 26 02:24:01 2001.
+     Last Modified: Thu Apr 26 19:44:47 2001.
 
  This file is part of Enfle.
 
@@ -49,6 +49,12 @@
 ***************************************************
 
 OK, legal part is over. The rest is fun.
+
+Enfle is a clipped form of Enfleurage. Enfleurage means: A process of
+extracting perfumes by exposing absorbents, as fixed oils or fats, to
+the exhalations of the flowers. It is used for plants whose volatile
+oils are too delicate to be separated by distillation. (Webster's
+Revised Unabridged Dictionary (1913)).
 
 See README.e if you don't read Japanese, but English.
 

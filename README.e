@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Thu Apr 26 02:23:57 2001.
+     Last Modified: Thu Apr 26 19:46:32 2001.
 
  This file is part of Enfle.
 
@@ -43,11 +43,19 @@
 
  This software includes mpglib by Michael Hipp.
 
+ This archive includes fnmatch.[ch] by FSF. These files can be
+ distributed under GPL2 or (at your option) any later version.
+
 ***************************************************
 
 OK, legal part is over. The rest is fun.
-
 BTW, my English is rather bad. Are there any volunteers for correction?
+
+Enfle is a clipped form of Enfleurage. Enfleurage means: A process of
+extracting perfumes by exposing absorbents, as fixed oils or fats, to
+the exhalations of the flowers. It is used for plants whose volatile
+oils are too delicate to be separated by distillation. (Webster's
+Revised Unabridged Dictionary (1913)).
 
 
 1. Blurb
