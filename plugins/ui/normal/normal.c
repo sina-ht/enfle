@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr 24 22:32:56 2001.
- * $Id: normal.c,v 1.33 2001/04/24 16:44:30 sian Exp $
+ * Last Modified: Wed Apr 25 10:00:44 2001.
+ * $Id: normal.c,v 1.34 2001/04/25 06:10:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -596,7 +596,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
     if (f != LOAD_OK) {
       if (player_identify(player, eps, m, s)) {
 
-	debug_message("Movie(Animation) identified as %s\n", m->format);
+	debug_message("Movie identified as %s\n", m->format);
 
 	if ((f = player_load_movie(player, eps, vw, m->format, m, s)) != PLAY_OK) {
 	  stream_close(s);
