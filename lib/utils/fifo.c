@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Aug  2 22:43:14 2002.
- * $Id: fifo.c,v 1.10 2002/08/02 13:58:26 sian Exp $
+ * Last Modified: Fri Nov  7 01:03:47 2003.
+ * $Id: fifo.c,v 1.11 2003/11/08 06:15:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -173,11 +173,12 @@ emptify(FIFO *f)
   void *p;
   FIFO_destructor dest;
 
+  debug_message_fnc("%d items (before emptify)\n", fifo_ndata(f));
   while (!fifo_is_empty(f)) {
-    debug_message_fnc("%d items left\n", fifo_ndata(f));
     fifo_get(f, &p, &dest);
     dest(p);
   }
+  debug_message_fnc("%d items left (after emptify)\n", fifo_ndata(f));
 }
 
 static void
@@ -190,9 +191,9 @@ destroy(FIFO *f)
   pthread_mutex_lock(&f->lock);
   pthread_cond_signal(&f->put_ok_cond);
   pthread_cond_signal(&f->get_ok_cond);
-  pthread_mutex_unlock(&f->lock);
   pthread_cond_destroy(&f->put_ok_cond);
   pthread_cond_destroy(&f->get_ok_cond);
+  pthread_mutex_unlock(&f->lock);
   pthread_mutex_destroy(&f->lock);
 #endif
 
