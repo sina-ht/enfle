@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:42:18 2001.
- * $Id: ungif.c,v 1.12 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Sun Jul 29 03:28:52 2001.
+ * $Id: ungif.c,v 1.13 2001/07/29 00:40:41 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -145,7 +145,7 @@ load_image(Image *p, Stream *st)
 	  p->comment = NULL;
 	}
 
-	/* This GIF should be treated by player plugin. */
+	/* This GIF should be treated by the UNGIF player plugin. */
 	return LOAD_NOT;
       }
       image_loaded++;
