@@ -1,3 +1,22 @@
+2004-01-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2.old/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2.c: Use invalidate().
+
+	* plugins/player/avcodec/avcodec.c: Set ctx->width and
+	ctx->height (important).  Enable msmpeg4v1.
+
+	* lib/utils/fifo.c: Updated.
+
+	* lib/demultiplexer/libriff.c: Use the data size from RIFF header.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c,
+	lib/demultiplexer/demultiplexer_avi.c: Updated.
+
+	* lib/avcodec/common.h: Use enfle-config.h.
+
+	* configure.in: More checks.
+
 2004-01-11  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Version up.
