@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 18:10:59 2002.
- * $Id: avifile.cpp,v 1.32 2002/03/07 15:17:50 sian Exp $
+ * Last Modified: Wed Mar 20 02:58:01 2002.
+ * $Id: avifile.cpp,v 1.33 2002/03/19 18:13:46 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -39,6 +39,12 @@
 #endif
 // only for GetAvifileVersion()...
 #include <avifile/aviplay.h>
+
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
 
 #define REQUIRE_STRING_H
 #include "compat.h"
@@ -415,6 +421,7 @@ play(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     return PLAY_OK;
   case _PAUSE:
     return pause_movie(m);
@@ -623,6 +630,7 @@ pause_movie(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _PAUSE;
     timer_pause(m->timer);
     return PLAY_OK;
@@ -649,6 +657,7 @@ stop_movie(Movie *m)
 
   switch (m->status) {
   case _PLAY:
+  case _RESIZING:
     m->status = _STOP;
     timer_stop(m->timer);
     break;
