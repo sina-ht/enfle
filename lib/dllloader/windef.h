@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:40:31 2001.
- * $Id: windef.h,v 1.6 2001/01/06 23:52:52 sian Exp $
+ * Last Modified: Mon Sep 10 17:18:48 2001.
+ * $Id: windef.h,v 1.7 2001/09/10 11:59:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,6 +56,8 @@ typedef const WCHAR *LPCWSTR;
 typedef BYTE *LPBYTE;
 typedef LONG LRESULT;
 typedef LONG LPARAM;
+typedef LONG *PLONG;
+typedef LONG *LPLONG;
 typedef ULONG *ULONG_PTR;
 typedef VOID *LPVOID;
 typedef const VOID *LPCVOID;
