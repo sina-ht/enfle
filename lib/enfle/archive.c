@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:08:25 2002.
- * $Id: archive.c,v 1.29 2002/08/18 04:19:26 sian Exp $
+ * Last Modified: Sun Oct  6 01:49:37 2002.
+ * $Id: archive.c,v 1.30 2002/10/05 17:17:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -201,6 +201,7 @@ set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnm)
   arc->fnmatch = fnm;
 }
 
+/* reminder should be a free-able region or NULL */
 static void
 add(Archive *arc, char *path, void *reminder)
 {
@@ -235,9 +236,10 @@ add(Archive *arc, char *path, void *reminder)
       return;
   }
 
-  arc->nfiles++;
   if (hash_define_str(arc->filehash, path, reminder) < 0) {
     warning("%s: %s: %s already in filehash.\n", __FILE__, __FUNCTION__, path);
+  } else {
+    arc->nfiles++;
   }
 }
 
