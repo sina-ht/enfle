@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.9 2004/03/31 14:41:26 sian Exp $
+# $Id: Makefile.am,v 1.10 2004/04/23 16:34:23 sian Exp $
 
 AM_CFLAGS = -DENFLE_PLUGINDIR=\"$(enfle_plugindir)\" -DENFLE_DATADIR=\"$(enfle_datadir)\"
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
@@ -17,5 +17,5 @@ enfleconfdir = $(enfle_datadir)
 enfleconf_DATA = enfle.rc
 
 .PHONY: install
-install:
-	ENFLE_PLUGINDIR=$(enfle_plugindir) $(top_build)/src/enfle -N
+install: install-am
+	ENFLE_PLUGINDIR=$(enfle_plugindir) $(top_builddir)/src/enfle -N
