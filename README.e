@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Thu Apr 26 19:46:32 2001.
+     Last Modified: Mon Jun 18 03:48:15 2001.
 
  This file is part of Enfle.
 
@@ -164,6 +164,9 @@ directory will be added recursively. Supported archives(such as
 -i specifies the pattern to include.
 -x specifies the pattern to exclude.
 -w sets the first image as wallpaper.
+-m specifies the method to magnify.
+   0: normal 1: double 2: short 3: long
+-c specifies the string to configure, multiple allowed.
 
 
 5. Usage

@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Thu Apr 26 19:44:47 2001.
+     Last Modified: Mon Jun 18 03:47:15 2001.
 
  This file is part of Enfle.
 
@@ -173,6 +173,9 @@ Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
 -iは指定したパターンのファイル名のみ対象とします。
 -xは指定したパターンのファイル名を対象から外します。
 -wは最初に読みこんだ画像を壁紙にして終了します。
+-mは拡大表示方法を指定します。
+  0: normal 1: double 2: short 3: long
+-cはconfigの上書きをします。複数指定可。
 
 
 5.使い方
