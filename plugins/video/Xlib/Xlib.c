@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 23:16:07 2001.
- * $Id: Xlib.c,v 1.35 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Tue Jun 19 05:13:29 2001.
+ * $Id: Xlib.c,v 1.36 2001/06/19 08:20:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -338,7 +338,7 @@ recreate_pixmap_if_resized(VideoWindow *vw, WindowResource *wr)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
-  if (wr->pix_width  != vw->render_width || wr->pix_height != vw->render_height) {
+  if (wr->pix_width != vw->render_width || wr->pix_height != vw->render_height) {
     if (wr->pix)
       x11_free_pixmap(x11, wr->pix);
     wr->pix = x11_create_pixmap(x11, x11window_win(xw), vw->render_width, vw->render_height, x11_depth(x11));
@@ -681,6 +681,8 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 
 	XSetClipMask(x11_display(x11), gc, None);
 	XDestroyRegion(region);
+      } else {
+	x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
       }
       if (vw->if_fullscreen)
 	draw_caption(vw);
@@ -1098,6 +1100,8 @@ render(VideoWindow *vw, Image *p)
   vw->render_width  = p->rendered.width;
   vw->render_height = p->rendered.height;
   resize(vw, p->magnified.width, p->magnified.height);
+
+  //debug_message(__FUNCTION__ ": r (%d, %d) m (%d, %d)\n", vw->render_width, vw->render_height, p->magnified.width, p->magnified.height);
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
