@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf should be 2.49b or later, though older may work.
 dnl
-dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
+dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed Jan  3 00:36:57 2001.
-dnl $Id: configure.in,v 1.30 2001/01/03 06:42:18 sian Exp $
+dnl Last Modified: Sat Jan  6 01:42:56 2001.
+dnl $Id: configure.in,v 1.31 2001/01/06 23:59:16 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -33,9 +33,9 @@ dnl use config.h
 AM_CONFIG_HEADER(config.h)
 
 dnl Maintainer mode (uncomment for production release.)
-AM_MAINTAINER_MODE
+dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010103)
+AM_INIT_AUTOMAKE(enfle, 20010106)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -44,6 +44,7 @@ dnl AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
 dnl Checks for programs.
+AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_AWK
@@ -53,7 +54,7 @@ AC_PROG_LN_S
 dnl AC_PROG_RANLIB
 dnl These might be commented out if autoconf is older.
 dnl AC_PROG_CC_STDC
-AC_PROG_GCC_TRADITIONAL
+dnl AC_PROG_GCC_TRADITIONAL
 
 dnl Checks for libraries.
 if test -d /usr/local/lib; then
@@ -85,7 +86,10 @@ AC_CHECK_HEADER(pthread.h, [
   AC_CHECK_LIB(pthread, pthread_create, [ available_pthread=yes; LIBADD_PTHREAD=-lpthread; ], [
     AC_CHECK_LIB(c_r, pthread_create, [ available_pthread=yes; LIBADD_PTHREAD=-lc_r; ], [
       AC_CHECK_FUNC(pthread_create, [ available_pthread=yes; ]) ]) ]) ])
-test "$available_pthread" = "yes" && AC_DEFINE(USE_PTHREAD,,[ Define if you have libpthread ])
+if test "$available_pthread" = "yes"; then
+  AC_DEFINE(USE_PTHREAD,,[ Define if you have libpthread ])
+  CFLAGS="$CFLAGS -D_REENTRANT"
+fi
 AM_CONDITIONAL(HAVE_PTHREAD, test "$available_pthread" = "yes")
 AC_SUBST(LIBADD_PTHREAD)
 
@@ -125,6 +129,35 @@ else
 fi
 AM_CONDITIONAL(HAVE_MNG, test "$available_mng" = "yes")
 AC_SUBST(LIBADD_MNG)
+
+available_avifile=no
+AC_ARG_WITH(avifile,
+        [  --with-avifile-path      specify avifile path(or auto detect).],
+        [ with_avifile=$enableval ],
+        [ with_avifile=yes ])
+if test "$with_avifile" = "yes"; then
+  for i in /usr/local/include /usr/include; do
+    if test -d "$i/avifile"; then
+      INCLUDEADD_AVIFILE="-I$i/avifile -I$i/avifile/wine"
+    fi
+  done
+else
+  if test -d "$with_avifile"; then
+    INCLUDEADD_AVIFILE="-I$with_avifile -I$with_avifile/wine"
+  fi
+fi
+
+CPPFLAGS_SAVE=$CPPFLAGS
+CPPFLAGS="$INCLUDEADD_AVIFILE $CPPFLAGS"
+AC_LANG_CPLUSPLUS
+AC_CHECK_HEADER(aviplay.h, [ available_avifile=yes; LIBADD_AVIFILE="-laviplay" ])
+LIBADD_STDCC=-lstdc++
+AC_LANG_C
+AM_CONDITIONAL(HAVE_AVIFILE, test "$available_avifile" = "yes")
+AC_SUBST(LIBADD_AVIFILE)
+AC_SUBST(LIBADD_STDCC)
+AC_SUBST(INCLUDEADD_AVIFILE)
+CPPFLAGS=$CPPFLAGS_SAVE
 
 available_bzlib=no
 AC_CHECK_HEADER(bzlib.h, [
@@ -200,10 +233,16 @@ test "$available_shm" = "yes" && AC_DEFINE(USE_SHM,,[ Define if you have MIT Sha
 AC_SUBST(LIBADD_SHM)
 
 available_ungif=no
-AC_CHECK_HEADER(gif_lib.h,
-  AC_CHECK_LIB(ungif, DGifOpen, [ available_ungif=yes; LIBADD_UNGIF=-lungif; ]))
+AC_ARG_WITH(ungif,
+        [  --with-ungif            build ungif plugin ],
+        [ with_ungif=$withval ],
+        [ with_ungif=no ])
+if test "$with_ungif" = "yes"; then
+  AC_CHECK_HEADER(gif_lib.h,
+    AC_CHECK_LIB(ungif, DGifOpen, [ available_ungif=yes; LIBADD_UNGIF=-lungif; ]))
+  AC_SUBST(LIBADD_UNGIF)
+fi
 AM_CONDITIONAL(HAVE_UNGIF, test "$available_ungif" = "yes")
-AC_SUBST(LIBADD_UNGIF)
 
 LIBS=$LIBS_BACKUP
 
@@ -226,6 +265,14 @@ AC_ARG_ENABLE(debug,
         [ enable_debug=$enableval ],
         [ enable_debug=no ])
 test "$enable_debug" = yes && AC_DEFINE(DEBUG, 1, [Define if you want to debug.])
+
+dnl susie plugin support
+AC_ARG_ENABLE(spi,
+        [  --enable-spi            susie plugin support.],
+        [ enable_spi=$enableval ],
+        [ enable_spi=no ])
+test "$enable_spi" = yes && AC_DEFINE(USE_SPI, 1, [Define if you want to susie plugin support.])
+AM_CONDITIONAL(USE_SPI, test "$enable_spi" = "yes")
 
 dnl data directory path
 enfle_datadir=${datadir}/enfle
@@ -282,6 +329,7 @@ AC_CONFIG_FILES([
     plugins/player/mpeg_lib/Makefile
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
+    plugins/player/avifile/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
    plugins/audio/Makefile
