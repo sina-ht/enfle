@@ -1,6 +1,9 @@
-2004-08-29  Hiroshi Takekawa  <sian@fennel.org>
+2004-09-17  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in: Version up.
+	* README, lib/enfle/ui-extra.h, plugins/ui/normal/normal.c,
+	src/enfle.c: Added -n option.  Now use -q for nocache.
+
+2004-08-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/Makefile.am: Added snow.c, sonic.c, and tscc.c.
 
