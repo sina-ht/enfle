@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Feb  8 02:33:02 2001.
-dnl $Id: configure.in,v 1.48 2001/02/07 17:38:38 sian Exp $
+dnl Last Modified: Mon Feb 12 05:49:44 2001.
+dnl $Id: configure.in,v 1.49 2001/02/12 13:14:34 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010208)
+AM_INIT_AUTOMAKE(enfle, 20010212)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -161,7 +161,7 @@ AC_SUBST(LIBADD_MNG)
 available_avifile=no
 AC_ARG_WITH(avifile,
         [  --with-avifile-path     specify avifile path (or auto detect).],
-        [ with_avifile=$enableval ],
+        [ with_avifile=$withval ],
         [ with_avifile=yes ])
 if test "$with_avifile" = "yes"; then
   for i in /usr/local/include /usr/include; do
