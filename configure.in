@@ -5,7 +5,7 @@ dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
 dnl Last Modified: Sun Jan 14 10:57:31 2001.
-dnl $Id: configure.in,v 1.34 2001/01/14 15:23:37 sian Exp $
+dnl $Id: configure.in,v 1.35 2001/01/14 18:57:21 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010114)
+AM_INIT_AUTOMAKE(enfle, 20010115)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
