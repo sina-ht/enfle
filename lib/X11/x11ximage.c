@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Sep 21 19:50:22 2001.
- * $Id: x11ximage.c,v 1.39 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Sun Oct  7 15:51:44 2001.
+ * $Id: x11ximage.c,v 1.40 2001/10/07 17:35:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -258,7 +258,7 @@ convert(X11XImage *xi, Image *p)
     xi->type = p->type;
   }
 
-#ifdef DEBUG
+#if 0
   if (create_ximage)
     debug_message(__FUNCTION__ ": (%d, %d) use_xv %d ximage %p xvimage %p\n", w, h, xi->use_xv, xi->ximage, xi->xvimage);
 #endif
