@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4725
+#define LIBAVCODEC_BUILD       4727
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -128,6 +128,7 @@ enum CodecID {
     CODEC_ID_ADPCM_ADX,
     CODEC_ID_ADPCM_EA,
     CODEC_ID_ADPCM_G726,
+    CODEC_ID_ADPCM_CT,
 
 	/* AMR */
     CODEC_ID_AMR_NB,
@@ -202,6 +203,7 @@ enum PixelFormat {
     PIX_FMT_XVMC_MPEG2_MC,///< XVideo Motion Acceleration via common packet passing(xvmc_render.h)
     PIX_FMT_XVMC_MPEG2_IDCT,
     PIX_FMT_UYVY422,   ///< Packed pixel, Cb Y0 Cr Y1 
+    PIX_FMT_UYVY411,   ///< Packed pixel, Cb Y0 Y1 Cr Y2 Y3
     PIX_FMT_NB,
 };
 
@@ -295,6 +297,7 @@ extern int motion_estimation_method;
 #define CODEC_FLAG_SVCD_SCAN_OFFSET 0x40000000 ///< will reserve space for SVCD scan offset user data
 #define CODEC_FLAG_CLOSED_GOP     0x80000000
 #define CODEC_FLAG2_FAST          0x00000001 ///< allow non spec compliant speedup tricks
+#define CODEC_FLAG2_STRICT_GOP    0x00000002 ///< strictly enforce GOP size
 
 /* Unsupported options :
  * 		Syntax Arithmetic coding (SAC)
@@ -1916,6 +1919,7 @@ PCM_CODEC(CODEC_ID_ADPCM_XA, adpcm_xa);
 PCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
 PCM_CODEC(CODEC_ID_ADPCM_EA, adpcm_ea);
 PCM_CODEC(CODEC_ID_ADPCM_G726, adpcm_g726);
+PCM_CODEC(CODEC_ID_ADPCM_CT, adpcm_ct);
 
 #undef PCM_CODEC
 
@@ -1939,7 +1943,7 @@ ReSampleContext *audio_resample_init(int output_channels, int input_channels,
 int audio_resample(ReSampleContext *s, short *output, short *input, int nb_samples);
 void audio_resample_close(ReSampleContext *s);
 
-struct AVResampleContext *av_resample_init(int out_rate, int in_rate);
+struct AVResampleContext *av_resample_init(int out_rate, int in_rate, int filter_length, int log2_phase_count, int linear, double cutoff);
 int av_resample(struct AVResampleContext *c, short *dst, short *src, int *consumed, int src_size, int dst_size, int update_ctx);
 void av_resample_compensate(struct AVResampleContext *c, int sample_delta, int compensation_distance);
 void av_resample_close(struct AVResampleContext *c);
