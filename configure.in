@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Jan 28 20:21:23 2001.
-dnl $Id: configure.in,v 1.43 2001/01/28 12:46:00 sian Exp $
+dnl Last Modified: Mon Jan 29 23:20:31 2001.
+dnl $Id: configure.in,v 1.44 2001/01/29 15:11:53 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -377,6 +377,7 @@ AC_CONFIG_FILES([
     plugins/player/mng/Makefile
     plugins/player/avifile/Makefile
     plugins/player/opendivx/Makefile
+    plugins/player/mpglib/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
    plugins/audio/Makefile
