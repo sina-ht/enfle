@@ -1,3 +1,18 @@
+2002-09-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/identify.[ch], plugins/ui/normal/normal.c: Skip
+	zero-size file.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Disable audio when device
+	cannot be opened.
+
+	* plugins/loader/jpeg/jpeg.c: YUV rendering fix.
+
+	* lib/utils/dlist.c: Removed an extra space character.
+
+	* lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/demultiplexer_mpeg.c: Avoid warnings.
+
 2002-09-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/hash.c: Use unlikely().  Don't calculate skip when the
