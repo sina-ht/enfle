@@ -23,7 +23,6 @@
 
 #include "compat.h"
 #include "common.h"
-#define PIC
 #define ACCEL_DETECT
 
 #include <inttypes.h>

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Jan 17 22:49:29 2004.
-# $Id: Makefile.am,v 1.1 2004/01/18 07:10:19 sian Exp $
+# Last Modified: Tue Jan 27 23:15:07 2004.
+# $Id: Makefile.am,v 1.2 2004/01/30 12:40:02 sian Exp $
 
 AM_CFLAGS = -Dasm=__asm__
 EXTRA_DIST = mad.h.sed CHANGES COPYRIGHT CREDITS README TODO VERSION
@@ -48,8 +48,7 @@ libenflemad_la_SOURCES = \
 	imdct_s.dat \
 	qc_table.dat \
 	rq_table.dat \
-	sf_table.dat \
-	audiodecoder_mad.c
+	sf_table.dat
 
 EXTRA_libenflemad_la_SOURCES = imdct_l_arm.S
 

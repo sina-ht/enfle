@@ -1,13 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Jan  3 00:07:04 2004.
-# $Id: Makefile.am,v 1.9 2004/01/03 10:16:24 sian Exp $
+# Last Modified: Wed Jan 28 02:23:44 2004.
+# $Id: Makefile.am,v 1.10 2004/01/30 12:40:02 sian Exp $
 
-noinst_LIBRARIES = libenflempeg2.a
-INCLUDES = -I$(top_srcdir)
+noinst_LTLIBRARIES = libenflempeg2.la
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 ##CFLAGS_POST = -O3 -fomit-frame-pointer -fno-common -mcpu=pentiumpro
 
-libenflempeg2_a_SOURCES = \
+libenflempeg2_la_SOURCES = \
 	alloc.c \
 	decode.c \
 	idct_alpha.c \

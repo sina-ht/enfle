@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Jan 17 22:39:22 2004.
-# $Id: Makefile.am,v 1.3 2004/01/18 07:15:19 sian Exp $
+# Last Modified: Tue Jan 27 23:14:59 2004.
+# $Id: Makefile.am,v 1.4 2004/01/30 12:40:02 sian Exp $
 
 AM_CFLAGS = -DLAYER1 -DLAYER2 -DLAYER3
 
@@ -20,7 +20,6 @@ libenflempglib_la_SOURCES = \
 	layer3.c \
 	mpg123.h \
 	mpglib.h \
-	tabinit.c \
-	audiodecoder_mpglib.c
+	tabinit.c
 
 libenflempglib_la_LIBADD = -lm
