@@ -1,3 +1,13 @@
+2001-07-10 Hiroshi Takekawa <sian@fennel.org>
+
+	* lib/enfle/archiver.[ch], lib/enfle/effect.[ch],
+	lib/enfle/loader.[ch], lib/enfle/player.[ch],
+	lib/enfle/saver.[ch], lib/enfle/streamer.[ch],
+	lib/enfle/ui-extra.h, lib/enfle/ui-plugin.h, lib/enfle/ui.[ch],
+	lib/enfle/video.h, plugins/ui/convert/convert.c,
+	plugins/ui/normal/normal.c, plugins/ui/wallpaper/wallpaper.c,
+	src/enfle.c: Eliminate useless OO codings.
+
 2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.c: Implemented BITMAP_* rendering.
