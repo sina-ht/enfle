@@ -1,6 +1,6 @@
 /*
- * debug.c
- * Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
+ * yuv2rgb.h
+ * Copyright (C) 1999-2001 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *
  * This file is part of mpeg2dec, a free MPEG-2 video stream decoder.
  *
@@ -19,33 +19,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdlib.h>
-#include "debug.h"
+#define MODE_RGB  0x1
+#define MODE_BGR  0x2
 
-static int debug_level = -1;
+typedef void (* yuv2rgb_fun) (uint8_t * image, uint8_t * py,
+			      uint8_t * pu, uint8_t * pv,
+			      int h_size, int v_size,
+			      int rgb_stride, int y_stride, int uv_stride);
 
-// Determine is debug output is required.
-// We could potentially have multiple levels of debug info
-int debug_is_on (void)
-{
-    char * env_var;
-	
-    if (debug_level < 0) {
-	env_var = getenv ("MPEG2_DEBUG");
+extern yuv2rgb_fun yuv2rgb;
 
-	if (env_var)
-	    debug_level = 1;
-	else
-	    debug_level = 0;
-    }
-	
-    return debug_level;
-}
-
-//If you don't have gcc, then ya don't get debug output
-#ifndef __GNUC__
-void dprintf (char fmt[],...)
-{
-    int foo = 0;
-}
-#endif
+void yuv2rgb_init (int bpp, int mode);
+yuv2rgb_fun yuv2rgb_init_mmxext (int bpp, int mode);
+yuv2rgb_fun yuv2rgb_init_mmx (int bpp, int mode);
+yuv2rgb_fun yuv2rgb_init_mlib (int bpp, int mode);

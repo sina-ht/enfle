@@ -1,6 +1,6 @@
 /*
  * mpeg2.h
- * Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
+ * Copyright (C) 1999-2001 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *
  * This file is part of mpeg2dec, a free MPEG-2 video stream decoder.
  *
@@ -19,37 +19,47 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef __OMS__
-#include <oms/plugin/output_video.h>
-#ifndef vo_functions_t
-#define vo_functions_t plugin_output_video_t
-#endif
-#else
-//FIXME normally I wouldn't nest includes, but we'll leave this here until I get
-//another chance to move things around
-#include "video_out.h"
-#endif
+/* Structure for the mpeg2dec decoder */
 
-#include <inttypes.h>
-#ifdef __OMS__
-#include <oms/accel.h>
-#else
-#include "oms_accel.h"
-#endif
+typedef struct mpeg2dec_s {
+    vo_instance_t * output;
 
-//config flags
-#define MPEG2_MLIB_ENABLE OMS_ACCEL_MLIB
-#define MPEG2_MMX_ENABLE OMS_ACCEL_X86_MMX
-#define MPEG2_3DNOW_ENABLE OMS_ACCEL_X86_3DNOW
-#define MPEG2_SSE_ENABLE OMS_ACCEL_X86_MMXEXT
+    /* this is where we keep the state of the decoder */
+    struct picture_s * picture;
+    
+    uint32_t shift;
+    int is_display_initialized;
+    int is_sequence_needed;
+    int drop_flag;
+    int drop_frame;
+    int in_slice;
 
-typedef struct mpeg2_config_s {
-    //Bit flags that enable various things
-    uint32_t flags;
-} mpeg2_config_t;
+    /* the maximum chunk size is determined by vbv_buffer_size */
+    /* which is 224K for MP@ML streams. */
+    /* (we make no pretenses of decoding anything more than that) */
+    /* allocated in init - gcc has problems allocating such big structures */
+    uint8_t * chunk_buffer;
+    /* pointer to current position in chunk_buffer */
+    uint8_t * chunk_ptr;
+    /* last start code ? */
+    uint8_t code;
 
-void mpeg2_init (void);
-int mpeg2_decode_data (vo_functions_t *, uint8_t * data_start, uint8_t * data_end);
-void mpeg2_close (vo_functions_t *);
-void mpeg2_drop (int flag);
-void mpeg2_output_init (int flag);
+    /* ONLY for 0.2.0 release - will not stay there later */
+    int frame_rate_code;
+} mpeg2dec_t ;
+
+
+
+
+
+/* initialize mpegdec with a opaque user pointer */
+void mpeg2_init (mpeg2dec_t * mpeg2dec, uint32_t mm_accel,
+		 vo_instance_t * output);
+
+/* destroy everything which was allocated, shutdown the output */
+void mpeg2_close (mpeg2dec_t * mpeg2dec);
+
+int mpeg2_decode_data (mpeg2dec_t * mpeg2dec,
+		       uint8_t * data_start, uint8_t * data_end);
+
+void mpeg2_drop (mpeg2dec_t * mpeg2dec, int flag);
