@@ -1,10 +1,10 @@
 /*
  * common.h -- common header file, which is included by almost all files.
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan  2 00:00:46 2002.
- * $Id: common.h,v 1.20 2002/01/02 11:23:01 sian Exp $
+ * Last Modified: Fri Feb  8 02:11:41 2002.
+ * $Id: common.h,v 1.21 2002/02/08 10:50:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,8 @@
 #define show_message_fn(format, args...) printf("%s", __FUNCTION__);printf(format, ## args)
 #define show_message_fnc(format, args...) printf("%s: ", __FUNCTION__);printf(format, ## args)
 #define warning(format, args...) printf("Warning: " format, ## args)
+#define warning_fn(format, args...) printf("Warning: %s", __FUNCTION__);printf(format, ## args)
+#define warning_fnc(format, args...) printf("Warning: %s: ", __FUNCTION__);printf(format, ## args)
 
 #ifdef REQUIRE_FATAL
 #include <stdarg.h>
@@ -105,7 +107,7 @@ fatal_perror(int code, const char *msg)
 /* #  define IDENTIFY_BEFORE_LOAD */
 /* #  define IDENTIFY_BEFORE_PLAY */
 #endif
-#define COPYRIGHT_MESSAGE "(C)Copyright 2000, 2001 by Hiroshi Takekawa"
+#define COPYRIGHT_MESSAGE "(C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa"
 
 #ifdef WITH_DMALLOCTH
 #  include <dmalloc.h>
