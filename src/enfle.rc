@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Wed May 23 21:11:38 2001.
-; $Id: enfle.rc,v 1.17 2001/05/23 12:14:31 sian Exp $
+; Last Modified: Mon May 28 20:22:30 2001.
+; $Id: enfle.rc,v 1.18 2001/06/03 16:59:02 sian Exp $
 
 enfle {
   plugins {
@@ -41,7 +41,7 @@ enfle {
     saver {
       png {
         compression_level = 9
-	; filter = {all/default/paeth_only/none}
+	; filter = {all|default|paeth|avg|sub|up|none}
 	;                        ^^-- This is correct, should not be transposed.
 	filter = all
 	; interlace = {yes/no} Note: interlace increases a file size slightly.

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 28 02:36:07 2001.
- * $Id: png.c,v 1.4 2001/04/27 17:42:34 sian Exp $
+ * Last Modified: Mon May 28 20:22:27 2001.
+ * $Id: png.c,v 1.5 2001/06/03 16:58:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,7 @@ DECLARE_SAVER_PLUGIN_METHODS;
 static SaverPlugin plugin = {
   type: ENFLE_PLUGIN_SAVER,
   name: "PNG",
-  description: "PNG Saver plugin version 0.1.1",
+  description: "PNG Saver plugin version 0.1.2",
   author: "Hiroshi Takekawa",
 
   save: save,
@@ -128,8 +128,14 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, params)
       filter_flag = PNG_ALL_FILTERS;
     else if (strcasecmp(tmp, "default") == 0)
       filter_flag_set = 0;
-    else if (strcasecmp(tmp, "paeth_only") == 0)
-      filter_flag = PNG_FILTER_PAETH | PNG_FILTER_NONE;
+    else if (strcasecmp(tmp, "paeth") == 0)
+      filter_flag = PNG_FILTER_PAETH;
+    else if (strcasecmp(tmp, "avg") == 0)
+      filter_flag = PNG_FILTER_AVG;
+    else if (strcasecmp(tmp, "sub") == 0)
+      filter_flag = PNG_FILTER_SUB;
+    else if (strcasecmp(tmp, "up") == 0)
+      filter_flag = PNG_FILTER_UP;
     else if (strcasecmp(tmp, "none") == 0)
       filter_flag = PNG_NO_FILTERS;
     else {
