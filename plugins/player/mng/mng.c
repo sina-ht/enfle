@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 18 15:55:21 2000.
- * $Id: mng.c,v 1.1 2000/11/20 12:57:16 sian Exp $
+ * Last Modified: Tue Nov 21 05:52:18 2000.
+ * $Id: mng.c,v 1.2 2000/11/27 02:55:39 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -135,17 +135,22 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
   p = image_create();
 
   this->p = p;
+#if 0
   p->type = _RGB24;
+  p->bits_per_pixel = 24;
+  mng_set_canvasstyle (mng, MNG_CANVAS_RGB8);
+#else
+  p->type = _BGRA32;
+  p->bits_per_pixel = 32;
+  mng_set_canvasstyle (mng, MNG_CANVAS_BGRA8);
+#endif
   p->width = width;
   p->height = height;
   p->depth = 24;
-  p->bytes_per_line = width * 3;
-  p->bits_per_pixel = 24;
+  p->bytes_per_line = width * (p->bits_per_pixel >> 3);
   p->next = NULL;
   p->image_size = p->bytes_per_line * height;
   p->image = calloc(1, p->image_size);
-
-  mng_set_canvasstyle (mng, MNG_CANVAS_RGB8);
 
   return MNG_TRUE;
 }
