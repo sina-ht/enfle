@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:35:04 2001.
- * $Id: gz.c,v 1.6 2001/09/02 05:47:03 sian Exp $
+ * Last Modified: Fri Feb  8 01:24:11 2002.
+ * $Id: gz.c,v 1.7 2002/02/07 16:24:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@
 
 DECLARE_STREAMER_PLUGIN_METHODS;
 
-#define STREAMER_GZ_PLUGIN_DESCRIPTION "GZ Streamer plugin version 0.1"
+#define STREAMER_GZ_PLUGIN_DESCRIPTION "GZ Streamer plugin version 0.1.1"
 
 static StreamerPlugin plugin = {
   type: ENFLE_PLUGIN_STREAMER,
@@ -81,7 +81,7 @@ plugin_exit(void *p)
 /* implementations */
 
 static int
-read(Stream *st, unsigned char *p, int size)
+_read(Stream *st, unsigned char *p, int size)
 {
   gzFile gzfile;
   int r, err;
@@ -119,7 +119,7 @@ tell(Stream *st)
 }
 
 static int
-close(Stream *st)
+_close(Stream *st)
 {
   int f;
 
@@ -169,10 +169,10 @@ DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
   if ((gzfile = gzopen(filepath, "rb")) == NULL)
     return STREAM_NOT;
   st->data = (void *)gzfile;
-  st->read = read;
+  st->read = _read;
   st->seek = seek;
   st->tell = tell;
-  st->close = close;
+  st->close = _close;
 
   return STREAM_OK;
 }
