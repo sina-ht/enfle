@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 25 23:04:35 2002.
- * $Id: Xlib.c,v 1.47 2002/08/03 05:08:37 sian Exp $
+ * Last Modified: Sun Aug 18 22:23:44 2002.
+ * $Id: Xlib.c,v 1.48 2002/08/18 13:28:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -1396,6 +1396,8 @@ destroy_window(VideoWindow *vw)
   if (xwi->full.gc)
     x11_free_gc(x11, xwi->full.gc);
 
+  if (vw->caption)
+    free(vw->caption);
   if (vw->parent)
     x11window_unmap(xw);
   x11window_destroy(xw);
