@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 03:33:45 2001.
- * $Id: archive.c,v 1.11 2001/02/24 08:24:36 sian Exp $
+ * Last Modified: Tue Mar 13 09:55:25 2001.
+ * $Id: archive.c,v 1.12 2001/03/13 06:47:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -191,7 +191,7 @@ delete_path(Archive *arc, char *path)
   arc->current = (arc->direction == 1) ? dlist_prev(arc->current) : dlist_next(arc->current);
   if (!hash_delete_str(arc->filehash, path, 1)) {
     /* This is not always, but probably bug. */
-    bug("archive.c: " __FUNCTION__ ": delete %s failed.\n", path);
+    bug("archive.c: " __FUNCTION__ ": failed to delete %s.\n", path);
   }
 }
 
