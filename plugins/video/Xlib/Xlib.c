@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Aug 10 02:25:27 2001.
- * $Id: Xlib.c,v 1.38 2001/08/09 17:33:20 sian Exp $
+ * Last Modified: Wed Aug 15 15:29:41 2001.
+ * $Id: Xlib.c,v 1.39 2001/08/15 06:30:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,11 +55,7 @@
 
 static Cursor normal_cursor, wait_cursor;
 
-typedef struct {
-  X11 *x11;
-  VideoWindow *root;
-  Config *c;
-} Xlib_info;
+#include "Xlib.h"
 
 typedef struct {
   X11Window *xw;
@@ -207,6 +203,7 @@ close_video(void *data)
   Xlib_info *p = (Xlib_info *)data;
   int f;
 
+  destroy_window(p->root);
   f = x11_close(p->x11);
   free(p);
 
@@ -216,11 +213,7 @@ close_video(void *data)
 static void
 destroy(void *data)
 {
-  Xlib_info *p = (Xlib_info *)data;
-
-  destroy_window(p->root);
-  close_video(data);
-  free(data);
+  (void)close_video(data);
 }
 
 static void
@@ -955,7 +948,7 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
     if (y + h > vw->full_height)
       y = vw->full_height - h;
 
-    debug_message("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
+    //debug_message("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
 
     if (x != vw->x || y != vw->y)
       x11window_moveresize(xw, x, y, w, h);
@@ -1208,10 +1201,9 @@ destroy_window(VideoWindow *vw)
   if (xwi->full.gc)
     x11_free_gc(x11, xwi->full.gc);
 
-  if (vw->parent) {
+  if (vw->parent)
     x11window_unmap(xw);
-    x11window_destroy(xw);
-  }
+  x11window_destroy(xw);
 
   free(xwi);
   free(vw);
