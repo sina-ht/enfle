@@ -1,3 +1,21 @@
+2002-08-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/dlist.[ch]: Removed the second arg. from
+	dlist_destroy().  Data of dlist's now have their own destructor.
+
+	* lib/enfle/archive.c, lib/utils/hash.c: Adapted for
+	dlist_destroy() change.
+
+	* src/enfle.c: Use pluginlist_iter macro.  Adapted for
+	dlist_destroy() change.
+
+	* lib/utils/pluginlist.h: Deleted unused pluginlist_hash() macro.
+
+	* lib/utils/plugin.c: Do dlclose() when not debugging.
+
+	* lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.c: Added
+	enfle_plugin_* macros, then use them.
+
 2002-08-08  Hiroshi Takekawa <sian@fennel.org>
 
 	* lib/utils/dlist.[ch], lib/utils/hash.[ch]: Discarded OO-style
