@@ -1,10 +1,10 @@
 /*
  * oss.c -- OSS Audio plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 03:45:43 2002.
- * $Id: oss.c,v 1.10 2002/03/06 19:31:17 sian Exp $
+ * Last Modified: Sun Jun 23 15:46:10 2002.
+ * $Id: oss.c,v 1.11 2002/08/02 14:03:55 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -70,8 +70,7 @@ static AudioPlugin plugin = {
   close_device: close_device
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(audio_oss)
 {
   AudioPlugin *ap;
 
@@ -82,8 +81,7 @@ plugin_entry(void)
   return (void *)ap;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(audio_oss, p)
 {
   free(p);
 }

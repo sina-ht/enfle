@@ -1,10 +1,10 @@
 /*
  * esd.c -- EsounD Audio plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 04:05:26 2002.
- * $Id: esd.c,v 1.5 2002/03/06 19:30:55 sian Exp $
+ * Last Modified: Sun Jun 23 15:45:13 2002.
+ * $Id: esd.c,v 1.6 2002/08/02 14:03:55 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -62,8 +62,7 @@ typedef struct _esd_data {
   char *server_host;
 } ESD_data;
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(audio_esd)
 {
   AudioPlugin *ap;
 
@@ -74,8 +73,7 @@ plugin_entry(void)
   return (void *)ap;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(audio_esd, p)
 {
   free(p);
 }

@@ -1,10 +1,10 @@
 /*
  * enfle.c -- graphic loader Enfle main program
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  4 23:47:07 2002.
- * $Id: enfle.c,v 1.47 2002/05/06 11:03:04 sian Exp $
+ * Last Modified: Mon Jul 29 21:40:26 2002.
+ * $Id: enfle.c,v 1.48 2002/08/02 14:03:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -53,6 +53,9 @@
 #endif
 
 #include "getopt-support.h"
+
+/* Static plugin prototypes */
+STATIC_PLUGIN_PROTO
 
 static Option enfle_options[] = {
   { "ui",        'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
@@ -186,6 +189,7 @@ static int
 scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 {
   Archive *a;
+  PluginType type;
   char *fullpath, *path, *ext, *base_name, *name;
   int nplugins = 0;
 #ifdef USE_SPI
@@ -196,8 +200,11 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   if (result > 0 && tmp)
     spi_enabled = 0;
   else if (result < 0)
-    warning("Invaid string in spi/disable.\n");
+    warning("Invalid string in spi/disable.\n");
 #endif
+
+  /* Add static linked plugins */
+  STATIC_PLUGIN_ADD
 
   a = archive_create(ARCHIVE_ROOT);
   archive_read_directory(a, plugin_path, 0);
@@ -216,7 +223,6 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 	    strncasecmp(base_name, "streamer_", 9) &&
 	    strncasecmp(base_name, "archiver_", 9) &&
 	    strncasecmp(base_name, "effect_", 7))) {
-	PluginType type;
 
 	if ((name = enfle_plugins_load(eps, fullpath, &type)) == NULL) {
 	  warning("enfle_plugin_load %s failed.\n", fullpath);
@@ -226,8 +232,6 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 	}
 #ifdef USE_SPI
       } else if (spi_enabled && !strcasecmp(ext, ".spi")) {
-	PluginType type;
-
 	if ((name = spi_load(eps, fullpath, &type)) == NULL) {
 	  warning("spi_load %s failed.\n", fullpath);
 	} else {
@@ -386,7 +390,8 @@ main(int argc, char **argv)
   if (format)
     config_set_str(c, (char *)"/enfle/plugins/ui/convert/format", format);
 
-  eps = uidata.eps = enfle_plugins_create();
+  eps = enfle_plugins_create();
+  set_enfle_plugins(eps);
 
   if ((plugin_path = config_get_str(c, "/enfle/plugins/dir")) == NULL) {
     plugin_path = (char *)ENFLE_PLUGINDIR;

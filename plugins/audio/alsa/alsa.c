@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 03:51:57 2002.
- * $Id: alsa.c,v 1.6 2002/03/06 19:30:32 sian Exp $
+ * Last Modified: Wed Jul 17 22:54:48 2002.
+ * $Id: alsa.c,v 1.7 2002/08/02 14:03:55 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -63,8 +63,7 @@ typedef struct _alsa_data {
   snd_output_t *log;
 } ALSA_data;
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(audio_alsa)
 {
   AudioPlugin *ap;
 
@@ -75,8 +74,7 @@ plugin_entry(void)
   return (void *)ap;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(audio_alsa, p)
 {
   free(p);
 }
@@ -273,6 +271,8 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     show_message_fnc("snd_pcm_sw_params() failed.\n");
     return err;
   }
+
+  debug_message_fnc("1 sample -> %d bytes\n", snd_pcm_samples_to_bytes(alsa->fd, 1));
 
   return 1;
 }

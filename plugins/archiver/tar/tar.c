@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb  9 12:39:20 2002.
- * $Id: tar.c,v 1.7 2002/02/09 03:45:28 sian Exp $
+ * Last Modified: Sun Jun 23 15:42:24 2002.
+ * $Id: tar.c,v 1.8 2002/08/02 14:03:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,8 +44,7 @@ static ArchiverPlugin plugin = {
   open: open
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(archiver_tar)
 {
   ArchiverPlugin *arp;
 
@@ -56,8 +55,7 @@ plugin_entry(void)
   return (void *)arp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(archiver_tar, p)
 {
   free(p);
 }
