@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 04:57:49 2000.
- * $Id: libconfig.c,v 1.2 2000/10/09 20:29:56 sian Exp $
+ * Last Modified: Sat Oct 21 01:54:33 2000.
+ * $Id: libconfig.c,v 1.3 2000/10/20 18:10:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 
