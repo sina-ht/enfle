@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct 12 17:34:14 2001.
- * $Id: kernel32.c,v 1.19 2001/10/12 09:08:05 sian Exp $
+ * Last Modified: Wed Dec 26 08:34:47 2001.
+ * $Id: kernel32.c,v 1.20 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,8 +48,10 @@
 
 #ifdef MORE_DEBUG
 #define more_debug_message(format, args...)
+#define more_debug_message_fn(format, args...)
 #else
 #define more_debug_message(format, args...) fprintf(stderr, format, ## args)
+#define more_debug_message_fn(format, args...) fprintf(stderr, "%s" format, __FUNCTION__, ## args)
 #endif
 
 /* file related */
@@ -303,7 +305,7 @@ DEFINE_W32API(HANDLE, CreateFileA,
 {
   HANDLE handle;
 
-  debug_message(__FUNCTION__ "(%s) called: ", filename);
+  debug_message_fn("(%s): ", filename);
   handle = (HANDLE)fopen(filename, "rb");
   debug_message("%p\n", handle);
 
@@ -316,7 +318,7 @@ DEFINE_W32API(HANDLE, CreateFileW,
 {
   HANDLE handle;
 
-  debug_message(__FUNCTION__ "(%s) called: ", (char *)filename);
+  debug_message_fn("(%s): ", (char *)filename);
   handle = (HANDLE)fopen((char *)filename, "rb");
   debug_message("%p\n", handle);
 
@@ -326,7 +328,7 @@ DEFINE_W32API(HANDLE, CreateFileW,
 DEFINE_W32API(HFILE, _lcreat,
 	      (LPCSTR path, INT mode))
 {
-  debug_message(__FUNCTION__ "(%s, %d) called\n", path, mode);
+  debug_message_fn("(%s, %d)\n", path, mode);
   return NULL;
 }
 
@@ -343,7 +345,7 @@ DEFINE_W32API(BOOL, ReadFile,
 	       LPDWORD bytes_read, LPOVERLAPPED overlapped))
 {
   int _bytes_read;
-  more_debug_message(__FUNCTION__ "(%p, %p, %d bytes) called\n", handle, buffer, bytes_to_read);
+  more_debug_message_fn("(%p, %p, %d bytes)\n", handle, buffer, bytes_to_read);
 
   if (bytes_read)
     *bytes_read = 0;
@@ -369,7 +371,7 @@ DEFINE_W32API(BOOL, WriteFile,
 	      (HANDLE handle, LPCVOID buffer, DWORD bytes_to_write, LPDWORD bytes_written,
 	       LPOVERLAPPED overlapped))
 {
-  debug_message(__FUNCTION__ "(handle %p, buffer %p, to_write %d) called\n", handle, buffer, bytes_to_write);
+  debug_message_fn("(handle %p, buffer %p, to_write %d)\n", handle, buffer, bytes_to_write);
 
   //return TRUE;
   return FALSE;
@@ -378,7 +380,7 @@ DEFINE_W32API(BOOL, WriteFile,
 DEFINE_W32API(UINT, _lwrite,
 	      (HFILE handle, LPCSTR buffer, UINT len))
 {
-  debug_message(__FUNCTION__ "(handle %p, buffer %p, to_write %d) called\n", handle, buffer, len);
+  debug_message_fn("(handle %p, buffer %p, to_write %d)\n", handle, buffer, len);
 
   return HFILE_ERROR;
 }
@@ -386,7 +388,7 @@ DEFINE_W32API(UINT, _lwrite,
 DEFINE_W32API(UINT, _lclose,
 	       (HFILE handle))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", handle);
+  debug_message_fn("(%p)\n", handle);
   fclose((FILE *)handle);
   return 0;
 }
@@ -394,7 +396,7 @@ DEFINE_W32API(UINT, _lclose,
 DEFINE_W32API(DWORD, SetFilePointer,
 	      (HANDLE handle, LONG offset, LONG *high, DWORD whence))
 {
-  debug_message(__FUNCTION__ "(%p, %ld, %d) called\n", handle, offset, whence);
+  debug_message_fn("(%p, %ld, %d)\n", handle, offset, whence);
 
   if (high && *high) {
     debug_message("*high != 0: Not supported...\n");
@@ -418,7 +420,7 @@ DEFINE_W32API(DWORD, GetFileSize,
 {
   DWORD size, cur;
 
-  debug_message(__FUNCTION__ "(%p) called: ", handle);
+  debug_message_fn("(%p): ", handle);
   if (filesizehigh)
     *filesizehigh = 0;
   cur = ftell((FILE *)handle);
@@ -433,7 +435,7 @@ DEFINE_W32API(DWORD, GetFileSize,
 DEFINE_W32API(DWORD, GetFileType,
 	      (HANDLE handle))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", handle);
+  debug_message_fn("(%p)\n", handle);
 
   return FILE_TYPE_DISK;
 }
@@ -441,14 +443,14 @@ DEFINE_W32API(DWORD, GetFileType,
 DEFINE_W32API(BOOL, DeleteFileA,
 	      (LPCSTR path))
 {
-  debug_message(__FUNCTION__ "(%s) called\n", path);
+  debug_message_fn("(%s)\n", path);
   return FALSE;
 }
 
 DEFINE_W32API(BOOL, FlushFileBuffers,
 	      (HANDLE h))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", h);
+  debug_message_fn("(%p)\n", h);
   return TRUE;
 }
 
@@ -467,7 +469,7 @@ DEFINE_W32API(LPVOID, MapViewOfFile,
   struct stat st;
   LPVOID p;
 
-  debug_message(__FUNCTION__ "(%p, %d, %d, %d, %d) called: ", mapping, acc, high, low, count);
+  debug_message_fn("(%p, %d, %d, %d, %d): ", mapping, acc, high, low, count);
   if (fstat(fd, &st)) {
     debug_message("fstat() failed.\n");
     return NULL;
@@ -494,7 +496,7 @@ DEFINE_W32API(LPVOID, MapViewOfFile,
 DEFINE_W32API(LPVOID, MapViewOfFileEx,
 	      (HANDLE mapping, DWORD acc, DWORD high, DWORD low, DWORD count, LPVOID addr))
 {
-  debug_message(__FUNCTION__ "(%p, %d, %d, %d, %d, %p) called\n", mapping, acc, high, low, count, addr);
+  debug_message_fn("(%p, %d, %d, %d, %d, %p)\n", mapping, acc, high, low, count, addr);
   return NULL;
 }
 
@@ -502,7 +504,7 @@ DEFINE_W32API(LPVOID, MapViewOfFileEx,
 DEFINE_W32API(BOOL, UnmapViewOfFile,
 	      (LPVOID addr))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", addr);
+  debug_message_fn("(%p)\n", addr);
   return TRUE;
 }
 
@@ -517,13 +519,13 @@ DEFINE_W32API(BOOL, UnmapViewOfFile,
 DEFINE_W32API(HANDLE, CreateFileMappingA,
 	      (HANDLE h, SECURITY_ATTRIBUTES *sa, DWORD protect, DWORD high, DWORD low, LPCSTR name))
 {
-  debug_message(__FUNCTION__ "(%p, %p, %d, %d, %d, %s) called\n", h, sa, protect, high, low, name);
+  debug_message_fn("(%p, %p, %d, %d, %d, %s)\n", h, sa, protect, high, low, name);
   return h;
 }
 
 DEFINE_W32API(BOOL, SetEndOfFile, (HANDLE h))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", h);
+  debug_message_fn("(%p)\n", h);
   return TRUE;
 }
 
@@ -532,14 +534,14 @@ DEFINE_W32API(BOOL, SetEndOfFile, (HANDLE h))
 DEFINE_W32API(BOOL, CreateDirectoryA,
 	      (LPCSTR path, LPSECURITY_ATTRIBUTES sa))
 {
-  debug_message(__FUNCTION__ "(%s) called\n", path);
+  debug_message_fn("(%s)\n", path);
   return TRUE;
 }
 
 DEFINE_W32API(BOOL, CreateDirectoryW,
 	      (LPCWSTR path, LPSECURITY_ATTRIBUTES sa))
 {
-  debug_message(__FUNCTION__ "(%s) called\n", (char *)path);
+  debug_message_fn("(%s)\n", (char *)path);
   return TRUE;
 }
 
@@ -548,7 +550,7 @@ DEFINE_W32API(BOOL, CreateDirectoryW,
 DEFINE_W32API(HANDLE, GetStdHandle,
 	      (DWORD std))
 {
-  debug_message(__FUNCTION__ "(%d) called: ", std);
+  debug_message_fn("(%d): ", std);
 
   switch (std) {
   case STD_INPUT_HANDLE:
@@ -570,7 +572,7 @@ DEFINE_W32API(HANDLE, GetStdHandle,
 DEFINE_W32API(BOOL, SetStdHandle,
 	      (DWORD std, HANDLE h))
 {
-  debug_message(__FUNCTION__ "(%d, %p) called: ", std, h);
+  debug_message_fn("(%d, %p)\n", std, h);
   return TRUE;
 }
 
@@ -586,7 +588,7 @@ DEFINE_W32API(BOOL, CloseHandle,
   /* XXX: Nasty workaround... */
   static HANDLE prev = NULL;
 
-  debug_message(__FUNCTION__ "(%p)\n", handle);
+  debug_message_fn("(%p)\n", handle);
   if (prev == handle)
     return TRUE;
   prev = handle;
@@ -599,28 +601,28 @@ DEFINE_W32API(BOOL, CloseHandle,
 DEFINE_W32API(HMODULE, LoadLibraryA,
 	      (LPCSTR name))
 {
-  debug_message(__FUNCTION__ "(%s)\n", name);
+  debug_message_fn("(%s)\n", name);
   return LoadLibraryExA(name, 0, 0);
 }
 
 DEFINE_W32API(HMODULE, LoadLibraryExA,
 	      (LPCSTR name, HANDLE handle, DWORD flags))
 {
-  debug_message(__FUNCTION__ "(%s, handle %p)\n", name, handle);
+  debug_message_fn("(%s, handle %p)\n", name, handle);
   return NULL;
 }
 
 DEFINE_W32API(HMODULE, GetModuleHandleA,
 	      (LPCSTR name))
 {
-  debug_message(__FUNCTION__ "(%s)\n", name);
+  debug_message_fn("(%s)\n", name);
   return module_lookup(name);
 }
 
 DEFINE_W32API(DWORD, GetModuleFileNameA,
 	      (HMODULE handle, LPSTR s, DWORD size))
 {
-  debug_message(__FUNCTION__ "(%p, %p[%s], %d) called\n", handle, s, s, size);
+  debug_message_fn("(%p, %p[%s], %d)\n", handle, s, s, size);
   /* XXX */
   strcpy(s, "c:\\windows\\system\\enfle.dll");
 
@@ -634,7 +636,7 @@ DEFINE_W32API(HLOCAL, LocalAlloc,
 {
   void *p;
 
-  more_debug_message(__FUNCTION__ "(0x%X, %d bytes) called: ", flags, size);
+  more_debug_message_fn("(0x%X, %d bytes): ", flags, size);
 
   p = w32api_mem_alloc(size);
   if ((flags & LMEM_ZEROINIT) && p)
@@ -648,14 +650,14 @@ DEFINE_W32API(HLOCAL, LocalAlloc,
 DEFINE_W32API(HLOCAL, LocalReAlloc,
 	      (HLOCAL handle, DWORD size, UINT flags))
 {
-  more_debug_message(__FUNCTION__ "(%p, %d, 0x%X) called\n", handle, size, flags);
+  more_debug_message_fn("(%p, %d, 0x%X)\n", handle, size, flags);
   return w32api_mem_realloc(handle, size);
 }
 
 DEFINE_W32API(HLOCAL, LocalFree,
 	      (HLOCAL handle))
 {
-  more_debug_message(__FUNCTION__ "(%p) called\n", handle);
+  more_debug_message_fn("(%p)\n", handle);
   w32api_mem_free(handle);
   return NULL;
 }
@@ -663,14 +665,14 @@ DEFINE_W32API(HLOCAL, LocalFree,
 DEFINE_W32API(LPVOID, LocalLock,
 	      (HLOCAL handle))
 {
-  more_debug_message(__FUNCTION__ "(%p) called\n", handle);
+  more_debug_message_fn("(%p)\n", handle);
   return handle;
 }
 
 DEFINE_W32API(BOOL, LocalUnlock,
 	      (HLOCAL handle))
 {
-  more_debug_message(__FUNCTION__ "(%p) called\n", handle);
+  more_debug_message_fn("(%p)\n", handle);
   return TRUE;
 }
 
@@ -679,7 +681,7 @@ DEFINE_W32API(HGLOBAL, GlobalAlloc,
 {
   void *p;
 
-  more_debug_message(__FUNCTION__ "(0x%X, %d bytes) called: ", flags, size);
+  more_debug_message_fn("(0x%X, %d bytes): ", flags, size);
 
   p = w32api_mem_alloc(size);
   if ((flags & GMEM_ZEROINIT) && p)
@@ -693,14 +695,14 @@ DEFINE_W32API(HGLOBAL, GlobalAlloc,
 DEFINE_W32API(HGLOBAL, GlobalReAlloc,
 	      (HGLOBAL handle, DWORD size, UINT flags))
 {
-  more_debug_message(__FUNCTION__ "(%d, %d, 0x%X) called\n", (int)handle, size, flags);
+  more_debug_message_fn("(%d, %d, 0x%X)\n", (int)handle, size, flags);
   return w32api_mem_realloc(handle, size);
 }
 
 DEFINE_W32API(HGLOBAL, GlobalFree,
 	      (HGLOBAL handle))
 {
-  more_debug_message(__FUNCTION__ "(%p) called\n", handle);
+  more_debug_message_fn("(%p)\n", handle);
   w32api_mem_free(handle);
   return NULL;
 }
@@ -708,21 +710,21 @@ DEFINE_W32API(HGLOBAL, GlobalFree,
 DEFINE_W32API(LPVOID, GlobalLock,
 	      (HGLOBAL handle))
 {
-  more_debug_message(__FUNCTION__ "() called\n");
+  more_debug_message_fn("()\n");
   return handle;
 }
 
 DEFINE_W32API(BOOL, GlobalUnlock,
 	      (HGLOBAL handle))
 {
-  more_debug_message(__FUNCTION__ "(%p) called\n", handle);
+  more_debug_message_fn("(%p)\n", handle);
   return TRUE;
 }
 
 DEFINE_W32API(VOID, GlobalMemoryStatus,
 	      (LPMEMORYSTATUS lpstat))
 {
-  more_debug_message(__FUNCTION__ "() called\n");
+  more_debug_message_fn("()\n");
   /* XXX */
 }
 
@@ -750,7 +752,7 @@ DEFINE_W32API(LPVOID, VirtualAlloc,
 {
   void *p;
 
-  more_debug_message(__FUNCTION__ "(%p, size %d, type 0x%X, protect %d) called\n", ptr, size, type, protect);
+  more_debug_message_fn("(%p, size %d, type 0x%X, protect %d)\n", ptr, size, type, protect);
 
   if (type & MEM_RESERVE) {
     p = w32api_mem_alloc(size);
@@ -767,7 +769,7 @@ DEFINE_W32API(LPVOID, VirtualAlloc,
     vmr->size = size;
     /* vmr->commited = NULL; vmr->next = vmr->prev = NULL; (calloc() do this) */
 
-    debug_message(__FUNCTION__ ": reserve: %p\n", p);
+    debug_message_fn(": reserve: %p\n", p);
 
     return p;
   }
@@ -797,7 +799,7 @@ DEFINE_W32API(LPVOID, VirtualAlloc,
 	v->commited->address = ptr;
 	v->commited->size = size;
 
-	debug_message(__FUNCTION__ ": commit: %p\n", ptr);
+	debug_message_fn(": commit: %p\n", ptr);
 
 	return ptr;
       }
@@ -805,14 +807,14 @@ DEFINE_W32API(LPVOID, VirtualAlloc,
     return NULL;
   }
 
-  debug_message(__FUNCTION__ ": neither MEM_RESERVE nor MEM_COMMIT\n");
+  debug_message_fn(": neither MEM_RESERVE nor MEM_COMMIT\n");
   return NULL;
 }
 
 DEFINE_W32API(BOOL, VirtualFree,
 	      (LPVOID ptr, DWORD size, DWORD type))
 {
-  more_debug_message(__FUNCTION__ "(%p, size %d, type 0x%X) called\n", ptr, size, type);
+  more_debug_message_fn("(%p, size %d, type 0x%X)\n", ptr, size, type);
 
   if (type & MEM_RELEASE) {
     VMReserved *v;
@@ -859,35 +861,35 @@ DEFINE_W32API(BOOL, VirtualFree,
     return FALSE;
   }
 
-  debug_message(__FUNCTION__ ": neither MEM_RELEASE nor MEM_DECOMMIT\n");
+  debug_message_fn(": neither MEM_RELEASE nor MEM_DECOMMIT\n");
   return FALSE;
 }
 
 DEFINE_W32API(DWORD, VirtualQuery,
 	      (LPCVOID p, LPMEMORY_BASIC_INFORMATION info, DWORD len))
 {
-  debug_message(__FUNCTION__ "(%p size %d) called\n", p, len);
+  debug_message_fn("(%p size %d)\n", p, len);
   return sizeof(*info);
 }
 
 DEFINE_W32API(BOOL, IsBadReadPtr,
 	      (LPCVOID ptr, UINT size))
 {
-  debug_message(__FUNCTION__ "(%p size %d) called\n", ptr, size);
+  debug_message_fn("(%p size %d)\n", ptr, size);
   return FALSE;
 }
 
 DEFINE_W32API(BOOL, IsBadWritePtr,
 	      (LPCVOID ptr, UINT size))
 {
-  debug_message(__FUNCTION__ "(%p size %d) called\n", ptr, size);
+  debug_message_fn("(%p size %d)\n", ptr, size);
   return FALSE;
 }
 
 DEFINE_W32API(BOOL, IsBadCodePtr,
 	      (FARPROC p))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", p);
+  debug_message_fn("(%p)\n", p);
   return FALSE;
 }
 
@@ -896,13 +898,13 @@ DEFINE_W32API(BOOL, IsBadCodePtr,
 DEFINE_W32API(HRSRC, FindResourceA,
 	      (HMODULE p, LPCSTR a, LPCSTR b))
 {
-  debug_message(__FUNCTION__ "(module %p %s %s) called\n", p, a, b);
+  debug_message_fn("(module %p %s %s)\n", p, a, b);
   return (HRSRC)0;
 }
 
 DEFINE_W32API(DWORD, SizeofResource, (HMODULE p, HRSRC r))
 {
-  debug_message(__FUNCTION__ "(module %p, HRSRC %p) called\n", p, r);
+  debug_message_fn("(module %p, HRSRC %p)\n", p, r);
   return (DWORD)0;
 }
 
@@ -911,10 +913,10 @@ DEFINE_W32API(DWORD, SizeofResource, (HMODULE p, HRSRC r))
 DEFINE_W32API(HANDLE, HeapCreate,
 	      (DWORD flags, DWORD init, DWORD max))
 {
-  more_debug_message(__FUNCTION__ "(0x%X, %d, %d) called\n", flags, init, max);
+  more_debug_message_fn("(0x%X, %d, %d)\n", flags, init, max);
   if (init)
     return (HANDLE)w32api_mem_alloc(init);
-  debug_message(__FUNCTION__ "() called with init == 0\n");
+  debug_message_fn("() called with init == 0\n");
   return (HANDLE)w32api_mem_alloc(100000);
 }
 
@@ -925,7 +927,7 @@ DEFINE_W32API(LPVOID, HeapAlloc,
 
   p = w32api_mem_alloc(size);
 
-  more_debug_message(__FUNCTION__ "(%p, 0x%X, %d) called -> %p\n", handle, flags, size, p);
+  more_debug_message_fn("(%p, 0x%X, %d) -> %p\n", handle, flags, size, p);
 
   if ((flags & HEAP_ZERO_MEMORY) && p)
     memset(p, 0, size);
@@ -936,14 +938,14 @@ DEFINE_W32API(LPVOID, HeapAlloc,
 DEFINE_W32API(LPVOID, HeapReAlloc,
 	      (HANDLE handle, DWORD flags, LPVOID ptr, DWORD size))
 {
-  more_debug_message(__FUNCTION__ "(%p, 0x%X, %p, %d) called\n", handle, flags, ptr, size);
+  more_debug_message_fn("(%p, 0x%X, %p, %d)\n", handle, flags, ptr, size);
   return w32api_mem_realloc(ptr, size);
 }
 
 DEFINE_W32API(BOOL, HeapFree,
 	      (HANDLE handle, DWORD flags, LPVOID ptr))
 {
-  more_debug_message(__FUNCTION__ "(%p, 0x%X, %p) called\n", handle, flags, ptr);
+  more_debug_message_fn("(%p, 0x%X, %p)\n", handle, flags, ptr);
   w32api_mem_free(ptr);
 
   return TRUE;
@@ -952,7 +954,7 @@ DEFINE_W32API(BOOL, HeapFree,
 DEFINE_W32API(BOOL, HeapDestroy,
 	      (HANDLE handle))
 {
-  more_debug_message(__FUNCTION__ "(%p) called\n", handle);
+  more_debug_message_fn("(%p)\n", handle);
   w32api_mem_free(handle);
   return TRUE;
 }
@@ -960,14 +962,14 @@ DEFINE_W32API(BOOL, HeapDestroy,
 DEFINE_W32API(HANDLE, GetProcessHeap,
 	      (void))
 {
-  more_debug_message(__FUNCTION__ "() called\n");
+  more_debug_message_fn("()\n");
   return (HANDLE)1;
 }
 
 DEFINE_W32API(DWORD, GetProcessHeaps,
 	      (DWORD count, HANDLE *heaps))
 {
-  debug_message(__FUNCTION__ "(count %d, handle *%p) called\n", count, heaps);
+  debug_message_fn("(count %d, handle *%p)\n", count, heaps);
   return 1;
 }
 
@@ -976,7 +978,7 @@ DEFINE_W32API(DWORD, GetProcessHeaps,
 DEFINE_W32API(INT, lstrlenA,
 	       (LPCSTR str))
 {
-  debug_message(__FUNCTION__ "(%s) called\n", str);
+  debug_message_fn("(%s)\n", str);
 
   if (str)
     return strlen(str);
@@ -986,7 +988,7 @@ DEFINE_W32API(INT, lstrlenA,
 DEFINE_W32API(LPSTR, lstrcpyA,
 	      (LPSTR dest, LPCSTR src))
 {
-  /* debug_message(__FUNCTION__ "(%p, %s) called\n", dest, src); */
+  /* debug_message_fn("(%p, %s)\n", dest, src); */
 
   memcpy(dest, src, strlen(src) + 1);
 
@@ -996,7 +998,7 @@ DEFINE_W32API(LPSTR, lstrcpyA,
 DEFINE_W32API(LPSTR, lstrcatA,
 	      (LPSTR dest, LPCSTR src))
 {
-  debug_message(__FUNCTION__ "(%p, %s) called\n", dest, src);
+  debug_message_fn("(%p, %s)\n", dest, src);
 
   memcpy(dest + strlen(dest), src, strlen(src) + 1);
 
@@ -1020,7 +1022,7 @@ DEFINE_W32API(INT, lstrcmpiA,
 DEFINE_W32API(HANDLE, GetCurrentProcess,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called.\n");
+  debug_message_fn("().\n");
   return (HANDLE)0xffffffff;
 }
 
@@ -1030,7 +1032,7 @@ DEFINE_W32API(FARPROC, GetProcAddress,
   Symbol_info *syminfo;
   int i;
 
-  debug_message(__FUNCTION__ "(%p, %s)\n", handle, funcname);
+  debug_message_fn("(%p, %s)\n", handle, funcname);
 
   if ((syminfo = (Symbol_info *)handle) == NULL)
     return NULL;
@@ -1038,7 +1040,7 @@ DEFINE_W32API(FARPROC, GetProcAddress,
   /* hashing should be used */
   for (i = 0; syminfo[i].name; i++)
     if (strcmp(syminfo[i].name, funcname) == 0) {
-      debug_message(__FUNCTION__ ": resolve: %s -> %p\n", funcname, syminfo[i].value);
+      debug_message_fn(": resolve: %s -> %p\n", funcname, syminfo[i].value);
       return syminfo[i].value;
     }
 
@@ -1047,14 +1049,14 @@ DEFINE_W32API(FARPROC, GetProcAddress,
 
 DEFINE_W32API(void, ExitProcess, (DWORD status))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   exit(status);
 }
 
 DEFINE_W32API(BOOL, TerminateProcess,
 	      (HANDLE h, DWORD d))
 {
-  debug_message(__FUNCTION__ "(%p, %d) called\n", h, d);
+  debug_message_fn("(%p, %d)\n", h, d);
   return TRUE;
 }
 
@@ -1063,33 +1065,33 @@ DEFINE_W32API(BOOL, TerminateProcess,
 DEFINE_W32API(HANDLE, GetCurrentThread,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return (HANDLE)0xfffffffe;
 }
 
 DEFINE_W32API(DWORD, GetCurrentThreadId,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return getpid();
 }
 
 DEFINE_W32API(LCID, GetThreadLocale,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return 0;
 }
 
 DEFINE_W32API(BOOL, DisableThreadLibraryCalls, (HMODULE module))
 {
-  debug_message(__FUNCTION__ "(module %p) called\n", module);
+  debug_message_fn("(module %p)\n", module);
   return TRUE;
 }
 
 DEFINE_W32API(HANDLE, CreateThread, (SECURITY_ATTRIBUTES *sa, DWORD stack, LPTHREAD_START_ROUTINE start, LPVOID param, DWORD flags, LPDWORD id))
 {
-  debug_message(__FUNCTION__ "(sa %p, stack %d, start %p, param %p, flags %d, id %p) called\n", sa, stack, start, param, flags, id);
+  debug_message_fn("(sa %p, stack %d, start %p, param %p, flags %d, id %p)\n", sa, stack, start, param, flags, id);
   return 0;
 }
 
@@ -1100,7 +1102,7 @@ DEFINE_W32API(DWORD, TlsAlloc,
 {
   void *p;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   if ((p = w32api_mem_alloc(sizeof(void *))) == NULL)
     return HFILE_ERROR;
   return (DWORD)p;
@@ -1109,7 +1111,7 @@ DEFINE_W32API(DWORD, TlsAlloc,
 DEFINE_W32API(BOOL, TlsFree,
 	      (DWORD i))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", (void *)i);
+  debug_message_fn("(%p)\n", (void *)i);
   w32api_mem_free((void *)i);
   return TRUE;
 }
@@ -1119,7 +1121,7 @@ DEFINE_W32API(LPVOID, TlsGetValue,
 {
   void **p = (void **)i;
 
-  debug_message(__FUNCTION__ "(%p) called\n", (void *)i);
+  debug_message_fn("(%p)\n", (void *)i);
 
   return *p;
 }
@@ -1129,7 +1131,7 @@ DEFINE_W32API(BOOL, TlsSetValue,
 {
   void **p = (void **)i;
 
-  debug_message(__FUNCTION__ "(%p, %p) called ", (void *)i, value);
+  debug_message_fn("(%p, %p) ", (void *)i, value);
 
   *p = value;
 
@@ -1153,7 +1155,7 @@ DEFINE_W32API(void, InitializeCriticalSection,
 {
   CSPrivate *csp;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
   if ((csp = calloc(1, sizeof(CSPrivate))) == NULL)
     return;
@@ -1170,7 +1172,7 @@ DEFINE_W32API(void, EnterCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
   if (csp->is_locked)
 #ifdef USE_PTHREAD
@@ -1193,7 +1195,7 @@ DEFINE_W32API(void, LeaveCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
   csp->is_locked = 0;
 #ifdef USE_PTHREAD
@@ -1208,7 +1210,7 @@ DEFINE_W32API(void, DeleteCriticalSection,
 {
   CSPrivate *csp = *(CSPrivate **)cs;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
 #ifdef USE_PTHREAD
   pthread_mutex_destroy(&csp->mutex);
@@ -1237,7 +1239,7 @@ DEFINE_W32API(LONG, InterlockedIncrement,
 	      (PLONG dest))
 {
     LONG result = InterlockedExchangeAdd(dest, 1) + 1;
-    debug_message(__FUNCTION__ "(0x%p => %ld) => %ld\n", dest, *dest, result);
+    debug_message_fn("(0x%p => %ld) => %ld\n", dest, *dest, result);
     return result;
 }
 
@@ -1245,7 +1247,7 @@ DEFINE_W32API(LONG, InterlockedDecrement,
 	      (PLONG dest))
 {
     LONG result = InterlockedExchangeAdd(dest, -1) - 1;
-    debug_message(__FUNCTION__ "(0x%p => %ld) => %ld\n", dest, *dest, result);
+    debug_message_fn("(0x%p => %ld) => %ld\n", dest, *dest, result);
     return result;
 }
 
@@ -1254,21 +1256,21 @@ DEFINE_W32API(LONG, InterlockedDecrement,
 DEFINE_W32API(DWORD, UnhandledExceptionFilter,
 	      (PEXCEPTION_POINTERS pp))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", pp);
+  debug_message_fn("(%p)\n", pp);
   return 0;
 }
 
 DEFINE_W32API(LPTOP_LEVEL_EXCEPTION_FILTER, SetUnhandledExceptionFilter,
 	      (LPTOP_LEVEL_EXCEPTION_FILTER filter))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", filter);
+  debug_message_fn("(%p)\n", filter);
   return filter;
 }
 
 DEFINE_W32API(void, RaiseException,
 	      (DWORD code, DWORD flags, DWORD nbargs, const LPDWORD args))
 {
-  debug_message(__FUNCTION__ "(code %d) called\n", code);
+  debug_message_fn("(code %d)\n", code);
 }
 
 /*
@@ -1289,7 +1291,7 @@ DEFINE_W32API(void, RtlUnwind, (PEXCEPTION_FRAME pestframe,
 				PEXCEPTION_RECORD pexcrec,
 				DWORD contextEAX))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 }
 
 /* environment */
@@ -1297,7 +1299,7 @@ DEFINE_W32API(void, RtlUnwind, (PEXCEPTION_FRAME pestframe,
 DEFINE_W32API(LPSTR, GetCommandLineA,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return (LPSTR)"c:\\enfle.exe";
 }
 
@@ -1308,7 +1310,7 @@ DEFINE_W32API(LPSTR, GetCommandLineA,
 DEFINE_W32API(DWORD, GetEnvironmentVariableA,
 	      (LPCSTR name, LPSTR field,DWORD size))
 {
-  debug_message(__FUNCTION__ "(%s, %p, 0x%x) called\n", name, field, size);
+  debug_message_fn("(%s, %p, 0x%x)\n", name, field, size);
   if (strcmp(name, "__MSVCRT_HEAP_SELECT") == 0) {
     strcpy(field, "__GLOBAL_HEAP_SELECTED,1");
   } else {
@@ -1323,35 +1325,35 @@ DEFINE_W32API(DWORD, GetEnvironmentVariableA,
 DEFINE_W32API(LPSTR, GetEnvironmentStringsA,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return (LPSTR)"Name=Value";
 }
 
 DEFINE_W32API(LPWSTR, GetEnvironmentStringsW,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return (LPWSTR)0;
 }
 
 DEFINE_W32API(BOOL, FreeEnvironmentStringsA,
 	      (LPSTR ptr))
 {
-  debug_message(__FUNCTION__ "(%p[%s]) called\n", ptr, ptr);
+  debug_message_fn("(%p[%s])\n", ptr, ptr);
   return TRUE;
 }
 
 DEFINE_W32API(BOOL, FreeEnvironmentStringsW,
 	      (LPWSTR ptr))
 {
-  debug_message(__FUNCTION__ "(%p[%s]) called\n", ptr, (char *)ptr);
+  debug_message_fn("(%p[%s])\n", ptr, (char *)ptr);
   return TRUE;
 }
 
 DEFINE_W32API(VOID, GetStartupInfoA,
 	      (LPSTARTUPINFOA info))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   memset(info, 0, sizeof(*info));
   info->cb = sizeof(*info);
 }
@@ -1361,7 +1363,7 @@ DEFINE_W32API(VOID, GetStartupInfoA,
 DEFINE_W32API(INT, GetLocaleInfoA,
 	      (LCID id, LCTYPE type, LPSTR buf, INT len))
 {
-  debug_message(__FUNCTION__ "(%d, %d, %p, %d)\n", id, type, buf, len);
+  debug_message_fn("(%d, %d, %p, %d)\n", id, type, buf, len);
   if (buf && len)
     buf[0] = '\0';
   return 0;
@@ -1385,34 +1387,34 @@ DEFINE_W32API(INT, GetLocaleInfoA,
 DEFINE_W32API(UINT, GetACP,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return 0;
 }
 
 DEFINE_W32API(UINT, GetOEMCP,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return 0;
 }
 
 DEFINE_W32API(BOOL, GetCPInfo,
 	      (UINT cp, LPCPINFO info))
 {
-  debug_message(__FUNCTION__ "(cp %d) called\n", cp);
+  debug_message_fn("(cp %d)\n", cp);
   return TRUE;
 }
 
 DEFINE_W32API(BOOL, GetStringTypeA,
 	      (LCID id, DWORD type, LPCSTR src, INT count, LPWORD ctype))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return TRUE;
 }
 
 DEFINE_W32API(BOOL, GetStringTypeW, (DWORD type, LPCWSTR src, INT count, LPWORD ctype))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return TRUE;
 }
 
@@ -1448,7 +1450,7 @@ DEFINE_W32API(INT, MultiByteToWideChar,
 	      (UINT page, DWORD flags, LPCSTR src, INT srclen,
 	       LPWSTR dest, INT destlen))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
   if (dest && destlen > 0)
     *dest = 0;
@@ -1490,7 +1492,7 @@ DEFINE_W32API(INT, WideCharToMultiByte,
 	      (UINT page, DWORD flags, LPCWSTR src, INT srclen,
 	       LPSTR dest, INT destlen, LPCSTR defchar, BOOL *used))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
   if (dest && destlen > 0)
     *dest = 0;
@@ -1516,7 +1518,7 @@ LCMAP_UPPERCASE, LCMAP_LOWERCASE,...
 DEFINE_W32API(INT, LCMapStringA,
 	      (LCID lcid, DWORD mapflags, LPCSTR srcstr, INT srclen, LPSTR dststr, INT dstlen))
 {
-  debug_message(__FUNCTION__ "(%d, %d, %p, %d, %p, %d) called\n", lcid, mapflags, srcstr, srclen, dststr, dstlen);
+  debug_message_fn("(%d, %d, %p, %d, %p, %d)\n", lcid, mapflags, srcstr, srclen, dststr, dstlen);
   return 0;
 }
 
@@ -1531,14 +1533,14 @@ DEFINE_W32API(BOOL, IsDBCSLeadByte,
 DEFINE_W32API(BOOL, EnumCalendarInfoA,
 	      (CALINFO_ENUMPROCA proc, LCID id, CALID calid, CALTYPE caltype))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   return FALSE;
 }
 
 DEFINE_W32API(VOID, GetLocalTime,
 	      (LPSYSTEMTIME t))
 {
-  debug_message(__FUNCTION__ "(%p) called\n", t);
+  debug_message_fn("(%p)\n", t);
 }
 
 /* miscellaneous */
@@ -1546,19 +1548,19 @@ DEFINE_W32API(VOID, GetLocalTime,
 DEFINE_W32API(DWORD, GetLastError,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called: 0\n");
+  debug_message_fn("(): 0\n");
   return 0;
 }
 
 DEFINE_W32API(void, SetLastError, (DWORD e))
 {
-  debug_message(__FUNCTION__ "(%d) called\n", e);
+  debug_message_fn("(%d)\n", e);
 }
 
 DEFINE_W32API(LONG, GetVersion,
 	      (void))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
   return 0xc0000a04; /* Windows98 */
 }
@@ -1566,7 +1568,7 @@ DEFINE_W32API(LONG, GetVersion,
 DEFINE_W32API(BOOL, GetVersionExA,
 	      (OSVERSIONINFOA *v))
 {
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
 
   v->dwMajorVersion = 4;
   v->dwMinorVersion = 10;

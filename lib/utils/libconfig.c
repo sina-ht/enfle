@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 19:31:24 2001.
- * $Id: libconfig.c,v 1.16 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Wed Dec 26 08:17:25 2001.
+ * $Id: libconfig.c,v 1.17 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -173,7 +173,7 @@ set_internal(Config *c, String *config_path, char *path, char *remain)
   int f;
 
   if ((value_path = string_dup(config_path)) == NULL)
-    fatal(1, "libconfig: " __FUNCTION__ "(): No enough memory\n");
+    fatal(1, "libconfig: %s(): No enough memory\n", __FUNCTION__);
   if (path != NULL) {
     string_cat(value_path, "/");
     string_cat(value_path, path);
@@ -183,11 +183,11 @@ set_internal(Config *c, String *config_path, char *path, char *remain)
     char *end, *quoted;
 
     if ((end = strrchr(remain, '"')) == NULL || remain == end)
-      fatal(1, "libconfig: " __FUNCTION__ "(): Non-terminated double quoted string.\n");
+      fatal(1, "libconfig: %s(): Non-terminated double quoted string.\n", __FUNCTION__);
     if ((quoted = malloc(end - remain)) == NULL)
-      fatal(1, "libconfig: " __FUNCTION__ "(): No enough memory\n");
+      fatal(1, "libconfig: %s(): No enough memory\n", __FUNCTION__);
     if (*(end + 1) != '\n' && *(end + 1) != '\0')
-      show_message("libconfig: " __FUNCTION__ "(): Ignored trailing garbage: %s\n", end + 1);
+      show_message("libconfig: %s(): Ignored trailing garbage: %s\n", __FUNCTION__, end + 1);
     memcpy(quoted, remain + 1, end - remain - 1);
     quoted[end - remain - 1] = '\0';
     f = set_str(c, string_get(value_path), quoted);

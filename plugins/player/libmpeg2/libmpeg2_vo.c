@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 24 11:09:46 2001.
- * $Id: libmpeg2_vo.c,v 1.6 2001/06/24 15:44:12 sian Exp $
+ * Last Modified: Wed Dec 26 09:32:13 2001.
+ * $Id: libmpeg2_vo.c,v 1.7 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,7 +69,7 @@ enfle_alloc_frames(vo_instance_t *_instance, int width, int height, int frame_si
   uint8_t *alloc;
   int i;
 
-  debug_message(__FUNCTION__ "(%d, %d) ", width, height);
+  debug_message_fn("(%d, %d) ", width, height);
 
   instance = (enfle_instance_t *)_instance;
   instance->prediction_index = 1;
@@ -102,7 +102,7 @@ enfle_free_frames (vo_instance_t *_instance)
 {
   enfle_instance_t *instance;
 
-  debug_message(__FUNCTION__ "() ");
+  debug_message_fn("() ");
 
   instance = (enfle_instance_t *)_instance;
   free(instance->frame_ptr[0]->base[0]);
@@ -130,7 +130,7 @@ rgb_get_frame (vo_instance_t *_instance, int flags)
   instance = (enfle_instance_t *)_instance;
   frame = (enfle_frame_t *)enfle_get_frame((vo_instance_t *)instance, flags);
 
-  //debug_message(__FUNCTION__ "(%p: rgb_stride %d yuv_stride %d)\n",
+  //debug_message_fn("(%p: rgb_stride %d yuv_stride %d)\n",
   //	frame->rgb_ptr_base, instance->rgbstride, instance->width);
 
   frame->rgb_ptr    = frame->rgb_ptr_base;
@@ -156,7 +156,7 @@ rgb_copy_slice(vo_frame_t *_frame, uint8_t **src)
   frame = (enfle_frame_t *)_frame;
   instance = (enfle_instance_t *)frame->vo.instance;
 
-  //debug_message(__FUNCTION__ "(%p: width %d, rgb_stride %d, yuv_stride %d)\n", frame->rgb_ptr, instance->width, frame->rgb_stride, frame->yuv_stride);
+  //debug_message_fn("(%p: width %d, rgb_stride %d, yuv_stride %d)\n", frame->rgb_ptr, instance->width, frame->rgb_stride, frame->yuv_stride);
 
   yuv2rgb(frame->rgb_ptr, src[0], src[1], src[2], instance->width, 16,
 	  frame->rgb_stride, frame->yuv_stride, frame->yuv_stride >> 1);
@@ -169,7 +169,7 @@ rgb_field (vo_frame_t *_frame, int flags)
   enfle_frame_t *frame;
   enfle_instance_t *instance;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   frame = (enfle_frame_t *)_frame;
   instance = (enfle_instance_t *)frame->vo.instance;
@@ -188,7 +188,7 @@ enfle_rgb_setup(vo_instance_t *_instance, int width, int height)
   Movie *m;
   Image *p;
 
-  debug_message(__FUNCTION__ ": (%d, %d)\n", width, height);
+  debug_message_fnc("(%d, %d)\n", width, height);
 
   instance = (enfle_instance_t *)_instance;
   m = instance->m;
@@ -206,7 +206,7 @@ enfle_rgb_setup(vo_instance_t *_instance, int width, int height)
   instance->rgbstride = (p->width * vw->bits_per_pixel) >> 3;
   instance->image_size = instance->rgbstride * height;
 
-  debug_message(__FUNCTION__ ": allocating %d bytes\n", p->bytes_per_line * p->height);
+  debug_message_fnc("allocating %d bytes\n", p->bytes_per_line * p->height);
   if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
     return 0;
 
@@ -274,7 +274,7 @@ enfle_yuv_alloc_frames(vo_instance_t *_instance, int width, int height, int fram
   uint8_t *alloc;
   int i;
 
-  debug_message(__FUNCTION__ "(%d, %d) ", width, height);
+  debug_message_fn("(%d, %d) ", width, height);
 
   instance = (enfle_instance_t *)_instance;
   instance->prediction_index = 1;
@@ -322,7 +322,7 @@ enfle_yuv_setup(vo_instance_t *_instance, int width, int height)
   Movie *m;
   Image *p;
 
-  debug_message(__FUNCTION__ ": (%d, %d)\n", width, height);
+  debug_message_fnc("(%d, %d)\n", width, height);
 
   instance = (enfle_instance_t *)_instance;
   m = instance->m;
@@ -341,7 +341,7 @@ enfle_yuv_setup(vo_instance_t *_instance, int width, int height)
   instance->yuvstride = p->width;
   instance->image_size = p->bytes_per_line * p->height;
 
-  debug_message(__FUNCTION__ ": allocating %d bytes\n", p->bytes_per_line * p->height);
+  debug_message_fnc("allocating %d bytes\n", p->bytes_per_line * p->height);
   if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
     return 0;
 

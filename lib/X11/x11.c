@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Sep 20 14:33:44 2001.
- * $Id: x11.c,v 1.15 2001/09/20 05:35:58 sian Exp $
+ * Last Modified: Wed Dec 26 08:56:46 2001.
+ * $Id: x11.c,v 1.16 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -89,13 +89,13 @@ get_xvinfo(X11 *x11)
 				 &xv->req_base, &xv->ev_base,
 				 &xv->err_base)) == Success) {
     x11->extensions |= X11_EXT_XV;
-    debug_message("x11: " __FUNCTION__ ": Xv Extension version %d.%d OK\n", xv->ver, xv->rev);
+    debug_message_fnc("Xv Extension version %d.%d OK\n", xv->ver, xv->rev);
   } else if (result == XvBadExtension) {
-    debug_message("x11: " __FUNCTION__ ": Xv Extension unavailable.\n");
+    debug_message_fnc("Xv Extension unavailable.\n");
   } else if (result == XvBadAlloc) {
-    debug_message("x11: " __FUNCTION__ ": XvQueryExtension() failed to allocate memory.\n");
+    debug_message_fnc("XvQueryExtension() failed to allocate memory.\n");
   } else {
-    debug_message("x11: " __FUNCTION__ ": unknown result code = %d.\n", result);
+    debug_message_fnc("unknown result code = %d.\n", result);
   }
 
   if (x11->extensions & X11_EXT_XV) {
@@ -106,8 +106,8 @@ get_xvinfo(X11 *x11)
 	unsigned int j, k;
 
 	for (i = 0; i < xv->nadaptors; i++) {
-	  debug_message("x11: " __FUNCTION__ ": Xv: adaptor#%d[%s]: %ld ports\n", i, adaptor_infos[i].name, adaptor_infos[i].num_ports);
-	  debug_message("x11: " __FUNCTION__ ": Xv:  operations: ");
+	  debug_message_fnc("Xv: adaptor#%d[%s]: %ld ports\n", i, adaptor_infos[i].name, adaptor_infos[i].num_ports);
+	  debug_message_fnc("Xv:  operations: ");
 	  switch (adaptor_infos[i].type & (XvInputMask | XvOutputMask)) {
 	  case XvInputMask:
 	    if (adaptor_infos[i].type & XvVideoMask)
@@ -130,17 +130,17 @@ get_xvinfo(X11 *x11)
 	  debug_message("\n");
 #if 0
 	  for (j = 0; j < adaptor_infos[i].num_formats; j++)
-	    debug_message("x11: " __FUNCTION__ ": Xv:  format#%02d: depth %d visual id %d\n", j, adaptor_infos[i].formats[j].depth, adaptor_infos[i].formats[j].visual_id);
+	    debug_message_fnc("Xv:  format#%02d: depth %d visual id %d\n", j, adaptor_infos[i].formats[j].depth, adaptor_infos[i].formats[j].visual_id);
 #endif
 	  /* XXX: Information of the last port is only stored. */
 	  for (j = 0; j < adaptor_infos[i].num_ports; j++) {
-	    debug_message("x11: " __FUNCTION__ ": Xv:  port#%d\n", j);
+	    debug_message_fnc("Xv:  port#%d\n", j);
 	    if ((result = XvQueryEncodings(x11_display(x11),
 					   adaptor_infos[i].base_id + j,
 					   &nencodings,
 					   &encoding_infos)) == Success) {
 	      for (k = 0; k < nencodings; k++) {
-		debug_message("x11: " __FUNCTION__ ": Xv:   encoding#%d[%s] (%ld x %ld)\n", k, encoding_infos[k].name, encoding_infos[k].width, encoding_infos[k].height);
+		debug_message_fnc("Xv:   encoding#%d[%s] (%ld x %ld)\n", k, encoding_infos[k].name, encoding_infos[k].width, encoding_infos[k].height);
 		xv->image_width  = encoding_infos[k].width;
 		xv->image_height = encoding_infos[k].height;
 
@@ -148,7 +148,7 @@ get_xvinfo(X11 *x11)
 
 		if (!strcmp(encoding_infos[k].name, "XV_IMAGE")) {
 		  xv->image_port = adaptor_infos[i].base_id + j;
-		  debug_message("x11: " __FUNCTION__ ": Xv:   Image port %d detected\n", xv->image_port);
+		  debug_message_fnc("Xv:   Image port %d detected\n", xv->image_port);
 		  formats = XvListImageFormats(x11_display(x11),
 					       adaptor_infos[i].base_id + j,
 					       &nformats);
@@ -157,7 +157,7 @@ get_xvinfo(X11 *x11)
 		    int m, c;
 		    char name[5] = { 0, 0, 0, 0, 0 };
 
-		    debug_message("x11: " __FUNCTION__ ": Xv:    format#%d[", l);
+		    debug_message_fnc("Xv:    format#%d[", l);
 		    memcpy(name, &formats[l].id, 4);
 		    for (m = 0; m < 4; m++)
 		      debug_message("%c", isprint(name[m]) ? name[m] : '.');
@@ -206,9 +206,9 @@ get_xvinfo(X11 *x11)
 		    }
 		    debug_message("\n");
 		    if (formats[l].type == XvRGB) {
-		      debug_message("x11: " __FUNCTION__ ": Xv: %d RGB mask %04X,%04X,%04X\n", formats[l].depth, formats[l].red_mask, formats[l].green_mask, formats[l].blue_mask);
+		      debug_message_fnc("Xv: %d RGB mask %04X,%04X,%04X\n", formats[l].depth, formats[l].red_mask, formats[l].green_mask, formats[l].blue_mask);
 		    } else {
-		      debug_message("x11: " __FUNCTION__ ": Xv:     bits %d %d %d horz %d %d %d vert %d %d %d order %s\n",
+		      debug_message_fnc("Xv:     bits %d %d %d horz %d %d %d vert %d %d %d order %s\n",
 				    formats[l].y_sample_bits,
 				    formats[l].u_sample_bits,
 				    formats[l].v_sample_bits,
@@ -230,10 +230,10 @@ get_xvinfo(X11 *x11)
 	}
 	XvFreeAdaptorInfo(adaptor_infos);
       } else {
-	debug_message("x11: " __FUNCTION__ ": Xv: there are no adaptors found.\n");
+	debug_message_fnc("Xv: there are no adaptors found.\n");
       }
     } else {
-      debug_message("x11: " __FUNCTION__ ": Xv: XvQueryAdaptors() failed.\n");
+      debug_message_fnc("Xv: XvQueryAdaptors() failed.\n");
       x11->extensions &= ~X11_EXT_XV;
     }
   }
@@ -267,14 +267,14 @@ open(X11 *x11, char *dispname)
     x11->visual = xvi[0].visual;
     x11->depth = 24;
 
-    debug_message("x11: " __FUNCTION__ ": Depth 24 TrueColor visual available\n");
+    debug_message_fnc("Depth 24 TrueColor visual available\n");
 
     XFree(xvi);
   } else {
     x11->visual = DefaultVisual(x11_display(x11), x11_screen(x11));
     x11->depth = DefaultDepth(x11_display(x11), x11_screen(x11));
 
-    debug_message("x11: " __FUNCTION__ ": using default visual\n");
+    debug_message_fnc("using default visual\n");
   }
 
   xpfv = XListPixmapFormats(x11_display(x11), &count);
@@ -295,15 +295,15 @@ open(X11 *x11, char *dispname)
   XFree(xpfv);
 
 #ifdef DEBUG
-  debug_message("x11: " __FUNCTION__ ": bits_per_pixel = %d\n", x11_bpp(x11));
+  debug_message_fnc("bits_per_pixel = %d\n", x11_bpp(x11));
   if (x11_bpp(x11) == 32)
-    debug_message("x11: " __FUNCTION__ ": Good, you have 32bpp ZPixmap.\n");
+    debug_message_fnc("Good, you have 32bpp ZPixmap.\n");
 #endif
 
 #ifdef USE_SHM
   if (XShmQueryExtension(x11_display(x11))) {
     x11->extensions |= X11_EXT_SHM;
-    debug_message("x11: " __FUNCTION__ ": MIT-SHM Extension OK\n");
+    debug_message_fnc("MIT-SHM Extension OK\n");
   }
 #endif
 

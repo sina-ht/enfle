@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 12:43:15 2001.
- * $Id: avifile.cpp,v 1.26 2001/10/14 12:34:05 sian Exp $
+ * Last Modified: Sun Nov 18 13:59:17 2001.
+ * $Id: avifile.cpp,v 1.27 2001/12/26 00:57:25 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -26,7 +26,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-
+#define DEBUG
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -172,14 +172,21 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   else
     rf = info->rf;
 
-  if (!rf)
+  if (!rf) {
+    debug_message("AviFile: rf is NULL!\n");
     goto error;
+  }
+
+  if (!rf->StreamCount()) {
+    debug_message("AviFile: StreamCount() is zero.\n");
+    goto error;
+  }
+
 #if (AVIFILE_MAJOR_VERSION == 0 && AVIFILE_MINOR_VERSION == 6) || (AVIFILE_MAJOR_VERSION > 0)
-  if (!rf->StreamCount() || rf->GetHeader(&info->hdr, sizeof(info->hdr)))
+  rf->GetHeader(&info->hdr, sizeof(info->hdr));
 #else
-  if (!rf->StreamCount() || rf->GetFileHeader(&info->hdr))
+  rf->GetFileHeader(&info->hdr);
 #endif
-    goto error;
 
   m->num_of_frames = info->hdr.dwTotalFrames;
 
@@ -705,6 +712,9 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 
   audiostream->StopStreaming();
   stream->StopStreaming();
+
+  delete rf;
+  info->rf = NULL;
 
   return PLAY_OK;
 

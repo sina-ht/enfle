@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 12:46:35 2001.
- * $Id: libmpeg2.c,v 1.28 2001/10/14 12:35:33 sian Exp $
+ * Last Modified: Wed Dec 26 09:31:04 2001.
+ * $Id: libmpeg2.c,v 1.29 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -92,7 +92,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   Image *p;
 
   if ((info = calloc(1, sizeof(Libmpeg2_info))) == NULL) {
-    show_message("LibMPEG2: " __FUNCTION__ ": No enough memory.\n");
+    show_message("LibMPEG2: %s: No enough memory.\n", __FUNCTION__);
     return PLAY_ERROR;
   }
 
@@ -104,7 +104,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
-    show_message(__FUNCTION__ ": Cannot do direct decoding...\n");
+    show_message_fnc("Cannot do direct decoding...\n");
     return PLAY_ERROR;
   }
   debug_message("LibMPEG2: requested type: %s direct\n", image_type_to_string(m->requested_type));
@@ -228,7 +228,7 @@ play(Movie *m)
 {
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -334,11 +334,11 @@ play_video(void *arg)
   unsigned long pts, dts, size;
 #endif
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   while (m->status == _PLAY) {
     if (!fifo_get(info->vstream, &data, &destructor)) {
-      show_message(__FUNCTION__ ": fifo_get() failed.\n");
+      show_message_fnc("fifo_get() failed.\n");
     } else {
       mp = (MpegPacket *)data;
 #ifdef USE_TS
@@ -364,7 +364,7 @@ play_video(void *arg)
 	if (pts != -1) {
 	  TS_TO_CLOCK(psec, pusec, pts);
 	  TS_TO_CLOCK(dsec, dusec, dts);
-	  debug_message(__FUNCTION__ ": pts %d.%d dts %d.%d\n", psec, pusec, dsec, dusec);
+	  debug_message_fnc("pts %d.%d dts %d.%d\n", psec, pusec, dsec, dusec);
 	}
       }
 #endif
@@ -377,15 +377,15 @@ play_video(void *arg)
     }
   }
 
-  debug_message(__FUNCTION__ ": mpeg2_close() ");
+  debug_message_fnc("mpeg2_close() ");
   mpeg2_close(&info->mpeg2dec);
   debug_message("OK\n");
 
-  debug_message(__FUNCTION__ ": vo_close() ");
+  debug_message_fnc("vo_close() ");
   vo_close(info->vo);
   debug_message("OK\n");
 
-  debug_message(__FUNCTION__ ": exiting.\n");
+  debug_message_fnc("exiting.\n");
 
   pthread_exit((void *)PLAY_OK);
 }
@@ -408,7 +408,7 @@ play_audio(void *arg)
   unsigned long pts, dts, size;
 #endif
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
@@ -419,7 +419,7 @@ play_audio(void *arg)
 
   while (m->status == _PLAY) {
     if (!fifo_get(info->astream, &data, &destructor)) {
-      show_message(__FUNCTION__ ": fifo_get() failed.\n");
+      show_message_fnc("fifo_get() failed.\n");
     } else {
       mp = (MpegPacket *)data;
 #ifdef USE_TS
@@ -459,13 +459,15 @@ play_audio(void *arg)
     }
   }
 
-  debug_message(__FUNCTION__ ": sync_device()...");
+  debug_message_fnc("sync_device()...");
   m->ap->sync_device(ad);
-  debug_message("OK\n" __FUNCTION__ ": close_device()...");
+  debug_message("OK\n");
+  debug_message_fnc("close_device()...");
   m->ap->close_device(ad);
   info->ad = NULL;
 
-  debug_message("OK\n" __FUNCTION__ ": ExitMP3()...");
+  debug_message("OK\n");
+  debug_message_fnc("ExitMP3()...");
   ExitMP3(&info->mp);
   debug_message("OK. exit.\n");
 
@@ -611,7 +613,7 @@ stop_movie(Movie *m)
 {
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -628,24 +630,24 @@ stop_movie(Movie *m)
 
   timer_stop(m->timer);
 
-  debug_message(__FUNCTION__ ": waiting for demultiplexer thread to exit... \n");
+  debug_message_fnc("waiting for demultiplexer thread to exit... \n");
 
   demultiplexer_stop(info->demux);
 
-  debug_message(__FUNCTION__ ": demultiplexer stopped\n");
+  debug_message_fnc("demultiplexer stopped\n");
 
   if (m->has_video && info->vstream) {
     fifo_destroy(info->vstream);
-    debug_message(__FUNCTION__ ": fifo for video destroyed\n");
+    debug_message_fnc("fifo for video destroyed\n");
     info->vstream = NULL;
   }
   if (m->has_audio && info->astream) {
     fifo_destroy(info->astream);
-    debug_message(__FUNCTION__ ": fifo for audio destroyed\n");
+    debug_message_fnc("fifo for audio destroyed\n");
     info->astream = NULL;
   }
 
-  debug_message(__FUNCTION__ ": waiting for video thread to exit... \n");
+  debug_message_fnc("waiting for video thread to exit... \n");
 
   if (info->video_thread) {
     info->to_render = 0;
@@ -654,14 +656,14 @@ stop_movie(Movie *m)
     info->video_thread = 0;
   }
 
-  debug_message(__FUNCTION__ ": waiting for audio thread to exit... \n");
+  debug_message_fnc("waiting for audio thread to exit... \n");
 
   if (info->audio_thread) {
     pthread_join(info->audio_thread, NULL);
     info->audio_thread = 0;
   }
 
-  debug_message(__FUNCTION__ ": OK\n");
+  debug_message_fnc("OK\n");
 
   return PLAY_OK;
 }
@@ -671,7 +673,7 @@ unload_movie(Movie *m)
 {
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   stop_movie(m);
 

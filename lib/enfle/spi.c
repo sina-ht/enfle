@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct 12 18:06:19 2001.
- * $Id: spi.c,v 1.17 2001/10/12 09:08:28 sian Exp $
+ * Last Modified: Wed Dec 26 08:47:15 2001.
+ * $Id: spi.c,v 1.18 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -105,7 +105,7 @@ loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
 
   memset(buf, 0, 2048);
   stream_read(st, buf, 2048);
-  debug_message(__FUNCTION__ ": %s: using %s\n", st->path, sl->pe->filepath);
+  debug_message_fnc("%s: using %s\n", st->path, sl->pe->filepath);
 #if 0
   if ((err = sl->is_supported(st->path, (DWORD)buf)) != SPI_SUCCESS)
     return LOAD_ERROR;
@@ -124,10 +124,10 @@ loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
       debug_message("Invalid depth %d\n", info.colorDepth);
       return LOAD_ERROR;
     }
-    debug_message(__FUNCTION__ ": (%ld, %ld) depth %d\n", info.width, info.height, info.colorDepth);
+    debug_message_fnc("(%ld, %ld) depth %d\n", info.width, info.height, info.colorDepth);
     return LOAD_OK;
   }
-  debug_message(__FUNCTION__ ": Susie plugin error: %s: %s\n", st->path, spi_errormsg[err]);
+  debug_message_fnc("Susie plugin error: %s: %s\n", st->path, spi_errormsg[err]);
 
   return LOAD_ERROR;
 #else
@@ -150,13 +150,13 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
   int i, err, bpl;
   unsigned int j;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("()\n");
   if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image,
 			 susie_loader_progress_callback, 0)) == SPI_SUCCESS) {
     p->depth = p->bits_per_pixel = bih->biBitCount;
     p->width = bih->biWidth;
     p->height = bih->biHeight;
-    debug_message(__FUNCTION__ ": (%d, %d) depth %d\n", p->width, p->height, p->depth);
+    debug_message_fnc("(%d, %d) depth %d\n", p->width, p->height, p->depth);
     switch (p->depth) {
     case 4:
       p->type = _INDEX;
@@ -225,7 +225,7 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
     return LOAD_OK;
   }
 
-  debug_message(__FUNCTION__ "(): %s\n", spi_errormsg[err]);
+  debug_message_fn("(): %s\n", spi_errormsg[err]);
 
   return LOAD_ERROR;
 }
@@ -236,7 +236,7 @@ archiver_identify(Archive *a, Stream *st, void *priv)
   SusieArchiver *sa = priv;
   unsigned char buffer[2048];
 
-  debug_message(__FUNCTION__ ": %s: using %s\n", st->path, sa->pe->filepath);
+  debug_message_fnc("%s: using %s\n", st->path, sa->pe->filepath);
 
   memset(buffer, 0, 2048);
   stream_read(st, buffer, 2048);
@@ -250,7 +250,7 @@ archiver_identify(Archive *a, Stream *st, void *priv)
 static int PASCAL
 susie_archive_progress_callback(int nNum, int nDenom, long lData)
 {
-  debug_message(__FUNCTION__ ": %d/%d\n", nNum, nDenom);
+  debug_message_fnc("%d/%d\n", nNum, nDenom);
   return 0;
 }
 
@@ -260,20 +260,20 @@ susie_archive_open(Archive *a, Stream *st, char *path)
   Susie_archiver_info *sai;
   unsigned char *dest;
 
-  debug_message(__FUNCTION__ ": %s: %s: %s\n", a->format, a->st->path, path);
+  debug_message_fnc("%s: %s: %s\n", a->format, a->st->path, path);
 
   if ((sai = (Susie_archiver_info *)archive_get(a, path)) == NULL)
     return 0;
 
-  debug_message(__FUNCTION__ ": get_file: %s(%ld)\n", path, sai->position);
+  debug_message_fnc("get_file: %s(%ld)\n", path, sai->position);
 
   if ((sai->get_file(a->st->path, sai->position, (LPSTR)&dest, 0x100 /* disk to memory */,
 		     susie_archive_progress_callback, 0)) != SPI_SUCCESS) {
-    show_message(__FUNCTION__ ": GetFile() failed.\n");
+    show_message_fnc("GetFile() failed.\n");
     return 0;
   }
 
-  debug_message(__FUNCTION__ ": GetFile() succeeded.\n");
+  debug_message_fnc("GetFile() succeeded.\n");
 
   return stream_make_memorystream(st, dest, sai->filesize);
 }
@@ -295,25 +295,25 @@ archiver_open(Archive *a, Stream *st, void *priv)
   fileInfo *info;
 
   if ((err = sa->get_archive_info(st->path, 0, 0, (HLOCAL *)&info)) != SPI_SUCCESS) {
-    show_message(__FUNCTION__ ": Susie plugin error: %s: %s\n", st->path, spi_errormsg[err]);
-    debug_message(__FUNCTION__ ": Susie plugin error: %s: %s(%d)\n", st->path, spi_errormsg[err], err);
+    show_message_fnc("Susie plugin error: %s: %s\n", st->path, spi_errormsg[err]);
+    debug_message_fnc("Susie plugin error: %s: %s(%d)\n", st->path, spi_errormsg[err], err);
     return OPEN_ERROR;
   }
 
   for (i = 0; info[i].method[0]; i++) {
     if ((sai = malloc(sizeof(Susie_archiver_info))) == NULL) {
-      show_message(__FUNCTION__ ": No enough memory.\n");
+      show_message_fnc("No enough memory.\n");
       free(info);
       return OPEN_ERROR;
     }
     sai->get_file = sa->get_file;
     sai->position = info[i].position;
     sai->filesize = info[i].filesize;
-    debug_message(__FUNCTION__ ": %ld: %s (%ld bytes)\n", sai->position, info[i].filename, sai->filesize);
+    debug_message_fnc("%ld: %s (%ld bytes)\n", sai->position, info[i].filename, sai->filesize);
     archive_add(a, info[i].filename, (void *)sai);
   }
 
-  debug_message(__FUNCTION__ ": %d files found\n", i);
+  debug_message_fnc("%d files found\n", i);
 
   free(info);
 
@@ -354,7 +354,7 @@ spi_plugin_exit(void *p)
     }
     break;
   default:
-    show_message(__FUNCTION__ ": inappropriate type %d\n", ep->type);
+    show_message_fnc("inappropriate type %d\n", ep->type);
     break;
   }
 
@@ -376,7 +376,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   char buf[256];
   int err;
 
-  debug_message(__FUNCTION__ ": %s...\n", path);
+  debug_message_fnc("%s...\n", path);
   pe = peimage_create();
   if (!peimage_load(pe, path)) {
     show_message("peimage_load() failed: %s\n", path);

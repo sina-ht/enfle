@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:56:39 2001.
- * $Id: oss.c,v 1.8 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Wed Dec 26 09:36:23 2001.
+ * $Id: oss.c,v 1.9 2001/12/26 00:57:25 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -106,7 +106,7 @@ open_device(void *data, Config *c)
     device = (char *)"/dev/dsp";
 
   if ((ad->fd = open(device, O_WRONLY, 0)) == -1) {
-    show_message(__FUNCTION__ ": in opening device %s\n", device);
+    show_message_fnc("in opening device %s\n", device);
     perror("OSS");
     free(ad);
     return NULL;
@@ -163,14 +163,14 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     break;
 #endif
   default:
-    show_message(__FUNCTION__ ": format %d is invalid.\n", format);
+    show_message_fnc("format %d is invalid.\n", format);
     ad->format = _AUDIO_FORMAT_UNSET;
     *format_p = _AUDIO_FORMAT_UNSET;
     return 0;
   }
 
   if (ioctl(ad->fd, SNDCTL_DSP_SETFMT, &f) == -1) {
-    show_message(__FUNCTION__ ": in setting format as %d(to ioctl %d).\n", format, f);
+    show_message_fnc("in setting format as %d(to ioctl %d).\n", format, f);
     perror("OSS");
     ad->format = _AUDIO_FORMAT_UNSET;
     return 0;
@@ -214,7 +214,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
 #endif
   case AFMT_MPEG:
     ad->format = _AUDIO_FORMAT_UNSET;
-    show_message(__FUNCTION__ ": unsupported AFMT_MPEG\n");
+    show_message_fnc("unsupported AFMT_MPEG\n");
     break;
   }
 
@@ -223,26 +223,26 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   /* channel part */
   c = ch;
   if (ioctl(ad->fd, SNDCTL_DSP_CHANNELS, &c) == -1) {
-    show_message(__FUNCTION__ ": in setting channels to %d.\n", ch);
+    show_message_fnc("in setting channels to %d.\n", ch);
     perror("OSS");
     *ch_p = 0;
     return 0;
   }
 
-  debug_message(__FUNCTION__ ": set to %d\n", c);
+  debug_message_fnc("set to %d\n", c);
 
   *ch_p = c;
 
   /* rate part */
   r = rate;
   if (ioctl(ad->fd, SNDCTL_DSP_SPEED, &r) == -1) {
-    show_message(__FUNCTION__ ": in setting speed to %d.\n", rate);
+    show_message_fnc("in setting speed to %d.\n", rate);
     perror("OSS");
     *rate_p = 0;
     return 0;
   }
 
-  debug_message(__FUNCTION__ ": set to %d\n", r);
+  debug_message_fnc("set to %d\n", r);
 
   *rate_p = r;
 

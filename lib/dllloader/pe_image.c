@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 19:54:38 2001.
- * $Id: pe_image.c,v 1.20 2001/10/10 14:42:31 sian Exp $
+ * Last Modified: Wed Dec 26 08:19:27 2001.
+ * $Id: pe_image.c,v 1.21 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -340,7 +340,7 @@ load(PE_image *p, char *path)
 #endif
 
   if ((fp = fopen(path, "rb")) == NULL) {
-    show_message("PE_image: " __FUNCTION__ ": Cannot open %s\n", path);
+    show_message("PE_image: %s: Cannot open %s\n", __FUNCTION__, path);
     return 0;
   }
   p->filepath = strdup(path);
@@ -352,7 +352,7 @@ load(PE_image *p, char *path)
   fseek(fp, pe_header_start, SEEK_SET);
   fread(&pe_signature, 1, 4, fp);
   if (pe_signature != PE_SIGNATURE) {
-    show_message("PE_image: " __FUNCTION__ ": Not PE file.\n");
+    show_message("PE_image: %s: Not PE file.\n", __FUNCTION__);
     return 0;
   }
 
@@ -363,19 +363,19 @@ load(PE_image *p, char *path)
   case 0x14e:
     break;
   default:
-    show_message("PE_image: " __FUNCTION__ ": unsupported architecture %03X\n", p->pe_header.Machine);
+    show_message("PE_image: %s: unsupported architecture %03X\n", __FUNCTION__, p->pe_header.Machine);
     return 0;
   }
 
   debug_message("Section: %d sections\n", p->pe_header.NumberOfSections);
   if (p->pe_header.SizeOfOptionalHeader != OPTIONAL_HEADER_SIZE) {
-    show_message("PE_image: " __FUNCTION__ ": Optional Header Size %d != %d\n", p->pe_header.SizeOfOptionalHeader, OPTIONAL_HEADER_SIZE);
+    show_message("PE_image: %s: Optional Header Size %d != %d\n", __FUNCTION__, p->pe_header.SizeOfOptionalHeader, OPTIONAL_HEADER_SIZE);
     return 0;
   }
 
   fread(&p->opt_header, 1, OPTIONAL_HEADER_SIZE, fp);
   if (p->opt_header.Magic != OPTIONAL_SIGNATURE) {
-    show_message("PE_image: " __FUNCTION__ ": PE file but corrupted optional header.\n");
+    show_message("PE_image: %s: PE file but corrupted optional header.\n", __FUNCTION__);
     return 0;
   }
 #if 0

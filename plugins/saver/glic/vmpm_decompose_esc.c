@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_esc.c -- ESC estimatation method A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep 21 20:42:08 2001.
- * $Id: vmpm_decompose_esc.c,v 1.13 2001/09/21 11:53:29 sian Exp $
+ * Last Modified: Wed Dec 26 09:48:27 2001.
+ * $Id: vmpm_decompose_esc.c,v 1.14 2001/12/26 00:57:25 sian Exp $
  */
 
 #include <stdio.h>
@@ -139,10 +139,10 @@ encode(VMPM *vmpm)
   unsigned int j, nsymbols, *symbol_to_index;
   int i, match_found;
 
-  //debug_message(__FUNCTION__ "()\n");
+  //debug_message_fn("()\n");
 
   if (!vmpm->outfile) {
-    debug_message(__FUNCTION__ ": outfile is NULL.\n");
+    debug_message_fnc("outfile is NULL.\n");
     return;
   }
 
@@ -255,7 +255,7 @@ decode(VMPM *vmpm)
   int i, n;
   unsigned int j;
 
-  //debug_message(__FUNCTION__ "()\n");
+  //debug_message_fn("()\n");
   fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
@@ -319,7 +319,7 @@ decode(VMPM *vmpm)
 static int
 reconstruct(VMPM *vmpm)
 {
-  fprintf(stderr, __FUNCTION__ "() not yet implemented.\n");
+  fprintf(stderr, "%s() not yet implemented.\n", __FUNCTION__);
   return 0;
 }
 

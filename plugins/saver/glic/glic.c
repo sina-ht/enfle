@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep 21 20:37:12 2001.
- * $Id: glic.c,v 1.23 2001/09/21 11:53:29 sian Exp $
+ * Last Modified: Wed Dec 26 09:40:45 2001.
+ * $Id: glic.c,v 1.24 2001/12/26 00:57:25 sian Exp $
  */
 
 #include <stdlib.h>
@@ -174,7 +174,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     char *statfn = misc_replace_ext(vmpm.outfilepath, (char *)"stat");
 
     if ((vmpm.statfile = fopen(statfn, "wb")) == NULL) {
-      perror(__FUNCTION__ ": Cannot open %s for writting");
+      perror(__FUNCTION__);
       return 0;
     }
     setvbuf(vmpm.statfile, (char *)NULL, _IONBF, 0);
@@ -222,7 +222,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     return 0;
   }
 
-  debug_message(__FUNCTION__ ": nlowbits = %d, bufferused = %d, bps = %d, alphasize = %d\n", vmpm.nlowbits, vmpm.bufferused, vmpm.bits_per_symbol, vmpm.alphabetsize);
+  debug_message_fnc("nlowbits = %d, bufferused = %d, bps = %d, alphasize = %d\n", vmpm.nlowbits, vmpm.bufferused, vmpm.bits_per_symbol, vmpm.alphabetsize);
 
   if (vmpm.bitwise)
     expand(&vmpm);

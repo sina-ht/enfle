@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 16 21:12:07 2001.
- * $Id: rotate.c,v 1.1 2001/04/18 05:23:57 sian Exp $
+ * Last Modified: Wed Dec 26 09:38:45 2001.
+ * $Id: rotate.c,v 1.2 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -208,7 +208,7 @@ effect(Image *p, void *params)
     result = right_rotate(p, save);
     break;
   default:
-    show_message("Rotate: " __FUNCTION__ ": Invalid function = %d\n", function);
+    show_message("Rotate: %s: Invalid function = %d\n", __FUNCTION__, function);
     result = 0;
     break;
   }

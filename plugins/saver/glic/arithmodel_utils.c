@@ -1,8 +1,8 @@
 /*
  * arithmodel_utils.c -- Utility functions
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 15:11:57 2001.
- * $Id: arithmodel_utils.c,v 1.3 2001/08/06 18:50:20 sian Exp $
+ * Last Modified: Wed Dec 26 09:47:17 2001.
+ * $Id: arithmodel_utils.c,v 1.4 2001/12/26 00:57:25 sian Exp $
  */
 
 #include <stdio.h>
@@ -144,7 +144,7 @@ arithmodel_encode_cbt(Arithmodel *am, unsigned int n, unsigned int nmax, Index b
   unsigned int kn = (1 << k) - (nmax + 1);
 
   if (n > nmax) {
-    fprintf(stderr, __FUNCTION__ ": n = %d > %d = nmax\n", n, nmax);
+    fprintf(stderr, "%s: n = %d > %d = nmax\n", __FUNCTION__, n, nmax);
     return -1;
   }
 

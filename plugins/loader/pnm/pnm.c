@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 20:31:53 2001.
- * $Id: pnm.c,v 1.4 2001/09/21 11:51:54 sian Exp $
+ * Last Modified: Wed Dec 26 09:23:49 2001.
+ * $Id: pnm.c,v 1.5 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -258,7 +258,7 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
     p->bytes_per_line = p->width * 3;
     break;
   default:
-    show_message(__FUNCTION__ ": unexpected image type %s\n", image_type_to_string(p->type));
+    show_message_fnc("unexpected image type %s\n", image_type_to_string(p->type));
     return 0;
   }
 
@@ -267,7 +267,7 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
     return 0;
   }
 
-  debug_message(__FUNCTION__ ": max %d ncolors %d (%d, %d) %s\n", data->maxval, p->ncolors, p->width, p->height, image_type_to_string(p->type));
+  debug_message_fnc("max %d ncolors %d (%d, %d) %s\n", data->maxval, p->ncolors, p->width, p->height, image_type_to_string(p->type));
 
   return 1;
 }
@@ -294,7 +294,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   unsigned char b, *d;
   char *token;
 
-  debug_message("pnm: " __FUNCTION__ "() called\n");
+  debug_message("pnm: %s() called\n", __FUNCTION__);
 
   if (!pnm_read_header(st, p, &pnmdata)) {
     debug_message("Weird. Identified but pnm_read_header() failed.\n");
@@ -302,7 +302,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   }
 
   image_size = p->bytes_per_line * p->height;
-  debug_message("pnm: " __FUNCTION__ ": allocate memory %d bytes for image\n", image_size);
+  debug_message("pnm: %s: allocate memory %d bytes for image\n", __FUNCTION__, image_size);
   if ((d = memory_alloc(p->image, image_size)) == NULL)
     goto error;
 
@@ -322,7 +322,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 	  if (j == 1)
 	    b |= 1;
 	  else if (j != 0) {
-	    show_message("pnm: " __FUNCTION__ ": Invalid PBM file.\n");
+	    show_message("pnm: %s: Invalid PBM file.\n", __FUNCTION__);
 	    goto error;
 	  }
 	  if (x % 8 == 7) {
@@ -344,7 +344,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 	j = atoi(token);
 	free(token);
 	if (j > p->ncolors) {
-	  show_message("pnm: " __FUNCTION__ ": Invalid PNM file.\n");
+	  show_message("pnm: %s: Invalid PNM file.\n", __FUNCTION__);
 	  goto error;
 	}
 	*d++ = j * 255 / pnmdata.maxval;

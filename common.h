@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 28 03:09:03 2001.
- * $Id: common.h,v 1.18 2001/10/27 18:45:09 sian Exp $
+ * Last Modified: Wed Dec 26 08:38:45 2001.
+ * $Id: common.h,v 1.19 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,9 @@
 
 #include <stdio.h>
 #define show_message(format, args...) printf(format, ## args)
-#define warning(format, args...) printf("warning: " format, ## args)
+#define show_message_fn(format, args...) printf("%s" format, __FUNCTION__, ## args)
+#define show_message_fnc(format, args...) printf("%s: " format, __FUNCTION__, ## args)
+#define warning(format, args...) printf("Warning: " format, ## args)
 
 #ifdef REQUIRE_FATAL
 #include <stdarg.h>
@@ -89,12 +91,16 @@ fatal_perror(int code, const char *msg)
 #ifdef DEBUG
 #  define PROGNAME PACKAGE "-debug"
 #  define debug_message(format, args...) fprintf(stderr, format, ## args)
+#  define debug_message_fn(format, args...) fprintf(stderr, "%s" format, __FUNCTION__, ## args)
+#  define debug_message_fnc(format, args...) fprintf(stderr, "%s: " format, __FUNCTION__, ## args)
 #  define IDENTIFY_BEFORE_OPEN
 #  define IDENTIFY_BEFORE_LOAD
 #  define IDENTIFY_BEFORE_PLAY
 #else
 #  define PROGNAME PACKAGE
 #  define debug_message(format, args...)
+#  define debug_message_fn(format, args...)
+#  define debug_message_fnc(format, args...)
 /* #  define IDENTIFY_BEFORE_OPEN */
 /* #  define IDENTIFY_BEFORE_LOAD */
 /* #  define IDENTIFY_BEFORE_PLAY */

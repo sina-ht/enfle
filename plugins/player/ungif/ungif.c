@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 17 12:28:21 2001.
- * $Id: ungif.c,v 1.25 2001/11/17 03:53:01 sian Exp $
+ * Last Modified: Mon Dec 17 19:00:02 2001.
+ * $Id: ungif.c,v 1.26 2001/12/26 00:57:25 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -354,6 +354,7 @@ play_main(Movie *m, VideoWindow *vw)
 	user_input = extension[1] & 2;
 	image_disposal = (extension[1] & 0x1c) >> 2;
 	delay = extension[2] + (extension[3] << 8);
+	//debug_message("UNGIF: Graphics Extention: trans %d user_input %d disposal %d delay %d\n", transparent_index, user_input, image_disposal, delay);
 	break;
       case APPLICATION_EXT_FUNC_CODE:
 	debug_message("UNGIF: Got application extension: %c%c%c%c%c%c%c%c: %d bytes.\n",
@@ -432,6 +433,9 @@ play_main(Movie *m, VideoWindow *vw)
   timer_start(m->timer);
 
   if (image_disposal == _RESTOREBACKGROUND)
+    memset(info->buffer[0], gf->SBackGroundColor, m->width * m->height);
+  if (image_disposal == _RESTOREPREVIOUS)
+    /* XXX: Restore previous image */
     memset(info->buffer[0], gf->SBackGroundColor, m->width * m->height);
 
   return PLAY_OK;

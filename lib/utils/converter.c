@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  8 03:33:58 2001.
- * $Id: converter.c,v 1.3 2001/10/11 10:41:26 sian Exp $
+ * Last Modified: Wed Dec 26 08:17:46 2001.
+ * $Id: converter.c,v 1.4 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -57,7 +57,7 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
 
   if ((cd = iconv_open(to, from)) == (iconv_t)-1) {
     if (errno == EINVAL) {
-      show_message(__FUNCTION__ ": conversion from %s to %s is not supported by iconv().\n", from, to);
+      show_message("%s: conversion from %s to %s is not supported by iconv().\n", __FUNCTION__, from, to);
       *d_r = strdup(s);
       return strlen(s);
     }

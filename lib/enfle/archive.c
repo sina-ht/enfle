@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 21:46:23 2001.
- * $Id: archive.c,v 1.23 2001/10/10 14:40:57 sian Exp $
+ * Last Modified: Wed Dec 26 08:52:03 2001.
+ * $Id: archive.c,v 1.24 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -217,7 +217,7 @@ add(Archive *arc, char *path, void *reminder)
       if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == 0)
 	result = 1;
       else if (result != FNM_NOMATCH)
-	fatal_perror(3, __FUNCTION__ "(include)");
+	fatal_perror(3, __FUNCTION__);
       else
 	result = 0;
       break;
@@ -225,7 +225,7 @@ add(Archive *arc, char *path, void *reminder)
       if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == FNM_NOMATCH)
 	result = 1;
       else if (result)
-	fatal_perror(3, __FUNCTION__ "(exclude)");
+	fatal_perror(3, __FUNCTION__);
       else
 	result = 0;
       break;
@@ -237,7 +237,7 @@ add(Archive *arc, char *path, void *reminder)
 
   arc->nfiles++;
   if (hash_define_str(arc->filehash, path, reminder) < 0) {
-    warning("archive.c: " __FUNCTION__ ": %s already in filehash.\n", path);
+    warning("%s: %s: %s already in filehash.\n", __FILE__, __FUNCTION__, path);
   }
 }
 
@@ -269,12 +269,12 @@ delete_path(Archive *arc, char *path)
 {
   arc->nfiles--;
   if (arc->nfiles < 0) {
-    warning("archive.c: " __FUNCTION__ ": arc->nfiles = %d < 0\n", arc->nfiles);
+    warning("%s: %s: arc->nfiles = %d < 0\n", __FILE__, __FUNCTION__, arc->nfiles);
   }
 
   if (!hash_delete_str(arc->filehash, path, 1)) {
     /* This is not always, but probably bug. */
-    warning("archive.c: " __FUNCTION__ ": failed to delete %s.\n", path);
+    warning("%s: %s: failed to delete %s.\n", __FILE__, __FUNCTION__, path);
   }
 }
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 24 05:44:43 2001.
- * $Id: esd.c,v 1.3 2001/06/24 15:41:50 sian Exp $
+ * Last Modified: Wed Dec 26 09:38:19 2001.
+ * $Id: esd.c,v 1.4 2001/12/26 00:57:25 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -118,7 +118,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     bits = ESD_BITS16;
     break;
   default:
-    show_message(__FUNCTION__ ": format %d is invalid or unsupported.\n", format);
+    show_message_fnc("format %d is invalid or unsupported.\n", format);
     ad->format = _AUDIO_FORMAT_UNSET;
     *format_p = _AUDIO_FORMAT_UNSET;
     return 0;

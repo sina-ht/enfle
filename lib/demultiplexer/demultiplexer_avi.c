@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 18 03:21:12 2001.
- * $Id: demultiplexer_avi.c,v 1.7 2001/10/18 04:48:53 sian Exp $
+ * Last Modified: Wed Dec 26 09:19:22 2001.
+ * $Id: demultiplexer_avi.c,v 1.8 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -89,7 +89,7 @@ tell_func(void *arg)
 #define _READ_CHUNK_HEADER(f, c) \
  for (;;) { \
   if (!riff_file_read_chunk_header((f), (c))) { \
-    show_message(__FUNCTION__ ": riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg((f))); \
+    show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg((f))); \
     goto error_free; \
   } \
   if (strcmp(riff_chunk_get_name((c)), "JUNK")) \
@@ -98,7 +98,7 @@ tell_func(void *arg)
  }
 #define _CHECK_CHUNK_NAME(c, n) \
  if (riff_chunk_is_list((c))) { \
-  show_message(__FUNCTION__ ": Chunk '%s' expected, but got list '%s'\n", n, riff_chunk_get_list_name((c))); \
+  show_message_fnc("Chunk '%s' expected, but got list '%s'\n", n, riff_chunk_get_list_name((c))); \
   goto error_free; \
  } \
  if (strcmp(riff_chunk_get_name((c)), n) != 0) { \
@@ -107,7 +107,7 @@ tell_func(void *arg)
  }
 #define _CHECK_LIST_NAME(c, n) \
  if (!riff_chunk_is_list((c))) { \
-  show_message(__FUNCTION__ ": List '%s' expected, but got chunk '%s'\n", n, riff_chunk_get_name((c))); \
+  show_message_fnc("List '%s' expected, but got chunk '%s'\n", n, riff_chunk_get_name((c))); \
   goto error_free; \
  } \
  if (strcmp(riff_chunk_get_list_name((c)), n) != 0) { \
@@ -126,7 +126,7 @@ examine(Demultiplexer *demux)
   RIFF_Chunk *rc_top, *rc;
   unsigned int i;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   info->nastreams = 0;
   info->nvstreams = 0;
@@ -138,18 +138,18 @@ examine(Demultiplexer *demux)
   riff_file_set_func_tell(info->rf, tell_func);
   riff_file_set_func_arg(info->rf, (void *)info->st);
   if (!riff_file_open(info->rf)) {
-    show_message(__FUNCTION__ ": riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
+    show_message_fnc("riff_file_open() failed: %s\n", riff_file_get_errmsg(info->rf));
     goto error_destroy;
   }
   rc_top = rc = riff_chunk_create();
 
   _READ_CHUNK_HEADER(info->rf, rc);
   _CHECK_LIST_NAME(rc, "hdrl");
-  debug_message(__FUNCTION__ ": Got list 'hdrl'\n");
+  debug_message_fnc("Got list 'hdrl'\n");
 
   _READ_CHUNK_HEADER(info->rf, rc);
   _CHECK_CHUNK_NAME(rc, "avih");
-  debug_message(__FUNCTION__ ": Got chunk 'avih'\n");
+  debug_message_fnc("Got chunk 'avih'\n");
 
   riff_file_read_data(info->rf, rc);
   /* XXX: little endian only. */
@@ -165,11 +165,11 @@ examine(Demultiplexer *demux)
   for (i = 0; i < mah.dwStreams; i++) {
     _READ_CHUNK_HEADER(info->rf, rc);
     _CHECK_LIST_NAME(rc, "strl");
-    debug_message(__FUNCTION__ ": Got list 'strl'\n");
+    debug_message_fnc("Got list 'strl'\n");
 
     _READ_CHUNK_HEADER(info->rf, rc);
     _CHECK_CHUNK_NAME(rc, "strh");
-    debug_message(__FUNCTION__ ": Got chunk 'strh'\n");
+    debug_message_fnc("Got chunk 'strh'\n");
     riff_file_read_data(info->rf, rc);
     /* XXX: Little endian only */
     memcpy(&ash, riff_chunk_get_data(rc), sizeof(AVIStreamHeader));
@@ -184,12 +184,12 @@ examine(Demultiplexer *demux)
       if (info->nastreams == 0)
 	info->ahandler = ash.fccHandler;
     } else {
-      show_message(__FUNCTION__ ": Unknow fccType %X\n", ash.fccType);
+      show_message_fnc("Unknow fccType %X\n", ash.fccType);
     }
 
     _READ_CHUNK_HEADER(info->rf, rc);
     _CHECK_CHUNK_NAME(rc, "strf");
-    debug_message(__FUNCTION__ ": Got chunk 'strf'\n");
+    debug_message_fnc("Got chunk 'strf'\n");
     riff_file_read_data(info->rf, rc);
     /* XXX: Little endian only */
     if (ash.fccType == FCC_vids) {
@@ -215,7 +215,7 @@ examine(Demultiplexer *demux)
   for (;;) {
     _READ_CHUNK_HEADER(info->rf, rc);
     if (!riff_chunk_is_list(rc)) {
-      debug_message(__FUNCTION__ ": Skipped chunk '%s'.\n", riff_chunk_get_name(rc));
+      debug_message_fnc("Skipped chunk '%s'.\n", riff_chunk_get_name(rc));
       riff_file_skip_chunk_data(info->rf, rc);
     } else if (strcmp(riff_chunk_get_list_name(rc), "movi") == 0)
       break;
@@ -225,7 +225,7 @@ examine(Demultiplexer *demux)
     }
   }
 
-  debug_message(__FUNCTION__ ": Got list 'movi'\n");
+  debug_message_fnc("Got list 'movi'\n");
   info->movi_start = stream_tell(info->st);
 
   /* XXX: should check idx1 */
@@ -277,14 +277,14 @@ demux_main(void *arg)
       break;
     if (riff_chunk_is_list(rc)) {
       if (strcmp(riff_chunk_get_list_name(rc), "rec ") != 0) {
-	debug_message(__FUNCTION__ ": Got list '%s', skipped.\n", riff_chunk_get_list_name(rc));
+	debug_message_fnc("Got list '%s', skipped.\n", riff_chunk_get_list_name(rc));
 	riff_file_skip_chunk_data(info->rf, rc);
 	continue;
       }
       if (!riff_file_read_chunk_header(info->rf, rc))
 	break;
       if (riff_chunk_is_list(rc)) {
-	show_message(__FUNCTION__ ": List '%s' within 'rec ' list... skipped.\n", riff_chunk_get_list_name(rc));
+	show_message_fnc("List '%s' within 'rec ' list... skipped.\n", riff_chunk_get_list_name(rc));
 	riff_file_skip_chunk_data(info->rf, rc);
 	continue;
       }
@@ -295,7 +295,7 @@ demux_main(void *arg)
       if (!riff_file_read_data(info->rf, rc))
 	break;
       if ((ap = malloc(sizeof(AVIPacket))) == NULL)
-	fatal(2, __FUNCTION__ ": No enough memory.\n");
+	fatal(2, "%s: No enough memory.\n", __FUNCTION__);
       ap->size = riff_chunk_get_size(rc);
       ap->data = riff_chunk_get_data(rc);
       fifo_put(info->vstream, ap, avi_packet_destructor);
@@ -309,7 +309,7 @@ demux_main(void *arg)
 	  break;
 	if (riff_chunk_get_size(rc) > 0) {
 	  if ((ap = malloc(sizeof(AVIPacket))) == NULL)
-	    fatal(2, __FUNCTION__ ": No enough memory.\n");
+	    fatal(2, "%s: No enough memory.\n", __FUNCTION__);
 	  ap->size = riff_chunk_get_size(rc);
 	  ap->data = riff_chunk_get_data(rc);
 	  fifo_put(info->astream, ap, avi_packet_destructor);
@@ -318,7 +318,7 @@ demux_main(void *arg)
 	riff_file_skip_chunk_data(info->rf, rc);
       }
     } else {
-      show_message(__FUNCTION__ ": Got unknown chunk '%s', skipped\n", riff_chunk_get_name(rc));
+      show_message_fnc("Got unknown chunk '%s', skipped\n", riff_chunk_get_name(rc));
       riff_file_skip_chunk_data(info->rf, rc);
     }
   }
@@ -326,7 +326,7 @@ demux_main(void *arg)
   free(rc);
 
   if (riff_file_get_err(info->rf) != _RIFF_ERR_SUCCESS) {
-    show_message(__FUNCTION__ ": Abort: %s.\n", riff_file_get_errmsg(info->rf));
+    show_message_fnc("Abort: %s.\n", riff_file_get_errmsg(info->rf));
     pthread_exit((void *)0);
   }
   pthread_exit((void *)1);
@@ -338,7 +338,7 @@ start(Demultiplexer *demux)
   if (demux->running)
     return 0;
 
-  debug_message(__FUNCTION__ " demultiplexer_avi\n");
+  debug_message_fn(" demultiplexer_avi\n");
 
   pthread_create(&demux->thread, NULL, demux_main, demux);
 
@@ -353,13 +353,13 @@ stop(Demultiplexer *demux)
   if (!demux->running)
     return 0;
 
-  debug_message(__FUNCTION__ " demultiplexer_avi\n");
+  debug_message_fn(" demultiplexer_avi\n");
 
   demux->running = 0;
   //pthread_cancel(demux->thread);
   pthread_join(demux->thread, &ret);
 
-  debug_message(__FUNCTION__ ": joined\n");
+  debug_message_fnc("joined\n");
 
   return 1;
 }

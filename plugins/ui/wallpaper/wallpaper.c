@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 13 00:53:39 2001.
- * $Id: wallpaper.c,v 1.6 2001/10/14 12:36:09 sian Exp $
+ * Last Modified: Wed Dec 26 09:22:04 2001.
+ * $Id: wallpaper.c,v 1.7 2001/12/26 00:57:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,7 +84,7 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     break;
   case _VIDEO_RENDER_MAGNIFY_DOUBLE:
     if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method))
-      show_message(__FUNCTION__ ": image_magnify() failed.\n");
+      show_message_fnc("image_magnify() failed.\n");
     if (p->rendered.image)
       memory_destroy(p->rendered.image);
     p->rendered.image = memory_dup(p->magnified.image);
@@ -108,7 +108,7 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     p->rendered.image = memory_dup(p->magnified.image);
     break;
   default:
-    show_message(__FUNCTION__ ": invalid render_method %d\n", vw->render_method);
+    show_message_fnc("invalid render_method %d\n", vw->render_method);
     p->if_magnified = 0;
     p->rendered.image = memory_dup(p->image);
     p->rendered.width  = p->magnified.width  = p->width;
@@ -151,7 +151,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
       switch (m->status) {
       case _PLAY:
 	if (movie_play_main(m, vw) != PLAY_OK) {
-	  show_message(__FUNCTION__ ": movie_play_main() failed.\n");
+	  show_message_fnc("movie_play_main() failed.\n");
 	  return 0;
 	}
 	break;

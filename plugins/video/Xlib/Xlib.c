@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 28 03:44:51 2001.
- * $Id: Xlib.c,v 1.42 2001/10/27 18:45:33 sian Exp $
+ * Last Modified: Wed Dec 26 09:35:26 2001.
+ * $Id: Xlib.c,v 1.43 2001/12/26 00:57:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -270,7 +270,7 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
     fontname = (char *)"a14";
   }
 
-  debug_message(__FUNCTION__ ": load font [%s]\n", fontname);
+  debug_message_fnc("load font [%s]\n", fontname);
 
   xwi->caption_font = XLoadFont(x11_display(x11), fontname);
   xwi->fs = XQueryFont(x11_display(x11), xwi->caption_font);
@@ -458,13 +458,13 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
   /* YUV support for Xv extension */
 #define CHECK_AND_RETURN(f) \
   if (types & IMAGE_ ## f) { \
-    debug_message(__FUNCTION__ ": decoder can provide image in " #f " format.\n"); \
+    debug_message_fnc("decoder can provide image in " #f " format.\n"); \
     if  (xv->capable_format & XV_ ## f ## _FLAG) { \
-      debug_message(__FUNCTION__ ": Xv can display " #f " format image, good.\n"); \
+      debug_message_fnc("Xv can display " #f " format image, good.\n"); \
       *direct_decode = 1; \
       return _ ## f; \
     } else { \
-      debug_message(__FUNCTION__ ": Xv cannot display " #f " format image.\n"); \
+      debug_message_fnc("Xv cannot display " #f " format image.\n"); \
     } \
   }
 
@@ -517,7 +517,7 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
     }
   }
 
-  show_message(__FUNCTION__": No appropriate image type. should not be happened\n");
+  show_message_fnc("No appropriate image type. should not be happened\n");
   return _IMAGETYPE_TERMINATOR;
 }
 
@@ -553,7 +553,7 @@ calc_magnified_size(VideoWindow *vw, unsigned int sw, unsigned int sh,
     *dh_return = sh << 1;
     if (!(x11_if_xv(x11) && (*dw_return > fw || *dh_return > fh)))
       break;
-    debug_message(__FUNCTION__ ": clipping.\n");
+    debug_message_fnc("clipping.\n");
     /* fall through */
   case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
     ws = (double)fw / (double)sw;
@@ -634,7 +634,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
   if ((ret = select(getdtablesize(), &read_fds, &write_fds, &except_fds, &timeout)) < 0) {
     if (errno == EINTR)
       return 0;
-    show_message("Xlib: " __FUNCTION__ ": select returns %d: errno = %d\n", ret, errno);
+    show_message("Xlib: %s: select returns %d: errno = %d\n", __FUNCTION__, ret, errno);
     return 0;
   }
 
@@ -838,7 +838,7 @@ set_background(VideoWindow *vw, Image *p)
   Pixmap pix;
   GC gc = vw->if_fullscreen ? xwi->full.gc : xwi->normal.gc;
 
-  debug_message(__FUNCTION__ "() called\n");
+  debug_message_fn("() called\n");
 
   x11_lock(x11);
 
@@ -879,7 +879,7 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     state_changed = 1;
     break;
   default:
-    show_message("Xlib: " __FUNCTION__ ": invalid fullscreen mode(%d).\n", mode);
+    show_message("Xlib: %s: invalid fullscreen mode(%d).\n", __FUNCTION__, mode);
     return 0;
   }
 
@@ -1125,7 +1125,7 @@ update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, uns
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
 
-  //debug_message(__FUNCTION__ ": (%d, %d) - (%d, %d) -> (%d, %d)\n", left + vw->offset_x, top + vw->offset_y, left + vw->offset_x + w, top + vw->offset_y + h, left, top);
+  //debug_message_fnc("(%d, %d) - (%d, %d) -> (%d, %d)\n", left + vw->offset_x, top + vw->offset_y, left + vw->offset_x + w, top + vw->offset_y + h, left, top);
 
   x11_lock(x11);
   if (!vw->if_fullscreen) {
@@ -1200,7 +1200,7 @@ render(VideoWindow *vw, Image *p)
   vw->render_height = p->rendered.height;
   resize(vw, p->magnified.width, p->magnified.height);
 
-  //debug_message(__FUNCTION__ ": r (%d, %d) m (%d, %d)\n", vw->render_width, vw->render_height, p->magnified.width, p->magnified.height);
+  //debug_message_fnc("r (%d, %d) m (%d, %d)\n", vw->render_width, vw->render_height, p->magnified.width, p->magnified.height);
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);

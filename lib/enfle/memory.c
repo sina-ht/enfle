@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:33:26 2001.
- * $Id: memory.c,v 1.6 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Wed Dec 26 08:54:14 2001.
+ * $Id: memory.c,v 1.7 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -92,19 +92,19 @@ alloc_shm(Memory *mem, unsigned int s)
   free_both(mem);
 
   if ((mem->shmid = shmget(IPC_PRIVATE, s, (IPC_CREAT | 0600))) < 0) {
-    show_message(__FUNCTION__ ": shmget failed.\n");
+    show_message_fnc("shmget failed.\n");
     return NULL;
   }
 
-  debug_message("MEMORY: " __FUNCTION__ ": shmget: id = %d\n", mem->shmid);
+  debug_message("MEMORY: %s: shmget: id = %d\n", __FUNCTION__, mem->shmid);
 
   if ((mem->ptr = shmat(mem->shmid, 0, 0)) == (void *)-1) {
-    show_message(__FUNCTION__ ": shmat failed.\n");
+    show_message_fnc("shmat failed.\n");
     mem->ptr = NULL;
     return NULL;
   }
 
-  debug_message("MEMORY: " __FUNCTION__ ": shmat: addr = %p\n", mem->ptr);
+  debug_message("MEMORY: %s: shmat: addr = %p\n", __FUNCTION__, mem->ptr);
 
   shmctl(mem->shmid, IPC_RMID, NULL);
 
@@ -153,7 +153,7 @@ allocate(Memory *mem, unsigned int size)
   alignment = getpagesize();
   aligned_size = (size % alignment) ? ((size / alignment) + 1) * alignment : size;
 
-  //debug_message("MEMORY: " __FUNCTION__ ": requested %d bytes (aligned %d bytes) as type %s\n", size, aligned_size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN"));
+  //debug_message("MEMORY: %s: requested %d bytes (aligned %d bytes) as type %s\n", __FUNCTION__, size, aligned_size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN"));
 
   switch (mem->type) {
   case _NORMAL:
@@ -180,7 +180,7 @@ set(Memory *mem, void *ptr, MemoryType type, unsigned int size, unsigned int use
 static int
 free_both(Memory *mem)
 {
-  /* debug_message(__FUNCTION__ ": free %p\n", mem); */
+  /* debug_message("%s: free %p\n", __FUNCTION__, mem); */
 
   switch (mem->type) {
   case _NORMAL:

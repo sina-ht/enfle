@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 13 02:34:32 2001.
- * $Id: loader.c,v 1.16 2001/10/14 12:32:37 sian Exp $
+ * Last Modified: Wed Dec 26 08:37:48 2001.
+ * $Id: loader.c,v 1.17 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,16 +51,16 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
       if ((p = pluginlist_get(pl, pluginname))) {
 	lp = plugin_get(p);
 	stream_rewind(st);
-	//debug_message(__FUNCTION__ ": try %s (assoc'd with %s)\n", pluginname, ext);
+	//debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
 	free(ext);
 	if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
 	  ip->format = pluginname;
 	  return 1;
 	}
-	debug_message(__FUNCTION__ ": %s failed.\n", pluginname);
+	debug_message_fnc("%s failed.\n", pluginname);
 	return 0;
       } else {
-	show_message(__FUNCTION__ ": %s (assoc'd with %s) not found.\n", pluginname, ext);
+	show_message_fnc("%s (assoc'd with %s) not found.\n", pluginname, ext);
       }
     }
     free(ext);
@@ -76,7 +76,7 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
 
     stream_rewind(st);
 
-    //debug_message(__FUNCTION__ ": try %s\n", pluginname);
+    //debug_message_fnc("try %s\n", pluginname);
 
     if (lp->identify(ip, st, vw, c, lp->image_private) == LOAD_OK) {
       ip->format = pluginname;

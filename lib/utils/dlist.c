@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 22:02:00 2001.
- * $Id: dlist.c,v 1.6 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Wed Dec 26 08:24:42 2001.
+ * $Id: dlist.c,v 1.7 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -130,7 +130,7 @@ insert(Dlist *dl, Dlist_data *inserted, void *d)
   Dlist_data *dd;
 
   if (dlist_dlist(inserted) != dl) {
-    debug_message("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
+    debug_message_fnc("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
     raise(SIGABRT);
     //return NULL;
   }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 20001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 21:16:49 2001.
- * $Id: alsa.c,v 1.2 2001/10/14 12:33:50 sian Exp $
+ * Last Modified: Wed Dec 26 09:37:43 2001.
+ * $Id: alsa.c,v 1.3 2001/12/26 00:57:25 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -104,12 +104,12 @@ open_device(void *data, Config *c)
   err = snd_output_stdio_attach(&alsa->log, stderr, 0);
 
   if ((err = snd_pcm_open(&alsa->fd, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
-    show_message(__FUNCTION__ ": error in opening device %s\n", device);
+    show_message_fnc("error in opening device %s\n", device);
     perror("ALSA");
     return NULL;
   }
 
-  debug_message(__FUNCTION__ ": opened device %s successfully.\n", device);
+  debug_message_fnc("opened device %s successfully.\n", device);
 
   return ad;
 }
@@ -172,20 +172,20 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
     break;
 #endif
   default:
-    show_message(__FUNCTION__ ": format %d is invalid.\n", format);
+    show_message_fnc("format %d is invalid.\n", format);
     return 0;
   }
 
   if ((err = snd_pcm_hw_params_any(alsa->fd, hwparams)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params_any() failed.\n");
+    show_message_fnc("snd_pcm_hw_params_any() failed.\n");
     return 0;
   }
   if ((err = snd_pcm_hw_params_set_access(alsa->fd, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params_set_access() failed.\n");
+    show_message_fnc("snd_pcm_hw_params_set_access() failed.\n");
     return 0;
   }
   if ((err = snd_pcm_hw_params_set_format(alsa->fd, hwparams, f)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params_set_format() failed.\n");
+    show_message_fnc("snd_pcm_hw_params_set_format() failed.\n");
     return 0;
   }
   ad->format = format;
@@ -193,30 +193,30 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
 
   /* channel part */
   if ((err = snd_pcm_hw_params_set_channels(alsa->fd, hwparams, ch)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params_set_channels() failed.\n");
+    show_message_fnc("snd_pcm_hw_params_set_channels() failed.\n");
     return 0;
   }
   *ch_p = ch;
 
   /* rate part */
   if ((err = snd_pcm_hw_params_set_rate_near(alsa->fd, hwparams, rate, 0)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params_set_rate_near() failed.\n");
+    show_message_fnc("snd_pcm_hw_params_set_rate_near() failed.\n");
     return 0;
   }
   *rate_p = r;
 
   /* buffer & period */
   if ((err = snd_pcm_hw_params_set_buffer_time_near(alsa->fd, hwparams, 500000, 0)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params_set_buffer_near() failed.\n");
+    show_message_fnc("snd_pcm_hw_params_set_buffer_near() failed.\n");
     return 0;
   }
   if ((err = snd_pcm_hw_params_set_period_time_near(alsa->fd, hwparams, 500000 / 4, 0)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params_set_period_near() failed.\n");
+    show_message_fnc("snd_pcm_hw_params_set_period_near() failed.\n");
     return 0;
   }
 
   if ((err = snd_pcm_hw_params(alsa->fd, hwparams)) < 0) {
-    show_message(__FUNCTION__ ": snd_pcm_hw_params() failed.\n");
+    show_message_fnc("snd_pcm_hw_params() failed.\n");
     return 0;
   }
 
@@ -224,7 +224,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   ad->speed = snd_pcm_hw_params_get_rate(hwparams, NULL);
 
 #ifdef DEBUG
-  debug_message(__FUNCTION__ ": format ");
+  debug_message_fnc("format ");
   switch (snd_pcm_hw_params_get_format(hwparams)) {
   case SND_PCM_FORMAT_MU_LAW:    debug_message("MU_LAW "); break;
   case SND_PCM_FORMAT_A_LAW:     debug_message("A_LAW "); break;

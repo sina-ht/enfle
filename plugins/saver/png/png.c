@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 17 14:55:57 2001.
- * $Id: png.c,v 1.9 2001/12/17 06:16:06 sian Exp $
+ * Last Modified: Wed Dec 26 09:39:16 2001.
+ * $Id: png.c,v 1.10 2001/12/26 00:57:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -162,7 +162,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
    * interlace: PNG_INTERLACE_NONE, PNG_INTERLACE_ADAM7.
    */
 
-  debug_message("png: " __FUNCTION__ ": %dx%d, type %s\n", p->width, p->height, image_type_to_string(p->type));
+  debug_message("png: %s: %dx%d, type %s\n", __FUNCTION__, p->width, p->height, image_type_to_string(p->type));
 
   switch (p->type) {
   case _GRAY:
@@ -193,7 +193,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     break;
   default:
-    show_message("png: " __FUNCTION__ ": Unsupported type %s.\n", image_type_to_string(p->type));
+    show_message("png: %s: Unsupported type %s.\n", __FUNCTION__, image_type_to_string(p->type));
     fclose(fp);
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     return 0;

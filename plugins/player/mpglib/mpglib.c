@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:14:02 2001.
- * $Id: mpglib.c,v 1.4 2001/09/02 05:47:03 sian Exp $
+ * Last Modified: Wed Dec 26 09:28:06 2001.
+ * $Id: mpglib.c,v 1.5 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -121,7 +121,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
-    show_message(__FUNCTION__ ": Cannot direct decoding...\n");
+    show_message_fnc("Cannot direct decoding...\n");
     return PLAY_ERROR;
   }
   debug_message("Mpglib: requested type: %s direct\n", image_type_to_string(m->requested_type));
@@ -190,7 +190,7 @@ play(Movie *m)
 {
   Mpglib_info *info = (Mpglib_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -227,7 +227,7 @@ play_audio(void *arg)
   AudioDevice *ad;
   int read_size, write_size, ret;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
@@ -258,7 +258,7 @@ play_audio(void *arg)
   m->ap->sync_device(ad);
   m->ap->close_device(ad);
 
-  debug_message(__FUNCTION__ " exiting.\n");
+  debug_message_fn(" exiting.\n");
 
   pthread_exit((void *)PLAY_OK);
 }
@@ -316,7 +316,7 @@ stop_movie(Movie *m)
   Mpglib_info *info = (Mpglib_info *)m->movie_private;
   void *a;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -346,7 +346,7 @@ unload_movie(Movie *m)
 {
   Mpglib_info *info = (Mpglib_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   stop_movie(m);
 
@@ -358,9 +358,9 @@ unload_movie(Movie *m)
     if (info->output_buffer)
       free(info->output_buffer);
 
-    debug_message(__FUNCTION__ ": freeing info\n");
+    debug_message_fnc("freeing info\n");
     free(info);
-    debug_message(__FUNCTION__ ": all Ok\n");
+    debug_message_fnc("all Ok\n");
   }
 }
 

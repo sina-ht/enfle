@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 24 02:31:39 2001.
- * $Id: libriff.c,v 1.4 2001/09/23 17:36:57 sian Exp $
+ * Last Modified: Wed Dec 26 09:08:28 2001.
+ * $Id: libriff.c,v 1.5 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -133,7 +133,7 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
       rf->err = _RIFF_ERR_SUCCESS;
       return 0;
     }
-    debug_message(__FUNCTION__ ": need 8bytes but got only %d bytes.\n", chunk_read);
+    debug_message_fnc("need 8bytes but got only %d bytes.\n", chunk_read);
     rf->err = _RIFF_ERR_PREMATURE_CHUNK;
     return 0;
   }
@@ -143,14 +143,14 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
   rc->size = (((((buffer[7] << 8) | buffer[6]) << 8) | buffer[5]) << 8) | buffer[4];
   rc->_size = (rc->size + 1) & ~1;
 
-  //debug_message(__FUNCTION__ ": got chunk %s %d at %d\n", rc->name, rc->size, rc->pos);
+  //debug_message_fnc("got chunk %s %d at %d\n", rc->name, rc->size, rc->pos);
 
   if (memcmp(rc->name, "LIST", 4)) {
     rc->is_list = 0;
   } else {
     rc->is_list = 1;
     if ((byte_read = rf->input_func(rf->func_arg, buffer, 4)) != 4) {
-      debug_message(__FUNCTION__ ": need 4bytes but got only %d bytes.\n", byte_read);
+      debug_message_fnc("need 4bytes but got only %d bytes.\n", byte_read);
       rf->err = _RIFF_ERR_PREMATURE_CHUNK;
       return 0;
     }
@@ -169,15 +169,15 @@ skip_chunk_data(RIFF_File *rf, RIFF_Chunk *rc)
 {
   if (!rc->is_list) {
     if (!rf->seek_func(rf->func_arg, rc->_size, _SEEK_CUR)) {
-      debug_message(__FUNCTION__ ": chunk size %d\n", rc->size);
-      perror(__FUNCTION__ ": seek");
+      debug_message_fnc("chunk size %d\n", rc->size);
+      perror(__FUNCTION__);
       rf->err = _RIFF_ERR_TRUNCATED_CHUNK;
       return 0;
     }
   } else {
     if (!rf->seek_func(rf->func_arg, rc->_list_size, _SEEK_CUR)) {
-      debug_message(__FUNCTION__ ": list size %d\n", rc->size);
-      perror(__FUNCTION__ ": seek");
+      debug_message_fnc("list size %d\n", rc->size);
+      perror(__FUNCTION__);
       rf->err = _RIFF_ERR_TRUNCATED_CHUNK;
       return 0;
     }
@@ -189,7 +189,7 @@ skip_chunk_data(RIFF_File *rf, RIFF_Chunk *rc)
 static int
 read_data(RIFF_File *rf, RIFF_Chunk *rc)
 {
-  //debug_message(__FUNCTION__ ": [%s] %d bytes (aligned %d bytes)\n", rc->name, rc->size, rc->_size);
+  //debug_message_fnc("[%s] %d bytes (aligned %d bytes)\n", rc->name, rc->size, rc->_size);
   int byte_read;
 
   if (rc->_size > 0) {
@@ -198,7 +198,7 @@ read_data(RIFF_File *rf, RIFF_Chunk *rc)
       return 0;
     }
     if ((byte_read = rf->input_func(rf->func_arg, rc->data, rc->_size)) != (int)rc->_size) {
-      debug_message(__FUNCTION__ ": requested %d bytes, but got %d bytes\n", rc->_size, byte_read);
+      debug_message_fnc("requested %d bytes, but got %d bytes\n", rc->_size, byte_read);
       rf->err = _RIFF_ERR_TRUNCATED_CHUNK;
       return 0;
     }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Oct 12 23:35:42 2001.
- * $Id: player.c,v 1.13 2001/10/14 12:32:37 sian Exp $
+ * Last Modified: Wed Dec 26 08:38:39 2001.
+ * $Id: player.c,v 1.14 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,16 +51,16 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
       if ((p = pluginlist_get(pl, pluginname))) {
 	pp = plugin_get(p);
 	stream_rewind(st);
-	debug_message(__FUNCTION__ ": try %s (assoc'd with %s)\n", pluginname, ext);
+	debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
 	free(ext);
 	if (pp->identify(m, st, c, NULL) == PLAY_OK) {
 	  m->format = pluginname;
 	  return 1;
 	}
-	debug_message(__FUNCTION__ ": %s failed.\n", pluginname);
+	debug_message_fnc("%s failed.\n", pluginname);
 	return 0;
       } else {
-	show_message(__FUNCTION__ ": %s (assoc'd with %s) not found.\n", pluginname, ext);
+	show_message_fnc("%s (assoc'd with %s) not found.\n", pluginname, ext);
       }
     }
     free(ext);
@@ -70,7 +70,7 @@ player_identify(EnflePlugins *eps, Movie *m, Stream *st, Config *c)
   dlist_iter(dl, dd) {
     pluginname = hash_key_key(dlist_data(dd));
     if ((p = pluginlist_get(pl, pluginname)) == NULL)
-      fatal(1, "BUG: %s player plugin not found but in list.\n", pluginname);
+      bug(1, "%s player plugin not found but in list.\n", pluginname);
     pp = plugin_get(p);
 
     stream_rewind(st);

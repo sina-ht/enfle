@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 21:11:40 2001.
- * $Id: mm.c,v 1.1 2001/10/10 14:41:25 sian Exp $
+ * Last Modified: Wed Dec 26 08:18:13 2001.
+ * $Id: mm.c,v 1.2 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -76,7 +76,7 @@ w32api_mem_realloc(void *p, int size)
     return w32api_mem_alloc(size);
 
   if ((mc = mc_find(p)) == NULL) {
-    show_message(__FUNCTION__ ": No such chunk %p\n", p);
+    show_message("%s: No such chunk %p\n", __FUNCTION__, p);
     return NULL;
   }
 
@@ -96,7 +96,7 @@ w32api_mem_free(void *p)
     return;
 
   if ((mc = mc_find(p)) == NULL) {
-    show_message(__FUNCTION__ ": No such chunk %p\n", p);
+    show_message("%s: No such chunk %p\n", __FUNCTION__, p);
     return;
   }
 

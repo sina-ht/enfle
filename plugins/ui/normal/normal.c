@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 17 11:56:28 2001.
- * $Id: normal.c,v 1.57 2001/11/17 03:50:25 sian Exp $
+ * Last Modified: Wed Dec 26 09:20:45 2001.
+ * $Id: normal.c,v 1.58 2001/12/26 00:57:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -129,7 +129,7 @@ magnify_if_requested(VideoWindow *vw, Image *p)
   case _VIDEO_RENDER_MAGNIFY_DOUBLE:
     if (!use_hw_scale) {
       if (!image_magnify(p, p->width * 2, p->height * 2, vw->interpolate_method))
-	show_message(__FUNCTION__ ": image_magnify() failed.\n");
+	show_message_fnc("image_magnify() failed.\n");
       if (p->rendered.image)
 	memory_destroy(p->rendered.image);
       p->rendered.image = memory_dup(p->magnified.image);
@@ -158,7 +158,7 @@ magnify_if_requested(VideoWindow *vw, Image *p)
     }
     break;
   default:
-    show_message(__FUNCTION__ ": invalid render_method %d\n", vw->render_method);
+    show_message_fnc("invalid render_method %d\n", vw->render_method);
     p->if_magnified = 0;
     p->rendered.image = memory_dup(p->image);
     p->rendered.width  = p->magnified.width  = p->width;
@@ -193,13 +193,13 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
   if ((ext = saver_get_ext(uidata->eps, format, uidata->c)) == NULL)
     return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
-    show_message(__FUNCTION__ ": No enough memory.\n");
+    show_message_fnc("No enough memory.\n");
     return 0;
   }
   free(ext);
 
   if ((fp = fopen(outpath, "wb")) == NULL) {
-    show_message(__FUNCTION__ ": Cannot open %s for writing.\n", outpath);
+    show_message_fnc("Cannot open %s for writing.\n", outpath);
     return 0;
   }
 
@@ -339,7 +339,7 @@ main_loop_toggle_interpolate(MainLoop *ml)
     ml->vw->interpolate_method = _NOINTERPOLATE;
     break;
   default:
-    show_message(__FUNCTION__ ": invalid interpolate method %d\n", ml->vw->interpolate_method);
+    show_message_fnc(": invalid interpolate method %d\n", ml->vw->interpolate_method);
     ml->vw->interpolate_method = _NOINTERPOLATE;
     break;
   }
@@ -759,7 +759,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
       switch (m->status) {
       case _PLAY:
 	if (movie_play_main(m, vw) != PLAY_OK) {
-	  show_message(__FUNCTION__ ": movie_play_main() failed.\n");
+	  show_message_fnc("movie_play_main() failed.\n");
 	  return MAIN_LOOP_NEXT;
 	}
 	break;
@@ -868,7 +868,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	//debug_message("MAIN_LOOP_DO_NOTHING\n");
 	break;
       default:
-	show_message("*** " __FUNCTION__ "() returned unknown code %d\n", ret);
+	show_message("*** %s() returned unknown code %d\n", __FUNCTION__, ret);
 	path = NULL;
 	break;
       }
@@ -989,7 +989,7 @@ ui_main(UIData *uidata)
   pthread_t gui_thread;
 #endif
 
-  debug_message("Normal: " __FUNCTION__ "()\n");
+  debug_message("Normal: %s()\n", __FUNCTION__);
 
   if ((disp = vp->open_video(NULL, c)) == NULL) {
     show_message("open_video() failed\n");

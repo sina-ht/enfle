@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_recur3.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep 21 20:49:03 2001.
- * $Id: vmpm_decompose_recur3.c,v 1.3 2001/09/21 11:53:28 sian Exp $
+ * Last Modified: Wed Dec 26 09:53:05 2001.
+ * $Id: vmpm_decompose_recur3.c,v 1.4 2001/12/26 00:57:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -129,19 +129,19 @@ calc_lowest_level(VMPM *vmpm, Arithmodel **ams, int pos)
 
   for (i = 0; i < vmpm->I; i++) {
     if ((max = ipow(vmpm->alphabetsize, rpow)) == 0) {
-      //debug_message(__FUNCTION__ ": ipow(%d, %d) overflow.\n", vmpm->alphabetsize, rpow);
+      //debug_message_fnc("ipow(%d, %d) overflow.\n", vmpm->alphabetsize, rpow);
       return i;
     }
     ndtokens = arithmodel_order_zero_nsymbols(ams[i + 1]);
     while (arithmodel_order_zero_get_freq(ams[i + 1], ndtokens - 1) == 1)
       ndtokens--;
     if (ndtokens < max) {
-      //debug_message(__FUNCTION__ ": lowest level == %d, ndtokens == %d < %d == max\n", i, ndtokens, max);
+      //debug_message_fnc("lowest level == %d, ndtokens == %d < %d == max\n", i, ndtokens, max);
       return i;
     }
     if (ndtokens > max)
       fatal(254, "ndtokens == %d > %d == max\n", ndtokens, max);
-    //debug_message(__FUNCTION__ ": ndtokens == %d == %d == ipow(%d, %d)\n", ndtokens, max, vmpm->alphabetsize, rpow);
+    //debug_message_fnc("ndtokens == %d == %d == ipow(%d, %d)\n", ndtokens, max, vmpm->alphabetsize, rpow);
     rpow *= vmpm->r;
   }
   return i;
@@ -170,9 +170,9 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel 
     int lowest  = calc_lowest_level(vmpm, ams, pos);
     int highest = calc_highest_level(vmpm, level_am, pos);
 
-    //debug_message(__FUNCTION__ ": level %d, lowest %d, highest %d, pos %d\n", i, lowest, highest, pos);
+    //debug_message_fnc("level %d, lowest %d, highest %d, pos %d\n", i, lowest, highest, pos);
     if (!arithmodel_order_zero_encode_with_range(level_am, i, lowest, highest))
-      fatal(5, __FUNCTION__ ": arithmodel_order_zero_encode_with_range() failed.\n");
+      fatal(5, "%s: arithmodel_order_zero_encode_with_range() failed.\n", __FUNCTION__);
     nsymbols = arithmodel_order_zero_nsymbols(ams[0]);
     if (s_to_i[(int)vmpm->token[0][j]] == (unsigned int)-1) {
       arithmodel_encode(ams[0], nsymbols);
@@ -191,11 +191,11 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel 
       int lowest  = calc_lowest_level(vmpm, ams, pos);
       int highest = calc_highest_level(vmpm, level_am, pos);
 
-      //debug_message(__FUNCTION__ ": level %d, lowest %d, highest %d, pos %d\n", i, lowest, highest, pos);
+      //debug_message_fnc("level %d, lowest %d, highest %d, pos %d\n", i, lowest, highest, pos);
       /* Found. Encode at this level. */
       stat_message(vmpm, "(%d,%d)", i, tv);
       if (!arithmodel_order_zero_encode_with_range(level_am, i, lowest, highest))
-	fatal(5, __FUNCTION__ ": arithmodel_order_zero_encode_with_range() failed.\n");
+	fatal(5, "%s: arithmodel_order_zero_encode_with_range() failed.\n", __FUNCTION__);
       arithmodel_encode(ams[i], tv);
       len = ipow(vmpm->r, i);
     } else if (arithmodel_order_zero_nsymbols(ams[i]) == tv) {
@@ -214,7 +214,7 @@ encode_recursively(VMPM *vmpm, Arithmodel **ams, Arithmodel *bin_am, Arithmodel 
 
   if (pos + len >= ipow(vmpm->r, arithmodel_order_zero_nsymbols(level_am)) &&
       arithmodel_order_zero_nsymbols(level_am) <= vmpm->I + 1) {
-    //debug_message(__FUNCTION__ ": pos %d len %d sum %d r %d nsymbols %d\n", pos, len, pos + len, vmpm->r, arithmodel_order_zero_nsymbols(level_am));
+    //debug_message_fnc("pos %d len %d sum %d r %d nsymbols %d\n", pos, len, pos + len, vmpm->r, arithmodel_order_zero_nsymbols(level_am));
     arithmodel_install_symbol(level_am, 1);
   }
 
@@ -231,10 +231,10 @@ encode(VMPM *vmpm)
   unsigned int j, pos, nsymbols, *s_to_i;
   int i, match_found;
 
-  //debug_message("Recur3: " __FUNCTION__ "()\n");
+  //debug_message("Recur3: %s()\n", __FUNCTION__);
 
   if (!vmpm->outfile) {
-    debug_message(__FUNCTION__ ": outfile is NULL.\n");
+    debug_message_fnc("outfile is NULL.\n");
     return;
   }
 
@@ -323,7 +323,7 @@ decode(VMPM *vmpm)
   int i, n;
   unsigned int j;
 
-  //debug_message(__FUNCTION__ "()\n");
+  //debug_message_fn("()\n");
   fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
@@ -387,7 +387,7 @@ decode(VMPM *vmpm)
 static int
 reconstruct(VMPM *vmpm)
 {
-  fprintf(stderr, __FUNCTION__ "() not yet implemented.\n");
+  fprintf(stderr, "%s() not yet implemented.\n", __FUNCTION__);
   return 0;
 }
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 12:47:30 2001.
- * $Id: libmpeg3.c,v 1.35 2001/10/14 12:35:33 sian Exp $
+ * Last Modified: Wed Dec 26 09:26:24 2001.
+ * $Id: libmpeg3.c,v 1.36 2001/12/26 00:57:25 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -125,7 +125,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
-    show_message(__FUNCTION__ ": Cannot do direct decoding...\n");
+    show_message_fnc("Cannot do direct decoding...\n");
     return PLAY_ERROR;
   }
   debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
@@ -239,7 +239,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 	  info->rendering_type = MPEG3_BGRA8888;
 	  break;
 	default:
-	  show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+	  show_message_fnc("requested type is %s.\n", image_type_to_string(p->type));
 	  return PLAY_ERROR;
 	}
 	p->depth = 24;
@@ -255,7 +255,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 	  info->rendering_type = MPEG3_BGR888;
 	  break;
 	default:
-	  show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+	  show_message_fnc("requested type is %s.\n", image_type_to_string(p->type));
 	  return PLAY_ERROR;
 	}
 	p->depth = 24;
@@ -269,7 +269,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 	  info->rendering_type = MPEG3_RGB565;
 	  break;
 	default:
-	  show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+	  show_message_fnc("requested type is %s.\n", image_type_to_string(p->type));
 	  return PLAY_ERROR;
 	}
 	p->depth = 16;
@@ -314,7 +314,7 @@ play(Movie *m)
 {
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -352,7 +352,7 @@ play_video(void *arg)
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
   int decode_error;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   if (info->use_xv) {
     while (m->status == _PLAY) {
@@ -393,7 +393,7 @@ play_video(void *arg)
     }
   }
 
-  debug_message(__FUNCTION__ " exiting.\n");
+  debug_message_fn(" exiting.\n");
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -410,7 +410,7 @@ play_audio(void *arg)
   short output_buffer[AUDIO_WRITE_SIZE];
   int samples_to_read;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
@@ -455,7 +455,7 @@ play_audio(void *arg)
   m->ap->close_device(ad);
   info->ad = NULL;
 
-  debug_message(__FUNCTION__ " exiting.\n");
+  debug_message_fn(" exiting.\n");
 
   pthread_exit((void *)PLAY_OK);
 }
@@ -562,7 +562,7 @@ stop_movie(Movie *m)
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
   void *v, *a;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -599,7 +599,7 @@ unload_movie(Movie *m)
 {
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   stop_movie(m);
 
@@ -617,13 +617,13 @@ unload_movie(Movie *m)
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
 
-    debug_message(__FUNCTION__ ": closing libmpeg3 file\n");
+    debug_message_fnc("closing libmpeg3 file\n");
     /* close */
     mpeg3_close(info->file);
 
-    debug_message(__FUNCTION__ ": freeing info\n");
+    debug_message_fnc("freeing info\n");
     free(info);
-    debug_message(__FUNCTION__ ": all Ok\n");
+    debug_message_fnc("all Ok\n");
   }
 }
 

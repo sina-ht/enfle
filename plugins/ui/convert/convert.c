@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 17 14:54:58 2001.
- * $Id: convert.c,v 1.13 2001/12/17 06:15:19 sian Exp $
+ * Last Modified: Wed Dec 26 09:21:22 2001.
+ * $Id: convert.c,v 1.14 2001/12/26 00:57:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -83,18 +83,18 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
   if ((ext = saver_get_ext(uidata->eps, format, uidata->c)) == NULL)
     return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
-    show_message(__FUNCTION__ ": No enough memory.\n");
+    show_message_fnc("No enough memory.\n");
     return 0;
   }
   free(ext);
 
   if ((fd = open(outpath, O_WRONLY)) >= 0) {
     close(fd);
-    show_message(__FUNCTION__ ": file %s exists\n", outpath);
+    show_message_fnc("file %s exists\n", outpath);
     return 0;
   }
   if ((fp = fopen(outpath, "wb+")) == NULL) {
-    show_message(__FUNCTION__ ": Cannot open %s for writing.\n", outpath);
+    show_message_fnc("Cannot open %s for writing.\n", outpath);
     free(outpath);
     return 0;
   } else {
@@ -217,7 +217,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 static int
 ui_main(UIData *uidata)
 {
-  debug_message("Convert: " __FUNCTION__ "()\n");
+  debug_message("Convert: %s()\n", __FUNCTION__);
 
   process_files_of_archive(uidata, uidata->a);
 

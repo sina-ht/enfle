@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Sep 24 02:35:16 2001.
- * $Id: arithmodel_order_zero.c,v 1.15 2001/09/23 17:36:57 sian Exp $
+ * Last Modified: Wed Dec 26 09:46:59 2001.
+ * $Id: arithmodel_order_zero.c,v 1.16 2001/12/26 00:57:25 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -101,7 +101,7 @@ update_region_with_range(Arithmodel *_am, Index idx, Index low, Index high)
   highest = am->freq[high] - lowest;
   tmp = ac->range / highest;
 
-  debug_message(__FUNCTION__ "(%d, tmp %X, lowest %X, highest %X)\n", idx, tmp, lowest, highest);
+  debug_message_fn("(%d, tmp %X, lowest %X, highest %X)\n", idx, tmp, lowest, highest);
 
   if (idx > low) {
     ac->low += tmp * (am->freq[idx - 1] - lowest);
@@ -109,7 +109,7 @@ update_region_with_range(Arithmodel *_am, Index idx, Index low, Index high)
   } else if (idx == low) {
     ac->range = tmp * (am->freq[low] - lowest);
   } else {
-    show_message(__FUNCTION__ ": idx == %d < %d == low.\n", idx, low);
+    show_message_fnc("idx == %d < %d == low.\n", idx, low);
   }
 }
 
@@ -141,7 +141,7 @@ install_symbol(Arithmodel *_am, Freq freq)
   Arithmodel_order_zero *am = AMOZ(_am);
   Freq *new_freq;
 
-  debug_message(__FUNCTION__ "(index %d freq %d)\n", am->nsymbols, freq);
+  debug_message_fn("(index %d freq %d)\n", am->nsymbols, freq);
 
   if ((new_freq = realloc(am->freq, (am->nsymbols + 1) * sizeof(Freq))) == NULL)
     return 0;
@@ -162,7 +162,7 @@ uninstall_symbol(Arithmodel *_am, Index idx)
   Arithmodel_order_zero *am = AMOZ(_am);
   Freq freq;
 
-  debug_message(__FUNCTION__ "(idx %d)\n", idx);
+  debug_message_fn("(idx %d)\n", idx);
 
   if (idx < am->start_symbol)
     am->start_symbol--;
@@ -251,7 +251,7 @@ common_init(Arithmodel *_am, Arithcoder *ac)
   Arithmodel_order_zero *am = AMOZ(_am);
 
   if (am->freq)
-    fatal(1, __FUNCTION__ ": am->freq != NULL\n");
+    fatal(1, "%s: am->freq != NULL\n", __FUNCTION__);
 
   am->ac = ac;
 
@@ -270,7 +270,7 @@ update_freq(Arithmodel *_am, Index idx)
   Arithmodel_order_zero *am = AMOZ(_am);
   unsigned int i;
 
-  debug_message(__FUNCTION__ "(%d)\n", idx);
+  debug_message_fn("(%d)\n", idx);
 
   if (idx == am->escape_symbol && am->update_escape_freq) {
     if (!am->update_escape_freq(_am, idx))
@@ -290,11 +290,11 @@ encode_bulk(Arithmodel *_am, Index idx, Index low, Index high, int use_range)
   Arithmodel_order_zero *am = AMOZ(_am);
 
   if (am->nsymbols < idx)
-    fatal(2, __FUNCTION__ ": nsymbols %d < %d idx, start = %d, low = %d, high = %d\n", am->nsymbols, idx, am->start_symbol, low, high);
+    fatal(2, "%s: nsymbols %d < %d idx, start = %d, low = %d, high = %d\n", __FUNCTION__, am->nsymbols, idx, am->start_symbol, low, high);
 
   if (am->nsymbols == idx) {
     if (use_range)
-      fatal(4, __FUNCTION__ ": nsymbols %d == %d idx, when use_range is true.\n", am->nsymbols, idx);
+      fatal(4, "%s: nsymbols %d == %d idx, when use_range is true.\n", __FUNCTION__, am->nsymbols, idx);
     if (IS_ESCAPE_INSTALLED(am)) {
       if (am->escape_encoded_with_rle) {
 	am->escape_run++;
@@ -304,7 +304,7 @@ encode_bulk(Arithmodel *_am, Index idx, Index low, Index high, int use_range)
       install_symbol(_am, 1);
       return 2;
     } else {
-      fatal(3, __FUNCTION__ ": nsymbols %d == %d idx, but escape disabled\n", am->nsymbols, idx);
+      fatal(3, "%s: nsymbols %d == %d idx, but escape disabled\n", __FUNCTION__, am->nsymbols, idx);
     }
   }
 
@@ -382,7 +382,7 @@ decode_bulk(Arithmodel *_am, Index *index_return, Index low, Index high)
   tmp = ac->range / am->freq[high];
   freq = (ac->value - ac->low) / tmp;
 
-  debug_message(__FUNCTION__ ": low %X range %X target %X freq %X\n", ac->low, ac->range, ac->value, freq);
+  debug_message_fnc("low %X range %X target %X freq %X\n", ac->low, ac->range, ac->value, freq);
 
   if (am->nsymbols == 2) {
     idx =  (am->freq[0] > freq) ? 0 : 1;
@@ -398,11 +398,11 @@ decode_bulk(Arithmodel *_am, Index *index_return, Index low, Index high)
     idx = right;
     if (idx == low) {
       if (am->freq[low] <= freq)
-	fatal(6, __FUNCTION__ ": Invalid selection of symbol: idx = %d, freq = %d, freq[%d] = %d\n",
+	fatal(6, "%s: Invalid selection of symbol: idx = %d, freq = %d, freq[%d] = %d\n", __FUNCTION__,
 	      low, freq, low, am->freq[low]);
     } else {
       if (am->freq[idx - 1] > freq || am->freq[idx] <= freq)
-	fatal(6, __FUNCTION__ ": Invalid selection of symbol: idx = %d, freq = %d, freq[idx - 1] = %d, freq[idx] = %d\n", idx, freq, am->freq[idx - 1], am->freq[idx]);
+	fatal(6, "%s: Invalid selection of symbol: idx = %d, freq = %d, freq[idx - 1] = %d, freq[idx] = %d\n", __FUNCTION__, idx, freq, am->freq[idx - 1], am->freq[idx]);
     }
   }
 

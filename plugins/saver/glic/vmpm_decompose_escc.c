@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escc.c -- ESC estimation method C decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep 21 20:42:52 2001.
- * $Id: vmpm_decompose_escc.c,v 1.6 2001/09/21 11:53:29 sian Exp $
+ * Last Modified: Wed Dec 26 09:50:03 2001.
+ * $Id: vmpm_decompose_escc.c,v 1.7 2001/12/26 00:57:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -130,10 +130,10 @@ encode(VMPM *vmpm)
   unsigned int j, nsymbols, *symbol_to_index;
   int i, match_found;
 
-  //debug_message(__FUNCTION__ "()\n");
+  //debug_message_fn("()\n");
 
   if (!vmpm->outfile) {
-    debug_message(__FUNCTION__ ": outfile is NULL.\n");
+    debug_message_fnc("outfile is NULL.\n");
     return;
   }
 
@@ -186,7 +186,7 @@ encode(VMPM *vmpm)
 
 	if (nsymbols == tv) {
 	  if (nsymbols > vmpm->newtoken[i] - 1)
-	    generic_error((char *)"Internal error in " __FUNCTION__ "\n", INTERNAL_ERROR);
+	    generic_error((char *)"Internal error\n", INTERNAL_ERROR);
 	  stat_message(vmpm, "e ");
 	  nsymbols++;
 	  arithmodel_encode(am, tv);
@@ -194,7 +194,7 @@ encode(VMPM *vmpm)
 	    /* All escapes are emitted. */
 	    jj = j;
 	    arithmodel_order_zero_uninstall_escape(am);
-	    debug_message(__FUNCTION__ ": Level %d: Escape is uninstalled: %d/%d.\n", i, j, vmpm->token_index[i] - 1);
+	    debug_message_fnc("Level %d: Escape is uninstalled: %d/%d.\n", i, j, vmpm->token_index[i] - 1);
 	  }
 	} else {
 	  stat_message(vmpm, "%d ", tv);
@@ -221,14 +221,14 @@ encode(VMPM *vmpm)
   for (j = 0; j < vmpm->token_index[0]; j++) {
     if (symbol_to_index[(int)vmpm->token[0][j]] == (unsigned int)-1) {
       if (nsymbols > vmpm->alphabetsize)
-	generic_error((char *)"Internal error in " __FUNCTION__ "\n", INTERNAL_ERROR);
+	generic_error((char *)"Internal error\n", INTERNAL_ERROR);
       stat_message(vmpm, "e ");
       arithmodel_encode(am, nsymbols);
       symbol_to_index[(int)vmpm->token[0][j]] = nsymbols++;
       arithmodel_encode_bits(bin_am, (int)vmpm->token[0][j], vmpm->bits_per_symbol, 0, 1);
       if (nsymbols == vmpm->alphabetsize) {
 	arithmodel_order_zero_uninstall_escape(am);
-	debug_message(__FUNCTION__ ": Level 0: Escape is uninstalled: %d/%d.\n", j, vmpm->token_index[0] - 1);
+	debug_message_fnc("Level 0: Escape is uninstalled: %d/%d.\n", j, vmpm->token_index[0] - 1);
       }
     } else {
       stat_message(vmpm, "%d ", symbol_to_index[(int)vmpm->token[0][j]]);
@@ -257,7 +257,7 @@ decode(VMPM *vmpm)
   int i, n;
   unsigned int j;
 
-  //debug_message(__FUNCTION__ "()\n");
+  //debug_message_fn("()\n");
 
   ac = arithcoder_arith_create();
   arithcoder_decode_init(ac, vmpm->infile);
@@ -330,7 +330,7 @@ decode(VMPM *vmpm)
 static int
 reconstruct(VMPM *vmpm)
 {
-  fprintf(stderr, __FUNCTION__ "() not yet implemented.\n");
+  fprintf(stderr, "%s() not yet implemented.\n", __FUNCTION__);
   return 0;
 }
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 21 03:15:21 2001.
- * $Id: opendivx.c,v 1.19 2001/10/22 08:40:04 sian Exp $
+ * Last Modified: Wed Dec 26 09:33:57 2001.
+ * $Id: opendivx.c,v 1.20 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -121,7 +121,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   Image *p;
 
   if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
-    show_message("OpenDivX: " __FUNCTION__ ": No enough memory.\n");
+    show_message("OpenDivX: %s: No enough memory.\n", __FUNCTION__);
     return PLAY_ERROR;
   }
 
@@ -132,7 +132,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
-    show_message(__FUNCTION__ ": Cannot direct decoding...\n");
+    show_message_fnc("Cannot direct decoding...\n");
     return PLAY_ERROR;
   }
   debug_message("OpenDivX: requested type: %s direct\n", image_type_to_string(m->requested_type));
@@ -290,7 +290,7 @@ play(Movie *m)
   DEC_MEM_REQS *dec_memreqs = &info->dec_memreqs;
   DEC_PARAM *dec_param = &info->dec_param;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -368,7 +368,7 @@ play_video(void *arg)
   AVIPacket *ap;
   FIFO_destructor destructor;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   while (m->status == _PLAY) {
     if (m->current_frame >= m->num_of_frames) {
@@ -377,7 +377,7 @@ play_video(void *arg)
     }
     
     if (!fifo_get(info->vstream, &data, &destructor)) {
-      debug_message(__FUNCTION__ ": fifo_get() failed.\n");
+      debug_message_fnc("fifo_get() failed.\n");
       break;
     }
 
@@ -397,7 +397,7 @@ play_video(void *arg)
     /* demultiplexer should seek to next key frame... */
     for (; info->drop; info->drop--) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
-	show_message(__FUNCTION__ ": fifo_get() failed.\n");
+	show_message_fnc("fifo_get() failed.\n");
       } else {
 	if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
 	  info->eof = 1;
@@ -417,7 +417,7 @@ play_video(void *arg)
     pthread_mutex_unlock(&info->update_mutex);
   }
 
-  debug_message(__FUNCTION__ " exiting.\n");
+  debug_message_fn(" exiting.\n");
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -436,7 +436,7 @@ play_audio(void *arg)
   AVIPacket *ap;
   FIFO_destructor destructor;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
@@ -447,7 +447,7 @@ play_audio(void *arg)
 
   while (m->status == _PLAY) {
     if (!fifo_get(info->astream, &data, &destructor)) {
-      debug_message(__FUNCTION__ ": fifo_get() failed.\n");
+      debug_message_fnc("fifo_get() failed.\n");
       break;
     }
     ap = (AVIPacket *)data;
@@ -475,7 +475,7 @@ play_audio(void *arg)
 
   ExitMP3(&info->mp);
 
-  debug_message(__FUNCTION__ " exiting.\n");
+  debug_message_fn(" exiting.\n");
 
   pthread_exit((void *)PLAY_OK);
 }
@@ -579,7 +579,7 @@ stop_movie(Movie *m)
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
   void *v, *a;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   switch (m->status) {
   case _PLAY:
@@ -629,7 +629,7 @@ unload_movie(Movie *m)
 {
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
 
-  debug_message(__FUNCTION__ "()\n");
+  debug_message_fn("()\n");
 
   stop_movie(m);
 
@@ -639,9 +639,9 @@ unload_movie(Movie *m)
     demultiplexer_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
-    debug_message(__FUNCTION__ ": freeing info\n");
+    debug_message_fnc("freeing info\n");
     free(info);
-    debug_message(__FUNCTION__ ": all Ok\n");
+    debug_message_fnc("all Ok\n");
   }
 }
 
@@ -664,7 +664,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 
 DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
-  debug_message("OpenDivX: " __FUNCTION__ "() called\n");
+  debug_message("OpenDivX: %s()\n", __FUNCTION__);
 
 #ifdef IDENTIFY_BEFORE_PLAY
   {

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Oct 11 14:43:29 2001.
- * $Id: user32.c,v 1.10 2001/10/11 10:41:57 sian Exp $
+ * Last Modified: Wed Dec 26 08:35:16 2001.
+ * $Id: user32.c,v 1.11 2001/12/26 00:57:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,13 +54,13 @@ static Symbol_info symbol_infos[] = {
 
 DEFINE_W32API(BOOL, EnumThreadWindows, (DWORD id, WNDENUMPROC func, LPARAM param))
 {
-  debug_message(__FUNCTION__ "(%d, %p) called\n", id, func);
+  debug_message_fn("(%d, %p) called\n", id, func);
   return TRUE;
 }
 
 DEFINE_W32API(INT, MessageBoxA, (HWND handle, LPCSTR text, LPCSTR title, UINT type))
 {
-  debug_message(__FUNCTION__ "(%s: %s) called\n", title, text);
+  debug_message_fn("(%s: %s) called\n", title, text);
   return 1;
 }
 
@@ -73,7 +73,7 @@ DEFINE_W32API(INT, LoadStringA, (HINSTANCE handle, UINT id, LPSTR buffer, INT le
   char buf[256];
   void *d;
 
-  debug_message(__FUNCTION__ "(%p, %d(rid: %d, sid: %d), %p, %d) called\n", handle, id, rid, sid, buffer, len);
+  debug_message_fn("(%p, %d(rid: %d, sid: %d), %p, %d) called\n", handle, id, rid, sid, buffer, len);
 
   if (len == 0 || buffer == NULL)
     return 0;
@@ -110,13 +110,13 @@ DEFINE_W32API(INT, LoadStringA, (HINSTANCE handle, UINT id, LPSTR buffer, INT le
 
 DEFINE_W32API(INT, GetSystemMetrics, (INT i))
 {
-  debug_message(__FUNCTION__ "(%d) called\n", i);
+  debug_message_fn("(%d) called\n", i);
   return 0;
 }
 
 DEFINE_W32API(INT, GetKeyboardType, (INT type))
 {
-  debug_message(__FUNCTION__ "(%d) called\n", type);
+  debug_message_fn("(%d) called\n", type);
 
   switch (type) {
   case 0:
@@ -138,7 +138,7 @@ DEFINE_W32API(INT, wsprintfA, (LPSTR buf, LPCSTR format, ...))
   vsnprintf(buf, 1024, format, va);
   va_end(va);
 
-  debug_message(__FUNCTION__ ": formatted: %s", buf);
+  debug_message_fn(": formatted: %s", buf);
 
   return strlen(buf);
 }

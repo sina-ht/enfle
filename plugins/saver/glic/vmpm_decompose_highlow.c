@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep 21 20:43:35 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.24 2001/09/21 11:53:29 sian Exp $
+ * Last Modified: Wed Dec 26 09:53:56 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.25 2001/12/26 00:57:24 sian Exp $
  */
 
 #include <stdio.h>
@@ -139,10 +139,10 @@ encode(VMPM *vmpm)
   unsigned int i, j, nsymbols, *symbol_to_index;
   int match_found;
 
-  //debug_message(__FUNCTION__ "()\n");
+  //debug_message_fn("()\n");
 
   if (!vmpm->outfile) {
-    debug_message(__FUNCTION__ ": outfile is NULL.\n");
+    debug_message_fnc("outfile is NULL.\n");
     return;
   }
 
@@ -189,7 +189,7 @@ encode(VMPM *vmpm)
 
 	/* The first token of each level must be t_0. */
 	if (vmpm->token[i][0]->value != 1) {
-	  debug_message(__FUNCTION__ ": Invalid token value: vmpm->token[%d][0]->value = %d.\n", i, vmpm->token[i][0]->value);
+	  debug_message_fnc("Invalid token value: vmpm->token[%d][0]->value = %d.\n", i, vmpm->token[i][0]->value);
 	  generic_error((char *)"Invalid token value.\n", INVALID_TOKEN_VALUE_ERROR);
 	}
 	/* Hence, we don't need to encode it. */
@@ -280,7 +280,7 @@ decode(VMPM *vmpm)
   int i, n;
   unsigned int j;
 
-  //debug_message(__FUNCTION__ "()\n");
+  //debug_message_fn("()\n");
   fatal(255, "DECODING IS INVALID. NEED REIMPLEMENTATION.\n");
 
   ac = arithcoder_arith_create();
@@ -364,7 +364,7 @@ decode(VMPM *vmpm)
 static int
 reconstruct(VMPM *vmpm)
 {
-  fprintf(stderr, __FUNCTION__ "() not yet implemented.\n");
+  fprintf(stderr, "%s() not yet implemented.\n", __FUNCTION__);
   return 0;
 }
 

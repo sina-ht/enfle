@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:49:27 2001.
- * $Id: mng.c,v 1.17 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Wed Dec 26 09:27:09 2001.
+ * $Id: mng.c,v 1.18 2001/12/26 00:57:25 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -155,7 +155,7 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
     mng_set_canvasstyle(mng, MNG_CANVAS_BGRA8);
     break;
   default:
-    show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+    show_message_fnc("requested type is %s.\n", image_type_to_string(p->type));
     return PLAY_ERROR;
   }
 
@@ -198,7 +198,7 @@ refresh(mng_handle mng, mng_uint32 l, mng_uint32 t, mng_uint32 w, mng_uint32 h)
 {
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
 
-  /* debug_message(__FUNCTION__ ": (%d,%d)-(%d,%d)\n", l, t, l + w - 1, t + h - 1); */
+  /* debug_messag_fnc("(%d,%d)-(%d,%d)\n", l, t, l + w - 1, t + h - 1); */
 
   this->m->current_frame++;
   this->m->render_frame(this->vw, this->m, this->p);
@@ -285,7 +285,7 @@ play_main(Movie *m, VideoWindow *vw)
     m->pause_usec(this->delay * 1000);
     break;
   default:
-    show_message("MNG: " __FUNCTION__ ": Error %d\n", this->rc);
+    show_message("MNG: %s: Error %d\n", __FUNCTION__, this->rc);
     return PLAY_ERROR;
   }
   this->rc = mng_display_resume(this->mng);
@@ -346,7 +346,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   int err = 0;
 
   if ((this = calloc(1, sizeof(MNG_info))) == NULL) {
-    show_message("MNG: " __FUNCTION__ ": No enough memory.\n");
+    show_message("MNG: %s: No enough memory.\n", __FUNCTION__);
     return PLAY_ERROR;
   }
 

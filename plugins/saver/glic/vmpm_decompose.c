@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose.c -- decompose plugin manager
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Aug  3 18:14:23 2001.
- * $Id: vmpm_decompose.c,v 1.3 2001/08/04 12:53:58 sian Exp $
+ * Last Modified: Wed Dec 26 09:42:15 2001.
+ * $Id: vmpm_decompose.c,v 1.4 2001/12/26 00:57:25 sian Exp $
  */
 
 #include <stdio.h>
@@ -24,12 +24,12 @@ load(VMPM *vmpm, char *path)
   char *error;
 
   if ((handle = dlopen(path, RTLD_LAZY)) == NULL) {
-    fprintf(stderr, __FUNCTION__ ": dlopen: %s\n", dlerror());
+    fprintf(stderr, "%s: dlopen: %s\n", __FUNCTION__, dlerror());
     return 0;
   }
 
   if ((init = dlsym(handle, "decomposer_init")) == NULL && (error = dlerror())) {
-    //fprintf(stderr, __FUNCTION__ ": dlsym: %s: %s\n", path, error);
+    //fprintf(stderr, "%s: dlsym: %s: %s\n", __FUNCTION__, path, error);
     return 0;
   }
 
@@ -61,14 +61,14 @@ decomposer_scan_and_load(VMPM *vmpm, char *path)
   int count = 0;
 
   if (!path) {
-    fprintf(stderr, __FUNCTION__ ": path is NULL.\n");
+    fprintf(stderr, "%s: path is NULL.\n", __FUNCTION__);
     return 0;
   }
   
   if ((dir = opendir(path)) == NULL) {
     char buf[256];
 
-    sprintf(buf, __FUNCTION__ ": opendir: %s", path);
+    sprintf(buf, "%s: opendir: %s", __FUNCTION__, path);
     perror(buf);
     return 0;
   }
