@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 15:49:09 2004.
- * $Id: generic.c,v 1.3 2004/02/21 07:50:46 sian Exp $
+ * Last Modified: Thu Mar  4 00:40:10 2004.
+ * $Id: generic.c,v 1.4 2004/03/03 15:46:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -155,17 +155,16 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       m->num_of_frames = 1;
     } else {
       m->has_video = 1;
+      if (videodecoder_query(info->eps, m, m->v_fourcc, &types, info->c) == 0) {
+	show_message("videodecoder for %s not found\n", m->v_codec_name);
+	return PLAY_NOT;
+      }
     }
   } else {
     m->width = 128;
     m->height = 128;
     m->num_of_frames = 1;
     debug_message("No video streams.\n");
-  }
-
-  if (videodecoder_query(info->eps, m, m->v_fourcc, &types, info->c) == 0) {
-    show_message("videodecoder for %s not found\n", m->v_codec_name);
-    return PLAY_NOT;
   }
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
@@ -229,14 +228,15 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     }
   }
 
-  show_message("video[%c%c%c%c(%08X):codec %s](%d streams)",
-	       m->v_fourcc        & 0xff,
-	      (m->v_fourcc >>  8) & 0xff,
-	      (m->v_fourcc >> 16) & 0xff,
-	      (m->v_fourcc >> 24) & 0xff,
-	       m->v_fourcc,
-	       m->v_codec_name,
-	       info->nvstreams);
+  if (m->v_codec_name)
+    show_message("video[%c%c%c%c(%08X):codec %s](%d streams)",
+		  m->v_fourcc        & 0xff,
+		 (m->v_fourcc >>  8) & 0xff,
+		 (m->v_fourcc >> 16) & 0xff,
+		 (m->v_fourcc >> 24) & 0xff,
+		  m->v_fourcc,
+		  m->v_codec_name,
+		 info->nvstreams);
   if (image_width(p) > 0)
     show_message(": (%d,%d) %f fps %d frames",
 		 m->width, m->height, m->framerate, m->num_of_frames);
