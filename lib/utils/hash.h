@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 20 00:21:10 2000.
- * $Id: hash.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Thu Jan  4 03:27:19 2001.
+ * $Id: hash.h,v 1.2 2001/01/06 23:55:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,7 @@ struct _hash {
   Dlist *(*get_keys)(Hash *);
   int (*get_key_size)(Hash *);
   void *(*lookup)(Hash *, unsigned char *);
-  int (*delete)(Hash *, unsigned char *, int);
+  int (*delete_item)(Hash *, unsigned char *, int);
   void (*destroy)(Hash *, int);
 };
 
@@ -52,7 +52,7 @@ struct _hash {
 #define hash_get_keys(h) (h)->get_keys((h))
 #define hash_get_key_size(h) (h)->get_key_size((h))
 #define hash_lookup(h, k) (h)->lookup((h), (k))
-#define hash_delete(h, k, f) (h)->delete((h), (k), (f))
+#define hash_delete(h, k, f) (h)->delete_item((h), (k), (f))
 #define hash_destroy(h, f) (h)->destroy((h), (f))
 
 #define hash_iter(h, dl, dd, k, d) \

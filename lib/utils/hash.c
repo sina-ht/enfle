@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 01:54:27 2000.
- * $Id: hash.c,v 1.3 2000/10/20 18:10:48 sian Exp $
+ * Last Modified: Thu Jan  4 04:05:56 2001.
+ * $Id: hash.c,v 1.4 2001/01/06 23:55:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@ static void set_function(Hash *, int (*)(unsigned char *, int, int));
 static Dlist *get_keys(Hash *);
 static int get_key_size(Hash *);
 static void *lookup(Hash *, unsigned char *);
-static int delete(Hash *, unsigned char *, int);
+static int delete_item(Hash *, unsigned char *, int);
 static void destroy(Hash *, int);
 
 static int default_hash_function(unsigned char *, int, int);
@@ -48,7 +48,7 @@ static Hash hash_template = {
   get_keys: get_keys,
   get_key_size: get_key_size,
   lookup: lookup,
-  delete: delete,
+  delete_item: delete_item,
   destroy: destroy
 };
 
@@ -184,7 +184,7 @@ destroy_datum(Hash *h, int index, int f)
   if (d->key == (Dlist_data *)-1)
     return;
   if (d->key != NULL) {
-    h->keys->delete(h->keys, d->key);
+    h->keys->delete_item(h->keys, d->key);
     d->key = (Dlist_data *)-1;
   }
   if (f && d->datum != NULL)
@@ -192,7 +192,7 @@ destroy_datum(Hash *h, int index, int f)
 }
 
 static int
-delete(Hash *h, unsigned char *k, int f)
+delete_item(Hash *h, unsigned char *k, int f)
 {
   int index = lookup_internal(h, k);
 
@@ -213,7 +213,7 @@ destroy(Hash *h, int f)
   keys = get_keys(h);
   while (get_key_size(h) > 0) {
     t = keys->get_top(keys);
-    delete(h, dlist_data(t), f);
+    delete_item(h, dlist_data(t), f);
   }
 
   keys->destroy(keys);

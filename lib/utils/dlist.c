@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 01:54:21 2000.
- * $Id: dlist.c,v 1.3 2000/10/20 18:10:48 sian Exp $
+ * Last Modified: Thu Jan  4 04:06:17 2001.
+ * $Id: dlist.c,v 1.4 2001/01/06 23:55:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,7 +31,7 @@
 
 static Dlist_data *add(Dlist *, void *);
 static Dlist_data *add_str(Dlist *, char *);
-static int delete(Dlist *, Dlist_data *);
+static int delete_item(Dlist *, Dlist_data *);
 static int move_to_top(Dlist *, Dlist_data *);
 static Dlist_data *get_top(Dlist *);
 static Dlist_data *get_head(Dlist *);
@@ -44,7 +44,7 @@ static Dlist dlist_template = {
   head: NULL,
   add: add,
   add_str: add_str,
-  delete: delete,
+  delete_item: delete_item,
   move_to_top: move_to_top,
   get_top: get_top,
   get_head: get_head,
@@ -72,7 +72,7 @@ destroy(Dlist *p)
 
   for (t = p->top; t != NULL; t = tn) {
     tn = t->next;
-    if (!delete(p, t))
+    if (!delete_item(p, t))
       return 0;
   }
   free(p);
@@ -149,7 +149,7 @@ detach(Dlist *p, Dlist_data *t)
 }
 
 static int
-delete(Dlist *p, Dlist_data *t)
+delete_item(Dlist *p, Dlist_data *t)
 {
   if (p == NULL || t == NULL)
     return 0;
