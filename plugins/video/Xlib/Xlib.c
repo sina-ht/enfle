@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan  7 01:19:26 2001.
- * $Id: Xlib.c,v 1.17 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Fri Jan 12 07:27:25 2001.
+ * $Id: Xlib.c,v 1.18 2001/01/11 22:28:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -446,21 +446,20 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   GC gc = vw->if_fullscreen ? xwi->full.gc : xwi->normal.gc;
   X11 *x11 = x11window_x11(xw);
-  int fd, ret;
+  int ret;
+  int fd;
   fd_set read_fds, write_fds, except_fds;
   struct timeval timeout;
   XEvent xev;
 #ifdef USE_PTHREAD
-  static pthread_mutex_t mutex;
-  static int first = 1;
+  static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-  if (first) {
-    pthread_mutex_init(&mutex, NULL);
-    first = 0;
-  }
-
+#if 0
   if (pthread_mutex_trylock(&mutex) == EBUSY)
     return 0;
+#else
+  pthread_mutex_lock(&mutex);
+#endif
   XSync(x11_display(x11), False);
 #endif
 
@@ -470,8 +469,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
   FD_ZERO(&except_fds);
   FD_SET(fd, &read_fds);
   timeout.tv_sec = 0;
-  timeout.tv_usec = 0;
-  //timeout.tv_usec = 50;
+  timeout.tv_usec = 50;
 
   if ((ret = select(getdtablesize(), &read_fds, &write_fds, &except_fds, &timeout)) < 0) {
 #ifdef USE_PTHREAD
