@@ -13,6 +13,7 @@
 	  r = 4
 	  I = 4
 	  nlowbits = 4
+	  is_stat = true
 	}
       }
 #    }
