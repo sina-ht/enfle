@@ -20,7 +20,7 @@
 #define FPM_PPC
 #elif defined(ARCH_SPARC)
 #define FPM_SPARC
-#elif
+#else
 //#undef FPM_64BIT
 //#undef FPM_ARM
 //#undef FPM_MIPS
