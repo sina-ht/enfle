@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Oct 15 22:01:20 2000.
- * $Id: x11ximage.c,v 1.4 2000/10/15 13:03:40 sian Exp $
+ * Last Modified: Mon Oct 16 06:43:47 2000.
+ * $Id: x11ximage.c,v 1.5 2000/10/16 19:24:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,8 +37,8 @@ void
 x11ximage_convert_image(XImage *ximage, Image *p)
 {
   int i, j;
-  int bytes_per_line, bits_per_pixel;
-  unsigned char *dest, *dd;
+  int bytes_per_line = 0, bits_per_pixel = 0;
+  unsigned char *dest = NULL, *dd;
 
 #if 0
   debug_message("x order %s\n", ximage->byte_order == LSBFirst ? "LSB" : "MSB");
@@ -56,6 +56,19 @@ x11ximage_convert_image(XImage *ximage, Image *p)
   case 16:
     {
       unsigned short int pix;
+
+      bits_per_pixel = 16;
+      bytes_per_line = p->width * 2;
+
+      if (p->type == _RGB_WITH_BITMASK) {
+	ximage->byte_order = MSBFirst;
+	dest = p->image;
+	break;
+      } else if (p->type == _BGR_WITH_BITMASK) {
+	ximage->byte_order = LSBFirst;
+	dest = p->image;
+	break;
+      }
 
       if ((dest = calloc(2, p->width * p->height)) == NULL) {
 	show_message("x11ximage_convert_image: No enough memory\n");
@@ -150,8 +163,6 @@ x11ximage_convert_image(XImage *ximage, Image *p)
 	show_message("Cannot render image [type %s] so far.\n", image_type_to_string(p->type));
 	break;
       }
-      bits_per_pixel = 16;
-      bytes_per_line = p->width * 2;
     }
     break;
   case 24:
