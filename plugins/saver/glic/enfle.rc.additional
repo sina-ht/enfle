@@ -3,15 +3,17 @@
 #    saver {
       glic {
         vmpm_path = ../plugins/saver/glic/.libs
-        ; decompose_method = {Normal/HighLow/Token}
-	decompose_method = HighLow
-	; predict_method = {None/Up/Sub/Avg/Paeth/JPEGLS(=JLS)}
+        ; decompose_method = {Normal/Threshold/Token/ESC-A/ESC-B}
+	decompose_method = Threshold
+	; predict_method = {None/Up/Sub/Avg/Paeth/JPEGLS(reserved)}
 	predict_method = Sub
         ; scan_method = {Normal/Quad/Hilbert}
 	scan_method = Quad
 	vmpm {
-	  r = 4
-	  I = 4
+	  r = 0
+	  ; Use the maximum value of I when zero.
+	  I = 0
+	  bitwise = 1
 	  nlowbits = 4
 	  is_stat = true
 	}
