@@ -1,3 +1,39 @@
+2002-11-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e: Updated documentation.
+
+	* src/enfle.rc: New configs.
+
+	* plugins/video/Xlib/Xlib.c: FontSet support.
+
+	* plugins/ui/normal/normal.c: Filename code conversion.  Added %i,
+	%I for caption.
+
+	* lib/enfle/stream.c: Added dummy stream.  Fixed stupid memory
+	stream bug.
+
+	* lib/enfle/archive.[ch]: Added iteration_index.
+
+	* INSTALL, config.guess, config.sub, install-sh, ltmain.sh,
+	mkinstalldirs: Upgraded.
+
+	* common.h: Adapted for gcc-3.2.1.
+
+2002-11-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Removed warnings.
+
+	* plugins/ui/normal/normal.c: Fixed DELETE_FILE bug.
+
+	* plugins/streamer/gz/gz.c, plugins/streamer/bz2/bz2.c,
+	plugins/loader/jpeg/jpeg.c, plugins/loader/gif/gif.c,
+	plugins/loader/gif/gifext.c, plugins/loader/gif/giflib.c,
+	plugins/loader/gif/giflib.h: Removed warnings.
+
+	* plugins/archiver/arc/arc.c: Cleaning up.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Removed warnings.
+
 2002-10-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added libarc check.
