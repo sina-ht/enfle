@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 16 03:15:47 2000.
- * $Id: mpeg_lib.c,v 1.4 2000/10/16 19:28:06 sian Exp $
+ * Last Modified: Sat Oct 21 03:02:17 2000.
+ * $Id: mpeg_lib.c,v 1.5 2000/10/20 18:11:50 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -37,7 +37,7 @@ typedef struct _mpeg_lib_info {
 } MPEG_lib_info;
 
 static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(UIData *, Movie *, Stream *);
+static PlayerStatus load(VideoWindow *, VideoPlugin *, Movie *, Stream *);
 
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
@@ -89,7 +89,7 @@ mpeg_lib_rewind_func(void *d)
 }
 
 static PlayerStatus
-load_movie(UIData *uidata, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
 {
   MPEG_lib_info *info;
 
@@ -116,7 +116,7 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
   m->status = _PLAY;
   m->current_frame = 0;
 
-  m->initialize_screen(uidata, m, m->width, m->height);
+  m->initialize_screen(vw, vp, m, m->width, m->height);
 
   return PLAY_OK;
 }
@@ -153,7 +153,7 @@ play(Movie *m)
 }
 
 static PlayerStatus
-play_main(Movie *m, UIData *uidata)
+play_main(Movie *m, VideoWindow *vw, VideoPlugin *vp)
 {
   int more_frame;
   MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
@@ -193,7 +193,7 @@ play_main(Movie *m, UIData *uidata)
 
   m->current_frame++;
 
-  m->render_frame(uidata, m, p);
+  m->render_frame(vw, vp, m, p);
 #if 1
   p->image = NULL;
 #endif
@@ -294,7 +294,7 @@ identify(Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load(UIData *uidata, Movie *m, Stream *st)
+load(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
 {
   debug_message("mpeg_lib player: load() called\n");
 
@@ -315,5 +315,5 @@ load(UIData *uidata, Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(uidata, m, st);
+  return load_movie(vw, vp, m, st);
 }

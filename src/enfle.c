@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:50:46 2000.
- * $Id: enfle.c,v 1.7 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Sat Oct 21 02:20:46 2000.
+ * $Id: enfle.c,v 1.8 2000/10/20 18:12:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,8 +56,9 @@ typedef struct _option {
 } Option;
 
 static Option enfle_options[] = {
-  { "help", 'h', _NO_ARGUMENT,       "Show help message." },
-  { "ui",   'u', _REQUIRED_ARGUMENT, "Specify which UI to use."  },
+  { "help",  'h', _NO_ARGUMENT,       "Show help message." },
+  { "ui",    'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
+  { "video", 'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
   { NULL }
 };
 
@@ -125,7 +126,7 @@ main(int argc, char **argv)
   Player *player;
   Archive *a;
   int i, ch;
-  char *plugin_path, *path, *ext, *name, *ui_name = NULL;
+  char *plugin_path, *path, *ext, *name, *ui_name = NULL, *video_name = NULL;
   char *optstr;
 
   optstr = gen_optstring(enfle_options);
@@ -139,6 +140,9 @@ main(int argc, char **argv)
       return 0;
     case 'u':
       ui_name = strdup(optarg);
+      break;
+    case 'v':
+      video_name = strdup(optarg);
       break;
     default:
       fprintf(stderr, "unknown option %c\n", ch);
@@ -214,8 +218,17 @@ main(int argc, char **argv)
     return 1;
   }
 
-  if (!ui_call(ui, eps, ui_name, &uidata))
-    fprintf(stderr, "No UI %s or UI %s initialize failed\n", ui_name, ui_name);
+  if (video_name == NULL && ((video_name = config_get(c, "/enfle/plugins/video/default")) == NULL)) {
+    fprintf(stderr, "configuration error\n");
+    return 1;
+  }
+
+  if ((uidata.vp = enfle_plugins_get(eps, ENFLE_PLUGIN_VIDEO, video_name)) == NULL) {
+    fprintf(stderr, "No %s Video plugin\n", video_name);
+  } else {
+    if (!ui_call(ui, eps, ui_name, &uidata))
+      fprintf(stderr, "No UI %s or UI %s initialize failed\n", ui_name, ui_name);
+  }
 
   archive_destroy(uidata.a);
   archiver_destroy(ar);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 16 06:04:34 2000.
- * $Id: libmpeg3.c,v 1.3 2000/10/16 19:33:08 sian Exp $
+ * Last Modified: Sat Oct 21 03:03:24 2000.
+ * $Id: libmpeg3.c,v 1.4 2000/10/20 18:11:50 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -44,7 +44,7 @@ typedef struct _libmpeg3_info {
 } LibMPEG3_info;
 
 static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(UIData *, Movie *, Stream *);
+static PlayerStatus load(VideoWindow *, VideoPlugin *, Movie *, Stream *);
 
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
@@ -80,10 +80,9 @@ plugin_exit(void *p)
 /* for internal use */
 
 static PlayerStatus
-load_movie(UIData *uidata, Movie *m, Stream *st)
+load_movie(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
 {
   LibMPEG3_info *info;
-  UIScreen *uiscreen = uidata->screen;
   int i, Bpp;
 
   if ((info = calloc(1, sizeof(LibMPEG3_info))) == NULL) {
@@ -132,7 +131,7 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
        (unsigned char **)calloc(m->height, sizeof(unsigned char *))) == NULL)
     goto error;
 
-  Bpp = uiscreen->bits_per_pixel >> 3;
+  Bpp = vw->bits_per_pixel >> 3;
   /* extra 4 bytes are needed for MMX routine */
   if ((info->buffer[0] =
        (unsigned char *)malloc(m->width * m->height * Bpp + 4)) == NULL)
@@ -148,7 +147,7 @@ load_movie(UIData *uidata, Movie *m, Stream *st)
   m->previous_frame = 0;
   m->current_frame = 0;
 
-  m->initialize_screen(uidata, m, m->width, m->height);
+  m->initialize_screen(vw, vp, m, m->width, m->height);
 
   timer_start(m->timer);
 
@@ -194,11 +193,10 @@ play(Movie *m)
 }
 
 static PlayerStatus
-play_main(Movie *m, UIData *uidata)
+play_main(Movie *m, VideoWindow *vw, VideoPlugin *vp)
 {
   int decode_error;
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
-  UIScreen *uiscreen = uidata->screen;
   Image *p;
   int rendering_type, dropframes;
   float time_elapsed, fps;
@@ -220,7 +218,7 @@ play_main(Movie *m, UIData *uidata)
   p->width  = m->width;
   p->height = m->height;
 
-  switch (uiscreen->bits_per_pixel) {
+  switch (vw->bits_per_pixel) {
   case 32:
     rendering_type = MPEG3_RGBA8888;
     p->type = _RGBA32;
@@ -243,7 +241,7 @@ play_main(Movie *m, UIData *uidata)
     p->bits_per_pixel = 16;
     break;
   default:
-    show_message("Cannot render bpp %d\n", uiscreen->bits_per_pixel);
+    show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
     rendering_type = MPEG3_RGBA8888;
     break;
   }
@@ -267,7 +265,7 @@ play_main(Movie *m, UIData *uidata)
 
   debug_message("%3.2f fps\r", fps);
 
-  m->render_frame(uidata, m, p);
+  m->render_frame(vw, vp, m, p);
   m->previous_frame = m->current_frame;
 
   if (fps <= m->framerate) {
@@ -377,7 +375,7 @@ identify(Movie *m, Stream *st)
 }
 
 static PlayerStatus
-load(UIData *uidata, Movie *m, Stream *st)
+load(VideoWindow *vw, VideoPlugin *vp, Movie *m, Stream *st)
 {
   debug_message("libmpeg3 player: load() called\n");
 
@@ -398,5 +396,5 @@ load(UIData *uidata, Movie *m, Stream *st)
   m->stop = stop_movie;
   m->unload_movie = unload_movie;
 
-  return load_movie(uidata, m, st);
+  return load_movie(vw, vp, m, st);
 }
