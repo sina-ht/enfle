@@ -1,10 +1,10 @@
 /*
  * png.c -- png loader plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:51:24 2001.
- * $Id: png.c,v 1.9 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Sat Nov 17 12:41:56 2001.
+ * $Id: png.c,v 1.10 2001/11/17 03:55:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.2"
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.3"
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -147,11 +147,9 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   int text_len;
   int try_when_error;
   unsigned int i, num_text;
-#if 0
   int num_trans;
   png_color_16p trans_values;
   png_bytep trans;
-#endif
 
   //debug_message("png loader: load() called\n");
 
@@ -244,53 +242,57 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
     png_set_expand(png_ptr);
 
-  /* Set the background color */
-  switch (color_type) {
-  case PNG_COLOR_TYPE_RGB_ALPHA:
-  case PNG_COLOR_TYPE_GRAY_ALPHA:
-    png_get_bKGD(png_ptr, info_ptr, &image_background);
-    break;
-  default:
-    if (png_get_bKGD(png_ptr, info_ptr, &image_background)) {
-      png_set_background(png_ptr, image_background, PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
-    } else {
-      my_background.red = my_background.green = my_background.blue = my_background.gray = 0;
-      png_set_background(png_ptr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, DISPLAY_GAMMA);
-    }
-    break;
-  }
-
   png_read_update_info(png_ptr, info_ptr);
 
-#if 0
   /* Set the transparent color */
   if (png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values)) {
-    int i;
-
-    p->transparent_disposal = info->transparent_disposal;
+    //p->transparent_disposal = info->transparent_disposal;
     switch (color_type) {
     case PNG_COLOR_TYPE_PALETTE:
-      for (i = 0; i < num_trans; i++) {
+      for (i = 0; i < (unsigned int)num_trans; i++) {
 	if (trans[i] == 0) {
-	  p->transparent.index = i;
+	  p->transparent_color.index = i;
 	  break;
 	}
       }
       break;
     case PNG_COLOR_TYPE_RGB:
     case PNG_COLOR_TYPE_RGB_ALPHA:
-      p->transparent.red = info_ptr->trans_values.red >> 8;
-      p->transparent.green = info_ptr->trans_values.green >> 8;
-      p->transparent.blue = info_ptr->trans_values.blue >> 8;
+      p->transparent_color.red = info_ptr->trans_values.red >> 8;
+      p->transparent_color.green = info_ptr->trans_values.green >> 8;
+      p->transparent_color.blue = info_ptr->trans_values.blue >> 8;
       break;
     case PNG_COLOR_TYPE_GRAY:
     case PNG_COLOR_TYPE_GRAY_ALPHA:
-      p->transparent.index = info_ptr->trans_values.gray;
+      p->transparent_color.gray = info_ptr->trans_values.gray;
       break;
     default:
     }
   }
-#endif
+
+  /* Set the background color */
+  if (png_get_bKGD(png_ptr, info_ptr, &image_background)) {
+    p->background_color.red   = image_background->red;
+    p->background_color.green = image_background->green;
+    p->background_color.blue  = image_background->blue;
+    p->background_color.index = image_background->index;
+    p->background_color.gray  = image_background->gray;
+    png_set_background(png_ptr, image_background, PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
+  } else {
+    if (color_type != PNG_COLOR_TYPE_RGB_ALPHA &&
+	color_type != PNG_COLOR_TYPE_GRAY_ALPHA &&
+	num_trans > 0) {
+      p->background_color.red   = my_background.red   = p->transparent_color.red;
+      p->background_color.green = my_background.green = p->transparent_color.green;
+      p->background_color.blue  = my_background.blue  = p->transparent_color.blue;
+      p->background_color.index = my_background.index = p->transparent_color.index;
+      p->background_color.gray  = my_background.gray  = p->transparent_color.gray;
+    } else {
+      p->background_color.red = p->background_color.green = p->background_color.blue = p->background_color.index = p->background_color.gray =
+	my_background.red = my_background.green = my_background.blue = my_background.index = my_background.gray = 0;
+    }
+    png_set_background(png_ptr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, DISPLAY_GAMMA);
+  }
 
   /* prepare image data, store palette if exists */
   switch (color_type) {
