@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Wed Jan  3 15:37:23 2001.
- * $Id: normal.c,v 1.15 2001/01/03 06:42:05 sian Exp $
+ * $Id: normal.c,v 1.16 2001/01/03 08:48:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -312,7 +312,7 @@ main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
 	break;
       case _UNLOADED:
 	show_message("Movie has been already unloaded.\n");
-	break;
+	return 0;
       }
     }
   }
