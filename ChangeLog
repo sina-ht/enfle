@@ -1,5 +1,7 @@
 2003-12-30  Hiroshi Takekawa  <sian@fennel.org>
 
+	* configure.in: Link -lpng before -lz.
+
 	* plugins/player/libmpeg2/libmpeg2.c: Increased fifo size for
 	vstream, avoiding dead-lock.
 
