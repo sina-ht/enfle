@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb  4 21:41:23 2001.
- * $Id: libconfig.c,v 1.7 2001/02/05 16:00:05 sian Exp $
+ * Last Modified: Sat Apr 14 05:09:16 2001.
+ * $Id: libconfig.c,v 1.8 2001/04/18 05:32:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,6 +37,10 @@ static int load(Config *, const char *);
 static int save(Config *, char *);
 static void *get(Config *, const char *);
 static int set(Config *, char *, void *);
+static unsigned char *get_str(Config *, const char *);
+static int set_str(Config *, char *, unsigned char *);
+static int get_int(Config *, const char *, int *);
+static int set_int(Config *, char *, int);
 static void destroy(Config *);
 
 #define DQUOTATION 0x22
@@ -48,6 +52,10 @@ static Config config_template = {
   save: save,
   get: get,
   set: set,
+  get_str: get_str,
+  set_str: set_str,
+  get_int: get_int,
+  set_int: set_int,
   destroy: destroy
 };
 
@@ -158,13 +166,29 @@ set_internal(Config *c, String *config_path, char *path, char *remain)
   int f;
 
   if ((value_path = string_dup(config_path)) == NULL)
-    fatal(1, "libconfig: set(): No enough memory\n");
+    fatal(1, "libconfig: " __FUNCTION__ "(): No enough memory\n");
   if (path != NULL) {
     string_cat(value_path, "/");
     string_cat(value_path, path);
   }
 
-  f = hash_set_str(c->hash, string_get(value_path), strdup(remain));
+  if (*remain == '"') {
+    char *end, *quoted;
+
+    if ((end = strrchr(remain, '"')) == NULL || remain == end)
+      fatal(1, "libconfig: " __FUNCTION__ "(): Non-terminated double quoted string.\n");
+    if ((quoted = malloc(end - remain)) == NULL)
+      fatal(1, "libconfig: " __FUNCTION__ "(): No enough memory\n");
+    if (*(end + 1) != '\n' && *(end + 1) != '\0')
+      show_message("libconfig: " __FUNCTION__ "(): Ignored trailing garbage: %s\n", end + 1);
+    memcpy(quoted, remain + 1, end - remain - 1);
+    quoted[end - remain - 1] = '\0';
+    f = set_str(c, string_get(value_path), quoted);
+  } else if (isdigit(*remain)) {
+    f = set_int(c, string_get(value_path), atoi(remain));
+  } else {
+    f = set_str(c, string_get(value_path), strdup(remain));
+  }
   string_destroy(value_path);
 
   return f;
@@ -283,6 +307,47 @@ static int
 set(Config *c, char *path, void *value)
 {
   return hash_set_str(c->hash, path, value);
+}
+
+static unsigned char *
+get_str(Config *c, const char *path)
+{
+  return (unsigned char *)hash_lookup_str(c->hash, (unsigned char *)path);
+}
+
+static int
+set_str(Config *c, char *path, unsigned char *value)
+{
+  return hash_set_str(c->hash, path, value);
+}
+
+static int
+get_int(Config *c, const char *path, int *is_success)
+{
+  char *p;
+
+  *is_success = 0;
+  if ((p = (char *)get(c, path)) == NULL)
+    return 0;
+  if (*p != '\0' || memcmp(p + 1, "INT", 3))
+    return 0;
+
+  *is_success = 1;
+  return *((int *)(p + 4));
+}
+
+static int
+set_int(Config *c, char *path, int value)
+{
+  char *p;
+
+  if ((p = malloc(4 + sizeof(int))) == NULL)
+    return 0;
+  p[0] = '\0';
+  memcpy(p + 1, "INT", 3);
+  *((int *)(p + 4)) = value;
+
+  return set(c, path, (void *)p);
 }
 
 static void

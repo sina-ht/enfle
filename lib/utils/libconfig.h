@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 11 07:58:21 2000.
- * $Id: libconfig.h,v 1.2 2000/11/14 00:54:45 sian Exp $
+ * Last Modified: Sat Apr 14 05:49:52 2001.
+ * $Id: libconfig.h,v 1.3 2001/04/18 05:32:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,10 @@ struct _config {
   int (*save)(Config *, char *);
   void *(*get)(Config *, const char *);
   int (*set)(Config *, char *, void *);
+  unsigned char *(*get_str)(Config *, const char *);
+  int (*set_str)(Config *, char *, unsigned char *);
+  int (*get_int)(Config *, const char *, int *);
+  int (*set_int)(Config *, char *, int);
   void (*destroy)(Config *);
 };
 
@@ -41,6 +45,10 @@ struct _config {
 #define config_save(c, p) (c)->save((c), (p))
 #define config_get(c, p) (c)->get((c), (p))
 #define config_set(c, p, d) (c)->set((c), (p), (d))
+#define config_get_str(c, p) (c)->get_str((c), (p))
+#define config_set_str(c, p, d) (c)->set_str((c), (p), (d))
+#define config_get_int(c, p, r) (c)->get_int((c), (p), (r))
+#define config_set_int(c, p, d) (c)->set_int((c), (p), (d))
 #define config_destroy(c) (c)->destroy((c))
 
 Config *config_create(void);
