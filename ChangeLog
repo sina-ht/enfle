@@ -1,5 +1,9 @@
 2004-01-19  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/X11/x11ximage.c: Clear if_attached.
+
+2004-01-19  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Version up.
 
 	* plugins/player/avcodec/avcodec.c: Cleaned up.
