@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat May 15 13:11:18 2004.
-dnl $Id: configure.in,v 1.158 2004/05/15 04:11:22 sian Exp $
+dnl Last Modified: Mon Jun 21 22:54:47 2004.
+dnl $Id: configure.in,v 1.159 2004/06/21 13:55:06 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT([enfle],[20040515],[sian@big.or.jp])
+AC_INIT([enfle],[20040621],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -467,17 +467,11 @@ if test "$available_ungif" != "yes"; then
 fi
 AM_CONDITIONAL(HAVE_UNGIF, test "$available_ungif" = "yes")
 
-available_gif=no
+available_gif=yes
 AC_ARG_ENABLE(gif,
-        [  --enable-gif            build gif plugin ])
-if test "${enable_gif-set}" = "set"; then
-  enable_gif=no
-elif test "$enable_gif" = "yes"; then
-  if test -f "$srcdir/plugins/loader/gif/gifimage.c"; then
-    available_gif=yes
-  else
-    echo "*** GIF plugin source is not included in this distribution to avoid infamous LZW patent problem (expires June 20, 2004 in Japan)"
-  fi
+        [  --disable-gif           don't build gif plugin ])
+if test "${enable_gif-set}" = "no"; then
+  available_gif=no
 fi
 if test "$available_gif" != "yes"; then
   ENFLE_PLUGIN_DISABLE(loader/gif)
