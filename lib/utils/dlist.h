@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 11:03:46 2002.
- * $Id: dlist.h,v 1.8 2002/08/15 12:49:15 sian Exp $
+ * Last Modified: Thu Sep  5 23:17:24 2002.
+ * $Id: dlist.h,v 1.9 2002/09/05 14:36:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,6 @@ struct _dlist {
 };
 
 Dlist *dlist_create(void);
-int dlist_attach(Dlist *, Dlist_data *, Dlist_data *);
 Dlist_data *dlist_insert_object(Dlist *, Dlist_data *, void *, Dlist_data_destructor);
 Dlist_data *dlist_insert(Dlist *, Dlist_data *, void *);
 Dlist_data *dlist_insert_value(Dlist *, Dlist_data *, void *);
@@ -49,7 +48,6 @@ Dlist_data *dlist_add_object(Dlist *, void *, Dlist_data_destructor);
 Dlist_data *dlist_add(Dlist *, void *);
 Dlist_data *dlist_add_value(Dlist *, void *);
 Dlist_data *dlist_add_str(Dlist *, char *);
-int dlist_detach(Dlist *, Dlist_data *);
 int dlist_delete(Dlist *, Dlist_data *);
 int dlist_move_to_top(Dlist *, Dlist_data *);
 void dlist_set_compfunc(Dlist *, Dlist_compfunc);

@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 19 21:31:17 2002.
- * $Id: dlist.c,v 1.12 2002/08/19 12:51:23 sian Exp $
+ * Last Modified: Thu Sep  5 22:54:58 2002.
+ * $Id: dlist.c,v 1.13 2002/09/05 14:36:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,9 +31,9 @@
 static Dlist_data *
 dlist_data_create(Dlist *dl)
 {
-  Dlist_data *dd;
+  Dlist_data *dd = calloc(1, sizeof(Dlist_data));
 
-  if ((dd = calloc(1, sizeof(Dlist_data))) == NULL)
+  if (unlikely(dd  == NULL))
     return NULL;
   dd->dl = dl;
 
@@ -43,12 +43,13 @@ dlist_data_create(Dlist *dl)
 Dlist *
 dlist_create(void)
 {
-  Dlist *dl;
+  Dlist *dl = calloc(1, sizeof(Dlist));
 
-  if ((dl = calloc(1, sizeof(Dlist))) == NULL)
+  if (unlikely(dl == NULL))
     goto error;
 
-  if ((dl->guard = dlist_data_create(dl)) == NULL)
+  dl->guard = dlist_data_create(dl);
+  if (unlikely(dl->guard  == NULL))
     goto error;
   dlist_prev(dl->guard) = dl->guard;
   dlist_next(dl->guard) = dl->guard;
@@ -91,7 +92,7 @@ dlist_destroy(Dlist *dl)
   return 1;
 }
 
-int
+static inline int
 dlist_attach(Dlist *dl, Dlist_data *inserted, Dlist_data *inserted_n)
 {
   Dlist_data *inserted_p = dlist_prev(inserted_n);
@@ -115,7 +116,8 @@ dlist_insert_object(Dlist *dl, Dlist_data *inserted, void *d, Dlist_data_destruc
   bug_on(__dlist_dlist(inserted) != dl);
 #endif
 
-  if ((dd = dlist_data_create(dl)) == NULL)
+  dd = dlist_data_create(dl);
+  if (unlikely(dd == NULL))
     return NULL;
   dlist_data(dd) = d;
   __dlist_data_destructor(dd) = dddest;
@@ -162,13 +164,14 @@ dlist_add_str(Dlist *dl, char *str)
 
   if (str == NULL)
     return NULL;
-  if ((new_str = strdup(str)) == NULL)
+  new_str = strdup(str);
+  if (unlikely(new_str == NULL))
     return NULL;
 
   return dlist_add(dl, (void *)new_str);
 }
 
-int
+static inline int
 dlist_detach(Dlist *dl, Dlist_data *dd)
 {
   Dlist_data *dd_p, *dd_n;
@@ -251,7 +254,8 @@ dlist_sort(Dlist *dl)
   if (dlist_size(dl) <= 1)
     return 1;
 
-  if ((tmp = calloc(dlist_size(dl), sizeof(void *))) == NULL)
+  tmp = calloc(dlist_size(dl), sizeof(void *));
+  if (unlikely(tmp == NULL))
     return 0;
   t = dlist_top(dl);
   for (i = 0; i < dlist_size(dl); i++) {
