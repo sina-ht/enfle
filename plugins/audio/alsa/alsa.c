@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Nov  6 22:57:22 2003.
- * $Id: alsa.c,v 1.9 2003/11/17 13:52:44 sian Exp $
+ * Last Modified: Tue Dec 30 04:22:28 2003.
+ * $Id: alsa.c,v 1.10 2003/12/29 19:26:55 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -312,13 +312,14 @@ bytes_written(AudioDevice *ad)
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
   snd_pcm_status_t *pcm_stat;
   snd_pcm_sframes_t delay;
-  snd_pcm_state_t state = snd_pcm_state(alsa->fd);
+  snd_pcm_state_t state;
 
-  if (state == SND_PCM_STATE_OPEN || state == SND_PCM_STATE_SETUP) {
-    if (state != SND_PCM_STATE_OPEN)
-      show_message_fnc("SND_PCM_STATE_SETUP\n");
+  if (!alsa)
     return -1;
-  }
+
+  state = snd_pcm_state(alsa->fd);
+  if (state == SND_PCM_STATE_OPEN || state == SND_PCM_STATE_SETUP)
+    return -1;
 
   snd_pcm_status_alloca(&pcm_stat);
   snd_pcm_status(alsa->fd, pcm_stat);
