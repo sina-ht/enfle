@@ -1,3 +1,117 @@
+2003-11-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added divx, avcodec.
+
+	* plugins/ui/normal/normal.c: Added next5, prev5, nextarchive5,
+	prevarchive5.
+
+	* lib/dllloader/pe_image.c: Adapted to tls-2.5.31-D9 change.
+
+	* lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h:
+	Introduce EOF, foucc, list_fourcc.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Fixed bug.
+
+	* plugins/video/Xlib/Xlib.c: Fixed silly typo.
+
+	* src/enfle.rc: New configuration.
+
+	* plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2_vo.c: Bug fix.
+
+	* plugins/player/Makefile.am: Renamed opendivx to divx.  Added
+	avcodec.
+
+	* plugins/player/avcodec/.cvsignore,
+	plugins/player/avcodec/Makefile.am,
+	plugins/player/avcodec/avcodec.c: avcodec player plugin
+
+	* plugins/player/divx/.cvsignore, plugins/player/divx/Makefile.am,
+	plugins/player/divx/divx.c: divx player plugin
+
+	* plugins/player/opendivx/divx.c: divx player plugin.
+
+	* plugins/player/opendivx/avcodec.c: avcodec player plugin.
+
+	* plugins/audio/alsa/alsa.c: Use ALSA_PCM_NEW_HW_PARAMS_API.
+	Recovery from EPIPE.
+
+	* lib/utils/converter.c: Suppress debug messages.
+
+	* lib/mpeg2/yuv2rgb_mmx.c: Avoid warnings.
+
+	* lib/enfle/fourcc.h: Added many fourccs.
+
+	* lib/enfle/archiver.c, lib/enfle/loader.c, lib/enfle/player.c,
+	lib/enfle/streamer.c: '.' for stop trying.
+
+	* lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/demultiplexer_avi.h,
+	lib/demultiplexer/demultiplexer_avi_private.h: Rewrote
+	demultiplexer_avi.
+
+	* lib/Makefile.am: Added libavcodec.
+
+	* lib/avcodec/.cvsignore, lib/avcodec/*.[ch]: libavcodec.
+
+	* config.guess, config.sub: Updated.
+
+	* compat.h: Avoid 'inline' confusion.
+
+	* common.h: Avoid 'inline' and '(un)likely' confusion.
+
+2003-11-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/opendivx/opendivx.c: Marked as obsolete.
+
+	* plugins/archiver/tar/tar.c, lib/utils/misc.c: Avoid warnings.
+
+	* lib/utils/fifo.c: Fewer debug output.
+
+	* lib/enfle/spi.c: Avoid warnings.
+
+	* lib/enfle/archive.c: arc->path should not be NULL.
+
+	* config.guess, config.sub, install-sh, ltmain.sh, missing:
+	Update.
+
+2003-10-12  Hiroshi Takekawa  <sian@fennnel.org>
+
+	* plugins/video/Xlib/Xlib.c: Use XSetWMName() to set caption.
+
+	* lib/X11/x11.h, lib/X11/x11window.h: New macros to use
+	XSetWMName().
+
+	* lib/enfle/archive.c, lib/enfle/archive.h: Export key_compare()
+	as archive_key_compare() to use in archive plugins to sort.
+
+	* plugins/ui/normal/normal.c: Path code conversion.
+
+	* src/enfle.rc: filename_code_from is a list, not a scalar.
+
+	* plugins/audio/alsa/alsa.c, plugins/audio/oss/oss.c: Use
+	SND_PCM_NONBLOCK.
+
+	* plugins/archiver/tar/tar.c: Sort the filenames of the archive.
+
+	* plugins/archiver/arc/arc.c: Sort the filenames of the archive.
+	Use a relative path to register.
+
+	* lib/utils/misc.h, lib/utils/misc.c: New function
+	misc_str_split_delimiters().
+
+	* lib/utils/hash.c: Check hash_delete() failure.
+
+	* lib/enfle/fourcc.h: New fourcc.
+
+2003-09-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/converter.c: Fix returning error code.
+
+2003-09-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/converter.c: More error message.
+
 2003-02-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* acinclude.m4, configure.in, plugins/archiver/arc/Makefile.am,
