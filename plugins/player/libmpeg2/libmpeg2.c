@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 19:21:45 2004.
- * $Id: libmpeg2.c,v 1.46 2004/01/12 12:14:02 sian Exp $
+ * Last Modified: Sun Jan 18 16:14:58 2004.
+ * $Id: libmpeg2.c,v 1.47 2004/01/18 07:15:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,8 +42,7 @@
 
 #include "enfle/player-plugin.h"
 #include "mpeg2/mpeg2.h"
-#include "mpglib/mpg123.h"
-#include "mpglib/mpglib.h"
+#include "enfle/audiodecoder.h"
 #include "demultiplexer/demultiplexer_mpeg.h"
 #include "utils/fifo.h"
 
@@ -64,7 +63,7 @@ typedef struct _libmpeg2_info {
   Image *p;
   Config *c;
   AudioDevice *ad;
-  struct mpstr mp;
+  AudioDecoder *adec;
   mpeg2dec_t *mpeg2dec;
   Demultiplexer *demux;
   int to_render;
@@ -86,7 +85,7 @@ typedef struct _libmpeg2_info {
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.3 with integrated libmpeg2(mpeg2dec-0.4.0)",
+  description: "LibMPEG2 Player plugin version 0.4 with integrated libmpeg2(mpeg2dec-0.4.0)",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -280,7 +279,6 @@ play(Movie *m)
       return PLAY_ERROR;
     fifo_set_max(info->astream, 128);
     demultiplexer_mpeg_set_ast(info->demux, info->astream);
-    InitMP3(&info->mp);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
 
@@ -404,7 +402,7 @@ play_video(void *arg)
 	m->height = seq->height;
 	m->framerate = 27000000.0 / seq->frame_period;
 	show_message_fnc("(%d, %d) fps %2.5f\n", m->width, m->height, m->framerate);
-	if (memory_alloc(image_rendered_image(info->p), size) == NULL) {
+	if (memory_alloc(image_rendered_image(info->p), size * 2) == NULL) {
 	  show_message_fnc("No enough memory (%d bytes) for rendered image.\n", size);
 	  goto err;
 	}
@@ -471,19 +469,16 @@ play_video(void *arg)
   return (void *)PLAY_ERROR;
 }
 
-#define MP3_DECODE_BUFFER_SIZE 16384
-
 static void *
 play_audio(void *arg)
 {
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   AudioDevice *ad;
-  char output_buffer[MP3_DECODE_BUFFER_SIZE];
-  int ret, write_size;
-  int param_is_set = 0;
+  AudioDecoderStatus ads;
+  unsigned int used, u;
   void *data;
-  MpegPacket *mp;
+  MpegPacket *mp = NULL;
   FIFO_destructor destructor;
 #ifdef USE_TS
   unsigned long pts, dts, size;
@@ -491,17 +486,27 @@ play_audio(void *arg)
 
   debug_message_fn("()\n");
 
+  // XXX: should be selectable
+  //info->adec = audiodecoder_mpglib_init();
+  info->adec = audiodecoder_mad_init();
+
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");
+    return (void *)PLAY_OK;
   }
   info->ad = ad;
 
   while (m->status == _PLAY) {
-    if (!fifo_get(info->astream, &data, &destructor)) {
-      debug_message_fnc("fifo_get() failed.\n");
-      break;
+    if (!mp || mp->size == used) {
+      if (!fifo_get(info->astream, &data, &destructor)) {
+	debug_message_fnc("fifo_get() failed.\n");
+	break;
+      }
+      if (mp)
+	destructor(mp);
+      mp = (MpegPacket *)data;
+      used = 0;
     }
-    mp = (MpegPacket *)data;
     if (ad) {
 #ifdef USE_TS
       switch (mp->pts_dts_flag) {
@@ -521,41 +526,32 @@ play_audio(void *arg)
 	break;
       }
 #endif
-      ret = decodeMP3(&info->mp, mp->data, mp->size,
-		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
-      if (!param_is_set) {
-	m->sampleformat = _AUDIO_FORMAT_S16_LE;
-	m->channels = info->mp.fr.stereo;
-	m->samplerate = freqs[info->mp.fr.sampling_frequency];
-	debug_message_fnc("mp3: (%d format) %d ch %d Hz\n", m->sampleformat, m->channels, m->samplerate);
-	m->sampleformat_actual = m->sampleformat;
-	m->channels_actual = m->channels;
-	m->samplerate_actual = m->samplerate;
-	if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
-	  warning_fnc("set_params went wrong: (%d format) %d ch %d Hz\n", m->sampleformat_actual, m->channels_actual, m->samplerate_actual);
-	param_is_set++;
+      ads = audiodecoder_decode(info->adec, m, ad, mp->data + used, mp->size - used, &u);
+      used += u;
+      while (ads == AD_OK) {
+	u = 0;
+	ads = audiodecoder_decode(info->adec, m, ad, NULL, 0, &u);
+	if (u > 0)
+	  debug_message_fnc("u should be zero.\n");
       }
-      while (ret == MP3_OK) {
-	m->ap->write_device(ad, (unsigned char *)output_buffer, write_size);
-	ret = decodeMP3(&info->mp, NULL, 0,
-			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+      if (ads != AD_NEED_MORE_DATA) {
+	err_message_fnc("error in audio decoding.\n");
+	break;
       }
     }
-    destructor(mp);
   }
+
+  if (mp)
+    destructor(mp);
 
   if (ad) {
-    debug_message_fnc("sync_device()...");
     m->ap->sync_device(ad);
-    debug_message("OK\n");
-    debug_message_fnc("close_device()...");
     m->ap->close_device(ad);
     info->ad = NULL;
-    debug_message("OK\n");
   }
 
-  debug_message_fnc("ExitMP3()...");
-  ExitMP3(&info->mp);
+  debug_message_fnc("audiodecoder_destroy()... ");
+  audiodecoder_destroy(info->adec);
   debug_message("OK. exit.\n");
 
   return (void *)PLAY_OK;

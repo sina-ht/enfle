@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Sep 17 18:22:55 2001.
-# $Id: Makefile.am,v 1.2 2001/09/18 05:23:26 sian Exp $
+# Last Modified: Sat Jan 17 22:39:22 2004.
+# $Id: Makefile.am,v 1.3 2004/01/18 07:15:19 sian Exp $
 
 AM_CFLAGS = -DLAYER1 -DLAYER2 -DLAYER3
 
 noinst_LTLIBRARIES = libenflempglib.la
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 libenflempglib_la_SOURCES = \
 	common.c \
@@ -20,6 +20,7 @@ libenflempglib_la_SOURCES = \
 	layer3.c \
 	mpg123.h \
 	mpglib.h \
-	tabinit.c
+	tabinit.c \
+	audiodecoder_mpglib.c
 
 libenflempglib_la_LIBADD = -lm
