@@ -3,10 +3,12 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "module.h"
 #include "misc.h"
+
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "common.h"
 
@@ -81,9 +83,9 @@ module_find(const char *filename)
 	free(trimmed);
 	return p;
       }
-      free(trimmed);
       p = p->prev;
     } while (p);
+    free(trimmed);
   }
 
   return p;
