@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 24 10:53:07 2001.
- * $Id: avifile.cpp,v 1.7 2001/01/24 10:14:14 sian Exp $
+ * Last Modified: Tue Mar 20 06:11:27 2001.
+ * $Id: avifile.cpp,v 1.8 2001/03/19 21:14:17 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -75,7 +75,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "AviFile",
-  description: (const unsigned char *)"AviFile Player plugin version 0.3.2",
+  description: (const unsigned char *)"AviFile Player plugin version 0.3.3",
   author: (const unsigned char *)"Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -227,6 +227,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   memory_alloc(p->rendered.image, p->bytes_per_line * p->height);
 
   m->st = st;
+  m->status = _STOP;
 
   m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
@@ -459,7 +460,13 @@ unload_movie(Movie *m)
 {
   AviFile_info *info = (AviFile_info *)m->movie_private;
 
+  debug_message("AviFile: unload_movie()\n");
+
+  stop_movie(m);
+
   if (info) {
+    if (info->rf)
+      delete info->rf;
     if (info->p)
       image_destroy(info->p);
     pthread_mutex_destroy(&info->update_mutex);
