@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 11:48:53 2001.
- * $Id: demultiplexer_mpeg.c,v 1.18 2001/09/21 02:56:06 sian Exp $
+ * Last Modified: Sat Sep 22 00:28:39 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.19 2001/09/22 18:59:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -57,8 +57,8 @@ demultiplexer_mpeg_create(void)
   return demux;
 }  
 
-#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536
-#define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536
+#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536*2
+#define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536*2
 
 /*
 #define MPEG_USER_DATA 0xb2
@@ -488,20 +488,26 @@ stop(Demultiplexer *demux)
   void *p;
   FIFO_destructor destructor;
 
-  if (!demux->running)
-    return 0;
-
   debug_message("demultiplexer_mpeg stop()...\n");
 
   demux->running = 0;
-  if (info->vstream && fifo_is_full(info->vstream) && fifo_get(info->vstream, &p, &destructor))
-     destructor(p);
-  if (info->astream && fifo_is_full(info->astream) && fifo_get(info->astream, &p, &destructor))
-     destructor(p);
+  if (info->vstream)
+    while (!fifo_is_empty(info->vstream)) {
+      fifo_get(info->vstream, &p, &destructor);
+      destructor(p);
+    }
+  if (info->astream)
+    while (!fifo_is_empty(info->astream)) {
+      fifo_get(info->astream, &p, &destructor);
+      destructor(p);
+    }
 
-  debug_message(__FUNCTION__ ": joining...\n");
-  pthread_join(demux->thread, &ret);
-  debug_message(__FUNCTION__ ": joined\n");
+  if (demux->thread) {
+    debug_message(__FUNCTION__ ": joining...\n");
+    pthread_join(demux->thread, &ret);
+    demux->thread = 0;
+    debug_message(__FUNCTION__ ": joined\n");
+  }
 
   return 1;
 }
