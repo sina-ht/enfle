@@ -815,9 +815,9 @@ void MPV_common_end(MpegEncContext *s)
     s->last_picture_ptr=
     s->next_picture_ptr=
     s->current_picture_ptr= NULL;
+
     for(i=0; i<3; i++)
-        if (s->visualization_buffer[i])
-            av_free(s->visualization_buffer[i]);
+        av_freep(&s->visualization_buffer[i]);
 }
 
 #ifdef CONFIG_ENCODERS
@@ -1486,7 +1486,7 @@ void MPV_frame_end(MpegEncContext *s)
  * @param color color of the arrow
  */
 static void draw_line(uint8_t *buf, int sx, int sy, int ex, int ey, int w, int h, int stride, int color){
-    int t, x, y, f;
+    int t, x, y, fr, f;
     
     sx= clip(sx, 0, w-1);
     sy= clip(sy, 0, h-1);
@@ -1504,8 +1504,10 @@ static void draw_line(uint8_t *buf, int sx, int sy, int ex, int ey, int w, int h
         ex-= sx;
         f= ((ey-sy)<<16)/ex;
         for(x= 0; x <= ex; x++){
-            y= ((x*f) + (1<<15))>>16;
-            buf[y*stride + x]+= color;
+            y = (x*f)>>16;
+            fr= (x*f)&0xFFFF;
+            buf[ y   *stride + x]+= (color*(0x10000-fr))>>16;
+            buf[(y+1)*stride + x]+= (color*         fr )>>16;
         }
     }else{
         if(sy > ey){
@@ -1517,8 +1519,10 @@ static void draw_line(uint8_t *buf, int sx, int sy, int ex, int ey, int w, int h
         if(ey) f= ((ex-sx)<<16)/ey;
         else   f= 0;
         for(y= 0; y <= ey; y++){
-            x= ((y*f) + (1<<15))>>16;
-            buf[y*stride + x]+= color;
+            x = (y*f)>>16;
+            fr= (y*f)&0xFFFF;
+            buf[y*stride + x  ]+= (color*(0x10000-fr))>>16;;
+            buf[y*stride + x+1]+= (color*         fr )>>16;;
         }
     }
 }
@@ -2430,9 +2434,17 @@ if(s->quarter_sample)
     src_y = s->mb_y*(16>>field_based) + (motion_y >> 1);
 
     if (s->out_format == FMT_H263) {
-        uvdxy = dxy | (motion_y & 2) | ((motion_x & 2) >> 1);
-        uvsrc_x = src_x>>1;
-        uvsrc_y = src_y>>1;
+        if((s->workaround_bugs & FF_BUG_HPEL_CHROMA) && field_based){
+            mx = (motion_x>>1)|(motion_x&1);
+            my = motion_y >>1;
+            uvdxy = ((my & 1) << 1) | (mx & 1);
+            uvsrc_x = s->mb_x* 8               + (mx >> 1);
+            uvsrc_y = s->mb_y*(8>>field_based) + (my >> 1);
+        }else{
+            uvdxy = dxy | (motion_y & 2) | ((motion_x & 2) >> 1);
+            uvsrc_x = src_x>>1;
+            uvsrc_y = src_y>>1;
+        }
     } else {
         mx = motion_x / 2;
         my = motion_y / 2;
