@@ -1,0 +1,13 @@
+2000-10-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: Implemented preliminary option processor.
+
+	* src/enfle.rc: Added Id expansion.
+
+	* lib/utils/libstring.[ch]: Added new method cat_ch().
+
+	* configure.in: Added strerror to AC_CHECK_FUNCS.
+
+2000-09-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* *: Imported enfle.dev 20000930.
