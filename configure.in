@@ -6,7 +6,7 @@ dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
 dnl Last Modified: Mon Jan 29 23:20:31 2001.
-dnl $Id: configure.in,v 1.44 2001/01/29 15:11:53 sian Exp $
+dnl $Id: configure.in,v 1.45 2001/02/01 01:09:14 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010128)
+AM_INIT_AUTOMAKE(enfle, 20010131)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -354,6 +354,7 @@ AC_CONFIG_FILES([
    lib/divxdecore/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
+   lib/mpeg2/Makefile
    lib/mpglib/Makefile
    lib/utils/Makefile
   src/Makefile
@@ -361,27 +362,27 @@ AC_CONFIG_FILES([
    plugins/ui/Makefile
     plugins/ui/normal/Makefile
    plugins/streamer/Makefile
-    plugins/streamer/gz/Makefile
     plugins/streamer/bz2/Makefile
+    plugins/streamer/gz/Makefile
    plugins/loader/Makefile
+    plugins/loader/bmp/Makefile
     plugins/loader/jpeg/Makefile
     plugins/loader/png/Makefile
-    plugins/loader/bmp/Makefile
     plugins/loader/ungif/Makefile
    plugins/archiver/Makefile
     plugins/archiver/tar/Makefile
    plugins/player/Makefile
-    plugins/player/ungif/Makefile
-    plugins/player/mpeg_lib/Makefile
+    plugins/player/avifile/Makefile
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
-    plugins/player/avifile/Makefile
-    plugins/player/opendivx/Makefile
+    plugins/player/mpeg_lib/Makefile
     plugins/player/mpglib/Makefile
+    plugins/player/opendivx/Makefile
+    plugins/player/ungif/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
    plugins/audio/Makefile
-    plugins/audio/oss/Makefile
     plugins/audio/esd/Makefile
+    plugins/audio/oss/Makefile
 ])
 AC_OUTPUT
