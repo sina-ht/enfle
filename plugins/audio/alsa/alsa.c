@@ -1,10 +1,10 @@
 /*
  * alsa.c -- ALSA Audio plugin
- * (C)Copyright 2000, 20001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 22 02:35:28 2002.
- * $Id: alsa.c,v 1.4 2002/02/22 17:41:06 sian Exp $
+ * Last Modified: Tue Mar  5 05:20:03 2002.
+ * $Id: alsa.c,v 1.5 2002/03/04 20:20:43 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -61,6 +61,8 @@ typedef struct _alsa_data {
   snd_pcm_sframes_t buffer_size;
   snd_pcm_sframes_t period_size;
   snd_output_t *log;
+  unsigned int bytes_per_sample;
+  unsigned int bytes_written;
 } ALSA_data;
 
 void *
@@ -110,6 +112,7 @@ open_device(void *data, Config *c)
     perror("ALSA");
     return NULL;
   }
+  alsa->bytes_written = 0;
 
   debug_message_fnc("opened device %s successfully.\n", device);
 
@@ -279,7 +282,7 @@ write_device(AudioDevice *ad, unsigned char *data, int size)
 {
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
   ssize_t r;
-  int unit = 2 * ad->channels;
+  int unit = snd_pcm_samples_to_bytes(alsa->fd, 1) * ad->channels;
   ssize_t count = size / unit;
 
   while (count > 0) {
@@ -290,6 +293,7 @@ write_device(AudioDevice *ad, unsigned char *data, int size)
       data += r * unit;
     }
   }
+  alsa->bytes_written += size;
 
   return 1;
 }
@@ -297,7 +301,19 @@ write_device(AudioDevice *ad, unsigned char *data, int size)
 static int
 bytes_written(AudioDevice *ad)
 {
-  return -1;
+  ALSA_data *alsa = (ALSA_data *)ad->private_data;
+  snd_pcm_status_t *pcm_stat;
+  snd_pcm_sframes_t delay;
+  snd_pcm_state_t state = snd_pcm_state(alsa->fd);
+
+  if (state == SND_PCM_STATE_OPEN || state == SND_PCM_STATE_SETUP)
+    return -1;
+
+  snd_pcm_status_alloca(&pcm_stat);
+  snd_pcm_status(alsa->fd, pcm_stat);
+  delay = snd_pcm_status_get_delay(pcm_stat);
+
+  return alsa->bytes_written - snd_pcm_samples_to_bytes(alsa->fd, delay) * ad->channels;
 }
 
 static int
