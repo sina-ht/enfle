@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:55:20 2001.
- * $Id: fifo.c,v 1.3 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Wed Sep 19 01:26:45 2001.
+ * $Id: fifo.c,v 1.4 2001/09/19 00:37:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,14 +62,6 @@ fifo_create(void)
   return f;
 }
 
-/* for internal use */
-
-static inline FIFO_data *
-fifo_data_create(void)
-{
-  return calloc(1, sizeof(FIFO_data));
-}
-
 /* methods */
 
 static int
@@ -85,7 +77,7 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
   if (f->maxdata && f->ndata >= f->maxdata)
     goto unlock_and_return;
 
-  if ((fd = fifo_data_create()) == NULL)
+  if ((fd = calloc(1, sizeof(FIFO_data))) == NULL)
     goto unlock_and_return;
 
   if (f->last_put)
