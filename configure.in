@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed Feb 25 00:55:37 2004.
-dnl $Id: configure.in,v 1.141 2004/02/24 15:56:00 sian Exp $
+dnl Last Modified: Sat Feb 28 23:15:00 2004.
+dnl $Id: configure.in,v 1.142 2004/02/28 14:15:15 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT(enfle, 20040225, sian@big.or.jp)
+AC_INIT(enfle, 20040228, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -147,7 +147,7 @@ AC_CHECK_HEADER(pthread.h, [
       AC_CHECK_FUNC(pthread_create, [ available_pthread=yes; ]) ]) ]) ])
 if test "$available_pthread" = "yes"; then
   AC_DEFINE(USE_PTHREAD,,[ Define if you have libpthread ])
-  CFLAGS="$CFLAGS -D_REENTRANT"
+  CFLAGS="$CFLAGS -pthread -D_REENTRANT"
 fi
 AM_CONDITIONAL(HAVE_PTHREAD, test "$available_pthread" = "yes")
 AC_SUBST(LIBADD_PTHREAD)
