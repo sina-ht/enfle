@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 23 19:23:02 2003.
- * $Id: normal.c,v 1.75 2003/12/23 11:02:13 sian Exp $
+ * Last Modified: Mon Jan  5 18:47:58 2004.
+ * $Id: normal.c,v 1.76 2004/01/05 09:56:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -328,6 +328,10 @@ set_caption_string(MainLoop *ml)
   }
 
   video_window_set_caption(vw, string_get(cap));
+#if defined(DEBUG)
+  if (!vw->if_fullscreen)
+    debug_message_fnc("%s\n", string_get(cap));
+#endif
 
   string_destroy(cap);
 }
@@ -976,6 +980,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
       ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
       break;
     case IDENTIFY_STREAM_MOVIE:
+      m->width = m->height = 0;
       ret = main_loop(uidata, vw, m, NULL, s, a, path, gui);
       movie_unload(m);
       break;
