@@ -1,3 +1,26 @@
+2001-06-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avifile/avifile.cpp: Implemented YUV color space
+	support. Use calc_magnified_size().
+
+	* plugins/video/Xlib/Xlib.c: Added YUV422 family
+	support. Implemented calc_magnified_size().
+
+	* lib/X11/x11ximage.c: Added YUV422 family support.
+
+	* lib/X11/x11.[ch]: Added image_width, image_height.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Simplify. Use
+	calc_magnified_size() to calculate magnified image size.
+
+	* lib/enfle/image.[ch]: Added YUV422 family.
+
+	* lib/enfle/video.h: Added calc_magnified_size() method.
+
+2001-06-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg3/libmpeg3.c: Fixed stupid bug...
+
 2001-06-15  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11ximage.c: Avoid warnings.
