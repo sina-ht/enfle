@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Feb  9 12:12:50 2002.
-; $Id: enfle.rc,v 1.28 2002/02/09 03:45:28 sian Exp $
+; Last Modified: Thu Feb 14 02:05:16 2002.
+; $Id: enfle.rc,v 1.29 2002/02/13 18:02:07 sian Exp $
 
 enfle {
   identify {
@@ -147,7 +147,7 @@ enfle {
     streamer {
       assoc {
         gz := GZ
-	bz2 := bz2
+	bz2 := BZ2
       }
     }
     archiver {
