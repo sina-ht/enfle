@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 00:44:12 2001.
- * $Id: Xlib.c,v 1.32 2001/05/01 17:05:52 sian Exp $
+ * Last Modified: Sat Jun 16 03:28:23 2001.
+ * $Id: Xlib.c,v 1.33 2001/06/15 18:49:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -406,6 +406,13 @@ preferred_memory_type(VideoWindow *vw)
 static ImageType
 request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
 {
+#ifdef USE_XV
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  X11 *x11 = x11window_x11(xw);
+  X11Xv *xv = &x11->xv;
+#endif
+
   static ImageType prefer_32_msb_direct[] = {
     _ARGB32, _RGB24, _BGRA32, _BGR24, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_32_msb[] = {
@@ -442,6 +449,20 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
     _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
   ImageType *prefer_direct = NULL, *prefer = NULL;
   int i;
+
+#ifdef USE_XV
+  /* YUV support for Xv extension */
+  if (types & IMAGE_YUV420_PLANAR) {
+    debug_message(__FUNCTION__ ": decoder can provide image in YUV420P format.\n");
+    if  (xv->capable_format & XV_YV12_PLANAR_FLAG) {
+      debug_message(__FUNCTION__ ": Xv can display YUV420P format image, good.\n");
+      *direct_decode = 1;
+      return xv->prefer_msb[XV_YV12_PLANAR] ? _YUV420P : _YVU420P;
+    } else {
+      debug_message(__FUNCTION__ ": Xv cannot display YUV420P format image, bad luck.\n");
+    }
+  }
+#endif
 
   switch (vw->bits_per_pixel) {
   case 32:
@@ -777,7 +798,8 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
     resize(vw, vw->render_width, vw->render_height);
-    x11ximage_put(xwi->xi, xwi->normal.pix, xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
+    if (!xwi->xi->use_xv)
+      x11ximage_put(xwi->xi, xwi->normal.pix, xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
     draw_caption(vw);
     x11window_map_raised(xwi->normal.xw);
     x11window_wait_mapped(xwi->normal.xw);
@@ -800,7 +822,8 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     }
     recreate_pixmap_if_resized(vw, &xwi->full);
     resize(vw, vw->render_width, vw->render_height);
-    x11ximage_put(xwi->xi, xwi->full.pix, xwi->full.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
+    if (!xwi->xi->use_xv)
+      x11ximage_put(xwi->xi, xwi->full.pix, xwi->full.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
     x11window_map_raised(xwi->full.xw);
     x11window_wait_mapped(xwi->full.xw);
     XSetInputFocus(x11_display(x11), x11window_win(xwi->full.xw), RevertToPointerRoot, CurrentTime);
@@ -989,7 +1012,13 @@ render(VideoWindow *vw, Image *p)
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
     if (vw->if_direct) {
-      x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
+      if (xwi->xi->use_xv) {
+#ifdef USE_XV
+	x11ximage_put_scaled(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height, p->magnified.width, p->magnified.height);
+#endif
+      } else {
+	x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
+      }
     } else {
       x11ximage_put(xwi->xi, xwi->normal.pix, xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
       update(vw, p->left, p->top, vw->render_width, vw->render_height);
@@ -997,10 +1026,20 @@ render(VideoWindow *vw, Image *p)
   } else {
     recreate_pixmap_if_resized(vw, &xwi->full);
     if (vw->if_direct) {
-      x11ximage_put(xwi->xi, x11window_win(xw), xwi->full.gc, 0, 0,
-		    (vw->full_width  - vw->render_width ) >> 1,
-		    (vw->full_height - vw->render_height) >> 1,
-		    vw->render_width, vw->render_height);
+      if (xwi->xi->use_xv) {
+#ifdef USE_XV
+	x11ximage_put_scaled(xwi->xi, x11window_win(xw), xwi->full.gc, 0, 0,
+			     (vw->full_width  - p->magnified.width ) >> 1,
+			     (vw->full_height - p->magnified.height) >> 1,
+			     vw->render_width, vw->render_height,
+			     p->magnified.width, p->magnified.height);
+#endif
+      } else {
+	x11ximage_put(xwi->xi, x11window_win(xw), xwi->full.gc, 0, 0,
+		      (vw->full_width  - vw->render_width ) >> 1,
+		      (vw->full_height - vw->render_height) >> 1,
+		      vw->render_width, vw->render_height);
+      }
     } else {
       x11ximage_put(xwi->xi, xwi->full.pix, xwi->full.gc, 0, 0, 0, 0,
 		    vw->render_width, vw->render_height);
