@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 20:55:21 2002.
- * $Id: common.h,v 1.26 2002/08/18 13:25:16 sian Exp $
+ * Last Modified: Fri Nov 22 00:35:07 2002.
+ * $Id: common.h,v 1.27 2002/11/29 15:52:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -76,7 +76,7 @@
 #endif
 #ifndef SWAP
 #define SWAP(a, b) \
- {typedef _ta = a, _tb = b; \
+  {typedef typeof(a) _ta, _tb; \
           _ta *_a = &a; _tb *_b = &b; _ta _t; \
           _t = *_a; *_a = *_b; *_b = _t; }
 #endif
