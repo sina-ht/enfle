@@ -1,3 +1,7 @@
+2001-08-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* libconfig.c: Accept sign for integers.
+
 2001-08-26  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Revived OpenDivX. Version up.
@@ -43,11 +47,9 @@
 
 	* lib/utils/timer.h: New macro: timer_status().
 
-	* lib/utils/misc.c, lib/utils/misc.h: New function:
-	misc_canonical_pathname().
+	* lib/utils/misc.[ch]: New function: misc_canonical_pathname().
 
-	* lib/utils/libstring.c, lib/utils/libstring.h: New methods:
-	ncat(), catf().
+	* lib/utils/libstring.[ch]: New methods: ncat(), catf().
 
 2001-08-15  Hiroshi Takekawa  <sian@fennel.org>
 

@@ -1,3 +1,7 @@
+2001-08-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* glic.c: Now we can choose the method of auto-calculation of I.
+
 2001-08-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* Makefile.am, glic.c, vmpm.h, vmpm_decompose_esc.c,
