@@ -1,3 +1,115 @@
+2004-02-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added demultiplexer plugin, jasper detection code.
+	Version up.
+
+	* lib/enfle/identify.c: Added code to use generic player.
+
+	* lib/enfle/movie.h: Movie object now has audio and video codec
+	related variables.
+
+	* lib/enfle/player.c: Replace m->format with m->player_name.
+
+	* lib/enfle/enfle-plugintype.h, lib/enfle/enfle-plugin.c: Added
+	demultiplexer.
+
+	* lib/enfle/audiodecoder.c, lib/enfle/audiodecoder.h,
+	lib/enfle/videodecoder.c, lib/enfle/videodecoder.h: Implemented
+	_codec_name() and _select() functions.
+
+	* lib/enfle/audiodecoder-plugin.h,
+	lib/enfle/videodecoder-plugin.h: init() now accepts fourcc for a
+	argument.
+
+	* lib/enfle/fourcc.h: Added audio codecs.
+
+	* lib/enfle/archiver-plugin.h, lib/enfle/audio-plugin.h,
+	lib/enfle/effect-plugin.h, lib/enfle/player-plugin.h,
+	lib/enfle/saver-plugin.h, lib/enfle/streamer-plugin.h,
+	lib/enfle/ui-plugin.h, lib/enfle/video-plugin.h: Added #ifndef
+	STATIC.
+
+	* lib/enfle/Makefile.am: Added demultiplexer plugin and object.
+
+	* src/enfle.rc: New configuration options.
+
+	* src/enfle.c: Scan demultiplexer plugin.
+
+	* plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: Check fourcc whether
+	they can play or not.
+
+	* plugins/demultiplexer/.cvsignore,
+	plugins/demultiplexer/Makefile.am: New files.
+
+	* plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/mpglib.c: Check fourcc whether they
+	can play or not.
+
+	* plugins/Makefile.am: Added demultiplexer plugin.
+
+	* plugins/player/Makefile.am: Added generic player plugin.
+	Commented out libmpeg2.old libmpeg2 divx avcodec player plugins.
+
+	* plugins/player/generic/.cvsignore,
+	plugins/player/generic/Makefile.am,
+	plugins/player/generic/generic.c: generic player plugin.
+
+	* plugins/loader/Makefile.am: Added jasper j2k loader plugins.
+
+	* plugins/demultiplexer/mpeg/*: mpeg demultiplexer plugin.
+
+	* plugins/demultiplexer/avi/*: avi demultiplexer plugin.
+
+	* plugins/loader/jpeg/jpeg.c: Removed ID report request.
+
+	* plugins/loader/jasper/*: JasPer loader plugin.
+
+	* plugins/loader/j2k/*: j2k loader plugin.
+
+	* lib/Makefile.am: Added libj2k.  Commented out mpeg2.old
+	demultiplexer(old).
+
+	* lib/enfle/demultiplexer-plugin.h, lib/enfle/demultiplexer.c,
+	lib/enfle/demultiplexer.h: demultiplexer plugin and object.
+
+	* lib/j2k/*: Integrated libj2k.
+
+	* plugins/player/{avcodec,divx,libmpeg2.old,libmpeg2}/*:
+	Deprecated.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/cabac.h, lib/avcodec/common.c,
+	lib/avcodec/common.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/ffv1.c, lib/avcodec/g726.c,
+	lib/avcodec/h263.c, lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/mjpeg.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegaudiodec.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/qtrle.c, lib/avcodec/ra144.c: Updated.
+
+	* lib/demultiplexer/*: Deprecated.
+
+2004-02-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/avcodec/avcodec.c, plugins/player/divx/divx.c,
+	plugins/player/libmpeg2/libmpeg2.c: Cleaned up.
+
+	* lib/enfle/movie.c, lib/enfle/movie.h,
+	plugins/ui/normal/normal.c, plugins/ui/wallpaper/wallpaper.c:
+	Removed movie_{get,set}_play_every_frame().
+
+	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c,
+	lib/avcodec/avcodec.h, lib/avcodec/common.c, lib/avcodec/dpcm.c,
+	lib/avcodec/dsputil.h, lib/avcodec/h263.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx.c, lib/avcodec/interplayvideo.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/msrle.c,
+	lib/avcodec/msvideo1.c, lib/avcodec/rpza.c, lib/avcodec/smc.c,
+	lib/avcodec/utils.c: Updated.
+
 2004-01-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/mad/audiodecoder_mad.c: Removed audiodecoder_mad.c
