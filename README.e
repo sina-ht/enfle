@@ -4,7 +4,7 @@
 
    (C) Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa.
 
-             Last Modified: Wed Jul 31 22:54:49 2002.
+             Last Modified: Fri Nov 22 00:53:55 2002.
 
  This file is part of Enfle.
 
@@ -233,6 +233,8 @@ Legends:
 %p: The path to the file displayed
 %P: The full path
 %N: The name of the software
+%i: The index of the current file in the current archive
+%I: The number of the files in the current archive
 
 
 7. Contact

@@ -4,7 +4,7 @@
 
    (C) Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa.
 
-             Last Modified: Wed Jul 17 20:58:08 2002.
+             Last Modified: Fri Nov 22 00:52:59 2002.
 
  This file is part of Enfle.
 
@@ -253,7 +253,10 @@ enfle.rc (~/.enfle/config) の caption_template = "%p %f %xx%y"で設定し
  ファイルのフルパス
 %N
  プログラム名
-
+%i
+ そのアーカイブ(ディレクトリ)での位置
+%I
+ そのアーカイブ(ディレクトリ)のファイル数
 
 7.その他
 
