@@ -1,10 +1,10 @@
 /*
  * enfle.c -- graphic loader Enfle main program
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar 19 00:25:07 2004.
- * $Id: enfle.c,v 1.62 2004/03/24 14:50:37 sian Exp $
+ * Last Modified: Thu Mar 25 22:22:15 2004.
+ * $Id: enfle.c,v 1.63 2004/03/25 13:27:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -225,12 +225,14 @@ scan_and_load_spi_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   while (path) {
     base_name = misc_basename(path);
     fullpath = archive_getpathname(a, path);
-    if (!strcasecmp(ext, ".spi")) {
-      if ((name = spi_load(eps, fullpath, &type)) == NULL) {
-	warning("spi_load %s failed.\n", fullpath);
-      } else {
-	nplugins++;
-	nplugins -= check_and_unload(eps, c, type, name);
+    if ((ext = strrchr(path, '.'))) {
+      if (!strcasecmp(ext, ".spi")) {
+	if ((name = spi_load(eps, fullpath, &type)) == NULL) {
+	  warning("spi_load %s failed.\n", fullpath);
+	} else {
+	  nplugins++;
+	  nplugins -= check_and_unload(eps, c, type, name);
+	}
       }
     }
     free(fullpath);
