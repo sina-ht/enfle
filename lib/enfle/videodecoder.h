@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 14:56:51 2004.
- * $Id: videodecoder.h,v 1.3 2004/02/21 07:51:20 sian Exp $
+ * Last Modified: Sun Apr 18 04:02:13 2004.
+ * $Id: videodecoder.h,v 1.4 2004/04/18 06:26:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,12 +42,12 @@ struct _video_decoder {
   pthread_cond_t update_cond;
 
   int (*setup)(VideoDecoder *, Movie *, Image *, int, int);
-  VideoDecoderStatus (*decode)(VideoDecoder *, Movie *, Image *, unsigned char *, unsigned int, unsigned int *);
+  VideoDecoderStatus (*decode)(VideoDecoder *, Movie *, Image *, unsigned char *, unsigned int, int, unsigned int *);
   void (*destroy)(VideoDecoder *);
 };
 
 #define videodecoder_setup(vdec,m,p,w,h) (vdec)->setup(vdec,m,p,w,h)
-#define videodecoder_decode(vdec,m,p,b,l,r) (vdec)->decode(vdec,m,p,b,l,r)
+#define videodecoder_decode(vdec,m,p,b,l,k,r) (vdec)->decode(vdec,m,p,b,l,k,r)
 #define videodecoder_destroy(vdec) (vdec)->destroy(vdec)
 
 /* protected */

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 17:45:06 2004.
- * $Id: raw.c,v 1.3 2004/04/12 04:15:05 sian Exp $
+ * Last Modified: Sun Apr 18 04:00:49 2004.
+ * $Id: raw.c,v 1.4 2004/04/18 06:26:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,7 +70,7 @@ ENFLE_PLUGIN_EXIT(videodecoder_raw, p)
 /* videodecoder plugin methods */
 
 static VideoDecoderStatus
-decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, unsigned int *used_r)
+decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, int is_key, unsigned int *used_r)
 {
   //struct videodecoder_raw *vdm = (struct videodecoder_raw *)vdec->opaque;
   int i;

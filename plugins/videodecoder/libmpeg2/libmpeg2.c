@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 18:04:58 2004.
- * $Id: libmpeg2.c,v 1.6 2004/04/12 04:15:05 sian Exp $
+ * Last Modified: Sun Apr 18 04:00:58 2004.
+ * $Id: libmpeg2.c,v 1.7 2004/04/18 06:26:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -71,7 +71,7 @@ ENFLE_PLUGIN_EXIT(videodecoder_libmpeg2, p)
 /* videodecoder plugin methods */
 
 static VideoDecoderStatus
-decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, unsigned int *used_r)
+decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, int is_key, unsigned int *used_r)
 {
   struct videodecoder_libmpeg2 *vdm = (struct videodecoder_libmpeg2 *)vdec->opaque;
   mpeg2_state_t state;

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 17:46:06 2004.
- * $Id: avcodec.c,v 1.5 2004/04/12 04:15:05 sian Exp $
+ * Last Modified: Sun Apr 18 04:01:10 2004.
+ * $Id: avcodec.c,v 1.6 2004/04/18 06:26:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -216,7 +216,7 @@ release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 #endif
 
 static VideoDecoderStatus
-decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, unsigned int *used_r)
+decode(VideoDecoder *vdec, Movie *m, Image *p, unsigned char *buf, unsigned int len, int is_key, unsigned int *used_r)
 {
   struct videodecoder_avcodec *vdm = (struct videodecoder_avcodec *)vdec->opaque;
   int l;
