@@ -1,3 +1,23 @@
+2001-08-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* Makefile.am, glic.c, vmpm.h, vmpm_decompose_esc.c,
+	vmpm_decompose_escb.c, vmpm_decompose_escc.c,
+	vmpm_decompose_escfirst.c, vmpm_decompose_half.c,
+	vmpm_decompose_highlow.c, vmpm_decompose_highlow_esc.c,
+	vmpm_decompose_highlow_escb.c, vmpm_decompose_highlow_rle.c,
+	vmpm_decompose_normal.c, vmpm_decompose_normal_old.c,
+	vmpm_decompose_normal_rle.c, vmpm_decompose_recur.c,
+	vmpm_decompose_token.c, vmpm_decompose_token2.c,
+	vmpm_decompose_token2_old.c, vmpm_decompose_token2_old2.c,
+	vmpm_decompose_token_old.c, vmpm_decompose_token_old2.c: Bit
+	expansion support.
+
+	* expand.[ch]: New files.
+
+2001-08-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* bitstream.c: Reverted changes.
+
 2001-08-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* vmpm_decompose_escb.c: Bug fixed.
