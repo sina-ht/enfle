@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 12 21:08:44 2001.
- * $Id: avifile.cpp,v 1.3 2001/01/12 13:22:55 sian Exp $
+ * Last Modified: Fri Jan 12 23:07:49 2001.
+ * $Id: avifile.cpp,v 1.4 2001/01/14 15:21:28 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -303,14 +303,17 @@ play_video(void *arg)
   pthread_exit((void *)PLAY_OK);
 }
 
+#define AUDIO_BUFFER_SIZE 8192
+
 static void *
 play_audio(void *arg)
 {
   Movie *m = (Movie *)arg;
   AviFile_info *info = (AviFile_info *)m->movie_private;
   AudioDevice *ad;
-
-  show_message("play_audio() is not yet implemented.\n");
+  unsigned int samples, ocnt;
+  int samples_to_read;
+  int i;
 
   if ((ad = m->ap->open_device(NULL, m->c)) == NULL) {
     show_message("Cannot open device.\n");
@@ -320,8 +323,20 @@ play_audio(void *arg)
   if (!m->ap->set_params(ad, &m->sampleformat, &m->channels, &m->samplerate))
     show_message("Some params are set wrong.\n");
 
-  m->ap->close_device(ad);
+  unsigned char *input_buffer = new unsigned char [AUDIO_BUFFER_SIZE];
 
+  samples_to_read = AUDIO_BUFFER_SIZE;
+  while (m->status == _PLAY) {
+    if (info->audiostream->Eof())
+      break;
+    samples = ocnt = 0;
+    info->audiostream->ReadFrames(input_buffer, samples_to_read, samples_to_read, samples, ocnt);
+    //debug_message("read %d samples (%d bytes)\n", samples, ocnt);
+    m->ap->write_device(ad, (unsigned char *)input_buffer, ocnt);
+    m->current_sample += samples;
+  }
+  m->ap->close_device(ad);
+  delete input_buffer;
   pthread_exit((void *)PLAY_OK);
 }
 
@@ -355,7 +370,7 @@ play_main(Movie *m, VideoWindow *vw)
   time_elapsed = (int)timer_get_milli(m->timer);
   m->current_frame = info->stream->GetPos();
   due_time = info->frametime * m->current_frame;
-  debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
+  //debug_message("v: %d %d (%d frame)\n", time_elapsed, due_time, m->current_frame);
   
   if (info->ci) {
     if (time_elapsed < due_time) {
@@ -365,7 +380,8 @@ play_main(Movie *m, VideoWindow *vw)
     } else if (time_elapsed > due_time + info->frametime) {
       /* too late, drop several frames */
       debug_message("drop frames\n");
-      info->stream->SkipTo((double)time_elapsed / 1000);
+      //info->stream->SkipTo((double)time_elapsed / 1000);
+      info->stream->ReadFrame();
       m->render_frame(vw, m, p);
     } else {
       /* just in time to render */
