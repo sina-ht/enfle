@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Jun 12 12:48:48 2004.
-# $Id: Makefile.am,v 1.16 2004/06/12 04:05:47 sian Exp $
+# Last Modified: Mon Jun 21 21:26:22 2004.
+# $Id: Makefile.am,v 1.17 2004/06/21 13:45:17 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -180,6 +180,7 @@ libavcodec_la_SOURCES = \
 	rational.c \
 	raw.c \
 	resample.c \
+	resample2.c \
 	roqvideo.c \
 	rpza.c \
 	rv10.c \
