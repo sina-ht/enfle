@@ -1,3 +1,54 @@
+2004-08-16  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: To load such as .bmp.gz and .tar.gz, enable scan
+	without assoc for loader and archiver.
+
+	* plugins/ui/normal/normal.c: Check archive_open() return value.
+
+	* plugins/archiver/tar/tar.c: Add by correct pathnames.
+
+	* lib/utils/plugin.c: Display an error message when dlopen()
+	fails.
+
+	* lib/enfle/identify.c: Check archive_open() return value
+	correctly.
+
+2004-07-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/mad/config.h, lib/utils/cpucaps.h: Fixed for x86_64.
+
+	* lib/avcodec/alpha/dsputil_alpha_asm.S,
+	lib/avcodec/alpha/motion_est_mvi_asm.S,
+	lib/avcodec/i386/cputest.c,
+	lib/avcodec/i386/mpegvideo_mmx_template.c,
+	lib/avcodec/Makefile.am, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.c, lib/avcodec/avcodec.h, lib/avcodec/cabac.c,
+	lib/avcodec/cabac.h, lib/avcodec/cinepak.c, lib/avcodec/common.h,
+	lib/avcodec/h264.c, lib/avcodec/integer.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudio.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/parser.c, lib/avcodec/rational.c,
+	lib/avcodec/rational.h, lib/avcodec/resample.c,
+	lib/avcodec/resample2.c, lib/avcodec/smc.c, lib/avcodec/utils.c:
+	Updated.
+
+2004-06-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/common.h, lib/enfle/audiodecoder.c,
+	lib/enfle/fourcc.h, plugins/audiodecoder/avcodec/avcodec.c: It
+	seems that fourcc 0x01 means mp3 audio...
+
+2004-06-26  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/ac3tab.h, lib/avcodec/avcodec.h,
+	lib/avcodec/common.h, lib/avcodec/error_resilience.c,
+	lib/avcodec/flac.c, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/i386/cputest.c,
+	lib/avcodec/mp3lameaudio.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/oggvorbis.c,
+	lib/avcodec/pthread.c, lib/avcodec/utils.c, lib/avcodec/wmadec.c:
+	Updated.
+
 2004-06-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Enable GIF.
