@@ -1,3 +1,52 @@
+2001-10-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: More configuration: stream, archive control
+	feature control, and assoc sample.
+
+	* src/enfle.c: Cleaned up.
+
+	* plugins/ui/normal/normal.c: Be able to disable the archive
+	feature.
+
+	* plugins/ui/convert/convert.c, plugins/ui/wallpaper/wallpaper.c:
+	Adapted for identify_file() change.
+
+	* plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/opendivx/opendivx.c: Deleted useless #include's.
+
+	* plugins/player/ungif/ungif.c: Use m->timer instead of
+	info->timer.
+
+	* plugins/player/avifile/avifile.cpp: Cleaned up.
+
+	* plugins/audio/alsa/Makefile.am, plugins/audio/alsa/alsa.c: More
+	ALSA code.
+
+	* lib/utils/timer.h: Added timer_is_running().
+
+	* lib/utils/timer.c: Make get() and get_milli() faster.
+
+	* lib/utils/misc.[ch]: Added misc_get_ext().
+
+	* lib/enfle/loader.c, lib/enfle/player.c: Implemented assoc
+	feature.
+
+	* lib/enfle/player.h: Deleted a useless #include.
+
+	* lib/enfle/identify.[ch]: Be able to disable the stream feature.
+
+	* lib/enfle/enfle-plugintype.h: Added ENFLE_PLUGIN_START.
+
+	* lib/X11/x11ximage.c: Use I420 instead of YV12 to render the
+	image of type YV12...
+
+2001-10-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/spi.c: Implemented depth 4 rendering.
+
+	* lib/dllloader/kernel32.c: Fixed SetFilePointer() return value.
+
 2001-10-11  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README, README.e: More documentation.
