@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar  9 23:12:36 2004.
- * $Id: streamer.c,v 1.13 2004/03/09 14:16:57 sian Exp $
+ * Last Modified: Thu Mar 11 23:10:09 2004.
+ * $Id: streamer.c,v 1.14 2004/03/11 15:07:04 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,7 +58,7 @@ streamer_identify(EnflePlugins *eps, Stream *st, char *filepath, Config *c)
 	  stp = plugin_get(p);
 	  debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
 	  if (stp->identify(st, filepath) == STREAM_OK) {
-	    st->format = strdup(pluginname);
+	    st->format = pluginname;
 	    free(ext);
 	    return 1;
 	  }
