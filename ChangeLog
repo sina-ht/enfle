@@ -1,3 +1,24 @@
+2001-09-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* Makefile.am, NEWS, README, README.e, plugins/player/Makefile.am,
+	plugins/player/opendivx/opendivx.c: DivX related changes such as
+	license description.
+
+	* plugins/player/opendivx/Makefile.am,
+	plugins/player/opendivx/opendivx.c: Use
+	demultiplexer_avi. Implemented mp3 audio support.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Fixed meaningless
+	code. Destroy demultiplexer object in unloading.
+
+	* lib/demultiplexer/Makefile.am: Added AVI demultiplexer.
+
+	* lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/demultiplexer_avi.h,
+	lib/demultiplexer/demultiplexer_avi_private.h,
+	lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h: New
+	files.
+
 2001-09-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS: Updated NEWS.
