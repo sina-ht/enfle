@@ -1,12 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl NOTE: autoconf should be 2.49b or later (2.49d or later recommended).
+dnl NOTE: autoconf should be 2.49b or later (2.49e or later recommended).
 dnl       Older autoconf needs some modifications.
 dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Apr 26 01:48:41 2001.
-dnl $Id: configure.in,v 1.62 2001/04/25 17:28:24 sian Exp $
+dnl Last Modified: Thu Apr 26 15:25:18 2001.
+dnl $Id: configure.in,v 1.63 2001/04/27 01:01:36 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -53,8 +53,6 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
-dnl These might be commented out if autoconf is older.
-dnl AC_PROG_CC_STDC
 AC_PROG_GCC_TRADITIONAL
 
 dnl Checks for libraries.
@@ -135,7 +133,6 @@ AM_CONDITIONAL(HAVE_ZLIB, test "$available_zlib" = "yes")
 AC_SUBST(LIBADD_ZLIB)
 
 available_png=no
-dnl Some libpng needs -lm
 if test "$available_zlib" = "yes"; then
   LIBADD_PNG=$LIBADD_ZLIB
   AC_CHECK_HEADER(png.h, [
@@ -202,7 +199,17 @@ AM_CONDITIONAL(HAVE_BZLIB, test "$available_bzlib" = "yes")
 AC_SUBST(LIBADD_BZLIB)
 
 available_oss=no
-AC_CHECK_HEADERS(sys/soundcard.h machine/soundcard.h soundcard.h)
+AC_CHECK_HEADER(sys/soundcard.h, [
+  AC_DEFINE(HAVE_SYS_SOUNDCARD_H, 1, [ Define if you have the <sys/soundcard.h> header file. ])
+], [
+  AC_CHECK_HEADER(machine/soundcard.h, [
+    AC_DEFINE(HAVE_MACHINE_SOUNDCARD_H, 1, [ Define if you have the <machine/soundcard.h> header file. ])
+  ], [
+    AC_CHECK_HEADER(soundcard.h, [
+      AC_DEFINE(HAVE_SOUNDCARD_H, 1, [ Define if you have the <soundcard.h> header file. ])
+    ])
+  ])
+])
 if test "${ac_cv_header_soundcard_h}" = "yes" -o \
         "${ac_cv_header_sys_soundcard_h}" = "yes" -o \
         "${ac_cv_header_machine_soundcard_h}" = "yes"; then
@@ -240,6 +247,12 @@ dnl if test "$enable_mmx" = "yes"; then
 dnl   AC_DEFINE(USE_MMX, 1,[ Define if you have and use MMX. ])
 dnl fi
 dnl AM_CONDITIONAL(USE_MMX, test "$enable_mmx" = "yes")
+
+AC_ARG_ENABLE(private,
+	[  --enable-private        enable private code. (Please ignore). ],
+	[ enable_private=$enableval ],
+	[ enable_private=no ])
+AM_CONDITIONAL(ENABLE_PRIVATE, test "$enable_private" = "yes")
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
