@@ -1,5 +1,13 @@
 2001-09-03  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/demultiplexer/Makefile.am: Added
+	demultiplexer_avi_private.h.
+
+	* plugins/player/opendivx/opendivx.c: Deleted #include "libavi.h",
+	which is no longer needed.
+
+2001-09-03  Hiroshi Takekawa  <sian@fennel.org>
+
 	* Makefile.am, NEWS, README, README.e, plugins/player/Makefile.am,
 	plugins/player/opendivx/opendivx.c: DivX related changes such as
 	license description.
