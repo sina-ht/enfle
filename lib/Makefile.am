@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.1 2000/09/30 17:36:36 sian Exp $
+# $Id: Makefile.am,v 1.2 2000/10/28 19:06:44 sian Exp $
 
-SUBDIRS = utils enfle X11
+SUBDIRS = utils dllloader enfle X11
