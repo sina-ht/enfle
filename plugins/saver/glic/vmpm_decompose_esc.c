@@ -1,8 +1,8 @@
 /*
- * vmpm_decompose_esc.c -- ESC estimate method A decomposer
+ * vmpm_decompose_esc.c -- ESC estimatation method A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Aug  2 20:48:55 2001.
- * $Id: vmpm_decompose_esc.c,v 1.2 2001/08/02 11:49:16 sian Exp $
+ * Last Modified: Fri Aug  3 18:01:54 2001.
+ * $Id: vmpm_decompose_esc.c,v 1.3 2001/08/04 12:54:47 sian Exp $
  */
 
 #include <stdio.h>
@@ -192,10 +192,11 @@ encode(VMPM *vmpm)
       unsigned int nsymbols = 0;
 
       stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i]);
-      arithmodel_order_zero_reset(am, 0, 0);
       arithmodel_order_zero_reset(bin_am, 0, 0);
       arithmodel_install_symbol(bin_am, 1);
       arithmodel_install_symbol(bin_am, 1);
+#if 0
+      arithmodel_order_zero_reset(am, 0, 0);
       for (j = 0; j < vmpm->token_index[i]; j++) {
 	Token *t = vmpm->token[i][j];
 	Token_value tv = t->value - 1;
@@ -211,6 +212,38 @@ encode(VMPM *vmpm)
 	  arithmodel_encode(am, tv);
 	}
       }
+#else
+      for (j = 0; j < vmpm->token_index[i]; j++) {
+	Token *t = vmpm->token[i][j];
+	Token_value tv = t->value - 1;
+
+	if (nsymbols == tv) {
+	  stat_message(vmpm, "e ");
+	  nsymbols++;
+	  arithmodel_encode(bin_am, 1);
+	} else {
+	  stat_message(vmpm, "%d ", tv);
+	  arithmodel_encode(bin_am, 0);
+	}
+      }
+      /* Then encode non-escape symbols */
+      arithmodel_order_zero_reset(bin_am, 0, 0);
+      arithmodel_install_symbol(bin_am, 1);
+      arithmodel_install_symbol(bin_am, 1);
+      arithmodel_order_zero_reset(am, 0, 0);
+      nsymbols = 0;
+      for (j = 0; j < vmpm->token_index[i]; j++) {
+        Token *t = vmpm->token[i][j];
+        Token_value tv = t->value - 1;
+
+        if (nsymbols == tv) {
+          nsymbols++;
+	  arithmodel_install_symbol(am, 1);
+        } else {
+	  arithmodel_encode(am, tv);
+        }
+      }
+#endif
       stat_message(vmpm, "\n");
     }
   }
