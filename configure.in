@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Feb 21 17:58:44 2004.
-dnl $Id: configure.in,v 1.140 2004/02/21 09:08:14 sian Exp $
+dnl Last Modified: Wed Feb 25 00:55:37 2004.
+dnl $Id: configure.in,v 1.141 2004/02/24 15:56:00 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT(enfle, 20040221, sian@big.or.jp)
+AC_INIT(enfle, 20040225, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -377,16 +377,28 @@ AM_CONDITIONAL(USE_MMX, test "$enable_mmx" = "yes")
 dnl for libmpeg2
 case "$host_cpu" in
   i*86 )
-    AC_DEFINE(ARCH_X86, 1, [ Define if you have X86 architecture. ]) ;;
+    AC_DEFINE(ARCH_X86, 1, [ Define if you have X86 architecture. ])
+    arch_x86=yes
+    ;;
   powerpc* )
-    AC_DEFINE(ARCH_PPC, 1, [ Define if you have PowerPC architecture. ]) ;;
+    AC_DEFINE(ARCH_PPC, 1, [ Define if you have PowerPC architecture. ])
+    arch_ppc=yes
+    ;;
   sparc* )
-    AC_DEFINE(ARCH_SPARC, 1, [ Define if you have SPARC architecture. ]) ;;
+    AC_DEFINE(ARCH_SPARC, 1, [ Define if you have SPARC architecture. ])
+    arch_sparc=yes
+    ;;
   alpha* )
-    AC_DEFINE(ARCH_ALPHA, 1, [ Define if you have ALPHA architecture. ]) ;;
+    AC_DEFINE(ARCH_ALPHA, 1, [ Define if you have ALPHA architecture. ])
+    arch_alpha=yes
+    ;;
   *)
     ;;
 esac
+AM_CONDITIONAL(ARCH_X86, test "$arch_x86" = "yes")
+AM_CONDITIONAL(ARCH_PPC, test "$arch_ppc" = "yes")
+AM_CONDITIONAL(ARCH_SPARC, test "$arch_sparc" = "yes")
+AM_CONDITIONAL(ARCH_ALPHA, test "$arch_alpha" = "yes")
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
