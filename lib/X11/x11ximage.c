@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Dec  9 03:22:46 2000.
- * $Id: x11ximage.c,v 1.14 2000/12/10 13:19:34 sian Exp $
+ * Last Modified: Tue Dec 12 23:26:35 2000.
+ * $Id: x11ximage.c,v 1.15 2000/12/12 14:29:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -245,8 +245,10 @@ convert(X11XImage *xi, Image *p)
 	break;
       case _BGRA32:
 #ifdef WITH_NASM
-	bgra32to16(dest, s, w, h);
-#else
+	if (ximage->bytes_per_line == w * 2)
+	  bgra32to16(dest, s, w, h);
+	else {
+#endif
 	for (j = 0; j < h; j++) {
 	  dd = dest + j * ximage->bytes_per_line;
 	  for (i = 0; i < w; i++) {
@@ -258,6 +260,8 @@ convert(X11XImage *xi, Image *p)
 	    *dd++ = pix >> 8;
 	  }
 	  s += bytes_per_line_s;
+	}
+#ifdef WITH_NASM
 	}
 #endif
 	break;
