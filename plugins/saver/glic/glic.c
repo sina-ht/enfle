@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug 28 16:05:45 2001.
- * $Id: glic.c,v 1.15 2001/08/29 08:37:57 sian Exp $
+ * Last Modified: Thu Aug 30 10:05:07 2001.
+ * $Id: glic.c,v 1.16 2001/08/30 01:07:33 sian Exp $
  */
 
 #include <stdlib.h>
@@ -127,19 +127,42 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   if (!result)
     vmpm.r = 2;
   vmpm.I = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/I", &result);
-  if (!result || vmpm.I == 0) {
-#if 0
+  if (!result)
+    vmpm.I = -2;
+  if (vmpm.I <= 0) {
     unsigned int t, Imax;
 
-    /* calculate the maximum value of I. */
     for (Imax = 0, t = image_size; t > 1; Imax++)
       t /= vmpm.r;
-    debug_message("glic: Max I = %d\n", Imax);
-#endif
 
-    /* calculate the recommended value of I. */
-    vmpm.I = log(log(image_size) / log(vmpm.r)) / log(vmpm.r);
-    debug_message("glic: Recommended I = %d\n", vmpm.I);
+    switch (vmpm.I) {
+    case 0:
+      /* Use log log */
+      vmpm.I = log(log(image_size) / log(vmpm.r)) / log(vmpm.r);
+      debug_message("glic: I = %d (log log)\n", vmpm.I);
+      break;
+    case -1:
+      /* Use Max */
+      vmpm.I = Imax;
+      debug_message("glic: I = %d (max)\n", vmpm.I);
+      break;
+    case -2:
+      /* Use the value optimized by differentiation. */
+      vmpm.I = log(image_size) / log(vmpm.r) + log(log(vmpm.r)) / log(vmpm.r) - 1;
+      if (vmpm.I < 1) {
+	debug_message("glic: I = %d underflow, clipped to 1.\n", vmpm.I);
+	vmpm.I = 1;
+      } else if (vmpm.I > Imax) {
+	debug_message("glic: I = %d overflow, clipped to %d.\n", vmpm.I, Imax);
+	vmpm.I = Imax;
+      }
+      debug_message("glic: I = %d (optimized)\n", vmpm.I);
+      break;
+    default:
+      show_message("glic: Invalid I = %d, defaults to Imax = %d\n", vmpm.I, Imax);
+      vmpm.I = Imax;
+      break;
+    }
   }
   vmpm.nlowbits = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/nlowbits", &result);
   if (!result)
