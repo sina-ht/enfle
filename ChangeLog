@@ -1,5 +1,13 @@
 2001-01-03  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpeg_lib/mpeg_lib.c: Sanitize the movie status.
+
+	* plugins/ui/normal/normal.c: Exit when try to display an unloaded
+	movie.
+
+2001-01-03  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/video.h, plugins/ui/normal/normal.c,
 	plugins/video/Xlib/Xlib.c: Implemented image scrolling.
 
