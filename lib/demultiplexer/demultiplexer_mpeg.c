@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 21 01:41:07 2004.
- * $Id: demultiplexer_mpeg.c,v 1.32 2004/01/24 07:08:10 sian Exp $
+ * Last Modified: Sat Jan 24 22:48:32 2004.
+ * $Id: demultiplexer_mpeg.c,v 1.33 2004/01/30 12:35:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -299,6 +299,7 @@ demux_main(void *arg)
       skip = used_size;
       dp = malloc(sizeof(DemuxedPacket));
       dp->pts_dts_flag = 0xff;
+      dp->pts = dp->dts = -1;
       dp->size = skip;
       dp->data = malloc(dp->size);
       memcpy(dp->data, buf, dp->size);
@@ -405,6 +406,7 @@ demux_main(void *arg)
 	  /* MPEG II */
 	  dp = malloc(sizeof(DemuxedPacket));
 	  dp->pts_dts_flag = 0xff;
+	  dp->pts = dp->dts = -1;
 	  dp->size = skip - 9 - buf[8];
 	  dp->data = malloc(dp->size);
 	  memcpy(dp->data, buf + 9 + buf[8], dp->size);
@@ -429,13 +431,11 @@ demux_main(void *arg)
 	    pts = get_timestamp(p);
 	    dts = pts;
 	    p += 5;
-	    //debug_message_fnc("pts: %ld\n", pts);
 	    break;
 	  case 3:
 	    /* presentation time stamp, decoding time stamp */
 	    pts = get_timestamp(p);
 	    dts = get_timestamp(p + 5);
-	    //debug_message_fnc("pts: %ld   dts: %ld\n", pts, dts);
 	    p += 10;
 	    break;
 	  default:
@@ -459,6 +459,7 @@ demux_main(void *arg)
 	  skip = used_size;
 	  dp = malloc(sizeof(DemuxedPacket));
 	  dp->pts_dts_flag = 0xff;
+	  dp->pts = dp->dts = -1;
 	  dp->size = skip;
 	  dp->data = malloc(dp->size);
 	  memcpy(dp->data, buf, dp->size);
