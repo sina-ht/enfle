@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 25 01:49:34 2001.
- * $Id: demultiplexer_mpeg.c,v 1.13 2001/06/24 16:52:58 sian Exp $
+ * Last Modified: Thu Jul 26 02:35:20 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.14 2001/07/29 00:40:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -259,18 +259,20 @@ demux_main(void *arg)
   demux->running = 1;
 
   do {
-    if ((read_size = stream_read(info->st, buf + used_size,
-				 DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
-      show_message(__FUNCTION__ ": read error.\n");
-      goto error;
-    }
-    used_size += read_size;
-    read_total += read_size;
-    if (read_size == 0) {
-      //debug_message(__FUNCTION__ ": %d %d\n", used_size, used_size_prev);
-      if (used_size <= 12 || used_size_prev == used_size)
-	break;
-      used_size_prev = used_size;
+    if (used_size < (DEMULTIPLEXER_MPEG_BUFFER_SIZE >> 1)) {
+      if ((read_size = stream_read(info->st, buf + used_size,
+				   DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
+	show_message(__FUNCTION__ ": read error.\n");
+	goto error;
+      }
+      used_size += read_size;
+      read_total += read_size;
+      if (read_size == 0) {
+	//debug_message(__FUNCTION__ ": %d %d\n", used_size, used_size_prev);
+	if (used_size <= 12 || used_size_prev == used_size)
+	  break;
+	used_size_prev = used_size;
+      }
     }
 
     if (buf[0]) {
@@ -458,6 +460,16 @@ stop(Demultiplexer *demux)
   debug_message(__FUNCTION__ ": joined\n");
 
   return 1;
+}
+
+static int
+demux_rewind(Demultiplexer *demux)
+{
+  MpegInfo *info = (MpegInfo *)demux->private_data;
+
+  if (demux->running)
+    return 0;
+  return stream_rewind(info->st);
 }
 
 static void

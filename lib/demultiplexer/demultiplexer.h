@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 18:32:42 2001.
- * $Id: demultiplexer.h,v 1.5 2001/06/22 17:34:42 sian Exp $
+ * Last Modified: Thu Jul 26 02:35:44 2001.
+ * $Id: demultiplexer.h,v 1.6 2001/07/29 00:40:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,6 +30,7 @@ struct _demultiplexer {
   int (*examine)(Demultiplexer *);
   int (*start)(Demultiplexer *);
   int (*stop)(Demultiplexer *);
+  int (*demux_rewind)(Demultiplexer *);
   void (*destroy)(Demultiplexer *);
 
   pthread_t thread;
@@ -43,6 +44,7 @@ struct _demultiplexer {
   static int examine(Demultiplexer *); \
   static int start(Demultiplexer *); \
   static int stop(Demultiplexer *); \
+  static int demux_rewind(Demultiplexer *); \
   static void destroy(Demultiplexer *)
 
 #define PREPARE_DEMULTIPLEXER_TEMPLATE \
@@ -50,6 +52,7 @@ struct _demultiplexer {
     examine: examine, \
     start: start, \
     stop: stop, \
+    demux_rewind: demux_rewind, \
     destroy: destroy \
   }
 
@@ -65,6 +68,7 @@ void _demultiplexer_destroy(Demultiplexer *);
 #define demultiplexer_examine(de) (de)->examine((de))
 #define demultiplexer_start(de) (de)->start((de))
 #define demultiplexer_stop(de) (de)->stop((de))
+#define demultiplexer_rewind(de) (de)->demux_rewind((de))
 #define demultiplexer_destroy(de) (de)->destroy((de))
 
 #endif
