@@ -81,6 +81,7 @@ typedef struct _image_optional_header {
 
 #define SECTION_HEADER_SIZE (sizeof(IMAGE_SECTION_HEADER))
 #define IMAGE_SIZEOF_SHORT_NAME 8
+#define IMAGE_SCN_CNT_UNINITIALIZED_DATA (1 << 7)
 
 typedef struct _image_section_header {
   BYTE Name[IMAGE_SIZEOF_SHORT_NAME];
@@ -117,6 +118,7 @@ typedef struct _image_import_by_name {
   BYTE Name[1];
 } IMAGE_IMPORT_BY_NAME;
 
+#define IMAGE_ORDINAL_FLAG (1 << 31)
 typedef struct _image_thunk_data {
   union { 
     LPBYTE ForwarderString;

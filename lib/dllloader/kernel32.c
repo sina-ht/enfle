@@ -16,7 +16,11 @@
 
 #include "common.h"
 
-#if 1
+#ifdef USE_PTHREAD
+#  include <pthread.h>
+#endif
+
+#if 0
 #define more_debug_message(format, args...)
 #else
 #define more_debug_message(format, args...) fprintf(stderr, format, ## args)
@@ -57,6 +61,8 @@ DECLARE_W32API(VOID, GlobalMemoryStatus, (LPMEMORYSTATUS));
 DECLARE_W32API(LPVOID, VirtualAlloc, (LPVOID, DWORD, DWORD, DWORD));
 DECLARE_W32API(BOOL, VirtualFree, (LPVOID, DWORD, DWORD));
 DECLARE_W32API(DWORD, VirtualQuery, (LPCVOID, LPMEMORY_BASIC_INFORMATION, DWORD));
+DECLARE_W32API(BOOL, IsBadReadPtr, (LPCVOID, UINT));
+DECLARE_W32API(BOOL, IsBadWritePtr, (LPCVOID, UINT));
 /* heap related */
 DECLARE_W32API(HANDLE, HeapCreate, (DWORD, DWORD, DWORD));
 DECLARE_W32API(LPVOID, HeapAlloc, (HANDLE, DWORD, DWORD));
@@ -75,6 +81,8 @@ DECLARE_W32API(void, ExitProcess, (DWORD)) __attribute__ ((noreturn));
 DECLARE_W32API(HANDLE, GetCurrentThread, (void));
 DECLARE_W32API(DWORD, GetCurrentThreadId, (void));
 DECLARE_W32API(LCID, GetThreadLocale, (void));
+DECLARE_W32API(BOOL, DisableThreadLibraryCalls, (HMODULE));
+DECLARE_W32API(HANDLE, CreateThread, (SECURITY_ATTRIBUTES *, DWORD, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD));
 /* thread local-variable related */
 DECLARE_W32API(DWORD, TlsAlloc, (void));
 DECLARE_W32API(BOOL, TlsFree, (DWORD));
@@ -82,9 +90,9 @@ DECLARE_W32API(LPVOID, TlsGetValue, (DWORD));
 DECLARE_W32API(BOOL, TlsSetValue, (DWORD, LPVOID));
 /* critical section */
 DECLARE_W32API(void, InitializeCriticalSection, (CRITICAL_SECTION *));
-DECLARE_W32API(LONG, EnterCriticalSection, (CRITICAL_SECTION *));
-DECLARE_W32API(LONG, LeaveCriticalSection, (CRITICAL_SECTION *));
-DECLARE_W32API(LONG, DeleteCriticalSection, (CRITICAL_SECTION *));
+DECLARE_W32API(void, EnterCriticalSection, (CRITICAL_SECTION *));
+DECLARE_W32API(void, LeaveCriticalSection, (CRITICAL_SECTION *));
+DECLARE_W32API(void, DeleteCriticalSection, (CRITICAL_SECTION *));
 /* exception */
 DECLARE_W32API(DWORD, UnhandledExceptionFilter, (PEXCEPTION_POINTERS));
 DECLARE_W32API(void, RaiseException, (DWORD, DWORD, DWORD, const LPDWORD));
@@ -145,6 +153,8 @@ static Symbol_info symbol_infos[] = {
   { "VirtualAlloc", VirtualAlloc },
   { "VirtualFree", VirtualFree },
   { "VirtualQuery", VirtualQuery },
+  { "IsBadReadPtr", IsBadReadPtr },
+  { "IsBadWritePtr", IsBadWritePtr },
   { "HeapCreate", HeapCreate },
   { "HeapAlloc", HeapAlloc },
   { "HeapReAlloc", HeapReAlloc },
@@ -159,6 +169,8 @@ static Symbol_info symbol_infos[] = {
   { "GetCurrentThread", GetCurrentThread },
   { "GetCurrentThreadId", GetCurrentThreadId },
   { "GetThreadLocale", GetThreadLocale },
+  { "DisableThreadLibraryCalls", DisableThreadLibraryCalls },
+  { "CreateThread", CreateThread },
   { "TlsAlloc", TlsAlloc },
   { "TlsFree", TlsFree },
   { "TlsGetValue", TlsGetValue },
@@ -411,7 +423,7 @@ DEFINE_W32API(HGLOBAL, GlobalAlloc,
 {
   void *p;
 
-  more_debug_message("GlobalAlloc(%X, %d bytes) called\n", flags, size);
+  more_debug_message("GlobalAlloc(0x%X, %d bytes) called\n", flags, size);
 
   p = w32api_mem_alloc(size);
   if ((flags & GMEM_ZEROINIT) && p)
@@ -422,7 +434,7 @@ DEFINE_W32API(HGLOBAL, GlobalAlloc,
 DEFINE_W32API(HGLOBAL, GlobalReAlloc,
 	      (HGLOBAL handle, DWORD size, UINT flags))
 {
-  more_debug_message("GlobalReAlloc(%d, %d, %X) called\n", (int)handle, size, flags);
+  more_debug_message("GlobalReAlloc(%d, %d, 0x%X) called\n", (int)handle, size, flags);
   return w32api_mem_realloc(handle, size);
 }
 
@@ -591,10 +603,25 @@ DEFINE_W32API(BOOL, VirtualFree,
   return FALSE;
 }
 
-DEFINE_W32API(DWORD, VirtualQuery, (LPCVOID p, LPMEMORY_BASIC_INFORMATION info, DWORD len))
+DEFINE_W32API(DWORD, VirtualQuery,
+	      (LPCVOID p, LPMEMORY_BASIC_INFORMATION info, DWORD len))
 {
   debug_message("VirtualQuery(%p size %d) called\n", p, len);
   return sizeof(*info);
+}
+
+DEFINE_W32API(BOOL, IsBadReadPtr,
+	      (LPCVOID ptr, UINT size))
+{
+  debug_message("IsBadReadPtr(%p size %d) called\n", ptr, size);
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, IsBadWritePtr,
+	      (LPCVOID ptr, UINT size))
+{
+  debug_message("IsBadWritePtr(%p size %d) called\n", ptr, size);
+  return TRUE;
 }
 
 /* heap related */
@@ -736,6 +763,18 @@ DEFINE_W32API(LCID, GetThreadLocale,
   return 0;
 }
 
+DEFINE_W32API(BOOL, DisableThreadLibraryCalls, (HMODULE module))
+{
+  debug_message("DisableThreadLibraryCalls() called\n");
+  return TRUE;
+}
+
+DEFINE_W32API(HANDLE, CreateThread, (SECURITY_ATTRIBUTES *sa, DWORD stack, LPTHREAD_START_ROUTINE start, LPVOID param, DWORD flags, LPDWORD id))
+{
+  debug_message("CreateThread() called\n");
+  return 0;
+}
+
 /* thread local-variable related */
 
 DEFINE_W32API(DWORD, TlsAlloc,
@@ -783,31 +822,81 @@ DEFINE_W32API(BOOL, TlsSetValue,
 
 /* critical section */
 
+typedef struct _cs_private {
+#ifdef USE_PTHREAD
+  pthread_t thread;
+  pthread_mutex_t mutex;
+#endif
+  int is_locked;
+} CSPrivate;
+
 DEFINE_W32API(void, InitializeCriticalSection,
 	      (CRITICAL_SECTION *cs))
 {
+  CSPrivate *csp;
+
   debug_message("InitializeCriticalSection() called\n");
+  if ((csp = calloc(1, sizeof(CSPrivate))) == NULL)
+    return;
+#ifdef USE_PTHREAD
+  pthread_mutex_init(&csp->mutex, NULL);
+#endif
+  //csp->is_locked = 0;
+  *(void **)cs = csp;
+  return;
 }
 
-DEFINE_W32API(LONG, EnterCriticalSection,
+DEFINE_W32API(void, EnterCriticalSection,
 	      (CRITICAL_SECTION *cs))
 {
+  CSPrivate *csp = *(CSPrivate **)cs;
+
   debug_message("EnterCriticalSection() called\n");
-  return 0;
+
+  if (csp->is_locked)
+#ifdef USE_PTHREAD
+    if (csp->thread == pthread_self())
+#endif
+      return;
+#ifdef USE_PTHREAD
+  pthread_mutex_lock(&csp->mutex);
+#endif
+  csp->is_locked = 1;
+#ifdef USE_PTHREAD
+  csp->thread = pthread_self();
+#endif
+
+  return;
 }
 
-DEFINE_W32API(LONG, LeaveCriticalSection,
+DEFINE_W32API(void, LeaveCriticalSection,
 	      (CRITICAL_SECTION *cs))
 {
+  CSPrivate *csp = *(CSPrivate **)cs;
+
   debug_message("LeaveCriticalSection() called\n");
-  return 0;
+
+  csp->is_locked = 0;
+#ifdef USE_PTHREAD
+  pthread_mutex_unlock(&csp->mutex);
+#endif
+
+  return;
 }
 
-DEFINE_W32API(LONG, DeleteCriticalSection,
+DEFINE_W32API(void, DeleteCriticalSection,
 	      (CRITICAL_SECTION *cs))
 {
+  CSPrivate *csp = *(CSPrivate **)cs;
+
   debug_message("DeleteCriticalSection() called\n");
-  return 0;
+
+#ifdef USE_PTHREAD
+  pthread_mutex_destroy(&csp->mutex);
+#endif
+  free(csp);
+
+  return;
 }
 
 /* exception */
@@ -940,6 +1029,10 @@ DEFINE_W32API(INT, MultiByteToWideChar,
 	      (UINT page, DWORD flags, LPCSTR src, INT srclen, LPWSTR dest, INT destlen))
 {
   debug_message("MultiByteToWideChar() called\n");
+
+  if (dest && destlen > 0)
+    *dest = 0;
+
   return 0;
 }
 
@@ -978,6 +1071,10 @@ DEFINE_W32API(INT, WideCharToMultiByte,
 	       LPCSTR defchar, BOOL *used))
 {
   debug_message("WideCharToMultiByte() called\n");
+
+  if (dest && destlen > 0)
+    *dest = 0;
+
   return 0;
 }
 
@@ -1016,6 +1113,12 @@ DEFINE_W32API(BOOL, GetVersionExA,
 	      (OSVERSIONINFOA *v))
 {
   debug_message("GetVersionExA() called\n");
+
+  v->dwMajorVersion = 4;
+  v->dwMinorVersion = 10;
+  v->dwBuildNumber = 0x40a07ce;
+  v->dwPlatformId = VER_PLATFORM_WIN32_WINDOWS;
+  strcpy(v->szCSDVersion, "Win98");
 
   return TRUE;
 }

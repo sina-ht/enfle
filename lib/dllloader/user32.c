@@ -44,6 +44,10 @@ DEFINE_W32API(INT, MessageBoxA, (HWND handle, LPCSTR text, LPCSTR title, UINT ty
 DEFINE_W32API(INT, LoadStringA, (HINSTANCE handle, UINT id, LPSTR buffer, INT len))
 {
   debug_message("LoadStringA(%p, %d, %p, %d) called\n", handle, id, buffer, len);
+
+  if (buffer && len > 0)
+    *buffer = 0;
+
   return 0;
 }
 

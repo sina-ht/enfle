@@ -69,6 +69,7 @@ typedef LRESULT CALLBACK (*FARPROC)(void);
 typedef BOOL CALLBACK (*WNDENUMPROC)(HWND, LPARAM);
 typedef BOOL CALLBACK (*DllEntryProc)(HMODULE, DWORD, LPVOID);
 typedef BOOL CALLBACK (*CALINFO_ENUMPROCA)(LPSTR);
+typedef DWORD CALLBACK (*LPTHREAD_START_ROUTINE)(LPVOID);
 
 /* DLL */
 
@@ -277,6 +278,10 @@ typedef struct _systemtime {
 } SYSTEMTIME, *LPSYSTEMTIME;
 
 /* misc */
+
+#define VER_PLATFORM_WIN32s        0
+#define VER_PLATFORM_WIN32_WINDOWS 1
+#define VER_PLATFORM_WIN32_NT      2
 
 typedef struct _osversioninfoa {
   DWORD dwOSVersionInfoSize;
