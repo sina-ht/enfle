@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 22 16:39:39 2002.
- * $Id: memory.c,v 1.8 2002/06/22 07:56:13 sian Exp $
+ * Last Modified: Fri Dec 26 00:10:58 2003.
+ * $Id: memory.c,v 1.9 2003/12/27 14:26:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,11 +29,11 @@
 
 #include "memory.h"
 
-static unsigned char *alloc_normal(Memory *, unsigned int);
-static unsigned char *alloc_shm(Memory *, unsigned int);
+static void *alloc_normal(Memory *, unsigned int);
+static void *alloc_shm(Memory *, unsigned int);
 
 static MemoryType request_type(Memory *, MemoryType);
-static unsigned char *allocate(Memory *, unsigned int);
+static void *allocate(Memory *, unsigned int);
 static int set(Memory *, void *, MemoryType, unsigned int, unsigned int);
 static int free_both(Memory *);
 static Memory *duplicate(Memory *, int);
@@ -68,10 +68,10 @@ memory_create(void)
 
 /* for internal use */
 
-static unsigned char *
+static void *
 alloc_normal(Memory *mem, unsigned int s)
 {
-  unsigned char *tmp;
+  void *tmp;
 
   free_both(mem);
 
@@ -85,7 +85,7 @@ alloc_normal(Memory *mem, unsigned int s)
   return mem->ptr;
 }
 
-static unsigned char *
+static void *
 alloc_shm(Memory *mem, unsigned int s)
 {
 #ifdef USE_SHM
@@ -98,7 +98,7 @@ alloc_shm(Memory *mem, unsigned int s)
     return NULL;
   }
 
-  debug_message("MEMORY: %s: shmget: id = %d\n", __FUNCTION__, mem->shmid);
+  debug_message_fnc("shmget: id = %d\n", mem->shmid);
 
   if ((mem->ptr = shmat(mem->shmid, 0, 0)) == (void *)-1) {
     show_message_fnc("shmat failed.\n");
@@ -106,7 +106,7 @@ alloc_shm(Memory *mem, unsigned int s)
     return NULL;
   }
 
-  debug_message("MEMORY: %s: shmat: addr = %p\n", __FUNCTION__, mem->ptr);
+  debug_message_fnc("shmat: addr = %p\n", mem->ptr);
 
   shmctl(mem->shmid, IPC_RMID, NULL);
 
@@ -141,7 +141,7 @@ request_type(Memory *mem, MemoryType type)
   return mem->type;
 }
 
-static unsigned char *
+static void *
 allocate(Memory *mem, unsigned int size)
 {
   unsigned int aligned_size;
@@ -155,7 +155,7 @@ allocate(Memory *mem, unsigned int size)
   alignment = getpagesize();
   aligned_size = (size % alignment) ? ((size / alignment) + 1) * alignment : size;
 
-  //debug_message("MEMORY: %s: requested %d bytes (aligned %d bytes) as type %s\n", __FUNCTION__, size, aligned_size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN"));
+  //debug_message_fnc("requested %d bytes (aligned %d bytes) as type %s\n", size, aligned_size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN"));
 
   switch (mem->type) {
   case _NORMAL:
@@ -182,7 +182,7 @@ set(Memory *mem, void *ptr, MemoryType type, unsigned int size, unsigned int use
 static int
 free_both(Memory *mem)
 {
-  /* debug_message("%s: free %p\n", __FUNCTION__, mem); */
+  /* debug_message_fnc("mem = %p\n", mem); */
 
   switch (mem->type) {
   case _NORMAL:

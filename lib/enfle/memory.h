@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan  4 06:56:47 2001.
- * $Id: memory.h,v 1.3 2001/01/06 23:53:32 sian Exp $
+ * Last Modified: Fri Dec 26 00:07:12 2003.
+ * $Id: memory.h,v 1.4 2003/12/27 14:26:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,7 +44,7 @@ struct _memory {
   int shmid;
 
   MemoryType (*request_type)(Memory *, MemoryType);
-  unsigned char *(*allocate)(Memory *, unsigned int);
+  void *(*allocate)(Memory *, unsigned int);
   int (*set)(Memory *, void *, MemoryType, unsigned int, unsigned int);
   int (*free_both)(Memory *);
   Memory *(*duplicate)(Memory *, int);
