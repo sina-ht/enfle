@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 29 20:08:36 2000.
- * $Id: png.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  9 01:35:27 2000.
+ * $Id: png.c,v 1.2 2000/10/08 17:26:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -245,6 +245,8 @@ load(Image *p, Stream *st)
 
   png_read_update_info(png_ptr, info_ptr);
 
+  p->mask = NULL;
+  p->mask_size = 0;
 #if 0
   /* Set the transparent color */
   if (png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values)) {
@@ -340,6 +342,8 @@ load(Image *p, Stream *st)
 
   /* read rest of file, and get additional chunks in info_ptr */
   png_read_end(png_ptr, info_ptr);
+
+  p->next = NULL;
 
 #if 0
   /* process alpha channel if exists */

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 05:33:16 2000.
- * $Id: bmp.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  9 01:34:10 2000.
+ * $Id: bmp.c,v 1.2 2000/10/08 17:28:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -166,6 +166,10 @@ load_image(Image *p, Stream *st)
     p->image = NULL;
     return 0;
   }
+
+  p->mask = NULL;
+  p->mask_size = 0;
+  p->next = NULL;
 
   return 1;
 }
