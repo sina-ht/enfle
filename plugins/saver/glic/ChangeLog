@@ -1,3 +1,14 @@
+2001-08-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* vmpm_decompose_escb.c: New escape probability estimation.
+
+	* vmpm_decompose_highlow.c, vmpm_decompose_highlow_esc.c: Adjust
+	include ordering.
+
+	* arithcoder_arith.c: Temporary debugging message code.
+
+	* glic.c: Added calculation of the maximum value of the level.
+
 2001-08-09  Hiroshi Takekawa  <sian@fennel.org>
 
 	* vmpm_decompose_null.c, vmpm_decompose_token.c,
