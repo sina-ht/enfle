@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep  3 00:33:49 2001.
- * $Id: demultiplexer_avi.h,v 1.2 2003/02/05 15:20:51 sian Exp $
+ * Last Modified: Tue Nov 11 00:57:30 2003.
+ * $Id: demultiplexer_avi.h,v 1.3 2003/11/17 13:47:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,8 +25,23 @@
 
 #include "demultiplexer.h"
 #include "enfle/stream.h"
+#include "enfle/fourcc.h"
 #include "utils/fifo.h"
 #include "libriff.h"
+
+#define FCC_vids FCC('v', 'i', 'd', 's')
+#define FCC_auds FCC('a', 'u', 'd', 's')
+#define FCC_LIST FCC('L', 'I', 'S', 'T')
+#define FCC_JUNK FCC('J', 'U', 'N', 'K')
+#define FCC_hdrl FCC('h', 'd', 'r', 'l')
+#define FCC_avih FCC('a', 'v', 'i', 'h')
+#define FCC_strl FCC('s', 't', 'r', 'l')
+#define FCC_strh FCC('s', 't', 'r', 'h')
+#define FCC_strf FCC('s', 't', 'r', 'f')
+#define FCC_strd FCC('s', 't', 'r', 'd')
+#define FCC_movi FCC('m', 'o', 'v', 'i')
+#define FCC_idx1 FCC('i', 'd', 'x', '1')
+#define FCC_indx FCC('i', 'n', 'd', 'x')
 
 typedef struct _avi_packet {
   unsigned int size;
@@ -48,6 +63,8 @@ typedef struct _avi_info {
   unsigned int nchannels, samples_per_sec, num_of_samples;
   int nvstreams, nastreams;
   int nvstream, nastream;
+  /* From AVIINDEXENTRY */
+  //ckid, dwFlags, dwChunkOffset, dwChunkLength
 } AVIInfo;
 
 Demultiplexer *demultiplexer_avi_create(void);

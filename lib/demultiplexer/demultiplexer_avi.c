@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 19 11:23:12 2002.
- * $Id: demultiplexer_avi.c,v 1.18 2003/02/05 15:20:51 sian Exp $
+ * Last Modified: Sun Nov 16 14:35:55 2003.
+ * $Id: demultiplexer_avi.c,v 1.19 2003/11/17 13:47:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -89,38 +89,6 @@ tell_func(void *arg)
   return stream_tell(st);
 }
 
-#define FCC_vids 0x73646976
-#define FCC_auds 0x73647561
-
-#define _READ_CHUNK_HEADER(f, c) \
- for (;;) { \
-  if (!riff_file_read_chunk_header((f), (c))) { \
-    show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg((f))); \
-    goto error_free; \
-  } \
-  if (strcmp(riff_chunk_get_name((c)), "JUNK")) \
-    break; \
-  riff_file_skip_chunk_data((f), (c)); \
- }
-#define _CHECK_CHUNK_NAME(c, n) \
- if (riff_chunk_is_list((c))) { \
-  show_message_fnc("Chunk '%s' expected, but got list '%s'\n", n, riff_chunk_get_list_name((c))); \
-  goto error_free; \
- } \
- if (strcmp(riff_chunk_get_name((c)), n) != 0) { \
-  show_message("Chunk name is not '" n "' but '%s'.\n", riff_chunk_get_name(rc)); \
-  goto error_free; \
- }
-#define _CHECK_LIST_NAME(c, n) \
- if (!riff_chunk_is_list((c))) { \
-  show_message_fnc("List '%s' expected, but got chunk '%s'\n", n, riff_chunk_get_name((c))); \
-  goto error_free; \
- } \
- if (strcmp(riff_chunk_get_list_name((c)), n) != 0) { \
-  show_message("List name is not '" n "' but '%s'.\n", riff_chunk_get_list_name(rc)); \
-  goto error_free; \
- }
-
 static int
 examine(Demultiplexer *demux)
 {
@@ -149,92 +117,164 @@ examine(Demultiplexer *demux)
   }
   rc_top = rc = riff_chunk_create();
 
-  _READ_CHUNK_HEADER(info->rf, rc);
-  _CHECK_LIST_NAME(rc, "hdrl");
-  debug_message_fnc("Got list 'hdrl'\n");
-
-  _READ_CHUNK_HEADER(info->rf, rc);
-  _CHECK_CHUNK_NAME(rc, "avih");
-  debug_message_fnc("Got chunk 'avih'\n");
-
-  riff_file_read_data(info->rf, rc);
-  /* XXX: little endian only. */
-  memcpy(&mah, riff_chunk_get_data(rc), sizeof(MainAVIHeader));
-  riff_chunk_destroy(rc);
-  info->nframes = mah.dwTotalFrames;
-  info->swidth  = mah.dwWidth;
-  info->sheight = mah.dwHeight;
-  info->rate = mah.dwRate;
-  info->length = mah.dwLength;
-  info->framerate = 1000000.0 / mah.dwMicroSecPerFrame;
-
-  for (i = 0; i < mah.dwStreams; i++) {
-    _READ_CHUNK_HEADER(info->rf, rc);
-    _CHECK_LIST_NAME(rc, "strl");
-    debug_message_fnc("Got list 'strl'\n");
-
-    _READ_CHUNK_HEADER(info->rf, rc);
-    _CHECK_CHUNK_NAME(rc, "strh");
-    debug_message_fnc("Got chunk 'strh'\n");
-    riff_file_read_data(info->rf, rc);
-    /* XXX: Little endian only */
-    memcpy(&ash, riff_chunk_get_data(rc), sizeof(AVIStreamHeader));
-    riff_chunk_destroy(rc);
-    if (ash.fccType == FCC_vids) {
-      /* vids */
-      info->vhandler = ash.fccHandler;
-      info->num_of_frames = ash.dwLength;
-    } else if (ash.fccType == FCC_auds) {
-      /* auds */
-      /* XXX: First stream only */
-      if (info->nastreams == 0)
-	info->ahandler = ash.fccHandler;
-    } else {
-      show_message_fnc("Unknown fccType %X\n", ash.fccType);
-    }
-
-    _READ_CHUNK_HEADER(info->rf, rc);
-    _CHECK_CHUNK_NAME(rc, "strf");
-    debug_message_fnc("Got chunk 'strf'\n");
-    riff_file_read_data(info->rf, rc);
-    /* XXX: Little endian only */
-    if (ash.fccType == FCC_vids) {
-      if (info->nvstreams == 0) {
-	memcpy(&bih, riff_chunk_get_data(rc), sizeof(BITMAPINFOHEADER));
-	info->width = bih.biWidth;
-	info->height = bih.biHeight;
-      }
-      info->nvstreams++;
-    } else if (ash.fccType == FCC_auds) {
-      /* XXX: First stream only */
-      if (info->nastreams == 0) {
-	memcpy(&wfx, riff_chunk_get_data(rc), sizeof(WAVEFORMATEX));
-	info->nchannels = wfx.nChannels;
-	info->samples_per_sec = wfx.nSamplesPerSec;
-	info->num_of_samples = wfx.cbSize;
-      }
-      info->nastreams++;
-    }
-    riff_chunk_destroy(rc);
-  }
+  /*
+RIFF( 'AVI' LIST ( 'hdrl'
+                   'avih' ( Main AVI Header )
+                   LIST ( 'strl'
+                          'strh' ( Stream 1 Header )
+                          'strf' ( Stream 1 Format )
+                         ['strd' ( Stream 1 optional codec data ) ]
+                        )
+                   LIST ( 'strl'
+                          'strh' ( Stream 2 Header )
+                          'strf' ( Stream 2 Format )
+                        [ 'strd' ( Stream 2 optional codec data )]
+                        )
+                   ...
+                )
+        LIST ( 'movi'
+                { 
+                        '##dc' ( compressed DIB )
+                        | 
+                        LIST ( 'rec '
+                                '##dc' ( compressed DIB )
+                                '##db' ( uncompressed DIB )
+                                '##wb' ( audio data ) 
+                                '##pc' ( palette change )
+                                ...
+                        )
+                }
+                ...
+        )
+        [ 'idx1' ( AVI Index ) ]
+)
+  */
 
   for (;;) {
-    _READ_CHUNK_HEADER(info->rf, rc);
-    if (!riff_chunk_is_list(rc)) {
-      debug_message_fnc("Skipped chunk '%s'.\n", riff_chunk_get_name(rc));
+    if (!riff_file_read_chunk_header(info->rf, rc)) {
+      if (riff_file_is_eof(info->rf))
+	break; /* EOF */
+      show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
+      goto error_free;
+    }
+    switch (rc->fourcc) {
+    case FCC_JUNK:
+      debug_message_fnc("Got chunk 'JUNK', skip.\n");
       riff_file_skip_chunk_data(info->rf, rc);
-    } else if (strcmp(riff_chunk_get_list_name(rc), "movi") == 0)
       break;
-    else {
-      debug_message("List name is not 'movi' but '%s', skipped.\n", riff_chunk_get_list_name(rc));
+    case FCC_idx1:
+      debug_message_fnc("Got chunk 'idx1', skip (so far).\n");
       riff_file_skip_chunk_data(info->rf, rc);
+      break;
+    case FCC_indx:
+      debug_message_fnc("Got chunk 'indx', skip (so far).\n");
+      riff_file_skip_chunk_data(info->rf, rc);
+      break;
+    case FCC_LIST:
+      switch (rc->list_fourcc) {
+      case FCC_hdrl:
+	debug_message_fnc("Got list 'hdrl'\n");
+	if (!riff_file_read_chunk_header(info->rf, rc)) {
+	  show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
+	  goto error_free;
+	}
+	if (rc->fourcc != FCC_avih) {
+	  debug_message_fnc("'avih' chunk expected, but got chunk '%s'\n", rc->name);
+	  goto error_free;
+	}
+	debug_message_fnc("Got chunk 'avih'\n");
+	riff_file_read_data(info->rf, rc);
+	/* XXX: little endian only. */
+	memcpy(&mah, riff_chunk_get_data(rc), sizeof(MainAVIHeader));
+	riff_chunk_destroy(rc);
+	info->nframes = mah.dwTotalFrames;
+	info->swidth  = mah.dwWidth;
+	info->sheight = mah.dwHeight;
+	info->rate = mah.dwRate;
+	info->length = mah.dwLength;
+	info->framerate = 1000000.0 / mah.dwMicroSecPerFrame;
+
+	debug_message_fnc("Streams: %d\n", mah.dwStreams);
+	for (i = 0; i < mah.dwStreams; i++) {
+	  for (;;) {
+	    if (!riff_file_read_chunk_header(info->rf, rc)) {
+	      show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
+	      goto error_free;
+	    }
+	    if (!riff_chunk_is_list(rc)) {
+	      debug_message_fnc("list expected, but got chunk '%s'\n", rc->name);
+	      riff_file_skip_chunk_data(info->rf, rc);
+	      continue;
+	    }
+	    if (rc->list_fourcc == FCC_strl)
+	      break;
+	    debug_message_fnc("'strl' list expected, but got list '%s'\n", rc->list_name);
+	    goto error_free;
+	  }
+	  debug_message_fnc("Got list 'strl'\n");
+	  if (!riff_file_read_chunk_header(info->rf, rc)) {
+	    show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
+	    goto error_free;
+	  }
+	  if (rc->fourcc != FCC_strh) {
+	    debug_message_fnc("strh chunk expected, but got chunk '%s'\n", rc->name);
+	    goto error_free;
+	  }
+	  debug_message_fnc("Got chunk 'strh'\n");
+	  riff_file_read_data(info->rf, rc);
+	  /* XXX: Little endian only */
+	  memcpy(&ash, riff_chunk_get_data(rc), sizeof(AVIStreamHeader));
+	  riff_chunk_destroy(rc);
+	  if (ash.fccType == FCC_vids) {
+	    info->vhandler = ash.fccHandler;
+	    info->num_of_frames = ash.dwLength;
+	  } else if (ash.fccType == FCC_auds) {
+	    /* XXX: First stream only */
+	    if (info->nastreams == 0)
+	      info->ahandler = ash.fccHandler;
+	  } else {
+	    show_message_fnc("Unknown fccType %X\n", ash.fccType);
+	  }
+
+	  if (!riff_file_read_chunk_header(info->rf, rc)) {
+	    show_message_fnc("riff_file_read_chunk_header() failed: %s\n", riff_file_get_errmsg(info->rf));
+	    goto error_free;
+	  }
+	  if (rc->fourcc != FCC_strf) {
+	    debug_message_fnc("'strf' chunk expected, but got chunk '%s'\n", rc->name);
+	    goto error_free;
+	  }
+	  debug_message_fnc("Got chunk 'strf'\n");
+	  riff_file_read_data(info->rf, rc);
+	  /* XXX: Little endian only */
+	  if (ash.fccType == FCC_vids) {
+	    if (info->nvstreams == 0) {
+	      memcpy(&bih, riff_chunk_get_data(rc), sizeof(BITMAPINFOHEADER));
+	      info->width = bih.biWidth;
+	      info->height = bih.biHeight;
+	    }
+	    info->nvstreams++;
+	  } else if (ash.fccType == FCC_auds) {
+	    /* XXX: First stream only */
+	    if (info->nastreams == 0) {
+	      memcpy(&wfx, riff_chunk_get_data(rc), sizeof(WAVEFORMATEX));
+	      info->nchannels = wfx.nChannels;
+	      info->samples_per_sec = wfx.nSamplesPerSec;
+	      info->num_of_samples = wfx.cbSize;
+	    }
+	    info->nastreams++;
+	  }
+	  riff_chunk_destroy(rc);
+	}
+	break;
+      case FCC_movi:
+	debug_message_fnc("Got list 'movi'\n");
+	info->movi_start = stream_tell(info->st);
+	riff_file_skip_chunk_data(info->rf, rc);
+	break;
+      }
     }
   }
-
-  debug_message_fnc("Got list 'movi'\n");
-  info->movi_start = stream_tell(info->st);
-
-  /* XXX: should check idx1 */
 
   free(rc);
   return 1;
@@ -360,6 +400,7 @@ start(Demultiplexer *demux)
 static int
 stop(Demultiplexer *demux)
 {
+  AVIInfo *info = (AVIInfo *)demux->private_data;
   void *ret;
 
   if (!demux->running)
@@ -368,10 +409,13 @@ stop(Demultiplexer *demux)
   debug_message_fn(" demultiplexer_avi\n");
 
   demux->running = 0;
-  //pthread_cancel(demux->thread);
+  if (info->vstream)
+    fifo_emptify(info->vstream);
+  if (info->astream)
+    fifo_emptify(info->astream);
   pthread_join(demux->thread, &ret);
 
-  debug_message_fnc("joined\n");
+  debug_message_fn(" demultiplexer_avi OK\n");
 
   return 1;
 }

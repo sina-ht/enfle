@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 23:27:52 2001.
- * $Id: demultiplexer_avi_private.h,v 1.1 2001/09/03 00:31:03 sian Exp $
+ * Last Modified: Mon Nov 10 23:45:13 2003.
+ * $Id: demultiplexer_avi_private.h,v 1.2 2003/11/17 13:47:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,8 +25,8 @@ typedef unsigned int LONG;
 typedef unsigned int FOURCC;
 typedef unsigned short int WORD;
 
-typedef struct _mainaviheader MainAVIHeader;
-struct _mainaviheader {
+typedef struct __mainaviheader MainAVIHeader;
+struct __mainaviheader {
   DWORD dwMicroSecPerFrame;
   DWORD dwMaxBytesPerSec;
   DWORD dwReserved1;
@@ -43,8 +43,8 @@ struct _mainaviheader {
   DWORD dwLength;
 };
 
-typedef struct _avistreamheader AVIStreamHeader;
-struct _avistreamheader {
+typedef struct __avistreamheader AVIStreamHeader;
+struct __avistreamheader {
   FOURCC fccType;
   FOURCC fccHandler;
   DWORD dwFlags;
@@ -64,8 +64,8 @@ struct _avistreamheader {
 #define BI_RLE4 2
 #define BI_DIV4 0x33564944
 
-typedef struct _bitmapinfoheader BITMAPINFOHEADER;
-struct _bitmapinfoheader {
+typedef struct __bitmapinfoheader BITMAPINFOHEADER;
+struct __bitmapinfoheader {
   DWORD biSize;         /* size of this structure */
   LONG  biWidth;        /* width of image */
   LONG  biHeight;       /* width of height */
@@ -94,8 +94,8 @@ struct _bitmapinfoheader {
 #define WAVEFORMAT_TAG_IMC         0x401
 #define WAVEFORMAT_TAG_AC3         0x2000
 
-typedef struct _waveformatex WAVEFORMATEX;
-struct _waveformatex {
+typedef struct __waveformatex WAVEFORMATEX;
+struct __waveformatex {
   WORD wFormatTag;
   WORD nChannels;
   DWORD nSamplesPerSec;
@@ -105,8 +105,8 @@ struct _waveformatex {
   WORD cbSize;
 };
 
-typedef struct _aviindexentry AVIINDEXENTRY;
-struct _aviindexentry {
+typedef struct __aviindexentry AVIINDEXENTRY;
+struct __aviindexentry {
   DWORD ckid;
   DWORD dwFlags;
   DWORD dwChunkOffset;
