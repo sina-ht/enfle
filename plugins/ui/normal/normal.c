@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 27 01:46:00 2004.
- * $Id: normal.c,v 1.84 2004/11/22 13:56:02 sian Exp $
+ * Last Modified: Sun Mar  6 12:22:10 2005.
+ * $Id: normal.c,v 1.85 2005/03/06 03:23:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -186,7 +186,7 @@ convert_cat(String *cap, char *s, Config *c)
       while ((from = froms[i++])) {
 	char *tmp;
 
-	//debug_message("%s->%s: %s\n", from, to, s);
+	//debug_message_fnc("%s->%s: %s\n", from, to, s);
 	if ((res = converter_convert(s, &tmp, strlen(s), from, to)) < 0)
 	  continue;
 	string_cat(cap, tmp);
@@ -207,7 +207,7 @@ convert_path(String *cap, char *s, Config *c)
   int i;
 
   if ((parts = misc_str_split_delimiters(s, delimiters, &used_delim)) == NULL) {
-    show_message_fnc("No enough memory.\n");
+    err_message_fnc("No enough memory.\n");
     return;
   }
 
@@ -219,6 +219,7 @@ convert_path(String *cap, char *s, Config *c)
     i++;
   }
   misc_free_str_array(parts);
+  free(used_delim);
 }
 
 
