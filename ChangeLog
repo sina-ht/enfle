@@ -1,3 +1,33 @@
+2001-09-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Clean up. Commented out --enable-nasm related
+	part. Added --enable-mmx.
+
+	* lib/X11/Makefile.am, lib/X11/x11ximage.[ch]: Do away with using
+	nasm. Dynamic MMX detection on x86.
+
+	* lib/X11/bgra32to16_mmx.s: New file.
+
+	* lib/utils/Makefile.am: Added cpucaps.[ch].
+
+	* lib/utils/cpucaps.[ch]: New files.
+
+	* plugins/player/avifile/avifile.cpp: Reuse rf(IAviReadFile
+	object) in case load_movie() called after identify() call.
+
+	* src/enfle.c: New extension 'MMX'.
+
+2001-09-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Use AC_LIBTOOL_DLOPEN. Use AC_PROG_LIBTOOL instead
+	of AM_PROG_LIBTOOL.
+
+	* plugins/player/avifile/avifile.cpp: Better playback. Supports
+	newer avifile library.
+
+	* lib/demultiplexer/demultiplexer_avi.c: _READ_CHUNK_HEADER() now
+	skips JUNK chunks automatically.
+
 2001-09-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* config.guess, config.sub, ltmain.sh: Upgraded libtool to 1.4.1.

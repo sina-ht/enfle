@@ -1,3 +1,49 @@
+2001-09-10  Hiroshi Takekawa  <sian@fennel.org>
+
+	* glic.c, threshold.c, vmpm.h, vmpm_decompose_highlow.c,
+	vmpm_decompose_highlow_esc.c, vmpm_decompose_highlow_escb.c,
+	vmpm_decompose_highlow_rle.c: Fixed threshold() bug.
+
+	* vmpm_hash.c: Increase hash recalculation maximum count.
+
+	* vmpm_decompose_recur2.c: Implemented 'The highest level
+	bound'. Cleaned up encode_recursively().
+
+	* expand.[ch]: Now expand() returns a result value. Optimization
+	with r = 2.
+
+2001-09-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* arithmodel_order_zero.c: Output more debugging information.
+
+	* Makefile.am: Deleted useless -export-dynamic. Get vmpm_error.c
+	linked with each plugin.
+
+2001-09-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* arithmodel_order_zero.[ch]: Added encode_with_range(),
+	decode_with_range(). Deleted set_update_region().
+
+	* Makefile.am: New Recur2 plugin.
+
+	* vmpm_decompose_recur2.c: New file.
+
+	* vmpm.h, vmpm_decompose_esc.c, vmpm_decompose_escb.c,
+	vmpm_decompose_escc.c, vmpm_decompose_escfirst.c,
+	vmpm_decompose_half.c, vmpm_decompose_highlow.c,
+	vmpm_decompose_highlow_esc.c, vmpm_decompose_highlow_escb.c,
+	vmpm_decompose_highlow_rle.c, vmpm_decompose_normal.c,
+	vmpm_decompose_normal_old.c, vmpm_decompose_normal_rle.c,
+	vmpm_decompose_recur.c, vmpm_decompose_token.c,
+	vmpm_decompose_token2.c, vmpm_decompose_token2_old.c,
+	vmpm_decompose_token2_old2.c, vmpm_decompose_token_old.c,
+	vmpm_decompose_token_old2.c, glic.c: Do threshold() and expand()
+	in glic.c rather than in each plugin.
+
+	* expand.c: Use bufferused instead of buffersize.
+
+	* threshold.[ch]: New files.
+
 2001-08-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* glic.c: Now we can choose the method of auto-calculation of I.
