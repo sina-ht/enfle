@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec 28 21:58:31 2000.
- * $Id: archive.c,v 1.6 2000/12/30 07:19:56 sian Exp $
+ * Last Modified: Sun Jan 14 10:57:01 2001.
+ * $Id: archive.c,v 1.7 2001/01/14 15:23:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -83,7 +83,7 @@ archive_create(void)
 /* for internal use */
 
 static int
-read_directory_recursively(Archive *arc, char *path, int depth)
+read_directory_recursively(Dlist *dl, char *path, int depth)
 {
   char *filepath;
   DIR *dir;
@@ -111,13 +111,13 @@ read_directory_recursively(Archive *arc, char *path, int depth)
 	if (depth > 1)
 	  depth--;
 	if (depth == 0 || depth > 1)
-	  count += read_directory_recursively(arc, filepath, depth);
+	  count += read_directory_recursively(dl, filepath, depth);
 	else {
-	  add(arc, filepath, strdup(filepath));
+	  dlist_add_str(dl, filepath);
 	  count++;
 	}
       } else if (S_ISREG(statbuf.st_mode)) {
-	add(arc, filepath, strdup(filepath));
+	dlist_add_str(dl, filepath);
 	count++;
       }
     }
@@ -128,20 +128,39 @@ read_directory_recursively(Archive *arc, char *path, int depth)
   return count;
 }
 
+static int
+key_compare(const void *a, const void *b)
+{
+  char **pa = (char **)a, **pb = (char **)b;
+  char *sa = *pa, *sb = *pb;
+
+  return strcmp(sa, sb);
+}
+
 /* methods */
 
 static int
 read_directory(Archive *arc, char *path, int depth)
 {
   int c;
+  Dlist *dl;
+  Dlist_data *dd;
 
-  c = read_directory_recursively(arc, path, depth);
+  dl = dlist_create();
+  dlist_set_compfunc(dl, key_compare);
+  c = read_directory_recursively(dl, path, depth);
 #if 0
   if (arc->nfiles != c) {
     fprintf(stderr, "BUG: arc->nfiles %d != %d read_directory_recursively()\n", arc->nfiles, c);
     return 0;
   }
 #endif
+
+  dlist_sort(dl);
+  dlist_iter (dl, dd) {
+    add(arc, dlist_data(dd), strdup(dlist_data(dd)));
+  }
+  dlist_destroy(dl);
 
   arc->format = (char *)"NORMAL";
 
