@@ -1,5 +1,20 @@
 2000-12-27  Hiroshi Takekawa  <sian@fennel.org>
 
+	* common.h, lib/X11/x11ximage.c, lib/dllloader/kernel32.c,
+	lib/enfle/archive.c, lib/enfle/archiver.c, lib/enfle/loader.c,
+	lib/enfle/player.c, lib/enfle/spi.c, lib/enfle/streamer.c,
+	lib/enfle/utils.c, lib/enfle/utils.h, lib/utils/libconfig.c,
+	plugins/streamer/gz/gz.c: Use fatal(), fatal_perror(). Each of
+	these functions has the attribute 'noreturn'.
+
+	* src/enfle.c: Search for configuration file in several
+	paths(current, home, system-wide).
+
+	* configure.in, src/Makefile.am, src/enfle.rc,
+	plugins/*/*/Makefile.am: Ready for 'make install'.
+
+2000-12-27  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Clean up. Adapted to autoconf-2.49b. More checks.
 
 	* compat.h, common.h: Avoid multiple definition of HAVE_STDLIB_H.
