@@ -1,5 +1,22 @@
 2001-10-10  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/dllloader/Makefile.am: Added mm.c.
+
+	* lib/dllloader/kernel32.c: Implemented MapViewOfFile(). Some
+	debug message tweaks. Nasty workaround for calling CloseHandle()
+	twice.
+
+	* lib/dllloader/pe_image.c: Path is strdup()'d to be saved.
+
+	* lib/enfle/spi.c: Implemented depth 8 handling.
+
+	* lib/dllloader/mm.[ch]: Added memory protection feature.
+
+	* common.h, lib/enfle/archive.c, lib/enfle/archiver.c: Tweak
+	bug(), fatal(), warning()...
+
+2001-10-10  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/dllloader/kernel32.c: Added API(stub)s: MapViewOfFile,
 	MapViewOfFileEx, UnmapViewOfFile, CreateFileMappingA,
 	SetEndOfFile, lstrcmpiA, IsDBCSLeadByte.
