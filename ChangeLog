@@ -1,5 +1,11 @@
 2001-02-21  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/ui/normal/normal.c: Fixed the infinite loop bug.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Create pipes.
+
+2001-02-21  Hiroshi Takekawa  <sian@fennel.org>
+
 	* compat.h, configure.in, lib/demultiplexer/Makefile.am,
 	lib/demultiplexer/demultiplexer.h,
 	lib/demultiplexer/demultiplexer_mpeg.c,
