@@ -1,3 +1,26 @@
+2002-10-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added libarc check.
+
+	* plugins/archiver/Makefile.am: New libarc Archiver plugin.
+
+	* plugins/ui/normal/normal.c: Ensure stream_close() to be called.
+
+	* lib/enfle/stream.c: Freeing path and format when closed.
+
+	* lib/enfle/identify.c: Cosmetic changes.
+
+	* lib/enfle/archive.c: Don't increment nfiles when
+	hash_define_str() fails.
+
+	* plugins/archiver/tar/tar.c: Cosmetic changes.
+
+	* plugins/archiver/arc/.cvsignore,
+	plugins/archiver/arc/Makefile.am, plugins/archiver/arc/arc.c: New
+	files.
+
+	* lib/X11/rgbparse.c: Close file.
+
 2002-09-22  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/identify.[ch], plugins/ui/normal/normal.c: Skip
