@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Mon Jun 21 22:53:58 2004.
+             Last Modified: Mon Jun 21 23:05:31 2004.
 
 ***************************************************************************
 
@@ -92,7 +92,7 @@ various formatted pictures and movies with several effects.
   animated GIF
   mng
   mpeg (mpeg1, mpeg2)
-  avi,asf,ogg,ogm (codec supported by avcodec, vorbis, Windows DMO)
+  avi,ogg,ogm(,asf,wmv) (codec supported by avcodec, vorbis, Windows DMO)
 
 This software has plugin architecture.  You can write plugins to
 loader new formatted pictures and movies.  Also, you can read

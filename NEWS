@@ -1,4 +1,16 @@
-NEWS  Last Modified: Sun Feb 29 23:48:23 2004.
+NEWS  Last Modified: Mon Jun 21 23:03:19 2004.
+
+20040621:
+ Plugin autoload
+ New Loader: GIF
+ New Demultiplexer: MP3, ASF
+ Audiodecoder plugins: avcodec
+ Use pts for a-v sync when playing MPEG
+ DMO bridge for WMV3 support, dllloader enhancement
+ Lighter loader in playing movie
+ Use ENFLE_PLUGINDIR environment variable
+ libavcodec from cvs as of 20040621.
+ and more...
 
 20040229:
  Upgraded libmpeg2 to 0.4.0 from 0.2.1.

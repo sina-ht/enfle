@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2004 by Hiroshi Takekawa.
 
-             Last Modified: Mon Jun 21 22:52:46 2004.
+             Last Modified: Mon Jun 21 23:05:20 2004.
 
 ***************************************************************************
 
@@ -94,7 +94,7 @@ See README.e if you don't read Japanese, but English.
   animated GIF
   mng
   mpeg (mpeg1, mpeg2)
-  avi,asf,ogg,ogm (avcodec が対応している codec, vorbis, Windows DMO)
+  avi,ogg,ogm(,asf,wmv) (avcodec が対応している codec, vorbis, Windows DMO)
 
 各フォーマットへの対応はプラグインによって実装されております。画像の他
 に特殊なアーカイブ、 tar などの一般的なアーカイブ、圧縮された gz などのファ
