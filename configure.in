@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Sep 13 14:24:19 2001.
-dnl $Id: configure.in,v 1.89 2001/09/13 12:24:59 sian Exp $
+dnl Last Modified: Fri Sep 21 20:01:59 2001.
+dnl $Id: configure.in,v 1.90 2001/09/21 11:54:04 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (could be uncommented for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010913)
+AM_INIT_AUTOMAKE(enfle, 20010921)
 AC_CANONICAL_HOST
 
 dnl Checks for programs.
@@ -385,7 +385,7 @@ dnl with dmalloc
 AM_WITH_DMALLOCTH
 
 dnl do not put this line at earlier position to avoid confusing configure script.
-test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Wwrite-strings"
+test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
 
 AC_CONFIG_FILES([
  Makefile
