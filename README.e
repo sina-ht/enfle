@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Mon Jun 18 03:48:15 2001.
+     Last Modified: Mon Jun 25 02:10:07 2001.
 
  This file is part of Enfle.
 
@@ -42,6 +42,9 @@
  -- possible patent infringement. It's up to you whether use it or not.
 
  This software includes mpglib by Michael Hipp.
+
+ This software includes libmpeg2 by Aaron Holtzman. For this part, you
+ can apply GPL2 or later version.
 
  This archive includes fnmatch.[ch] by FSF. These files can be
  distributed under GPL2 or (at your option) any later version.
@@ -123,11 +126,11 @@ on the same/other environments.
 
 My main environment is:
 
-Kernel: Linux-2.4.3
-CPU: Celeron/366 (running at 550)
-X server: XFree86-4.0.3
-Video: Matrox MillenniumII/AGP 8M
-Compiler: gcc version 2.95.3 20010315 (release)
+Kernel: Linux-2.4.5-ac17
+CPU: PentiumIII/1GHz
+X server: XFree86-4.1.0
+Video: Matrox Millennium G450 DH/AGP 16M
+Compiler: gcc version 3.0
 libc: glibc-2.2.2
 
 
