@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 00:37:06 2000.
- * $Id: ungif.c,v 1.7 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Wed Jan  3 15:36:01 2001.
+ * $Id: ungif.c,v 1.8 2001/01/03 06:41:15 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -153,8 +153,7 @@ load_image(Image *p, Stream *st)
       p->width = GifFile->Image.Width;
       p->height = GifFile->Image.Height;
 
-      debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n",
-		    p->left, p->top, p->width, p->height);
+      //debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", p->left, p->top, p->width, p->height);
 
       if (GifFile->Image.Interlace) {
 	for (i = 0; i < 4; i++)
