@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar 20 18:08:26 2004.
- * $Id: demultiplexer_waveformatex.h,v 1.1 2004/03/24 14:54:25 sian Exp $
+ * Last Modified: Tue Apr  6 00:41:46 2004.
+ * $Id: demultiplexer_waveformatex.h,v 1.2 2004/04/05 15:46:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,7 +24,7 @@
 #define __DEMULTIPLEXER_WAVEFORMATEX_H__
 
 typedef struct __waveformatex WAVEFORMATEX;
-struct __waveformatex {
+struct __attribute__((__packed__)) __waveformatex {
   WORD wFormatTag;
   WORD nChannels;
   DWORD nSamplesPerSec;
