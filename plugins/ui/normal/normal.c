@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul 30 21:55:01 2002.
- * $Id: normal.c,v 1.65 2002/08/03 05:08:37 sian Exp $
+ * Last Modified: Thu Aug  8 19:20:53 2002.
+ * $Id: normal.c,v 1.66 2002/08/08 15:06:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -298,7 +298,7 @@ main_loop_toggle_interpolate(void *a)
     ml->vw->interpolate_method = _NOINTERPOLATE;
     break;
   default:
-    show_message_fnc(": invalid interpolate method %d\n", ml->vw->interpolate_method);
+    show_message_fnc("invalid interpolate method %d\n", ml->vw->interpolate_method);
     ml->vw->interpolate_method = _NOINTERPOLATE;
     break;
   }
