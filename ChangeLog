@@ -1,3 +1,71 @@
+2001-01-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Renamed configuration file.
+
+	* plugins/player/avifile/aviplay_audio.h,
+	plugins/player/avifile/aviplay_impl.h: Deleted.
+
+	* plugins/player/avifile/avifile.cpp: Adapted for cvs version
+	avifile library.
+
+	* src/enfle.c: Copyright year updated.
+
+	* lib/enfle/movie.h, plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mng/mng.c, plugins/player/mpeg_lib/mpeg_lib.c,
+	plugins/player/ungif/ungif.c: Deleted get_screen() method.
+
+	* lib/X11/x11ximage.c: Commented out unused debug message.
+
+	* common.h, compat.h: Rename configuration file.
+
+	* plugins/video/Xlib/Xlib.c: Initialize mutex statically.
+
+2001-01-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README: More documentation.
+
+	* configure.in: Added C++ checking, -D_REENTRANT to CFLAGS if
+	appropriate, avifile related staff, ungif and spi are now
+	optional.
+
+	* src/Makefile.am, src/enfle.c: Header files now should be
+	specified as enfle/*.h or so. Call XInitThreads() in
+	src/enfle.c... this is ugly, but works better. This might be
+	changed.
+
+	* plugins/*/*/Makefile.am, plugins/*/*/*.c: Header files now
+	should be specified as enfle/*.h or so.
+
+	* lib/utils/dlist.c, lib/utils/dlist.h, lib/utils/hash.c,
+	lib/utils/hash.h: Avoid collision for C++.
+
+	* lib/enfle/Makefile.am, lib/enfle/*.[ch]: Header files now should
+	be specified as enfle/*.h or so.
+
+	* lib/enfle/player-extra.h, lib/enfle/player-plugin.h:
+	PlayerStatus definition has been moved to player-extra.h.
+
+	* lib/enfle/memory.c, lib/enfle/memory.h: Header files now should
+	be specified as enfle/*.h or so. New method set().
+
+	* lib/dllloader/Makefile.am, lib/dllloader/*.[ch]: Header files
+	now should be specified as enfle/*.h or so. Susie support is now
+	optional, so dllloader is also optional. Added copyright messages.
+
+	* lib/X11/Makefile.am, lib/X11/x11ximage.h: Header files now
+	should be specified as enfle/*.h or so.
+
+	* lib/X11/x11ximage.c, plugins/player/avifile/.cvsignore,
+	plugins/player/avifile/Makefile.am,
+	plugins/player/avifile/avifile.cpp,
+	plugins/player/avifile/aviplay_audio.h,
+	plugins/player/avifile/aviplay_impl.h: Cosmetic change.
+
+2001-01-05  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+
+	* plugins/ui/normal/Makefile.am, plugins/ui/normal/normal.c:
+	Deleted obsolete Xlib UI plugin.
+
 2001-01-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg3/libmpeg3.c,
