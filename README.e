@@ -5,7 +5,7 @@
 
  (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
 
-     Last Modified: Wed Apr 25 15:03:57 2001.
+     Last Modified: Thu Apr 26 02:23:57 2001.
 
  This file is part of Enfle.
 
@@ -53,7 +53,7 @@ BTW, my English is rather bad. Are there any volunteers for correction?
 1. Blurb
 
 This software aims to view many pictures just clicking. You can view
-various formatted pictures and movies.
+various formatted pictures and movies with several effects.
 
  Formats you can view:
  BMP
@@ -173,8 +173,10 @@ l,r			rotate by a right angle.
 m			magnify x2
 M(shift+m)		magnify according to longer edge.
 Alt-m			magnify according to shorter edge.
+1-3,5-7			do gamma correction with 2.2, 1.7, 1.45, 1/1.45, 1/1.7, 1/2.2.
+4			restore original image.
 
-Yes, Enfle will quit when all pictures are viewed.
+Yes, Enfle will also quit when all pictures are viewed.
 
 If you have wheel, you can use it for Left, Right click.
 
