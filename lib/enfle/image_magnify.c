@@ -1,10 +1,10 @@
 /*
  * image_magnify.c -- image magnification
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar 20 05:47:43 2001.
- * $Id: image_magnify.c,v 1.4 2001/03/19 21:12:47 sian Exp $
+ * Last Modified: Thu Feb 14 01:50:46 2002.
+ * $Id: image_magnify.c,v 1.5 2002/02/13 16:53:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,6 +26,12 @@
 #include "common.h"
 
 #include "image.h"
+
+#define INTEGER_ARITHMETIC
+#define PRECISION 8
+#define PRECISION2 (PRECISION * 2)
+#define MIN_INT (1 << PRECISION)
+#define DECIMAL_MASK (MIN_INT - 1)
 
 /* for internal use */
 
@@ -110,6 +116,7 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
   if (dw >= w)
     if (dh >= h) {
       if (method == _BILINEAR) {
+#ifndef INTEGER_ARITHMETIC
 	unsigned char *dd = d;
 	double dx, dy;
 	int yt;
@@ -141,6 +148,38 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 	    }
 	  }
 	}
+#else
+	unsigned char *dd = d;
+	unsigned int dx, dy;
+	int yt;
+
+	debug_message_fnc("integer arithmetic24\n");
+
+	yt = (h - 1) * w;
+	for (y = 0; y < dh; y++) {
+	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
+	  t = y * h / dh * w;
+	  for (x = 0; x < dw; x++) {
+	    dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	    t3 = x * w / dw;
+
+	    if (t < yt) {
+	      /* bilinear interpolation */
+	      for (i = 0; i < 3; i++) 
+		*dd++ = (
+		  s[(t +      t3     ) * 3 + i] * (MIN_INT - dx) * (MIN_INT - dy) +
+		  s[(t +     (t3 + 1)) * 3 + i] *            dx  * (MIN_INT - dy) +
+		  s[(t + w +  t3     ) * 3 + i] * (MIN_INT - dx) *            dy  +
+		  s[(t + w + (t3 + 1)) * 3 + i] *            dx  *            dy ) >> PRECISION2;
+	    } else {
+	      for (i = 0; i < 3; i++) 
+		*dd++ = (
+		  s[(t     +  t3     ) * 3 + i] * (MIN_INT - dx) +
+		  s[(t     + (t3 + 1)) * 3 + i] *            dx ) >> PRECISION;
+	    }
+	  }
+	}
+#endif
       } else {
 	unsigned char *dd = d;
 	for (y = 0; y < dh; y++) {
@@ -193,7 +232,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
   if (dw >= w)
     if (dh >= h) {
       if (method == _BILINEAR) {
-#if 0
+#ifndef INTEGER_ARITHMETIC
 	unsigned char *dd = d;
 	double dx, dy;
 	int yt;
@@ -213,15 +252,15 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	      /* bilinear interpolation */
 	      for (i = 0; i < 3; i++) 
 		*dd++ =
-		  s[(t +      t3     ) * 4 + i] * (1.0 - dx) * (1.0 - dy) +
-		  s[(t +     (t3 + 1)) * 4 + i] *        dx  * (1.0 - dy) +
-		  s[(t + w +  t3     ) * 4 + i] * (1.0 - dx) *        dy  +
-		  s[(t + w + (t3 + 1)) * 4 + i] *        dx  *        dy;
+		  s[((t +      t3     ) << 2) + i] * (1.0 - dx) * (1.0 - dy) +
+		  s[((t +     (t3 + 1)) << 2) + i] *        dx  * (1.0 - dy) +
+		  s[((t + w +  t3     ) << 2) + i] * (1.0 - dx) *        dy  +
+		  s[((t + w + (t3 + 1)) << 2) + i] *        dx  *        dy;
 	    } else {
 	      for (i = 0; i < 3; i++) 
 		*dd++ =
-		  s[(t     +  t3     ) * 4 + i] * (1.0 - dx) +
-		  s[(t     + (t3 + 1)) * 4 + i] *        dx;
+		  s[((t     +  t3     ) << 2) + i] * (1.0 - dx) +
+		  s[((t     + (t3 + 1)) << 2) + i] *        dx;
 	    }
 	  }
 	}
@@ -230,10 +269,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	unsigned int dx, dy;
 	int yt;
 
-#define PRECISION 8
-#define PRECISION2 (PRECISION * 2)
-#define MIN_INT (1 << PRECISION)
-#define DECIMAL_MASK (MIN_INT - 1)
+	debug_message_fnc("integer arithmetic32\n");
 
 	yt = (h - 1) * w;
 	for (y = 0; y < dh; y++) {
@@ -247,15 +283,15 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	      /* bilinear interpolation */
 	      for (i = 0; i < 3; i++) 
 		*dd++ = (
-		  s[(t +      t3     ) * 4 + i] * (MIN_INT - dx) * (MIN_INT - dy) +
-		  s[(t +     (t3 + 1)) * 4 + i] *            dx  * (MIN_INT - dy) +
-		  s[(t + w +  t3     ) * 4 + i] * (MIN_INT - dx) *            dy  +
-		  s[(t + w + (t3 + 1)) * 4 + i] *            dx  *            dy ) >> PRECISION2;
+		  s[((t +      t3     ) << 2) + i] * (MIN_INT - dx) * (MIN_INT - dy) +
+		  s[((t +     (t3 + 1)) << 2) + i] *            dx  * (MIN_INT - dy) +
+		  s[((t + w +  t3     ) << 2) + i] * (MIN_INT - dx) *            dy  +
+		  s[((t + w + (t3 + 1)) << 2) + i] *            dx  *            dy ) >> PRECISION2;
 	    } else {
 	      for (i = 0; i < 3; i++) 
 		*dd++ = (
-		  s[(t     +  t3     ) * 4 + i] * (MIN_INT - dx) +
-		  s[(t     + (t3 + 1)) * 4 + i] *            dx ) >> PRECISION;
+		  s[((t     +  t3     ) << 2) + i] * (MIN_INT - dx) +
+		  s[((t     + (t3 + 1)) << 2) + i] *            dx ) >> PRECISION;
 	    }
 	  }
 	}
@@ -267,7 +303,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	  for (x = 0; x < dw; x++) {
 	    t3 = x * w / dw + t;
 	    for (i = 0; i < 3; i++)
-	      *dd++ = s[t3 * 4 + i];
+	      *dd++ = s[(t3 << 2) + i];
 	  }
 	}
       }
@@ -278,7 +314,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	for (x = 0; x < dw; x++) {
 	  t4 = x * w / dw + t2;
 	  for (i = 0; i < 3; i++)
-	    d[(x + t) * 4 + i] = s[t4 * 4 + i];
+	    d[((x + t) << 2) + i] = s[(t4 << 2) + i];
 	}
       }
   else
@@ -289,7 +325,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	for (x = 0; x < w; x++) {
 	  t3 = x * dw / w + t;
 	  for (i = 0; i < 3; i++)
-	    d[t3 * 4 + i] = s[(x + t2) * 4 + i];
+	    d[(t3 << 2) + i] = s[((x + t2) << 2) + i];
 	}
       }
     else
@@ -298,7 +334,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	for (x = 0; x < w; x++) {
 	  t3 = x * dw / w + t;
 	  for (i = 0; i < 3; i++)
-	    d[t3 * 4 + i] = *s++;
+	    d[(t3 << 2) + i] = *s++;
 	}
       }
 }
@@ -325,18 +361,22 @@ image_magnify_main(Image *p, int dw, int dh, ImageInterpolateMethod method)
   case _ABGR32:
   case _ARGB32:
   case _BGRA32:
-    p->magnified.bytes_per_line = dw * 4;
+    p->magnified.bytes_per_line = dw << 2;
     break;
   default:
-    fprintf(stderr, "image_magnify: unsupported image type %s\n", image_type_to_string(p->type));
+    show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
     return 0;
   }
 
-  if (!p->magnified.image && ((p->magnified.image = memory_create()) == NULL))
+  if (!p->magnified.image && ((p->magnified.image = memory_create()) == NULL)) {
+    show_message_fnc("No enough memory\n");
     return 0;
+  }
 
-  if ((memory_alloc(p->magnified.image, p->magnified.bytes_per_line * dh)) == NULL)
+  if ((memory_alloc(p->magnified.image, p->magnified.bytes_per_line * dh)) == NULL) {
+    show_message_fnc("No enough memory (%d bytes requested)\n", p->magnified.bytes_per_line * dh);
     return 0;
+  }
 
   switch (p->type) {
   case _GRAY:
@@ -358,7 +398,7 @@ image_magnify_main(Image *p, int dw, int dh, ImageInterpolateMethod method)
     magnify_generic32(memory_ptr(p->magnified.image), memory_ptr(p->image), p->width, p->height, dw, dh, method);
     break;
   default:
-    fprintf(stderr, "image_magnify: unsupported image type %s\n", image_type_to_string(p->type));
+    show_message_fnc("unsupported image type %s\n", image_type_to_string(p->type));
     return 0;
   }
 
