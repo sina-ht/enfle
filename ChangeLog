@@ -1,3 +1,13 @@
+2001-02-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Fixed typo.
+
+	* lib/enfle/archive.c, lib/enfle/archive.h,
+	plugins/ui/normal/normal.c: Implemented deletion an entry from the
+	list and a file itself.
+
+	* src/Makefile.am: Deleted -lX11, which is no longer needed.
+
 2001-02-07  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README.e, README, lib/Makefile.am, plugins/player/Makefile.am:
