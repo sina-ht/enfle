@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 24 08:43:29 2001.
- * $Id: demultiplexer_mpeg.c,v 1.5 2001/02/24 08:23:31 sian Exp $
+ * Last Modified: Mon Mar  5 01:30:05 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.6 2001/03/04 17:08:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -207,7 +207,7 @@ examine(Demultiplexer *demux)
 }
 
 static void
-close_pipes(Demultiplexer *demux)
+close_sockets(Demultiplexer *demux)
 {
   MpegInfo *info = (MpegInfo *)demux->private_data;
 
@@ -220,6 +220,8 @@ close_pipes(Demultiplexer *demux)
     info->a_fd = 0;
   }
 }
+
+#define CONTINUE_IF_RUNNING if (demux->running) continue; else break
 
 static void *
 demux_main(void *arg)
@@ -237,6 +239,8 @@ demux_main(void *arg)
   used_size = 0;
   read_total = 0;
 
+  demux->running = 1;
+
   do {
     if ((read_size = stream_read(info->st, buf + used_size, DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
       show_message(__FUNCTION__ ": read error.\n");
@@ -252,27 +256,25 @@ demux_main(void *arg)
       read_total += read_size;
     }
 
-    debug_message(__FUNCTION__ ": read %d bytes\n", read_size);
-
     if (buf[0]) {
       memcpy(buf, buf + 1, used_size - 1);
       used_size--;
-      continue;
+      CONTINUE_IF_RUNNING;
     }
     if (buf[1]) {
       memcpy(buf, buf + 2, used_size - 2);
       used_size -= 2;
-      continue;
+      CONTINUE_IF_RUNNING;
     }
     if (buf[2] != 1) {
       if (buf[2]) {
 	memcpy(buf, buf + 3, used_size - 3);
 	used_size -= 3;
-	continue;
+	CONTINUE_IF_RUNNING;
       } else {
 	memcpy(buf, buf + 1, used_size - 1);
 	used_size--;
-	continue;
+	CONTINUE_IF_RUNNING;
       }
     }
 
@@ -283,13 +285,15 @@ demux_main(void *arg)
     case MPEG_PACK_HEADER:
       if ((buf[4] & 0xc0) == 0x40) {
 	skip = 14 + (buf[13] & 7);
-	if (used_size < skip)
-	  continue;
+	if (used_size < skip) {
+	  CONTINUE_IF_RUNNING;
+	}
 	info->ver = 2;
       } else if ((buf[4] & 0xf0) == 0x20) {
 	skip = 12;
-	if (used_size < skip)
-	  continue;
+	if (used_size < skip) {
+	  CONTINUE_IF_RUNNING;
+	}
 	info->ver = 1;
       } else {
 	show_message(__FUNCTION__ ": weird version\n");
@@ -298,34 +302,34 @@ demux_main(void *arg)
       break;
     case MPEG_SYSTEM_START:
       skip = 6 + utils_get_big_uint16(buf + 4);
-      if (used_size < skip)
-	continue;
+      if (used_size < skip) {
+	CONTINUE_IF_RUNNING;
+      }
       break;
     case MPEG_AUDIO_AC3:
       skip = 6 + utils_get_big_uint16(buf + 4);
-      if (used_size < skip)
-	continue;
+      if (used_size < skip) {
+	CONTINUE_IF_RUNNING;
+      }
       debug_message("MPEG_AUDIO_AC3??\n");
       break;
     case MPEG_PADDING:
       skip = 6 + utils_get_big_uint16(buf + 4);
-      if (used_size < skip)
-	continue;
+      if (used_size < skip) {
+	CONTINUE_IF_RUNNING;
+      }
       break;
     default:
       skip = 6 + utils_get_big_uint16(buf + 4);
-      if (used_size < skip)
-	continue;
+      if (used_size < skip) {
+	CONTINUE_IF_RUNNING;
+      }
       if ((id & 0xe0) == 0xc0) {
 	nastream = id & 0x1f;
 	if (nastream == info->nastream) {
 	  if ((buf[6] & 0xc0) == 0x80) {
 	    /* ?, flags, header_len */
-	    debug_message(__FUNCTION__ ": audio II\n");
-
 	    write(info->a_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
-
-	    debug_message(__FUNCTION__ ": audio OK\n");
 	  } else {
 	    unsigned char *p;
 
@@ -350,11 +354,7 @@ demux_main(void *arg)
 	      goto error;
 	    }
 	    if (p < buf + skip) {
-	      debug_message(__FUNCTION__ ": audio I\n");
-
 	      write(info->a_fd, p, buf + skip - p);
-
-	      debug_message(__FUNCTION__ ": audio OK\n");
 	    }
 	  }
 	}
@@ -363,11 +363,7 @@ demux_main(void *arg)
 	if (nvstream == info->nvstream) {
 	  if ((buf[6] & 0xc0) == 0x80) {
 	    /* ?, flags, header_len */
-	    debug_message(__FUNCTION__ ": video II\n");
-
 	    write(info->v_fd, buf + 9 + buf[8], skip - 9 - buf[8]);
-
-	    debug_message(__FUNCTION__ ": video OK\n");
 	  } else {
 	    unsigned char *p;
 
@@ -392,11 +388,7 @@ demux_main(void *arg)
 	      goto error;
 	    }
 	    if (p < buf + skip) {
-	      debug_message(__FUNCTION__ ": video I\n");
-
 	      write(info->v_fd, p, buf + skip - p);
-
-	      debug_message(__FUNCTION__ ": video OK\n");
 	    }
 	  }
 	}
@@ -413,24 +405,26 @@ demux_main(void *arg)
   } while (demux->running);
 
  end:
+  demux->running = 0;
   free(buf);
-  close_pipes(demux);
+  close_sockets(demux);
   pthread_exit((void *)1);
 
  error:
+  demux->running = 0;
   free(buf);
-  close_pipes(demux);
+  close_sockets(demux);
   pthread_exit((void *)0);
 }
 
 static int
 start(Demultiplexer *demux)
 {
-  debug_message(__FUNCTION__ "()\n");
-
   if (demux->running)
     return 0;
-  demux->running = 1;
+
+  debug_message(__FUNCTION__ "()\n");
+
   pthread_create(&demux->thread, NULL, demux_main, demux);
 
   debug_message(__FUNCTION__ ": created\n");
@@ -443,11 +437,13 @@ stop(Demultiplexer *demux)
 {
   void *ret;
 
-  debug_message(__FUNCTION__ "()\n");
-
   if (!demux->running)
     return 0;
+
+  debug_message(__FUNCTION__ " demultiplexer_mpeg\n");
+
   demux->running = 0;
+  pthread_cancel(demux->thread);
   pthread_join(demux->thread, &ret);
 
   debug_message(__FUNCTION__ ": joined\n");
