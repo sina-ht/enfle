@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 21 05:27:41 2001.
- * $Id: normal.c,v 1.32 2001/04/21 07:26:39 sian Exp $
+ * Last Modified: Tue Apr 24 22:32:56 2001.
+ * $Id: normal.c,v 1.33 2001/04/24 16:44:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -653,14 +653,14 @@ ui_main(UIData *uidata)
   void *disp;
   char *render_method, *interpolate_method;
 
-  if ((disp = vp->open_video(NULL)) == NULL) {
+  if ((disp = vp->open_video(NULL, c)) == NULL) {
     show_message("open_video() failed\n");
     free(uidata->private);
     return 0;
   }
   uidata->disp = disp;
 
-  uidata->vw = vw = vp->open_window(disp, c, 600, 400);
+  uidata->vw = vw = vp->open_window(disp, vp->get_root(disp), 600, 400);
 
   video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask | ENFLE_PointerMask);
   /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask | ENFLE_PointerMask | ENFLE_WindowMask); */
