@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 13:02:02 2001.
- * $Id: opendivx.c,v 1.17 2001/10/14 12:35:33 sian Exp $
+ * Last Modified: Thu Oct 18 00:51:53 2001.
+ * $Id: opendivx.c,v 1.18 2001/10/18 04:47:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -446,7 +446,7 @@ play_audio(void *arg)
 
   while (m->status == _PLAY) {
     if (!fifo_get(info->astream, &data, &destructor)) {
-      show_message(__FUNCTION__ ": fifo_get() failed.\n");
+      debug_message(__FUNCTION__ ": fifo_get() failed.\n");
     } else {
       ap = (AVIPacket *)data;
       ret = decodeMP3(&info->mp, ap->data, ap->size,
