@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 29 03:52:24 2001.
- * $Id: convert.c,v 1.10 2001/07/29 00:41:05 sian Exp $
+ * Last Modified: Mon Aug 27 15:18:32 2001.
+ * $Id: convert.c,v 1.11 2001/08/27 06:29:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -93,7 +93,7 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
     show_message(__FUNCTION__ ": file %s exists\n", outpath);
     return 0;
   }
-  if ((fp = fopen(outpath, "wb")) == NULL) {
+  if ((fp = fopen(outpath, "wb+")) == NULL) {
     show_message(__FUNCTION__ ": Cannot open %s for writing.\n", outpath);
     free(outpath);
     return 0;
@@ -188,11 +188,16 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	free(p->comment);
 	p->comment = NULL;
       }
-      save_image(uidata, p, format, path);
+      {
+	char *fullpath = archive_getpathname(a, path);
+	save_image(uidata, p, format, fullpath);
+	free(fullpath);
+      }
       memory_destroy(p->image);
       p->image = NULL;
+      continue;
     case IDENTIFY_STREAM_MOVIE:
-      show_message("BUG... cannot reach here.");
+      show_message("BUG... cannot reach here.\n");
       continue;
     default:
       continue;
