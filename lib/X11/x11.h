@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Oct 12 18:58:06 2000.
- * $Id: x11.h,v 1.3 2000/10/12 15:44:28 sian Exp $
+ * Last Modified: Sun Oct 15 21:23:23 2000.
+ * $Id: x11.h,v 1.4 2000/10/15 12:30:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,6 +30,7 @@ struct _x11 {
   Visual *visual;
   int screen;
   int depth;
+  int bits_per_pixel;
   unsigned long white;
   unsigned long black;
 
@@ -43,6 +44,7 @@ struct _x11 {
 #define x11_visual(x) (x)->visual
 #define x11_screen(x) (x)->screen
 #define x11_depth(x) (x)->depth
+#define x11_bpp(x) (x)->bits_per_pixel
 #define x11_white(x) (x)->white
 #define x11_black(x) (x)->black
 
