@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed May 23 01:05:17 2001.
-dnl $Id: configure.in,v 1.69 2001/05/23 12:18:22 sian Exp $
+dnl Last Modified: Mon Jun  4 02:03:24 2001.
+dnl $Id: configure.in,v 1.70 2001/06/03 19:39:17 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -33,10 +33,10 @@ fi
 dnl use enfle-config.h
 AM_CONFIG_HEADER(enfle-config.h)
 
-dnl Maintainer mode (uncomment for production release.)
+dnl Maintainer mode (could be uncommented for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010522)
+AM_INIT_AUTOMAKE(enfle, 20010604)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -352,6 +352,13 @@ elif test "$enable_spi" = yes; then
 fi
 AM_CONDITIONAL(USE_SPI, test "$enable_spi" = "yes")
 
+dnl more warning
+AC_ARG_ENABLE(warnings,
+        [  --enable-warnings       enable more compiler warnings.])
+if test "${enable_warnings-set}" = "set"; then
+  enable_spi=no
+fi
+
 dnl data directory path
 enfle_datadir=${datadir}/enfle
 AC_SUBST(enfle_datadir)
@@ -381,9 +388,10 @@ AC_SUBST(enfle_video_plugindir)
 dnl with dmalloc
 AM_WITH_DMALLOC
 
-dnl more warnings, calm down for production release (comment out)
 dnl do not put this line at earlier position to avoid confusing configure script.
-CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Wwrite-strings"
+if test "$enable_warnings" = "yes"; then
+  CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Wwrite-strings"
+fi
 
 AC_CONFIG_FILES([
  Makefile
