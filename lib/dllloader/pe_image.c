@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:48:04 2002.
- * $Id: pe_image.c,v 1.24 2002/08/17 02:19:36 sian Exp $
+ * Last Modified: Mon Nov 10 15:52:16 2003.
+ * $Id: pe_image.c,v 1.25 2003/11/17 13:59:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,6 +37,11 @@
 #ifdef __linux__
 # include <asm/ldt.h>
 # include <asm/unistd.h>
+// tls-2.5.31-D9 by Ingo Molnar <mingo@elte.hu> changed the name...
+# include <linux/version.h>
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,32)
+#  define modify_ldt_ldt_s user_desc
+# endif
 #elif defined(__FreeBSD__)
 # include <machine/segments.h>
 # include <machine/sysarch.h>
