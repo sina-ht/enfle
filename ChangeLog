@@ -1,3 +1,35 @@
+2004-05-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/demultiplexer.h, lib/enfle/dmo.c,
+	lib/enfle/videodecoder.h, plugins/demultiplexer/avi/avi.c,
+	plugins/player/generic/generic.c,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/raw/raw.c: More pts related codes.
+
+	* src/enfle.c: Detect SSE3.
+
+	* configure.in: See if Makefile.in exists instead of Makefile.am.
+
+	* plugins/audiodecoder/mad/mad.c: Extend buffer.
+
+	* lib/utils/cpucaps.c, lib/utils/cpucaps.h: Detect SSE3.
+
+	* lib/avcodec/4xm.c, lib/avcodec/Makefile.am,
+	lib/avcodec/allcodecs.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/cinepak.c, lib/avcodec/cljr.c,
+	lib/avcodec/common.h, lib/avcodec/cyuv.c, lib/avcodec/dv.c,
+	lib/avcodec/ffv1.c, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/huffyuv.c, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/integer.c, lib/avcodec/integer.h, lib/avcodec/mdec.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/motion_est.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpeg12data.h, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/pthread.c,
+	lib/avcodec/svq1.c, lib/avcodec/svq1_cb.h, lib/avcodec/svq1_vlc.h,
+	lib/avcodec/utils.c, lib/avcodec/vcr1.c: Updated.
+
 2004-04-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/generic/generic.c: No time-consuming a-v sync.
