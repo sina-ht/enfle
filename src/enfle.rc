@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sun Aug  4 21:33:21 2002.
-; $Id: enfle.rc,v 1.31 2002/08/04 12:35:24 sian Exp $
+; Last Modified: Sat Nov 30 00:58:33 2002.
+; $Id: enfle.rc,v 1.32 2002/11/29 16:01:16 sian Exp $
 
 enfle {
   identify {
@@ -32,11 +32,15 @@ enfle {
 	;
 	deletefile_without_shift = no
 	;
-	;caption_template = "%p %f %xx%y"
+	;caption_template = "%i/%I:%p %f %xx%y"
         ; disable archiver plugin
         ;archiver/disabled = yes
 	;
 	show_comment = no
+	; filename code conversion
+	filename_code_conversion = yes
+	filename_code_from = Shift_JIS
+	filename_code_to = EUC-JP
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -55,6 +59,7 @@ enfle {
       default = Xlib
       ; caption font for full screen mode
       caption_font = a14
+      caption_fontset = -misc-fixed-medium-r-normal--14-*-*-*-*-*-jisx0208.1983-0
       ; Preferred format order for YUV display
       ; planar: YV12, I420, YUY2, UYVY
       ; packed: YUY2, UYVY, YV12, I420
