@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 03:24:56 2001.
- * $Id: normal.c,v 1.25 2001/02/21 18:26:11 sian Exp $
+ * Last Modified: Thu Feb 22 04:34:51 2001.
+ * $Id: normal.c,v 1.26 2001/02/24 08:23:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -202,7 +202,8 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  first_point = 1;
 	break;
       case ENFLE_Event_ButtonReleased:
-	if (button == ev.button.button)
+	if (button == ev.button.button) {
+	  video_window_sync_discard(vw);
 	  switch (ev.button.button) {
 	  case ENFLE_Button_1:
 	    return MAIN_LOOP_NEXT;
@@ -217,14 +218,15 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  default:
 	    break;
 	  }
+	}
 	button = ENFLE_Button_None;
-	video_window_sync_discard(vw);
 	break;
       case ENFLE_Event_KeyPressed:
 	key = ev.key.key;
 	break;
       case ENFLE_Event_KeyReleased:
 	if (key == ev.key.key) {
+	  video_window_sync_discard(vw);
 	  switch (ev.key.key) {
 	  case ENFLE_KEY_n:
 	  case ENFLE_KEY_space:
@@ -290,7 +292,6 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	  default:
 	    break;
 	  }
-	  video_window_sync_discard(vw);
 	}
 	key = ENFLE_KEY_Unknown;
 	break;
