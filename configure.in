@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Feb 21 14:16:53 2004.
-dnl $Id: configure.in,v 1.139 2004/02/21 07:52:09 sian Exp $
+dnl Last Modified: Sat Feb 21 17:58:44 2004.
+dnl $Id: configure.in,v 1.140 2004/02/21 09:08:14 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -471,7 +471,7 @@ AC_HEADER_TIME
 ENFLE_MAX_ALIGN
 
 dnl Checks for library functions.
-AC_FUNC_FNMATCH
+AC_REPLACE_FNMATCH
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_MEMCMP
@@ -485,9 +485,6 @@ AC_FUNC_STRTOD
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
 AC_CHECK_FUNCS([floor getpagesize gettimeofday mblen memalign memmove memset munmap pow rint setlocale select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr strstr strtol])
-
-dnl enable compatible function(s) if unavailable in system library.
-AM_CONDITIONAL(HAVE_FNMATCH, test $ac_cv_func_fnmatch_works = yes)
 
 dnl debug option
 AC_ARG_ENABLE(debug,
@@ -636,16 +633,13 @@ AC_C_INLINE
 
 AC_CONFIG_FILES([
  Makefile
-  compat/Makefile
   lib/Makefile
    lib/X11/Makefile
    lib/avcodec/Makefile
-   lib/demultiplexer/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
    lib/j2k/Makefile
    lib/mad/Makefile
-   lib/mpeg2.old/Makefile
    lib/mpeg2/Makefile
    lib/mpglib/Makefile
    lib/utils/Makefile
@@ -674,16 +668,12 @@ AC_CONFIG_FILES([
     plugins/archiver/tar/Makefile
     plugins/archiver/arc/Makefile
    plugins/player/Makefile
-    plugins/player/avcodec/Makefile
     plugins/player/avifile/Makefile
     plugins/player/generic/Makefile
-    plugins/player/libmpeg2.old/Makefile
-    plugins/player/libmpeg2/Makefile
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
     plugins/player/mpeg_lib/Makefile
     plugins/player/mpglib/Makefile
-    plugins/player/divx/Makefile
     plugins/player/ungif/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
