@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 03:19:51 2002.
- * $Id: kernel32.c,v 1.22 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Wed Apr  7 00:13:47 2004.
+ * $Id: kernel32.c,v 1.23 2004/04/06 15:16:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #define W32API_REQUEST_MEM_ALLOC
@@ -78,6 +79,11 @@ DECLARE_W32API(BOOL, SetEndOfFile, (HANDLE));
 /* directory related */
 DECLARE_W32API(BOOL, CreateDirectoryA, (LPCSTR, LPSECURITY_ATTRIBUTES));
 DECLARE_W32API(BOOL, CreateDirectoryW, (LPCWSTR, LPSECURITY_ATTRIBUTES));
+/* disk related */
+DECLARE_W32API(BOOL, GetDiskFreeSpaceA, (LPCSTR,LPDWORD,LPDWORD,LPDWORD,LPDWORD));
+DECLARE_W32API(BOOL, GetDiskFreeSpaceW, (LPCWSTR,LPDWORD,LPDWORD,LPDWORD,LPDWORD));
+DECLARE_W32API(BOOL, GetDiskFreeSpaceExA, (LPCSTR,PULARGE_INTEGER,PULARGE_INTEGER,PULARGE_INTEGER));
+DECLARE_W32API(BOOL, GetDiskFreeSpaceExW, (LPCWSTR,PULARGE_INTEGER,PULARGE_INTEGER,PULARGE_INTEGER));
 /* handle related */
 DECLARE_W32API(HANDLE, GetStdHandle, (DWORD));
 DECLARE_W32API(BOOL, SetStdHandle, (DWORD, HANDLE));
@@ -87,6 +93,7 @@ DECLARE_W32API(BOOL, CloseHandle, (HANDLE));
 DECLARE_W32API(HMODULE, LoadLibraryA, (LPCSTR));
 DECLARE_W32API(HMODULE, LoadLibraryExA, (LPCSTR, HANDLE, DWORD));
 DECLARE_W32API(HMODULE, GetModuleHandleA, (LPCSTR));
+DECLARE_W32API(HMODULE, GetModuleHandleW, (LPCWSTR));
 DECLARE_W32API(DWORD, GetModuleFileNameA, (HMODULE, LPSTR, DWORD));
 /* memory related */
 DECLARE_W32API(HLOCAL, LocalAlloc, (UINT, DWORD));
@@ -125,6 +132,7 @@ DECLARE_W32API(INT, lstrcmpA, (LPCSTR, LPCSTR));
 DECLARE_W32API(INT, lstrcmpiA, (LPCSTR, LPCSTR));
 /* process related */
 DECLARE_W32API(HANDLE, GetCurrentProcess, (void));
+DECLARE_W32API(DWORD, GetCurrentProcessId, (void));
 DECLARE_W32API(FARPROC, GetProcAddress, (HMODULE, LPCSTR));
 DECLARE_W32API(void, ExitProcess, (DWORD)) __attribute__ ((noreturn));
 DECLARE_W32API(BOOL, TerminateProcess, (HANDLE, DWORD));
@@ -132,6 +140,7 @@ DECLARE_W32API(BOOL, TerminateProcess, (HANDLE, DWORD));
 DECLARE_W32API(HANDLE, GetCurrentThread, (void));
 DECLARE_W32API(DWORD, GetCurrentThreadId, (void));
 DECLARE_W32API(LCID, GetThreadLocale, (void));
+DECLARE_W32API(INT, GetThreadPriority, (HANDLE));
 DECLARE_W32API(BOOL, DisableThreadLibraryCalls, (HMODULE));
 DECLARE_W32API(HANDLE, CreateThread, (SECURITY_ATTRIBUTES *, DWORD, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD));
 /* thread local-variable related */
@@ -175,6 +184,9 @@ DECLARE_W32API(BOOL, IsDBCSLeadByte, (BYTE));
 /* date and time */
 DECLARE_W32API(BOOL, EnumCalendarInfoA, (CALINFO_ENUMPROCA, LCID, CALID, CALTYPE));
 DECLARE_W32API(VOID, GetLocalTime, (LPSYSTEMTIME));
+DECLARE_W32API(VOID, GetSystemTimeAsFileTime, (LPFILETIME));
+DECLARE_W32API(VOID, Sleep, (DWORD));
+DECLARE_W32API(int, GetTickCount, (void));
 /* miscellaneous */
 DECLARE_W32API(DWORD, GetLastError, (void));
 DECLARE_W32API(void, SetLastError, (DWORD));
@@ -206,6 +218,10 @@ static Symbol_info symbol_infos[] = {
   { "SetEndOfFile", SetEndOfFile },
   { "CreateDirectoryA", CreateDirectoryA },
   { "CreateDirectoryW", CreateDirectoryW },
+  { "GetDiskFreeSpaceA", GetDiskFreeSpaceA },
+  { "GetDiskFreeSpaceW", GetDiskFreeSpaceW },
+  { "GetDiskFreeSpaceExA", GetDiskFreeSpaceExA },
+  { "GetDiskFreeSpaceExW", GetDiskFreeSpaceExW },
   { "GetStdHandle", GetStdHandle },
   { "SetStdHandle", SetStdHandle },
   { "SetHandleCount", SetHandleCount },
@@ -213,6 +229,7 @@ static Symbol_info symbol_infos[] = {
   { "LoadLibraryA", LoadLibraryA },
   { "LoadLibraryExA", LoadLibraryExA },
   { "GetModuleHandleA", GetModuleHandleA },
+  { "GetModuleHandleW", GetModuleHandleW },
   { "GetModuleFileNameA", GetModuleFileNameA },
   { "LocalAlloc", LocalAlloc },
   { "LocalReAlloc", LocalReAlloc },
@@ -246,12 +263,14 @@ static Symbol_info symbol_infos[] = {
   { "lstrcmpA", lstrcmpA },
   { "lstrcmpiA", lstrcmpiA },
   { "GetCurrentProcess", GetCurrentProcess },
+  { "GetCurrentProcessId", GetCurrentProcessId },
   { "GetProcAddress", GetProcAddress },
   { "ExitProcess", ExitProcess },
   { "TerminateProcess", TerminateProcess },
   { "GetCurrentThread", GetCurrentThread },
   { "GetCurrentThreadId", GetCurrentThreadId },
   { "GetThreadLocale", GetThreadLocale },
+  { "GetThreadPriority", GetThreadPriority },
   { "DisableThreadLibraryCalls", DisableThreadLibraryCalls },
   { "CreateThread", CreateThread },
   { "TlsAlloc", TlsAlloc },
@@ -289,6 +308,9 @@ static Symbol_info symbol_infos[] = {
   { "IsDBCSLeadByte", IsDBCSLeadByte },
   { "EnumCalendarInfoA", EnumCalendarInfoA },
   { "GetLocalTime", GetLocalTime },
+  { "GetSystemTimeAsFileTime", GetSystemTimeAsFileTime },
+  { "Sleep", Sleep },
+  { "GetTickCount", GetTickCount },
   { "GetLastError", GetLastError },
   { "SetLastError", SetLastError },
   { "GetVersion", GetVersion },
@@ -545,6 +567,36 @@ DEFINE_W32API(BOOL, CreateDirectoryW,
   return TRUE;
 }
 
+/* disk related */
+
+DEFINE_W32API(BOOL, GetDiskFreeSpaceA,
+	      (LPCSTR a, LPDWORD b, LPDWORD c, LPDWORD d, LPDWORD e))
+{
+  debug_message_fn("()\n");
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, GetDiskFreeSpaceW,
+	      (LPCWSTR a, LPDWORD b, LPDWORD c, LPDWORD d, LPDWORD e))
+{
+  debug_message_fn("()\n");
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, GetDiskFreeSpaceExA,
+	      (LPCSTR a, PULARGE_INTEGER b, PULARGE_INTEGER c, PULARGE_INTEGER d))
+{
+  debug_message_fn("()\n");
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, GetDiskFreeSpaceExW,
+	      (LPCWSTR a, PULARGE_INTEGER b, PULARGE_INTEGER c, PULARGE_INTEGER d))
+{
+  debug_message_fn("()\n");
+  return TRUE;
+}
+
 /* handle related */
 
 DEFINE_W32API(HANDLE, GetStdHandle,
@@ -617,6 +669,13 @@ DEFINE_W32API(HMODULE, GetModuleHandleA,
 {
   debug_message_fn("(%s)\n", name);
   return module_lookup(name);
+}
+
+DEFINE_W32API(HMODULE, GetModuleHandleW,
+	      (LPCWSTR name))
+{
+  debug_message_fn("(%s)\n", (LPCSTR)name);
+  return module_lookup((LPCSTR)name);
 }
 
 DEFINE_W32API(DWORD, GetModuleFileNameA,
@@ -1026,6 +1085,13 @@ DEFINE_W32API(HANDLE, GetCurrentProcess,
   return (HANDLE)0xffffffff;
 }
 
+DEFINE_W32API(DWORD, GetCurrentProcessId,
+	      (void))
+{
+  debug_message_fn("(): %d\n", getpid());
+  return getpid();
+}
+
 DEFINE_W32API(FARPROC, GetProcAddress,
 	     (HMODULE handle, LPCSTR funcname))
 {
@@ -1080,6 +1146,13 @@ DEFINE_W32API(LCID, GetThreadLocale,
 	      (void))
 {
   debug_message_fn("()\n");
+  return 0;
+}
+
+DEFINE_W32API(INT, GetThreadPriority,
+	      (HANDLE h))
+{
+  debug_message_fn("(handle %p)\n", h);
   return 0;
 }
 
@@ -1540,7 +1613,73 @@ DEFINE_W32API(BOOL, EnumCalendarInfoA,
 DEFINE_W32API(VOID, GetLocalTime,
 	      (LPSYSTEMTIME t))
 {
+  time_t local_time;
+  struct tm *local_tm;
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+  local_time = tv.tv_sec;
+  local_tm = localtime(&local_time);
+
+  t->wYear = local_tm->tm_year + 1900;
+  t->wMonth = local_tm->tm_mon + 1;
+  t->wDayOfWeek = local_tm->tm_wday;
+  t->wDay = local_tm->tm_mday;
+  t->wHour = local_tm->tm_hour;
+  t->wMinute = local_tm->tm_min;
+  t->wSecond = local_tm->tm_sec;
+  t->wMilliseconds = (tv.tv_usec / 1000) % 1000;
+
   debug_message_fn("(%p)\n", t);
+}
+
+#define SECS_1601_TO_1970  ((369 * 365 + 89) * 86400ULL)
+DEFINE_W32API(VOID, GetSystemTimeAsFileTime,
+	      (LPFILETIME t))
+{
+  struct timeval tv;
+  unsigned long long secs;
+  
+  gettimeofday(&tv, NULL);
+  secs = (tv.tv_sec + SECS_1601_TO_1970) * 10000000;
+  secs += tv.tv_usec * 10;
+  t->dwLowDateTime = secs & 0xffffffff;
+  t->dwHighDateTime = (secs >> 32);
+
+  debug_message_fn("(%p)\n", t);
+}
+
+DEFINE_W32API(VOID, Sleep,
+	      (DWORD t))
+{
+#if HAVE_NANOSLEEP
+  struct timespec ts;
+
+  ts.tv_sec  =  t / 1000000;
+  ts.tv_nsec = (t % 1000000) * 1000;
+  nanosleep(&ts, NULL);
+#else
+  usleep(t);
+#endif
+  debug_message_fn("(%d)\n", t);
+}
+
+DEFINE_W32API(int, GetTickCount,
+	      (void))
+{
+  static int tcstart = -1;
+  struct timeval t;
+  int tc;
+
+  gettimeofday(&t, NULL);
+  tc = t.tv_sec * 1000 + t.tv_usec / 1000;
+
+  if (tcstart == -1)
+    tcstart = tc;
+
+  debug_message_fn("(): %d\n", tc - tcstart);
+
+  return tc - tcstart;
 }
 
 /* miscellaneous */

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  7 02:06:01 2003.
- * $Id: windef.h,v 1.10 2003/12/08 01:43:27 sian Exp $
+ * Last Modified: Wed Apr  7 00:12:41 2004.
+ * $Id: windef.h,v 1.11 2004/04/06 15:16:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,6 +45,8 @@ typedef unsigned char BYTE;
 typedef unsigned long ULONG;
 typedef char CHAR;
 typedef long LONG;
+typedef long long LONGLONG;
+typedef unsigned long long ULONGLONG;
 typedef void VOID;
 typedef int INT;
 typedef int BOOL;
@@ -198,6 +200,24 @@ typedef struct _memory_basic_information {
 /* This is taken from wine */
 #define HEAP_SHARED                     0x04000000  
 
+/* integer */
+
+typedef union _large_integer {
+  struct {
+    DWORD LowPart;
+    LONG  HighPart;
+  } DUMMYSTRUCTNAME;
+  LONGLONG QuadPart;
+} LARGE_INTEGER, *LPLARGE_INTEGER, *PLARGE_INTEGER;
+
+typedef union _ularge_integer {
+  struct {
+    DWORD LowPart;
+    LONG  HighPart;
+  } DUMMYSTRUCTNAME;
+  LONGLONG QuadPart;
+} ULARGE_INTEGER, *LPULARGE_INTEGER, *PULARGE_INTEGER;
+
 /* registry */
 
 typedef DWORD ACCESS_MASK;
@@ -310,6 +330,12 @@ typedef struct _systemtime {
   WORD wSecond;
   WORD wMilliseconds;
 } SYSTEMTIME, *LPSYSTEMTIME;
+
+/* 64 bit number of 100 nanoseconds intervals since January 1, 1601 */
+typedef struct _filetime {
+  DWORD  dwLowDateTime;
+  DWORD  dwHighDateTime;
+} FILETIME, *LPFILETIME;
 
 /* misc */
 
