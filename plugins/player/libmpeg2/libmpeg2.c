@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 22 01:41:45 2001.
- * $Id: libmpeg2.c,v 1.7 2001/02/21 17:56:29 sian Exp $
+ * Last Modified: Thu Feb 22 03:15:30 2001.
+ * $Id: libmpeg2.c,v 1.8 2001/02/21 18:25:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,6 +25,7 @@
 #include <inttypes.h>
 
 #define REQUIRE_STRING_H
+#define REQUIRE_UNISTD_H
 #include "compat.h"
 #include "common.h"
 
@@ -47,9 +48,13 @@ typedef struct _libmpeg2_info {
   pthread_cond_t update_cond;
   int nvstreams;
   int nvstream;
+  int v_fd_in;
+  int v_fd_out;
   pthread_t video_thread;
   int nastreams;
   int nastream;
+  int a_fd_in;
+  int a_fd_out;
   pthread_t audio_thread;
 } Libmpeg2_info;
 
@@ -209,6 +214,7 @@ static PlayerStatus
 play(Movie *m)
 {
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
+  int fds[2];
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -232,12 +238,42 @@ play(Movie *m)
   demultiplexer_set_eof(info->demux, 0);
 
   stream_rewind(m->st);
-  demultiplexer_start(info->demux);
+  if (info->a_fd_in) {
+    close(info->a_fd_in);
+    info->a_fd_in = 0;
+  }
+  if (info->a_fd_out) {
+    close(info->a_fd_out);
+    info->a_fd_out = 0;
+  }
+  if (info->v_fd_in) {
+    close(info->v_fd_in);
+    info->v_fd_in = 0;
+  }
+  if (info->v_fd_out) {
+    close(info->v_fd_out);
+    info->v_fd_out = 0;
+  }
 
-  if (m->has_video)
+    
+  if (m->has_video) {
+    if (pipe(fds) != 0)
+      return PLAY_ERROR;
+    info->v_fd_in = fds[0];
+    info->v_fd_out = fds[1];
     pthread_create(&info->video_thread, NULL, play_video, m);
-  if (m->has_audio)
+  }
+  if (m->has_audio) {
+    if (pipe(fds) != 0)
+      return PLAY_ERROR;
+    info->a_fd_in = fds[0];
+    info->a_fd_out = fds[1];
     pthread_create(&info->audio_thread, NULL, play_audio, m);
+  }
+
+  demultiplexer_mpeg_set_vfd(info->demux, info->v_fd_out);
+  demultiplexer_mpeg_set_afd(info->demux, info->a_fd_out);
+  demultiplexer_start(info->demux);
 
   return PLAY_OK;
 }
