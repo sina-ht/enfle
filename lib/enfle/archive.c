@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov 22 00:44:01 2002.
- * $Id: archive.c,v 1.31 2002/11/29 15:56:21 sian Exp $
+ * Last Modified: Wed Dec 11 01:52:50 2002.
+ * $Id: archive.c,v 1.32 2002/12/31 06:05:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -205,7 +205,7 @@ set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnm)
 static void
 add(Archive *arc, char *path, void *reminder)
 {
-  debug_message_fnc("%s\n", path);
+  //debug_message_fnc("%s\n", path);
 
   if (arc->pattern) {
     int result = 0;
@@ -295,6 +295,7 @@ __iteration_index(Archive *arc)
   while ((dd_n = __dlist_next_or_null(dl, dd)) != NULL) {
     if (dd == arc->current)
       break;
+    dd = dd_n;
     i++;
   }
 
