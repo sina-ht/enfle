@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 24 10:55:49 2001.
- * $Id: demultiplexer_mpeg.c,v 1.12 2001/06/24 15:42:20 sian Exp $
+ * Last Modified: Mon Jun 25 01:49:34 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.13 2001/06/24 16:52:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -267,10 +267,9 @@ demux_main(void *arg)
     used_size += read_size;
     read_total += read_size;
     if (read_size == 0) {
-      if (used_size <= 12 || used_size_prev == used_size) {
-	demultiplexer_set_eof(demux, 1);
+      //debug_message(__FUNCTION__ ": %d %d\n", used_size, used_size_prev);
+      if (used_size <= 12 || used_size_prev == used_size)
 	break;
-      }
       used_size_prev = used_size;
     }
 
@@ -418,6 +417,7 @@ demux_main(void *arg)
   } while (demux->running);
 
  end:
+  demultiplexer_set_eof(demux, 1);
   demux->running = 0;
   free(buf);
   pthread_exit((void *)1);
