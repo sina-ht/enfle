@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:33:01 2001.
- * $Id: stream-utils.c,v 1.4 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Aug 14 16:34:48 2001.
+ * $Id: stream-utils.c,v 1.5 2001/08/15 06:37:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -113,11 +113,10 @@ stream_gets(Stream *st)
 
   p[ptr] = '\0';
 
-  if ((tmp = malloc(strlen(p) + 1)) == NULL) {
+  if ((tmp = realloc(p, strlen(p) + 1)) == NULL) {
     free(p);
     return NULL;
   }
-  strcpy(tmp, p);
 
   return tmp;
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 12 16:46:01 2001.
- * $Id: libconfig.c,v 1.10 2001/06/12 09:06:57 sian Exp $
+ * Last Modified: Mon Aug 13 18:52:22 2001.
+ * $Id: libconfig.c,v 1.11 2001/08/15 06:32:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -308,7 +308,7 @@ parse(Config *c, char *str)
 {
   char *name, *namestart, *nameend;
   char *value, *valuestart;
-  int namelen;
+  int namelen, r;
 
   namestart = str;
   for (nameend = namestart; *nameend; nameend++)
@@ -328,7 +328,10 @@ parse(Config *c, char *str)
     valuestart++;
   value = strdup(valuestart);
 
-  return isdigit(*value) ? set_int(c, name, atoi(value)) : set_str(c, name, (unsigned char *)value);
+  r = isdigit(*value) ? set_int(c, name, atoi(value)) : set_str(c, name, (unsigned char *)value);
+  free(name);
+
+  return r;
 }
 
 static void *
