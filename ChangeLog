@@ -1,3 +1,17 @@
+2001-05-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archive.c, lib/enfle/archive.h: Added
+	iteration_{first,last}().
+
+	* plugins/ui/normal/normal.c: Added 'B'(previous archive), '<'(go
+	first) and '>'(go last) actions. More intuitive 'b' action. Bug
+	fix.
+
+	* lib/enfle/video.h, plugins/video/Xlib/Xlib.c: Removed
+	sync_discard(). Added discard_{key,button}_event().
+
+	* plugins/ui/normal/normal.c: Rewrote for more flexible structure.
+
 2001-04-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/video/Xlib/Xlib.c: Smoothing scroll.
