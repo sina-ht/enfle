@@ -1,3 +1,28 @@
+2001-01-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added --enable-mmx. Version up.
+
+	* src/enfle.c: Fixed warning when compiled with spi disabled.
+
+	* lib/Makefile.am: Added mpglib.
+
+	* plugins/player/opendivx/yuv2rgb.c: Moved to divxdecore.
+
+	* plugins/player/opendivx/Makefile.am,
+	plugins/player/opendivx/opendivx.c: Improved playback.
+
+	* lib/divxdecore/yuv2rgb.c, lib/divxdecore/yuv2rgb.h,
+	lib/divxdecore/yuv2rgb_mmx.c, lib/divxdecore/Makefile.am,
+	lib/divxdecore/idct.c, lib/divxdecore/idct_mmx.c,
+	lib/divxdecore/transferIDCT_mmx.c: Added MMX optimizations.
+
+	* lib/mpglib/*: New mpglib library.
+
+2001-01-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* OpenDivX-LICENSE, README, plugins/player/opendivx/opendivx.c:
+	Changed copyright/license description.
+
 2001-01-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/avifile/avifile.cpp: Better identification.
