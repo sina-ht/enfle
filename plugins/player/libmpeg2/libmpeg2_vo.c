@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  5 01:51:00 2001.
- * $Id: libmpeg2_vo.c,v 1.4 2001/03/04 17:10:41 sian Exp $
+ * Last Modified: Wed Jun 20 05:22:51 2001.
+ * $Id: libmpeg2_vo.c,v 1.5 2001/06/19 20:50:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,8 @@ enfle_draw(vo_frame_t *_frame)
   Image *p = instance->p;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
 
+  //debug_message(__FUNCTION__ "()\n");
+
   if (m->status == _PLAY) {
     if ((int)m->framerate == 0 && info->mpeg2dec.frame_rate > 0)
       m->framerate = info->mpeg2dec.frame_rate;
@@ -48,7 +50,7 @@ enfle_draw(vo_frame_t *_frame)
     memcpy(memory_ptr(p->rendered.image), frame->rgb_ptr_base, instance->image_size);
     info->to_render++;
     m->current_frame++;
-    //while (info->to_render > 0)
+    while (info->to_render > 0)
       pthread_cond_wait(&info->update_cond, &info->update_mutex);
     pthread_mutex_unlock(&info->update_mutex);
   }

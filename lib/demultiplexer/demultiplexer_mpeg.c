@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 21:49:28 2001.
- * $Id: demultiplexer_mpeg.c,v 1.9 2001/06/19 14:23:30 sian Exp $
+ * Last Modified: Wed Jun 20 05:49:46 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.10 2001/06/19 20:50:34 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -97,7 +97,7 @@ examine(Demultiplexer *demux)
       read_total += read_size;
     }
 
-    if (read_total >= DEMULTIPLEXER_MPEG_DETERMINE_SIZE && used_size < 4) {
+    if (read_total >= DEMULTIPLEXER_MPEG_DETERMINE_SIZE && used_size <= 12) {
       if (info->ver == 0) {
 	debug_message(__FUNCTION__ ": determined as not MPEG.\n");
 	goto error;
@@ -163,8 +163,8 @@ examine(Demultiplexer *demux)
       debug_message("MPEG_AUDIO_AC3??\n");
       break;
     case MPEG_PADDING:
-      debug_message(__FUNCTION__ ": MPEG_PADDING\n");
       skip = 6 + utils_get_big_uint16(buf + 4);
+      debug_message(__FUNCTION__ ": MPEG_PADDING, skip %d\n", skip);
       if (used_size < skip)
 	continue;
       break;
@@ -198,6 +198,7 @@ examine(Demultiplexer *demux)
     used_size -= skip;
   } while (1);
 
+  debug_message(__FUNCTION__ ": OK\n");
  end:
   free(buf);
   return 1;
@@ -373,7 +374,7 @@ demux_main(void *arg)
 	      p += 2;
 	    }
 	    pts_dts_flag = (*p & 0xf0) >> 4;
-	    debug_message(__FUNCTION__ ": pd_flag(a) %d\n", pts_dts_flag);
+	    //debug_message(__FUNCTION__ ": pd_flag(a) %d\n", pts_dts_flag);
 	    switch ((int)pts_dts_flag) {
 	    case 0:
 	      p++;
@@ -406,7 +407,17 @@ demux_main(void *arg)
 		break;
 	      }
 	      put_timestamp(info->a_fd, buf + skip - p);
+#if 0
 	      write(info->a_fd, p, buf + skip - p);
+#else
+	      {
+		unsigned char *d = malloc(buf + skip - p);
+
+		memcpy(d, p, buf + skip - p);
+		//debug_message(__FUNCTION__ ": %p\n", d);
+		write(info->a_fd, &d, sizeof(d));
+	      }
+#endif
 	    }
 	  }
 	}
@@ -430,7 +441,7 @@ demux_main(void *arg)
 	      p += 2;
 	    }
 	    pts_dts_flag = (*p & 0xf0) >> 4;
-	    debug_message(__FUNCTION__ ": pd_flag(v) %d\n", pts_dts_flag);
+	    //debug_message(__FUNCTION__ ": pd_flag(v) %d\n", pts_dts_flag);
 	    switch ((int)pts_dts_flag) {
 	    case 0:
 	      p++;
@@ -463,7 +474,16 @@ demux_main(void *arg)
 		break;
 	      }
 	      put_timestamp(info->v_fd, buf + skip - p);
+#if 0
 	      write(info->v_fd, p, buf + skip - p);
+#else
+	      {
+		unsigned char *d = malloc(buf + skip - p);
+		memcpy(d, p, buf + skip - p);
+		//debug_message(__FUNCTION__ ": %p\n", d);
+		write(info->v_fd, &d, sizeof(d));
+	      }
+#endif
 	    }
 	  }
 	}
@@ -502,7 +522,7 @@ start(Demultiplexer *demux)
 
   pthread_create(&demux->thread, NULL, demux_main, demux);
 
-  debug_message(__FUNCTION__ ": created\n");
+  debug_message(__FUNCTION__ ": demultiplexer created\n");
 
   return 1;
 }
