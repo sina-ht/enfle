@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Dec 19 00:45:40 2000.
- * $Id: x11ximage.c,v 1.16 2000/12/18 16:58:24 sian Exp $
+ * Last Modified: Sat Dec 23 07:53:52 2000.
+ * $Id: x11ximage.c,v 1.17 2000/12/22 23:11:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -120,6 +120,7 @@ convert(X11XImage *xi, Image *p)
 	XShmCreateImage(x11_display(xi->x11), x11_visual(xi->x11), x11_depth(xi->x11), ZPixmap, NULL,
 			&xi->shminfo, w, h);
       to_be_attached = 1;
+      XSync(x11_display(xi->x11), False);
 #else
       show_message("No SHM support. Should not be reached here.\n");
       exit(-3);
@@ -438,9 +439,14 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
 {
 #ifdef USE_SHM
   if (xi->if_attached) {
+#ifdef USE_PTHREAD
+    XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+    XSync(x11_display(xi->x11), False);
+#else
     /* delayed sync, intentionally. */
     XSync(x11_display(xi->x11), False);
     XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+#endif
   } else
 #endif
     XPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h);
