@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 22:52:59 2000.
- * $Id: normal.c,v 1.8 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Tue Dec  5 23:59:22 2000.
+ * $Id: normal.c,v 1.9 2000/12/05 15:06:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -100,7 +100,6 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
     video_window_resize(vw, p->width, p->height);
     vw->if_direct = 0;
     /* XXX: hack... */
-    memory_destroy(p->rendered_image);
     p->rendered_image = memory_dup(p->image);
     video_window_render(vw, p);
   } else if (m) {
@@ -295,6 +294,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
       debug_message("Image identified as %s\n", p->format);
 
+      p->image = memory_create();
       if ((f = loader_load_image(ld, eps, p->format, p, s)) == LOAD_OK)
 	stream_close(s);
     }

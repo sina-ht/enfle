@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 22:55:06 2000.
- * $Id: ungif.c,v 1.12 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Tue Dec  5 23:52:56 2000.
+ * $Id: ungif.c,v 1.13 2000/12/05 15:06:45 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -41,6 +41,7 @@
 typedef struct _ungif_info {
   GifFileType *gf;
   GifRowType *buffer;
+  Image *p;
 } UNGIF_info;
 
 typedef enum {
@@ -61,7 +62,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "UNGIF",
-  description: "UNGIF Player plugin version 0.2.2",
+  description: "UNGIF Player plugin version 0.2.3",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -101,6 +102,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   int i, size;
   UNGIF_info *info;
+  Image *p;
 
   if ((info = calloc(1, sizeof(UNGIF_info))) == NULL) {
     show_message("UNGIF: load_movie: No enough memory.\n");
@@ -118,6 +120,28 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   m->width = info->gf->SWidth;
   m->height = info->gf->SHeight;
+
+  p = info->p = image_create();
+  p->width = m->width;
+  p->height = m->height;
+  p->type = _INDEX;
+  p->depth = 8;
+  p->bytes_per_line = m->width;
+  p->bits_per_pixel = 8;
+  p->next = NULL;
+
+  if (m->direct_decode) {
+    p->rendered_image = memory_create();
+    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
+      return PLAY_ERROR;
+  } else {
+    p->rendered_image = memory_create();
+    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    p->image = memory_create();
+    if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
+      return PLAY_ERROR;
+  }
 
   if ((info->buffer = (GifRowType *)calloc(m->height, sizeof(GifRowType *))) == NULL) {
     return PLAY_ERROR;
@@ -187,7 +211,7 @@ play_main(Movie *m, VideoWindow *vw)
   GifRecordType rectype;
   GifByteType *extension;
   ColorMapObject *ColorMap;
-  Image *p;
+  Image *p = info->p;
 
   switch (m->status) {
   case _PLAY:
@@ -201,21 +225,18 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  p = image_create();
-
   do {
     if (DGifGetRecordType(gf, &rectype) == GIF_ERROR) {
       if (image_loaded)
 	break;
       PrintGifError();
-      image_destroy(p);
       return PLAY_OK;
     }
 
     switch (rectype) {
     case IMAGE_DESC_RECORD_TYPE:
       if (DGifGetImageDesc(gf) == GIF_ERROR)
-	goto error;
+	return PLAY_ERROR;
 
       ColorMap = gf->Image.ColorMap ? gf->Image.ColorMap : gf->SColorMap;
       p->ncolors = ColorMap->ColorCount;
@@ -226,13 +247,6 @@ play_main(Movie *m, VideoWindow *vw)
 	p->colormap[i][2] = ColorMap->Colors[i].Blue;
       }
 
-      p->width  = m->width;
-      p->height = m->height;
-      p->type = _INDEX;
-      p->depth = 8;
-      p->bytes_per_line = m->width;
-      p->bits_per_pixel = 8;
-      p->next = NULL;
       p->background_color.index = gf->SBackGroundColor;
       p->transparent_color.index = transparent_index;
 
@@ -246,10 +260,10 @@ play_main(Movie *m, VideoWindow *vw)
       if (if_transparent) {
 	/* First, allocate memory */
 	if ((rows = calloc(h, sizeof(GifRowType *))) == NULL)
-	  goto error;
+	  return PLAY_ERROR;
 	if ((rows[0] = calloc(w * h, sizeof(GifPixelType))) == NULL) {
 	  free(rows);
-	  goto error;
+	  return PLAY_ERROR;
 	}
 	for (i = 1; i < h; i++)
 	  rows[i] = rows[0] + i * w;
@@ -260,14 +274,14 @@ play_main(Movie *m, VideoWindow *vw)
 	      if (DGifGetLine(gf, rows[j], w) == GIF_ERROR) {
 		free(rows[0]);
 		free(rows);
-		goto error;
+		return PLAY_ERROR;
 	      }
 	} else {
 	  for (i = 0; i < h; i++)
 	    if (DGifGetLine(gf, rows[i], w) == GIF_ERROR) {
 	      free(rows[0]);
 	      free(rows);
-	      goto error;
+	      return PLAY_ERROR;
 	    }
 	}
 	/* Last, draw into screen, processing transparency */
@@ -283,21 +297,21 @@ play_main(Movie *m, VideoWindow *vw)
 	  for (i = 0; i < 4; i++)
 	    for (j = ioffset[i]; j < h; j += ijumps[i])
 	      if (DGifGetLine(gf, &info->buffer[j + t][l], w) == GIF_ERROR)
-		goto error;
+		return PLAY_ERROR;
 	} else {
 	  for (i = 0; i < h; i++)
 	    if (DGifGetLine(gf, &info->buffer[i + t][l], w) == GIF_ERROR)
-	      goto error;
+	      return PLAY_ERROR;
 	}
       }
 
       if (m->direct_decode) {
 	if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
-	  goto error;
+	  return PLAY_ERROR;
 	memcpy(memory_ptr(p->rendered_image), info->buffer[0], memory_used(p->rendered_image));
       } else {
 	if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
-	  goto error;
+	  return PLAY_ERROR;
 	memcpy(memory_ptr(p->image), info->buffer[0], memory_used(p->image));
       }
 
@@ -306,7 +320,7 @@ play_main(Movie *m, VideoWindow *vw)
       break;
     case EXTENSION_RECORD_TYPE:
       if (DGifGetExtension(gf, &extcode, &extension) == GIF_ERROR)
-	goto error;
+	return PLAY_ERROR;
 
       switch (extcode) {
       case COMMENT_EXT_FUNC_CODE:
@@ -337,7 +351,7 @@ play_main(Movie *m, VideoWindow *vw)
 
       for (;;) {
 	if (DGifGetExtensionNext(gf, &extension) == GIF_ERROR)
-	  goto error;
+	  return PLAY_ERROR;
 	if (extension == NULL)
 	  break;
 
@@ -360,7 +374,6 @@ play_main(Movie *m, VideoWindow *vw)
       }
       break;
     case TERMINATE_RECORD_TYPE:
-      image_destroy(p);
       stop_movie(m);
       return PLAY_OK;
     default:
@@ -375,14 +388,7 @@ play_main(Movie *m, VideoWindow *vw)
   if (image_disposal == _RESTOREBACKGROUND)
     memset(info->buffer[0], gf->SBackGroundColor, m->width * m->height);
 
-  image_destroy(p);
-
   return PLAY_OK;
-
- error:
-  image_destroy(p);
-
-  return PLAY_ERROR;
 }
 
 static PlayerStatus
@@ -448,6 +454,8 @@ unload_movie(Movie *m)
     free(info->buffer[0]);
   if (info->buffer)
     free(info->buffer);
+  if (info->p)
+    image_destroy(info->p);
 
   if (DGifCloseFile(info->gf) == GIF_ERROR) {
     PrintGifError();

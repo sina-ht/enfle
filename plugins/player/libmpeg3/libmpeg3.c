@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 22:55:53 2000.
- * $Id: libmpeg3.c,v 1.9 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Tue Dec  5 22:02:43 2000.
+ * $Id: libmpeg3.c,v 1.10 2000/12/05 15:06:44 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -40,8 +40,9 @@ typedef struct _libmpeg3_info {
   mpeg3_t *file;
   int nstreams;
   int nstream;
+  int rendering_type;
   unsigned char **lines;
-  Memory *buffer;
+  Image *p;
 } LibMPEG3_info;
 
 static const unsigned int types =
@@ -56,7 +57,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.2.1",
+  description: "LibMPEG3 Player plugin version 0.2.2",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -86,6 +87,7 @@ static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   LibMPEG3_info *info;
+  Image *p;
   int i, Bpp;
 
   if ((info = calloc(1, sizeof(LibMPEG3_info))) == NULL) {
@@ -128,29 +130,82 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->height = mpeg3_video_height(info->file, info->nstream);
   m->framerate = mpeg3_frame_rate(info->file, 0);
   m->num_of_frames = mpeg3_video_frames(info->file, 0);
-
   debug_message("libmpeg3 player: (%d x %d) %f fps %d frames\n",
 		m->width, m->height, m->framerate, m->num_of_frames);
 
+  p = info->p = image_create();
+  p->width = m->width;
+  p->height = m->height;
+  p->type = m->requested_type;
+  if ((p->rendered_image = memory_create()) == NULL)
+    goto error;
+  memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+
+  switch (vw->bits_per_pixel) {
+  case 32:
+    switch (p->type) {
+    case _RGBA32:
+      info->rendering_type = MPEG3_RGBA8888;
+      break;
+    case _BGRA32:
+      info->rendering_type = MPEG3_BGRA8888;
+      break;
+    default:
+      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+      return PLAY_ERROR;
+    }
+    p->depth = 24;
+    p->bits_per_pixel = 32;
+    p->bytes_per_line = m->width * 4;
+    break;
+  case 24:
+    switch (p->type) {
+    case _RGB24:
+      info->rendering_type = MPEG3_RGB888;
+      break;
+    case _BGR24:
+      info->rendering_type = MPEG3_BGR888;
+      break;
+    default:
+      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+      return PLAY_ERROR;
+    }
+    p->depth = 24;
+    p->bits_per_pixel = 24;
+    p->bytes_per_line = m->width * 3;
+    break;
+  case 16:
+    switch (p->type) {
+    case _RGB_WITH_BITMASK:
+    case _BGR_WITH_BITMASK:
+      info->rendering_type = MPEG3_RGB565;
+      break;
+    default:
+      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+      return PLAY_ERROR;
+    }
+    p->depth = 16;
+    p->bits_per_pixel = 16;
+    p->bytes_per_line = m->width * 2;
+    break;
+  default:
+    show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+    return PLAY_ERROR;
+  }
+
   /* rewind stream */
   mpeg3_seek_percentage(info->file, 0);
-
-  if ((info->buffer = memory_create()) == NULL)
-    goto error;
-  memory_request_type(info->buffer, video_window_preferred_memory_type(vw));
-
-  debug_message(__FUNCTION__ ": requested memory type %s\n", memory_type(info->buffer) == _NORMAL ? "NORMAL" : "SHM");
 
   if ((info->lines = calloc(m->height, sizeof(unsigned char *))) == NULL)
     goto error;
 
   Bpp = vw->bits_per_pixel >> 3;
   /* extra 4 bytes are needed for MMX routine */
-  if (memory_alloc(info->buffer, m->width * m->height * Bpp + 4) == NULL)
+  if (memory_alloc(p->rendered_image, m->width * m->height * Bpp + 4) == NULL)
     goto error;
 
   for (i = 0; i < m->height; i++)
-    info->lines[i] = memory_ptr(info->buffer) + i * m->width * Bpp;
+    info->lines[i] = memory_ptr(p->rendered_image) + i * m->width * Bpp;
 
   m->movie_private = (void *)info;
   m->st = st;
@@ -176,7 +231,7 @@ get_screen(Movie *m)
 
   if (m->movie_private) {
     info = (LibMPEG3_info *)m->movie_private;
-    return memory_ptr(info->buffer);
+    return memory_ptr(info->p->rendered_image);
   }
 
   return NULL;
@@ -208,8 +263,8 @@ play_main(Movie *m, VideoWindow *vw)
 {
   int decode_error;
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
-  Image *p;
-  int rendering_type, dropframes;
+  Image *p = info->p;
+  int dropframes;
   float time_elapsed, fps;
 
   switch (m->status) {
@@ -224,75 +279,11 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  p = image_create();
-
-  p->width  = m->width;
-  p->height = m->height;
-
-  p->type = m->requested_type;
-  switch (vw->bits_per_pixel) {
-  case 32:
-    switch (p->type) {
-    case _RGBA32:
-      rendering_type = MPEG3_RGBA8888;
-      break;
-    case _BGRA32:
-      rendering_type = MPEG3_BGRA8888;
-      break;
-    default:
-      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
-      return PLAY_ERROR;
-    }
-    p->depth = 24;
-    p->bits_per_pixel = 32;
-    p->bytes_per_line = m->width * 4;
-    break;
-  case 24:
-    switch (p->type) {
-    case _RGB24:
-      rendering_type = MPEG3_RGB888;
-      break;
-    case _BGR24:
-      rendering_type = MPEG3_BGR888;
-      break;
-    default:
-      show_message(__FUNCTION__": Requested type is %s.\n", image_type_to_string(p->type));
-      return PLAY_ERROR;
-    }
-    p->depth = 24;
-    p->bits_per_pixel = 24;
-    p->bytes_per_line = m->width * 3;
-    break;
-  case 16:
-    switch (p->type) {
-    case _RGB_WITH_BITMASK:
-    case _BGR_WITH_BITMASK:
-      rendering_type = MPEG3_RGB565;
-      break;
-    default:
-      show_message(__FUNCTION__": Requested type is %s.\n", image_type_to_string(p->type));
-      return PLAY_ERROR;
-    }
-    p->depth = 16;
-    p->bits_per_pixel = 16;
-    p->bytes_per_line = m->width * 2;
-    break;
-  default:
-    show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
-    return PLAY_ERROR;
-  }
-
   decode_error = (mpeg3_read_frame(info->file, info->lines,
 				   0, 0,
 				   m->width, m->height,
 				   m->width, m->height,
-				   rendering_type, info->nstream) == -1) ? 0 : 1;
-
-  p->next = NULL;
-  memory_destroy(p->rendered_image);
-  p->rendered_image = info->buffer;
-
-  m->current_frame++;
+				   info->rendering_type, info->nstream) == -1) ? 0 : 1;
 
   timer_pause(m->timer);
   time_elapsed = timer_get_milli(m->timer);
@@ -301,6 +292,7 @@ play_main(Movie *m, VideoWindow *vw)
 
   debug_message("%3.2f fps\r", fps);
 
+  m->current_frame++;
   m->render_frame(vw, m, p);
   m->previous_frame = m->current_frame;
 
@@ -313,9 +305,6 @@ play_main(Movie *m, VideoWindow *vw)
       debug_message("\ndropped %d frame\n", dropframes);
     }
   }
-
-  p->rendered_image = NULL;
-  image_destroy(p);
 
   if (!decode_error || m->current_frame >= m->num_of_frames)
     stop_movie(m);
@@ -374,10 +363,10 @@ unload_movie(Movie *m)
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
 
   if (info) {
-    if (info->buffer)
-      memory_destroy(info->buffer);
     if (info->lines)
       free(info->lines);
+    if (info->p)
+      image_destroy(info->p);
 
     /* close */
     mpeg3_close(info->file);

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 22:55:36 2000.
- * $Id: mng.c,v 1.7 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Tue Dec  5 22:59:18 2000.
+ * $Id: mng.c,v 1.8 2000/12/05 15:06:44 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -51,7 +51,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "MNG",
-  description: "MNG Player plugin version 0.1",
+  description: "MNG Player plugin version 0.1.1",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -125,13 +125,11 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 
   m->width  = width;
   m->height = height;
-  m->initialize_screen(this->vw, m, m->width, m->height);
 
-  this->p = p = image_create();
+  p = this->p = image_create();
 
-  p->width = width;
-  p->height = height;
-
+  p->width = m->width;
+  p->height = m->height;
   p->type = m->requested_type;
   switch (p->type) {
   case _ARGB32:
@@ -148,10 +146,20 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
   p->bits_per_pixel = 32;
   p->depth = 24;
   p->bytes_per_line = p->width * (p->bits_per_pixel >> 3);
-  if (m->direct_decode)
-    memory_alloc(p->rendered_image, p->bytes_per_line * p->height);
-  else
-    memory_alloc(p->image, p->bytes_per_line * p->height);
+  if (m->direct_decode) {
+    p->rendered_image = memory_create();
+    memory_request_type(p->rendered_image, video_window_preferred_memory_type(this->vw));
+    if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
+      return PLAY_ERROR;
+  } else {
+    p->rendered_image = memory_create();
+    memory_request_type(p->rendered_image, video_window_preferred_memory_type(this->vw));
+    p->image = memory_create();
+    if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
+      return PLAY_ERROR;
+  }
+
+  m->initialize_screen(this->vw, m, m->width, m->height);
 
   return MNG_TRUE;
 }
@@ -176,9 +184,8 @@ refresh(mng_handle mng, mng_uint32 l, mng_uint32 t, mng_uint32 w, mng_uint32 h)
 
   /* debug_message(__FUNCTION__ ": (%d,%d)-(%d,%d)\n", l, t, l + w - 1, t + h - 1); */
 
-  this->m->render_frame(this->vw, this->m, this->p);
-
   this->m->current_frame++;
+  this->m->render_frame(this->vw, this->m, this->p);
 
   return MNG_TRUE;
 }

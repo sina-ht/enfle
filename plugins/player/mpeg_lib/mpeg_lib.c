@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec  4 22:55:21 2000.
- * $Id: mpeg_lib.c,v 1.8 2000/12/04 14:01:13 sian Exp $
+ * Last Modified: Tue Dec  5 21:52:57 2000.
+ * $Id: mpeg_lib.c,v 1.9 2000/12/05 15:06:44 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -32,7 +32,7 @@
 #include "player-plugin.h"
 
 typedef struct _mpeg_lib_info {
-  Memory *buffer;
+  Image *p;
   ImageDesc img;
 } MPEG_lib_info;
 
@@ -47,7 +47,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "MPEG_lib",
-  description: "MPEG_lib Player plugin version 0.2.1",
+  description: "MPEG_lib Player plugin version 0.2.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -94,6 +94,7 @@ static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   MPEG_lib_info *info;
+  Image *p;
 
   if ((info = calloc(1, sizeof(MPEG_lib_info))) == NULL) {
     show_message("MPEG_lib: play_movie: No enough memory.\n");
@@ -112,14 +113,27 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->width = info->img.Width;
   m->height = info->img.Height;
 
-  if ((info->buffer = memory_create()) == NULL) {
-    free(info);
-    return PLAY_ERROR;
-  }
-  //memory_request_type(info->buffer, video_window_preferred_memory_type(vw));
+  p = info->p = image_create();
+  p->width = m->width;
+  p->height = m->height;
+  p->type = _RGBA32;
+  p->depth = 24;
+  p->bytes_per_line = p->width * 4;
+  p->bits_per_pixel = 32;
+  p->next = NULL;
 
-  if (memory_alloc(info->buffer, m->height * m->width * 4) == NULL)
-    return PLAY_ERROR;
+  if (m->direct_decode) {
+    p->rendered_image = memory_create();
+    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    if (memory_alloc(p->rendered_image, m->height * m->width * 4) == NULL)
+      return PLAY_ERROR;
+  } else {
+    p->rendered_image = memory_create();
+    memory_request_type(p->rendered_image, video_window_preferred_memory_type(vw));
+    p->image = memory_create();
+    if (memory_alloc(p->image, m->height * m->width * 4) == NULL)
+      return PLAY_ERROR;
+  }
 
   m->movie_private = (void *)info;
   m->st = st;
@@ -138,7 +152,7 @@ get_screen(Movie *m)
 
   if (m->movie_private) {
     info = (MPEG_lib_info *)m->movie_private;
-    return memory_ptr(info->buffer);
+    return memory_ptr(m->direct_decode ? info->p->rendered_image : info->p->image);
   }
 
   return NULL;
@@ -167,7 +181,7 @@ play_main(Movie *m, VideoWindow *vw)
 {
   int more_frame;
   MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
-  Image *p;
+  Image *p = info->p;
 
   switch (m->status) {
   case _PLAY:
@@ -181,35 +195,10 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  p = image_create();
-
-  memory_alloc(info->buffer, m->height * m->width * 4);
-  more_frame = GetMPEGFrame(memory_ptr(info->buffer));
-
-  p->width  = m->width;
-  p->height = m->height;
-  p->type = _RGBA32;
-  p->depth = 24;
-  p->bytes_per_line = m->width * 4;
-  p->bits_per_pixel = 32;
-  p->next = NULL;
-  if (m->direct_decode) {
-    memory_destroy(p->rendered_image);
-    p->rendered_image = info->buffer;
-  } else {
-    memory_destroy(p->image);
-    p->image = info->buffer;
-  }
+  more_frame = GetMPEGFrame(memory_ptr(m->direct_decode ? p->rendered_image : p->image));
 
   m->current_frame++;
-
   m->render_frame(vw, m, p);
-  if (m->direct_decode)
-    p->rendered_image = NULL;
-  else
-    p->image = NULL;
-
-  image_destroy(p);
 
   if (!more_frame)
     stop_movie(m);
@@ -266,8 +255,8 @@ unload_movie(Movie *m)
 {
   MPEG_lib_info *info = (MPEG_lib_info *)m->movie_private;
 
-  if (info->buffer)
-    memory_destroy(info->buffer);
+  if (info->p)
+    image_destroy(info->p);
 
   CloseMPEG();
 
