@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 21 07:12:08 2002.
- * $Id: opendivx.c,v 1.26 2002/03/21 01:35:11 sian Exp $
+ * Last Modified: Mon Apr  1 21:57:50 2002.
+ * $Id: opendivx.c,v 1.27 2002/04/27 13:00:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -89,7 +89,9 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
-#define DECORE_VERSION_STRING(n) #n
+#ifndef DECORE_VERSION
+# define DECORE_VERSION 0
+#endif
 
 #define PLAYER_OPENDIVX_PLUGIN_DESCRIPTION "OpenDivX Player plugin version 0.3"
 
