@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 04:56:10 2000.
- * $Id: stream.c,v 1.2 2000/10/09 20:26:14 sian Exp $
+ * Last Modified: Sat Oct 14 04:53:46 2000.
+ * $Id: stream.c,v 1.3 2000/10/15 07:51:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
 #include "compat.h"
 
@@ -352,6 +353,11 @@ make_filestream(Stream *s, char *path)
 
   if ((fp = fopen(path, "rb")) == NULL)
     return 0;
+
+  if ((s->path = strdup(path)) == NULL) {
+    fclose(fp);
+    return 0;
+  }
 
   s->read = filestream_read;
   s->seek = filestream_seek;
