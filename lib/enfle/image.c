@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 18 21:11:01 2000.
- * $Id: image.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  9 17:36:39 2000.
+ * $Id: image.c,v 1.2 2000/10/09 20:29:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,7 +48,7 @@ static Image *dup(Image *);
 static Image *magnify(Image *, int, int, ImageInterpolateMethod);
 static void destroy(Image *);
 
-static Image image_template = {
+static Image template = {
   dup: dup,
   magnify: magnify,
   destroy: destroy
@@ -61,7 +61,7 @@ image_create(void)
 
   if ((p = calloc(1, sizeof(Image))) == NULL)
     return NULL;
-  memcpy(p, &image_template, sizeof(Image));
+  memcpy(p, &template, sizeof(Image));
 
   return p;
 }
