@@ -1,10 +1,10 @@
 /*
  * tar.c -- tar archiver plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:24:57 2001.
- * $Id: tar.c,v 1.6 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Sat Feb  9 12:39:20 2002.
+ * $Id: tar.c,v 1.7 2002/02/09 03:45:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ DECLARE_ARCHIVER_PLUGIN_METHODS;
 static ArchiverPlugin plugin = {
   type: ENFLE_PLUGIN_ARCHIVER,
   name: "TAR",
-  description: "TAR Archiver plugin version 0.0.6",
+  description: "TAR Archiver plugin version 0.0.7",
   author: "Hiroshi Takekawa",
   archiver_private: NULL,
 
@@ -166,6 +166,7 @@ tar_open(Archive *arc, Stream *st, char *path)
     return 0;
   }
 
+  st->path = strdup(ti->path);
   return stream_make_memorystream(st, p, ti->size);
 }
 

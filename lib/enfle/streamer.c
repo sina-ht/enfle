@@ -1,10 +1,10 @@
 /*
  * streamer.c -- streamer plugin interface
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 25 07:29:35 2001.
- * $Id: streamer.c,v 1.8 2001/08/26 00:51:21 sian Exp $
+ * Last Modified: Sat Feb  9 12:32:35 2002.
+ * $Id: streamer.c,v 1.9 2002/02/09 03:45:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,28 +27,61 @@
 
 #include "streamer.h"
 #include "streamer-plugin.h"
+#include "utils/libstring.h"
+#include "utils/misc.h"
 
 int
-streamer_identify(EnflePlugins *eps, Stream *s, char *filepath)
+streamer_identify(EnflePlugins *eps, Stream *st, char *filepath, Config *c)
 {
   Dlist *dl;
   Dlist_data *dd;
   PluginList *pl;
+  Plugin *p;
+  StreamerPlugin *stp;
+  char *ext, *pluginname, **pluginnames;
+  int res;
 
   pl = eps->pls[ENFLE_PLUGIN_STREAMER];
+
+  if ((ext = misc_str_tolower(misc_get_ext(filepath, 1)))) {
+    String *s;
+
+    s = string_create();
+    string_catf(s, "/enfle/plugins/streamer/assoc/%s", ext);
+    pluginnames = config_get_list(c, string_get(s), &res);
+    string_destroy(s);
+    if (pluginnames) {
+      int i;
+
+      i = 0;
+      while ((pluginname = pluginnames[i])) {
+	if ((p = pluginlist_get(pl, pluginname))) {
+	  stp = plugin_get(p);
+	  debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
+	  if (stp->identify(st, filepath) == STREAM_OK) {
+	    st->format = strdup(pluginname);
+	    free(ext);
+	    return 1;
+	  }
+	  debug_message_fnc("%s failed.\n", pluginname);
+	} else {
+	  show_message_fnc("%s (assoc'd with %s) not found.\n", pluginname, ext);
+	}
+	i++;
+      }
+    }
+    free(ext);
+  }
+
   dl = pluginlist_list(pl);
   dlist_iter(dl, dd) {
-    Plugin *p;
-    StreamerPlugin *stp;
-    char *pluginname;
-
     pluginname = hash_key_key(dlist_data(dd));
     if ((p = pluginlist_get(pl, pluginname)) == NULL)
       fatal(1, "BUG: %s streamer plugin not found but in list.\n", pluginname);
     stp = plugin_get(p);
 
-    if (stp->identify(s, filepath) == STREAM_OK) {
-      s->format = strdup(pluginname);
+    if (stp->identify(st, filepath) == STREAM_OK) {
+      st->format = strdup(pluginname);
       dlist_move_to_top(dl, dd);
       return 1;
     }

@@ -1,10 +1,10 @@
 /*
  * normal.c -- Normal UI plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:20:45 2001.
- * $Id: normal.c,v 1.58 2001/12/26 00:57:24 sian Exp $
+ * Last Modified: Sat Feb  9 12:27:38 2002.
+ * $Id: normal.c,v 1.59 2002/02/09 03:45:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -905,7 +905,7 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	debug_message("tmp = %s\n", tmp);
 
 	arc = archive_create(a);
-	if (archiver_identify(eps, arc, s)) {
+	if (archiver_identify(eps, arc, s, c)) {
 	  debug_message("Archiver identified as %s\n", arc->format);
 	  if (archiver_open(eps, arc, arc->format, s)) {
 	    (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);

@@ -1,10 +1,10 @@
 /*
  * convert.c -- Convert UI plugin
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 09:21:22 2001.
- * $Id: convert.c,v 1.14 2001/12/26 00:57:24 sian Exp $
+ * Last Modified: Sat Feb  9 12:27:49 2002.
+ * $Id: convert.c,v 1.15 2002/02/09 03:45:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -148,7 +148,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       continue;
     case IDENTIFY_FILE_STREAM:
       arc = archive_create(a);
-      if (archiver_identify(eps, arc, s)) {
+      if (archiver_identify(eps, arc, s, c)) {
 	debug_message("Archiver identified as %s\n", arc->format);
 	if (archiver_open(eps, arc, arc->format, s)) {
 	  ret = process_files_of_archive(uidata, arc);

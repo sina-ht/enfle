@@ -1,10 +1,10 @@
 /*
  * identify.c -- File or stream identify utility functions
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 13 00:50:36 2001.
- * $Id: identify.c,v 1.6 2001/10/14 12:31:36 sian Exp $
+ * Last Modified: Sat Feb  9 12:28:37 2002.
+ * $Id: identify.c,v 1.7 2002/02/09 03:45:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -72,7 +72,7 @@ identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a, Config *c)
     }
     if ((tmp = config_get_str(c, "/enfle/identify/streamer/disabled")) == NULL ||
 	strcasecmp(tmp, "yes") != 0) {
-      if (streamer_identify(eps, s, fullpath)) {
+      if (streamer_identify(eps, s, fullpath, c)) {
 	debug_message("Stream identified as %s.\n", s->format);
 	if (!streamer_open(eps, s, s->format, fullpath)) {
 	  show_message("Stream %s[%s] cannot open.\n", s->format, fullpath);

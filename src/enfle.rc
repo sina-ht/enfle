@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Fri Feb  8 20:25:20 2002.
-; $Id: enfle.rc,v 1.27 2002/02/08 11:31:31 sian Exp $
+; Last Modified: Sat Feb  9 12:12:50 2002.
+; $Id: enfle.rc,v 1.28 2002/02/09 03:45:28 sian Exp $
 
 enfle {
   identify {
@@ -11,6 +11,7 @@ enfle {
     ; To execute enfle in the build tree, override the default path.
     ;dir = ../plugins
     ; How to find plugins. (NOT IMPLEMENTED YET)
+    ;                       ~~~~~~~~~~~~~~~~~~~
     ;  scan_all: Scan the specified directory and load all plugins found.
     ;  custom: Custom loading, can be set per plugin type.
     loadmethod = scan_all
@@ -97,25 +98,6 @@ enfle {
 	bmp := BMP
       }
     }
-    saver {
-      ; How to find plugins.
-      ;  scan_all: Scan the audio directory and load all plugins found.
-      ;  ondemand: On-demand loading.
-      ;  load: Load only specified plugins.
-      loadmethod = ondemand
-      png {
-        compression_level = 9
-	; filter = {all|default|paeth|avg|sub|up|none}
-	;                        ^^-- This is correct, should not be transposed.
-	filter = all
-	; interlace = {yes/no} Note: interlace increases a file size slightly.
-	interlace = no
-      }
-      jpeg {
-        ; quality = 0...100
-        quality = 100
-      }
-    }
     player {
       ; How to find plugins.
       ;  scan_all: Scan the audio directory and load all plugins found.
@@ -142,6 +124,36 @@ enfle {
       ; You may choose one of these.
       ;LibMPEG2/disabled = yes
       ;LibMPEG3/disabled = yes
+    }
+    saver {
+      ; How to find plugins.
+      ;  scan_all: Scan the audio directory and load all plugins found.
+      ;  ondemand: On-demand loading.
+      ;  load: Load only specified plugins.
+      loadmethod = ondemand
+      png {
+        compression_level = 9
+	; filter = {all|default|paeth|avg|sub|up|none}
+	;                        ^^-- This is correct, should not be transposed.
+	filter = all
+	; interlace = {yes/no} Note: interlace increases a file size slightly.
+	interlace = no
+      }
+      jpeg {
+        ; quality = 0...100
+        quality = 100
+      }
+    }
+    streamer {
+      assoc {
+        gz := GZ
+	bz2 := bz2
+      }
+    }
+    archiver {
+      assoc {
+        tar := TAR
+      }
     }
   }
 }
