@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Feb 15 21:36:34 2004.
- * $Id: Xlib.c,v 1.56 2004/02/20 17:21:28 sian Exp $
+ * Last Modified: Fri Mar  5 13:40:48 2004.
+ * $Id: Xlib.c,v 1.57 2004/03/05 04:43:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -841,6 +841,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
       ret = 1;
       break;
     case EnterNotify:
+      XSetInputFocus(x11_display(x11), x11window_win(vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw), RevertToPointerRoot, CurrentTime);
       ev->type = ENFLE_Event_EnterWindow;
       ret = 1;
       break;
@@ -981,7 +982,6 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     draw_caption(vw);
     x11window_map_raised(xwi->normal.xw);
     x11window_wait_mapped(xwi->normal.xw);
-    XSetInputFocus(x11_display(x11), x11window_win(xwi->normal.xw), RevertToPointerRoot, CurrentTime);
   } else {
     if (xwi->full.xw == NULL) {
       XSetWindowAttributes set_attr;
@@ -1004,7 +1004,6 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
       x11ximage_put(xwi->xi, xwi->full.pix, xwi->full.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
     x11window_map_raised(xwi->full.xw);
     x11window_wait_mapped(xwi->full.xw);
-    XSetInputFocus(x11_display(x11), x11window_win(xwi->full.xw), RevertToPointerRoot, CurrentTime);
   }
   x11_unlock(x11);
 
