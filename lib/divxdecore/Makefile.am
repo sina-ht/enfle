@@ -1,18 +1,18 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for libdivxdecore
-# $Id: Makefile.am,v 1.2 2001/01/28 03:47:29 sian Exp $
+# $Id: Makefile.am,v 1.3 2001/01/28 12:46:00 sian Exp $
 
 noinst_LTLIBRARIES = libdivxdecore.la
 #INCLUDES =
 
 if USE_MMX
+AM_CFLAGS = -D_DECORE -DUSE_MMX
 transferIDCT=transferIDCT_mmx.c
 idct=idct.c idct_mmx.c
-AM_CFLAGS = -D_DECORE -DUSE_MMX
 else
+AM_CFLAGS = -D_DECORE
 transferIDCT=transferIDCT.c
 idct=idct.c
-AM_CFLAGS = -D_DECORE
 endif
 
 libdivxdecore_la_SOURCES = \

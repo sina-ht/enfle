@@ -136,11 +136,10 @@ dummy(void)
 void yuv2rgb_32(uint8_t *puc_y, int stride_y, 
                 uint8_t *puc_u, uint8_t *puc_v, int stride_uv, 
                 uint8_t *puc_out, int width_y, int height_y ) {
-
+#ifdef WIN32
 	int y, horiz_count;
 	int stride_out = width_y * 4;
 
-#ifdef WIN32
 	puc_out = puc_out + stride_out * (height_y-2);
 
 	horiz_count = -(width_y >> 3);
@@ -293,6 +292,10 @@ void yuv2rgb_32(uint8_t *puc_y, int stride_y,
 		}
 		puc_out -= stride_out;
 #else
+	int volatile y;
+	int volatile horiz_count;
+	int volatile stride_out = width_y * 4;
+
 	horiz_count = -(width_y >> 3);
 
 	for (y=0; y<(height_y-2); y++) {
@@ -452,11 +455,10 @@ void yuv2rgb_32(uint8_t *puc_y, int stride_y,
 void yuv2rgb_24(uint8_t *puc_y, int stride_y, 
                 uint8_t *puc_u, uint8_t *puc_v, int stride_uv, 
                 uint8_t *puc_out, int width_y, int height_y ) {
-
+#ifdef WIN32
 	int y, horiz_count;
 	int stride_out = width_y * 3;
 
-#ifdef WIN32
 	puc_out = puc_out + stride_out * (height_y-2); // go to the end of rgb buffer (upside down conversion)
 
 	horiz_count = -(width_y >> 3);
@@ -621,6 +623,10 @@ void yuv2rgb_24(uint8_t *puc_y, int stride_y,
 		puc_out -= stride_out; 
 	}
 #else
+	int volatile y;
+	int volatile horiz_count;
+	int volatile stride_out = width_y * 3;
+
 	puc_out = puc_out;
 
 	horiz_count = -(width_y >> 3);
@@ -793,11 +799,10 @@ void yuv2rgb_24(uint8_t *puc_y, int stride_y,
 void yuv2rgb_16(uint8_t *puc_y, int stride_y, 
                 uint8_t *puc_u, uint8_t *puc_v, int stride_uv, 
                 uint8_t *puc_out,	int width_y, int height_y ) {
-
+#ifdef WIN32
 	int y, horiz_count;
 	int stride_out = width_y * 2;
 
-#ifdef WIN32
 	puc_out = puc_out + stride_out * (height_y-4); // go to the end of rgb buffer (upside down conversion)
 
 	horiz_count = -(width_y >> 3);
@@ -976,6 +981,10 @@ void yuv2rgb_16(uint8_t *puc_y, int stride_y,
 		puc_out -= stride_out;
 	}
 #else
+	int volatile y;
+	int volatile horiz_count;
+	int volatile stride_out = width_y * 2;
+
 	puc_out = puc_out;
 
 	horiz_count = -(width_y >> 3);

@@ -37,9 +37,11 @@
 #ifndef _YUVRGB_H_
 #define _YUVRGB_H_
 
+#ifdef USE_MMX
 #define YUV2RGB_32_MMX
 #define YUV2RGB_24_MMX
 #define YUV2RGB_16_MMX
+#endif
 
 void (*convert_yuv)(unsigned char *puc_y, int stride_y,
 	unsigned char *puc_u, unsigned char *puc_v, int stride_uv,
