@@ -1,3 +1,18 @@
+2003-02-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/Makefile.am,
+	plugins/saver/glic/arithmodel_order_zero.c,
+	plugins/saver/glic/vmpm_decompose_esc.c,
+	plugins/saver/glic/vmpm_decompose_escb.c,
+	plugins/saver/glic/vmpm_decompose_escfirst.c,
+	plugins/saver/glic/vmpm_decompose_highlow.c,
+	plugins/saver/glic/vmpm_decompose_highlow_esc.c,
+	plugins/saver/glic/vmpm_decompose_highlow_escb.c,
+	plugins/saver/glic/vmpm_decompose_recur.c,
+	plugins/saver/glic/vmpm_decompose_recur2.c,
+	plugins/saver/glic/vmpm_decompose_recur3.c: Adapted for fatal()
+	change. Fixed for static link.
+
 2002-02-22  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/glic/arithmodel_order_zero.c: Removed a warning.

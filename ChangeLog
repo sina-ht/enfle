@@ -1,3 +1,36 @@
+2003-02-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* acinclude.m4, configure.in, plugins/archiver/arc/Makefile.am,
+	plugins/streamer/bz2/Makefile.am, plugins/streamer/gz/Makefile.am,
+	plugins/ui/convert/Makefile.am, plugins/ui/normal/Makefile.am,
+	plugins/ui/wallpaper/Makefile.am, plugins/video/Xlib/Makefile.am:
+	Better support for --enable-all-static.
+
+	* plugins/ui/normal/normal.c: Include utils/converter.h.
+
+	* plugins/streamer/bz2/bz2.c, plugins/streamer/gz/gz.c,
+	plugins/ui/convert/convert.c, plugins/ui/wallpaper/wallpaper.c,
+	plugins/video/Xlib/Xlib.c: Use ENFLE_PLUGIN_ENTRY() and
+	ENFLE_PLUGIN_EXIT() macros.
+
+	* plugins/player/libmpeg3/libmpeg3.c: Adapted for Image changes.
+
+	* plugins/loader/pcx/pcx.c: Fixed typo.
+
+	* lib/demultiplexer/demultiplexer_avi.[ch]: Fixed silly bugs.
+
+	* common.h: Use __typeof__.
+
+2002-12-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archive.c: Fixed __iteration_index() bug.
+
+2002-12-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* config.guess: Upgraded.
+
+	* ltmain.sh: Avoid undefined SED bug.
+
 2002-11-29  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README, README.e: Updated documentation.
