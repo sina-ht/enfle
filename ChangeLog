@@ -1,5 +1,9 @@
 2002-03-06  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/utils/fifo.c: Forgot to unlock()...
+
+2002-03-06  Hiroshi Takekawa  <sian@fennel.org>
+
 	* src/enfle.rc: New configuration for esd.
 
 	* plugins/player/opendivx/opendivx.c: stop() cleanly.
