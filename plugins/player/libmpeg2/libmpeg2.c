@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 24 11:49:57 2001.
- * $Id: libmpeg2.c,v 1.18 2001/06/24 15:44:12 sian Exp $
+ * Last Modified: Mon Jun 25 01:48:36 2001.
+ * $Id: libmpeg2.c,v 1.19 2001/06/24 16:53:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,7 +60,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.2",
+  description: "LibMPEG2 Player plugin version 0.2.1",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -91,7 +91,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
   Libmpeg2_info *info;
   Image *p;
-  unsigned int accel;
 
   if ((info = calloc(1, sizeof(Libmpeg2_info))) == NULL) {
     show_message("LibMPEG2: " __FUNCTION__ ": No enough memory.\n");
@@ -143,7 +142,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
-      InitMP3(&info->mp);
     }
   } else {
     debug_message("No audio streams.\n");
@@ -186,10 +184,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       if ((info->vo = vo_enfle_rgb_open(vw, m, p)) == NULL)
 	goto error;
     }
-
-    accel = mm_accel();
-    vo_accel(accel);
-    mpeg2_init(&info->mpeg2dec, accel, info->vo);
   }
 
   if (info->use_xv) {
@@ -260,18 +254,25 @@ play(Movie *m)
   stream_rewind(m->st);
 
   if (m->has_video) {
+    unsigned int accel;
+
     if ((info->vstream = fifo_create()) == NULL)
       return PLAY_ERROR;
     //fifo_set_max(info->vstream, 2000);
     demultiplexer_mpeg_set_vst(info->demux, info->vstream);
+    accel = mm_accel();
+    vo_accel(accel);
+    mpeg2_init(&info->mpeg2dec, accel, info->vo);
     pthread_create(&info->video_thread, NULL, play_video, m);
   }
 
   if (m->has_audio) {
+    m->has_audio = 1;
     if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
     //fifo_set_max(info->vstream, 2000);
     demultiplexer_mpeg_set_ast(info->demux, info->astream);
+    InitMP3(&info->mp);
     pthread_create(&info->audio_thread, NULL, play_audio, m);
   }
 
@@ -329,6 +330,7 @@ play_video(void *arg)
   debug_message(__FUNCTION__ "()\n");
 
   while (m->status == _PLAY) {
+    /* XXX: Should I use wait and singal? */
     if (fifo_get(info->vstream, &data)) {
       mp = (MpegPacket *)data;
 #if 0
@@ -395,6 +397,7 @@ play_audio(void *arg)
   info->ad = ad;
 
   while (m->status == _PLAY) {
+    /* XXX: Should I use wait and singal? */
     if (fifo_get(info->astream, &data)) {
       mp = (MpegPacket *)data;
 #if 0
@@ -467,16 +470,23 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  if (!m->has_video || info->to_render == 0)
+  if (!m->has_video)
     return PLAY_OK;
 
   if (demultiplexer_get_eof(info->demux)) {
+    //debug_message(__FUNCTION__ ": %d %d\n", info->vstream->ndata, info->astream->ndata);
+    if (info->astream && fifo_is_empty(info->astream))
+      /* Audio existed, but over. */
+      m->has_audio = 2;
     if ((!info->vstream || fifo_is_empty(info->vstream)) &&
 	(!info->astream || fifo_is_empty(info->astream))) {
       stop_movie(m);
       return PLAY_OK;
     }
   }
+
+ if (info->to_render == 0)
+   return PLAY_OK;
 
   if (!info->if_initialized && m->width && m->height) {
     m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
@@ -495,7 +505,7 @@ play_main(Movie *m, VideoWindow *vw)
   pthread_mutex_lock(&info->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
-  if (m->has_audio) {
+  if (m->has_audio == 1) {
     audio_time = get_audio_time(m, info->ad);
     // debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
 
