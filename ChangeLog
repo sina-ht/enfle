@@ -1,3 +1,29 @@
+2002-02-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: libconfig can now treat colon separated list by := .
+
+	* lib/enfle/loader.c, lib/enfle/player.c: Use config_get_list(),
+	config_set_list().
+
+	* lib/utils/libconfig.c, lib/utils/libconfig.h: Implemented
+	set_list(), get_list().
+
+	* lib/enfle/loader.c, lib/enfle/player.c, src/enfle.rc: Improved
+	assoc implementation, assoc now can have colon separated plugin
+	list. (But need more work.)
+
+	* plugins/player/avifile/avifile.cpp: Changed timer_start()
+	timing.
+
+	* lib/utils/misc.c, lib/utils/misc.h: Added misc_str_split(),
+	misc_free_str_array(), misc_str_tolower().
+
+	* common.h: Added warning_fn(), warning_fnc().
+
+2002-02-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/streamer/gz/gz.c: Avoid name collisions.
+
 2002-01-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/avifile/avifile.cpp: Play asf audio. Audio only
