@@ -1,4 +1,37 @@
+2004-03-14  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: More extensions.
+
+	* configure.in, src/enfle.c: Added SSE switch.
+
+	* plugins/ui/normal/Makefile.am: Needs libenfle.la.
+
+	* plugins/player/generic/generic.c: Conditioned out 'bad audio
+	check' code.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c,
+	lib/avcodec/avcodec.h, lib/avcodec/cinepak.c,
+	lib/avcodec/common.c, lib/avcodec/common.h, lib/avcodec/dpcm.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c, lib/avcodec/fft-test.c,
+	lib/avcodec/fft.c, lib/avcodec/flicvideo.c, lib/avcodec/h263.c,
+	lib/avcodec/i386/fft_sse.c, lib/avcodec/mdct.c,
+	lib/avcodec/mp3lameaudio.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/msvideo1.c, lib/avcodec/ppc/dsputil_ppc.c,
+	lib/avcodec/ppc/fdct_altivec.c, lib/avcodec/ppc/fft_altivec.c,
+	lib/avcodec/ps2/dsputil_mmi.c, lib/avcodec/ps2/idct_mmi.c,
+	lib/avcodec/ps2/mpegvideo_mmi.c, lib/avcodec/qtrle.c,
+	lib/avcodec/rpza.c, lib/avcodec/smc.c, lib/avcodec/svq3.c,
+	lib/avcodec/truemotion1.c, lib/avcodec/vmdav.c,
+	lib/avcodec/vqavideo.c, lib/avcodec/xan.c: Updated libavcodec.
+
+2004-03-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/generic/generic.c: Fixed resizing bug.
+
 2004-03-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/mad/Makefile.am: 'make dist' should include config.h.
 
 	* plugins/player/generic/generic.c: Fixed type-undefined bug when
 	no video.
