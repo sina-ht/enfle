@@ -1,3 +1,30 @@
+2001-09-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11ximage.[ch]: Bug fix. Added several debug messages.
+
+	* lib/X11/x11.[ch]: Keep bits_per_pixel.
+
+	* lib/demultiplexer/demultiplexer_avi.c,
+	lib/demultiplexer/demultiplexer_mpeg.c: Adapted for fifo change.
+
+	* plugins/player/opendivx/opendivx.c: Adapted for fifo
+	change. Simplify.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Adapted for fifo change.
+
+	* plugins/player/avifile/avifile.cpp: Simplify, dropping
+	DecodingState.
+
+	* lib/utils/fifo.[ch]: Definition of FIFO_data is moved to fifo.c
+	from fifo.h. get() now gets the third argument to return
+	destructor. put() and get() cooperate with each other using cond_t
+	to reduce CPU usage, avoiding busy loop.
+
+2001-09-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2/libmpeg2.c: Better playback for slower
+	CPU.
+
 2001-09-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.c: Show whether MMX routine is available.
