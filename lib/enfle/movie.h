@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:14:42 2001.
- * $Id: movie.h,v 1.12 2001/01/06 23:55:25 sian Exp $
+ * Last Modified: Sun Jan  7 21:10:15 2001.
+ * $Id: movie.h,v 1.13 2001/01/11 22:31:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -72,7 +72,6 @@ struct _movie {
   void (*destroy)(Movie *);
 
   /* These are implemented by movie plugin. */
-  void *(*get_screen)(Movie *);
   PlayerStatus (*play)(Movie *);
   PlayerStatus (*play_main)(Movie *, VideoWindow *);
   PlayerStatus (*pause_movie)(Movie *);
@@ -80,7 +79,6 @@ struct _movie {
   void (*unload_movie)(Movie *);
 };
 
-#define movie_get_screen(m) (m)->get_screen((m))
 #define movie_play(m) (m)->play((m))
 #define movie_play_main(m, vw) (m)->play_main((m), (vw))
 #define movie_pause(m) (m)->pause_movie((m))

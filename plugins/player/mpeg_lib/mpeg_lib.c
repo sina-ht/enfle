@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:29:38 2001.
- * $Id: mpeg_lib.c,v 1.15 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Sun Jan  7 21:11:53 2001.
+ * $Id: mpeg_lib.c,v 1.16 2001/01/11 22:31:31 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -147,19 +147,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   play(m);
 
   return PLAY_OK;
-}
-
-static void *
-get_screen(Movie *m)
-{
-  MPEG_lib_info *info;
-
-  if (m->movie_private) {
-    info = (MPEG_lib_info *)m->movie_private;
-    return memory_ptr(m->direct_decode ? info->p->rendered.image : info->p->image);
-  }
-
-  return NULL;
 }
 
 static PlayerStatus
@@ -305,7 +292,6 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   }
 #endif
 
-  m->get_screen = get_screen;
   m->play = play;
   m->play_main = play_main;
   m->pause_movie = pause_movie;

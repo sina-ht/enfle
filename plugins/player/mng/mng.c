@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:29:45 2001.
- * $Id: mng.c,v 1.13 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Sun Jan  7 21:12:15 2001.
+ * $Id: mng.c,v 1.14 2001/01/11 22:31:31 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -227,19 +227,6 @@ errorproc(mng_handle mng, mng_int32 errcode, mng_int8 severity,
 
 /* for internal use */
 
-static void *
-get_screen(Movie *m)
-{
-  MNG_info *this;
-
-  if (m->movie_private) {
-    this = (MNG_info *)m->movie_private;
-    return getcanvasline(this->mng, 0);
-  }
-
-  return NULL;
-}
-
 static PlayerStatus
 play(Movie *m)
 {
@@ -422,7 +409,6 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   }
 #endif
 
-  m->get_screen = get_screen;
   m->play = play;
   m->play_main = play_main;
   m->pause_movie = pause_movie;

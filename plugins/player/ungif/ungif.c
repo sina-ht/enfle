@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:29:30 2001.
- * $Id: ungif.c,v 1.17 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Sun Jan  7 21:12:28 2001.
+ * $Id: ungif.c,v 1.18 2001/01/11 22:31:31 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -165,19 +165,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->initialize_screen(vw, m, m->width, m->height);
 
   return PLAY_OK;
-}
-
-static void *
-get_screen(Movie *m)
-{
-  UNGIF_info *info;
-
-  if (m->movie_private) {
-    info = (UNGIF_info *)m->movie_private;
-    return info->buffer[0];
-  }
-
-  return NULL;
 }
 
 static PlayerStatus
@@ -506,7 +493,6 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   }
 #endif
 
-  m->get_screen = get_screen;
   m->play = play;
   m->play_main = play_main;
   m->pause_movie = pause_movie;

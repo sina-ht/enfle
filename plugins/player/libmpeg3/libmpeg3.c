@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:29:55 2001.
- * $Id: libmpeg3.c,v 1.18 2001/01/06 23:56:06 sian Exp $
+ * Last Modified: Mon Jan  8 12:35:34 2001.
+ * $Id: libmpeg3.c,v 1.19 2001/01/11 22:31:31 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -45,7 +45,7 @@ typedef struct _libmpeg3_info {
   int nvstream;
   int rendering_type;
 #ifdef USE_PTHREAD
-  VideoWindow *vw;
+  int updated;
   pthread_t video_thread;
 #endif
   AudioDevice *ad;
@@ -69,7 +69,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.3.1",
+  description: "LibMPEG3 Player plugin version 0.3.2",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -253,10 +253,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   for (i = 0; i < m->rendering_height; i++)
     info->lines[i] = memory_ptr(p->rendered.image) + i * p->width * Bpp;
 
-#ifdef USE_PTHREAD
-  info->vw = vw;
-#endif
-
   m->movie_private = (void *)info;
   m->st = st;
   m->status = _STOP;
@@ -270,19 +266,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
  error:
   free(info);
   return PLAY_ERROR;
-}
-
-static void *
-get_screen(Movie *m)
-{
-  LibMPEG3_info *info;
-
-  if (m->movie_private) {
-    info = (LibMPEG3_info *)m->movie_private;
-    return memory_ptr(info->p->rendered.image);
-  }
-
-  return NULL;
 }
 
 #ifdef USE_PTHREAD
@@ -330,44 +313,17 @@ play_video(void *arg)
 {
   Movie *m = arg;
   LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
-  VideoWindow *vw = info->vw;
-  Image *p = info->p;
   int decode_error;
-  int frametime;
-  int due_time;
-  int time_elapsed;
-
-  frametime = 1000 / m->framerate;
 
   while (m->status == _PLAY) {
-    decode_error =
-      (mpeg3_read_frame(info->file, info->lines,
-			0, 0,
-			m->width, m->height,
-			m->rendering_width, m->rendering_height,
-			info->rendering_type, info->nvstream) == -1) ? 0 : 1;
-
-    time_elapsed = timer_get_milli(m->timer);
-    due_time = m->current_frame * 1000 / m->framerate;
-
-    //debug_message("v: %d %d\n", time_elapsed, due_time);
-
-    if (time_elapsed < due_time) {
-      /* too fast to display, wait then render */
-      m->pause_usec((due_time - time_elapsed) * 1000);
-      m->render_frame(vw, m, p);
-      m->current_frame++;
-    } else if (time_elapsed > due_time + frametime) {
-      /* too late, drop this frame */
-      m->current_frame++;
-    } else {
-      /* just in time to render */
-      m->render_frame(vw, m, p);
-      m->current_frame++;
-    }
-    if (m->current_frame >= m->num_of_frames) {
-      stop_movie(m);
-      pthread_exit((void *)PLAY_OK);
+    if (info->updated == 0) {
+      decode_error =
+	(mpeg3_read_frame(info->file, info->lines,
+			  0, 0,
+			  m->width, m->height,
+			  m->rendering_width, m->rendering_height,
+			  info->rendering_type, info->nvstream) == -1) ? 0 : 1;
+      info->updated = 1;
     }
   }
 
@@ -416,6 +372,14 @@ play_audio(void *arg)
 static PlayerStatus
 play_main(Movie *m, VideoWindow *vw)
 {
+  LibMPEG3_info *info = (LibMPEG3_info *)m->movie_private;
+  Image *p = info->p;
+  int frametime;
+#if 0
+  int due_time;
+  int time_elapsed;
+#endif
+
   switch (m->status) {
   case _PLAY:
     break;
@@ -427,6 +391,38 @@ play_main(Movie *m, VideoWindow *vw)
   default:
     return PLAY_ERROR;
   }
+
+  frametime = 1000 / m->framerate;
+
+#if 0
+  time_elapsed = timer_get_milli(m->timer);
+  due_time = m->current_frame * 1000 / m->framerate;
+
+  //debug_message("v: %d %d\n", time_elapsed, due_time);
+
+  if (time_elapsed < due_time) {
+    /* too fast to display, wait then render */
+    m->pause_usec((due_time - time_elapsed) * 1000);
+    m->render_frame(vw, m, p);
+    m->current_frame++;
+  } else if (time_elapsed > due_time + frametime) {
+    /* too late, drop this frame */
+    m->current_frame++;
+  } else {
+    /* just in time to render */
+    m->render_frame(vw, m, p);
+    m->current_frame++;
+  }
+#else
+  if (info->updated) {
+    m->render_frame(vw, m, p);
+    m->current_frame++;
+    info->updated = 0;
+  }
+#endif
+
+  if (m->current_frame >= m->num_of_frames)
+    stop_movie(m);
 
   return PLAY_OK;
 }
@@ -615,7 +611,6 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   }
 #endif
 
-  m->get_screen = get_screen;
   m->play = play;
   m->play_main = play_main;
   m->pause_movie = pause_movie;
