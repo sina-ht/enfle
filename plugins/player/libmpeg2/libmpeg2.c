@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 21 23:03:11 2002.
- * $Id: libmpeg2.c,v 1.38 2002/09/22 21:32:19 sian Exp $
+ * Last Modified: Sat Feb 22 02:20:03 2003.
+ * $Id: libmpeg2.c,v 1.39 2003/11/17 13:57:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -416,18 +416,17 @@ play_audio(void *arg)
   debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
-    show_message("Cannot open device. Audio disabled.\n");
-    m->has_audio = 0;
-    ExitMP3(&info->mp);
-    pthread_exit((void *)PLAY_ERROR);
+    err_message("Cannot open device. Audio disabled.\n");
   }
   info->ad = ad;
 
   while (m->status == _PLAY) {
     if (!fifo_get(info->astream, &data, &destructor)) {
-      show_message_fnc("fifo_get() failed.\n");
-    } else {
-      mp = (MpegPacket *)data;
+      debug_message_fnc("fifo_get() failed.\n");
+      break;
+    }
+    mp = (MpegPacket *)data;
+    if (ad) {
 #ifdef USE_TS
       switch (mp->pts_dts_flag) {
       case 2:
@@ -464,18 +463,20 @@ play_audio(void *arg)
 	ret = decodeMP3(&info->mp, NULL, 0,
 			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       }
-      destructor(mp);
     }
+    destructor(mp);
   }
 
-  debug_message_fnc("sync_device()...");
-  m->ap->sync_device(ad);
-  debug_message("OK\n");
-  debug_message_fnc("close_device()...");
-  m->ap->close_device(ad);
-  info->ad = NULL;
+  if (ad) {
+    debug_message_fnc("sync_device()...");
+    m->ap->sync_device(ad);
+    debug_message("OK\n");
+    debug_message_fnc("close_device()...");
+    m->ap->close_device(ad);
+    info->ad = NULL;
+    debug_message("OK\n");
+  }
 
-  debug_message("OK\n");
   debug_message_fnc("ExitMP3()...");
   ExitMP3(&info->mp);
   debug_message("OK. exit.\n");
@@ -560,7 +561,7 @@ play_main(Movie *m, VideoWindow *vw)
   pthread_mutex_lock(&info->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
-  if (m->has_audio == 1) {
+  if (m->has_audio == 1 && info->ad) {
     audio_time = get_audio_time(m, info->ad);
     debug_message("r: %d v: %d a: %d (%d frame)\n", (int)timer_get_milli(m->timer), video_time, audio_time, m->current_frame);
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul  3 23:17:01 2002.
- * $Id: libmpeg2_vo.c,v 1.8 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Sat Feb  8 03:28:31 2003.
+ * $Id: libmpeg2_vo.c,v 1.9 2003/11/17 13:57:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -103,12 +103,21 @@ static void
 enfle_free_frames (vo_instance_t *_instance)
 {
   enfle_instance_t *instance;
+  int i;
 
   debug_message_fn("()\n");
 
   instance = (enfle_instance_t *)_instance;
-  debug_message_fnc("freeing %p\n", instance->frame_ptr[0]->base[0]);
-  free(instance->frame_ptr[0]->base[0]);
+  if (instance->frame[0].vo.base[0]) {
+    debug_message_fnc("freeing %p\n", instance->frame[0].vo.base[0]);
+    free(instance->frame[0].vo.base[0]);
+  }
+  for (i = 0; i < 3; i++) {
+    if (instance->frame[i].rgb_ptr_base) {
+      debug_message_fnc("%d:rgb_ptr_base: freeing %p\n", i, instance->frame[i].rgb_ptr_base);
+      free(instance->frame[i].rgb_ptr_base);
+    }
+  }
   debug_message_fnc("OK\n");
 }
 
@@ -365,7 +374,7 @@ vo_enfle_yuv_open(VideoWindow *vw, Movie *m, Image *p)
 {
   enfle_instance_t *instance;
 
-  if ((instance = malloc(sizeof(enfle_instance_t))) == NULL)
+  if ((instance = calloc(1, sizeof(enfle_instance_t))) == NULL)
     return NULL;
 
   instance->vo.setup = enfle_yuv_setup;
