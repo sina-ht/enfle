@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_escb.c -- ESC estimation method B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 27 17:05:11 2001.
- * $Id: vmpm_decompose_escb.c,v 1.6 2001/08/27 21:58:23 sian Exp $
+ * Last Modified: Tue Aug 28 08:05:37 2001.
+ * $Id: vmpm_decompose_escb.c,v 1.7 2001/08/27 23:10:38 sian Exp $
  */
 
 #include <stdio.h>
@@ -194,6 +194,8 @@ encode(VMPM *vmpm)
       arithmodel_encode_cbt(bin_am, vmpm->newtoken[i] - 1, vmpm->token_index[i], 0, 1);
       arithmodel_order_zero_reset(am, 0, vmpm->newtoken[i]);
       arithmodel_order_zero_reset(bin_am, 0, 0);
+      arithmodel_install_symbol(bin_am, 1);
+      arithmodel_install_symbol(bin_am, 1);
 
       /* The first token of each level must be t_0. */
       if (vmpm->token[i][0]->value != 1)
