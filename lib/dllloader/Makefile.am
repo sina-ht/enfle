@@ -1,9 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.2 2000/10/29 18:08:57 sian Exp $
+# $Id: Makefile.am,v 1.3 2001/01/06 23:52:52 sian Exp $
 
+if USE_SPI
 noinst_LTLIBRARIES = libdllloader.la
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib/utils
+endif
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 libdllloader_la_SOURCES = \
 	windef.h w32api.h mm.h export.h \
