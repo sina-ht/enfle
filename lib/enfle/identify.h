@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 29 03:31:40 2001.
- * $Id: identify.h,v 1.1 2001/07/29 00:38:18 sian Exp $
+ * Last Modified: Sat Aug 11 05:31:04 2001.
+ * $Id: identify.h,v 1.2 2001/08/15 06:39:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,14 @@
 
 #ifndef _ENFLE_IDENTIFY_H
 #define _ENFLE_IDENTIFY_H
+
+#include "enfle-plugins.h"
+#include "stream.h"
+#include "archive.h"
+#include "image.h"
+#include "movie.h"
+#include "video.h"
+#include "utils/libconfig.h"
 
 #define IDENTIFY_FILE_STREAM       0
 #define IDENTIFY_FILE_DIRECTORY    1
