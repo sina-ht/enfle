@@ -1,3 +1,67 @@
+2005-03-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c, lib/avcodec/adx.c,
+	lib/avcodec/alac.c, lib/avcodec/allcodecs.c,
+	lib/avcodec/apiexample.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream.h, lib/avcodec/cabac.h, lib/avcodec/cljr.c,
+	lib/avcodec/common.h, lib/avcodec/dsputil.c, lib/avcodec/faad.c,
+	lib/avcodec/ffv1.c, lib/avcodec/flac.c, lib/avcodec/golomb.h,
+	lib/avcodec/h263.c, lib/avcodec/h263dec.c, lib/avcodec/h264.c,
+	lib/avcodec/h264data.h, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/idcinvideo.c,
+	lib/avcodec/indeo3.c, lib/avcodec/interplayvideo.c,
+	lib/avcodec/loco.c, lib/avcodec/mace.c, lib/avcodec/mem.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/motion_est.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mp3lameaudio.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegaudio.c,
+	lib/avcodec/mpegaudio.h, lib/avcodec/mpegaudiodec.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/msmpeg4.c, lib/avcodec/msmpeg4data.h,
+	lib/avcodec/parser.c, lib/avcodec/pcm.c, lib/avcodec/rangecoder.c,
+	lib/avcodec/rangecoder.h, lib/avcodec/ratecontrol.c,
+	lib/avcodec/resample.c, lib/avcodec/rv10.c, lib/avcodec/shorten.c,
+	lib/avcodec/snow.c, lib/avcodec/sonic.c, lib/avcodec/svq1.c,
+	lib/avcodec/tscc.c, lib/avcodec/utils.c, lib/avcodec/vc9.c,
+	lib/avcodec/vc9data.h, lib/avcodec/vcr1.c, lib/avcodec/vp3.c,
+	lib/avcodec/vp3data.h, lib/avcodec/wmv2.c: Updated.
+
+	* lib/utils/converter.c: Fixed a bug for state-dependent character
+	sets.
+
+	* lib/enfle/archive.h: Increased a file hash size.
+
+	* plugins/archiver/arc/arc.c: Permit a directory name with leading
+	'#'.
+
+	* plugins/ui/normal/normal.c: Plugged a memory leak.
+
+2005-01-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/4xm.c, lib/avcodec/8bps.c, lib/avcodec/allcodecs.c,
+	lib/avcodec/apiexample.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.h,
+	lib/avcodec/cabac.c, lib/avcodec/cljr.c, lib/avcodec/common.h,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h, lib/avcodec/dv.c,
+	lib/avcodec/error_resilience.c, lib/avcodec/eval.c,
+	lib/avcodec/ffv1.c, lib/avcodec/flicvideo.c, lib/avcodec/golomb.h,
+	lib/avcodec/h261.c, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/imgconvert.c, lib/avcodec/imgresample.c,
+	lib/avcodec/indeo3.c, lib/avcodec/lcl.c, lib/avcodec/mdec.c,
+	lib/avcodec/mem.c, lib/avcodec/mjpeg.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/msmpeg4.c,
+	lib/avcodec/msmpeg4data.h, lib/avcodec/msrle.c,
+	lib/avcodec/msvideo1.c, lib/avcodec/png.c, lib/avcodec/pnm.c,
+	lib/avcodec/qdrw.c, lib/avcodec/qpeg.c, lib/avcodec/qtrle.c,
+	lib/avcodec/ratecontrol.c, lib/avcodec/resample2.c,
+	lib/avcodec/rpza.c, lib/avcodec/rv10.c, lib/avcodec/smc.c,
+	lib/avcodec/snow.c, lib/avcodec/svq1.c, lib/avcodec/svq3.c,
+	lib/avcodec/truemotion1.c, lib/avcodec/tscc.c,
+	lib/avcodec/utils.c, lib/avcodec/vcr1.c, lib/avcodec/vp3.c,
+	lib/avcodec/vqavideo.c, lib/avcodec/xan.c, lib/avcodec/xl.c:
+	Updated.
+
 2004-12-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/i386/cputest.c,
@@ -2297,7 +2361,7 @@
 
 	* lib/X11/x11ximage.c: Added fail-safe image size checking code.
 
-2001-09-20  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+2001-09-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg2/libmpeg2.c: Current frame counting bug,
 	which occurs when dropping, is fixed. Added time-stamp convertion
@@ -3653,7 +3717,7 @@
 	plugins/player/avifile/aviplay_audio.h,
 	plugins/player/avifile/aviplay_impl.h: Cosmetic change.
 
-2001-01-05  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+2001-01-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/Makefile.am, plugins/ui/normal/normal.c:
 	Deleted obsolete Xlib UI plugin.
