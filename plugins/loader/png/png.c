@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 01:35:27 2000.
- * $Id: png.c,v 1.2 2000/10/08 17:26:53 sian Exp $
+ * Last Modified: Sun Oct 29 03:20:02 2000.
+ * $Id: png.c,v 1.3 2000/10/28 19:07:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,8 +36,7 @@
 
 #define DISPLAY_GAMMA 2.20
 
-static LoaderStatus identify(Image *, Stream *);
-static LoaderStatus load(Image *, Stream *);
+DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -102,8 +101,7 @@ warning_handler(png_structp png_ptr, png_const_charp warning_msg)
 
 #define PNG_BYTES_TO_CHECK 4
 
-static LoaderStatus
-identify(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
 {
   char buf[PNG_BYTES_TO_CHECK];
 
@@ -118,8 +116,7 @@ identify(Image *p, Stream *st)
   return LOAD_OK;
 }
 
-static LoaderStatus
-load(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
 {
   png_structp png_ptr;
   png_infop info_ptr;
@@ -142,7 +139,7 @@ load(Image *p, Stream *st)
   {
     LoaderStatus status;
 
-    if ((status = identify(p, st)) != LOAD_OK)
+    if ((status = identify(p, st, priv)) != LOAD_OK)
       return status;
   }
 #endif

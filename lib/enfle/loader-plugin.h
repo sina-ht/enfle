@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:07:49 2000.
- * $Id: loader-plugin.h,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Sun Oct 29 03:18:15 2000.
+ * $Id: loader-plugin.h,v 1.3 2000/10/28 19:07:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,12 +30,23 @@
 
 typedef struct _loader_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
+  void *private;
 
-  LoaderStatus (*identify)(Image *, Stream *);
-  LoaderStatus (*load)(Image *, Stream *);
+  LoaderStatus (*identify)(Image *, Stream *, void *);
+  LoaderStatus (*load)(Image *, Stream *, void *);
 } LoaderPlugin;
 
-void *plugin_entry(void);
-void plugin_exit(void *);
+#define DECLARE_LOADER_PLUGIN_METHODS \
+ static LoaderStatus identify(Image *, Stream *, void *); \
+ static LoaderStatus load(Image *, Stream *, void *)
+
+#define DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv) \
+ static LoaderStatus \
+ identify(Image * ## p ## , Stream * ## st ## , void * ## priv ##)
+#define DEFINE_LOADER_PLUGIN_LOAD(p, st, priv) \
+ static LoaderStatus \
+ load(Image * ## p ## , Stream * ## st ## , void * ## priv ##)
+
+ENFLE_PLUGIN_ENTRIES;
 
 #endif

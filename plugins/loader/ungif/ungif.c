@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 21:34:19 2000.
- * $Id: ungif.c,v 1.5 2000/10/10 17:28:51 sian Exp $
+ * Last Modified: Sun Oct 29 03:20:31 2000.
+ * $Id: ungif.c,v 1.6 2000/10/28 19:07:16 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -37,8 +37,7 @@
 
 #include "loader-plugin.h"
 
-static LoaderStatus identify(Image *, Stream *);
-static LoaderStatus load(Image *, Stream *);
+DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -262,8 +261,7 @@ load_image(Image *p, Stream *st)
 
 /* methods */
 
-static LoaderStatus
-identify(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
 {
   char buf[3];
 
@@ -286,8 +284,7 @@ identify(Image *p, Stream *st)
   return LOAD_OK;
 }
 
-static LoaderStatus
-load(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
 {
   debug_message("ungif loader: load() called\n");
 
@@ -295,7 +292,7 @@ load(Image *p, Stream *st)
   {
     LoaderStatus status;
 
-    if ((status = identify(p, st)) != LOAD_OK)
+    if ((status = identify(p, st, priv)) != LOAD_OK)
       return status;
     stream_rewind(st);
   }

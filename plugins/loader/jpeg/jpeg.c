@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 01:31:54 2000.
- * $Id: jpeg.c,v 1.2 2000/10/08 17:28:02 sian Exp $
+ * Last Modified: Sun Oct 29 03:19:37 2000.
+ * $Id: jpeg.c,v 1.3 2000/10/28 19:07:16 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -37,8 +37,7 @@
 #  error BITS_IN_JSAMPLE must be 8
 #endif
 
-static LoaderStatus identify(Image *, Stream *);
-static LoaderStatus load(Image *, Stream *);
+DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -182,8 +181,7 @@ my_error_exit (j_common_ptr cinfo)
 
 /* methods */
 
-static LoaderStatus
-identify(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
 {
   unsigned char buf[16];
   static unsigned char id[] = { 0xff, 0xd8 };
@@ -199,8 +197,7 @@ identify(Image *p, Stream *st)
   return LOAD_OK;
 }
 
-static LoaderStatus
-load(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
 {
   struct jpeg_decompress_struct *cinfo;
   struct my_error_mgr jerr;
@@ -216,7 +213,7 @@ load(Image *p, Stream *st)
   {
     LoaderStatus status;
 
-    if ((status = identify(p, st)) != LOAD_OK)
+    if ((status = identify(p, st, priv)) != LOAD_OK)
       return status;
     stream_rewind(st);
   }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 02:20:46 2000.
- * $Id: enfle.c,v 1.8 2000/10/20 18:12:05 sian Exp $
+ * Last Modified: Sun Oct 29 02:58:42 2000.
+ * $Id: enfle.c,v 1.9 2000/10/28 19:07:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,6 +41,7 @@
 #include "loader.h"
 #include "archiver.h"
 #include "player.h"
+#include "spi.h"
 
 typedef enum _argument_requirement {
   _NO_ARGUMENT,
@@ -190,10 +191,33 @@ main(int argc, char **argv)
       printf("%s by %s\n",
 	     enfle_plugins_get_description(eps, type, name),
 	     enfle_plugins_get_author(eps, type, name));
-      if ((strcmp(name, "MPEG_lib") == 0) && config_get(c, "/enfle/plugins/player/mpeg_lib") && strcasecmp(config_get(c, "/enfle/plugins/player/mpeg_lib"), "disabled") == 0) {
-	enfle_plugins_unload(eps, ENFLE_PLUGIN_PLAYER, name);
-	printf("unload %s (disabled)\n", name);
+      {
+	String *s = string_create();
+	char *tmp;
+
+	string_set(s, "/enfle/plugins/");
+	string_cat(s, enfle_plugin_type_to_name(type));
+	string_cat_ch(s, '/');
+	string_cat(s, name);
+	string_cat_ch(s, '/');
+	string_cat(s, "disabled");
+
+	if (((tmp = config_get(c, string_get(s))) != NULL) &&
+	    !strcasecmp(tmp, "yes")) {
+	  enfle_plugins_unload(eps, type, name);
+	  printf("unload %s (disabled)\n", name);
+	}
+	string_destroy(s);
       }
+    } else if (!strcasecmp(ext, ".spi")) {
+      PluginType type;
+
+      if ((name = spi_load(eps, path, &type)) == NULL) {
+	fprintf(stderr, "spi_load %s failed.\n", path);
+	return 1;
+      }
+      printf("SPI: %s\n",
+	     enfle_plugins_get_description(eps, type, name));
     }
     path = archive_iteration_next(a);
   }

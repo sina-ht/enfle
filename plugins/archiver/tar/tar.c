@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 17:28:39 2000.
- * $Id: tar.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sun Oct 29 03:22:03 2000.
+ * $Id: tar.c,v 1.2 2000/10/28 19:07:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,8 +31,7 @@
 
 #include "_tar.h"
 
-static ArchiverStatus identify(Archive *, Stream *);
-static ArchiverStatus open(Archive *, Stream *);
+DECLARE_ARCHIVER_PLUGIN_METHODS;
 
 static ArchiverPlugin plugin = {
   type: ENFLE_PLUGIN_ARCHIVER,
@@ -181,8 +180,7 @@ tar_destroy(Archive *arc)
 
 #define READ_HEADER(p, st) (stream_read(st, (unsigned char *)p, sizeof(TarHeader)) == sizeof(TarHeader))
 
-static ArchiverStatus
-identify(Archive *a, Stream *st)
+DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
 {
   TarHeader th;
 
@@ -194,15 +192,14 @@ identify(Archive *a, Stream *st)
   return OPEN_OK;
 }
 
-static ArchiverStatus
-open(Archive *a, Stream *st)
+DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
 {
   TarHeader th;
   TarInfo *ti;
   unsigned int size, nrecord;
 
 #ifdef IDENTIFY_BEFORE_OPEN
-  if (identify(a, st) == OPEN_NOT)
+  if (identify(a, st, priv) == OPEN_NOT)
     return OPEN_NOT;
   stream_rewind(st);
 #endif

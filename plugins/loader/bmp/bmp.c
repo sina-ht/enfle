@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 01:34:10 2000.
- * $Id: bmp.c,v 1.2 2000/10/08 17:28:49 sian Exp $
+ * Last Modified: Sun Oct 29 03:20:17 2000.
+ * $Id: bmp.c,v 1.3 2000/10/28 19:07:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,8 +29,7 @@
 #include "stream-utils.h"
 #include "loader-plugin.h"
 
-static LoaderStatus identify(Image *, Stream *);
-static LoaderStatus load(Image *, Stream *);
+DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -176,8 +175,7 @@ load_image(Image *p, Stream *st)
 
 /* methods */
 
-static LoaderStatus
-identify(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, priv)
 {
   char buf[2];
 
@@ -190,15 +188,14 @@ identify(Image *p, Stream *st)
   return LOAD_OK;
 }
 
-static LoaderStatus
-load(Image *p, Stream *st)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, priv)
 {
   LoaderStatus status;
 
   debug_message("bmp loader: load() called\n");
 
   /* identify() must be called() */
-  if ((status = identify(p, st)) != LOAD_OK)
+  if ((status = identify(p, st, priv)) != LOAD_OK)
     return status;
 
   if (!load_image(p, st))

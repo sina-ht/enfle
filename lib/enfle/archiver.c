@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 17 22:16:53 2000.
- * $Id: archiver.c,v 1.2 2000/10/17 14:04:01 sian Exp $
+ * Last Modified: Sun Oct 29 03:19:04 2000.
+ * $Id: archiver.c,v 1.3 2000/10/28 19:07:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -73,7 +73,7 @@ identify(EnflePlugins *eps, Archive *a, Stream *st)
     arp = plugin_get(p);
 
     stream_rewind(st);
-    if (arp->identify(a, st) == OPEN_OK) {
+    if (arp->identify(a, st, arp->private) == OPEN_OK) {
       a->format = pluginname;
       dlist_move_to_top(dl, dd);
       return 1;
@@ -94,5 +94,5 @@ open(EnflePlugins *eps, Archive *a, char *pluginname, Stream *st)
   arp = plugin_get(p);
 
   stream_rewind(st);
-  return arp->open(a, st);
+  return arp->open(a, st, arp->private);
 }
