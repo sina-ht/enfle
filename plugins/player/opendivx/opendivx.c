@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 10 22:25:10 2002.
- * $Id: opendivx.c,v 1.28 2002/08/03 05:08:37 sian Exp $
+ * Last Modified: Thu Aug 15 22:57:04 2002.
+ * $Id: opendivx.c,v 1.29 2002/08/17 02:20:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,6 +123,10 @@ ENFLE_PLUGIN_ENTRY(player_opendivx)
 
 ENFLE_PLUGIN_EXIT(player_opendivx, p)
 {
+  PlayerPlugin *pp = p;
+
+  if (pp->description)
+    free((void *)pp->description);
   free(p);
 }
 
