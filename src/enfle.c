@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:43:08 2001.
- * $Id: enfle.c,v 1.36 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Mon Aug 13 18:50:00 2001.
+ * $Id: enfle.c,v 1.37 2001/08/15 06:28:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -366,6 +366,8 @@ main(int argc, char **argv)
   if (argc == optind) {
     usage();
     print_plugin_info(eps, print_more_info);
+    config_destroy(c);
+    enfle_plugins_destroy(eps);
     return 0;
   }
 
