@@ -104,8 +104,10 @@ static __int64 mmb_0x10      __attribute__ ((aligned (8))) = 0x1010101010101010;
 static __int64 mmw_0x0080    __attribute__ ((aligned (8))) = 0x0080008000800080;
 static __int64 mmw_0x00ff    __attribute__ ((aligned (8))) = 0x00ff00ff00ff00ff;
 
-static __int64 mmw_cut_red   __attribute__ ((aligned (8))) = 0x7c007c007c007c00;
-static __int64 mmw_cut_green __attribute__ ((aligned (8))) = 0x03e003e003e003e0;
+//static __int64 mmw_cut_red   __attribute__ ((aligned (8))) = 0x7c007c007c007c00;
+//static __int64 mmw_cut_green __attribute__ ((aligned (8))) = 0x03e003e003e003e0;
+static __int64 mmw_cut_red   __attribute__ ((aligned (8))) = 0xf800f800f800f800;
+static __int64 mmw_cut_green __attribute__ ((aligned (8))) = 0x07e007e007e007e0;
 static __int64 mmw_cut_blue  __attribute__ ((aligned (8))) = 0x001f001f001f001f;
 #endif
 
@@ -1097,10 +1099,14 @@ void yuv2rgb_16(uint8_t *puc_y, int stride_y,
 			"punpcklbw %%mm0, %%mm6\n\t" // mm6 = __g2__g3__g0__g1 green 
 			"punpcklbw %%mm0, %%mm3\n\t" // mm3 = __b2__b3__b0__b1 blue
 
-			"psllq $7, %%mm1\n\t" // shift red
-			"psllq $7, %%mm7\n\t"
-			"psllq $2, %%mm2\n\t" // shift green
-			"psllq $2, %%mm6\n\t"
+			//"psllq $7, %%mm1\n\t" // shift red
+			//"psllq $7, %%mm7\n\t"
+			"psllq $8, %%mm1\n\t" // shift red
+			"psllq $8, %%mm7\n\t"
+			//"psllq $2, %%mm2\n\t" // shift green
+			//"psllq $2, %%mm6\n\t"
+			"psllq $3, %%mm2\n\t" // shift green
+			"psllq $3, %%mm6\n\t"
 			"psrlq $3, %%mm4\n\t" // shift blue
 			"psrlq $3, %%mm3\n\t"
 			"pand mmw_cut_red, %%mm1\n\t" // cut red
