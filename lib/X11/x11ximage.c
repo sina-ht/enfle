@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Dec 12 23:26:35 2000.
- * $Id: x11ximage.c,v 1.15 2000/12/12 14:29:01 sian Exp $
+ * Last Modified: Tue Dec 19 00:45:40 2000.
+ * $Id: x11ximage.c,v 1.16 2000/12/18 16:58:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -367,6 +367,11 @@ convert(X11XImage *xi, Image *p)
 	ximage->byte_order = LSBFirst;
 	dest = memory_ptr(p->rendered.image);
 	break;
+      }
+
+      if (memory_alloc(p->rendered.image, ximage->bytes_per_line * h) == NULL) {
+	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
+	exit(-2);
       }
 
       dest = memory_ptr(p->rendered.image);
