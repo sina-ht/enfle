@@ -1,6 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.4 2000/12/18 17:00:35 sian Exp $
+# $Id: Makefile.am,v 1.5 2001/04/18 05:26:55 sian Exp $
 
-SUBDIRS = ui streamer loader archiver player video audio
-#SUBDIRS = ui streamer loader archiver player video saver effect
+SUBDIRS = ui streamer loader archiver player video audio effect saver
