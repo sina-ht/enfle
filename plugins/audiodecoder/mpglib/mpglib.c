@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 29 22:48:56 2004.
- * $Id: mpglib.c,v 1.4 2004/03/31 14:35:49 sian Exp $
+ * Last Modified: Thu Apr  1 23:05:56 2004.
+ * $Id: mpglib.c,v 1.5 2004/04/05 15:47:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -110,7 +110,7 @@ destroy(AudioDecoder *adec)
 }
 
 static int
-setup(AudioDecoder *adec)
+setup(AudioDecoder *adec, Movie *m)
 {
   return 1;
 }
