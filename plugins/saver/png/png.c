@@ -1,10 +1,10 @@
 /*
  * png.c -- PNG Saver plugin
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 16:06:45 2002.
- * $Id: png.c,v 1.12 2002/08/03 05:08:37 sian Exp $
+ * Last Modified: Tue Dec 30 01:46:59 2003.
+ * $Id: png.c,v 1.13 2003/12/29 16:48:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,7 +49,7 @@ DECLARE_SAVER_PLUGIN_METHODS;
 static SaverPlugin plugin = {
   type: ENFLE_PLUGIN_SAVER,
   name: "PNG",
-  description: "PNG Saver plugin version 0.1.3",
+  description: "PNG Saver plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   save: save,
@@ -235,23 +235,9 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     return 0;
   }
 
-  switch (p->type) {
-  case _GRAY:
-  case _INDEX:
-    for (k = 0; k < image_height(p); k++)
-      row_pointers[k] = memory_ptr(image_image(p)) + k * image_width(p);
-    break;
-  case _BGR24:
-  case _RGB24:
-    for (k = 0; k < image_height(p); k++)
-      row_pointers[k] = memory_ptr(image_image(p)) + 3 * k * image_width(p);
-    break;
-  default:
-    fprintf(stderr, "png_save_image: FATAL: internal error: type %s cannot be processed\n", image_type_to_string(p->type));
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-    fclose(fp);
-    exit(1);
-  }
+  /* Set up row pointers */
+  for (k = 0; k < image_height(p); k++)
+    row_pointers[k] = memory_ptr(image_image(p)) + k * image_bpl(p);
 
   /* Write the image */
   png_write_image(png_ptr, row_pointers);
