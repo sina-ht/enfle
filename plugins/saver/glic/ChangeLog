@@ -1,3 +1,20 @@
+2001-07-02 Hiroshi Takekawa <sian@fennel.org>
+
+	* plugins/saver/glic/glic.c, plugins/saver/glic/vmpm.h,
+	plugins/saver/glic/vmpm_decompose_highlow.c,
+	plugins/saver/glic/vmpm_decompose_normal.c: Output statistical
+	information.
+
+	* plugins/saver/glic/enfle.rc.additional: New configuration
+	is_stat.
+
+	* plugins/saver/glic/Makefile.am: Added forgotten files...
+
+2001-06-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/vmpm_decompose_highlow.c: Added filename to
+	output.
+
 2001-06-28 Hiroshi Takekawa <sian@fennel.org>
 
 	* plugins/saver/glic/vmpm_decompose_highlow.c: Changed to print

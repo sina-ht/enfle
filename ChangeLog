@@ -1,5 +1,11 @@
 2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/X11/x11ximage.c: Implemented BITMAP_* rendering.
+
+	* compat/Makefile.am: Make sure to include fnmatch.
+
+2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/mpeg2/Makefile.am: Added attributes.h to include the
 	distribution.
 
