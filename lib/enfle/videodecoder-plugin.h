@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 15:13:05 2004.
- * $Id: videodecoder-plugin.h,v 1.3 2004/02/21 07:51:20 sian Exp $
+ * Last Modified: Sat Apr 10 17:45:22 2004.
+ * $Id: videodecoder-plugin.h,v 1.4 2004/04/12 04:14:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,14 +28,15 @@
 
 typedef struct _videodecoder_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
+  void *vd_private;
 
-  unsigned int (*query)(unsigned int);
-  VideoDecoder *(*init)(unsigned int);
+  unsigned int (*query)(unsigned int, void *);
+  VideoDecoder *(*init)(unsigned int, void *);
 } VideoDecoderPlugin;
 
 #define DECLARE_VIDEODECODER_PLUGIN_METHODS \
- static unsigned int query(unsigned int); \
- static VideoDecoder *init(unsigned int)
+  static unsigned int query(unsigned int, void *); \
+  static VideoDecoder *init(unsigned int, void *)
 
 #ifndef STATIC
 ENFLE_PLUGIN_ENTRIES;

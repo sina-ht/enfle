@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 15:08:12 2004.
- * $Id: videodecoder.c,v 1.3 2004/02/21 07:51:20 sian Exp $
+ * Last Modified: Sat Apr 10 18:03:52 2004.
+ * $Id: videodecoder.c,v 1.4 2004/04/12 04:14:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -106,6 +106,8 @@ videodecoder_codec_name(unsigned int fourcc)
     return "wmv1";
   case FCC_WMV2:
     return "wmv2";
+  case FCC_WMV3:
+    return "wmv3";
   case FCC_dvsd:
   case FCC_dvhd:
   case FCC_dvsl:
@@ -196,7 +198,7 @@ videodecoder_query(EnflePlugins *eps, Movie *m, unsigned int fourcc, unsigned in
       if ((p = pluginlist_get(pl, pluginname))) {
 	vdp = plugin_get(p);
 	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
-	if ((*types_r = vdp->query(fourcc)) != 0)
+	if ((*types_r = vdp->query(fourcc, vdp->vd_private)) != 0)
 	  return 1;
 	debug_message_fnc("%s failed.\n", pluginname);
       } else {
@@ -209,7 +211,7 @@ videodecoder_query(EnflePlugins *eps, Movie *m, unsigned int fourcc, unsigned in
   pluginlist_iter(pl, k, kl, p) {
     vdp = plugin_get(p);
     debug_message_fnc("try %s\n", (char *)k);
-    if ((*types_r = vdp->query(fourcc)) != 0) {
+    if ((*types_r = vdp->query(fourcc, vdp->vd_private)) != 0) {
       pluginlist_move_to_top;
       return 1;
     }
@@ -251,7 +253,7 @@ videodecoder_select(EnflePlugins *eps, Movie *m, unsigned int fourcc, Config *c)
       if ((p = pluginlist_get(pl, pluginname))) {
 	vdp = plugin_get(p);
 	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
-	if ((m->vdec = vdp->init(fourcc)) != NULL)
+	if ((m->vdec = vdp->init(fourcc, vdp->vd_private)) != NULL)
 	  return 1;
 	debug_message_fnc("%s failed.\n", pluginname);
       } else {
@@ -264,7 +266,7 @@ videodecoder_select(EnflePlugins *eps, Movie *m, unsigned int fourcc, Config *c)
   pluginlist_iter(pl, k, kl, p) {
     vdp = plugin_get(p);
     debug_message_fnc("try %s\n", (char *)k);
-    if ((m->vdec = vdp->init(fourcc)) != NULL) {
+    if ((m->vdec = vdp->init(fourcc, vdp->vd_private)) != NULL) {
       pluginlist_move_to_top;
       return 1;
     }
@@ -285,5 +287,5 @@ videodecoder_create(EnflePlugins *eps, const char *pluginname)
     return NULL;
   vdp = plugin_get(p);
 
-  return vdp->init(0);
+  return vdp->init(0, vdp->vd_private);
 }

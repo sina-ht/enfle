@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 29 22:54:05 2004.
- * $Id: audiodecoder.c,v 1.4 2004/03/31 14:35:49 sian Exp $
+ * Last Modified: Sat Apr 10 17:52:14 2004.
+ * $Id: audiodecoder.c,v 1.5 2004/04/12 04:14:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -85,6 +85,61 @@ audiodecoder_codec_name(unsigned int fourcc)
 }
 
 int
+audiodecoder_query(EnflePlugins *eps, Movie *m, unsigned int fourcc, unsigned int *types_r, Config *c)
+{
+  PluginList *pl = eps->pls[ENFLE_PLUGIN_AUDIODECODER];
+  Plugin *p;
+  AudioDecoderPlugin *adp;
+  String *s;
+  char *pluginname, **pluginnames;
+  int res;
+  void *k;
+  unsigned int kl;
+  const char *codec_name = audiodecoder_codec_name(fourcc);
+
+  if (codec_name == NULL)
+    return 0;
+
+  s = string_create();
+  string_catf(s, "/enfle/plugins/audiodecoder/preference/%s", codec_name);
+  pluginnames = config_get_list(c, string_get(s), &res);
+  string_destroy(s);
+  if (pluginnames) {
+    int i = 0;
+
+    while ((pluginname = pluginnames[i])) {
+      if (strcmp(pluginname, ".") == 0) {
+	debug_message_fnc("Failed, no further try.\n");
+	return 0;
+      }
+      if ((p = pluginlist_get(pl, pluginname))) {
+	adp = plugin_get(p);
+	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
+	if ((*types_r = adp->query(fourcc, adp->ad_private)) != 0)
+	  return 1;
+	debug_message_fnc("%s failed.\n", pluginname);
+      } else {
+	show_message_fnc("%s (prefered for %s) not found.\n", pluginname, codec_name);
+      }
+      i++;
+    }
+  }
+  
+  pluginlist_iter(pl, k, kl, p) {
+    adp = plugin_get(p);
+    debug_message_fnc("try %s\n", (char *)k);
+    if ((*types_r = adp->query(fourcc, adp->ad_private)) != 0) {
+      pluginlist_move_to_top;
+      return 1;
+    }
+    //debug_message("%s: failed\n", (char *)k);
+  }
+  pluginlist_iter_end;
+
+  return 0;
+}
+
+int
 audiodecoder_select(EnflePlugins *eps, Movie *m, unsigned int fourcc, Config *c)
 {
   PluginList *pl = eps->pls[ENFLE_PLUGIN_AUDIODECODER];
@@ -115,7 +170,7 @@ audiodecoder_select(EnflePlugins *eps, Movie *m, unsigned int fourcc, Config *c)
       if ((p = pluginlist_get(pl, pluginname))) {
 	adp = plugin_get(p);
 	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
-	if ((m->adec = adp->init(fourcc)) != NULL)
+	if ((m->adec = adp->init(fourcc, adp->ad_private)) != NULL)
 	  return 1;
 	debug_message_fnc("%s failed.\n", pluginname);
       } else {
@@ -128,7 +183,7 @@ audiodecoder_select(EnflePlugins *eps, Movie *m, unsigned int fourcc, Config *c)
   pluginlist_iter(pl, k, kl, p) {
     adp = plugin_get(p);
     debug_message_fnc("try %s\n", (char *)k);
-    if ((m->adec = adp->init(fourcc)) != NULL) {
+    if ((m->adec = adp->init(fourcc, adp->ad_private)) != NULL) {
       pluginlist_move_to_top;
       return 1;
     }
@@ -149,5 +204,5 @@ audiodecoder_create(EnflePlugins *eps, const char *pluginname)
     return NULL;
   adp = plugin_get(p);
 
-  return adp->init(0);
+  return adp->init(0, adp->ad_private);
 }

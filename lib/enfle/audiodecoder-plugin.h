@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 29 21:53:58 2004.
- * $Id: audiodecoder-plugin.h,v 1.3 2004/03/31 14:35:49 sian Exp $
+ * Last Modified: Sat Apr 10 17:45:14 2004.
+ * $Id: audiodecoder-plugin.h,v 1.4 2004/04/12 04:14:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,14 +28,15 @@
 
 typedef struct _audiodecoder_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
+  void *ad_private;
 
-  unsigned int (*query)(unsigned int);
-  AudioDecoder *(*init)(unsigned int);
+  unsigned int (*query)(unsigned int, void *);
+  AudioDecoder *(*init)(unsigned int, void *);
 } AudioDecoderPlugin;
 
 #define DECLARE_AUDIODECODER_PLUGIN_METHODS \
- static unsigned int query(unsigned int); \
- static AudioDecoder *init(unsigned int)
+  static unsigned int query(unsigned int, void *); \
+  static AudioDecoder *init(unsigned int, void *)
 
 #ifndef STATIC
 ENFLE_PLUGIN_ENTRIES;
