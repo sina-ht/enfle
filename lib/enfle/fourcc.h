@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 10 22:35:03 2004.
- * $Id: fourcc.h,v 1.7 2004/02/14 05:28:48 sian Exp $
+ * Last Modified: Thu Feb 19 22:08:05 2004.
+ * $Id: fourcc.h,v 1.8 2004/02/20 17:19:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -131,6 +131,8 @@
 #define FCC_Xxan FCC('X', 'x', 'a', 'n')
 #define FCC_cvid FCC('c', 'v', 'i', 'd')
 
+#define FCC_NONE FCC(0xff, 0xff, 0xff, 0xff)
+
 /*
  * Audio Codecs
  */
@@ -149,5 +151,7 @@
 #define WAVEFORMAT_TAG_DivX_WMA1   0x161
 #define WAVEFORMAT_TAG_IMC         0x401
 #define WAVEFORMAT_TAG_AC3         0x2000
+#define WAVEFORMAT_TAG_VORBIS      0xfffe
+#define WAVEFORMAT_TAG_NONE        0xffff
 
 #endif
