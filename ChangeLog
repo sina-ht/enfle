@@ -1,3 +1,12 @@
+2002-02-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/image_magnify.c: Interger arithmetic for bpp 24, and
+	clean up.
+
+	* common.h: Fixed *_fn(), *_fnc() macro bug.
+
+	* plugins/ui/normal/normal.c: Removed a useless debug_message.
+
 2002-02-09  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/archiver.c, lib/enfle/archiver.h,
