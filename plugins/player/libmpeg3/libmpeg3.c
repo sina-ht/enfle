@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 17:11:48 2000.
- * $Id: libmpeg3.c,v 1.7 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Sun Dec  3 19:55:33 2000.
+ * $Id: libmpeg3.c,v 1.8 2000/12/03 11:05:02 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -110,8 +110,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 
   if ((info->nstreams = mpeg3_total_vstreams(info->file)) > 1) {
-    show_message("There are %d video streams in this whole stream.\n",
-		 info->nstreams);
+    show_message("There are %d video streams in this whole stream.\n", info->nstreams);
     show_message("Only the first video stream will be played(so far). Sorry.\n");
   }
   info->nstream = 0;
@@ -223,15 +222,25 @@ play_main(Movie *m, VideoWindow *vw)
 
   switch (vw->bits_per_pixel) {
   case 32:
-    rendering_type = MPEG3_RGBA8888;
-    p->type = _RGBA32;
+    if (vw->prefer_msb) {
+      rendering_type = MPEG3_RGBA8888;
+      p->type = _RGBA32;
+    } else {
+      rendering_type = MPEG3_BGRA8888;
+      p->type = _BGRA32;
+    }
     p->depth = 24;
     p->bytes_per_line = m->width * 4;
     p->bits_per_pixel = 32;
     break;
   case 24:
-    rendering_type = MPEG3_RGB888;
-    p->type = _RGB24;
+    if (vw->prefer_msb) {
+      rendering_type = MPEG3_RGB888;
+      p->type = _RGB24;
+    } else {
+      rendering_type = MPEG3_BGR888;
+      p->type = _BGR24;
+    }
     p->depth = 24;
     p->bytes_per_line = m->width * 3;
     p->bits_per_pixel = 24;
