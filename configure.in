@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Fri Apr 30 05:07:04 2004.
-dnl $Id: configure.in,v 1.156 2004/04/29 20:07:16 sian Exp $
+dnl Last Modified: Fri Apr 30 13:51:59 2004.
+dnl $Id: configure.in,v 1.157 2004/05/15 04:08:31 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -75,8 +75,8 @@ for kind in $Plugins_dirs; do
   search_dir="$search_topdir/$kind"
   for plugin_dir in $search_dir/*; do
     plugin=`basename $plugin_dir`
-    makefileam="$plugin_dir/Makefile.am"
-    if test -d "$plugin_dir" -a -f $makefileam ; then
+    makefilein="$plugin_dir/Makefile.in"
+    if test -d "$plugin_dir" -a -f $makefilein ; then
       if test "${plugin}" != "ungif" -a "${plugin}" != "gif"; then
         ENFLE_APPEND(Plugins, "${kind}/${plugin}")
       fi
@@ -671,7 +671,7 @@ AC_SUBST(enfle_video_plugindir)
 AC_SUBST(enfle_videodecoder_plugindir)
 
 dnl do not put this line at earlier position to avoid confusing configure script.
-if test "$CC" = "gcc"; then
+if test "$CC" = "gcc" -o "$CC" = "/usr/bin/gcc" -o "$CC" = "/usr/local/bin/gcc"; then
   CFLAGS_warn="-Wall -Wno-trigraphs -D_GNU_SOURCE=1"
   if test "`uname -s`" = "SunOS"; then
     dnl Supress insignificant warnings
