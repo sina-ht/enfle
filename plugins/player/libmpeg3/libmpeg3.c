@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 14 05:47:35 2000.
- * $Id: libmpeg3.c,v 1.1 2000/10/15 07:44:48 sian Exp $
+ * Last Modified: Sun Oct 15 21:05:51 2000.
+ * $Id: libmpeg3.c,v 1.2 2000/10/15 12:28:04 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -232,11 +232,6 @@ play_main(Movie *m, UIData *uidata)
     stop_movie(m);
 
   return PLAY_OK;
-
- error:
-  image_destroy(p);
-
-  return PLAY_ERROR;
 }
 
 static PlayerStatus
