@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Apr 14 05:21:25 2001.
-dnl $Id: configure.in,v 1.59 2001/04/18 05:41:56 sian Exp $
+dnl Last Modified: Thu Apr 19 18:53:21 2001.
+dnl $Id: configure.in,v 1.60 2001/04/20 07:24:58 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (uncomment for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20010414)
+AM_INIT_AUTOMAKE(enfle, 20010419)
 
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
@@ -52,7 +52,7 @@ AC_PROG_AWK
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_PROG_LN_S
-dnl AC_PROG_RANLIB
+AC_PROG_RANLIB
 dnl These might be commented out if autoconf is older.
 dnl AC_PROG_CC_STDC
 AC_PROG_GCC_TRADITIONAL
@@ -299,12 +299,16 @@ AC_HEADER_TIME
 ENFLE_MAX_ALIGN
 
 dnl Checks for library functions.
+AC_FUNC_FNMATCH
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([getpagesize gettimeofday memalign memset munmap pow select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr])
+
+dnl enable compatible function(s) if unavailable in system library.
+AM_CONDITIONAL(HAVE_FNMATCH, test $ac_cv_func_fnmatch_works = yes)
 
 dnl debug option
 AC_ARG_ENABLE(debug,
@@ -356,6 +360,7 @@ CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Wwrite-strings"
 
 AC_CONFIG_FILES([
  Makefile
+  compat/Makefile
   lib/Makefile
    lib/X11/Makefile
    lib/demultiplexer/Makefile

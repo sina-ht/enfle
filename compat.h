@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr 13 14:58:09 2001.
- * $Id: compat.h,v 1.6 2001/04/18 05:41:14 sian Exp $
+ * Last Modified: Thu Apr 19 19:38:29 2001.
+ * $Id: compat.h,v 1.7 2001/04/20 07:24:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,13 +31,16 @@
 #endif
 
 #ifdef REQUIRE_STRING_H
-# if STDC_HEADERS
-#  include <string.h>
-# else
-#  ifndef HAVE_MEMCPY
-#   define memcpy(d, s, n) bcopy((s), (d), (n))
-#   define memmove(d, s, n) bcopy((s), (d), (n))
+# if HAVE_STRING_H
+#  if !STDC_HEADERS && HAVE_MEMORY_H
+#   include <memory.h>
 #  endif
+#  include <string.h>
+# elif HAVE_STRINGS_H
+#  include <strings.h>
+# elif !HAVE_MEMCPY
+#  define memcpy(d, s, n) bcopy((s), (d), (n))
+#  define memmove(d, s, n) bcopy((s), (d), (n))
 # endif
 #endif
 
@@ -74,4 +77,12 @@ void *memalign(size_t, size_t);
 
 #ifndef HAVE_GETPAGESIZE
 # define getpagesize() 1024
+#endif
+
+#ifdef REQUIRE_FNMATCH_H
+# ifndef HAVE_FNMATCH
+#  include "compat/fnmatch.h"
+# else
+#  include <fnmatch.h>
+# endif
 #endif

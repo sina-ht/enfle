@@ -1,10 +1,10 @@
 /*
  * archive.c -- archive interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar 13 09:55:25 2001.
- * $Id: archive.c,v 1.12 2001/03/13 06:47:50 sian Exp $
+ * Last Modified: Thu Apr 19 19:50:20 2001.
+ * $Id: archive.c,v 1.13 2001/04/20 07:24:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,8 +22,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <sys/stat.h>
 
+#define REQUIRE_FNMATCH_H
 #define REQUIRE_UNISTD_H
 #define REQUIRE_STRING_H
 #define REQUIRE_DIRENT_H
@@ -36,6 +38,7 @@
 #include "archive.h"
 
 static int read_directory(Archive *, char *, int);
+static void set_fnmatch(Archive *, char *, Archive_fnmatch);
 static void add(Archive *, char *, void *);
 static void *get(Archive *, char *);
 static void delete_path(Archive *, char *);
@@ -49,6 +52,7 @@ static void destroy(Archive *);
 
 static Archive archive_template = {
   read_directory: read_directory,
+  set_fnmatch: set_fnmatch,
   add: add,
   get: get,
   iteration_start: iteration_start,
@@ -61,7 +65,7 @@ static Archive archive_template = {
 };
 
 Archive *
-archive_create(void)
+archive_create(Archive *parent)
 {
   Archive *arc;
 
@@ -73,6 +77,10 @@ archive_create(void)
     return NULL;
   }
   arc->format = (char *)"NORMAL";
+  if (parent) {
+    arc->fnmatch = parent->fnmatch;
+    arc->pattern = strdup(parent->pattern);
+  }
 
   return arc;
 }
@@ -92,13 +100,13 @@ read_directory_recursively(Dlist *dl, char *path, int depth)
     return 0;
 
   if ((dir = opendir(path)) == NULL)
-    fatal_perror(1, "archive.c: read_directory: ");
+    fatal_perror(1, __FUNCTION__);
 
   while ((ent = readdir(dir))) {
     if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
       continue;
     if ((filepath = calloc(1, strlen(path) + strlen(ent->d_name) + 2)) == NULL)
-      fatal(1, "archive.c: read_directory: No enough memory for filepath.\n");
+      fatal(1, __FUNCTION__ ": No enough memory for filepath.\n");
     strcpy(filepath, path);
     if (filepath[strlen(filepath) - 1] != '/')
       strcat(filepath, "/");
@@ -146,12 +154,6 @@ read_directory(Archive *arc, char *path, int depth)
   dl = dlist_create();
   dlist_set_compfunc(dl, key_compare);
   c = read_directory_recursively(dl, path, depth);
-#if 0
-  if (arc->nfiles != c) {
-    bug("arc->nfiles %d != %d read_directory_recursively()\n", arc->nfiles, c);
-    return 0;
-  }
-#endif
 
   dlist_sort(dl);
   dlist_iter (dl, dd) {
@@ -165,8 +167,51 @@ read_directory(Archive *arc, char *path, int depth)
 }
 
 static void
+set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnmatch)
+{
+  if (arc->pattern)
+    free(arc->pattern);
+  arc->pattern = pattern;
+  arc->fnmatch = fnmatch;
+}
+
+static void
 add(Archive *arc, char *path, void *reminder)
 {
+  if (arc->pattern) {
+    int result;
+    char *base_copy, *base_name;
+
+    base_copy = strdup(path);
+    base_name = basename(base_copy);
+
+    switch (arc->fnmatch) {
+    case _ARCHIVE_FNMATCH_ALL:
+      result = 1;
+      break;
+    case _ARCHIVE_FNMATCH_INCLUDE:
+      if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == 0)
+	result = 1;
+      else if (result != FNM_NOMATCH)
+	fatal_perror(3, __FUNCTION__ "(include)");
+      else
+	result = 0;
+      break;
+    case _ARCHIVE_FNMATCH_EXCLUDE:
+      if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == FNM_NOMATCH)
+	result = 1;
+      else if (result)
+	fatal_perror(3, __FUNCTION__ "(exclude)");
+      else
+	result = 0;
+      break;
+    }
+
+    free(base_copy);
+    if (!result)
+      return;
+  }
+
   arc->nfiles++;
   if (hash_define_str(arc->filehash, path, reminder) < 0) {
     /* This is not always bug. But treats as bug so far. */
@@ -286,6 +331,8 @@ open(Archive *arc, Stream *st, char *path)
 static void
 destroy(Archive *arc)
 {
+  if (arc->pattern)
+    free(arc->pattern);
   hash_destroy(arc->filehash, 0);
   free(arc);
 }
