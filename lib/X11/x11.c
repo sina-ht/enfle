@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Oct 15 21:30:13 2000.
- * $Id: x11.c,v 1.2 2000/10/15 12:30:30 sian Exp $
+ * Last Modified: Fri Nov  3 04:26:23 2000.
+ * $Id: x11.c,v 1.3 2000/11/02 19:33:49 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -122,6 +122,7 @@ close(X11 *x11)
 {
   XCloseDisplay(x11_display(x11));
   x11_display(x11) = NULL;
+  free(x11);
 
   return 1;
 }

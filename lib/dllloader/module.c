@@ -22,46 +22,6 @@ struct _module_list {
 
 ModuleList *mod_list = NULL;
 
-int
-module_register(const char *filename, HMODULE module)
-{
-  if (mod_list == NULL) {
-    mod_list = malloc(sizeof(ModuleList));
-    mod_list->next = mod_list->prev = NULL;
-  } else {
-    if (mod_list->filename && strcmp(mod_list->filename, filename) == 0) {
-      return 1;
-    }
-
-    mod_list->next = malloc(sizeof(ModuleList));
-    mod_list->next->prev = mod_list;
-    mod_list->next->next = NULL;
-    mod_list = mod_list->next;
-  }
-
-  mod_list->filename = filename ? strdup(filename) : NULL;
-  mod_list->module = module;
-
-  return 1;
-}
-
-static int
-module_delete(ModuleList *p)
-{
-  if (p) {
-    if (p->prev)
-      p->prev->next = p->next;
-    if (p->next)
-      p->next->prev = p->prev;
-    if (mod_list == p)
-      mod_list = mod_list->prev;
-    free(p);
-    return 1;
-  }
-
-  return 0;
-}
-
 static ModuleList *
 module_find(const char *filename)
 {
@@ -89,6 +49,47 @@ module_find(const char *filename)
   }
 
   return p;
+}
+
+int
+module_register(const char *filename, HMODULE module)
+{
+  if (mod_list == NULL) {
+    mod_list = malloc(sizeof(ModuleList));
+    mod_list->next = mod_list->prev = NULL;
+  } else {
+    if (module_find(filename))
+      return 1;
+
+    mod_list->next = malloc(sizeof(ModuleList));
+    mod_list->next->prev = mod_list;
+    mod_list->next->next = NULL;
+    mod_list = mod_list->next;
+  }
+
+  mod_list->filename = filename ? strdup(filename) : NULL;
+  mod_list->module = module;
+
+  return 1;
+}
+
+static int
+module_delete(ModuleList *p)
+{
+  if (p) {
+    if (p->prev)
+      p->prev->next = p->next;
+    if (p->next)
+      p->next->prev = p->prev;
+    if (mod_list == p)
+      mod_list = mod_list->prev;
+    if (p->module)
+      free(p->module);
+    free(p);
+    return 1;
+  }
+
+  return 0;
 }
 
 int
