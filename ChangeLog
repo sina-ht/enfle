@@ -1,3 +1,17 @@
+2000-10-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/Xlib/Xlib.c, plugins/player/ungif/ungif.c: More
+	implementation.
+
+	* plugins/loader/ungif/ungif.c (load_image): Fixed to use left,
+	top values.
+
+	* lib/enfle/utils.h: Include common.h.
+
+	* lib/enfle/image.h: Deleted Disposal and Transparent.
+
+	* lib/X11/x11.h: Added x11_free_pixmap() macro.
+
 2000-10-10  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/movie.[ch], lib/enfle/player-plugin.h,
