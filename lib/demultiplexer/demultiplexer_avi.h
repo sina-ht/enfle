@@ -1,10 +1,10 @@
 /*
  * demultiplexer_avi.h -- AVI stream demultiplexer header
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Nov 11 00:57:30 2003.
- * $Id: demultiplexer_avi.h,v 1.3 2003/11/17 13:47:56 sian Exp $
+ * Last Modified: Mon Jan 12 04:15:53 2004.
+ * $Id: demultiplexer_avi.h,v 1.4 2004/01/11 21:40:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -64,7 +64,8 @@ typedef struct _avi_info {
   int nvstreams, nastreams;
   int nvstream, nastream;
   /* From AVIINDEXENTRY */
-  //ckid, dwFlags, dwChunkOffset, dwChunkLength
+  unsigned int *idx_offset;
+  unsigned int *idx_length;
 } AVIInfo;
 
 Demultiplexer *demultiplexer_avi_create(void);
