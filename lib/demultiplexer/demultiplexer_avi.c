@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov 29 21:26:17 2003.
- * $Id: demultiplexer_avi.c,v 1.20 2003/11/30 05:52:45 sian Exp $
+ * Last Modified: Tue Dec 16 22:57:48 2003.
+ * $Id: demultiplexer_avi.c,v 1.21 2003/12/16 16:55:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -316,7 +316,6 @@ demux_main(void *arg)
 {
   Demultiplexer *demux = (Demultiplexer *)arg;
   AVIInfo *info = (AVIInfo *)demux->private_data;
-  AVIPacket *ap;
   RIFF_Chunk *rc;
 
   if (!info->rf) {
@@ -329,7 +328,9 @@ demux_main(void *arg)
 
   demux->running = 1;
   while (demux->running) {
+    AVIPacket *ap;
     char *p;
+    int nstream;
 
     if (!riff_file_read_chunk_header(info->rf, rc))
       break;
@@ -347,21 +348,26 @@ demux_main(void *arg)
 	continue;
       }
     }
-    p = riff_chunk_get_name(rc);
-    if (p[2] == 'd' && (p[3] == 'c' || p[3] == 'b')) {
-      /* video data */
-      if (!riff_file_read_data(info->rf, rc))
-	break;
-      if ((ap = malloc(sizeof(AVIPacket))) == NULL)
-	fatal("%s: No enough memory.\n", __FUNCTION__);
-      ap->size = riff_chunk_get_size(rc);
-      ap->data = riff_chunk_get_data(rc);
-      fifo_put(info->vstream, ap, avi_packet_destructor);
-    } else if (p[2] == 'w' && p[3] == 'b') {
-      int nstream;
 
+    p = riff_chunk_get_name(rc);
+    nstream = (p[0] - '0') * 10 + (p[1] - '0');
+    if (p[2] == 'd' && p[3] == 'c') {
+      /* video data */
+      if (nstream == info->nvstream) {
+	if (!riff_file_read_data(info->rf, rc))
+	  break;
+	if (riff_chunk_get_size(rc) > 0) {
+	  if ((ap = malloc(sizeof(AVIPacket))) == NULL)
+	    fatal("%s: No enough memory.\n", __FUNCTION__);
+	  ap->size = riff_chunk_get_size(rc);
+	  ap->data = riff_chunk_get_data(rc);
+	  fifo_put(info->vstream, ap, avi_packet_destructor);
+	}
+      } else {
+	riff_file_skip_chunk_data(info->rf, rc);
+      }
+    } else if (p[2] == 'w' && p[3] == 'b') {
       /* audio data */
-      nstream = (p[0] - '0') * 10 + (p[1] - '0');
       if (nstream == info->nastream) {
 	if (!riff_file_read_data(info->rf, rc))
 	  break;
