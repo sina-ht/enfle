@@ -1,3 +1,19 @@
+2001-02-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* acinclude.m4, configure.in: Added certain checks for mpeg2.
+
+	* plugins/ui/normal/normal.c: Fixed deletion bug.
+
+	* lib/enfle/archive.c: Use bug() to indicate bug.
+
+	* plugins/player/libmpeg2/libmpeg2.c: More skelton code.
+
+	* lib/Makefile.am: Readded mpeg2.
+
+	* common.h: Added bug() macro.
+
+	* lib/mpeg2/*: Updated to mpeg2dec-0.2.0.
+
 2001-02-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Fixed typo.
