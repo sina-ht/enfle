@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Nov 18 15:55:38 2000.
- * $Id: x11ximage.c,v 1.6 2000/11/20 12:52:23 sian Exp $
+ * Last Modified: Tue Nov 21 06:04:04 2000.
+ * $Id: x11ximage.c,v 1.7 2000/11/27 02:56:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,6 +50,11 @@ x11ximage_convert_image(XImage *ximage, Image *p)
     for (i = 0; i < p->ncolors; i++)
       p->colormap[i][0] = p->colormap[i][1] = p->colormap[i][2] = 255 * i / p->ncolors;
     p->type = _INDEX;
+  }
+
+  if (ximage->data) {
+    free(ximage->data);
+    ximage->data = NULL;
   }
 
   switch (ximage->bits_per_pixel) {
