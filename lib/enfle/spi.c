@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov  3 04:19:50 2000.
- * $Id: spi.c,v 1.4 2000/11/02 19:38:09 sian Exp $
+ * Last Modified: Sun Nov  5 01:06:11 2000.
+ * $Id: spi.c,v 1.5 2000/11/04 17:33:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -78,10 +78,19 @@ static LoaderStatus
 loader_identify(Image *p, Stream *st, void *priv)
 {
   SusieLoader *sl = priv;
+#if 0
   PictureInfo info;
+#endif
   int err;
+  unsigned char buf[2048];
 
+  memset(buf, 0, 2048);
+  stream_read(st, buf, 2048);
   debug_message("loader_identify() called\n");
+  if ((err = sl->is_supported(st->path, (DWORD)buf)) != SPI_SUCCESS)
+    return LOAD_ERROR;
+
+#if 0
   if (st->path)
     err = sl->get_pic_info(st->path, 0, 0, &info);
   else
@@ -97,10 +106,12 @@ loader_identify(Image *p, Stream *st, void *priv)
     debug_message("(%ld, %ld) depth %d\n", info.width, info.height, info.colorDepth);
     return LOAD_OK;
   }
-
   debug_message("loader_identify(): %s\n", spi_errormsg[err]);
 
   return LOAD_ERROR;
+#else
+  return LOAD_OK;
+#endif
 }
 
 static int PASCAL
