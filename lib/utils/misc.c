@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 26 17:45:30 2001.
- * $Id: misc.c,v 1.4 2001/04/27 01:00:10 sian Exp $
+ * Last Modified: Sat Aug 25 06:21:18 2001.
+ * $Id: misc.c,v 1.5 2001/08/25 21:07:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -81,4 +81,35 @@ misc_replace_ext(char *filename, char *ext)
   strcpy(new + base_len + 1, ext);
 
   return new;
+}
+
+/* Make a directory pathname canonical */
+char *
+misc_canonical_pathname(char *pathname)
+{
+  int l = strlen(pathname);
+  char *p;
+
+  if (pathname[l - 1] != '/') {
+    /* Pathname should be ended with '/'. */
+    if ((p = malloc(l + 2)) == NULL)
+      return NULL;
+    strcpy(p, pathname);
+    strcat(p, "/");
+  } else if (pathname[l - 2] == '/') {
+    /* Pathname should be ended with single '/'. */
+    l--;
+    while (pathname[l - 2] == '/') {
+      pathname[l - 1] = '\0';
+      l--;
+    }
+    if ((p = malloc(l + 1)) == NULL)
+      return NULL;
+    strncpy(p, pathname, l);
+  } else {
+    if ((p = strdup(pathname)) == NULL)
+      return NULL;
+  }
+
+  return p;
 }
