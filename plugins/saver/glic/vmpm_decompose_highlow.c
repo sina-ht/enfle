@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- High-Low decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Jul 11 12:24:25 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.10 2001/07/11 03:43:52 sian Exp $
+ * Last Modified: Wed Jul 11 13:23:37 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.11 2001/07/11 04:24:18 sian Exp $
  */
 
 #include <stdio.h>
@@ -189,11 +189,11 @@ encode(VMPM *vmpm)
   }
 
   ac = arithcoder_arith_create();
+  arithcoder_encode_init(ac, vmpm->outfile);
 
   if (vmpm->nlowbits < 8) {
     am = arithmodel_order_zero_create(1, 1);
 
-    arithcoder_encode_init(ac, vmpm->outfile);
     arithmodel_encode_init(am, ac);
     arithmodel_order_zero_set_update_escape_freq(am, update_escape_freq);
 
