@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 13 01:48:53 2000.
- * $Id: Xlib.c,v 1.13 2000/12/12 17:04:36 sian Exp $
+ * Last Modified: Sat Dec 23 07:35:24 2000.
+ * $Id: Xlib.c,v 1.14 2000/12/22 23:13:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -111,6 +111,10 @@ plugin_entry(void)
   if ((vp = (VideoPlugin *)calloc(1, sizeof(VideoPlugin))) == NULL)
     return NULL;
   memcpy(vp, &plugin, sizeof(VideoPlugin));
+
+#ifdef USE_PTHREAD
+  XInitThreads();
+#endif
 
   return (void *)vp;
 }
@@ -237,7 +241,9 @@ open_window(void *data, Config *c, unsigned int w, unsigned int h)
   xwi->normal.gc  = xwi->current.gc;
 
   x11window_get_position(xw, &vw->x, &vw->y);
-  x11window_map(xw);
+  x11window_set_event_mask(xw, StructureNotifyMask);
+  x11window_map_raised(xw);
+  x11window_wait_mapped(xw);
 
   return vw;
 }
@@ -459,7 +465,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 
 	update(vw, rect.x, rect.y, rect.width, rect.height);
 
-	XSync(x11_display(x11), False);
+	//XSync(x11_display(x11), False);
 	XSetClipMask(x11_display(x11), xwi->current.gc, None);
 	XDestroyRegion(region);
       }
