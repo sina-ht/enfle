@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Nov 22 00:35:07 2002.
- * $Id: common.h,v 1.27 2002/11/29 15:52:20 sian Exp $
+ * $Id: common.h,v 1.28 2003/02/05 15:20:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -64,21 +64,18 @@
 #if defined(__GNUC__)
 #ifndef MAX
 #define MAX(a, b) \
- ({typedef _ta = (a), _tb = (b); \
-           _ta _a = (a); _tb _b = (b); \
+ ({__typeof__ (a) _a = (a), _b = (b); \
            _a > _b ? _a : _b; })
 #endif
 #ifndef MIN
 #define MIN(a, b) \
- ({typedef _ta = (a), _tb = (b); \
-           _ta _a = (a); _tb _b = (b); \
+ ({__typeof__ (a) _a = (a), _b = (b); \
            _a < _b ? _a : _b; })
 #endif
 #ifndef SWAP
 #define SWAP(a, b) \
-  {typedef typeof(a) _ta, _tb; \
-          _ta *_a = &a; _tb *_b = &b; _ta _t; \
-          _t = *_a; *_a = *_b; *_b = _t; }
+ {__typeof__ (a) _a = (a), _b = (b), _t = _a; \
+          _a = _b; _b = _t; }
 #endif
 #else
 #define MAX(a,b) ((a>b)?a:b)
