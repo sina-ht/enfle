@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow_escb.c -- Threshold ESC-B decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 27 09:22:46 2001.
- * $Id: vmpm_decompose_highlow_escb.c,v 1.2 2001/08/27 21:58:23 sian Exp $
+ * Last Modified: Tue Aug 28 16:12:27 2001.
+ * $Id: vmpm_decompose_highlow_escb.c,v 1.3 2001/08/29 08:37:57 sian Exp $
  */
 
 #include <stdio.h>
@@ -19,6 +19,7 @@
 #include "vmpm_hash.h"
 #include "vmpm_error.h"
 #include "ipow.h"
+#include "expand.h"
 
 #include "arithcoder.h"
 #include "arithcoder_arith.h"
@@ -155,6 +156,8 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
     vmpm->buffer[i] = c >> vmpm->nlowbits;
   }
 
+  if (vmpm->bitwise)
+    expand(vmpm);
   return decompose_recur(vmpm, offset, level, blocksize);
 }
 

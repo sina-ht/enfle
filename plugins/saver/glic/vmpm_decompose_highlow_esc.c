@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow_esc.c -- Threshold ESC-A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 27 09:22:21 2001.
- * $Id: vmpm_decompose_highlow_esc.c,v 1.4 2001/08/27 21:58:23 sian Exp $
+ * Last Modified: Tue Aug 28 16:12:09 2001.
+ * $Id: vmpm_decompose_highlow_esc.c,v 1.5 2001/08/29 08:37:57 sian Exp $
  */
 
 #include <stdio.h>
@@ -12,6 +12,7 @@
 #include "compat.h"
 #define REQUIRE_FATAL
 #include "common.h"
+#include "expand.h"
 
 #define LOW_MASK(n) ((1 << n) - 1)
 
@@ -155,6 +156,8 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
     vmpm->buffer[i] = c >> vmpm->nlowbits;
   }
 
+  if (vmpm->bitwise)
+    expand(vmpm);
   return decompose_recur(vmpm, offset, level, blocksize);
 }
 

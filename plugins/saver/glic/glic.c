@@ -1,8 +1,8 @@
 /*
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug 28 02:27:17 2001.
- * $Id: glic.c,v 1.14 2001/08/27 21:57:29 sian Exp $
+ * Last Modified: Tue Aug 28 16:05:45 2001.
+ * $Id: glic.c,v 1.15 2001/08/29 08:37:57 sian Exp $
  */
 
 #include <stdlib.h>
@@ -79,9 +79,8 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   char *vmpm_path;
   char *predict_method, *decompose_method, *scan_method;
   PredictType predict_id;
-  int scan_id, bitwise;
-  int count, result;
-  int i, b;
+  int scan_id;
+  int b, count, result;
 
   if (p->width != p->height) {
     show_message("width %d != %d height\n", p->width, p->height);
@@ -112,9 +111,9 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     return 0;
   }
 
-  bitwise = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/bitwise", &result);
+  vmpm.bitwise = config_get_int(c, "/enfle/plugins/saver/glic/vmpm/bitwise", &result);
   if (!result)
-    bitwise = 0;
+    vmpm.bitwise = 0;
 
   image_size = p->width * p->height;
   vmpm_path = (char *)config_get(c, "/enfle/plugins/saver/glic/vmpm_path");
@@ -189,28 +188,6 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   }
   scan(vmpm.buffer, predicted, p->width, p->height, scan_id);
   free(predicted);
-
-  if (bitwise) {
-    unsigned char *tmp;
-
-    if ((tmp = malloc(image_size)) == NULL)
-      memory_error(NULL, MEMORY_ERROR);
-    memcpy(tmp, vmpm.buffer, image_size);
-    free(vmpm.buffer);
-    image_size <<= 3;
-    if ((vmpm.buffer = malloc(image_size)) == NULL)
-      memory_error(NULL, MEMORY_ERROR);
-    /* Expand into bits. */
-    for (i = 0; i < p->width * p->height; i++) {
-      unsigned char c = tmp[i];
-      for (b = 0; b < 8; b++) {
-	vmpm.buffer[i * 8 + b] = (c & 0x80) ? 1 : 0;
-	c <<= 1;
-      }
-    }
-    vmpm.alphabetsize = 2;
-    vmpm.bits_per_symbol = 1;
-  }
 
   vmpm.bufferused = image_size;
   result = vmpm.decomposer->decompose(&vmpm, 0, vmpm.I, vmpm.bufferused);

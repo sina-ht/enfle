@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal_old.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug  7 21:59:54 2001.
- * $Id: vmpm_decompose_normal_old.c,v 1.3 2001/08/09 17:32:07 sian Exp $
+ * Last Modified: Tue Aug 28 16:12:42 2001.
+ * $Id: vmpm_decompose_normal_old.c,v 1.4 2001/08/29 08:37:57 sian Exp $
  */
 
 #include <stdio.h>
@@ -14,6 +14,7 @@
 #include "vmpm_hash.h"
 #include "vmpm_error.h"
 #include "ipow.h"
+#include "expand.h"
 
 #include "arithcoder.h"
 #include "arithcoder_arith.h"
@@ -71,7 +72,7 @@ init(VMPM *vmpm)
 }
 
 static int
-decompose(VMPM *vmpm, int offset, int level, int blocksize)
+decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
 {
   int token_length = 0;
   int ntokens = 0;
@@ -105,7 +106,7 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 	vmpm->token[level][vmpm->token_index[level]] = t;
 	vmpm->newtoken[level]++;
 	if (level > 0)
-	  result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
+	  result = decompose_recur(vmpm, offset + i * token_length, level - 1, token_length);
       }
       vmpm->token_index[level]++;
     }
@@ -117,9 +118,17 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
   }
 
   if (blocksize - ntokens * token_length > 0)
-    decompose(vmpm, offset + ntokens * token_length, level - 1, blocksize - ntokens * token_length);
+    decompose_recur(vmpm, offset + ntokens * token_length, level - 1, blocksize - ntokens * token_length);
 
   return ntokens * token_length;
+}
+
+static int
+decompose(VMPM *vmpm, int offset, int level, int blocksize)
+{
+  if (vmpm->bitwise)
+    expand(vmpm);
+  return decompose_recur(vmpm, offset, level, blocksize);
 }
 
 static void

@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug 27 09:21:52 2001.
- * $Id: vmpm_decompose_highlow.c,v 1.19 2001/08/27 21:58:23 sian Exp $
+ * Last Modified: Tue Aug 28 16:12:02 2001.
+ * $Id: vmpm_decompose_highlow.c,v 1.20 2001/08/29 08:37:57 sian Exp $
  */
 
 #include <stdio.h>
@@ -19,6 +19,7 @@
 #include "vmpm_hash.h"
 #include "vmpm_error.h"
 #include "ipow.h"
+#include "expand.h"
 
 #include "arithcoder.h"
 #include "arithcoder_arith.h"
@@ -155,6 +156,8 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
     vmpm->buffer[i] = c >> vmpm->nlowbits;
   }
 
+  if (vmpm->bitwise)
+    expand(vmpm);
   return decompose_recur(vmpm, offset, level, blocksize);
 }
 

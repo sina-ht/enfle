@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.9 2001/08/27 21:56:46 sian Exp $
+# $Id: Makefile.am,v 1.10 2001/08/29 08:37:57 sian Exp $
 
 libdir = $(enfle_saver_plugindir)
 
@@ -35,6 +35,7 @@ saver_glic_la_SOURCES = \
 	scan.c scan.h \
 	floorlog2.c floorlog2.h \
 	ipow.c ipow.h \
+	expand.c expand.h \
 	vmpm_decompose.c vmpm_decompose.h \
 	vmpm_error.c vmpm_error.h \
 	vmpm.h
