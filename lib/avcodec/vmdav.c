@@ -45,6 +45,9 @@
 #include "avcodec.h"
 #include "dsputil.h"
 
+#undef printf
+#undef fprintf
+
 #define VMD_HEADER_SIZE 0x330
 #define PALETTE_COUNT 256
 

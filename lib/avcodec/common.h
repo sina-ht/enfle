@@ -88,6 +88,12 @@ extern const struct AVOption avoptions_workaround_bug[11];
 #    define always_inline inline
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
+#    define attribute_used __attribute__((used))
+#else
+#    define attribute_used
+#endif
+
 #ifndef EMULATE_INTTYPES
 #   include <inttypes.h>
 #else
@@ -108,7 +114,7 @@ extern const struct AVOption avoptions_workaround_bug[11];
 #endif /* HAVE_INTTYPES_H */
 
 #ifndef INT64_MAX
-#define INT64_MAX 9223372036854775807LL
+#define INT64_MAX int64_t_C(9223372036854775807)
 #endif
 
 #ifdef EMULATE_FAST_INT
@@ -982,7 +988,7 @@ static inline int get_xbits_trace(GetBitContext *s, int n, char *file, char *fun
 #define tprintf printf
 
 #else //TRACE
-#define tprintf(_arg...) {}
+#define tprintf(...) {}
 #endif
 
 /* define it to include statistics code (useful only for optimizing
@@ -1162,21 +1168,23 @@ static inline long long rdtsc(void)
 }
 
 #define START_TIMER \
-static uint64_t tsum=0;\
-static int tcount=0;\
-static int tskip_count=0;\
 uint64_t tend;\
 uint64_t tstart= rdtsc();\
 
 #define STOP_TIMER(id) \
 tend= rdtsc();\
-if(tcount<2 || tend - tstart < 8*tsum/tcount){\
-    tsum+= tend - tstart;\
-    tcount++;\
-}else\
-    tskip_count++;\
-if(256*256*256*64%(tcount+tskip_count)==0){\
-    fprintf(stderr, "%Ld dezicycles in %s, %d runs, %d skips\n", tsum*10/tcount, id, tcount, tskip_count);\
+{\
+  static uint64_t tsum=0;\
+  static int tcount=0;\
+  static int tskip_count=0;\
+  if(tcount<2 || tend - tstart < 8*tsum/tcount){\
+      tsum+= tend - tstart;\
+      tcount++;\
+  }else\
+      tskip_count++;\
+  if(256*256*256*64%(tcount+tskip_count)==0){\
+      av_log(NULL, AV_LOG_DEBUG, "%Ld dezicycles in %s, %d runs, %d skips\n", tsum*10/tcount, id, tcount, tskip_count);\
+  }\
 }
 #endif
 
@@ -1186,6 +1194,10 @@ if(256*256*256*64%(tcount+tskip_count)==0){\
 #define malloc please_use_av_malloc
 #define free please_use_av_free
 #define realloc please_use_av_realloc
+#if !(defined(LIBAVFORMAT_BUILD) || defined(_FRAMEHOOK_H))
+#define printf please_use_av_log
+#define fprintf please_use_av_log
+#endif
 
 #define CHECKED_ALLOCZ(p, size)\
 {\

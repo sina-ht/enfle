@@ -36,6 +36,9 @@
 #include "avcodec.h"
 #include "dsputil.h"
 
+#undef printf
+#undef fprintf
+
 #include "truemotion1data.h"
 
 #define LE_16(x)  ((((uint8_t*)(x))[1] << 8) | ((uint8_t*)(x))[0])

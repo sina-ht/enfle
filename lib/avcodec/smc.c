@@ -36,6 +36,9 @@
 #include "avcodec.h"
 #include "dsputil.h"
 
+#undef printf
+#undef fprintf
+
 #define CPAIR 2
 #define CQUAD 4
 #define COCTET 8
