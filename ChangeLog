@@ -1,5 +1,17 @@
 2000-10-10  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/movie.[ch], lib/enfle/player-plugin.h,
+	lib/enfle/player.[ch], plugins/player/ungif/ungif.c,
+	plugins/ui/Xlib/Xlib.c: More implementation of playing movie.
+
+	* plugins/loader/ungif/ungif.c: Plugged a memory leak.
+
+	* lib/enfle/image.h: Added Transparent and Disposal.
+
+	* common.h: Coloring debug message.
+
+2000-10-10  Hiroshi Takekawa  <sian@fennel.org>
+
 	* common.h, lib/enfle/archive.c, lib/enfle/stream.c,
 	lib/enfle/streamer.c, lib/utils/dlist.c, lib/utils/hash.c,
 	lib/utils/libconfig.c, lib/utils/libstring.c, lib/utils/plugin.c,
