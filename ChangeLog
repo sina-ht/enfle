@@ -1,3 +1,18 @@
+2001-02-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/dllloader/pe_image.c, lib/enfle/archive.c,
+	lib/enfle/archiver.c, lib/enfle/loader.c, lib/enfle/player.c,
+	lib/enfle/streamer.c, lib/utils/dlist.[ch], lib/utils/hash.[ch],
+	lib/utils/libconfig.c, lib/utils/pluginlist.[ch], src/enfle.c:
+	Improved Hash and Dlist implementations.
+
+	* lib/enfle/video.h, plugins/ui/normal/normal.c,
+	plugins/video/Xlib/Xlib.c: Implemented cursor-switch support.
+
+2001-02-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* Makefile.am: Added README.e.
+
 2001-02-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* common.h: Added warning() macro.
