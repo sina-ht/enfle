@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar 20 02:27:01 2002.
- * $Id: libmpeg2.c,v 1.35 2002/03/21 01:39:13 sian Exp $
+ * Last Modified: Sat May  4 23:28:10 2002.
+ * $Id: libmpeg2.c,v 1.36 2002/05/04 14:36:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,6 +41,7 @@
 #include <pthread.h>
 
 #include "enfle/player-plugin.h"
+#define VIDEO_OUT_NEED_VO_CLOSE
 #include "libmpeg2_vo.h"
 #include "mpeg2/mm_accel.h"
 
@@ -288,6 +289,7 @@ get_audio_time(Movie *m, AudioDevice *ad)
   return (int)((double)m->current_sample * 1000 / m->samplerate);
 }
 
+#if 0
 static inline unsigned long
 get_timestamp(unsigned char *p)
 {
@@ -312,6 +314,7 @@ get_ptr(unsigned char *p)
 
   return (unsigned char *)t;
 }
+#endif
 
 //#define USE_TS
 #undef USE_TS

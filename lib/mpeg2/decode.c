@@ -30,6 +30,9 @@
 #include "common.h"
 
 #define VIDEO_OUT_NEED_VO_SETUP
+#define VIDEO_OUT_NEED_VO_DRAW
+#define VIDEO_OUT_NEED_VO_GET_FRAME
+#define VIDEO_OUT_NEED_VO_FIELD
 
 #include "video_out.h"
 #include "mpeg2.h"

@@ -80,31 +80,39 @@ static inline int vo_setup (vo_instance_t * instance, int width, int height)
 }
 #endif
 
+#ifdef VIDEO_OUT_NEED_VO_CLOSE
 static inline void vo_close (vo_instance_t * instance)
 {
     if (instance->close)
 	instance->close (instance);
 }
+#endif
 
 #define VO_TOP_FIELD 1
 #define VO_BOTTOM_FIELD 2
 #define VO_BOTH_FIELDS (VO_TOP_FIELD | VO_BOTTOM_FIELD)
 #define VO_PREDICTION_FLAG 4
 
+#ifdef VIDEO_OUT_NEED_VO_GET_FRAME
 static inline vo_frame_t * vo_get_frame (vo_instance_t * instance, int flags)
 {
     return instance->get_frame (instance, flags);
 }
+#endif
 
+#ifdef VIDEO_OUT_NEED_VO_FIELD
 static inline void vo_field (vo_frame_t * frame, int flags)
 {
     if (frame->field)
 	frame->field (frame, flags);
 }
+#endif
 
+#ifdef VIDEO_OUT_NEED_VO_DRAW
 static inline void vo_draw (vo_frame_t * frame)
 {
     frame->draw (frame);
 }
+#endif
 
 #endif /* VIDEO_OUT_H */
