@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 13:14:43 2002.
- * $Id: common.h,v 1.25 2002/08/18 04:19:27 sian Exp $
+ * Last Modified: Sun Aug 18 20:55:21 2002.
+ * $Id: common.h,v 1.26 2002/08/18 13:25:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,12 +45,21 @@
 #define err_message_fn(format, args...) fprintf(stderr, "Error: %s" format, __FUNCTION__ , ## args)
 #define err_message_fnc(format, args...) fprintf(stderr, "Error: %s: " format, __FUNCTION__ , ## args)
 
+#if __GNUC__ == 2 && __GNUC_MINOR__ < 96
+#define likely(x)   (x)
+#define unlikely(x) (x)
+#else
+#define likely(x)   __builtin_expect((x), 1)
+#define unlikely(x) __builtin_expect((x), 0)
+#endif
+
 #include <signal.h>
 #define __fatal(msg, format, args...) \
   do {fprintf(stderr, "%s" format, msg, ## args); raise(SIGABRT); exit(1);} while (0)
 #define fatal(format, args...) __fatal(PACKAGE " FATAL ERROR: ", format, ## args)
-#define bug(format, args...) __fatal(PACKAGE " BUG: ", format, ## args) 
 #define fatal_perror(msg) do { perror(msg); raise(SIGABRT); exit(1); } while (0)
+#define bug(format, args...) __fatal(PACKAGE " BUG: ", format, ## args) 
+#define bug_on(cond) do { if (unlikely(cond)) __fatal(PACKAGE " BUG: cond: ", "%s", #cond); } while (0)
 
 #if defined(__GNUC__)
 #ifndef MAX
