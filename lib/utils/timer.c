@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 18:27:54 2000.
- * $Id: timer.c,v 1.2 2000/10/29 18:09:56 sian Exp $
+ * Last Modified: Sat Nov 18 15:01:27 2000.
+ * $Id: timer.c,v 1.3 2000/11/20 12:54:39 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,8 +20,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include "timer.h"
 #include <stdlib.h>
+
+#include "common.h"
+
+#include "timer.h"
 
 static void destroy(Timer *);
 static void reset(Timer *);
