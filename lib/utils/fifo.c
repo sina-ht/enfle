@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 27 13:12:04 2003.
- * $Id: fifo.c,v 1.12 2003/12/27 14:26:40 sian Exp $
+ * Last Modified: Mon Jan 12 06:24:42 2004.
+ * $Id: fifo.c,v 1.13 2004/01/11 21:37:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,7 +39,7 @@ struct _fifo_data {
 static int put(FIFO *, void *, FIFO_destructor);
 static int get(FIFO *, void **, FIFO_destructor *);
 static int set_max(FIFO *, unsigned int);
-static void emptify(FIFO *);
+static void invalidate(FIFO *);
 static void destroy(FIFO *);
 
 static FIFO template = {
@@ -51,7 +51,7 @@ static FIFO template = {
   put: put,
   get: get,
   set_max: set_max,
-  emptify: emptify,
+  invalidate: invalidate,
   destroy: destroy
 };
 
@@ -66,6 +66,7 @@ fifo_create(void)
 
 #ifdef USE_PTHREAD
   pthread_mutex_init(&f->lock, NULL);
+  pthread_cond_init(&f->lock_cond, NULL);
   f->valid = 1;
 #endif
 
@@ -81,10 +82,12 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
   int ret = 0;
 
 #ifdef USE_PTHREAD
+  if (!f->valid)
+    return 0;
   pthread_mutex_lock(&f->lock);
   if (f->maxdata)
     while (f->valid && f->ndata >= f->maxdata)
-      pthread_cond_wait(&f->put_ok_cond, &f->lock);
+      pthread_cond_wait(&f->lock_cond, &f->lock);
   if (!f->valid) {
     pthread_mutex_unlock(&f->lock);
     return 0;
@@ -113,23 +116,25 @@ put(FIFO *f, void *d, FIFO_destructor destructor)
  unlock_and_return:
 #ifdef USE_PTHREAD
   if (f->ndata > 0)
-    pthread_cond_signal(&f->get_ok_cond);
+    pthread_cond_signal(&f->lock_cond);
   pthread_mutex_unlock(&f->lock);
 #endif
 
   return ret;
 }
 
-int
+static int
 get(FIFO *f, void **d_return, FIFO_destructor *destructor_r)
 {
   FIFO_data *fd;
   int ret = 0;
 
 #ifdef USE_PTHREAD
+  if (!f->valid)
+    return 0;
   pthread_mutex_lock(&f->lock);
   while (f->valid && f->ndata == 0)
-    pthread_cond_wait(&f->get_ok_cond, &f->lock);
+    pthread_cond_wait(&f->lock_cond, &f->lock);
   if (!f->valid) {
     pthread_mutex_unlock(&f->lock);
     return 0;
@@ -150,7 +155,7 @@ get(FIFO *f, void **d_return, FIFO_destructor *destructor_r)
  unlock_and_return2:
 #ifdef USE_PTHREAD
   if (f->maxdata && f->ndata < f->maxdata)
-    pthread_cond_signal(&f->put_ok_cond);
+    pthread_cond_signal(&f->lock_cond);
   pthread_mutex_unlock(&f->lock);
 #endif
 
@@ -168,17 +173,18 @@ set_max(FIFO *f, unsigned int m)
 }
 
 static void
-emptify(FIFO *f)
+invalidate(FIFO *f)
 {
-  void *p;
-  FIFO_destructor dest;
-
-  debug_message_fnc("%d items (before emptify)\n", fifo_ndata(f));
-  while (!fifo_is_empty(f)) {
-    fifo_get(f, &p, &dest);
-    dest(p);
-  }
-  debug_message_fnc("%d items left (after emptify)\n", fifo_ndata(f));
+  debug_message_fnc("\n");
+#ifdef USE_PTHREAD
+  f->valid = 0;
+  pthread_mutex_lock(&f->lock);
+  pthread_cond_signal(&f->lock_cond);
+  //pthread_cond_signal(&f->put_ok_cond);
+  //pthread_cond_signal(&f->get_ok_cond);
+  pthread_mutex_unlock(&f->lock);
+#endif
+  debug_message_fnc(" OK\n");
 }
 
 static void
@@ -187,13 +193,10 @@ destroy(FIFO *f)
   FIFO_data *m, *n;
 
 #ifdef USE_PTHREAD
-  f->valid = 0;
-  pthread_mutex_lock(&f->lock);
-  pthread_cond_signal(&f->put_ok_cond);
-  pthread_cond_signal(&f->get_ok_cond);
-  pthread_mutex_unlock(&f->lock);
-  pthread_cond_destroy(&f->put_ok_cond);
-  pthread_cond_destroy(&f->get_ok_cond);
+  invalidate(f);
+  //pthread_cond_destroy(&f->lock_cond);
+  //pthread_cond_destroy(&f->put_ok_cond);
+  //pthread_cond_destroy(&f->get_ok_cond);
   pthread_mutex_destroy(&f->lock);
 #endif
 

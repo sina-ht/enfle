@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Aug  2 22:08:06 2002.
- * $Id: fifo.h,v 1.6 2002/08/02 13:58:26 sian Exp $
+ * Last Modified: Mon Jan 12 06:24:27 2004.
+ * $Id: fifo.h,v 1.7 2004/01/11 21:37:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,8 +33,9 @@ typedef struct _fifo FIFO;
 struct _fifo {
 #ifdef USE_PTHREAD
   pthread_mutex_t lock;
-  pthread_cond_t put_ok_cond;
-  pthread_cond_t get_ok_cond;
+  pthread_cond_t lock_cond;
+  //pthread_cond_t put_ok_cond;
+  //pthread_cond_t get_ok_cond;
   int valid;
 #endif
   unsigned int ndata;
@@ -45,7 +46,7 @@ struct _fifo {
   int (*put)(FIFO *, void *, FIFO_destructor);
   int (*get)(FIFO *, void **, FIFO_destructor *);
   int (*set_max)(FIFO *, unsigned int);
-  void (*emptify)(FIFO *);
+  void (*invalidate)(FIFO *);
   void (*destroy)(FIFO *);
 };
 
@@ -56,7 +57,7 @@ struct _fifo {
 #define fifo_put(f, d, dest) (f)->put((f), (d), (dest))
 #define fifo_get(f, d, dest_r) (f)->get((f), (d), (dest_r))
 #define fifo_set_max(f, m) (f)->set_max((f), (m))
-#define fifo_emptify(f) (f)->emptify((f))
+#define fifo_invalidate(f) (f)->invalidate((f))
 #define fifo_destroy(f) (f)->destroy((f))
 
 FIFO *fifo_create(void);
