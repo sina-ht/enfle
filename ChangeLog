@@ -1,5 +1,11 @@
 2000-11-02  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/enfle-plugins.c: Fixed unload() bug.
+
+	* src/enfle.c: Added check_and_unload().
+
+2000-11-02  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/enfle-plugins.c: Plugged a memory leak.
 
 	* lib/enfle/spi.c: Added spi plugin destroy routines.
