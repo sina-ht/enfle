@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 17 22:48:43 2004.
- * $Id: mpeg.c,v 1.2 2004/02/20 17:18:51 sian Exp $
+ * Last Modified: Wed Feb 25 00:49:32 2004.
+ * $Id: mpeg.c,v 1.3 2004/02/24 15:55:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -166,7 +166,7 @@ __examine(Demultiplexer *demux, int identify_only)
   int vstream, astream;
   int maximum_size = identify_only ? DEMULTIPLEXER_MPEG_IDENTIFY_SIZE : DEMULTIPLEXER_MPEG_DETERMINE_SIZE;
 
-  debug_message_fnc("%s\n", identify_only ? "identify" : "examine");
+  debug_message("%s...\n", identify_only ? "identify" : "examine");
 
   vstream = 0;
   astream = 0;
@@ -308,8 +308,6 @@ __examine(Demultiplexer *demux, int identify_only)
 	demux->nvstreams = 1;
 	info->ver = 3;
 	goto end;
-      } else {
-	debug_message_fnc("Unknown id %02X %d bytes\n", id, skip - 6);
       }
       break;
     }
