@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 26 09:38:09 2001.
- * $Id: enfle.c,v 1.38 2001/08/26 01:07:13 sian Exp $
+ * Last Modified: Fri Sep  7 17:58:43 2001.
+ * $Id: enfle.c,v 1.39 2001/09/09 23:50:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -70,7 +70,10 @@ static void
 usage(void)
 {
   const char *ext = 
-#if defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI)
+#if defined(USE_MMX) || defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI)
+#ifdef USE_MMX
+    "MMX "
+#endif
 #ifdef USE_SHM
     "SHM "
 #endif
