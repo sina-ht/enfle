@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 15:56:20 2004.
- * $Id: libmpeg2.c,v 1.3 2004/01/18 07:12:04 sian Exp $
+ * Last Modified: Mon Jan 19 22:13:23 2004.
+ * $Id: libmpeg2.c,v 1.4 2004/01/19 13:19:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -723,10 +723,13 @@ unload_movie(Movie *m)
   if (info) {
     if (info->p)
       image_destroy(info->p);
-    demultiplexer_destroy(info->demux);
+    if (info->demux)
+      demultiplexer_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
+
     free(info);
+    m->movie_private = NULL;
   }
 }
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 25 00:46:58 2003.
- * $Id: libmpeg3.c,v 1.42 2003/02/05 15:21:20 sian Exp $
+ * Last Modified: Mon Jan 19 22:13:43 2004.
+ * $Id: libmpeg3.c,v 1.43 2004/01/19 13:19:08 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -653,6 +653,7 @@ unload_movie(Movie *m)
 
     debug_message_fnc("freeing info\n");
     free(info);
+    m->movie_private = NULL;
     debug_message_fnc("all Ok\n");
   }
 }

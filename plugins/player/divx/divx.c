@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 16:14:50 2004.
- * $Id: divx.c,v 1.3 2004/01/18 07:15:19 sian Exp $
+ * Last Modified: Mon Jan 19 22:14:01 2004.
+ * $Id: divx.c,v 1.4 2004/01/19 13:19:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -760,9 +760,9 @@ unload_movie(Movie *m)
       demultiplexer_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
-    debug_message_fnc("freeing info\n");
+
     free(info);
-    debug_message_fnc("freed info\n");
+    m->movie_private = NULL;
   }
 
   debug_message_fn("() Ok\n");

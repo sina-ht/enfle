@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 16:14:58 2004.
- * $Id: libmpeg2.c,v 1.47 2004/01/18 07:15:19 sian Exp $
+ * Last Modified: Mon Jan 19 22:17:20 2004.
+ * $Id: libmpeg2.c,v 1.48 2004/01/19 13:19:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -129,7 +129,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
   if (!m->direct_decode) {
     show_message_fnc("Cannot do direct decoding...\n");
-    return PLAY_ERROR;
+    goto error;
   }
   debug_message("LibMPEG2: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
@@ -137,8 +137,12 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   info->demux = demultiplexer_mpeg_create();
   demultiplexer_mpeg_set_input(info->demux, st);
-  if (!demultiplexer_examine(info->demux))
+  if (!demultiplexer_examine(info->demux)) {
+    demultiplexer_destroy(info->demux);
+    free(info);
+    m->movie_private = NULL;
     return PLAY_NOT;
+  }
   info->nastreams = demultiplexer_mpeg_naudios(info->demux);
   info->nvstreams = demultiplexer_mpeg_nvideos(info->demux);
 
@@ -215,7 +219,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       break;
     default:
       show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
-      return PLAY_ERROR;
+      goto error;
     }
   }
 
@@ -338,7 +342,7 @@ play_video(void *arg)
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   void *data;
-  MpegPacket *mp;
+  MpegPacket *mp = NULL;
   FIFO_destructor destructor;
   mpeg2_state_t state;
   const mpeg2_info_t *mpeg2dec_info;
@@ -350,7 +354,6 @@ play_video(void *arg)
 
   debug_message_fn("()\n");
 
-  mp = NULL;
   while (m->status == _PLAY) {
     state = mpeg2_parse(info->mpeg2dec);
     mpeg2dec_info = mpeg2_info(info->mpeg2dec);
@@ -358,7 +361,8 @@ play_video(void *arg)
     switch (state) {
     case STATE_BUFFER:
       if (!fifo_get(info->vstream, &data, &destructor)) {
-	show_message_fnc("fifo_get() failed.\n");
+	debug_message_fnc("fifo_get() failed.\n");
+	goto quit;
       } else {
 	if (mp)
 	  destructor(mp);
@@ -448,6 +452,7 @@ play_video(void *arg)
     }
   }
 
+ quit:
   if (mp)
     destructor(mp);
 
@@ -777,10 +782,13 @@ unload_movie(Movie *m)
   if (info) {
     if (info->p)
       image_destroy(info->p);
-    demultiplexer_destroy(info->demux);
+    if (info->demux)
+      demultiplexer_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
+
     free(info);
+    m->movie_private = NULL;
   }
 }
 
