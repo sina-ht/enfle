@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr  7 00:13:47 2004.
- * $Id: kernel32.c,v 1.23 2004/04/06 15:16:12 sian Exp $
+ * Last Modified: Fri Apr  9 00:01:18 2004.
+ * $Id: kernel32.c,v 1.24 2004/04/12 04:13:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -80,10 +80,10 @@ DECLARE_W32API(BOOL, SetEndOfFile, (HANDLE));
 DECLARE_W32API(BOOL, CreateDirectoryA, (LPCSTR, LPSECURITY_ATTRIBUTES));
 DECLARE_W32API(BOOL, CreateDirectoryW, (LPCWSTR, LPSECURITY_ATTRIBUTES));
 /* disk related */
-DECLARE_W32API(BOOL, GetDiskFreeSpaceA, (LPCSTR,LPDWORD,LPDWORD,LPDWORD,LPDWORD));
-DECLARE_W32API(BOOL, GetDiskFreeSpaceW, (LPCWSTR,LPDWORD,LPDWORD,LPDWORD,LPDWORD));
-DECLARE_W32API(BOOL, GetDiskFreeSpaceExA, (LPCSTR,PULARGE_INTEGER,PULARGE_INTEGER,PULARGE_INTEGER));
-DECLARE_W32API(BOOL, GetDiskFreeSpaceExW, (LPCWSTR,PULARGE_INTEGER,PULARGE_INTEGER,PULARGE_INTEGER));
+DECLARE_W32API(BOOL, GetDiskFreeSpaceA, (LPCSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD));
+DECLARE_W32API(BOOL, GetDiskFreeSpaceW, (LPCWSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD));
+DECLARE_W32API(BOOL, GetDiskFreeSpaceExA, (LPCSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER));
+DECLARE_W32API(BOOL, GetDiskFreeSpaceExW, (LPCWSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER));
 /* handle related */
 DECLARE_W32API(HANDLE, GetStdHandle, (DWORD));
 DECLARE_W32API(BOOL, SetStdHandle, (DWORD, HANDLE));
@@ -141,6 +141,7 @@ DECLARE_W32API(HANDLE, GetCurrentThread, (void));
 DECLARE_W32API(DWORD, GetCurrentThreadId, (void));
 DECLARE_W32API(LCID, GetThreadLocale, (void));
 DECLARE_W32API(INT, GetThreadPriority, (HANDLE));
+DECLARE_W32API(BOOL, SetThreadPriority, (HANDLE, INT));
 DECLARE_W32API(BOOL, DisableThreadLibraryCalls, (HMODULE));
 DECLARE_W32API(HANDLE, CreateThread, (SECURITY_ATTRIBUTES *, DWORD, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD));
 /* thread local-variable related */
@@ -154,7 +155,8 @@ DECLARE_W32API(void, EnterCriticalSection, (CRITICAL_SECTION *));
 DECLARE_W32API(void, LeaveCriticalSection, (CRITICAL_SECTION *));
 DECLARE_W32API(void, DeleteCriticalSection, (CRITICAL_SECTION *));
 /* interlocked */
-DECLARE_W32API(LONG, InterlockedExchangeAdd, (PLONG,LONG));
+DECLARE_W32API(LONG, InterlockedExchange, (PLONG, LONG));
+DECLARE_W32API(LONG, InterlockedExchangeAdd, (PLONG, LONG));
 DECLARE_W32API(LONG, InterlockedIncrement, (PLONG));
 DECLARE_W32API(LONG, InterlockedDecrement, (PLONG));
 /* exception */
@@ -164,12 +166,15 @@ DECLARE_W32API(void, RaiseException, (DWORD, DWORD, DWORD, const LPDWORD));
 DECLARE_W32API(void, RtlUnwind, (PEXCEPTION_FRAME, LPVOID, PEXCEPTION_RECORD, DWORD));
 /* Environment */
 DECLARE_W32API(LPSTR, GetCommandLineA, (void));
-DECLARE_W32API(DWORD, GetEnvironmentVariableA, (LPCSTR,LPSTR,DWORD));
+DECLARE_W32API(DWORD, GetEnvironmentVariableA, (LPCSTR, LPSTR,DWORD));
 DECLARE_W32API(LPSTR, GetEnvironmentStringsA, (void));
 DECLARE_W32API(LPWSTR, GetEnvironmentStringsW, (void));
 DECLARE_W32API(BOOL, FreeEnvironmentStringsA, (LPSTR));
 DECLARE_W32API(BOOL, FreeEnvironmentStringsW, (LPWSTR));
 DECLARE_W32API(VOID, GetStartupInfoA, (LPSTARTUPINFOA));
+DECLARE_W32API(BOOL, GetComputerNameA, (LPSTR, LPDWORD));
+DECLARE_W32API(BOOL, GetComputerNameW, (LPWSTR, LPDWORD));
+DECLARE_W32API(VOID, GetSystemInfo, (LPSYSTEM_INFO));
 /* codepage */
 DECLARE_W32API(INT, GetLocaleInfoA, (LCID, LCTYPE, LPSTR, INT));
 DECLARE_W32API(UINT, GetACP, (void));
@@ -271,6 +276,7 @@ static Symbol_info symbol_infos[] = {
   { "GetCurrentThreadId", GetCurrentThreadId },
   { "GetThreadLocale", GetThreadLocale },
   { "GetThreadPriority", GetThreadPriority },
+  { "SetThreadPriority", SetThreadPriority },
   { "DisableThreadLibraryCalls", DisableThreadLibraryCalls },
   { "CreateThread", CreateThread },
   { "TlsAlloc", TlsAlloc },
@@ -281,6 +287,7 @@ static Symbol_info symbol_infos[] = {
   { "EnterCriticalSection", EnterCriticalSection },
   { "LeaveCriticalSection", LeaveCriticalSection },
   { "DeleteCriticalSection", DeleteCriticalSection },
+  { "InterlockedExchange", InterlockedExchange },
   { "InterlockedExchangeAdd", InterlockedExchangeAdd },
   { "InterlockedIncrement", InterlockedIncrement },
   { "InterlockedDecrement", InterlockedDecrement },
@@ -296,6 +303,9 @@ static Symbol_info symbol_infos[] = {
   { "FreeEnvironmentStringsA", FreeEnvironmentStringsA },
   { "FreeEnvironmentStringsW", FreeEnvironmentStringsW },
   { "GetStartupInfoA", GetStartupInfoA },
+  { "GetComputerNameA", GetComputerNameA },
+  { "GetComputerNameW", GetComputerNameW },
+  { "GetSystemInfo", GetSystemInfo },
   { "GetLocaleInfoA", GetLocaleInfoA },
   { "GetACP", GetACP },
   { "GetOEMCP", GetOEMCP },
@@ -1156,6 +1166,13 @@ DEFINE_W32API(INT, GetThreadPriority,
   return 0;
 }
 
+DEFINE_W32API(BOOL, SetThreadPriority,
+	      (HANDLE h, INT a))
+{
+  debug_message_fn("(handle %p, arg %d)\n", h, a);
+  return TRUE;
+}
+
 DEFINE_W32API(BOOL, DisableThreadLibraryCalls, (HMODULE module))
 {
   debug_message_fn("(module %p)\n", module);
@@ -1295,7 +1312,14 @@ DEFINE_W32API(void, DeleteCriticalSection,
 
 /* Interlocked */
 //PVOID WINAPI InterlockedCompareExchange(PVOID*, PVOID, PVOID);
-//LONG  WINAPI InterlockedExchange(PLONG, LONG);
+
+DEFINE_W32API(LONG, InterlockedExchange,
+	      (PLONG d_r, LONG l))
+{
+    long ret = *d_r;
+    *d_r = l;
+    return ret;
+}
 
 DEFINE_W32API(LONG, InterlockedExchangeAdd,
 	      (PLONG dest, LONG incr))
@@ -1429,6 +1453,26 @@ DEFINE_W32API(VOID, GetStartupInfoA,
   debug_message_fn("()\n");
   memset(info, 0, sizeof(*info));
   info->cb = sizeof(*info);
+}
+
+DEFINE_W32API(BOOL, GetComputerNameA,
+	      (LPSTR a, LPDWORD b))
+{
+  debug_message_fn("()\n");
+  return TRUE;
+}
+
+DEFINE_W32API(BOOL, GetComputerNameW,
+	      (LPWSTR a, LPDWORD b))
+{
+  debug_message_fn("()\n");
+  return TRUE;
+}
+
+DEFINE_W32API(VOID, GetSystemInfo,
+	      (LPSYSTEM_INFO si))
+{
+  debug_message_fn("()\n");
 }
 
 /* codepage */

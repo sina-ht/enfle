@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr  7 00:12:41 2004.
- * $Id: windef.h,v 1.11 2004/04/06 15:16:11 sian Exp $
+ * Last Modified: Fri Apr  9 21:09:01 2004.
+ * $Id: windef.h,v 1.12 2004/04/12 04:13:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,6 +56,7 @@ typedef const CHAR *LPCSTR;
 typedef WCHAR *LPWSTR;
 typedef const WCHAR *LPCWSTR;
 typedef BYTE *LPBYTE;
+typedef LONG HRESULT;
 typedef LONG LRESULT;
 typedef LONG LPARAM;
 typedef LONG *PLONG;
@@ -223,6 +224,15 @@ typedef union _ularge_integer {
 typedef DWORD ACCESS_MASK;
 typedef ACCESS_MASK REGSAM;
 
+/* com */
+
+typedef struct _guid {
+  DWORD f1;
+  WORD  f2;
+  WORD  f3;
+  BYTE  f4[8];
+} GUID;
+
 /* critical section */
 
 typedef struct _list_entry {
@@ -306,6 +316,25 @@ typedef struct _startupinfoa {
   HANDLE hStdOutput;      /* 3c: */
   HANDLE hStdError;       /* 40: */
 } STARTUPINFOA, *LPSTARTUPINFOA;
+
+typedef struct _system_info {
+  union {
+    DWORD dwOemId; /* Obsolete field - do not use */
+    struct {
+      WORD wProcessorArchitecture;
+      WORD wReserved;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  DWORD  dwPageSize;
+  LPVOID lpMinimumApplicationAddress;
+  LPVOID lpMaximumApplicationAddress;
+  DWORD  dwActiveProcessorMask;
+  DWORD  dwNumberOfProcessors;
+  DWORD  dwProcessorType;
+  DWORD  dwAllocationGranularity;
+  WORD   wProcessorLevel;
+  WORD   wProcessorRevision;
+} SYSTEM_INFO, *LPSYSTEM_INFO;
 
 /* codepage */
 
