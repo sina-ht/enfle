@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 14 07:39:43 2001.
- * $Id: Xlib.c,v 1.19 2001/01/14 15:19:47 sian Exp $
+ * Last Modified: Mon Jan 15 03:54:37 2001.
+ * $Id: Xlib.c,v 1.20 2001/01/14 18:57:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -92,7 +92,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.3.3",
+  description: "Xlib Video plugin version 0.3.4",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -528,6 +528,12 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
       case Button3:
 	ev->button.button = ENFLE_Button_3;
 	break;
+      case Button4:
+	ev->button.button = ENFLE_Button_4;
+	break;
+      case Button5:
+	ev->button.button = ENFLE_Button_5;
+	break;
       }
       ret = 1;
       break;
@@ -583,6 +589,10 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	ev->pointer.button |= ENFLE_Button_2;
       if (xev.xmotion.state & Button3Mask)
 	ev->pointer.button |= ENFLE_Button_3;
+      if (xev.xmotion.state & Button4Mask)
+	ev->pointer.button |= ENFLE_Button_4;
+      if (xev.xmotion.state & Button5Mask)
+	ev->pointer.button |= ENFLE_Button_5;
       ev->pointer.x = xev.xmotion.x;
       ev->pointer.y = xev.xmotion.y;
       ret = 1;
