@@ -1,3 +1,57 @@
+2003-12-16  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* src/enfle.c, src/enfle.rc: Split spi-related code.
+
+	* README, README.e: More documentation.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Check stream number for
+	video.
+
+	* plugins/player/divx/divx.c: updated.
+
+	* plugins/player/avcodec/avcodec.c: avcodec plugin version 0.2.
+
+	* lib/enfle/fourcc.h: Added one new fourcc.
+
+	* plugins/*/*/Makefile.am: Add -static for static linked plugins.
+
+	* lib/avcodec/*: avcodec updates.
+
+2003-12-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Improved icc support.
+
+	* Makefile.am: Commented out ACLOCAL_AMFLAGS.
+
+	* src/enfle.c: Eliminate fprintf().
+
+	* lib/dllloader/windef.h: Fixed typo, causing icc compile error.
+
+2003-12-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* acinclude.m4, compat.h: Deleted DMALLOCTH support.
+
+	* common.h:
+	Disable IDENTIFY_BEFORE_{OPEN,LOAD,PLAY} even if in debug mode.
+
+	* ltconfig, ltconfig.diff: Obsolete.
+
+2003-11-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/demultiplexer/demultiplexer_avi.c:
+	Use biCompression if fccHandler == 0.  Skip unrecognized LIST chunk.
+
+	* plugins/audio/oss/oss.c: More debug information.
+
+	* plugins/player/avcodec/avcodec.c: Disabled DR1 for the time being.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c:
+	Yes, MPEG_PRIVATE_STREAM1 is AC3.
+
+	* OpenDivX-LICENSE: Removed.
+
 2003-11-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added divx, avcodec.
