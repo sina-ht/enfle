@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jan 25 13:09:52 2001.
- * $Id: opendivx.c,v 1.3 2001/01/25 21:13:53 sian Exp $
+ * Last Modified: Sun Jan 28 05:48:08 2001.
+ * $Id: opendivx.c,v 1.4 2001/01/28 03:48:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -53,6 +53,7 @@ typedef struct _opendivx_info {
   Image *p;
   AudioDevice *ad;
   int eof;
+  int drop;
   pthread_mutex_t update_mutex;
   pthread_cond_t update_cond;
   int nvstreams;
@@ -76,7 +77,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "OpenDivX",
-  description: "OpenDivX Player plugin version 0.1",
+  description: "OpenDivX Player plugin version 0.1.1",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -312,6 +313,7 @@ play_video(void *arg)
 {
   Movie *m = arg;
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
+  int i;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -323,16 +325,18 @@ play_video(void *arg)
 
     pthread_mutex_lock(&info->update_mutex);
 
-    info->rc = info->afr->vchunks[m->current_frame];
-    riff_file_read_data(info->rf, info->rc);
-    info->dec_frame.length = riff_chunk_get_size(info->rc);
-    info->dec_frame.bitstream = riff_chunk_get_data(info->rc);
-    info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
-    info->dec_frame.render_flag = 1;
-    decore((long)info, 0, &info->dec_frame, NULL);
-    riff_chunk_destroy(info->rc);
-    m->current_frame++;
-    //memcpy(memory_ptr(info->p->rendered.image), info->rgb, info->p->bytes_per_line * info->p->height);
+    for (i = -1; i < info->drop; i++) {
+      info->rc = info->afr->vchunks[m->current_frame];
+      riff_file_read_data(info->rf, info->rc);
+      info->dec_frame.length = riff_chunk_get_size(info->rc);
+      info->dec_frame.bitstream = riff_chunk_get_data(info->rc);
+      info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
+      info->dec_frame.render_flag = 1;
+      decore((long)info, 0, &info->dec_frame, NULL);
+      riff_chunk_destroy(info->rc);
+      m->current_frame++;
+    }
+    info->drop = 0;
     pthread_cond_wait(&info->update_cond, &info->update_mutex);
     pthread_mutex_unlock(&info->update_mutex);
   }
@@ -417,7 +421,7 @@ play_main(Movie *m, VideoWindow *vw)
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
   Image *p = info->p;
   int video_time, audio_time;
-#if 0
+#if 1
   int i = 0;
 #endif
 
@@ -452,24 +456,24 @@ play_main(Movie *m, VideoWindow *vw)
     while (video_time > audio_time)
       audio_time = get_audio_time(m, info->ad);
 
-#if 0
+#if 1
     /* skip if delayed */
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
-      m->current_frame += i;
+      info->drop = i;
     }
 #endif
   } else {
     /* if too fast to display, wait before render */
     while (video_time > timer_get_milli(m->timer)) ;
 
-#if 0
+#if 1
     /* skip if delayed */
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
-      m->current_frame += i;
+      info->drop = i;
     }
 #endif
   }
