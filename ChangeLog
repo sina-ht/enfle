@@ -1,3 +1,49 @@
+2004-03-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added avcodec audiodecoder plugin.
+
+	* src/enfle.c: Quit without printing help when '-N' specified.
+
+	* src/Makefile.am: Rebuild cache when 'make install'.
+
+	* plugins/videodecoder/avcodec/Makefile.am: Added
+	-export-symbols-regex 'plugin_*' to avoid possible symbol
+	conflicts.
+
+	* plugins/demultiplexer/asf/asf.c: Some fixes.
+
+	* lib/enfle/audiodecoder-plugin.h, lib/enfle/audiodecoder.c,
+	lib/enfle/audiodecoder.h, plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/audiodecoder/vorbis/vorbis.c,
+	plugins/demultiplexer/avi/avi.c, plugins/player/generic/generic.c:
+	audiodecoder enhancements.
+
+	* lib/enfle/identify.c: Clear m->channels, m->samplerate.
+
+	* lib/enfle/fourcc.h: Renamed WAVEFORMAT_TAG.
+
+	* lib/enfle/Makefile.am: Added demultiplexer_types.h
+	demultiplexer_waveformatex.h.
+
+	* plugins/audiodecoder/Makefile.am: Added avcodec audiodecoder
+	plugin.
+
+	* plugins/audiodecoder/avcodec/.cvsignore,
+	plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/audiodecoder/avcodec/avcodec.c: New files.
+
+	* plugins/ui/convert/Makefile.am,
+	plugins/ui/wallpaper/Makefile.am: Link libenfle.
+
+2004-03-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/*: Updated.
+
+2004-03-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: Fixed ext == NULL bug.
+
 2004-03-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added asf support.
