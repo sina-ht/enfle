@@ -1,3 +1,16 @@
+2001-09-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* Makefile.am: Added new Recur3 decomposer.
+
+	* vmpm_decompose_recur3.c: New file.
+
+	* arithmodel_order_zero.[ch]: Added get_freq() method. Implemented
+	low range handling.
+
+	* glic.c: Change statfile buffering.
+
+	* ipow.[ch]: Check overflow.
+
 2001-09-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* expand.c, glic.c: Optimize for r=4. Clean up.

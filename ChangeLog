@@ -1,3 +1,15 @@
+2001-09-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/Makefile.am: Link pthread library when needed. FIFO
+	code is compiled when pthread is available.
+
+	* lib/utils/plugin.c: Added RTLD_GLOBAL flag. This allows a loaded
+	plugin, say AviFile, to load its own plugins.
+
+	* plugins/player/avifile/avifile.cpp: Simplified.
+
+	* plugins/player/opendivx/opendivx.c: Deleted useless #if's.
+
 2001-09-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* config.guess, config.sub, ltmain.sh: Upgrade libtool to 1.4.2.
