@@ -1,8 +1,8 @@
 /*
  * vmpm_error.h -- Error messages
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Apr 20 18:42:50 2001.
- * $Id: vmpm_error.h,v 1.2 2001/04/21 07:28:07 sian Exp $
+ * Last Modified: Tue Aug  7 17:19:15 2001.
+ * $Id: vmpm_error.h,v 1.3 2001/08/07 09:29:24 sian Exp $
  */
 
 #ifndef _VMPM_ERROR_H
@@ -20,6 +20,7 @@
 #define INVALID_INDEX 10
 #define DECOMPOSER_SPECIFIED_ERROR 11
 #define INVALID_TOKEN_VALUE_ERROR 12
+#define INTERNAL_ERROR 255
 
 #ifdef DEBUG
 # define debug_message(format, args...) fprintf(stderr, format, ## args)
