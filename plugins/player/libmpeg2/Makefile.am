@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Dec 14 21:36:15 2003.
-# $Id: Makefile.am,v 1.5 2003/12/16 16:51:55 sian Exp $
+# Last Modified: Thu Jan  1 02:32:22 2004.
+# $Id: Makefile.am,v 1.6 2004/01/03 10:20:03 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -17,7 +17,7 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 player_libmpeg2_la_LDFLAGS = $(MORE_LDFLAGS) -module
 player_libmpeg2_la_CFLAGS = $(MORE_CFLAGS)
-player_libmpeg2_la_SOURCES = libmpeg2.c libmpeg2_vo.c libmpeg2_vo.h
+player_libmpeg2_la_SOURCES = libmpeg2.c
 player_libmpeg2_la_LIBADD = \
 	-L$(top_builddir)/lib/mpeg2 -lenflempeg2 \
 	$(top_builddir)/lib/mpglib/libenflempglib.la \
