@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Aug 11 04:45:19 2001.
- * $Id: identify.c,v 1.3 2001/08/15 06:38:50 sian Exp $
+ * Last Modified: Sat Aug 25 08:47:42 2001.
+ * $Id: identify.c,v 1.4 2001/08/26 00:50:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
 
@@ -46,32 +47,46 @@ identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a)
   struct stat statbuf;
 
   if (!a || strcmp(a->format, "NORMAL") == 0) {
+    char *fullpath;
+
     if (strcmp(path, "-") == 0) {
       stream_make_fdstream(s, dup(0));
       return IDENTIFY_FILE_STREAM;
     }
-    if (stat(path, &statbuf)) {
-      show_message("ERROR: %s: %s.\n", path, strerror(errno));
+
+    if ((fullpath = archive_getpathname(a, path)) == NULL)
+      return IDENTIFY_FILE_MEMORY_ERROR;
+
+    if (stat(fullpath, &statbuf)) {
+      show_message("ERROR: %s: %s.\n", fullpath, strerror(errno));
+      free(fullpath);
       return IDENTIFY_FILE_STAT_FAILED;
     }
-    if (S_ISDIR(statbuf.st_mode))
+    if (S_ISDIR(statbuf.st_mode)) {
+      free(fullpath);
       return IDENTIFY_FILE_DIRECTORY;
-    if (!S_ISREG(statbuf.st_mode))
+    }
+    if (!S_ISREG(statbuf.st_mode)) {
+      free(fullpath);
       return IDENTIFY_FILE_NOTREG;
-    if (streamer_identify(eps, s, path)) {
+    }
+    if (streamer_identify(eps, s, fullpath)) {
       debug_message("Stream identified as %s.\n", s->format);
-      if (!streamer_open(eps, s, s->format, path)) {
-	show_message("Stream %s[%s] cannot open.\n", s->format, path);
+      if (!streamer_open(eps, s, s->format, fullpath)) {
+	show_message("Stream %s[%s] cannot open.\n", s->format, fullpath);
+	free(fullpath);
 	return IDENTIFY_FILE_SOPEN_FAILED;
       }
-    } else if (!stream_make_filestream(s, path)) {
-      show_message("Stream NORMAL[%s] cannot open.\n", path);
+    } else if (!stream_make_filestream(s, fullpath)) {
+      show_message("Stream NORMAL[%s] cannot open.\n", fullpath);
+      free(fullpath);
       return IDENTIFY_FILE_SOPEN_FAILED;
     }
   } else if (!archive_open(a, s, path)) {
     show_message("File %s in Archive %s [%s] cannot open.\n", path, a->format, a->path);
     return IDENTIFY_FILE_AOPEN_FAILED;
   }
+
   return IDENTIFY_FILE_STREAM;
 }
 
