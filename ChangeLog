@@ -1,5 +1,20 @@
 2003-12-29  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/demultiplexer/demultiplexer_avi.c: Skip unknown chunk.
+
+	* plugins/audio/alsa/alsa.c: Fail safe...
+
+	* lib/enfle/fourcc.h, plugins/player/avcodec/avcodec.c: Added mpg4
+	fourcc.
+
+	* src/enfle.rc: Updated.
+
+	* Makefile.am: Deleted OpenDivx-LICENSE.
+
+	* NEWS: Updated NEWS.
+
+2003-12-29  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Version up.
 
 	* plugins/saver/png/png.c: Use image_bpl().
