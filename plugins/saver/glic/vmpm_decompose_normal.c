@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Original decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 00:40:48 2001.
- * $Id: vmpm_decompose_normal.c,v 1.10 2001/08/05 16:19:37 sian Exp $
+ * Last Modified: Mon Aug  6 13:57:01 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.11 2001/08/06 04:59:11 sian Exp $
  */
 
 #include <stdio.h>
@@ -106,16 +106,13 @@ decompose(VMPM *vmpm, int offset, int level, int blocksize)
 	/* newly registered token */
 	vmpm->token[level][vmpm->token_index[level]] = t;
 	vmpm->newtoken[level]++;
-	if (level > 0)
-	  result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
+	result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
       }
       vmpm->token_index[level]++;
     }
   } else {
-    for (i = 0; i < ntokens; i++) {
-      vmpm->token[level][vmpm->token_index[level]] = (Token *)((int)vmpm->buffer[offset + i]);
-      vmpm->token_index[level]++;
-    }
+    for (i = 0; i < ntokens; i++)
+      vmpm->token[level][vmpm->token_index[level]++] = (Token *)((int)vmpm->buffer[offset + i]);
   }
 
   if (blocksize - ntokens * token_length > 0)
@@ -149,20 +146,15 @@ encode(VMPM *vmpm)
   }
 
   ac = arithcoder_arith_create();
-  am = arithmodel_order_zero_create(0, 1);
-
   arithcoder_encode_init(ac, vmpm->outfile);
+
+  /* EOF won't be used. ESC will be used. */
+  am = arithmodel_order_zero_create(0, 1);
   arithmodel_encode_init(am, ac);
   arithmodel_order_zero_set_update_escape_freq(am, update_escape_freq);
 
   bin_am = arithmodel_order_zero_create(0, 0);
   arithmodel_encode_init(bin_am, ac);
-#ifdef ESCAPE_RUN
-  {
-    Arithmodel_order_zero *am_oz = (Arithmodel_order_zero *)am;
-    am_oz->bin_am = bin_am;
-  }
-#endif
 
   match_found = 0;
   for (i = vmpm->I; i >= 1; i--) {
