@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 26 21:22:11 2004.
- * $Id: generic.c,v 1.14 2004/04/27 12:23:37 sian Exp $
+ * Last Modified: Fri Apr 30 04:09:59 2004.
+ * $Id: generic.c,v 1.15 2004/04/29 19:13:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   .type = ENFLE_PLUGIN_PLAYER,
   .name = "generic",
-  .description = "generic Player plugin version 0.2",
+  .description = "generic Player plugin version 0.2.1",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -511,7 +511,7 @@ play_main(Movie *m, VideoWindow *vw)
 {
   generic_info *info = (generic_info *)m->movie_private;
   Image *p = info->p;
-  int video_time, audio_time;
+  int video_time, diff_time;
   int i = 0;
 
   switch (m->status) {
@@ -584,36 +584,64 @@ play_main(Movie *m, VideoWindow *vw)
 
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
-    audio_time = get_audio_time(m, info->ad);
-    //debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, audio_time);
+    //debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, get_audio_time(m, info->ad));
+    if ((diff_time = video_time - get_audio_time(m, info->ad)) >= 0) {
+      /* if too fast to display, wait before render */
+#if 1
+      while (diff_time > 0) {
+	struct timeval tv;
 
-    /* if too fast to display, wait before render */
-    while (video_time > audio_time) {
-#if 0
-      if (timer_get_milli(m->timer) > video_time + 10 * 1000 / m->framerate) {
-	warning_fnc("might have bad audio: %d (r: %d v: %d a: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time, audio_time);
-	break;
+	tv.tv_sec = diff_time / 1000;
+	tv.tv_usec = (diff_time % 1000) * 1000;
+	select(0, NULL, NULL, NULL, &tv);
+	diff_time = video_time - get_audio_time(m, info->ad);
+	if (diff_time <= 1)
+	  break;
+      }
+#else
+      int audio_time = get_audio_time(m, info->ad);
+
+      while (video_time > audio_time) {
+	if (timer_get_milli(m->timer) > video_time + 10 * 1000 / m->framerate) {
+	  warning_fnc("might have bad audio: %d (r: %d v: %d a: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time, audio_time);
+	  break;
+	}
+	audio_time = get_audio_time(m, info->ad);
       }
 #endif
-      audio_time = get_audio_time(m, info->ad);
-    }
-
-    /* skip if delayed */
-    i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
-    if (i > 0) {
-      //debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
-      info->to_skip = i;
+    } else {
+      /* skip if delayed */
+      i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
+      if (i > 0) {
+	//debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
+	info->to_skip = i;
+      }
     }
   } else {
     //debug_message("%d (r: %d v: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time);
-    /* if too fast to display, wait before render */
-    while (video_time > timer_get_milli(m->timer)) ;
+    if ((diff_time = video_time - timer_get_milli(m->timer)) >= 0) {
+      /* if too fast to display, wait before render */
+#if 1
+      while (diff_time > 0) {
+	struct timeval tv;
 
-    /* skip if delayed */
-    i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
-    if (i > 0) {
-      //debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
-      info->to_skip = i;
+	tv.tv_sec = diff_time / 1000;
+	tv.tv_usec = (diff_time % 1000) * 1000;
+	select(0, NULL, NULL, NULL, &tv);
+	diff_time = video_time - timer_get_milli(m->timer);
+	if (diff_time <= 1)
+	  break;
+      }
+#else
+      while (video_time > timer_get_milli(m->timer)) ;
+#endif
+    } else {
+      /* skip if delayed */
+      i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
+      if (i > 0) {
+	//debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
+	info->to_skip = i;
+      }
     }
   }
 
