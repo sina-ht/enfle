@@ -133,7 +133,7 @@ static int64_t get_utf8(GetBitContext *gb)
     return val;
 }
 
-static int get_crc8(uint8_t *buf, int count){
+static int get_crc8(const uint8_t *buf, int count){
     int crc=0;
     int i;
     
@@ -508,7 +508,7 @@ static int decode_frame(FLACContext *s)
     }
 
     skip_bits(&s->gb, 8);
-    crc8= get_crc8((uint8_t *)s->gb.buffer, get_bits_count(&s->gb)/8);
+    crc8= get_crc8(s->gb.buffer, get_bits_count(&s->gb)/8);
     if(crc8){
         av_log(s->avctx, AV_LOG_ERROR, "header crc missmatch crc=%2X\n", crc8);
         return -1;
@@ -543,7 +543,7 @@ static int flac_decode_frame(AVCodecContext *avctx,
 {
     FLACContext *s = avctx->priv_data;
     int metadata_last, metadata_type, metadata_size;
-    int tmp = 0, i, j = 0, input_buf_size = 0;
+    int tmp = 0, i, j = 0, input_buf_size;
     int16_t *samples = data, *left, *right;
 
     *data_size = 0;

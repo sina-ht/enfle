@@ -1641,7 +1641,7 @@ void ff_print_debug_info(MpegEncContext *s, AVFrame *pict){
                 if((s->avctx->debug_mv) && pict->motion_val){
                   int type;
                   for(type=0; type<3; type++){
-                    int direction = 0;
+                    int direction;
                     switch (type) {
                       case 0: if ((!(s->avctx->debug_mv&FF_DEBUG_VIS_MV_P_FOR)) || (pict->pict_type!=FF_P_TYPE))
                                 continue;
@@ -2101,7 +2101,7 @@ int MPV_encode_picture(AVCodecContext *avctx,
         }
 
         /* update mpeg1/2 vbv_delay for CBR */    
-        if(s->avctx->rc_max_rate && s->avctx->rc_min_rate == s->avctx->rc_max_rate){
+        if(s->avctx->rc_max_rate && s->avctx->rc_min_rate == s->avctx->rc_max_rate && s->out_format == FMT_MPEG1){
             int vbv_delay;
 
             assert(s->repeat_first_field==0);
