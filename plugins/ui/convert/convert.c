@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 30 00:48:29 2001.
- * $Id: convert.c,v 1.5 2001/04/30 01:09:45 sian Exp $
+ * Last Modified: Tue May 22 17:50:28 2001.
+ * $Id: convert.c,v 1.6 2001/05/23 12:14:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,7 +42,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Convert",
-  description: "Convert UI plugin version 0.1",
+  description: "Convert UI plugin version 0.1.1",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -146,7 +146,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
 	  if (!archive_read_directory(arc, path, 1)) {
 	    archive_destroy(arc);
-	    archive_iteration_delete(a);
 	    continue;
 	  }
 	  ret = process_files_of_archive(uidata, arc);
@@ -158,7 +157,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  dir = 1;
 	  continue;
 	} else if (!S_ISREG(statbuf.st_mode)) {
-	  archive_iteration_delete(a);
 	  continue;
 	}
 
@@ -168,12 +166,10 @@ process_files_of_archive(UIData *uidata, Archive *a)
 
 	  if (!streamer_open(st, eps, s, s->format, path)) {
 	    show_message("Stream %s [%s] cannot open\n", s->format, path);
-	    archive_iteration_delete(a);
 	    continue;
 	  }
 	} else if (!stream_make_filestream(s, path)) {
 	  show_message("Stream NORMAL [%s] cannot open\n", path);
-	  archive_iteration_delete(a);
 	  continue;
 	}
       }
@@ -190,13 +186,11 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  continue;
 	} else {
 	  show_message("Archive %s [%s] cannot open\n", arc->format, path);
-	  archive_iteration_delete(a);
 	}
       }
       archive_destroy(arc);
     } else if (!archive_open(a, s, path)) {
       show_message("File %s in %s archive cannot open\n", path, a->format);
-      archive_iteration_delete(a);
       continue;
     }
 
@@ -214,7 +208,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
     if (f != LOAD_OK) {
 	stream_close(s);
 	show_message("%s identification failed\n", path);
-	archive_iteration_delete(a);
 	continue;
     } else {
 
