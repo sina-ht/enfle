@@ -1,3 +1,15 @@
+2001-07-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/saver/glic/Makefile.am: Added escfirst and esc.
+
+	* plugins/saver/glic/arithmodel_order_zero.[ch]: Replacable
+	update_region().
+
+	* plugins/saver/glic/vmpm_decompose_highlow.c: Renamed.
+
+	* plugins/saver/glic/vmpm_decompose_esc.c,
+	plugins/saver/glic/vmpm_decompose_escfirst.c: New files.
+
 2001-07-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/glic/arithmodel_order_zero.[ch],
