@@ -1,8 +1,8 @@
 /*
  * arithcoder_arith.c -- Renormalization for arithmetic coder
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr 12 14:31:06 2001.
- * $Id: arithcoder_arith.c,v 1.1 2001/04/18 05:43:31 sian Exp $
+ * Last Modified: Wed Aug 15 15:16:53 2001.
+ * $Id: arithcoder_arith.c,v 1.2 2001/08/15 06:41:26 sian Exp $
  *
  * WARNING:
  *  This renormalization code probably implements the exact patented arithmetic coder.
@@ -18,7 +18,7 @@
 # include "enfle-config.h"
 #endif
 #define CONFIG_H_INCLUDED
-#undef DEBUG
+#define DEBUG
 
 #include "common.h"
 
@@ -142,7 +142,7 @@ encode_renormalize(Arithcoder *_ac)
     ac->range <<= 1;
   }
 
-  debug_message(__FUNCTION__ " done (low %X range %X)\n", ac->low, ac->range);
+  debug_message(__FUNCTION__ " done (low %X range %X) %ld\n", ac->low, ac->range, ftell(ac->bs->fp));
 }
 
 static void
