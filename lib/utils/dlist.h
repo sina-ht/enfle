@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul 30 21:22:09 2002.
- * $Id: dlist.h,v 1.5 2002/08/01 12:40:48 sian Exp $
+ * Last Modified: Wed Aug  7 23:46:06 2002.
+ * $Id: dlist.h,v 1.6 2002/08/07 15:30:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -66,18 +66,18 @@ struct _dlist {
 #define dlist_sort(dl) (dl)->do_sort((dl))
 #define dlist_destroy(dl, f) (dl)->destroy((dl), (f))
 
-#define dlist_guard(dl) ((dl)->guard)
-#define dlist_top(dl) (dlist_next(dlist_guard(dl)))
-#define dlist_head(dl) (dlist_prev(dlist_guard(dl)))
-#define dlist_size(dl) ((dl)->size)
+/* private macros */
+#define __dlist_guard(dl) ((dl)->guard)
+#define __dlist_dlist(dd) ((dd)->dl)
 
-#define dlist_dlist(dd) ((dd)->dl)
 #define dlist_next(dd) ((dd)->next)
 #define dlist_prev(dd) ((dd)->prev)
+#define dlist_top(dl) dlist_next(__dlist_guard(dl))
+#define dlist_head(dl) dlist_prev(__dlist_guard(dl))
+#define dlist_size(dl) ((dl)->size)
 #define dlist_data(dd) ((dd)->data)
 #define dlist_data_destructor(dd) ((dd)->data_destructor)
-
-#define dlist_iter(dl,dd) for (dd = dlist_top(dl); dd != dlist_guard(dl); dd = dlist_next((dd)))
+#define dlist_iter(dl,dd) for (dd = dlist_top(dl); dd != __dlist_guard(dl); dd = dlist_next((dd)))
 
 Dlist *dlist_create(void);
 

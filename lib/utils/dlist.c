@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul 30 21:24:33 2002.
- * $Id: dlist.c,v 1.8 2002/08/01 12:40:48 sian Exp $
+ * Last Modified: Wed Aug  7 23:46:12 2002.
+ * $Id: dlist.c,v 1.9 2002/08/07 15:30:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -108,7 +108,7 @@ destroy(Dlist *dl, int f)
 {
   Dlist_data *dd, *dd_n, *g;
 
-  g = dlist_guard(dl);
+  g = __dlist_guard(dl);
   dlist_next(dlist_prev(g)) = NULL;
   dd_n = dlist_next(g);
   free(g);
@@ -145,8 +145,8 @@ insert(Dlist *dl, Dlist_data *inserted, void *d)
 {
   Dlist_data *dd;
 
-  if (dlist_dlist(inserted) != dl) {
-    debug_message_fnc("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
+  if (__dlist_dlist(inserted) != dl) {
+    debug_message_fnc("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", __dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
     raise(SIGABRT);
     //return NULL;
   }
@@ -165,8 +165,8 @@ insert_object(Dlist *dl, Dlist_data *inserted, void *d, Dlist_data_destructor dd
 {
   Dlist_data *dd;
 
-  if (dlist_dlist(inserted) != dl) {
-    debug_message_fnc("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
+  if (__dlist_dlist(inserted) != dl) {
+    debug_message_fnc("inserted(dl: %p, self: %p, data: %p) is not in dl(%p)\n", __dlist_dlist(inserted), inserted, dlist_data(inserted), dl);
     raise(SIGABRT);
     //return NULL;
   }
@@ -184,13 +184,13 @@ insert_object(Dlist *dl, Dlist_data *inserted, void *d, Dlist_data_destructor dd
 static Dlist_data *
 add(Dlist *dl, void *d)
 {
-  return insert(dl, dlist_guard(dl), d);
+  return insert(dl, __dlist_guard(dl), d);
 }
 
 static Dlist_data *
 add_object(Dlist *dl, void *d, Dlist_data_destructor dddest)
 {
-  return insert_object(dl, dlist_guard(dl), d, dddest);
+  return insert_object(dl, __dlist_guard(dl), d, dddest);
 }
 
 static Dlist_data *
@@ -211,7 +211,7 @@ detach(Dlist *dl, Dlist_data *dd)
 {
   Dlist_data *dd_p, *dd_n;
 
-  if (dlist_guard(dl) == dd)
+  if (__dlist_guard(dl) == dd)
     return 0;
 
   dd_p = dlist_prev(dd);
@@ -229,7 +229,7 @@ delete_item(Dlist *dl, Dlist_data *dd)
 {
   if (dl == NULL || dd == NULL)
     return 0;
-  if (dlist_dlist(dd) != dl)
+  if (__dlist_dlist(dd) != dl)
     return 0;
 
   if (!detach(dl, dd))
@@ -245,7 +245,7 @@ delete_item(Dlist *dl, Dlist_data *dd)
 static int
 move_to_top(Dlist *dl, Dlist_data *dd)
 {
-  if (dlist_dlist(dd) != dl)
+  if (__dlist_dlist(dd) != dl)
     return 0;
   if (dlist_top(dl) == dd)
     return 1;
