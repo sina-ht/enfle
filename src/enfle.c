@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 18:52:52 2001.
- * $Id: enfle.c,v 1.41 2001/09/18 05:22:23 sian Exp $
+ * Last Modified: Wed Sep 19 16:42:57 2001.
+ * $Id: enfle.c,v 1.42 2001/09/19 07:46:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -37,6 +37,9 @@
 #include "utils/libstring.h"
 #include "utils/libconfig.h"
 #include "utils/misc.h"
+#ifdef __i386__
+#  include "utils/cpucaps.h"
+#endif
 #include "enfle/enfle-plugin.h"
 #include "enfle/ui.h"
 #include "enfle/streamer.h"
@@ -94,6 +97,20 @@ usage(void)
   printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n\n");
   printf("usage: enfle [options] [path...]\n");
   printf("Extension: %s", ext);
+#ifdef __i386__
+  {
+    CPUCaps caps = cpucaps_get();
+#ifdef USE_MMX
+    if (caps & _MMX)
+      printf("MMX is available.\n");
+    else
+      printf("MMX is not available.\n");
+#else
+    if (caps & _MMX)
+      printf("MMX is available, but disabled at compile-time.\n");
+#endif
+  }
+#endif
   printf("Options:\n");
   print_option_usage(enfle_options);
 }
