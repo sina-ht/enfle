@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 21:08:22 2001.
- * $Id: demultiplexer_mpeg.h,v 1.4 2001/06/22 17:34:42 sian Exp $
+ * Last Modified: Tue Jan 20 22:17:44 2004.
+ * $Id: demultiplexer_mpeg.h,v 1.5 2004/01/24 07:08:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,13 +26,6 @@
 #include "demultiplexer.h"
 #include "enfle/stream.h"
 #include "utils/fifo.h"
-
-typedef struct _mpeg_packet {
-  int pts_dts_flag;
-  unsigned long pts, dts;
-  unsigned int size;
-  void *data;
-} MpegPacket;
 
 typedef struct _mpeg_info {
   Stream *st;

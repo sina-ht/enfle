@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 22:17:20 2004.
- * $Id: libmpeg2.c,v 1.48 2004/01/19 13:19:08 sian Exp $
+ * Last Modified: Tue Jan 20 22:29:04 2004.
+ * $Id: libmpeg2.c,v 1.49 2004/01/24 07:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -342,7 +342,7 @@ play_video(void *arg)
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   void *data;
-  MpegPacket *mp = NULL;
+  DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
   mpeg2_state_t state;
   const mpeg2_info_t *mpeg2dec_info;
@@ -364,24 +364,24 @@ play_video(void *arg)
 	debug_message_fnc("fifo_get() failed.\n");
 	goto quit;
       } else {
-	if (mp)
-	  destructor(mp);
-	mp = (MpegPacket *)data;
+	if (dp)
+	  destructor(dp);
+	dp = (DemuxedPacket *)data;
 #ifdef USE_TS
-	switch (mp->pts_dts_flag) {
+	switch (dp->pts_dts_flag) {
 	case 2:
-	  pts = mp->pts;
+	  pts = dp->pts;
 	  dts = pts;
-	  size = mp->size;
+	  size = dp->size;
 	  break;
 	case 3:
-	  pts = mp->pts;
-	  dts = mp->dts;
-	  size = mp->size;
+	  pts = dp->pts;
+	  dts = dp->dts;
+	  size = dp->size;
 	  break;
 	default:
 	  pts = dts = -1;
-	  size = mp->size;
+	  size = dp->size;
 	  break;
 	}
 #ifdef DEBUG
@@ -395,8 +395,8 @@ play_video(void *arg)
 	}
 #endif
 #endif
-	mpeg2_buffer(info->mpeg2dec, mp->data, mp->data + mp->size);
-	/* mp->data should not be freed until all data in mp->data is used. */
+	mpeg2_buffer(info->mpeg2dec, dp->data, dp->data + dp->size);
+	/* dp->data should not be freed until all data in dp->data is used. */
       }
       break;
     case STATE_SEQUENCE:
@@ -453,8 +453,8 @@ play_video(void *arg)
   }
 
  quit:
-  if (mp)
-    destructor(mp);
+  if (dp)
+    destructor(dp);
 
   debug_message_fnc("mpeg2_close() ");
   mpeg2_close(info->mpeg2dec);
@@ -481,9 +481,9 @@ play_audio(void *arg)
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
   AudioDevice *ad;
   AudioDecoderStatus ads;
-  unsigned int used, u;
+  unsigned int used = 0, u;
   void *data;
-  MpegPacket *mp = NULL;
+  DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
 #ifdef USE_TS
   unsigned long pts, dts, size;
@@ -502,36 +502,36 @@ play_audio(void *arg)
   info->ad = ad;
 
   while (m->status == _PLAY) {
-    if (!mp || mp->size == used) {
+    if (!dp || dp->size == used) {
       if (!fifo_get(info->astream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
 	break;
       }
-      if (mp)
-	destructor(mp);
-      mp = (MpegPacket *)data;
+      if (dp)
+	destructor(dp);
+      dp = (DemuxedPacket *)data;
       used = 0;
     }
     if (ad) {
 #ifdef USE_TS
-      switch (mp->pts_dts_flag) {
+      switch (dp->pts_dts_flag) {
       case 2:
-	pts = mp->pts;
+	pts = dp->pts;
 	dts = -1;
-	size = mp->size;
+	size = dp->size;
 	break;
       case 3:
-	pts = mp->pts;
-	dts = mp->dts;
-	size = mp->size;
+	pts = dp->pts;
+	dts = dp->dts;
+	size = dp->size;
 	break;
       default:
 	pts = dts = -1;
-	size = mp->size;
+	size = dp->size;
 	break;
       }
 #endif
-      ads = audiodecoder_decode(info->adec, m, ad, mp->data + used, mp->size - used, &u);
+      ads = audiodecoder_decode(info->adec, m, ad, dp->data + used, dp->size - used, &u);
       used += u;
       while (ads == AD_OK) {
 	u = 0;
@@ -546,8 +546,8 @@ play_audio(void *arg)
     }
   }
 
-  if (mp)
-    destructor(mp);
+  if (dp)
+    destructor(dp);
 
   if (ad) {
     m->ap->sync_device(ad);

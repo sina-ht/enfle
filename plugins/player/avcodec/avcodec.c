@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 22:17:06 2004.
- * $Id: avcodec.c,v 1.13 2004/01/19 13:19:20 sian Exp $
+ * Last Modified: Wed Jan 21 01:32:54 2004.
+ * $Id: avcodec.c,v 1.14 2004/01/24 07:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -617,7 +617,7 @@ play_video(void *arg)
   Movie *m = arg;
   avcodec_info *info = (avcodec_info *)m->movie_private;
   void *data;
-  AVIPacket *ap = NULL;
+  DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
   int offset, size, len, got_picture;
 
@@ -629,17 +629,17 @@ play_video(void *arg)
     if (size <= 0) {
       if (!fifo_get(info->vstream, &data, &destructor))
 	break;
-      if (ap)
-	destructor(ap);
-      if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL)
+      if (dp)
+	destructor(dp);
+      if ((dp = (DemuxedPacket *)data) == NULL || dp->data == NULL)
 	break;
       offset = 0;
-      size = ap->size;
+      size = dp->size;
     }
 
     /* XXX: decode */
     len = avcodec_decode_video(info->vcodec_ctx, info->vcodec_picture, &got_picture,
-			       ap->data + offset, size);
+			       dp->data + offset, size);
     if (len < 0) {
       warning_fnc("avcodec: avcodec_decode_video return %d\n", len);
       break;
@@ -681,8 +681,8 @@ play_video(void *arg)
     }
   }
 
-  if (ap)
-    destructor(ap);
+  if (dp)
+    destructor(dp);
 
   debug_message_fn(" exiting.\n");
 
@@ -696,9 +696,9 @@ play_audio(void *arg)
   avcodec_info *info = (avcodec_info *)m->movie_private;
   AudioDevice *ad;
   AudioDecoderStatus ads;
-  unsigned int used, u;
+  unsigned int used = 0, u;
   void *data;
-  AVIPacket *ap = NULL;
+  DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
 
   debug_message_fn("()\n");
@@ -714,18 +714,20 @@ play_audio(void *arg)
   info->ad = ad;
 
   while (m->status == _PLAY) {
-    if (!ap || ap->size == used) {
+    if (!dp || dp->size == used) {
+      debug_message_fnc("getting\n");
       if (!fifo_get(info->astream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
 	break;
       }
-      if (ap)
-	destructor(ap);
-      ap = (AVIPacket *)data;
+      debug_message_fnc("got\n");
+      if (dp)
+	destructor(dp);
+      dp = (DemuxedPacket *)data;
       used = 0;
     }
     if (ad) {
-      ads = audiodecoder_decode(info->adec, m, ad, ap->data + used, ap->size - used, &u);
+      ads = audiodecoder_decode(info->adec, m, ad, dp->data + used, dp->size - used, &u);
       used += u;
       while (ads == AD_OK) {
 	u = 0;
@@ -740,8 +742,8 @@ play_audio(void *arg)
     }
   }
 
-  if (ap)
-    destructor(ap);
+  if (dp)
+    destructor(dp);
 
   if (ad) {
     m->ap->sync_device(ad);
@@ -802,9 +804,14 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_OK;
 
   if (demultiplexer_get_eof(info->demux)) {
-    if (info->astream && fifo_is_empty(info->astream))
+    if (info->astream && fifo_is_empty(info->astream)) {
       /* Audio existed, but over. */
-      m->has_audio = 2;
+      if (m->has_audio != 2) {
+	debug_message_fnc("Audio over.\n");
+	m->has_audio = 2;
+	fifo_invalidate(info->astream);
+      }
+    }
     if ((!info->vstream || fifo_is_empty(info->vstream)) &&
 	(!info->astream || fifo_is_empty(info->astream))) {
       stop_movie(m);
@@ -817,11 +824,16 @@ play_main(Movie *m, VideoWindow *vw)
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio == 1 && info->ad) {
     audio_time = get_audio_time(m, info->ad);
-    //debug_message("%d frames(v: %d a: %d)\n", i, video_time, audio_time);
+    //debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, audio_time);
 
     /* if too fast to display, wait before render */
-    while (video_time > audio_time)
+    while (video_time > audio_time) {
+      if (timer_get_milli(m->timer) > video_time + 3 * 1000 / m->framerate) {
+	warning_fnc("might have bad audio: %d (r: %d v: %d a: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time, audio_time);
+	break;
+      }
       audio_time = get_audio_time(m, info->ad);
+    }
 
     /* skip if delayed */
     i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
@@ -830,6 +842,7 @@ play_main(Movie *m, VideoWindow *vw)
       info->drop = i;
     }
   } else {
+    //debug_message("%d (r: %d v: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time);
     /* if too fast to display, wait before render */
     while (video_time > timer_get_milli(m->timer)) ;
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 22:14:01 2004.
- * $Id: divx.c,v 1.4 2004/01/19 13:19:08 sian Exp $
+ * Last Modified: Tue Jan 20 22:30:50 2004.
+ * $Id: divx.c,v 1.5 2004/01/24 07:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -423,7 +423,7 @@ play_video(void *arg)
   Movie *m = arg;
   DivX_info *info = (DivX_info *)m->movie_private;
   void *data;
-  AVIPacket *ap = NULL;
+  DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
   int res;
 
@@ -432,12 +432,12 @@ play_video(void *arg)
   while (m->status == _PLAY) {
     if (!fifo_get(info->vstream, &data, &destructor))
       break;
-    if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL)
+    if ((dp = (DemuxedPacket *)data) == NULL || dp->data == NULL)
       break;
 
     pthread_mutex_lock(&info->update_mutex);
-    info->dec_frame.length = ap->size;
-    info->dec_frame.bitstream = ap->data;
+    info->dec_frame.length = dp->size;
+    info->dec_frame.bitstream = dp->data;
     info->dec_frame.bmp = memory_ptr(image_rendered_image(info->p));
     info->dec_frame.render_flag = 1;
     info->dec_frame.stride = 0;
@@ -457,24 +457,24 @@ play_video(void *arg)
       }
     }
 
-    destructor(ap);
+    destructor(dp);
     m->current_frame++;
 
     for (; info->drop; info->drop--) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
 	break;
       } else {
-	if ((ap = (AVIPacket *)data) == NULL || ap->data == NULL) {
+	if ((dp = (DemuxedPacket *)data) == NULL || dp->data == NULL) {
 	  pthread_mutex_unlock(&info->update_mutex);
 	  break;
 	}
-	info->dec_frame.length = ap->size;
-	info->dec_frame.bitstream = ap->data;
+	info->dec_frame.length = dp->size;
+	info->dec_frame.bitstream = dp->data;
 	info->dec_frame.bmp = memory_ptr(image_rendered_image(info->p));
 	info->dec_frame.render_flag = 0; /* drop */
 	info->dec_frame.stride = 0;
 	decore(info->dec_handle, DEC_OPT_FRAME, &info->dec_frame, NULL);
-	destructor(ap);
+	destructor(dp);
 	m->current_frame++;
       }
     }
@@ -497,9 +497,9 @@ play_audio(void *arg)
   DivX_info *info = (DivX_info *)m->movie_private;
   AudioDevice *ad;
   AudioDecoderStatus ads;
-  unsigned int used, u;
+  unsigned int used = 0, u;
   void *data;
-  AVIPacket *ap = NULL;
+  DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
 
   debug_message_fn("()\n");
@@ -515,18 +515,18 @@ play_audio(void *arg)
   info->ad = ad;
 
   while (m->status == _PLAY) {
-    if (!ap || ap->size == used) {
+    if (!dp || dp->size == used) {
       if (!fifo_get(info->astream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
 	break;
       }
-      if (ap)
-	destructor(ap);
-      ap = (AVIPacket *)data;
+      if (dp)
+	destructor(dp);
+      dp = (DemuxedPacket *)data;
       used = 0;
     }
     if (ad) {
-      ads = audiodecoder_decode(info->adec, m, ad, ap->data + used, ap->size - used, &u);
+      ads = audiodecoder_decode(info->adec, m, ad, dp->data + used, dp->size - used, &u);
       used += u;
       while (ads == AD_OK) {
 	u = 0;
@@ -541,8 +541,8 @@ play_audio(void *arg)
     }
   }
 
-  if (ap)
-    destructor(ap);
+  if (dp)
+    destructor(dp);
 
   if (ad) {
     m->ap->sync_device(ad);

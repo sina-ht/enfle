@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 13:56:37 2004.
- * $Id: demultiplexer.c,v 1.3 2004/01/18 07:13:01 sian Exp $
+ * Last Modified: Tue Jan 20 22:25:10 2004.
+ * $Id: demultiplexer.c,v 1.4 2004/01/24 07:08:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,4 +42,16 @@ void
 _demultiplexer_destroy(Demultiplexer *demux)
 {
   free(demux);
+}
+
+void
+demultiplexer_destroy_packet(void *d)
+{
+  DemuxedPacket *dp = (DemuxedPacket *)d;
+
+  if (dp) {
+    if (dp->data)
+      free(dp->data);
+    free(dp);
+  }
 }

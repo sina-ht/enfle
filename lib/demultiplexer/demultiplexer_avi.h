@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 04:15:53 2004.
- * $Id: demultiplexer_avi.h,v 1.4 2004/01/11 21:40:03 sian Exp $
+ * Last Modified: Tue Jan 20 22:17:48 2004.
+ * $Id: demultiplexer_avi.h,v 1.5 2004/01/24 07:08:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,11 +42,6 @@
 #define FCC_movi FCC('m', 'o', 'v', 'i')
 #define FCC_idx1 FCC('i', 'd', 'x', '1')
 #define FCC_indx FCC('i', 'n', 'd', 'x')
-
-typedef struct _avi_packet {
-  unsigned int size;
-  void *data;
-} AVIPacket;
 
 typedef struct _avi_info {
   Stream *st;

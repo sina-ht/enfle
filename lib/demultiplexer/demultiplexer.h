@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 13:56:31 2004.
- * $Id: demultiplexer.h,v 1.8 2004/01/18 07:13:01 sian Exp $
+ * Last Modified: Tue Jan 20 22:24:53 2004.
+ * $Id: demultiplexer.h,v 1.9 2004/01/24 07:08:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,13 @@ struct _demultiplexer {
   void (*destroy)(Demultiplexer *);
 };
 
+typedef struct _demuxed_packet {
+  int pts_dts_flag;
+  unsigned long pts, dts;
+  unsigned int size;
+  void *data;
+} DemuxedPacket;
+
 #define DECLARE_DEMULTIPLEXER_METHODS \
   static int examine(Demultiplexer *); \
   static int start(Demultiplexer *); \
@@ -58,6 +65,8 @@ struct _demultiplexer {
 /* protected */
 Demultiplexer *_demultiplexer_create(void);
 void _demultiplexer_destroy(Demultiplexer *);
+
+void demultiplexer_destroy_packet(void *);
 
 #define demultiplexer_set_eof(de, f) (de)->eof = (f)
 #define demultiplexer_get_eof(de) (de)->eof

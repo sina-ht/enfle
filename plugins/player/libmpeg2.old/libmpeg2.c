@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 22:13:23 2004.
- * $Id: libmpeg2.c,v 1.4 2004/01/19 13:19:08 sian Exp $
+ * Last Modified: Tue Jan 20 22:28:41 2004.
+ * $Id: libmpeg2.c,v 1.5 2004/01/24 07:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -333,7 +333,7 @@ play_video(void *arg)
   void *data;
   unsigned int old_nframe;
   int nframe_decoded;
-  MpegPacket *mp;
+  DemuxedPacket *dp;
   FIFO_destructor destructor;
 #ifdef USE_TS
   unsigned long pts, dts, size;
@@ -345,22 +345,22 @@ play_video(void *arg)
     if (!fifo_get(info->vstream, &data, &destructor)) {
       show_message_fnc("fifo_get() failed.\n");
     } else {
-      mp = (MpegPacket *)data;
+      dp = (DemuxedPacket *)data;
 #ifdef USE_TS
-      switch (mp->pts_dts_flag) {
+      switch (dp->pts_dts_flag) {
       case 2:
-	pts = mp->pts;
+	pts = dp->pts;
 	dts = pts;
-	size = mp->size;
+	size = dp->size;
 	break;
       case 3:
-	pts = mp->pts;
-	dts = mp->dts;
-	size = mp->size;
+	pts = dp->pts;
+	dts = dp->dts;
+	size = dp->size;
 	break;
       default:
 	pts = dts = -1;
-	size = mp->size;
+	size = dp->size;
 	break;
       }
 #ifdef DEBUG
@@ -375,10 +375,10 @@ play_video(void *arg)
 #endif
 #endif
       old_nframe = m->current_frame;
-      nframe_decoded = mpeg2old_decode_data(&info->mpeg2dec, mp->data, mp->data + mp->size);
+      nframe_decoded = mpeg2old_decode_data(&info->mpeg2dec, dp->data, dp->data + dp->size);
       /* Be sure m->current_frame is right when dropping. */
       m->current_frame = old_nframe + nframe_decoded;
-      destructor(mp);
+      destructor(dp);
     }
   }
 
@@ -407,7 +407,7 @@ play_audio(void *arg)
   int ret, write_size;
   int param_is_set = 0;
   void *data;
-  MpegPacket *mp;
+  DemuxedPacket *dp;
   FIFO_destructor destructor;
 #ifdef USE_TS
   unsigned long pts, dts, size;
@@ -425,27 +425,27 @@ play_audio(void *arg)
       debug_message_fnc("fifo_get() failed.\n");
       break;
     }
-    mp = (MpegPacket *)data;
+    dp = (DemuxedPacket *)data;
     if (ad) {
 #ifdef USE_TS
-      switch (mp->pts_dts_flag) {
+      switch (dp->pts_dts_flag) {
       case 2:
-	pts = mp->pts;
+	pts = dp->pts;
 	dts = -1;
-	size = mp->size;
+	size = dp->size;
 	break;
       case 3:
-	pts = mp->pts;
-	dts = mp->dts;
-	size = mp->size;
+	pts = dp->pts;
+	dts = dp->dts;
+	size = dp->size;
 	break;
       default:
 	pts = dts = -1;
-	size = mp->size;
+	size = dp->size;
 	break;
       }
 #endif
-      ret = decodeMP3(&info->mp, mp->data, mp->size,
+      ret = decodeMP3(&info->mp, dp->data, dp->size,
 		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       if (!param_is_set) {
 	m->sampleformat = _AUDIO_FORMAT_S16_LE;
@@ -465,7 +465,7 @@ play_audio(void *arg)
 			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
       }
     }
-    destructor(mp);
+    destructor(dp);
   }
 
   if (ad) {

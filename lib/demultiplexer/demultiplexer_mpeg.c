@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 22:07:27 2004.
- * $Id: demultiplexer_mpeg.c,v 1.31 2004/01/19 13:15:08 sian Exp $
+ * Last Modified: Wed Jan 21 01:41:07 2004.
+ * $Id: demultiplexer_mpeg.c,v 1.32 2004/01/24 07:08:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,8 +58,8 @@ demultiplexer_mpeg_create(void)
   return demux;
 }  
 
-#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536*4
-#define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536*4
+#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536
+#define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536*8
 
 /*
 #define MPEG_USER_DATA 0xb2
@@ -255,18 +255,6 @@ get_timestamp(unsigned char *p)
   return t;
 }
 
-static void
-mpeg_packet_destructor(void *d)
-{
-  MpegPacket *mp = (MpegPacket *)d;
-
-  if (mp) {
-    if (mp->data)
-      free(mp->data);
-    free(mp);
-  }
-}
-
 #define CONTINUE_IF_RUNNING if (demux->running) continue; else break
 
 static void *
@@ -274,7 +262,7 @@ demux_main(void *arg)
 {
   Demultiplexer *demux = (Demultiplexer *)arg;
   MpegInfo *info = (MpegInfo *)demux->private_data;
-  MpegPacket *mp;
+  DemuxedPacket *dp;
   unsigned char *buf, id;
   int read_total, read_size, used_size, used_size_prev = 0, skip;
   int nvstream = 0, nastream = 0;
@@ -309,12 +297,12 @@ demux_main(void *arg)
     if (info->ver == 3) {
       /* Video stream */
       skip = used_size;
-      mp = malloc(sizeof(MpegPacket));
-      mp->pts_dts_flag = 0xff;
-      mp->size = skip;
-      mp->data = malloc(mp->size);
-      memcpy(mp->data, buf, mp->size);
-      fifo_put(info->vstream, mp, mpeg_packet_destructor);
+      dp = malloc(sizeof(DemuxedPacket));
+      dp->pts_dts_flag = 0xff;
+      dp->size = skip;
+      dp->data = malloc(dp->size);
+      memcpy(dp->data, buf, dp->size);
+      fifo_put(info->vstream, dp, demultiplexer_destroy_packet);
       used_size = 0;
       CONTINUE_IF_RUNNING;
     }
@@ -415,12 +403,12 @@ demux_main(void *arg)
 	  (v_or_a == 2 && nastream == info->nastream)) {
 	if ((buf[6] & 0xc0) == 0x80) {
 	  /* MPEG II */
-	  mp = malloc(sizeof(MpegPacket));
-	  mp->pts_dts_flag = 0xff;
-	  mp->size = skip - 9 - buf[8];
-	  mp->data = malloc(mp->size);
-	  memcpy(mp->data, buf + 9 + buf[8], mp->size);
-	  fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor);
+	  dp = malloc(sizeof(DemuxedPacket));
+	  dp->pts_dts_flag = 0xff;
+	  dp->size = skip - 9 - buf[8];
+	  dp->data = malloc(dp->size);
+	  memcpy(dp->data, buf + 9 + buf[8], dp->size);
+	  fifo_put((v_or_a == 1) ? info->vstream : info->astream, dp, demultiplexer_destroy_packet);
 	} else {
 	  unsigned char *p;
 	  int pts_dts_flag;
@@ -454,14 +442,14 @@ demux_main(void *arg)
 	    goto error;
 	  }
 	  if (p < buf + skip) {
-	    mp = malloc(sizeof(MpegPacket));
-	    mp->pts_dts_flag = pts_dts_flag;
-	    mp->pts = pts;
-	    mp->dts = dts;
-	    mp->size = buf + skip - p;
-	    mp->data = malloc(mp->size);
-	    memcpy(mp->data, p, mp->size);
-	    fifo_put((v_or_a == 1) ? info->vstream : info->astream, mp, mpeg_packet_destructor);
+	    dp = malloc(sizeof(DemuxedPacket));
+	    dp->pts_dts_flag = pts_dts_flag;
+	    dp->pts = pts;
+	    dp->dts = dts;
+	    dp->size = buf + skip - p;
+	    dp->data = malloc(dp->size);
+	    memcpy(dp->data, p, dp->size);
+	    fifo_put((v_or_a == 1) ? info->vstream : info->astream, dp, demultiplexer_destroy_packet);
 	  }
 	}
       } else if (!v_or_a) {
@@ -469,12 +457,12 @@ demux_main(void *arg)
 	  /* Video stream */
 	  debug_message_fnc("identified as video stream.  Put data in raw.\n");
 	  skip = used_size;
-	  mp = malloc(sizeof(MpegPacket));
-	  mp->pts_dts_flag = 0xff;
-	  mp->size = skip;
-	  mp->data = malloc(mp->size);
-	  memcpy(mp->data, buf, mp->size);
-	  fifo_put(info->vstream, mp, mpeg_packet_destructor);
+	  dp = malloc(sizeof(DemuxedPacket));
+	  dp->pts_dts_flag = 0xff;
+	  dp->size = skip;
+	  dp->data = malloc(dp->size);
+	  memcpy(dp->data, buf, dp->size);
+	  fifo_put(info->vstream, dp, demultiplexer_destroy_packet);
 	  info->ver = 3;
 	} else {
 	  debug_message_fnc("Unknown id %02X %d bytes\n", id, skip - 6);
