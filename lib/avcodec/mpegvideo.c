@@ -885,8 +885,15 @@ int MPV_encode_init(AVCodecContext *avctx)
 
     if(avctx->rc_min_rate && avctx->rc_max_rate != avctx->rc_min_rate){
         av_log(avctx, AV_LOG_INFO, "Warning min_rate > 0 but min_rate != max_rate isnt recommanded!\n");
-    }    
+    }
+    
+    if(   s->avctx->rc_max_rate && s->avctx->rc_min_rate == s->avctx->rc_max_rate 
+       && (s->codec_id == CODEC_ID_MPEG1VIDEO || s->codec_id == CODEC_ID_MPEG2VIDEO)
+       && 90000LL * (avctx->rc_buffer_size-1) > s->avctx->rc_max_rate*0xFFFFLL){
         
+        av_log(avctx, AV_LOG_INFO, "Warning vbv_delay will be set to 0xFFFF (=VBR) as the specified vbv buffer is too large for the given bitrate!\n");
+    }
+       
     if((s->flags & CODEC_FLAG_4MV) && s->codec_id != CODEC_ID_MPEG4 
        && s->codec_id != CODEC_ID_H263 && s->codec_id != CODEC_ID_H263P && s->codec_id != CODEC_ID_FLV1){
         av_log(avctx, AV_LOG_ERROR, "4MV not supported by codec\n");
@@ -2115,7 +2122,8 @@ int MPV_encode_picture(AVCodecContext *avctx,
         }
 
         /* update mpeg1/2 vbv_delay for CBR */    
-        if(s->avctx->rc_max_rate && s->avctx->rc_min_rate == s->avctx->rc_max_rate && s->out_format == FMT_MPEG1){
+        if(s->avctx->rc_max_rate && s->avctx->rc_min_rate == s->avctx->rc_max_rate && s->out_format == FMT_MPEG1
+           && 90000LL * (avctx->rc_buffer_size-1) <= s->avctx->rc_max_rate*0xFFFFLL){
             int vbv_delay;
 
             assert(s->repeat_first_field==0);
@@ -3382,7 +3390,6 @@ static void encode_mb(MpegEncContext *s, int motion_x, int motion_y)
     int dct_offset   = s->linesize*8; //default for progressive frames
     uint8_t *ptr_y, *ptr_cb, *ptr_cr;
     int wrap_y, wrap_c;
-    int emu=0;
     
     for(i=0; i<6; i++) skip_dct[i]=0;
     
@@ -4580,7 +4587,6 @@ static void merge_context_after_encode(MpegEncContext *dst, MpegEncContext *src)
 
 static void encode_picture(MpegEncContext *s, int picture_number)
 {
-    int mb_x, mb_y;
     int i, j;
     int bits;
 
@@ -5141,7 +5147,6 @@ static int dct_quantize_refine(MpegEncContext *s, //FIXME breaks denoise?
     int prev_run=0;
     int prev_level=0;
     int qmul, qadd, start_i, last_non_zero, i, dc;
-    const int esc_length= s->ac_esc_length;
     uint8_t * length;
     uint8_t * last_length;
     int lambda;
@@ -5249,7 +5254,6 @@ STOP_TIMER("init rem[]")
 #endif
     for(;;){
         int best_score=s->dsp.try_8x8basis(rem, weight, basis[0], 0);
-        int nochange_score= best_score;
         int best_coeff=0;
         int best_change=0;
         int run2, best_unquant_change, analyze_gradient;
