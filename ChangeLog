@@ -1,3 +1,14 @@
+2001-06-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, lib/X11/Makefile.am, lib/X11/x11.c, lib/X11/x11.h,
+	src/enfle.c: The begninning of supporting Xv extension. There are
+	no code to make use of it yet.
+
+	* src/enfle.c: Implemented -c option.
+
+	* lib/utils/libconfig.c, lib/utils/libconfig.h: Implemented
+	parse().
+
 2001-06-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added --enable-warnings. Version up.
