@@ -2,6 +2,9 @@
 
 	* plugins/player/Makefile.am: LibMPEG2 is now not experimental.
 
+	* lib/Makefile.am: mpeg2 and demultiplexer are now not
+	experimental.
+
 	* NEWS: Updated NEWS.
 
 	* README, README.e: Updated documentations.
