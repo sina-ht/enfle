@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep 20 14:32:21 2001.
- * $Id: demultiplexer_mpeg.c,v 1.15 2001/09/20 05:32:49 sian Exp $
+ * Last Modified: Thu Sep 20 19:36:57 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.16 2001/09/20 10:36:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -59,11 +59,22 @@ demultiplexer_mpeg_create(void)
 
 #define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536
 #define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536
+
+/*
+#define MPEG_USER_DATA 0xb2
+#define MPEG_SEQUENCE_START 0xb3
+#define MPEG_SEQUENCE_ERROR 0xb4
+#define MPEG_EXTENSION_START 0xb5
+#define MPEG_SEQUENCE_END 0xb7
+#define MPEG_GROUP_START 0xb8
+*/
 #define MPEG_PROGRAM_END 0xb9
 #define MPEG_PACK_HEADER 0xba
 #define MPEG_SYSTEM_START 0xbb
-#define MPEG_AUDIO_AC3 0xbd /* suspicious */
+#define MPEG_RESERVED_STREAM1 0xbc
+#define MPEG_PRIVATE_STREAM1 0xbd
 #define MPEG_PADDING 0xbe
+#define MPEG_PRIVATE_STREAM2 0xbf
 
 static int
 examine(Demultiplexer *demux)
@@ -160,17 +171,29 @@ examine(Demultiplexer *demux)
       if (used_size < skip)
 	continue;
       break;
-    case MPEG_AUDIO_AC3:
+    case MPEG_RESERVED_STREAM1:
       skip = 6 + utils_get_big_uint16(buf + 4);
       if (used_size < skip)
 	continue;
-      debug_message("MPEG_AUDIO_AC3??\n");
+      debug_message(__FUNCTION__ ": MPEG_RESERVED_STREAM1\n");
+      break;
+    case MPEG_PRIVATE_STREAM1: /* AC3? */
+      skip = 6 + utils_get_big_uint16(buf + 4);
+      if (used_size < skip)
+	continue;
+      debug_message(__FUNCTION__ ": MPEG_PRIVATE_STREAM1\n");
       break;
     case MPEG_PADDING:
       skip = 6 + utils_get_big_uint16(buf + 4);
-      debug_message(__FUNCTION__ ": MPEG_PADDING, skip %d\n", skip);
+      debug_message(__FUNCTION__ ": MPEG_PADDING, skip %d bytes\n", skip);
       if (used_size < skip)
 	continue;
+      break;
+    case MPEG_PRIVATE_STREAM2:
+      skip = 6 + utils_get_big_uint16(buf + 4);
+      if (used_size < skip)
+	continue;
+      debug_message(__FUNCTION__ ": MPEG_PRIVATE_STREAM2\n");
       break;
     default:
       skip = 6 + utils_get_big_uint16(buf + 4);
@@ -325,12 +348,12 @@ demux_main(void *arg)
 	CONTINUE_IF_RUNNING;
       }
       break;
-    case MPEG_AUDIO_AC3:
+    case MPEG_PRIVATE_STREAM1: /* AC3? */
       skip = 6 + utils_get_big_uint16(buf + 4);
       if (used_size < skip) {
 	CONTINUE_IF_RUNNING;
       }
-      debug_message("MPEG_AUDIO_AC3??\n");
+      debug_message(__FUNCTION__ ": MPEG_PRIVATE_STREAM1\n");
       break;
     case MPEG_PADDING:
       skip = 6 + utils_get_big_uint16(buf + 4);
