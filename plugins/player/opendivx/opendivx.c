@@ -1,10 +1,10 @@
 /*
- * opendivx.c -- opendivx player plugin, which exploits libdivxdecore
+ * opendivx.c -- opendivx player plugin, now OBSOLETE
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:57:04 2002.
- * $Id: opendivx.c,v 1.29 2002/08/17 02:20:45 sian Exp $
+ * Last Modified: Sun Nov  2 00:35:44 2003.
+ * $Id: opendivx.c,v 1.30 2003/11/08 06:17:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -18,15 +18,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
- *
- * This plugin uses libdivxdecore developed by Project Mayo and its
- * contributors. This plugin itself doesn't include any part of codes
- * by others. I'm not sure this plugin is regarded as "Larger
- * Work". But even if so, consistent with OpenDivX-LICENSE, this
- * plugin can be and is released under the GNU General Public
- * License. The OpenDivX license can be found in the top of this
- * source tree, or
- * http://www.projectmayo.com/projects/divx_open_license.txt
  */
 
 #include <stdio.h>
@@ -218,6 +209,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
       case FCC_div6:
       case FCC_DIV6:
       case FCC_MP41:
+      case FCC_mp43:
       case FCC_MP43:
 	info->input_format = 311;
 	break;
@@ -452,17 +444,11 @@ play_video(void *arg)
     info->dec_frame.render_flag = 1;
     opt_frame = DEC_OPT_FRAME;
     if ((res = decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL)) != DEC_OK) {
-#ifndef DEC_OPT_FRAME_311
-#define DEC_OPT_FRAME_311 (DEC_OPT_FRAME + 1)
-#endif
       if (res == DEC_BAD_FORMAT) {
-	opt_frame = DEC_OPT_FRAME_311;
-	if ((res = decore((long)info, DEC_OPT_FRAME_311, &info->dec_frame, NULL)) == DEC_BAD_FORMAT) {
-	  err_message("Unknown frame format\n");
-	  pthread_mutex_unlock(&info->update_mutex);
-	  m->has_video = 0;
-	  break;
-	}
+	err_message("OPT_FRAME returns DEC_BAD_FORMAT\n");
+	pthread_mutex_unlock(&info->update_mutex);
+	m->has_video = 0;
+	break;
       } else {
 	err_message("OPT_FRAME returns %d\n", res);
 	pthread_mutex_unlock(&info->update_mutex);
@@ -470,8 +456,6 @@ play_video(void *arg)
 	break;
       }
     }
-
-    //debug_message_fnc("Frame format: %s\n", opt_frame == DEC_OPT_FRAME ? "DivX4 or later" : "DivX ;-) 3.11");
 
     destructor(ap);
     m->current_frame++;
@@ -522,9 +506,7 @@ play_audio(void *arg)
   debug_message_fn("()\n");
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
-    err_message("Cannot open device.\n");
-    ExitMP3(&info->mp);
-    pthread_exit((void *)PLAY_ERROR);
+    err_message("Cannot open device. Audio disabled.\n");
   }
   info->ad = ad;
 
@@ -534,30 +516,34 @@ play_audio(void *arg)
       break;
     }
     ap = (AVIPacket *)data;
-    ret = decodeMP3(&info->mp, ap->data, ap->size,
-		    output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
-    if (!param_is_set) {
-      m->sampleformat = _AUDIO_FORMAT_S16_LE;
-      m->channels = info->mp.fr.stereo;
-      m->samplerate = freqs[info->mp.fr.sampling_frequency];
-      m->sampleformat_actual = m->sampleformat;
-      m->channels_actual = m->channels;
-      m->samplerate_actual = m->samplerate;
-      if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
-	err_message("Some params are set wrong.\n");
-      param_is_set++;
-    }
-    while (ret == MP3_OK) {
-      m->ap->write_device(ad, (unsigned char *)output_buffer, write_size);
-      ret = decodeMP3(&info->mp, NULL, 0,
+    if (ad) {
+      ret = decodeMP3(&info->mp, ap->data, ap->size,
 		      output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+      if (!param_is_set) {
+	m->sampleformat = _AUDIO_FORMAT_S16_LE;
+	m->channels = info->mp.fr.stereo;
+	m->samplerate = freqs[info->mp.fr.sampling_frequency];
+	m->sampleformat_actual = m->sampleformat;
+	m->channels_actual = m->channels;
+	m->samplerate_actual = m->samplerate;
+	if (!m->ap->set_params(ad, &m->sampleformat_actual, &m->channels_actual, &m->samplerate_actual))
+	  err_message("Some params are set wrong.\n");
+	param_is_set++;
+      }
+      while (ret == MP3_OK) {
+	m->ap->write_device(ad, (unsigned char *)output_buffer, write_size);
+	ret = decodeMP3(&info->mp, NULL, 0,
+			output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+      }
     }
     destructor(ap);
   }
 
-  m->ap->sync_device(ad);
-  m->ap->close_device(ad);
-  info->ad = NULL;
+  if (ad) {
+    m->ap->sync_device(ad);
+    m->ap->close_device(ad);
+    info->ad = NULL;
+  }
 
   ExitMP3(&info->mp);
 
@@ -630,7 +616,7 @@ play_main(Movie *m, VideoWindow *vw)
   pthread_mutex_lock(&info->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
-  if (m->has_audio == 1) {
+  if (m->has_audio == 1 && info->ad) {
     audio_time = get_audio_time(m, info->ad);
     //debug_message("%d frames(v: %d a: %d)\n", i, video_time, audio_time);
 
@@ -804,6 +790,7 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
     case FCC_div6:
     case FCC_DIV6:
     case FCC_MP41:
+    case FCC_mp43:
     case FCC_MP43:
       info->input_format = 311;
       debug_message_fnc("Identified as DivX ;-) 3.11\n");
