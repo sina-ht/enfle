@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Jun 23 15:53:13 2002.
-# $Id: Makefile.am,v 1.3 2002/08/03 05:08:39 sian Exp $
+# Last Modified: Sun Aug  4 21:19:32 2002.
+# $Id: Makefile.am,v 1.4 2002/08/04 12:35:43 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC"; else echo -n ""; fi)
@@ -20,5 +20,5 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib @INCLUDEADD_AVIFILE@
 
 player_avifile_la_LDFLAGS = $(MORE_LDFLAGS) -module
 player_avifile_la_CFLAGS = $(MORE_CFLAGS)
-player_avifile_la_SOURCES = avifile.cpp
+player_avifile_la_SOURCES = avifile.cpp config.h
 player_avifile_la_LIBADD = @LIBADD_AVIFILE@ @LIBADD_STDCC@
