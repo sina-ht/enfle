@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_normal.c -- Original decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 18:46:49 2001.
- * $Id: vmpm_decompose_normal.c,v 1.12 2001/08/06 18:51:42 sian Exp $
+ * Last Modified: Tue Aug  7 17:50:09 2001.
+ * $Id: vmpm_decompose_normal.c,v 1.13 2001/08/07 09:29:58 sian Exp $
  */
 
 #include <stdio.h>
@@ -180,6 +180,7 @@ encode(VMPM *vmpm)
   if (match_found) {
     for (; i >= 1; i--) {
       int nsymbols = 0;
+      int jj = -1;
 
       stat_message(vmpm, "Level %d (%d tokens, %d distinct): ", i, vmpm->token_index[i], vmpm->newtoken[i] - 1);
       arithmodel_order_zero_reset(bin_am, 0, 0);
@@ -200,15 +201,25 @@ encode(VMPM *vmpm)
 	Token_value tv = vmpm->token[i][j]->value - 1;
 
 	if (nsymbols == tv) {
+	  if (nsymbols > vmpm->newtoken[i] - 1)
+	    generic_error((char *)"Internal error in " __FUNCTION__ "\n", INTERNAL_ERROR);
 	  stat_message(vmpm, "e ");
 	  nsymbols++;
+	  arithmodel_encode(am, tv);
+	  if (nsymbols == vmpm->newtoken[i] - 1 && j < vmpm->token_index[i] - 1) {
+	    /* All escapes are emitted. */
+	    jj = j;
+	    arithmodel_order_zero_uninstall_escape(am);
+	    debug_message(__FUNCTION__ ": Escape is uninstalled: %d/%d.\n", j, vmpm->token_index[i] - 1);
+	  }
 	} else {
 	  stat_message(vmpm, "%d ", tv);
+	  arithmodel_encode(am, tv);
 	}
-
-	arithmodel_encode(am, tv);
       }
       stat_message(vmpm, "\n");
+      if (jj != -1)
+	stat_message(vmpm, "Level %d: Escape is uninstalled at %d\n", i, jj);
     }
   }
 
