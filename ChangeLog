@@ -1,3 +1,52 @@
+2004-03-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11.c, lib/X11/x11window.c, lib/X11/x11ximage.c,
+	lib/dllloader/pe_image.c, lib/enfle/archive.c,
+	lib/enfle/demultiplexer.h, lib/enfle/enfle-plugins.c,
+	lib/enfle/memory.c, lib/enfle/movie.c, lib/enfle/spi.c,
+	lib/enfle/stream.c, lib/utils/fifo.c, lib/utils/hash.c,
+	lib/utils/timer.c, lib/utils/timer_gettimeofday.c,
+	plugins/archiver/arc/arc.c, plugins/archiver/tar/tar.c,
+	plugins/audio/alsa/alsa.c, plugins/audio/esd/esd.c,
+	plugins/audio/oss/oss.c, plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/audiodecoder/vorbis/vorbis.c,
+	plugins/demultiplexer/avi/avi.c, plugins/demultiplexer/mp3/mp3.c,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/demultiplexer/ogg/ogg.c, plugins/effect/gamma/gamma.c,
+	plugins/effect/rotate/rotate.c, plugins/loader/bmp/bmp.c,
+	plugins/loader/gif/gif.c, plugins/loader/j2k/j2k.c,
+	plugins/loader/jasper/jasper.c, plugins/loader/jpeg/jpeg.c,
+	plugins/loader/pcx/pcx.c, plugins/loader/png/png.c,
+	plugins/loader/pnm/pnm.c, plugins/loader/ungif/ungif.c,
+	plugins/loader/xbm/xbm.c, plugins/loader/xpm/xpm.c,
+	plugins/player/avcodec/avcodec.c, plugins/player/divx/divx.c,
+	plugins/player/generic/generic.c,
+	plugins/player/libmpeg2.old/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
+	plugins/player/mpeg_lib/mpeg_lib.c,
+	plugins/player/mpglib/mpglib.c, plugins/player/opendivx/avcodec.c,
+	plugins/player/opendivx/divx.c, plugins/player/opendivx/libavi.c,
+	plugins/player/opendivx/libriff.c,
+	plugins/player/opendivx/opendivx.c, plugins/player/ungif/ungif.c,
+	plugins/saver/jpeg/jpeg.c, plugins/saver/png/png.c,
+	plugins/streamer/bz2/bz2.c, plugins/streamer/gz/gz.c,
+	plugins/ui/convert/convert.c, plugins/ui/normal/normal.c,
+	plugins/ui/wallpaper/wallpaper.c, plugins/video/Xlib/Xlib.c,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/raw/raw.c: Cleaned up static initializers.
+	Mainly converted to C99 initializer syntax.
+
+2004-03-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Fixed long-standing SetInputForcus
+	bug.
+
+	* lib/avcodec/*: Updated.
+
 2004-03-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.rc: Added config for mp3.
