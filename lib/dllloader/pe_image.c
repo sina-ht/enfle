@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct  6 23:03:47 2001.
- * $Id: pe_image.c,v 1.18 2001/10/06 16:02:23 sian Exp $
+ * Last Modified: Wed Oct 10 18:33:43 2001.
+ * $Id: pe_image.c,v 1.19 2001/10/10 09:34:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -127,6 +127,10 @@ get_dll_symbols(char *dllname)
 }
 
 /* LDT related */
+#define LDT_INDEX 1
+#define LDT_TABLE_IDENT 1
+#define LDT_RPL 3
+#define LDT_SELECTOR(i, t, rpl) ((i << 3) | (t << 2) | rpl)
 
 #if defined(linux)
 #ifdef PIC
@@ -158,6 +162,7 @@ static int
 install_fs(void)
 {
   struct modify_ldt_ldt_s ldt;
+  unsigned int fs;
   int fd, ret;
   void *prev;
 
@@ -165,24 +170,24 @@ install_fs(void)
     return 0;
 
   fd = open("/dev/zero", O_RDWR);
-  if ((fs_seg = mmap((void *)0xbf000000, 0x30000, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL) {
+  if ((fs_seg = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL) {
     show_message("No enough memory for fs. Probably raising SIGSEGV...\n");
     return -1;
   }
-  ldt.base_addr = ((int)fs_seg + 0xffff) & 0xffff0000;
-  ldt.entry_number = 1;
+  ldt.base_addr = (int)fs_seg;
+  ldt.entry_number = LDT_INDEX;
   ldt.limit = ldt.base_addr + getpagesize() - 1;
   ldt.seg_32bit = 1;
   ldt.read_exec_only = 0;
   ldt.seg_not_present = 0;
   ldt.contents = MODIFY_LDT_CONTENTS_DATA;
   ldt.limit_in_pages = 0;
-  if ((ret = modify_ldt(1, &ldt, sizeof(struct modify_ldt_ldt_s))) < 0) {
+  if ((ret = modify_ldt(1, &ldt, sizeof(ldt))) < 0) {
     perror("install_fs");
     show_message("modify_ldt() failed. Probably raising SIGSEGV...\n");
   }
-  __asm__("movl $0xf,%eax\n\t"
-	  "movw %ax,%fs\n\t");
+  fs = LDT_SELECTOR(LDT_INDEX, LDT_TABLE_IDENT, LDT_RPL);
+  __asm__ ("movl %0, %%eax; movw %%ax, %%fs\n\t" : : "r" (fs));
   prev = malloc(8);
   *(void **)ldt.base_addr = prev;
   close(fd);
@@ -237,7 +242,8 @@ uninstall_fs(void)
 {
   if (fs_seg == NULL)
     return -1;
-  munmap(fs_seg, 0x30000);
+  munmap(fs_seg, getpagesize());
+  fs_seg = 0;
   fs_installed = 0;
 
   return 0;
@@ -412,9 +418,13 @@ load(PE_image *p, char *path)
       memset(p->image + p->sect_headers[i].VirtualAddress, 0, p->opt_header.SizeOfUninitializedData);
       debug_message("zero-cleared at 0x%X (%d bytes).\n", p->sect_headers[i].VirtualAddress, p->opt_header.SizeOfUninitializedData);
     } else {
-      fseek(fp, p->sect_headers[i].PointerToRawData, SEEK_SET);
-      fread(p->image + p->sect_headers[i].VirtualAddress, 1, p->sect_headers[i].SizeOfRawData, fp);
-      debug_message("loaded at 0x%X.\n", p->sect_headers[i].VirtualAddress);
+      if (p->sect_headers[i].SizeOfRawData > 0) {
+	fseek(fp, p->sect_headers[i].PointerToRawData, SEEK_SET);
+	fread(p->image + p->sect_headers[i].VirtualAddress, 1, p->sect_headers[i].SizeOfRawData, fp);
+	debug_message("loaded at 0x%X.\n", p->sect_headers[i].VirtualAddress);
+      } else {
+	debug_message("at 0x%X.\n", p->sect_headers[i].VirtualAddress);
+      }
     }
   }
 
@@ -462,8 +472,12 @@ load(PE_image *p, char *path)
     Symbol_info *syminfo;
 
     /* per DLL */
-    for (i = 0; iid[i].u.OriginalFirstThunk; i++) {
-      othunk = (IMAGE_THUNK_DATA *)(p->image + (int)iid[i].u.OriginalFirstThunk);
+    for (i = 0; iid[i].Name; i++) {
+      if (iid[i].u.OriginalFirstThunk) {
+	othunk = (IMAGE_THUNK_DATA *)(p->image + (int)iid[i].u.OriginalFirstThunk);
+      } else {
+	othunk = (IMAGE_THUNK_DATA *)(p->image + (int)iid[i].FirstThunk);
+      }
       thunk = (IMAGE_THUNK_DATA *)(p->image + (int)iid[i].FirstThunk);
 
       debug_message("Import DLL Name: %s\n", p->image + iid[i].Name);
