@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 16 02:32:10 2001.
- * $Id: image.h,v 1.11 2001/06/15 18:46:18 sian Exp $
+ * Last Modified: Mon Jun 18 00:44:29 2001.
+ * $Id: image.h,v 1.12 2001/06/17 20:48:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,10 +39,10 @@ typedef enum _image_type {
   _ABGR32,
   _ARGB32,
   _BGRA32,
-  _YUV420,
   _YUV420P,
-  _YVU420,
   _YVU420P,
+  _YUV422,
+  _YVU422,
   _IMAGETYPE_TERMINATOR
 } ImageType;
 
@@ -59,10 +59,10 @@ typedef enum _image_type {
 #define IMAGE_ABGR32           (1 << 10)
 #define IMAGE_ARGB32           (1 << 11)
 #define IMAGE_BGRA32           (1 << 12)
-#define IMAGE_YUV420           (1 << 13)
-#define IMAGE_YUV420_PLANAR    (1 << 14)
-#define IMAGE_YVU420           (1 << 13)
+#define IMAGE_YUV420_PLANAR    (1 << 13)
 #define IMAGE_YVU420_PLANAR    (1 << 14)
+#define IMAGE_YUV422           (1 << 15)
+#define IMAGE_YVU422           (1 << 16)
 
 typedef enum {
   _NOINTERPOLATE,

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 16 02:34:59 2001.
- * $Id: image.c,v 1.9 2001/06/15 18:46:18 sian Exp $
+ * Last Modified: Mon Jun 18 00:43:58 2001.
+ * $Id: image.c,v 1.10 2001/06/17 20:48:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,10 +44,10 @@ static const char *image_type_to_string_array[] = {
   "_ABGR32",
   "_ARGB32",
   "_BGRA32",
-  "_YUV420",
   "_YUV420P",
-  "_YVU420",
-  "_YVU420P"
+  "_YVU420P",
+  "_YUV422",
+  "_YVU422"
 };
 
 static Image *duplicate(Image *);
