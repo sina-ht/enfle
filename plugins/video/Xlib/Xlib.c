@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 21 03:46:15 2001.
- * $Id: Xlib.c,v 1.41 2001/10/22 08:48:43 sian Exp $
+ * Last Modified: Sun Oct 28 03:44:51 2001.
+ * $Id: Xlib.c,v 1.42 2001/10/27 18:45:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -65,6 +65,8 @@ typedef struct {
   WindowResource full;
   Font caption_font;
   XFontStruct *fs;
+  int is_rect_draw;
+  unsigned int lx, uy, rx, dy;
 } X11Window_info;
 
 static void *open_video(void *, Config *);
@@ -88,6 +90,8 @@ static int move(VideoWindow *, unsigned int, unsigned int);
 static int get_offset(VideoWindow *, int *, int *);
 static int set_offset(VideoWindow *, int, int);
 static int adjust_offset(VideoWindow *, int, int);
+static void erase_rect(VideoWindow *);
+static void draw_rect(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
 static int render(VideoWindow *, Image *);
 static void update(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
 static void do_sync(VideoWindow *);
@@ -95,12 +99,14 @@ static void discard_key_event(VideoWindow *);
 static void discard_button_event(VideoWindow *);
 static void destroy(void *);
 
+static void draw_rect_xor(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
+
 /* internal */
 
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.6",
+  description: "Xlib Video plugin version 0.6.1",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -127,6 +133,8 @@ static VideoWindow template = {
   get_offset: get_offset,
   set_offset: set_offset,
   adjust_offset: adjust_offset,
+  erase_rect: erase_rect,
+  draw_rect: draw_rect,
   render: render,
   update: update,
   do_sync: do_sync,
@@ -649,6 +657,14 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	  XUnionRectWithRegion(&rect, region, region);
 	} while (XCheckWindowEvent(x11_display(x11), x11window_win(xw),
 				   ExposureMask, &xev));
+	/* Prepare to draw a rectangle */
+	if (xwi->is_rect_draw) {
+	  rect.x = xwi->lx;
+	  rect.y = xwi->uy;
+	  rect.width  = xwi->rx - xwi->lx + 1;
+	  rect.height = xwi->dy - xwi->uy + 1;
+	  XUnionRectWithRegion(&rect, region, region);
+	}
 
 	XClipBox(region, &rect);
 	XSetRegion(x11_display(x11), gc, region);
@@ -657,6 +673,10 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 
 	XSetClipMask(x11_display(x11), gc, None);
 	XDestroyRegion(region);
+
+	/* Draw a rectangle */
+	if (xwi->is_rect_draw)
+	  draw_rect_xor(vw, xwi->lx, xwi->uy, xwi->rx, xwi->dy);
       } else {
 	if (!xwi->xi->use_xv)
 	  x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
@@ -669,6 +689,8 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
     case ButtonRelease:
       ev->type = (xev.type == ButtonPress) ?
 	ENFLE_Event_ButtonPressed : ENFLE_Event_ButtonReleased;
+      ev->pointer.x = xev.xbutton.x;
+      ev->pointer.y = xev.xbutton.y;
       switch (xev.xbutton.button) {
       case Button1:
 	ev->button.button = ENFLE_Button_1;
@@ -987,6 +1009,7 @@ move(VideoWindow *vw, unsigned int x, unsigned int y)
 static void
 commit_offset(VideoWindow *vw, int offset_x, int offset_y)
 {
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
   int old_offset_x = vw->offset_x;
   int old_offset_y = vw->offset_y;
 
@@ -1033,6 +1056,8 @@ commit_offset(VideoWindow *vw, int offset_x, int offset_y)
 
   if (vw->offset_x != old_offset_x || vw->offset_y != old_offset_y)
     update(vw, 0, 0, vw->width, vw->height);
+  if (xwi->is_rect_draw && (vw->offset_x != old_offset_x || vw->offset_y != old_offset_y))
+    draw_rect_xor(vw, xwi->lx, xwi->uy, xwi->rx, xwi->dy);
 }
 
 static int
@@ -1060,6 +1085,39 @@ adjust_offset(VideoWindow *vw, int x, int y)
   return 1;
 }
 
+/* This is not a method */
+static void
+draw_rect_xor(VideoWindow *vw, unsigned int lx, unsigned int uy, unsigned int rx, unsigned int dy)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+  GC gc = vw->if_fullscreen ? xwi->full.gc : xwi->normal.gc;
+  X11 *x11 = x11window_x11(xw);
+  XGCValues gcv_save;
+
+  if (vw->if_fullscreen) {
+    unsigned int slx = (vw->full_width  - vw->render_width ) >> 1;
+    unsigned int suy = (vw->full_height - vw->render_height) >> 1;
+
+    lx += slx;
+    rx += slx;
+    uy += suy;
+    dy += suy;
+  }
+  lx -= vw->offset_x;
+  rx -= vw->offset_x;
+  uy -= vw->offset_y;
+  dy -= vw->offset_y;
+
+  x11_lock(x11);
+  XGetGCValues(x11_display(x11), gc, GCFunction | GCForeground, &gcv_save);
+  XSetForeground(x11_display(x11), gc, x11_white(x11));
+  XSetFunction(x11_display(x11), gc, GXxor);
+  XDrawRectangle(x11_display(x11), x11window_win(xw), xwi->normal.gc, lx, uy, rx - lx, dy - uy);
+  XChangeGC(x11_display(x11), gc, GCFunction | GCForeground, &gcv_save);
+  x11_unlock(x11);
+}
+
 static void
 update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, unsigned int h)
 {
@@ -1080,6 +1138,51 @@ update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, uns
 	      top  + ((vw->full_height - vw->height) >> 1));
   }
   x11_unlock(x11);
+}
+
+static void
+erase_rect(VideoWindow *vw)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+
+  if (xwi->is_rect_draw != 1)
+    return;
+  draw_rect_xor(vw, xwi->lx, xwi->uy, xwi->rx, xwi->dy);
+  xwi->is_rect_draw = 0;
+}
+
+static void
+draw_rect(VideoWindow *vw, unsigned int lx, unsigned int uy, unsigned int rx, unsigned int dy)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+
+  erase_rect(vw);
+
+  if (lx > rx)
+    SWAP(lx, rx);
+  if (uy > dy)
+    SWAP(uy, dy);
+
+  if (vw->if_fullscreen) {
+    unsigned int slx = (vw->full_width  - vw->render_width ) >> 1;
+    unsigned int suy = (vw->full_height - vw->render_height) >> 1;
+
+    lx -= slx;
+    rx -= slx;
+    uy -= suy;
+    dy -= suy;
+  }
+  lx += vw->offset_x;
+  rx += vw->offset_x;
+  uy += vw->offset_y;
+  dy += vw->offset_y;
+
+  draw_rect_xor(vw, lx, uy, rx, dy);
+  xwi->is_rect_draw = 1;
+  xwi->lx = lx;
+  xwi->uy = uy;
+  xwi->rx = rx;
+  xwi->dy = dy;
 }
 
 static int

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jul  3 20:41:00 2001.
- * $Id: video.h,v 1.17 2001/07/10 12:59:45 sian Exp $
+ * Last Modified: Sun Oct 28 03:05:57 2001.
+ * $Id: video.h,v 1.18 2001/10/27 18:45:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -155,6 +155,8 @@ struct _video_window {
   int (*get_offset)(VideoWindow *, int *, int *);
   int (*set_offset)(VideoWindow *, int, int);
   int (*adjust_offset)(VideoWindow *, int, int);
+  void (*erase_rect)(VideoWindow *);
+  void (*draw_rect)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   int (*render)(VideoWindow *, Image *);
   void (*update)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   void (*do_sync)(VideoWindow *);
@@ -182,6 +184,8 @@ struct _video_window {
 #define video_window_get_offset(vw, xp, yp) (vw)->get_offset((vw), (xp), (yp))
 #define video_window_set_offset(vw, x, y) (vw)->set_offset((vw), (x), (y))
 #define video_window_adjust_offset(vw, x, y) (vw)->adjust_offset((vw), (x), (y))
+#define video_window_erase_rect(vw) (vw)->erase_rect((vw))
+#define video_window_draw_rect(vw, lx, uy, rx, dy) (vw)->draw_rect((vw), (lx), (uy), (rx), (dy))
 #define video_window_render(vw, p) (vw)->render((vw), (p))
 #define video_window_update(vw, x, y, w, h) (vw)->update((vw), (x), (y), (w), (h))
 #define video_window_sync(vw) (vw)->do_sync((vw))
