@@ -1,3 +1,11 @@
+2001-09-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11ximage.c: Added necessary #ifdef's.
+
+	* lib/utils/fifo.c: Dropped a useless inline function.
+
+	* plugins/player/avifile/avifile.cpp: Adapted for newer avifile.
+
 2001-09-18  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/mpglib/Makefile.am: Moved out main.c.
