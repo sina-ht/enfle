@@ -1,3 +1,39 @@
+2004-03-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added asf support.
+
+	* src/enfle.rc: Added .asf, .wmv.
+
+	* lib/enfle/demultiplexer.h, plugins/demultiplexer/avi/avi.c,
+	plugins/demultiplexer/mp3/mp3.c,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/demultiplexer/ogg/ogg.c, plugins/player/generic/generic.c:
+	Use demux->astreams[], demux->vstreams[].  Removed
+	demux->av_contig_number.
+
+	* plugins/demultiplexer/Makefile.am: Added asf.
+
+	* plugins/loader/gif/Makefile.am: Added headers.
+
+	* lib/enfle/demultiplexer_types.h,
+	lib/enfle/demultiplexer_waveformatex.h,
+	plugins/demultiplexer/avi/demultiplexer_avi_private.h: Created
+	demultiplexer_types.h, demultiplexer_waveformatex.h.
+
+	* lib/enfle/enfle-plugins.c, src/enfle.c: Added two options:
+	-n(nocache), -N(recache).
+
+	* plugins/demultiplexer/asf/*: ASF demultiplexer plugin.
+
+	* lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
+	lib/avcodec/common.h, lib/avcodec/dv.c, lib/avcodec/dvdata.h,
+	lib/avcodec/h263.c, lib/avcodec/h263dec.c, lib/avcodec/h264.c,
+	lib/avcodec/h264data.h, lib/avcodec/mjpeg.c,
+	lib/avcodec/mlib/dsputil_mlib.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/rv10.c, lib/avcodec/svq1.c,
+	lib/avcodec/svq3.c, lib/avcodec/utils.c: Updated.
+
 2004-03-14  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.rc: More extensions.
