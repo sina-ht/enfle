@@ -1,3 +1,9 @@
+2004-03-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/mad/Makefile.am: Fixed mad.h building bug.
+
+	* lib/avcodec/*: Updated.
+
 2004-03-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11.c, lib/X11/x11window.c, lib/X11/x11ximage.c,
