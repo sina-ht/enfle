@@ -1,3 +1,12 @@
+2001-05-23 Hiroshi Takekawa <sian@fennel.org>
+
+	* plugins/saver/glic/predict.c, plugins/saver/glic/predict.h,
+	plugins/saver/glic/scan.c, plugins/saver/glic/scan.h,
+	plugins/saver/glic/vmpm_decompose_highlow.c,
+	plugins/saver/glic/Makefile.am, plugins/saver/glic/floorlog2.c,
+	plugins/saver/glic/floorlog2.h, plugins/saver/glic/glic.c:
+	Implemented prediction.
+
 2001-05-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/saver/glic/vmpm_decompose_highlow.c: More efficient low

@@ -1,3 +1,12 @@
+2001-05-23 Hiroshi Takekawa <sian@fennel.org>
+
+	* plugins/player/libmpeg3/libmpeg3.c: Cosmetic change.
+
+	* src/enfle.rc: Fixed typo.
+
+	* plugins/ui/convert/convert.c: Don't use
+	archive_iteration_delete().
+
 2001-05-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c, src/enfle.rc: Added
