@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 21 01:54:45 2000.
- * $Id: stdio-support.c,v 1.3 2000/10/20 18:10:48 sian Exp $
+ * Last Modified: Fri Sep 21 02:26:39 2001.
+ * $Id: stdio-support.c,v 1.4 2001/09/21 02:57:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,34 +28,32 @@
 #include "common.h"
 
 #include "stdio-support.h"
+#include "libstring.h"
+
+#define TMP_SIZE 80
 
 char *
 stdios_gets(FILE *fp)
 {
-  char *p, *tmp;
-  int size = 80;
+  String *s;
+  char t[TMP_SIZE], *p;
 
-  p = NULL;
+  if ((s = string_create()) == NULL)
+    return NULL;
+
   for (;;) {
-    if ((tmp = realloc(p, size)) == NULL) {
-      if (p)
-	free(p);
-      return NULL;
-    }
-    p = tmp;
-
-    if (fgets(p, size, fp) == NULL) {
-      free(p);
+    if (fgets(t, TMP_SIZE, fp) == NULL) {
+      string_destroy(s);
       return NULL;
     }
 
-    if (strchr(p, '\n') != NULL)
+    string_cat(s, t);
+    if (strchr(t, '\n') != NULL)
       break;
-
-    size += 80;
   }
 
-  p = realloc(p, strlen(p) + 1);
+  p = strdup(string_get(s));
+  string_destroy(s);
 
   return p;
 }
