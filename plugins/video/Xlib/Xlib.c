@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 19 11:29:45 2002.
- * $Id: Xlib.c,v 1.49 2002/11/06 14:12:50 sian Exp $
+ * Last Modified: Fri Nov 29 01:36:37 2002.
+ * $Id: Xlib.c,v 1.50 2002/11/29 16:00:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <locale.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -69,6 +70,8 @@ typedef struct {
   WindowResource normal;
   WindowResource full;
   Font caption_font;
+  XFontSet xfontset;
+  int fontset;
   XFontStruct *fs;
   int is_rect_draw;
   unsigned int lx, uy, rx, dy;
@@ -153,6 +156,7 @@ void *
 plugin_entry(void)
 {
   VideoPlugin *vp;
+  char *tmp;
 
   if ((vp = (VideoPlugin *)calloc(1, sizeof(VideoPlugin))) == NULL)
     return NULL;
@@ -163,6 +167,20 @@ plugin_entry(void)
   else
     debug_message("XInitThreads() OK\n");
 #endif
+
+  if ((tmp = setlocale(LC_ALL, getenv("LANG"))) == NULL) {
+    warning("setlocale() failed.\n");
+  }
+  debug_message("Locale: %s\n", tmp);
+  if (XSupportsLocale() == False) {
+    warning("Xlib: XSupportsLocale() failed.\n");
+  } else {
+    if ((tmp = XSetLocaleModifiers("")) == NULL) {
+      warning("Xlib: XSetLocaleModifers() failed.\n");
+    } else {
+      debug_message("XSetLocaleModifiers: %s\n", tmp);
+    }
+  }
 
   return (void *)vp;
 }
@@ -266,7 +284,7 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
   X11Window *xw;
   X11Window_info *xwi;
   X11 *x11 = p->x11;
-  char *fontname;
+  char *fontname, *fontsetname;
 
   if ((vw = calloc(1, sizeof(VideoWindow))) == NULL)
     return NULL;
@@ -282,10 +300,36 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
   if ((fontname = config_get(vw->c, "/enfle/plugins/video/caption_font")) == NULL) {
     fontname = (char *)"a14";
   }
+  if ((fontsetname = config_get(vw->c, "/enfle/plugins/video/caption_fontset")) == NULL) {
+    fontsetname = NULL;
+  }
 
-  debug_message_fnc("load font [%s]\n", fontname);
+  if (fontsetname) {
+    debug_message_fnc("load fontset [%s]\n", fontsetname);
+  } else {
+    debug_message_fnc("load font [%s]\n", fontname);
+  }
 
-  xwi->caption_font = XLoadFont(x11_display(x11), fontname);
+  {
+    char **miss = NULL, *def = NULL;
+    int misscount = 0;
+
+    if (fontsetname) {
+      xwi->xfontset = XCreateFontSet(x11_display(x11), fontsetname, &miss, &misscount, &def);
+      if (misscount > 0) {
+	warning("%d miss for '%s'\n", miss, fontsetname);
+	xwi->caption_font = XLoadFont(x11_display(x11), fontname);
+	xwi->fontset = 0;
+      } else {
+	debug_message("XCreateFontSet(%s) OK.\n", fontsetname);
+	xwi->fontset = 1;
+	xwi->caption_font = XLoadFont(x11_display(x11), fontname);
+      }
+    } else {
+      xwi->caption_font = XLoadFont(x11_display(x11), fontname);
+      xwi->fontset = 0;
+    }
+  }
   xwi->fs = XQueryFont(x11_display(x11), xwi->caption_font);
 
   vw->full_width = WidthOfScreen(x11_sc(x11));
@@ -373,7 +417,11 @@ draw_caption(VideoWindow *vw)
     if (oy < y) {
       x11_lock(x11);
       XSetForeground(x11_display(x11), xwi->full.gc, x11_white(x11));
-      XDrawString(x11_display(x11), x11window_win(xw), xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+      if (xwi->fontset) {
+	XmbDrawString(x11_display(x11), x11window_win(xw), xwi->xfontset, xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+      } else {
+	XDrawString(x11_display(x11), x11window_win(xw), xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+      }
       x11_unlock(x11);
     } else {
       vw->if_caption = 0;
@@ -402,7 +450,11 @@ erase_caption(VideoWindow *vw)
 
   x11_lock(x11);
   XSetForeground(x11_display(x11), xwi->full.gc, x11_black(x11));
-  XDrawString(x11_display(x11), x11window_win(xw), xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+  if (xwi->fontset) {
+    XmbDrawString(x11_display(x11), x11window_win(xw), xwi->xfontset, xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+  } else {
+    XDrawString(x11_display(x11), x11window_win(xw), xwi->full.gc, x, y, vw->caption, strlen(vw->caption));
+  }
   x11_unlock(x11);
 
   vw->if_caption = 0;
