@@ -1,3 +1,30 @@
+2001-02-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h: Added warning() macro.
+
+	* README, README.e: More documentation.
+
+	* lib/enfle/image.h: Added new variable format_detail.
+
+	* plugins/loader/Makefile.am, plugins/loader/pcx/*: Added new pcx
+	loader plugin.
+
+	* plugins/player/Makefile.am: Commented out unusable libmpeg2
+	plugin.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Cleaned up a bit.
+
+	* plugins/ui/normal/normal.c: Print image type when debugging.
+
+2001-02-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/player/Makefile.am,
+	plugins/player/libmpeg2/*:New libmpeg2 player plugin.
+
+	* README: More documentation.
+
+	* README.e: New english README.
+
 2001-02-01  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Imported libmpeg2. Version up.
