@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov 29 02:09:59 2002.
- * $Id: stream.c,v 1.9 2002/11/29 15:57:16 sian Exp $
+ * Last Modified: Fri Jan  2 10:55:15 2004.
+ * $Id: stream.c,v 1.10 2004/01/03 10:29:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -383,6 +383,7 @@ make_fdstream(Stream *s, int fd)
     return 0;
   s->ptr = s->buffer;
   s->buffer_used = 0;
+  s->path = strdup("");
 
   s->format = strdup("FD");
   s->read = fdstream_read;
