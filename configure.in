@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2004 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Mar 11 23:12:01 2004.
-dnl $Id: configure.in,v 1.148 2004/03/11 15:12:31 sian Exp $
+dnl Last Modified: Mon Mar 15 01:51:33 2004.
+dnl $Id: configure.in,v 1.149 2004/03/14 16:51:50 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT(enfle, 20040311, sian@big.or.jp)
+AC_INIT(enfle, 20040315, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -373,6 +373,20 @@ fi
 
 test "$enable_mmx" = "yes" && AC_DEFINE(USE_MMX, 1, [ Define if you have and use MMX. ])
 AM_CONDITIONAL(USE_MMX, test "$enable_mmx" = "yes")
+
+AC_ARG_ENABLE(sse,
+       [  --enable-sse            Include SSE code(default yes for x86).])
+if test "${enable_sse-set}" = set; then
+  case "$host_cpu" in
+  i*86 )
+    enable_sse=yes ;;
+  *)
+    enable_sse=no ;;
+  esac
+fi
+
+test "$enable_sse" = "yes" && AC_DEFINE(USE_SSE, 1, [ Define if you have and use SSE. ])
+AM_CONDITIONAL(USE_SSE, test "$enable_sse" = "yes")
 
 dnl for libmpeg2
 case "$host_cpu" in

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar 12 00:01:35 2004.
- * $Id: enfle.c,v 1.60 2004/03/11 15:10:04 sian Exp $
+ * Last Modified: Sun Mar 14 19:32:22 2004.
+ * $Id: enfle.c,v 1.61 2004/03/14 16:51:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -75,9 +75,12 @@ static void
 usage(void)
 {
   const char *ext = 
-#if defined(USE_MMX) || defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI) || defined(__INTEL_COMPILER)
+#if defined(USE_MMX) || defined(USE_SSE) || defined(USE_SHM) || defined(USE_XV) || defined(USE_PTHREAD) || defined(USE_SPI) || defined(__INTEL_COMPILER)
 #ifdef USE_MMX
     "MMX "
+#endif
+#ifdef USE_SSE
+    "SSE "
 #endif
 #ifdef USE_SHM
     "SHM "
@@ -113,6 +116,15 @@ usage(void)
 #else
     if (caps & _MMX)
       printf("MMX is available, but disabled at compile-time.\n");
+#endif
+#ifdef USE_SSE
+    if (caps & _SSE)
+      printf("SSE is available.\n");
+    else
+      printf("SSE is not available.\n");
+#else
+    if (caps & _SSE)
+      printf("SSE is available, but disabled at compile-time.\n");
 #endif
   }
 #endif
