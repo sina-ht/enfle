@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 00:27:14 2001.
- * $Id: normal.c,v 1.39 2001/05/01 15:28:50 sian Exp $
+ * Last Modified: Wed May  2 02:04:32 2001.
+ * $Id: normal.c,v 1.40 2001/05/01 17:07:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,7 +40,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.4.4",
+  description: "Normal UI plugin version 0.4.5",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -202,9 +202,12 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
 #define MAIN_LOOP_NEXT 1
 #define MAIN_LOOP_PREV -1
 #define MAIN_LOOP_NEXTARCHIVE 2
-#define MAIN_LOOP_DELETE_FROM_LIST 3
-#define MAIN_LOOP_DELETE_FILE 4
-#define MAIN_LOOP_DO_NOTHING 5
+#define MAIN_LOOP_PREVARCHIVE -2
+#define MAIN_LOOP_LAST 3
+#define MAIN_LOOP_FIRST -3
+#define MAIN_LOOP_DELETE_FROM_LIST 4
+#define MAIN_LOOP_DELETE_FILE 5
+#define MAIN_LOOP_DO_NOTHING 6
 
 typedef struct _main_loop {
   UIData *uidata;
@@ -224,10 +227,13 @@ typedef struct _main_loop {
 
 /* action handler */
 
+static int main_loop_quit(MainLoop *ml) { ml->ret = MAIN_LOOP_QUIT; return 1; }
 static int main_loop_next(MainLoop *ml) { ml->ret = MAIN_LOOP_NEXT; return 1; }
 static int main_loop_nextarchive(MainLoop *ml) { ml->ret = MAIN_LOOP_NEXTARCHIVE; return 1; }
 static int main_loop_prev(MainLoop *ml) { ml->ret = MAIN_LOOP_PREV; return 1; }
-static int main_loop_quit(MainLoop *ml) { ml->ret = MAIN_LOOP_QUIT; return 1; }
+static int main_loop_prevarchive(MainLoop *ml) { ml->ret = MAIN_LOOP_PREVARCHIVE; return 1; }
+static int main_loop_last(MainLoop *ml) { ml->ret = MAIN_LOOP_LAST; return 1; }
+static int main_loop_first(MainLoop *ml) { ml->ret = MAIN_LOOP_FIRST; return 1; }
 static int main_loop_delete_file(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FILE; return 1; }
 static int main_loop_delete_from_list(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FROM_LIST; return 1;}
 
@@ -419,7 +425,6 @@ main_loop_button_released(MainLoop *ml)
 
   ml->button = ENFLE_Button_None;
   if (button == ml->ev.button.button) {
-    video_window_sync_discard(ml->vw);
     switch (button) {
     case ENFLE_Button_1:
       return main_loop_next(ml);
@@ -450,7 +455,11 @@ main_loop_key_released(MainLoop *ml)
     case ENFLE_KEY_space:
       return (ml->ev.key.modkey & ENFLE_MOD_Shift) ? main_loop_nextarchive(ml) : main_loop_next(ml);
     case ENFLE_KEY_b:
-      return main_loop_prev(ml);
+      return (ml->ev.key.modkey & ENFLE_MOD_Shift) ? main_loop_prevarchive(ml) : main_loop_prev(ml);
+    case ENFLE_KEY_less:
+      return main_loop_first(ml);
+    case ENFLE_KEY_greater:
+      return main_loop_last(ml);
     case ENFLE_KEY_q:
       return main_loop_quit(ml);
     case ENFLE_KEY_f:
@@ -569,13 +578,14 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	break;
       case ENFLE_Event_ButtonReleased:
 	main_loop_button_released(&ml);
+	video_window_discard_button_event(vw);
 	break;
       case ENFLE_Event_KeyPressed:
 	main_loop_key_pressed(&ml);
 	break;
       case ENFLE_Event_KeyReleased:
 	main_loop_key_released(&ml);
-	video_window_sync_discard(vw);
+	video_window_discard_key_event(vw);
 	break;
       case ENFLE_Event_PointerMoved:
 	main_loop_pointer_moved(&ml);
@@ -651,7 +661,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
       switch (ret) {
       case MAIN_LOOP_DELETE_FROM_LIST:
 	archive_iteration_delete(a);
-	ret = (dir == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	ret = MAIN_LOOP_NEXT;
 	continue;
       case MAIN_LOOP_DELETE_FILE:
 	if (strcmp(a->format, "NORMAL") == 0) {
@@ -659,7 +669,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	  show_message("DELETED: %s\n", s->path);
 	}
 	archive_iteration_delete(a);
-	ret = (dir == 1) ? MAIN_LOOP_NEXT : MAIN_LOOP_PREV;
+	ret = MAIN_LOOP_NEXT;
 	continue;
       case MAIN_LOOP_NEXT:
 	dir = 1;
@@ -672,6 +682,18 @@ process_files_of_archive(UIData *uidata, Archive *a)
       case MAIN_LOOP_NEXTARCHIVE:
 	path = NULL;
 	ret = MAIN_LOOP_NEXT;
+	break;
+      case MAIN_LOOP_PREVARCHIVE:
+	path = NULL;
+	ret = MAIN_LOOP_PREV;
+	break;
+      case MAIN_LOOP_FIRST:
+	dir = 1;
+	path = archive_iteration_first(a);
+	break;
+      case MAIN_LOOP_LAST:
+	dir = 1;
+	path = archive_iteration_last(a);
 	break;
       case MAIN_LOOP_DO_NOTHING:
 	break;
@@ -707,6 +729,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	    ret = MAIN_LOOP_NEXT;
 	    continue;
 	  }
+	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
 	  video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 	  ret = process_files_of_archive(uidata, arc);
 	  if (arc->nfiles == 0) {
@@ -747,6 +770,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	debug_message("Archiver identified as %s\n", arc->format);
 
 	if (archiver_open(ar, eps, arc, arc->format, s)) {
+	  (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
 	  ret = process_files_of_archive(uidata, arc);
 	  archive_destroy(arc);
 	  dir = 1;
