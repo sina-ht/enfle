@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 11 17:00:49 2000.
- * $Id: common.h,v 1.4 2000/10/12 03:46:44 sian Exp $
+ * Last Modified: Sat Oct 21 01:54:00 2000.
+ * $Id: common.h,v 1.5 2000/10/20 18:13:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,7 @@
 # endif
 #endif
 
+#include <stdio.h>
 #define show_message(format, args...) printf(format, ## args)
 
 #ifdef DEBUG
