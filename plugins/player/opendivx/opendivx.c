@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jun 22 21:44:46 2001.
- * $Id: opendivx.c,v 1.7 2001/06/22 16:54:12 sian Exp $
+ * Last Modified: Sun Aug 26 09:05:51 2001.
+ * $Id: opendivx.c,v 1.8 2001/08/26 00:56:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,7 +29,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "divxdecore/decore.h"
+#define LINUX
+#include <decore.h>
 #include "libavi.h"
 
 #include "common.h"
@@ -47,11 +48,14 @@ typedef struct _opendivx_info {
   RIFF_File *rf;
   RIFF_Chunk *rc;
   AviFileReader *afr;
+  DEC_MEM_REQS dec_memreqs;
   DEC_PARAM dec_param;
   DEC_SET   dec_set;
   DEC_FRAME dec_frame;
   Image *p;
   AudioDevice *ad;
+  int output_format;
+  int use_xv;
   int eof;
   int drop;
   pthread_mutex_t update_mutex;
@@ -64,16 +68,13 @@ typedef struct _opendivx_info {
   pthread_t audio_thread;
 } OpenDivX_info;
 
-#ifdef USE_MMX
 static const unsigned int types =
-  (IMAGE_BGRA32 | IMAGE_BGR24 | IMAGE_BGR_WITH_BITMASK);
-#else
-static const unsigned int types =
-  (IMAGE_ARGB32 | IMAGE_RGB24 | IMAGE_RGB_WITH_BITMASK);
-#endif
+  (IMAGE_I420 | IMAGE_UYVY | IMAGE_YUY2 |
+   IMAGE_BGRA32 | IMAGE_BGR24 |
+   IMAGE_ARGB32 | IMAGE_RGB24 |
+   IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
 
-static PlayerStatus identify(Movie *, Stream *);
-static PlayerStatus load(VideoWindow *, Movie *, Stream *);
+DECLARE_PLAYER_PLUGIN_METHODS;
 
 static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
@@ -82,7 +83,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "OpenDivX",
-  description: "OpenDivX Player plugin version 0.1.1",
+  description: "OpenDivX Player plugin version 0.2",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -131,7 +132,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   Image *p;
 
   if ((info = calloc(1, sizeof(OpenDivX_info))) == NULL) {
-    show_message("OpenDivX: load_movie: No enough memory.\n");
+    show_message("OpenDivX: " __FUNCTION__ ": No enough memory.\n");
     return PLAY_ERROR;
   }
 
@@ -160,10 +161,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
   debug_message("OpenDivX: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
-  /* can set how many CPUs you want to use. */
-  /* mpeg3_set_cpus(info->file, 2); */
-  /* mpeg3_set_mmx(info->file, 1); */
-
   m->has_audio = 0;
   if (info->afr->header.dwStreams == 2) {
     if (m->ap == NULL)
@@ -182,6 +179,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
       if (m->ap->bytes_written == NULL)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
+
       show_message("Audio support is not yet implemented.\n");
       m->has_audio = 0;
     }
@@ -198,26 +196,21 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->framerate = 1000000 / info->afr->header.dwMicroSecPerFrame;
   m->num_of_frames = info->afr->vsheader.dwLength;
 
-  switch (vw->render_method) {
-  case _VIDEO_RENDER_NORMAL:
+  p = info->p = image_create();
+  video_window_calc_magnified_size(vw, m->width, m->height, &p->magnified.width, &p->magnified.height);
+
+  if (info->use_xv) {
     m->rendering_width  = m->width;
     m->rendering_height = m->height;
-    break;
-  case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-    m->rendering_width  = m->width  << 1;
-    m->rendering_height = m->height << 1;
-    break;
-  default:
-    m->rendering_width  = m->width;
-    m->rendering_height = m->height;
-    break;
+  } else {
+    m->rendering_width  = p->magnified.width;
+    m->rendering_height = p->magnified.height;
   }
 
   debug_message("video(%d streams): (%d,%d) -> (%d,%d) %f fps %d frames\n", info->nvstreams,
 		m->width, m->height, m->rendering_width, m->rendering_height,
 		m->framerate, m->num_of_frames);
 
-  p = info->p = image_create();
   p->width = m->rendering_width;
   p->height = m->rendering_height;
   p->type = m->requested_type;
@@ -225,25 +218,56 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     goto error;
   memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
 
-  switch (vw->bits_per_pixel) {
-  case 32:
-    p->depth = 24;
-    p->bits_per_pixel = 32;
-    p->bytes_per_line = p->width * 4;
+  switch (m->requested_type) {
+  case _I420:
+    p->bits_per_pixel = 12;
+    p->bytes_per_line = p->width * 3 / 2;
+    info->use_xv = 1;
+    info->output_format = DEC_420;
     break;
-  case 24:
-    p->depth = 24;
-    p->bits_per_pixel = 24;
-    p->bytes_per_line = p->width * 3;
-    break;
-  case 16:
-    p->depth = 16;
+  case _UYVY:
     p->bits_per_pixel = 16;
-    p->bytes_per_line = p->width * 2;
+    p->bytes_per_line = p->width << 1;
+    info->use_xv = 1;
+    info->output_format = DEC_UYVY;
+    break;
+  case _YUY2:
+    p->bits_per_pixel = 16;
+    p->bytes_per_line = p->width << 1;
+    info->use_xv = 1;
+    info->output_format = DEC_YUY2;
     break;
   default:
-    show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
-    return PLAY_ERROR;
+    info->use_xv = 0;
+    switch (vw->bits_per_pixel) {
+    case 32:
+      p->depth = 24;
+      p->bits_per_pixel = 32;
+      p->bytes_per_line = p->width * 4;
+      info->output_format = (p->type == _BGRA32) ? DEC_RGB32_INV : DEC_RGB32;
+      break;
+    case 24:
+      p->depth = 24;
+      p->bits_per_pixel = 24;
+      p->bytes_per_line = p->width * 3;
+      info->output_format = (p->type == _BGR24) ? DEC_RGB24_INV : DEC_RGB24;
+      break;
+    case 16:
+      p->depth = 16;
+      p->bits_per_pixel = 16;
+      p->bytes_per_line = p->width * 2;
+      info->output_format = (p->type == _BGR_WITH_BITMASK) ? DEC_RGB565_INV : DEC_RGB565;
+      break;
+    case 15:
+      p->depth = 15;
+      p->bits_per_pixel = 16;
+      p->bytes_per_line = p->width * 2;
+      info->output_format = (p->type == _BGR_WITH_BITMASK) ? DEC_RGB555_INV : DEC_RGB555;
+      break;
+    default:
+      show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
+      return PLAY_ERROR;
+    }
   }
 
   if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
@@ -271,6 +295,8 @@ static PlayerStatus
 play(Movie *m)
 {
   OpenDivX_info *info = (OpenDivX_info *)m->movie_private;
+  DEC_MEM_REQS *dec_memreqs = &info->dec_memreqs;
+  DEC_PARAM *dec_param = &info->dec_param;
 
   debug_message(__FUNCTION__ "()\n");
 
@@ -293,10 +319,28 @@ play(Movie *m)
   timer_start(m->timer);
   info->eof = 0;
 
-  info->dec_param.x_dim = m->width;
-  info->dec_param.y_dim = m->height;
-  info->dec_param.color_depth = info->p->bits_per_pixel;
-  decore((long)info, DEC_OPT_INIT, &info->dec_param, NULL);
+  dec_param->x_dim = m->width;
+  dec_param->y_dim = m->height;
+  dec_param->output_format = info->output_format;
+  dec_param->time_incr = 15;
+
+  decore((long)info, DEC_OPT_MEMORY_REQS, dec_param, dec_memreqs);
+
+  dec_param->buffers.mp4_edged_ref_buffers = malloc(dec_memreqs->mp4_edged_ref_buffers_size);
+  dec_param->buffers.mp4_edged_for_buffers = malloc(dec_memreqs->mp4_edged_for_buffers_size);
+  dec_param->buffers.mp4_edged_back_buffers = malloc(dec_memreqs->mp4_edged_back_buffers_size);
+  dec_param->buffers.mp4_display_buffers = malloc(dec_memreqs->mp4_display_buffers_size);
+  dec_param->buffers.mp4_state = malloc(dec_memreqs->mp4_state_size);
+  dec_param->buffers.mp4_tables = malloc(dec_memreqs->mp4_tables_size);
+  dec_param->buffers.mp4_stream = malloc(dec_memreqs->mp4_stream_size);
+  dec_param->buffers.mp4_reference = malloc(dec_memreqs->mp4_reference_size);
+
+  memset(dec_param->buffers.mp4_state, 0, dec_memreqs->mp4_state_size);
+  memset(dec_param->buffers.mp4_tables, 0, dec_memreqs->mp4_tables_size);
+  memset(dec_param->buffers.mp4_stream, 0, dec_memreqs->mp4_stream_size);
+  memset(dec_param->buffers.mp4_reference, 0, dec_memreqs->mp4_reference_size);
+
+  decore((long)info, DEC_OPT_INIT, dec_param, NULL);
 
   info->dec_set.postproc_level = 0;
   decore((long)info, DEC_OPT_SETPP, &info->dec_set, NULL);
@@ -335,7 +379,7 @@ play_video(void *arg)
       info->dec_frame.bitstream = riff_chunk_get_data(info->rc);
       info->dec_frame.bmp = memory_ptr(info->p->rendered.image);
       info->dec_frame.render_flag = 1;
-      decore((long)info, 0, &info->dec_frame, NULL);
+      decore((long)info, DEC_OPT_FRAME, &info->dec_frame, NULL);
       riff_chunk_destroy(info->rc);
       m->current_frame++;
     }
@@ -546,6 +590,17 @@ stop_movie(Movie *m)
     info->audio_thread = 0;
   }
 
+  decore((long)info, DEC_OPT_RELEASE, NULL, NULL);
+
+  free(info->dec_param.buffers.mp4_edged_ref_buffers);
+  free(info->dec_param.buffers.mp4_edged_for_buffers);
+  free(info->dec_param.buffers.mp4_edged_back_buffers);
+  free(info->dec_param.buffers.mp4_display_buffers);
+  free(info->dec_param.buffers.mp4_state);
+  free(info->dec_param.buffers.mp4_tables);
+  free(info->dec_param.buffers.mp4_stream);
+  free(info->dec_param.buffers.mp4_reference);
+
   return PLAY_OK;
 }
 
@@ -579,8 +634,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-static PlayerStatus
-identify(Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
 {
   unsigned char buf[16];
 
@@ -595,8 +649,7 @@ identify(Movie *m, Stream *st)
   return PLAY_OK;
 }
 
-static PlayerStatus
-load(VideoWindow *vw, Movie *m, Stream *st)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
 {
   debug_message("opendivx player: load() called\n");
 
@@ -604,7 +657,7 @@ load(VideoWindow *vw, Movie *m, Stream *st)
   {
     PlayerStatus status;
 
-    if ((status = identify(m, st)) != PLAY_OK)
+    if ((status = identify(m, st, c, priv)) != PLAY_OK)
       return status;
     stream_rewind(st);
   }
