@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar 19 00:22:16 2004.
- * $Id: ogg.c,v 1.3 2004/03/24 15:00:35 sian Exp $
+ * Last Modified: Sat Apr 24 15:09:12 2004.
+ * $Id: ogg.c,v 1.4 2004/04/27 12:23:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -326,7 +326,6 @@ demux_main(void *arg)
 	}
 #endif
 	dp = malloc(sizeof(DemuxedPacket));
-	dp->pts_dts_flag = 0xff;
 	dp->pts = dp->dts = -1;
 	dp->size = op.bytes - 1 - header_len;
 	dp->data = malloc(dp->size);
@@ -336,7 +335,6 @@ demux_main(void *arg)
 	/* XXX: This code is for vorbis only.
 	   If mp3 or some like that, you should handle it. */
 	dp = malloc(sizeof(DemuxedPacket));
-	dp->pts_dts_flag = 0xff;
 	dp->pts = dp->dts = -1;
 	dp->size = op.bytes;
 	dp->data = malloc(dp->size);

@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar 22 22:02:23 2004.
- * $Id: mpeg.c,v 1.6 2004/03/24 15:00:35 sian Exp $
+ * Last Modified: Sat Apr 24 15:27:12 2004.
+ * $Id: mpeg.c,v 1.7 2004/04/27 12:23:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -249,8 +249,10 @@ __examine(Demultiplexer *demux, int identify_only)
 	goto error;
       }
       //debug_message_fnc("MPEG_PACK_HEADER: version %d skip %d\n", info->ver, skip);
-      if (identify_only)
+      if (identify_only) {
+	debug_message_fnc("MPEG %d stream detected\n", info->ver);
 	goto end;
+      }
       break;
     case MPEG_SYSTEM_START:
       debug_message_fnc("MPEG_SYSTEM_START\n");
@@ -339,6 +341,8 @@ get_timestamp(unsigned char *p)
 
 #define CONTINUE_IF_RUNNING if (demux->running) continue; else break
 
+#define TS_BASE 90000
+
 static void *
 demux_main(void *arg)
 {
@@ -380,7 +384,6 @@ demux_main(void *arg)
       /* Video stream */
       skip = used_size;
       dp = malloc(sizeof(DemuxedPacket));
-      dp->pts_dts_flag = 0xff;
       dp->pts = dp->dts = -1;
       dp->size = skip;
       dp->data = malloc(dp->size);
@@ -487,7 +490,6 @@ demux_main(void *arg)
 	if ((buf[6] & 0xc0) == 0x80) {
 	  /* MPEG II */
 	  dp = malloc(sizeof(DemuxedPacket));
-	  dp->pts_dts_flag = 0xff;
 	  dp->pts = dp->dts = -1;
 	  dp->size = skip - 9 - buf[8];
 	  dp->data = malloc(dp->size);
@@ -523,9 +525,10 @@ demux_main(void *arg)
 	  default:
 	    goto error;
 	  }
+
 	  if (p < buf + skip) {
 	    dp = malloc(sizeof(DemuxedPacket));
-	    dp->pts_dts_flag = pts_dts_flag;
+	    dp->ts_base = TS_BASE;
 	    dp->pts = pts;
 	    dp->dts = dts;
 	    dp->size = buf + skip - p;
@@ -540,7 +543,6 @@ demux_main(void *arg)
 	  debug_message_fnc("identified as video stream.  Put data in raw.\n");
 	  skip = used_size;
 	  dp = malloc(sizeof(DemuxedPacket));
-	  dp->pts_dts_flag = 0xff;
 	  dp->pts = dp->dts = -1;
 	  dp->size = skip;
 	  dp->data = malloc(dp->size);

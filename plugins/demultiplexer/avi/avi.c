@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr  6 00:31:20 2004.
- * $Id: avi.c,v 1.6 2004/04/05 15:51:22 sian Exp $
+ * Last Modified: Sat Apr 24 15:14:17 2004.
+ * $Id: avi.c,v 1.7 2004/04/27 12:23:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -540,6 +540,7 @@ demux_main(void *arg)
 	if (riff_chunk_get_size(rc) > 0) {
 	  if ((dp = malloc(sizeof(DemuxedPacket))) == NULL)
 	    fatal("%s: No enough memory.\n", __FUNCTION__);
+	  dp->pts = dp->dts = -1;
 	  dp->size = riff_chunk_get_size(rc);
 	  dp->data = riff_chunk_get_data(rc);
 	  fifo_put(demux->vstream, dp, demultiplexer_destroy_packet);
@@ -555,6 +556,7 @@ demux_main(void *arg)
 	if (riff_chunk_get_size(rc) > 0) {
 	  if ((dp = malloc(sizeof(DemuxedPacket))) == NULL)
 	    fatal("%s: No enough memory.\n", __FUNCTION__);
+	  dp->pts = dp->dts = -1;
 	  dp->size = riff_chunk_get_size(rc);
 	  dp->data = riff_chunk_get_data(rc);
 	  fifo_put(demux->astream, dp, demultiplexer_destroy_packet);

@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 03:59:00 2004.
- * $Id: demultiplexer.h,v 1.4 2004/04/18 06:26:46 sian Exp $
+ * Last Modified: Sat Apr 24 15:19:36 2004.
+ * $Id: demultiplexer.h,v 1.5 2004/04/27 12:23:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -64,7 +64,7 @@ struct _demultiplexer {
 
 typedef struct _demuxed_packet {
   int is_key;
-  int pts_dts_flag;
+  unsigned long ts_base;
   unsigned long pts, dts;
   unsigned int size;
   void *data;

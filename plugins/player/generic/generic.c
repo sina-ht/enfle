@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 18 04:06:37 2004.
- * $Id: generic.c,v 1.13 2004/04/18 06:28:38 sian Exp $
+ * Last Modified: Mon Apr 26 21:22:11 2004.
+ * $Id: generic.c,v 1.14 2004/04/27 12:23:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -343,15 +343,9 @@ get_audio_time(Movie *m, AudioDevice *ad)
   return (int)((double)m->current_sample * 1000 / m->samplerate);
 }
 
-//#define USE_TS
-#undef USE_TS
-
-#ifdef USE_TS
-#define TS_BASE 90000
-#define TS_TO_CLOCK(sec, usec, ts) \
-  sec  =  ts / TS_BASE; \
-  usec = (ts % TS_BASE) * (1000000 / TS_BASE);
-#endif
+#define TS_TO_CLOCK(sec, usec, ts, ts_base) \
+  sec  =  ts / ts_base; \
+  usec = (ts % ts_base) * (1000000 / ts_base);
 
 static void *
 play_video(void *arg)
@@ -364,12 +358,6 @@ play_video(void *arg)
   FIFO_destructor destructor;
   int used;
   int is_key;
-#ifdef USE_TS
-  unsigned long pts, dts, size;
-#if defined(DEBUG)
-  unsigned int psec, pusec, dsec, dusec;
-#endif
-#endif
 
   debug_message_fn("()\n");
 
@@ -404,17 +392,19 @@ play_video(void *arg)
 	destructor(dp);
       dp = (DemuxedPacket *)data;
 
-#if defined(USE_TS)
-      pts = dp->pts;
-      dts = dp->dts;
-#if defined(DEBUG)
-      if (pts != -1) {
-	TS_TO_CLOCK(psec, pusec, pts);
-	TS_TO_CLOCK(dsec, dusec, dts);
-	debug_message_fnc("pts %d.%d dts %d.%d flag(%d)\n", psec, pusec, dsec, dusec, dp->pts_dts_flag);
+#if 0
+      {
+	unsigned long pts, dts, psec, pusec, dsec, dusec;
+	pts = dp->pts;
+	dts = dp->dts;
+	if (pts != -1) {
+	  TS_TO_CLOCK(psec, pusec, pts, dp->ts_base);
+	  TS_TO_CLOCK(dsec, dusec, dts, dp->ts_base);
+	  debug_message_fnc("pts %ld.%ld dts %ld.%ld\n", psec, pusec, dsec, dusec);
+	}
       }
 #endif
-#endif
+
       is_key = dp->is_key;
       vds = videodecoder_decode(m->vdec, m, info->p, dp->data, dp->size, is_key, &used);
       if (used != dp->size)
@@ -449,9 +439,6 @@ play_audio(void *arg)
   FIFO_destructor destructor;
   int used;
   AudioDevice *ad;
-#ifdef USE_TS
-  unsigned long pts, dts, size;
-#endif
 
   debug_message_fn("()\n");
 
@@ -493,10 +480,6 @@ play_audio(void *arg)
 	destructor(dp);
       dp = (DemuxedPacket *)data;
 
-#if defined(USE_TS)
-      pts = dp->pts;
-      dts = dp->dts;
-#endif
       ads = audiodecoder_decode(m->adec, m, ad, dp->data, dp->size, &used);
       if (used != dp->size)
 	warning_fnc("audiodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
