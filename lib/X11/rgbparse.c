@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb 15 03:54:46 2002.
- * $Id: rgbparse.c,v 1.1 2002/02/14 19:20:16 sian Exp $
+ * Last Modified: Tue Jul 30 21:57:54 2002.
+ * $Id: rgbparse.c,v 1.2 2002/07/31 13:57:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,7 +74,7 @@ parse_string(char *p)
 static void
 parse_error(char *s)
 {
-  fprintf(stderr, "Parse error: %s\n", s);
+  err_message("rgbparse: %s\n", s);
 }
 
 static int
@@ -111,6 +111,7 @@ rgbparse_line(Hash *h, char *s)
       k[i] = tolower(k[i]);
 
   hash_define_str(h, k, c);
+  free(k);
 
   return 1;
 }
