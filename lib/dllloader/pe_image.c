@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 10 17:01:31 2001.
- * $Id: pe_image.c,v 1.12 2001/09/10 11:59:41 sian Exp $
+ * Last Modified: Mon Sep 10 21:10:38 2001.
+ * $Id: pe_image.c,v 1.13 2001/09/10 14:20:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -479,11 +479,14 @@ load(PE_image *p, char *path)
 
     if (InitDll) {
       debug_message("InitDll %p\n", InitDll);
-      /* some dll (e.g. ir32_32.dll) break %ebx */
-      __asm__("pushl %ebx\n\t");
+      /*
+       * some dll (e.g. ir32_32.dll) break %ebx
+       * but do as below will cause segmentation fault...
+       */
+      //__asm__ __volatile__("pushl %ebx\n\t");
       if ((result = InitDll((HMODULE)p->image, DLL_PROCESS_ATTACH, NULL)) != 1)
 	show_message("InitDll returns %d\n", result);
-      __asm__("popl %ebx\n\t");
+      //__asm__ __volatile__("popl %ebx\n\t");
     }
   }
 
