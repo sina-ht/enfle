@@ -1,3 +1,17 @@
+2001-03-13  Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in: More checking.
+
+	* common.h: Added #undef HAVE_STDDEF_H.
+
+	* plugins/ui/normal/normal.c: Fixed a leap bug.
+
+	* lib/utils/hash.h: Deleted codes commented out.
+
+	* lib/utils/hash.c: destroy_datum() now returns a result value.
+
+	* lib/enfle/archive.c: Fixed message error.
+
 2001-03-11  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Changed the return value of
