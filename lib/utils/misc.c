@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 20:53:25 2002.
- * $Id: misc.c,v 1.8 2002/08/18 13:27:43 sian Exp $
+ * Last Modified: Sat Sep 13 02:52:41 2003.
+ * $Id: misc.c,v 1.9 2003/10/12 04:00:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -158,7 +158,7 @@ misc_str_split(char *str, char delimiter)
     return NULL;
 
   count = count_token(str, delimiter) + 1;
-  if  ((ret = calloc(count + 1, sizeof(char *))) == NULL)
+  if ((ret = calloc(count + 1, sizeof(char *))) == NULL)
     return NULL;
 
   k = 0;
@@ -177,11 +177,95 @@ misc_str_split(char *str, char delimiter)
   bug_on(k > count);
 
   for (; k < count; k++) {
+    debug_message("k = %d\n", k);
     if ((ret[k] = malloc(1)) == NULL)
       goto free_and_return;
     ret[k][0] = '\0';
   }
   ret[k] = NULL;
+
+  return ret;
+
+ free_and_return:
+  for (k-- ; k >= 0; k--)
+    free(ret[k]);
+  free(ret);
+  return NULL;
+}
+
+static int
+count_token_delimiters(char *str, char *delimiters)
+{
+  char delimiter;
+  int count = 0;
+  int i;
+
+  while (*str != '\0') {
+    i = 0;
+    while ((delimiter = delimiters[i++]) != '\0') {
+      if (*str == delimiter) {
+	count++;
+	break;
+      }
+    }
+    str++;
+  }
+
+  return count;
+}
+
+char **
+misc_str_split_delimiters(char *str, char *delimiters, char **used_delim_r)
+{
+  int i, j, k, l;
+  int count;
+  char delimiter, *used_delim, **ret;
+
+  if (str == NULL)
+    return NULL;
+
+  count = count_token_delimiters(str, delimiters) + 1;
+  if ((ret = calloc(count + 1, sizeof(char *))) == NULL)
+    return NULL;
+  if ((*used_delim_r = calloc(count + 1, sizeof(char))) == NULL) {
+    free(ret);
+    return NULL;
+  }
+  used_delim = *used_delim_r;
+
+  k = 0;
+  for (i = 0; i < (int)strlen(str);) {
+    j = i;
+    while (1) {
+      int m = 0;
+      while ((delimiter = delimiters[m++]) != '\0') {
+	if (str[i] == delimiter)
+	  break;
+      }
+      /* '\0' is also checked */
+      if (str[i] == delimiter)
+	break;
+      i++;
+    }
+    l = i - j;
+    i++;
+    if ((ret[k] = malloc(l + 1)) == NULL)
+      goto free_and_return;
+    used_delim[k] = delimiter;
+    if (l)
+      strncpy(ret[k], str + j, l);
+    ret[k++][l] = '\0';
+  }
+  bug_on(k > count);
+
+  for (; k < count; k++) {
+    if ((ret[k] = malloc(1)) == NULL)
+      goto free_and_return;
+    ret[k][0] = '\0';
+    used_delim[k] = delimiter;
+  }
+  ret[k] = NULL;
+  used_delim[k] = '\0';
 
   return ret;
 
