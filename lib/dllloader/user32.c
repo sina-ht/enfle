@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:35:16 2001.
- * $Id: user32.c,v 1.11 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Thu Apr 15 00:21:11 2004.
+ * $Id: user32.c,v 1.12 2004/04/18 06:25:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,6 +41,10 @@ DECLARE_W32API(INT, LoadStringA, (HINSTANCE, UINT, LPSTR, INT));
 DECLARE_W32API(INT, GetSystemMetrics, (INT));
 DECLARE_W32API(INT, GetKeyboardType, (INT));
 DECLARE_W32API(INT, wsprintfA, (LPSTR, LPCSTR, ...));
+DECLARE_W32API(INT, GetDesktopWindow, (void));
+DECLARE_W32API(INT, GetDC, (INT));
+DECLARE_W32API(INT, ReleaseDC, (INT, INT));
+DECLARE_W32API(INT, IsRectEmpty, (CONST RECT *));
 
 static Symbol_info symbol_infos[] = {
   { "EnumThreadWindows", EnumThreadWindows },
@@ -49,6 +53,10 @@ static Symbol_info symbol_infos[] = {
   { "GetSystemMetrics", GetSystemMetrics },
   { "GetKeyboardType", GetKeyboardType },
   { "wsprintfA", wsprintfA },
+  { "GetDesktopWindow", GetDesktopWindow },
+  { "GetDC", GetDC },
+  { "ReleaseDC", ReleaseDC },
+  { "IsRectEmpty", IsRectEmpty },
   { NULL, unknown_symbol }
 };
 
@@ -141,6 +149,34 @@ DEFINE_W32API(INT, wsprintfA, (LPSTR buf, LPCSTR format, ...))
   debug_message_fn(": formatted: %s", buf);
 
   return strlen(buf);
+}
+
+DEFINE_W32API(INT, GetDesktopWindow,
+       (void))
+{
+  debug_message_fn("() called\n");
+  return 0;
+}
+
+DEFINE_W32API(INT, GetDC,
+	      (INT hwnd))
+{
+  debug_message_fn("(0x%x) called\n", hwnd);
+  return 1;
+}
+
+DEFINE_W32API(INT, ReleaseDC,
+	      (INT hwnd, INT hdc))
+{
+  debug_message_fn("(0x%x, 0x%x) called\n", hwnd, hdc);
+  return 1;
+}
+
+DEFINE_W32API(INT, IsRectEmpty,
+	      (CONST RECT *lprc))
+{
+  debug_message_fn("(%p) called\n", lprc);
+  return 0;
 }
 
 /* unimplemened */
