@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 29 02:25:26 2000.
- * $Id: plugin.c,v 1.5 2000/10/28 19:07:41 sian Exp $
+ * Last Modified: Fri Nov  3 04:03:39 2000.
+ * $Id: plugin.c,v 1.6 2000/11/02 19:34:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -119,9 +119,8 @@ get(Plugin *p)
 static void
 destroy(Plugin *p)
 {
-#ifndef WITH_DMALLOC
   unload(p);
-#endif
+
   if (p->filepath)
     free(p->filepath);
   free(p);
