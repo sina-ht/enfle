@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:54:21 2004.
- * $Id: pe_image.c,v 1.26 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Apr 18 13:31:00 2004.
+ * $Id: pe_image.c,v 1.27 2004/04/18 06:25:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,6 +62,7 @@
 #include "advapi32.h"
 #include "msvcrt.h"
 #include "borlndmm.h"
+#include "msdmo.h"
 
 #include "common.h"
 
@@ -114,6 +115,7 @@ get_dll_symbols(char *dllname)
     { "advapi32.dll", advapi32_get_export_symbols },
     { "msvcrt.dll",   msvcrt_get_export_symbols },
     { "borlndmm.dll", borlndmm_get_export_symbols },
+    { "msdmo.dll", msdmo_get_export_symbols },
     { NULL, NULL }
   };
 
@@ -163,11 +165,19 @@ static int fs_installed = 0;
 static char *fs_seg = NULL;
 
 #if defined(__linux__)
+void
+setup_fs(void)
+{
+  unsigned int fs = LDT_SELECTOR(LDT_INDEX, LDT_TABLE_IDENT, LDT_RPL);
+  __asm__ __volatile__ (
+			"movl %0, %%eax; movw %%ax, %%fs\n\t" : : "r" (fs)
+			);
+}
+
 static int
 install_fs(void)
 {
   struct modify_ldt_ldt_s ldt;
-  unsigned int fs;
   int fd, ret;
   void *prev;
 
@@ -191,8 +201,7 @@ install_fs(void)
     perror("install_fs");
     show_message("modify_ldt() failed. Probably raising SIGSEGV...\n");
   }
-  fs = LDT_SELECTOR(LDT_INDEX, LDT_TABLE_IDENT, LDT_RPL);
-  __asm__ ("movl %0, %%eax; movw %%ax, %%fs\n\t" : : "r" (fs));
+  setup_fs();
   prev = malloc(8);
   *(void **)ldt.base_addr = prev;
   close(fd);
