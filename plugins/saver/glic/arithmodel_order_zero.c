@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Fri Sep 21 17:19:23 2001.
- * $Id: arithmodel_order_zero.c,v 1.14 2001/09/21 10:12:50 sian Exp $
+ * Last Modified: Mon Sep 24 02:35:16 2001.
+ * $Id: arithmodel_order_zero.c,v 1.15 2001/09/23 17:36:57 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -13,6 +13,8 @@
 
 #define REQUIRE_FATAL
 #include "common.h"
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include <stdlib.h>
 
@@ -58,12 +60,12 @@ static Arithmodel_order_zero template = {
 };
 
 static int
-default_update_escape_freq(Arithmodel *_am, Index index)
+default_update_escape_freq(Arithmodel *_am, Index idx)
 {
   Arithmodel_order_zero *am = AMOZ(_am);
   Index i;
 
-  for (i = index; i < am->nsymbols; i++)
+  for (i = idx; i < am->nsymbols; i++)
     am->freq[i]++;
 
   return 1;
@@ -89,7 +91,7 @@ normalize_freq(Arithmodel *_am)
 }
 
 static void
-update_region_with_range(Arithmodel *_am, Index index, Index low, Index high)
+update_region_with_range(Arithmodel *_am, Index idx, Index low, Index high)
 {
   Arithmodel_order_zero *am = AMOZ(_am);
   Arithcoder *ac = am->ac;
@@ -99,15 +101,15 @@ update_region_with_range(Arithmodel *_am, Index index, Index low, Index high)
   highest = am->freq[high] - lowest;
   tmp = ac->range / highest;
 
-  debug_message(__FUNCTION__ "(%d, tmp %X, lowest %X, highest %X)\n", index, tmp, lowest, highest);
+  debug_message(__FUNCTION__ "(%d, tmp %X, lowest %X, highest %X)\n", idx, tmp, lowest, highest);
 
-  if (index > low) {
-    ac->low += tmp * (am->freq[index - 1] - lowest);
-    ac->range = tmp * (am->freq[index] - am->freq[index - 1]);
-  } else if (index == low) {
+  if (idx > low) {
+    ac->low += tmp * (am->freq[idx - 1] - lowest);
+    ac->range = tmp * (am->freq[idx] - am->freq[idx - 1]);
+  } else if (idx == low) {
     ac->range = tmp * (am->freq[low] - lowest);
   } else {
-    show_message(__FUNCTION__ ": index == %d < %d == low.\n", index, low);
+    show_message(__FUNCTION__ ": idx == %d < %d == low.\n", idx, low);
   }
 }
 
@@ -155,24 +157,24 @@ install_symbol(Arithmodel *_am, Freq freq)
 }
 
 static int
-uninstall_symbol(Arithmodel *_am, Index index)
+uninstall_symbol(Arithmodel *_am, Index idx)
 {
   Arithmodel_order_zero *am = AMOZ(_am);
   Freq freq;
 
-  debug_message(__FUNCTION__ "(index %d)\n", index);
+  debug_message(__FUNCTION__ "(idx %d)\n", idx);
 
-  if (index < am->start_symbol)
+  if (idx < am->start_symbol)
     am->start_symbol--;
-  if (index == am->escape_symbol)
+  if (idx == am->escape_symbol)
     am->escape_symbol = -1;
 
-  if (index > 0)
-    freq = am->freq[index] - am->freq[index - 1];
+  if (idx > 0)
+    freq = am->freq[idx] - am->freq[idx - 1];
   else
-    freq = am->freq[index];
-  for (index++; index < am->nsymbols; index++)
-    am->freq[index - 1] = am->freq[index] - freq;
+    freq = am->freq[idx];
+  for (idx++; idx < am->nsymbols; idx++)
+    am->freq[idx - 1] = am->freq[idx] - freq;
 
   /* We can shrink the memory size, but leave it as is. */
   am->nsymbols--;
@@ -263,36 +265,36 @@ encode_init(Arithmodel *_am, Arithcoder *ac)
 }
 
 static void
-update_freq(Arithmodel *_am, Index index)
+update_freq(Arithmodel *_am, Index idx)
 {
   Arithmodel_order_zero *am = AMOZ(_am);
   unsigned int i;
 
-  debug_message(__FUNCTION__ "(%d)\n", index);
+  debug_message(__FUNCTION__ "(%d)\n", idx);
 
-  if (index == am->escape_symbol && am->update_escape_freq) {
-    if (!am->update_escape_freq(_am, index))
+  if (idx == am->escape_symbol && am->update_escape_freq) {
+    if (!am->update_escape_freq(_am, idx))
       return;
   } else {
-    for (i = index; i < am->nsymbols; i++)
+    for (i = idx; i < am->nsymbols; i++)
       am->freq[i]++;
   }
 
   normalize_freq(_am);
 }
 
-/* Call with 0 <= low < high <= nsymbols - 1 && low <= index <= high */
+/* Call with 0 <= low < high <= nsymbols - 1 && low <= idx <= high */
 static int
-encode_bulk(Arithmodel *_am, Index index, Index low, Index high, int use_range)
+encode_bulk(Arithmodel *_am, Index idx, Index low, Index high, int use_range)
 {
   Arithmodel_order_zero *am = AMOZ(_am);
 
-  if (am->nsymbols < index)
-    fatal(2, __FUNCTION__ ": nsymbols %d < %d index, start = %d, low = %d, high = %d\n", am->nsymbols, index, am->start_symbol, low, high);
+  if (am->nsymbols < idx)
+    fatal(2, __FUNCTION__ ": nsymbols %d < %d idx, start = %d, low = %d, high = %d\n", am->nsymbols, idx, am->start_symbol, low, high);
 
-  if (am->nsymbols == index) {
+  if (am->nsymbols == idx) {
     if (use_range)
-      fatal(4, __FUNCTION__ ": nsymbols %d == %d index, when use_range is true.\n", am->nsymbols, index);
+      fatal(4, __FUNCTION__ ": nsymbols %d == %d idx, when use_range is true.\n", am->nsymbols, idx);
     if (IS_ESCAPE_INSTALLED(am)) {
       if (am->escape_encoded_with_rle) {
 	am->escape_run++;
@@ -302,7 +304,7 @@ encode_bulk(Arithmodel *_am, Index index, Index low, Index high, int use_range)
       install_symbol(_am, 1);
       return 2;
     } else {
-      fatal(3, __FUNCTION__ ": nsymbols %d == %d index, but escape disabled\n", am->nsymbols, index);
+      fatal(3, __FUNCTION__ ": nsymbols %d == %d idx, but escape disabled\n", am->nsymbols, idx);
     }
   }
 
@@ -314,33 +316,33 @@ encode_bulk(Arithmodel *_am, Index index, Index low, Index high, int use_range)
     arithmodel_encode_delta(am->bin_am, run, 0, 1);
   }
 
-  update_region_with_range(_am, index, low, high);
+  update_region_with_range(_am, idx, low, high);
   arithcoder_encode_renormalize(am->ac);
-  update_freq(_am, index);
+  update_freq(_am, idx);
 
   return 1;
 }
 
 static int
-encode(Arithmodel *_am, Index index)
+encode(Arithmodel *_am, Index idx)
 {
-  return encode_bulk(_am, index + AMOZ_START_SYMBOL(_am), 0, _am->nsymbols - 1, 0);
+  return encode_bulk(_am, idx + AMOZ_START_SYMBOL(_am), 0, _am->nsymbols - 1, 0);
 }
 
 static int
-encode_with_range(Arithmodel *_am, Index index, Index low, Index high)
+encode_with_range(Arithmodel *_am, Index idx, Index low, Index high)
 {
   /* Ensure the parameters are OK. */
   if (high >= arithmodel_order_zero_nsymbols(_am))
     return 0;
-  if (index < low && high < index)
+  if (idx < low && high < idx)
     return 0;
 
   /* No need to encode. */
   if (low == high)
     return 1;
 
-  return encode_bulk(_am, index + AMOZ_START_SYMBOL(_am), low + AMOZ_START_SYMBOL(_am), high + AMOZ_START_SYMBOL(_am), 1);
+  return encode_bulk(_am, idx + AMOZ_START_SYMBOL(_am), low + AMOZ_START_SYMBOL(_am), high + AMOZ_START_SYMBOL(_am), 1);
 }
 
 static int
@@ -374,7 +376,7 @@ decode_bulk(Arithmodel *_am, Index *index_return, Index low, Index high)
   Arithmodel_order_zero *am = AMOZ(_am);
   Arithcoder *ac = am->ac;
   Freq freq;
-  Index left, right, index;
+  Index left, right, idx;
   unsigned int tmp;
 
   tmp = ac->range / am->freq[high];
@@ -383,7 +385,7 @@ decode_bulk(Arithmodel *_am, Index *index_return, Index low, Index high)
   debug_message(__FUNCTION__ ": low %X range %X target %X freq %X\n", ac->low, ac->range, ac->value, freq);
 
   if (am->nsymbols == 2) {
-    index =  (am->freq[0] > freq) ? 0 : 1;
+    idx =  (am->freq[0] > freq) ? 0 : 1;
   } else {
     left = low;
     right = high;
@@ -393,32 +395,32 @@ decode_bulk(Arithmodel *_am, Index *index_return, Index low, Index high)
       else
 	right = (left + right) >> 1;
     }
-    index = right;
-    if (index == low) {
+    idx = right;
+    if (idx == low) {
       if (am->freq[low] <= freq)
-	fatal(6, __FUNCTION__ ": Invalid selection of symbol: index = %d, freq = %d, freq[%d] = %d\n",
+	fatal(6, __FUNCTION__ ": Invalid selection of symbol: idx = %d, freq = %d, freq[%d] = %d\n",
 	      low, freq, low, am->freq[low]);
     } else {
-      if (am->freq[index - 1] > freq || am->freq[index] <= freq)
-	fatal(6, __FUNCTION__ ": Invalid selection of symbol: index = %d, freq = %d, freq[index - 1] = %d, freq[index] = %d\n", index, freq, am->freq[index - 1], am->freq[index]);
+      if (am->freq[idx - 1] > freq || am->freq[idx] <= freq)
+	fatal(6, __FUNCTION__ ": Invalid selection of symbol: idx = %d, freq = %d, freq[idx - 1] = %d, freq[idx] = %d\n", idx, freq, am->freq[idx - 1], am->freq[idx]);
     }
   }
 
-  update_region_with_range(_am, index, low, high);
+  update_region_with_range(_am, idx, low, high);
   arithcoder_decode_renormalize(am->ac);
 
-  if (IS_EOF_INSTALLED(am) && index == am->eof_symbol)
+  if (IS_EOF_INSTALLED(am) && idx == am->eof_symbol)
     return 0;
 
-  update_freq(_am, index);
+  update_freq(_am, idx);
 
-  if (IS_ESCAPE_INSTALLED(am) && index == am->escape_symbol) {
+  if (IS_ESCAPE_INSTALLED(am) && idx == am->escape_symbol) {
     *index_return = am->nsymbols;
     install_symbol(_am, 1);
     return 2;
   }
 
-  *index_return = index;
+  *index_return = idx;
 
   return 1;
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 19 16:34:10 2001.
- * $Id: cpucaps.c,v 1.4 2001/09/19 07:45:36 sian Exp $
+ * Last Modified: Mon Sep 24 02:30:15 2001.
+ * $Id: cpucaps.c,v 1.5 2001/09/23 17:36:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,6 +21,8 @@
  */
 
 #include "common.h"
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "cpucaps.h"
 

@@ -1,14 +1,16 @@
 /*
  * expand.c
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Sep 11 12:57:46 2001.
- * $Id: expand.c,v 1.4 2001/09/12 11:38:01 sian Exp $
+ * Last Modified: Mon Sep 24 02:32:44 2001.
+ * $Id: expand.c,v 1.5 2001/09/23 17:36:57 sian Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "common.h"
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 #include "expand.h"
 #include "vmpm_error.h"

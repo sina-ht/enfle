@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 14:05:26 2001.
- * $Id: libriff.c,v 1.3 2001/09/18 05:22:24 sian Exp $
+ * Last Modified: Mon Sep 24 02:31:39 2001.
+ * $Id: libriff.c,v 1.4 2001/09/23 17:36:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,6 +24,8 @@
 #include "libriff.h"
 
 #include "common.h"
+#define REQUIRE_STRING_H
+#include "compat.h"
 
 static int rc_destroy(RIFF_Chunk *);
 
