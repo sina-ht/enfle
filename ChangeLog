@@ -1,3 +1,10 @@
+2001-09-16  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11ximage.[ch]: Cleaning and polishing up.
+
+	* plugins/player/avifile/avifile.cpp: Prevent unload_movie() from
+	freeing already freed pointers and objects.
+
 2001-09-13  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/Makefile.am: Link pthread library when needed. FIFO

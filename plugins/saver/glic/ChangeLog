@@ -1,3 +1,8 @@
+2001-09-16  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+
+	* arithmodel_order_zero.c: Return the right decoded symbol when
+	low == high.
+
 2001-09-13  Hiroshi Takekawa  <sian@fennel.org>
 
 	* Makefile.am: Added new Recur3 decomposer.
