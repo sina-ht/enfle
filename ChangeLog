@@ -1,3 +1,22 @@
+2000-10-10  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h, lib/enfle/archive.c, lib/enfle/stream.c,
+	lib/enfle/streamer.c, lib/utils/dlist.c, lib/utils/hash.c,
+	lib/utils/libconfig.c, lib/utils/libstring.c, lib/utils/plugin.c,
+	lib/utils/stdio-support.c, Makefile.am, src/enfle.c: Introduced
+	compat.h.
+
+	* lib/enfle/image.c: Cosmetic change.
+
+	* compat.h: Added compat.h.
+
+	* lib/enfle/Makefile.am, lib/enfle/movie.[ch]: Added movie.[ch].
+
+	* */.cvsignore, */*/.cvsignore, */*/*/.cvsignore: Added cvsignore.
+
+	* plugins/{loader,player}/ungif/ungif.c (identify): Loose
+	identify().
+
 2000-10-09  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/Makefile.am, plugins/player/ungif/Makefile.am,
