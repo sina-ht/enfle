@@ -1,3 +1,42 @@
+2004-01-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+	* plugins/ui/normal/normal.c: Bug fix.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Bigger fifo buffer for
+	video.
+
+	* plugins/player/avcodec/avcodec.c: Feed one chunk per one
+	decode_frame().  Use invalidate().
+
+	* lib/demultiplexer/demultiplexer_avi.h: Parsing 'idx1' chunk.
+
+	* lib/demultiplexer/demultiplexer_avi.c: Parsing 'idx1' chunk.
+	Removed emptify().
+
+	* lib/demultiplexer/demultiplexer_avi_private.h: Added flags.
+
+	* lib/demultiplexer/demultiplexer_mpeg.c: Removed emptify().
+
+	* lib/utils/fifo.[ch]: Removed emptify().  Implemented
+	invalidate().  Use a single cond valuable.
+
+	* lib/avcodec/*: Updated.
+
+2004-01-10  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h, configure.in, lib/mpeg2/cpu_accel.c: Now configure
+	defines ARCH_*.
+
+	* lib/avcodec/*: Updated.
+
+2004-01-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/*: Updated.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Fixed one dead-lock.
+
 2004-01-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Version up.
