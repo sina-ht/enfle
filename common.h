@@ -1,10 +1,10 @@
 /*
  * common.h -- common header file, which is included by almost all files.
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Nov 10 01:48:25 2003.
- * $Id: common.h,v 1.29 2003/11/17 13:23:39 sian Exp $
+ * Last Modified: Sun Nov 30 14:45:40 2003.
+ * $Id: common.h,v 1.30 2003/12/07 04:22:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -95,17 +95,13 @@
 #  define debug_message(format, args...) fprintf(stderr, format, ## args)
 #  define debug_message_fn(format, args...) fprintf(stderr, "%s" format, __FUNCTION__ , ## args)
 #  define debug_message_fnc(format, args...) fprintf(stderr, "%s: " format, __FUNCTION__ , ## args)
-#  define IDENTIFY_BEFORE_OPEN
-#  define IDENTIFY_BEFORE_LOAD
-#  define IDENTIFY_BEFORE_PLAY
+//#  define IDENTIFY_BEFORE_OPEN
+//#  define IDENTIFY_BEFORE_LOAD
+//#  define IDENTIFY_BEFORE_PLAY
 #else
 #  define PROGNAME PACKAGE
 #  define debug_message(format, args...)
 #  define debug_message_fn(format, args...)
 #  define debug_message_fnc(format, args...)
 #endif
-#define COPYRIGHT_MESSAGE "(C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa"
-
-#ifdef WITH_DMALLOCTH
-#  include <dmalloc.h>
-#endif
+#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2003 by Hiroshi Takekawa"
