@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 18:20:40 2004.
- * $Id: generic.c,v 1.12 2004/04/12 04:15:33 sian Exp $
+ * Last Modified: Sun Apr 18 04:06:37 2004.
+ * $Id: generic.c,v 1.13 2004/04/18 06:28:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -185,6 +185,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
   switch (m->requested_type) {
   case _I420:
+  case _YV12:
     p->bits_per_pixel = 12;
     image_bpl(p) = image_width(p) * 3 / 2;
     info->use_xv = 1;
@@ -362,6 +363,7 @@ play_video(void *arg)
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
   int used;
+  int is_key;
 #ifdef USE_TS
   unsigned long pts, dts, size;
 #if defined(DEBUG)
@@ -388,10 +390,11 @@ play_video(void *arg)
 
   show_message("videodecoder %s\n", m->vdec->name);
 
-  vds = VD_OK;
+  vds = VD_NEED_MORE_DATA;
+  is_key = 1;
   while (m->status == _PLAY || m->status == _RESIZING) {
     while ((m->status == _PLAY || m->status == _RESIZING) && vds == VD_OK)
-      vds = videodecoder_decode(m->vdec, m, info->p, NULL, 0, NULL);
+      vds = videodecoder_decode(m->vdec, m, info->p, NULL, 0, is_key, NULL);
     if (vds == VD_NEED_MORE_DATA) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
@@ -412,7 +415,8 @@ play_video(void *arg)
       }
 #endif
 #endif
-      vds = videodecoder_decode(m->vdec, m, info->p, dp->data, dp->size, &used);
+      is_key = dp->is_key;
+      vds = videodecoder_decode(m->vdec, m, info->p, dp->data, dp->size, is_key, &used);
       if (used != dp->size)
 	warning_fnc("videodecoder_decode didn't consumed all %d bytes, but %d bytes\n", used, dp->size);
     } else {
