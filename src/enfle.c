@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar  9 22:30:38 2004.
- * $Id: enfle.c,v 1.58 2004/03/09 13:59:24 sian Exp $
+ * Last Modified: Tue Mar  9 23:23:47 2004.
+ * $Id: enfle.c,v 1.59 2004/03/09 14:25:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -234,7 +234,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   Archive *a;
   PluginType type;
   char *fullpath, *path, *ext, *base_name, *name;
-  FILE *fp;
+  FILE *fp = NULL;
   int nplugins = 0;
 
   /* Add static linked plugins */
@@ -434,7 +434,7 @@ main(int argc, char **argv)
     int path_ok = 0;
     struct stat st;
 
-    if ((plugin_path = getenv("ENFLE_PLUGINDIR")) == NULL) {
+    if ((plugin_path = getenv("ENFLE_PLUGINDIR")) != NULL) {
       if (stat(plugin_path, &st) == 0)
 	path_ok = 1;
     }
