@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 30 14:45:40 2003.
- * $Id: common.h,v 1.30 2003/12/07 04:22:53 sian Exp $
+ * Last Modified: Thu Jan  1 23:05:47 2004.
+ * $Id: common.h,v 1.31 2004/01/03 10:26:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -49,6 +49,16 @@
 #define err_message(format, args...) fprintf(stderr, "Error: " format, ## args)
 #define err_message_fn(format, args...) fprintf(stderr, "Error: %s" format, __FUNCTION__ , ## args)
 #define err_message_fnc(format, args...) fprintf(stderr, "Error: %s: " format, __FUNCTION__ , ## args)
+
+// for libmpeg2
+#if defined(USE_MMX)
+#define ARCH_X86
+#else
+// XXX: auto-detect
+//#define ARCH_PPC
+//#define ARCH_ALPHA
+//#define ARCH_SPARC
+#endif
 
 #if !defined(unlikely)
 #if __GNUC__ == 2 && __GNUC_MINOR__ < 96
