@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 17:52:30 2000.
- * $Id: ungif.c,v 1.3 2000/10/10 11:49:18 sian Exp $
+ * Last Modified: Wed Oct 11 01:40:52 2000.
+ * $Id: ungif.c,v 1.4 2000/10/10 17:30:14 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -41,6 +41,13 @@ typedef struct _ungif_info {
   GifFileType *gf;
   GifRowType *buffer;
 } UNGIF_info;
+
+typedef enum {
+  _NOTHING_DISPOSAL,
+  _LEFTIMAGE,
+  _RESTOREBACKGROUND,
+  _RESTOREPREVIOUS
+} Disposal;
 
 static PlayerStatus identify(Movie *, Stream *);
 static PlayerStatus load(Movie *, Stream *);
@@ -162,17 +169,18 @@ play(Movie *m)
 static PlayerStatus
 play_main(Movie *m)
 {
-  int i, j, size, row, col, extcode, image_loaded = 0;
-  int transparent_index = 0, delay = 0, image_disposal = 0;
+  int i, j, extcode, image_loaded = 0;
+  int if_transparent = 0, transparent_index = 0, delay = 0, image_disposal = 0;
+  int l, t, w, h;
   static int ioffset[] = { 0, 4, 2, 1 };
   static int ijumps[] = { 8, 8, 4, 2 };
   UNGIF_info *info = (UNGIF_info *)m->movie_private;
   GifFileType *gf = info->gf;
-  GifRecordType RecordType;
-  GifByteType *Extension;
+  GifRowType *rows;
+  GifRecordType rectype;
+  GifByteType *extension;
   ColorMapObject *ColorMap;
   Image *p;
-  Transparent transparent_disposal = _DONOTHING;
 
   switch (m->status) {
   case _PLAY:
@@ -189,52 +197,18 @@ play_main(Movie *m)
   p = image_create();
 
   do {
-    if (DGifGetRecordType(gf, &RecordType) == GIF_ERROR) {
+    if (DGifGetRecordType(gf, &rectype) == GIF_ERROR) {
+      if (image_loaded)
+	break;
       PrintGifError();
-      break;
+      image_destroy(p);
+      return PLAY_OK;
     }
 
-    switch (RecordType) {
+    switch (rectype) {
     case IMAGE_DESC_RECORD_TYPE:
       if (DGifGetImageDesc(gf) == GIF_ERROR)
 	goto error;
-      p->top = row = gf->Image.Top;
-      p->left = col = gf->Image.Left;
-      p->width = gf->Image.Width;
-      p->height = gf->Image.Height;
-
-      debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", p->left, p->top, p->width, p->height);
-
-      memset(info->buffer[0], gf->SBackGroundColor, m->height * size);
-      if (gf->Image.Interlace) {
-	for (i = 0; i < 4; i++)
-	  for (j = row + ioffset[i]; j < row + p->height; j += ijumps[i])
-	    if (DGifGetLine(gf, &info->buffer[j][col], p->width) == GIF_ERROR)
-	      goto error;
-      } else {
-	for (i = 0; i < p->height; i++)
-	  if (DGifGetLine(gf, &info->buffer[row++][col], p->width) == GIF_ERROR)
-	    goto error;
-      }
-
-      p->type = _INDEX;
-      p->bytes_per_line = p->width;
-      p->image_size = p->bytes_per_line * p->height;
-      p->background_color.index = gf->SBackGroundColor;
-      if (m->nthframe == 0 && image_disposal == _RESTOREBACKGROUND) {
-	/* guess... */
-	p->transparent_disposal = _TRANSPARENT;
-      } else {
-	p->transparent_disposal = transparent_disposal;
-      }
-      p->transparent_color.index = transparent_index;
-      p->image_disposal = image_disposal;
-
-      if ((p->image = malloc(p->image_size)) == NULL)
-	goto error;
-
-      for (i = 0; i < p->height; i++)
-	memcpy(&p->image[i * p->width], info->buffer[p->top + i], p->width);
 
       ColorMap = gf->Image.ColorMap ? gf->Image.ColorMap : gf->SColorMap;
       p->ncolors = ColorMap->ColorCount;
@@ -245,44 +219,115 @@ play_main(Movie *m)
 	p->colormap[i][2] = ColorMap->Colors[i].Blue;
       }
 
+      p->width  = m->width;
+      p->height = m->height;
+      p->type = _INDEX;
+      p->depth = 8;
+      p->bytes_per_line = m->width;
+      p->bits_per_pixel = 8;
+      p->next = NULL;
+      p->background_color.index = gf->SBackGroundColor;
+      p->transparent_color.index = transparent_index;
+
+      l = gf->Image.Left;
+      t = gf->Image.Top;
+      w = gf->Image.Width;
+      h = gf->Image.Height;
+
+      debug_message("IMAGE_DESC_RECORD_TYPE: (%d, %d) (%d, %d)\n", l, t, w, h);
+
+      p->image_size = p->bytes_per_line * p->height;
+
+      if (if_transparent) {
+	/* First, allocate memory */
+	if ((rows = calloc(h, sizeof(GifRowType *))) == NULL)
+	  goto error;
+	if ((rows[0] = calloc(w * h, sizeof(GifPixelType))) == NULL) {
+	  free(rows);
+	  goto error;
+	}
+	for (i = 1; i < h; i++)
+	  rows[i] = rows[0] + i * w;
+	/* Then, load into it */
+	if (gf->Image.Interlace) {
+	  for (i = 0; i < 4; i++)
+	    for (j = ioffset[i]; j < h; j += ijumps[i])
+	      if (DGifGetLine(gf, rows[j], w) == GIF_ERROR) {
+		free(rows[0]);
+		free(rows);
+		goto error;
+	      }
+	} else {
+	  for (i = 0; i < h; i++)
+	    if (DGifGetLine(gf, rows[i], w) == GIF_ERROR) {
+	      free(rows[0]);
+	      free(rows);
+	      goto error;
+	    }
+	}
+	/* Last, draw into screen, processing transparency */
+	for (i = 0; i < h; i++)
+	  for (j = 0; j < w; j++)
+	    if (rows[i][j] != transparent_index)
+	      info->buffer[i + t][j + l] = rows[i][j];
+	free(rows[0]);
+	free(rows);
+      } else {
+	/* Just load into screen */
+	if (gf->Image.Interlace) {
+	  for (i = 0; i < 4; i++)
+	    for (j = ioffset[i]; j < h; j += ijumps[i])
+	      if (DGifGetLine(gf, &info->buffer[j + t][l], w) == GIF_ERROR)
+		goto error;
+	} else {
+	  for (i = 0; i < h; i++)
+	    if (DGifGetLine(gf, &info->buffer[i + t][l], w) == GIF_ERROR)
+	      goto error;
+	}
+      }
+
+      if ((p->image = malloc(p->image_size)) == NULL)
+	goto error;
+      memcpy(p->image, info->buffer[0], p->image_size);
+
       m->nthframe++;
       image_loaded = 1;
       break;
     case EXTENSION_RECORD_TYPE:
-      if (DGifGetExtension(gf, &extcode, &Extension) == GIF_ERROR)
+      if (DGifGetExtension(gf, &extcode, &extension) == GIF_ERROR)
 	goto error;
 
       switch (extcode) {
       case COMMENT_EXT_FUNC_CODE:
 	debug_message("comment: ");
-	if ((p->comment = malloc(Extension[0] + 1)) == NULL) {
-	  show_message("No enough memory for comment. Try to continue.\n");
+	if ((p->comment = malloc(extension[0] + 1)) == NULL) {
 	  debug_message("(abandoned)\n");
+	  show_message("No enough memory for comment. Try to continue.\n");
 	} else {
-	  memcpy(p->comment, &Extension[1], Extension[0]);
-	  p->comment[Extension[0]] = '\0';
+	  memcpy(p->comment, &extension[1], extension[0]);
+	  p->comment[extension[0]] = '\0';
 	  debug_message("%s\n", p->comment);
 	}
 	break;
       case GRAPHICS_EXT_FUNC_CODE:
-	if (Extension[1] & 1) {
-	  transparent_disposal = _TRANSPARENT;
-	  transparent_index = Extension[4];
+	if (extension[1] & 1) {
+	  if_transparent = 1;
+	  transparent_index = extension[4];
 	} else {
-	  transparent_disposal = _DONOTHING;
+	  if_transparent = 0;
 	  transparent_index = -1;
 	}
-	image_disposal = (Extension[1] & 0x1c) >> 2;
-	delay = Extension[2] + (Extension[3] << 8);
+	image_disposal = (extension[1] & 0x1c) >> 2;
+	delay = extension[2] + (extension[3] << 8);
 	break;
       default:
 	break;
       }
 
       for (;;) {
-	if (DGifGetExtensionNext(gf, &Extension) == GIF_ERROR)
+	if (DGifGetExtensionNext(gf, &extension) == GIF_ERROR)
 	  goto error;
-	if (Extension == NULL)
+	if (extension == NULL)
 	  break;
 
 	switch (extcode) {
@@ -290,10 +335,10 @@ play_main(Movie *m)
 	  {
 	    unsigned char *tmp;
 
-	    if ((tmp = realloc(p->comment, strlen(p->comment) + Extension[0] + 1)) == NULL) {
+	    if ((tmp = realloc(p->comment, strlen(p->comment) + extension[0] + 1)) == NULL) {
 	      show_message("No enough memory for comment(append). Truncated.\n");
 	    } else {
-	      memcpy(tmp + strlen(tmp), &Extension[1], Extension[0]);
+	      memcpy(tmp + strlen(tmp), &extension[1], extension[0]);
 	      p->comment = tmp;
 	    }
 	  }
@@ -315,6 +360,9 @@ play_main(Movie *m)
   m->render_frame(m, p);
   if (delay)
     m->pause_usec(delay * 10000);
+
+  if (image_disposal == _RESTOREBACKGROUND)
+    memset(info->buffer[0], gf->SBackGroundColor, m->width * m->height);
 
   image_destroy(p);
 

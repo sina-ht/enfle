@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 17:59:58 2000.
- * $Id: Xlib.c,v 1.3 2000/10/10 11:49:18 sian Exp $
+ * Last Modified: Wed Oct 11 01:40:44 2000.
+ * $Id: Xlib.c,v 1.4 2000/10/10 17:30:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -109,7 +109,8 @@ render_frame(Movie *m, Image *p)
     free(p->image);
   p->image = NULL;
 
-  XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, 0, 0, p->width, p->height, 0, 0);
+  XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, 0, 0, p->width, p->height, p->left, p->top);
+  x11_free_pixmap(x11, pix);
   XFlush(x11_display(x11));
 
   return 1;
@@ -165,6 +166,7 @@ show_image(X11 *x11, X11Window *xw, Image *p)
   debug_message("x order %s\n", ximage->byte_order == MSBFirst ? "MSB" : "LSB");
 
   x11window_resize(xw, p->width, p->height);
+
   pix = x11_create_pixmap(x11, x11window_win(xw), p->width, p->height, x11_depth(x11));
   gc = x11_create_gc(x11, pix, 0, 0);
   XPutImage(x11_display(x11), pix, gc, ximage, 0, 0, 0, 0, p->width, p->height);
@@ -176,7 +178,7 @@ show_image(X11 *x11, X11Window *xw, Image *p)
   x11_destroy_ximage(ximage);
   p->image = NULL;
 
-  XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, 0, 0, p->width, p->height, 0, 0);
+  XCopyArea(x11_display(x11), pix, x11window_win(xw), gc, 0, 0, p->width, p->height, p->left, p->top);
   XSelectInput(x11_display(x11), x11window_win(xw), ExposureMask | ButtonPressMask | ButtonReleaseMask);
   XFlush(x11_display(x11));
 
