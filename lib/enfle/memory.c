@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 16:56:04 2000.
- * $Id: memory.c,v 1.1 2000/12/03 08:36:32 sian Exp $
+ * Last Modified: Thu Dec  7 17:16:23 2000.
+ * $Id: memory.c,v 1.2 2000/12/07 13:38:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -21,6 +21,9 @@
  */
 
 #include <stdlib.h>
+
+#define REQUIRE_UNISTD_H
+#include "compat.h"
 
 #include "common.h"
 
@@ -142,13 +145,19 @@ request_type(Memory *mem, MemoryType type)
 static unsigned char *
 allocate(Memory *mem, unsigned int size)
 {
-  /* debug_message("MEMORY: " __FUNCTION__ ": requested %d bytes as type %s\n", size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN")); */
+  unsigned int aligned_size;
+  unsigned int alignment;
+
+  alignment = getpagesize();
+  aligned_size = (size % alignment) ? ((size / alignment) + 1) * alignment : size;
+
+  /* debug_message("MEMORY: " __FUNCTION__ ": requested %d bytes (aligned %d bytes) as type %s\n", size, aligned_size, mem->type == _NORMAL ? "NORMAL" : (mem->type == _SHM ? "SHM" : "UNKNOWN")); */
 
   switch (mem->type) {
   case _NORMAL:
-    return alloc_normal(mem, size);
+    return alloc_normal(mem, aligned_size);
   case _SHM:
-    return alloc_shm(mem, size);
+    return alloc_shm(mem, aligned_size);
   default:
     break;
   }
