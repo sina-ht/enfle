@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  6 01:16:19 2002.
- * $Id: identify.c,v 1.11 2002/10/05 17:17:46 sian Exp $
+ * Last Modified: Fri Feb 13 08:45:17 2004.
+ * $Id: identify.c,v 1.12 2004/02/14 05:32:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -116,10 +116,23 @@ identify_stream(EnflePlugins *eps, Image *p, Movie *m, Stream *s, VideoWindow *v
       return IDENTIFY_STREAM_IMAGE_FAILED;
   }
 
+  /* for generic player */
+  if (m && demultiplexer_identify(eps, m, s, c) == DEMULTIPLEX_OK) {
+    debug_message_fnc("demultiplexer_identify() OK.\n");
+    if ((m->demux = demultiplexer_examine(eps, m->format, m, s, c)) == NULL) 
+      return IDENTIFY_STREAM_MOVIE_FAILED;
+    debug_message_fnc("demultiplexer_examine() OK.\n");
+    if (player_load(eps, vw, (char *)"generic", m, s, c) != PLAY_OK)
+      return IDENTIFY_STREAM_MOVIE_FAILED;
+    debug_message_fnc("player_load() OK.\n");
+    return IDENTIFY_STREAM_MOVIE;
+  }
+
+  /* for mng, ungif player */
   if (m && player_identify(eps, m, s, c)) {
-    if (player_load(eps, vw, m->format, m, s, c) == PLAY_OK)
-      return IDENTIFY_STREAM_MOVIE;
-    return IDENTIFY_STREAM_MOVIE_FAILED;
+    if (player_load(eps, vw, m->format, m, s, c) != PLAY_OK)
+      return IDENTIFY_STREAM_MOVIE_FAILED;
+    return IDENTIFY_STREAM_MOVIE;
   }
 
   return IDENTIFY_STREAM_FAILED;
