@@ -4,14 +4,18 @@
 
 #include "ipow.h"
 
-int
-ipow(int base, int exponent)
+unsigned int
+ipow(unsigned int base, unsigned int exponent)
 {
-  int ret;
+  unsigned int ret, tmp;
 
   for (ret = 1; exponent; exponent >>= 1) {
-    if (exponent & 1)
-      ret *= base;
+    if (exponent & 1) {
+      tmp = ret * base;
+      if (tmp / base != ret)
+	return 0;
+      ret = tmp;
+    }
     base *= base;
   }
 

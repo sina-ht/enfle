@@ -5,6 +5,6 @@
 #ifndef _IPOW_H
 #define _IPOW_H
 
-int ipow(int, int);
+unsigned int ipow(unsigned int, unsigned int);
 
 #endif
