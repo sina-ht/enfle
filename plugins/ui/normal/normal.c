@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 30 09:54:25 2001.
- * $Id: normal.c,v 1.38 2001/04/30 01:10:10 sian Exp $
+ * Last Modified: Wed May  2 00:27:14 2001.
+ * $Id: normal.c,v 1.39 2001/05/01 15:28:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -206,29 +206,351 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
 #define MAIN_LOOP_DELETE_FILE 4
 #define MAIN_LOOP_DO_NOTHING 5
 
+typedef struct _main_loop {
+  UIData *uidata;
+  VideoWindow *vw;
+  VideoEventData ev;
+  VideoButton button;
+  VideoKey key;
+  Image *original_p;
+  Image *p;
+  Movie *m;
+  char *path;
+  int first_point;
+  unsigned int old_x, old_y;
+  int offset_x, offset_y;
+  int ret;
+} MainLoop;
+
+/* action handler */
+
+static int main_loop_next(MainLoop *ml) { ml->ret = MAIN_LOOP_NEXT; return 1; }
+static int main_loop_nextarchive(MainLoop *ml) { ml->ret = MAIN_LOOP_NEXTARCHIVE; return 1; }
+static int main_loop_prev(MainLoop *ml) { ml->ret = MAIN_LOOP_PREV; return 1; }
+static int main_loop_quit(MainLoop *ml) { ml->ret = MAIN_LOOP_QUIT; return 1; }
+static int main_loop_delete_file(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FILE; return 1; }
+static int main_loop_delete_from_list(MainLoop *ml) { ml->ret = MAIN_LOOP_DELETE_FROM_LIST; return 1;}
+
+static int
+main_loop_toggle_fullscreen_mode(MainLoop *ml)
+{
+  video_window_set_fullscreen_mode(ml->vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
+  return 1;
+}
+static int
+main_loop_set_wallpaper(MainLoop *ml)
+{
+  if (ml->p) 
+    ml->uidata->vp->set_wallpaper(ml->uidata->disp, ml->p);
+  return 1;
+}
+static int
+main_loop_toggle_interpolate(MainLoop *ml)
+{
+  switch (ml->vw->interpolate_method) {
+  case _NOINTERPOLATE:
+    ml->vw->interpolate_method = _BILINEAR;
+    break;
+  case _BILINEAR:
+    ml->vw->interpolate_method = _NOINTERPOLATE;
+    break;
+  default:
+    show_message(__FUNCTION__ ": invalid interpolate method %d\n", ml->vw->interpolate_method);
+    ml->vw->interpolate_method = _NOINTERPOLATE;
+    break;
+  }
+  magnify_if_requested(ml->vw, ml->p);
+  video_window_render(ml->vw, ml->p);
+  set_caption_string(ml->vw, ml->path, ml->p ? ml->p->format : ml->m->format);
+  return 1;
+}
+
+static int
+main_loop_magnify_main(MainLoop *ml)
+{
+  if (ml->p) {
+    magnify_if_requested(ml->vw, ml->p);
+    video_window_resize(ml->vw, ml->p->magnified.width, ml->p->magnified.height);
+    video_window_set_offset(ml->vw, 0, 0);
+    video_window_render(ml->vw, ml->p);
+  }
+  return 1;
+}
+static int
+main_loop_magnify_short(MainLoop *ml)
+{
+  ml->vw->render_method = (ml->vw->render_method == _VIDEO_RENDER_NORMAL) ?
+    _VIDEO_RENDER_MAGNIFY_SHORT_FULL : _VIDEO_RENDER_NORMAL;
+  return main_loop_magnify_main(ml);
+}
+static int
+main_loop_magnify_long(MainLoop *ml)
+{
+  ml->vw->render_method = (ml->vw->render_method == _VIDEO_RENDER_NORMAL) ?
+    _VIDEO_RENDER_MAGNIFY_LONG_FULL : _VIDEO_RENDER_NORMAL;
+  return main_loop_magnify_main(ml);
+}
+static int
+main_loop_magnify_double(MainLoop *ml)
+{
+  ml->vw->render_method = (ml->vw->render_method == _VIDEO_RENDER_NORMAL) ?
+    _VIDEO_RENDER_MAGNIFY_DOUBLE : _VIDEO_RENDER_NORMAL;
+  return main_loop_magnify_main(ml);
+}
+
+static int
+main_loop_save_main(MainLoop *ml, char *format)
+{
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
+  if (!save_image(ml->p, ml->uidata, ml->path, format)) {
+    show_message("save_image() (format %s) failed.\n", format);
+    return 0;
+  }
+  video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
+  return 1;
+}
+static int
+main_loop_save_png(MainLoop *ml)
+{
+  return main_loop_save_main(ml, (char *)"PNG");
+}
+static int
+main_loop_save(MainLoop *ml)
+{
+  char *format;
+
+  if ((format = config_get(ml->uidata->c, "/enfle/plugins/ui/normal/save_format")) == NULL) {
+    show_message("save_format is not specified.\n");
+    return 0;
+  } else {
+    return main_loop_save_main(ml, format);
+  }
+}
+
+static int
+main_loop_rotate_main(MainLoop *ml, int f)
+{
+  Image *old_p;
+  UIData *uidata = ml->uidata;
+
+  config_set_int(uidata->c, (char *)"/enfle/plugins/effect/rotate/function", f);
+  if ((old_p = effect_call(uidata->ef, uidata->eps, (char *)"Rotate", ml->p, uidata->c))) {
+    if (old_p != ml->p) {
+      image_destroy(old_p);
+      video_window_resize(ml->vw, ml->p->width, ml->p->height);
+    }
+    magnify_if_requested(ml->vw, ml->p);
+    video_window_set_offset(ml->vw, 0, 0);
+    video_window_render(ml->vw, ml->p);
+    return 1;
+  } else {
+    show_message("Rotate effect failed.\n");
+    return 0;
+  }
+}
+static int main_loop_rotate_right(MainLoop *ml) { return main_loop_rotate_main(ml, 1); }
+static int main_loop_rotate_left(MainLoop *ml) { return main_loop_rotate_main(ml, -1); }
+static int main_loop_flip_vertical(MainLoop *ml) { return main_loop_rotate_main(ml, 2); }
+static int main_loop_flip_horizontal(MainLoop *ml) { return main_loop_rotate_main(ml, -2); }
+
+static int
+main_loop_gamma_main(MainLoop *ml, int index)
+{
+  UIData *uidata = ml->uidata;
+
+  if (index == 3) {
+    image_destroy(ml->p);
+    ml->p = image_dup(ml->original_p);
+    magnify_if_requested(ml->vw, ml->p);
+    video_window_resize(ml->vw, ml->p->magnified.width, ml->p->magnified.height);
+    video_window_set_offset(ml->vw, 0, 0);
+    video_window_render(ml->vw, ml->p);
+    return 1;
+  } else {
+    Image *old_p;
+    int result = 1;
+
+    config_set_int(uidata->c, (char *)"/enfle/plugins/effect/gamma/index", index);
+    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_WAIT);
+    if ((old_p = effect_call(uidata->ef, uidata->eps, (char *)"Gamma", ml->p, uidata->c))) {
+      if (old_p != ml->p)
+	image_destroy(old_p);
+      magnify_if_requested(ml->vw, ml->p);
+      video_window_set_offset(ml->vw, 0, 0);
+      video_window_render(ml->vw, ml->p);
+    } else {
+      show_message("Gamma correction failed.\n");
+      result = 0;
+    }
+    video_window_set_cursor(ml->vw, _VIDEO_CURSOR_NORMAL);
+    return result;
+  }
+}
+static int main_loop_gamma_1(MainLoop *ml) { return main_loop_gamma_main(ml, 0); }
+static int main_loop_gamma_2(MainLoop *ml) { return main_loop_gamma_main(ml, 1); }
+static int main_loop_gamma_3(MainLoop *ml) { return main_loop_gamma_main(ml, 2); }
+static int main_loop_gamma_4(MainLoop *ml) { return main_loop_gamma_main(ml, 3); }
+static int main_loop_gamma_5(MainLoop *ml) { return main_loop_gamma_main(ml, 4); }
+static int main_loop_gamma_6(MainLoop *ml) { return main_loop_gamma_main(ml, 5); }
+static int main_loop_gamma_7(MainLoop *ml) { return main_loop_gamma_main(ml, 6); }
+
+/* Event dispatcher */
+
+static int
+main_loop_button_pressed(MainLoop *ml)
+{
+  ml->button = ml->ev.button.button;
+  if (ml->button == ENFLE_Button_1)
+    ml->first_point = 1;
+  return 1;
+}
+
+static int
+main_loop_key_pressed(MainLoop *ml)
+{
+  ml->key = ml->ev.key.key;
+  return 1;
+}
+
+static int
+main_loop_button_released(MainLoop *ml)
+{
+  VideoButton button = ml->button;
+
+  ml->button = ENFLE_Button_None;
+  if (button == ml->ev.button.button) {
+    video_window_sync_discard(ml->vw);
+    switch (button) {
+    case ENFLE_Button_1:
+      return main_loop_next(ml);
+    case ENFLE_Button_2:
+      return main_loop_nextarchive(ml);
+    case ENFLE_Button_3:
+      return main_loop_prev(ml);
+    case ENFLE_Button_4:
+      return main_loop_next(ml);
+    case ENFLE_Button_5:
+      return main_loop_prev(ml);
+    default:
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int
+main_loop_key_released(MainLoop *ml)
+{
+  VideoKey key = ml->key;
+
+  ml->key = ENFLE_KEY_Unknown;
+  if (key == ml->ev.key.key) {
+    switch (key) {
+    case ENFLE_KEY_n:
+    case ENFLE_KEY_space:
+      return (ml->ev.key.modkey & ENFLE_MOD_Shift) ? main_loop_nextarchive(ml) : main_loop_next(ml);
+    case ENFLE_KEY_b:
+      return main_loop_prev(ml);
+    case ENFLE_KEY_q:
+      return main_loop_quit(ml);
+    case ENFLE_KEY_f:
+      return main_loop_toggle_fullscreen_mode(ml);
+    case ENFLE_KEY_d:
+      return (ml->ev.key.modkey & ENFLE_MOD_Shift) ?
+	main_loop_delete_file(ml) : main_loop_delete_from_list(ml);
+    case ENFLE_KEY_s:
+      if (ml->ev.key.modkey & ENFLE_MOD_Shift) {
+	return main_loop_toggle_interpolate(ml);
+      } else if (ml->ev.key.modkey & ENFLE_MOD_Ctrl) {
+	return main_loop_save_png(ml);
+      } else if (ml->ev.key.modkey & ENFLE_MOD_Alt) {
+	return main_loop_save(ml);
+      }
+      break;
+    case ENFLE_KEY_m:
+      if (ml->ev.key.modkey & ENFLE_MOD_Shift)
+	return main_loop_magnify_short(ml);
+      else if (ml->ev.key.modkey & ENFLE_MOD_Alt)
+	return main_loop_magnify_long(ml);
+      else
+	return main_loop_magnify_double(ml);
+      break;
+      return 1;
+    case ENFLE_KEY_w:
+      return main_loop_set_wallpaper(ml);
+    case ENFLE_KEY_l:
+      return main_loop_rotate_left(ml);
+    case ENFLE_KEY_r:
+      return main_loop_rotate_right(ml);
+    case ENFLE_KEY_v:
+      return main_loop_flip_vertical(ml);
+    case ENFLE_KEY_h:
+      return main_loop_flip_horizontal(ml);
+    case ENFLE_KEY_1:
+      return main_loop_gamma_1(ml);
+    case ENFLE_KEY_2:
+      return main_loop_gamma_2(ml);
+    case ENFLE_KEY_3:
+      return main_loop_gamma_3(ml);
+    case ENFLE_KEY_4:
+      return main_loop_gamma_4(ml);
+    case ENFLE_KEY_5:
+      return main_loop_gamma_5(ml);
+    case ENFLE_KEY_6:
+      return main_loop_gamma_6(ml);
+    case ENFLE_KEY_7:
+      return main_loop_gamma_7(ml);
+    default:
+      break;
+    }
+  }
+  return 1;
+}
+
+static int
+main_loop_pointer_moved(MainLoop *ml)
+{
+  if (ml->ev.pointer.button & ENFLE_Button_1) {
+    if (ml->first_point) {
+      ml->old_x = ml->ev.pointer.x;
+      ml->old_y = ml->ev.pointer.y;
+      ml->first_point = 0;
+    } else {
+      ml->offset_x = ml->ev.pointer.x - ml->old_x;
+      ml->offset_y = ml->ev.pointer.y - ml->old_y;
+      ml->old_x = ml->ev.pointer.x;
+      ml->old_y = ml->ev.pointer.y;
+
+      if (ml->offset_x != 0 || ml->offset_y != 0) {
+	ml->button = ENFLE_Button_None;
+	video_window_adjust_offset(ml->vw, ml->offset_x, ml->offset_y);
+      }
+    }
+  }
+  return 1;
+}
+
 static int
 main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 {
-  VideoPlugin *vp = uidata->vp;
-  VideoEventData ev;
-  int loop = 1;
-  VideoButton button = ENFLE_Button_None;
-  VideoKey key = ENFLE_KEY_Unknown;
-  EnflePlugins *eps = uidata->eps;
-  Config *c = uidata->c;
-  Effect *ef = uidata->ef;
-  Image *original_p = NULL;
-  unsigned int old_x = 0, old_y = 0;
-  int first_point = 1;
-  int offset_x, offset_y;
-  int ret;
+  MainLoop ml;
+
+  memset(&ml, 0, sizeof(ml));
+  ml.button = ENFLE_Button_None;
+  ml.key = ENFLE_KEY_Unknown;
+  ml.uidata = uidata;
+  ml.vw = vw;
+  ml.m = m;
+  ml.p = p;
+  ml.path = path;
+  ml.original_p = NULL;
 
   if (p) {
     vw->if_direct = 0;
     magnify_if_requested(vw, p);
     video_window_render(vw, p);
     set_caption_string(vw, path, p->format);
-    original_p = image_dup(p);
+    ml.original_p = image_dup(p);
   } else if (m) {
     vw->if_direct = 1;
     vw->render_width  = m->width;
@@ -238,248 +560,25 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 
   video_window_set_offset(vw, 0, 0);
 
-  while (loop) {
-    if (video_window_dispatch_event(vw, &ev)) {
-      /* XXX: Key bindings should be configurable. */
-      switch (ev.type) {
+  ml.ret = MAIN_LOOP_DO_NOTHING;
+  while (ml.ret == MAIN_LOOP_DO_NOTHING) {
+    if (video_window_dispatch_event(vw, &ml.ev)) {
+      switch (ml.ev.type) {
       case ENFLE_Event_ButtonPressed:
-	button = ev.button.button;
-	if (button == ENFLE_Button_1)
-	  first_point = 1;
+	main_loop_button_pressed(&ml);
 	break;
       case ENFLE_Event_ButtonReleased:
-	if (button == ev.button.button) {
-	  video_window_sync_discard(vw);
-	  switch (ev.button.button) {
-	  case ENFLE_Button_1:
-	    ret = MAIN_LOOP_NEXT;
-	    goto quit_main_loop;
-	  case ENFLE_Button_2:
-	    ret = MAIN_LOOP_NEXTARCHIVE;
-	    goto quit_main_loop;
-	  case ENFLE_Button_3:
-	    ret = MAIN_LOOP_PREV;
-	    goto quit_main_loop;
-	  case ENFLE_Button_4:
-	    ret = MAIN_LOOP_NEXT;
-	    goto quit_main_loop;
-	  case ENFLE_Button_5:
-	    ret = MAIN_LOOP_PREV;
-	    goto quit_main_loop;
-	  default:
-	    break;
-	  }
-	}
-	button = ENFLE_Button_None;
+	main_loop_button_released(&ml);
 	break;
       case ENFLE_Event_KeyPressed:
-	key = ev.key.key;
+	main_loop_key_pressed(&ml);
 	break;
       case ENFLE_Event_KeyReleased:
-	if (key == ev.key.key) {
-	  video_window_sync_discard(vw);
-	  switch (ev.key.key) {
-	  case ENFLE_KEY_n:
-	  case ENFLE_KEY_space:
-	    ret = (ev.key.modkey & ENFLE_MOD_Shift) ? MAIN_LOOP_NEXTARCHIVE :  MAIN_LOOP_NEXT;
-	    goto quit_main_loop;
-	  case ENFLE_KEY_b:
-	    ret = MAIN_LOOP_PREV;
-	    goto quit_main_loop;
-	  case ENFLE_KEY_q:
-	    ret = MAIN_LOOP_QUIT;
-	    goto quit_main_loop;
-	  case ENFLE_KEY_f:
-	    video_window_set_fullscreen_mode(vw, _VIDEO_WINDOW_FULLSCREEN_TOGGLE);
-	    break;
-	  case ENFLE_KEY_d:
-	    ret = (ev.key.modkey & ENFLE_MOD_Shift) ?
-	      MAIN_LOOP_DELETE_FILE : MAIN_LOOP_DELETE_FROM_LIST;
-	    goto quit_main_loop;
-	  case ENFLE_KEY_s:
-	    if (ev.key.modkey & ENFLE_MOD_Shift) {
-	      switch (vw->interpolate_method) {
-	      case _NOINTERPOLATE:
-		vw->interpolate_method = _BILINEAR;
-		break;
-	      case _BILINEAR:
-		vw->interpolate_method = _NOINTERPOLATE;
-		break;
-	      default:
-		show_message(__FUNCTION__ ": invalid interpolate method %d\n", vw->interpolate_method);
-		vw->interpolate_method = _NOINTERPOLATE;
-		break;
-	      }
-	      magnify_if_requested(vw, p);
-	      video_window_render(vw, p);
-	      set_caption_string(vw, path, p ? p->format : m->format);
-	    } else if (ev.key.modkey & ENFLE_MOD_Ctrl) {
-	      video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-	      if (!save_image(p, uidata, path, (char *)"PNG"))
-		show_message("save_image() failed.\n");
-	      video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-	    } else if (ev.key.modkey & ENFLE_MOD_Alt) {
-	      char *format;
-
-	      if ((format = config_get(c, "/enfle/plugins/ui/normal/save_format")) == NULL)
-		show_message("save_format is not specified.\n");
-	      else {
-		video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-		if (!save_image(p, uidata, path, format))
-		  show_message("save_image() failed.\n");
-		video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-	      }
-	    }
-	    break;
-	  case ENFLE_KEY_m:
-	    switch (vw->render_method) {
-	    case _VIDEO_RENDER_NORMAL:
-	      if (ev.key.modkey & ENFLE_MOD_Shift)
-		vw->render_method = _VIDEO_RENDER_MAGNIFY_SHORT_FULL;
-	      else if (ev.key.modkey & ENFLE_MOD_Alt)
-		vw->render_method = _VIDEO_RENDER_MAGNIFY_LONG_FULL;
-	      else
-		vw->render_method = _VIDEO_RENDER_MAGNIFY_DOUBLE;
-	      break;
-	    case _VIDEO_RENDER_MAGNIFY_DOUBLE:
-	    case _VIDEO_RENDER_MAGNIFY_SHORT_FULL:
-	    case _VIDEO_RENDER_MAGNIFY_LONG_FULL:
-	      vw->render_method = _VIDEO_RENDER_NORMAL;
-	      break;
-	    default:
-	      break;
-	    }
-	    if (p) {
-	      magnify_if_requested(vw, p);
-	      video_window_resize(vw, p->magnified.width, p->magnified.height);
-	      video_window_set_offset(vw, 0, 0);
-	      video_window_render(vw, p);
-	    }
-	    break;
-	  case ENFLE_KEY_w:
-	    if (p) 
-	      vp->set_wallpaper(uidata->disp, p);
-	    break;
-	  case ENFLE_KEY_l:
-	  case ENFLE_KEY_r:
-	  case ENFLE_KEY_v:
-	  case ENFLE_KEY_h:
-	    if (p) {
-	      Image *old_p;
-	      int f;
-
-	      switch (ev.key.key) {
-	      case ENFLE_KEY_r:
-		f = 1;
-		break;
-	      case ENFLE_KEY_l:
-		f = -1;
-		break;
-	      case ENFLE_KEY_v:
-		f = 2;
-		break;
-	      case ENFLE_KEY_h:
-		f = -2;
-		break;
-	      default:
-		f = 0;
-		break;
-	      }
-	      config_set_int(c, (char *)"/enfle/plugins/effect/rotate/function", f);
-	      if ((old_p = effect_call(ef, eps, (char *)"Rotate", p, c))) {
-		if (old_p != p) {
-		  image_destroy(old_p);
-		  video_window_resize(vw, p->width, p->height);
-		}
-		magnify_if_requested(vw, p);
-		video_window_set_offset(vw, 0, 0);
-		video_window_render(vw, p);
-	      } else
-		show_message("Rotate effect failed.\n");
-	    }
-	    break;
-	  case ENFLE_KEY_1:
-	  case ENFLE_KEY_2:
-	  case ENFLE_KEY_3:
-	  case ENFLE_KEY_4:
-	  case ENFLE_KEY_5:
-	  case ENFLE_KEY_6:
-	  case ENFLE_KEY_7:
-	    if (p) {
-	      Image *old_p;
-	      int index = 1;
-
-	      switch (ev.key.key) {
-	      case ENFLE_KEY_1:
-		index = 0;
-		break;
-	      case ENFLE_KEY_2:
-		index = 1;
-		break;
-	      case ENFLE_KEY_3:
-		index = 2;
-		break;
-	      case ENFLE_KEY_4:
-		index = 3;
-		break;
-	      case ENFLE_KEY_5:
-		index = 4;
-		break;
-	      case ENFLE_KEY_6:
-		index = 5;
-		break;
-	      case ENFLE_KEY_7:
-		index = 6;
-		break;
-	      default:
-		break;
-	      }
-	      if (index == 3) {
-		image_destroy(p);
-		p = image_dup(original_p);
-		magnify_if_requested(vw, p);
-		video_window_resize(vw, p->magnified.width, p->magnified.height);
-		video_window_set_offset(vw, 0, 0);
-		video_window_render(vw, p);
-	      } else {
-		config_set_int(c, (char *)"/enfle/plugins/effect/gamma/index", index);
-		video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-		if ((old_p = effect_call(ef, eps, (char *)"Gamma", p, c))) {
-		  if (old_p != p)
-		    image_destroy(old_p);
-		  magnify_if_requested(vw, p);
-		  video_window_set_offset(vw, 0, 0);
-		  video_window_render(vw, p);
-		} else
-		  show_message("Gamma correction failed.\n");
-		video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
-	      }
-	    }
-	    break;
-	  default:
-	    break;
-	  }
-	}
-	key = ENFLE_KEY_Unknown;
+	main_loop_key_released(&ml);
+	video_window_sync_discard(vw);
 	break;
       case ENFLE_Event_PointerMoved:
-	if (ev.pointer.button & ENFLE_Button_1) {
-	  if (first_point) {
-	    old_x = ev.pointer.x;
-	    old_y = ev.pointer.y;
-	    first_point = 0;
-	  } else {
-	    offset_x = ev.pointer.x - old_x;
-	    offset_y = ev.pointer.y - old_y;
-	    old_x = ev.pointer.x;
-	    old_y = ev.pointer.y;
-
-	    if (offset_x != 0 || offset_y != 0) {
-	      button = ENFLE_Button_None;
-	      video_window_adjust_offset(vw, offset_x, offset_y);
-	    }
-	  }
-	}
+	main_loop_pointer_moved(&ml);
 	break;
       default:
 	break;
@@ -491,7 +590,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
       case _PLAY:
 	if (movie_play_main(m, vw) != PLAY_OK) {
 	  show_message(__FUNCTION__ ": movie_play_main() failed.\n");
-	  return 0;
+	  return MAIN_LOOP_NEXT;
 	}
 	break;
       case _PAUSE:
@@ -502,17 +601,15 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
 	break;
       case _UNLOADED:
 	show_message("Movie has been already unloaded.\n");
-	return 0;
+	return MAIN_LOOP_NEXT;
       }
     }
   }
 
-  ret = 0;
+  if (ml.original_p)
+    image_destroy(ml.original_p);
 
- quit_main_loop:
-  if (original_p)
-    image_destroy(original_p);
-  return ret;
+  return ml.ret;
 }
 
 static int
@@ -743,19 +840,19 @@ ui_main(UIData *uidata)
   void *disp;
   char *render_method, *interpolate_method;
 
-  debug_message("Convert: " __FUNCTION__ "()\n");
+  debug_message("Normal: " __FUNCTION__ "()\n");
 
   if ((disp = vp->open_video(NULL, c)) == NULL) {
     show_message("open_video() failed\n");
-    free(uidata->private);
     return 0;
   }
   uidata->disp = disp;
 
   uidata->vw = vw = vp->open_window(disp, vp->get_root(disp), 600, 400);
 
-  video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask | ENFLE_PointerMask);
-  /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask | ENFLE_PointerMask | ENFLE_WindowMask); */
+  video_window_set_event_mask(vw,
+			      ENFLE_ExposureMask | ENFLE_ButtonMask |
+			      ENFLE_KeyMask | ENFLE_PointerMask); /* ENFLE_WindowMask */
 
   if ((render_method = config_get(c, "/enfle/plugins/ui/normal/render")) != NULL) {
     if (!strcasecmp(render_method, "normal")) {
