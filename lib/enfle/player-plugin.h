@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 04:58:41 2000.
- * $Id: player-plugin.h,v 1.6 2000/11/04 17:31:28 sian Exp $
+ * Last Modified: Mon Dec  4 21:09:19 2000.
+ * $Id: player-plugin.h,v 1.7 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 19:55:33 2000.
- * $Id: libmpeg3.c,v 1.8 2000/12/03 11:05:02 sian Exp $
+ * Last Modified: Mon Dec  4 22:55:53 2000.
+ * $Id: libmpeg3.c,v 1.9 2000/12/04 14:01:13 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -44,6 +44,9 @@ typedef struct _libmpeg3_info {
   Memory *buffer;
 } LibMPEG3_info;
 
+static const unsigned int types =
+  (IMAGE_RGBA32 | IMAGE_BGRA32 | IMAGE_RGB24 | IMAGE_BGR24 | IMAGE_BGR_WITH_BITMASK);
+
 static PlayerStatus identify(Movie *, Stream *);
 static PlayerStatus load(VideoWindow *, Movie *, Stream *);
 
@@ -53,9 +56,8 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG3",
-  description: "LibMPEG3 Player plugin version 0.2",
+  description: "LibMPEG3 Player plugin version 0.2.1",
   author: "Hiroshi Takekawa",
-
   identify: identify,
   load: load
 };
@@ -95,6 +97,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     free(info);
     return PLAY_ERROR;
   }
+
+  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
+  if (!m->direct_decode) {
+    show_message(__FUNCTION__ ": Cannot direct decoding...\n");
+    return PLAY_ERROR;
+  }
+  debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   /* can set how many CPUs you want to use. */
   /* mpeg3_set_cpus(info->file, 2); */
@@ -220,42 +229,57 @@ play_main(Movie *m, VideoWindow *vw)
   p->width  = m->width;
   p->height = m->height;
 
+  p->type = m->requested_type;
   switch (vw->bits_per_pixel) {
   case 32:
-    if (vw->prefer_msb) {
+    switch (p->type) {
+    case _RGBA32:
       rendering_type = MPEG3_RGBA8888;
-      p->type = _RGBA32;
-    } else {
+      break;
+    case _BGRA32:
       rendering_type = MPEG3_BGRA8888;
-      p->type = _BGRA32;
+      break;
+    default:
+      show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+      return PLAY_ERROR;
     }
     p->depth = 24;
-    p->bytes_per_line = m->width * 4;
     p->bits_per_pixel = 32;
+    p->bytes_per_line = m->width * 4;
     break;
   case 24:
-    if (vw->prefer_msb) {
+    switch (p->type) {
+    case _RGB24:
       rendering_type = MPEG3_RGB888;
-      p->type = _RGB24;
-    } else {
+      break;
+    case _BGR24:
       rendering_type = MPEG3_BGR888;
-      p->type = _BGR24;
+      break;
+    default:
+      show_message(__FUNCTION__": Requested type is %s.\n", image_type_to_string(p->type));
+      return PLAY_ERROR;
     }
     p->depth = 24;
-    p->bytes_per_line = m->width * 3;
     p->bits_per_pixel = 24;
+    p->bytes_per_line = m->width * 3;
     break;
   case 16:
-    rendering_type = MPEG3_RGB565;
+    switch (p->type) {
+    case _RGB_WITH_BITMASK:
+    case _BGR_WITH_BITMASK:
+      rendering_type = MPEG3_RGB565;
+      break;
+    default:
+      show_message(__FUNCTION__": Requested type is %s.\n", image_type_to_string(p->type));
+      return PLAY_ERROR;
+    }
     p->depth = 16;
-    p->type = _BGR_WITH_BITMASK;
-    p->bytes_per_line = m->width * 2;
     p->bits_per_pixel = 16;
+    p->bytes_per_line = m->width * 2;
     break;
   default:
     show_message("Cannot render bpp %d\n", vw->bits_per_pixel);
-    rendering_type = MPEG3_RGBA8888;
-    break;
+    return PLAY_ERROR;
   }
 
   decode_error = (mpeg3_read_frame(info->file, info->lines,
@@ -265,8 +289,8 @@ play_main(Movie *m, VideoWindow *vw)
 				   rendering_type, info->nstream) == -1) ? 0 : 1;
 
   p->next = NULL;
-  memory_destroy(p->image);
-  p->image = info->buffer;
+  memory_destroy(p->rendered_image);
+  p->rendered_image = info->buffer;
 
   m->current_frame++;
 
@@ -290,7 +314,7 @@ play_main(Movie *m, VideoWindow *vw)
     }
   }
 
-  p->image = NULL;
+  p->rendered_image = NULL;
   image_destroy(p);
 
   if (!decode_error || m->current_frame >= m->num_of_frames)

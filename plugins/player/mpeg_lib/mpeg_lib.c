@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 16:58:16 2000.
- * $Id: mpeg_lib.c,v 1.7 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Mon Dec  4 22:55:21 2000.
+ * $Id: mpeg_lib.c,v 1.8 2000/12/04 14:01:13 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).
@@ -35,6 +35,8 @@ typedef struct _mpeg_lib_info {
   Memory *buffer;
   ImageDesc img;
 } MPEG_lib_info;
+
+static const unsigned int types = IMAGE_RGBA32;
 
 static PlayerStatus identify(Movie *, Stream *);
 static PlayerStatus load(VideoWindow *, Movie *, Stream *);
@@ -97,6 +99,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     show_message("MPEG_lib: play_movie: No enough memory.\n");
     return PLAY_ERROR;
   }
+
+  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
+  debug_message("MPEG_lib: requested type: %s %s\n", image_type_to_string(m->requested_type), m->direct_decode ? "direct" : "not direct");
 
   SetMPEGOption(MPEG_DITHER, FULL_COLOR_DITHER);
   if (!OpenMPEGStream((void *)st, &info->img, mpeg_lib_input_func)) {
@@ -178,7 +183,7 @@ play_main(Movie *m, VideoWindow *vw)
 
   p = image_create();
 
-  memory_used(info->buffer) = memory_size(info->buffer);
+  memory_alloc(info->buffer, m->height * m->width * 4);
   more_frame = GetMPEGFrame(memory_ptr(info->buffer));
 
   p->width  = m->width;
@@ -188,13 +193,21 @@ play_main(Movie *m, VideoWindow *vw)
   p->bytes_per_line = m->width * 4;
   p->bits_per_pixel = 32;
   p->next = NULL;
-  memory_destroy(p->image);
-  p->image = info->buffer;
+  if (m->direct_decode) {
+    memory_destroy(p->rendered_image);
+    p->rendered_image = info->buffer;
+  } else {
+    memory_destroy(p->image);
+    p->image = info->buffer;
+  }
 
   m->current_frame++;
 
   m->render_frame(vw, m, p);
-  p->image = NULL;
+  if (m->direct_decode)
+    p->rendered_image = NULL;
+  else
+    p->image = NULL;
 
   image_destroy(p);
 

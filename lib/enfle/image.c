@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 16:33:26 2000.
- * $Id: image.c,v 1.4 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Mon Dec  4 17:50:08 2000.
+ * $Id: image.c,v 1.5 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,18 +63,26 @@ image_create(void)
     return NULL;
   memcpy(p, &template, sizeof(Image));
 
-  if ((p->image = memory_create()) == NULL) {
-    free(p);
-    return NULL;
-  }
+  if ((p->rendered_image = memory_create()) == NULL)
+    goto error;
 
-  if ((p->mask = memory_create()) == NULL) {
-    free(p);
-    memory_destroy(p->mask);
-    return NULL;
-  }
+  if ((p->image = memory_create()) == NULL)
+    goto error;
+
+  if ((p->mask = memory_create()) == NULL)
+    goto error;
 
   return p;
+
+ error:
+  if (p->rendered_image)
+    memory_destroy(p->rendered_image);
+  if (p->image)
+    memory_destroy(p->image);
+  if (p)
+    free(p);
+
+  return NULL;
 }
 
 const char *
@@ -98,6 +106,7 @@ duplicate(Image *p)
     return NULL;
   memcpy(new, p, sizeof(Image));
 
+  memory_destroy(new->image);
   if ((new->image = memory_dup_as_shm(p->image)) == NULL) {
     destroy(new);
     return NULL;
@@ -128,6 +137,8 @@ magnify(Image *p, int dw, int dh, ImageInterpolateMethod method)
 static void
 destroy(Image *p)
 {
+  if (p->rendered_image)
+    memory_destroy(p->rendered_image);
   if (p->image)
     memory_destroy(p->image);
   if (p->mask)

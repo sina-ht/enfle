@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Dec  3 19:58:15 2000.
- * $Id: x11ximage.c,v 1.9 2000/12/03 11:04:07 sian Exp $
+ * Last Modified: Mon Dec  4 22:53:52 2000.
+ * $Id: x11ximage.c,v 1.10 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -82,23 +82,22 @@ convert(X11XImage *xi, Image *p)
   int bytes_per_line = 0, bits_per_pixel = 0;
   unsigned char *dest = NULL, *dd, *s;
   XImage *ximage;
-  Memory *source = NULL;
 
   if (!xi->ximage || xi->ximage->width != p->width || xi->ximage->height != p->height) {
     destroy_ximage(xi);
-    switch (memory_type(p->image)) {
+    switch (memory_type(p->rendered_image)) {
     case _NORMAL:
       xi->ximage =
-	x11_create_ximage(xi->x11, x11_visual(xi->x11), x11_depth(xi->x11), memory_ptr(p->image),
-			  p->width, p->height, 8, 0);
+	x11_create_ximage(xi->x11, x11_visual(xi->x11), x11_depth(xi->x11),
+			  memory_ptr(p->rendered_image), p->width, p->height, 8, 0);
       break;
     case _SHM:
 #ifdef USE_SHM
       xi->ximage =
 	XShmCreateImage(x11_display(xi->x11), x11_visual(xi->x11), x11_depth(xi->x11), ZPixmap, NULL,
 			&xi->shminfo, p->width, p->height);
-      xi->shminfo.shmid = memory_shmid(p->image);
-      xi->shminfo.shmaddr = memory_ptr(p->image);
+      xi->shminfo.shmid = memory_shmid(p->rendered_image);
+      xi->shminfo.shmaddr = memory_ptr(p->rendered_image);
       xi->shminfo.readOnly = False;
       XShmAttach(x11_display(xi->x11), &xi->shminfo);
       xi->if_attached = 1;
@@ -137,26 +136,22 @@ convert(X11XImage *xi, Image *p)
 
       if (p->type == _RGB_WITH_BITMASK) {
 	ximage->byte_order = MSBFirst;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       } else if (p->type == _BGR_WITH_BITMASK) {
 	ximage->byte_order = LSBFirst;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       }
 
-      if ((source = memory_dup(p->image)) == NULL) {
-	show_message(__FUNCTION__ ": No enough memory(source)\n");
-	exit(-2);
-      }
-
-      if (memory_alloc(p->image, p->width * p->height * 2) == NULL) {
+      if (memory_alloc(p->rendered_image, p->width * p->height * 2) == NULL) {
 	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
 	exit(-2);
       }
 
-      dd = dest = memory_ptr(p->image);
-      s = memory_ptr(source);
+      dd = dest = memory_ptr(p->rendered_image);
+      s = memory_ptr(p->image);
+
       ximage->byte_order = LSBFirst;
       switch (p->type) {
       case _BGR24:
@@ -255,26 +250,21 @@ convert(X11XImage *xi, Image *p)
 
       if (p->type == _RGB24) {
 	ximage->byte_order = MSBFirst;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       } else if (p->type == _BGR24) {
 	ximage->byte_order = LSBFirst;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       }
 
-      if ((source = memory_dup(p->image)) == NULL) {
-	show_message(__FUNCTION__ ": No enough memory(source)\n");
-	exit(-2);
-      }
-
-      if (memory_alloc(p->image, p->width * p->height * 3) == NULL) {
+      if (memory_alloc(p->rendered_image, p->width * p->height * 3) == NULL) {
 	show_message(__FUNCTION__ ": No enough memory(alloc)\n");
 	exit(-2);
       }
 
-      dd = dest = memory_ptr(p->image);
-      s = memory_ptr(source);
+      dd = dest = memory_ptr(p->rendered_image);
+      s = memory_ptr(p->image);
       ximage->byte_order = LSBFirst;
       switch (p->type) {
       case _INDEX:
@@ -308,46 +298,41 @@ convert(X11XImage *xi, Image *p)
       if (p->type == _RGB24) {
 	ximage->byte_order = MSBFirst;
 	bits_per_pixel = 24;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       } else if (p->type == _BGR24) {
 	ximage->byte_order = LSBFirst;
 	bits_per_pixel = 24;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       } else if (p->type == _ARGB32) {
 	ximage->byte_order = MSBFirst;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       } else if (p->type == _BGRA32) {
 	ximage->byte_order = LSBFirst;
-	dest = memory_ptr(p->image);
+	dest = memory_ptr(p->rendered_image);
 	break;
       }
 
-      dest = memory_ptr(p->image);
+      dest = memory_ptr(p->rendered_image);
       bytes_per_line = p->width << 2;
       switch (p->type) {
       case _RGBA32:
 	ximage->byte_order = MSBFirst;
-	memcpy(dest + 1, dest, memory_size(p->image) - 1);
+	memcpy(dest + 1, memory_ptr(p->image), memory_size(p->image) - 1);
 	break;
       case _ABGR32:
 	ximage->byte_order = LSBFirst;
-	memcpy(dest, dest + 1, memory_size(p->image) - 1);
+	memcpy(dest, memory_ptr(p->image) + 1, memory_size(p->image) - 1);
 	break;
       case _INDEX:
-	if (memory_alloc(p->image, p->width * p->height * 4) == NULL) {
+	if (memory_alloc(p->rendered_image, p->width * p->height * 4) == NULL) {
 	  show_message(__FUNCTION__ ": No enough memory(alloc)\n");
 	  exit(-2);
 	}
 
-	if ((source = memory_dup(p->image)) == NULL) {
-	  show_message(__FUNCTION__ ": No enough memory(source)\n");
-	  exit(-2);
-	}
-
-	s = memory_ptr(source);
+	s = memory_ptr(p->image);
 	dd = dest;
 	ximage->byte_order = LSBFirst;
 	for (i = 0; i < p->width * p->height; i++) {
@@ -367,9 +352,6 @@ convert(X11XImage *xi, Image *p)
     show_message(__FUNCTION__ ": ximage->bits_per_pixel = %d\n", ximage->bits_per_pixel);
     break;
   }
-
-  if (source)
-    memory_destroy(source);
 
   ximage->data = dest;
   ximage->bytes_per_line = bytes_per_line;

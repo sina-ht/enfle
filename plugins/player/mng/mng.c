@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 20:01:40 2000.
- * $Id: mng.c,v 1.6 2000/12/03 11:05:02 sian Exp $
+ * Last Modified: Mon Dec  4 22:55:36 2000.
+ * $Id: mng.c,v 1.7 2000/12/04 14:01:13 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -39,6 +39,8 @@ typedef struct {
   int rc;
   unsigned int delay;
 } MNG_info;
+
+static const unsigned types = (IMAGE_ARGB32 | IMAGE_BGRA32);
 
 static PlayerStatus identify(Movie *, Stream *);
 static PlayerStatus load(VideoWindow *, Movie *, Stream *);
@@ -125,24 +127,31 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
   m->height = height;
   m->initialize_screen(this->vw, m, m->width, m->height);
 
-  p = image_create();
-
-  this->p = p;
-
-  p->bits_per_pixel = 32;
-  if (this->vw->prefer_msb) {
-    mng_set_canvasstyle(mng, MNG_CANVAS_ARGB8);
-    p->type = _ARGB32;
-  } else {
-    mng_set_canvasstyle(mng, MNG_CANVAS_BGRA8);
-    p->type = _BGRA32;
-  }
+  this->p = p = image_create();
 
   p->width = width;
   p->height = height;
+
+  p->type = m->requested_type;
+  switch (p->type) {
+  case _ARGB32:
+    mng_set_canvasstyle(mng, MNG_CANVAS_ARGB8);
+    break;
+  case _BGRA32:
+    mng_set_canvasstyle(mng, MNG_CANVAS_BGRA8);
+    break;
+  default:
+    show_message(__FUNCTION__": requested type is %s.\n", image_type_to_string(p->type));
+    return PLAY_ERROR;
+  }
+
+  p->bits_per_pixel = 32;
   p->depth = 24;
-  p->bytes_per_line = width * (p->bits_per_pixel >> 3);
-  memory_alloc(p->image, p->bytes_per_line * height);
+  p->bytes_per_line = p->width * (p->bits_per_pixel >> 3);
+  if (m->direct_decode)
+    memory_alloc(p->rendered_image, p->bytes_per_line * p->height);
+  else
+    memory_alloc(p->image, p->bytes_per_line * p->height);
 
   return MNG_TRUE;
 }
@@ -155,18 +164,17 @@ getcanvasline(mng_handle mng, mng_uint32 nthline)
   unsigned char *d;
 
   p = this->p;
-  d = memory_ptr(p->image);
+  d = memory_ptr(this->m->direct_decode ? p->rendered_image : p->image);
 
   return (mng_ptr)&d[p->bytes_per_line * nthline];
 }
 
 static mng_bool
-refresh(mng_handle mng, mng_uint32 left, mng_uint32 top,
-	mng_uint32 width, mng_uint32 height)
+refresh(mng_handle mng, mng_uint32 l, mng_uint32 t, mng_uint32 w, mng_uint32 h)
 {
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
 
-  debug_message(__FUNCTION__ ": (%d,%d)-(%d,%d)\n", left, top, left + width - 1, top + height - 1);
+  /* debug_message(__FUNCTION__ ": (%d,%d)-(%d,%d)\n", l, t, l + w - 1, t + h - 1); */
 
   this->m->render_frame(this->vw, this->m, this->p);
 
@@ -335,6 +343,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
+  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
+  debug_message("MNG: requested type: %s %s\n", image_type_to_string(m->requested_type), m->direct_decode ? "direct" : "not direct");
+
   m->st = st;
   m->movie_private = (void *)this;
   m->status = _PLAY;
@@ -344,17 +355,17 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   this->m = m;
 
   this->mng = mng_initialize((mng_ptr)this, memalloc, memfree, NULL);
-  if (mng_setcb_openstream    (this->mng, openstream   )) err++;
-  if (mng_setcb_closestream   (this->mng, closestream  )) err++;
-  if (mng_setcb_readdata      (this->mng, readdata     )) err++;
-  if (mng_setcb_processheader (this->mng, processheader)) err++;
-  if (mng_setcb_getcanvasline (this->mng, getcanvasline)) err++;
-  if (mng_setcb_refresh       (this->mng, refresh      )) err++;
-  if (mng_setcb_gettickcount  (this->mng, gettickcount )) err++;
-  if (mng_setcb_settimer      (this->mng, settimer     )) err++;
-  if (mng_setcb_errorproc     (this->mng, errorproc    )) err++;
+  if (mng_setcb_openstream   (this->mng, openstream   )) err++;
+  if (mng_setcb_closestream  (this->mng, closestream  )) err++;
+  if (mng_setcb_readdata     (this->mng, readdata     )) err++;
+  if (mng_setcb_processheader(this->mng, processheader)) err++;
+  if (mng_setcb_getcanvasline(this->mng, getcanvasline)) err++;
+  if (mng_setcb_refresh      (this->mng, refresh      )) err++;
+  if (mng_setcb_gettickcount (this->mng, gettickcount )) err++;
+  if (mng_setcb_settimer     (this->mng, settimer     )) err++;
+  if (mng_setcb_errorproc    (this->mng, errorproc    )) err++;
   if (err) {
-    fprintf(stderr, "failed to install %d callback function(s)\n", err);
+    show_message("MNG: failed to install %d callback function(s)\n", err);
     return PLAY_ERROR;
   }
 

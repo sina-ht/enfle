@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 19:56:55 2000.
- * $Id: Xlib.c,v 1.8 2000/12/03 11:04:35 sian Exp $
+ * Last Modified: Mon Dec  4 22:09:03 2000.
+ * $Id: Xlib.c,v 1.9 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,6 +63,7 @@ typedef struct {
 static void *open_video(void *);
 static int close_video(void *);
 static VideoWindow *open_window(void *, unsigned int, unsigned int);
+static ImageType request_type(VideoWindow *, unsigned int, int *);
 static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
 static int dispatch_event(VideoWindow *, VideoEventData *);
@@ -89,6 +90,7 @@ static VideoPlugin plugin = {
 
 static VideoWindow template = {
   preferred_memory_type: preferred_memory_type,
+  request_type: request_type,
   set_event_mask: set_event_mask,
   dispatch_event: dispatch_event,
   set_caption: set_caption,
@@ -234,6 +236,81 @@ preferred_memory_type(VideoWindow *vw)
   X11 *x11 = x11window_x11(xw);
 
   return x11_if_shm(x11) ? _SHM : _NORMAL;
+}
+
+static ImageType
+request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
+{
+  static ImageType prefer_32_msb_direct[] = {
+    _ARGB32, _RGB24, _BGRA32, _BGR24, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_32_msb[] = {
+    _RGBA32, _ABGR32,
+    _RGB_WITH_BITMASK, _BGR_WITH_BITMASK,
+    _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_MSBFirst, _BITMAP_LSBFirst, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_32_lsb_direct[] = {
+    _BGRA32, _BGR24, _ARGB32, _RGB24, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_32_lsb[] = {
+    _RGBA32, _ABGR32,
+    _BGR_WITH_BITMASK, _RGB_WITH_BITMASK,
+    _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_24_msb_direct[] = { _RGB24, _BGR24, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_24_msb[] = {
+    _RGBA32, _BGRA32, _ARGB32, _ABGR32,
+    _RGB_WITH_BITMASK, _BGR_WITH_BITMASK,
+    _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_24_lsb_direct[] = { _BGR24, _RGB24, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_24_lsb[] = {
+    _BGRA32, _RGBA32, _ABGR32, _ARGB32,
+    _BGR_WITH_BITMASK, _RGB_WITH_BITMASK,
+    _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_16_msb_direct[] = {
+    _RGB_WITH_BITMASK, _BGR_WITH_BITMASK, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_16_msb[] = {
+    _BGR24, _RGB24,
+    _BGRA32, _RGBA32, _ABGR32, _ARGB32,
+    _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_16_lsb_direct[] = {
+    _BGR_WITH_BITMASK, _RGB_WITH_BITMASK, _IMAGETYPE_TERMINATOR };
+  static ImageType prefer_16_lsb[] = {
+    _BGR24, _RGB24,
+    _BGRA32, _RGBA32, _ABGR32, _ARGB32,
+    _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
+  ImageType *prefer_direct, *prefer;
+  int i;
+
+  switch (vw->bits_per_pixel) {
+  case 32:
+    prefer_direct = (vw->prefer_msb) ? prefer_32_msb_direct : prefer_32_lsb_direct;
+    prefer        = (vw->prefer_msb) ? prefer_32_msb        : prefer_32_lsb;
+    break;
+  case 24:
+    prefer_direct = (vw->prefer_msb) ? prefer_24_msb_direct : prefer_24_lsb_direct;
+    prefer        = (vw->prefer_msb) ? prefer_24_msb        : prefer_24_lsb;
+    break;
+  case 16:
+    prefer_direct = (vw->prefer_msb) ? prefer_16_msb_direct : prefer_16_lsb_direct;
+    prefer        = (vw->prefer_msb) ? prefer_16_msb        : prefer_16_lsb;
+    break;
+  default:
+    break;
+  }
+
+  for (i = 0; prefer_direct[i] != _IMAGETYPE_TERMINATOR; i++) {
+    if (types & (1 << prefer_direct[i])) {
+      *direct_decode = 1;
+      return prefer_direct[i];
+    }
+  }
+
+  for (i = 0; prefer[i] != _IMAGETYPE_TERMINATOR; i++) {
+    if (types & (1 << prefer[i])) {
+      *direct_decode = 0;
+      return prefer[i];
+    }
+  }
+
+  show_message(__FUNCTION__": No appropriate image type. should not be happened\n");
+  return _IMAGETYPE_TERMINATOR;
 }
 
 static int

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 19:51:48 2000.
- * $Id: video.h,v 1.4 2000/12/03 11:04:18 sian Exp $
+ * Last Modified: Mon Dec  4 21:46:17 2000.
+ * $Id: video.h,v 1.5 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -106,6 +106,7 @@ struct _video_window {
   int if_fullscreen, if_direct, prefer_msb;
 
   MemoryType (*preferred_memory_type)(VideoWindow *);
+  ImageType (*request_type)(VideoWindow *, unsigned int, int *);
   int (*set_event_mask)(VideoWindow *, int);
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
   void (*set_caption)(VideoWindow *, unsigned char *);
@@ -118,6 +119,7 @@ struct _video_window {
 };
 
 #define video_window_preferred_memory_type(vw) (vw)->preferred_memory_type((vw))
+#define video_window_request_type(vw, types, ddp) (vw)->request_type((vw), (types), (ddp))
 #define video_window_set_event_mask(vw, m) (vw)->set_event_mask((vw), (m))
 #define video_window_dispatch_event(vw, ved) (vw)->dispatch_event((vw), (ved))
 #define video_window_set_caption(vw, c) (vw)->set_caption((vw), (c))

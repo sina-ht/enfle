@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  2 23:17:07 2000.
- * $Id: ungif.c,v 1.11 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Mon Dec  4 22:55:06 2000.
+ * $Id: ungif.c,v 1.12 2000/12/04 14:01:13 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -50,6 +50,8 @@ typedef enum {
   _RESTOREPREVIOUS
 } Disposal;
 
+static const unsigned int types = IMAGE_INDEX;
+
 static PlayerStatus identify(Movie *, Stream *);
 static PlayerStatus load(VideoWindow *, Movie *, Stream *);
 
@@ -59,7 +61,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "UNGIF",
-  description: "UNGIF Player plugin version 0.2.1",
+  description: "UNGIF Player plugin version 0.2.2",
   author: "Hiroshi Takekawa",
 
   identify: identify,
@@ -104,6 +106,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     show_message("UNGIF: load_movie: No enough memory.\n");
     return PLAY_ERROR;
   }
+
+  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
+  debug_message("UNGIF: requested type: %s %s\n", image_type_to_string(m->requested_type), m->direct_decode ? "direct" : "not direct");
 
   if ((info->gf = DGifOpen(st, ungif_input_func)) == NULL) {
     PrintGifError();
@@ -286,9 +291,15 @@ play_main(Movie *m, VideoWindow *vw)
 	}
       }
 
-      if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
-	goto error;
-      memcpy(memory_ptr(p->image), info->buffer[0], memory_used(p->image));
+      if (m->direct_decode) {
+	if (memory_alloc(p->rendered_image, p->bytes_per_line * p->height) == NULL)
+	  goto error;
+	memcpy(memory_ptr(p->rendered_image), info->buffer[0], memory_used(p->rendered_image));
+      } else {
+	if (memory_alloc(p->image, p->bytes_per_line * p->height) == NULL)
+	  goto error;
+	memcpy(memory_ptr(p->image), info->buffer[0], memory_used(p->image));
+      }
 
       m->current_frame++;
       image_loaded = 1;

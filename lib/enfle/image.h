@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec  2 22:55:28 2000.
- * $Id: image.h,v 1.6 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Mon Dec  4 21:05:00 2000.
+ * $Id: image.h,v 1.7 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,6 +42,20 @@ typedef enum _image_type {
   _IMAGETYPE_TERMINATOR
 } ImageType;
 
+#define IMAGE_BITMAP_LSBFirst  (1 <<  0)
+#define IMAGE_BITMAP_MSBFirst  (1 <<  1)
+#define IMAGE_GRAY             (1 <<  2)
+#define IMAGE_GRAY_ALPHA       (1 <<  3)
+#define IMAGE_INDEX            (1 <<  4)
+#define IMAGE_RGB_WITH_BITMASK (1 <<  5)
+#define IMAGE_BGR_WITH_BITMASK (1 <<  6)
+#define IMAGE_RGB24            (1 <<  7)
+#define IMAGE_BGR24            (1 <<  8)
+#define IMAGE_RGBA32           (1 <<  9)
+#define IMAGE_ABGR32           (1 << 10)
+#define IMAGE_ARGB32           (1 << 11)
+#define IMAGE_BGRA32           (1 << 12)
+
 typedef enum {
   _NOINTERPOLATE,
   _BILINEAR
@@ -59,6 +73,7 @@ typedef struct _image Image;
 struct _image {
   int width, height;
   int left, top;
+  Memory *rendered_image;
   Memory *image;
   Memory *mask;
   unsigned char *comment;

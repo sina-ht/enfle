@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 17:13:06 2000.
- * $Id: normal.c,v 1.7 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Mon Dec  4 22:52:59 2000.
+ * $Id: normal.c,v 1.8 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,7 +38,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.1",
+  description: "Normal UI plugin version 0.2",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -99,6 +99,9 @@ main_loop(VideoWindow *vw, Movie *m, Image *p)
   if (p) {
     video_window_resize(vw, p->width, p->height);
     vw->if_direct = 0;
+    /* XXX: hack... */
+    memory_destroy(p->rendered_image);
+    p->rendered_image = memory_dup(p->image);
     video_window_render(vw, p);
   } else if (m) {
     vw->if_direct = 1;

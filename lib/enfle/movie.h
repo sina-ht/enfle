@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  4 05:01:05 2000.
- * $Id: movie.h,v 1.6 2000/11/04 17:31:28 sian Exp $
+ * Last Modified: Mon Dec  4 21:45:49 2000.
+ * $Id: movie.h,v 1.7 2000/12/04 14:01:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -42,12 +42,14 @@ typedef enum {
 struct _movie {
   Stream *st;
   MovieStatus status;
+  ImageType requested_type;
   Timer *timer;
   void *movie_private;
   int width, height;
   int current_frame, previous_frame, num_of_frames;
   float framerate;
   int play_every_frame;
+  int direct_decode;
   char *format;
 
   /* These are callback functions which may or should be provided by UI. */
