@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Nov  3 04:26:23 2000.
- * $Id: x11.c,v 1.3 2000/11/02 19:33:49 sian Exp $
+ * Last Modified: Sat Nov  4 05:39:24 2000.
+ * $Id: x11.c,v 1.4 2000/11/04 17:29:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,6 +69,7 @@ open(X11 *x11, char *dispname)
 
   x11->root = DefaultRootWindow(x11_display(x11));
   x11->screen = DefaultScreen(x11_display(x11));
+  x11->sc = ScreenOfDisplay(x11_display(x11), x11_screen(x11));
   x11->white = WhitePixel(x11_display(x11), x11_screen(x11));
   x11->black = BlackPixel(x11_display(x11), x11_screen(x11));
 

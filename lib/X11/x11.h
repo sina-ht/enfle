@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Oct 15 21:23:23 2000.
- * $Id: x11.h,v 1.4 2000/10/15 12:30:30 sian Exp $
+ * Last Modified: Sat Nov  4 07:35:56 2000.
+ * $Id: x11.h,v 1.5 2000/11/04 17:29:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,7 @@ struct _x11 {
   Display *disp;
   Window root;
   Visual *visual;
+  Screen *sc;
   int screen;
   int depth;
   int bits_per_pixel;
@@ -42,6 +43,7 @@ struct _x11 {
 #define x11_display(x) (x)->disp
 #define x11_root(x) (x)->root
 #define x11_visual(x) (x)->visual
+#define x11_sc(x) (x)->sc
 #define x11_screen(x) (x)->screen
 #define x11_depth(x) (x)->depth
 #define x11_bpp(x) (x)->bits_per_pixel
@@ -52,10 +54,12 @@ struct _x11 {
 #define x11_create_window(x, p, w, h) \
                     XCreateSimpleWindow(x11_display((x)), (p), 0, 0, \
 					(w), (h), 0, x11_white((x)), x11_black((x)));
-#define x11_move_window(x, win, xa, ya) XResizeWindow(x11_display((x)), (win), (xa), (ya))
+#define x11_move_window(x, win, xa, ya) XMoveWindow(x11_display((x)), (win), (xa), (ya))
 #define x11_resize_window(x, win, w, h) XResizeWindow(x11_display((x)), (win), (w), (h))
-#define x11_moveresize_window(x, win, xa, ya, w, h) XResizeWindow(x11_display((x)), (win), (xa), (ya), (w), (h))
+#define x11_moveresize_window(x, win, xa, ya, w, h) XMoveResizeWindow(x11_display((x)), (win), (xa), (ya), (w), (h))
+#define x11_raise_window(x, win) XRaiseWindow(x11_display(x), (win))
 #define x11_map_window(x, win) XMapWindow(x11_display((x)), (win))
+#define x11_map_raised(x, win) XMapRaised(x11_display((x)), (win))
 #define x11_unmap_window(x, win) XUnmapWindow(x11_display((x)), (win))
 #define x11_storename(x, win, s) XStoreName(x11_display((x)), (win), (s))
 #define x11_destroy_window(x, win) XDestroyWindow(x11_display((x)), (win))
