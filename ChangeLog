@@ -1,5 +1,10 @@
 2000-10-17  Hiroshi Takekawa  <sian@fennel.org>
 
+	* plugins/ui/Xlib/Xlib.c (process_files_of_archive): Deleting path
+	when processed archive returned with empty.
+
+2000-10-17  Hiroshi Takekawa  <sian@fennel.org>
+
 	* lib/enfle/movie.[ch], plugins/player/libmpeg3/libmpeg3.c: Using
 	timer to calculate fps (frame per second). Dropping frame if
 	actual fps is less than given fps. Implemented
