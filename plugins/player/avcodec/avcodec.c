@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 12 19:21:51 2004.
- * $Id: avcodec.c,v 1.10 2004/01/12 12:13:13 sian Exp $
+ * Last Modified: Thu Jan 15 23:24:44 2004.
+ * $Id: avcodec.c,v 1.11 2004/01/15 14:25:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -78,7 +78,6 @@ typedef struct __avcodec_info {
   enum CodecID acodec_id;
   const char *acodec_name;
   int use_xv;
-  int eof;
   int drop;
   pthread_mutex_t update_mutex;
   pthread_cond_t update_cond;
@@ -803,11 +802,6 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  if (info->eof) {
-    stop_movie(m);
-    return PLAY_OK;
-  }
-
   if (!m->has_video)
     return PLAY_OK;
 
@@ -891,9 +885,6 @@ static PlayerStatus
 stop_movie(Movie *m)
 {
   avcodec_info *info = (avcodec_info *)m->movie_private;
-#if defined(DEBUG)
-  void *v, *a;
-#endif
 
   debug_message_fn("()\n");
 
@@ -920,7 +911,7 @@ stop_movie(Movie *m)
   if (info->video_thread) {
     debug_message_fnc("waiting for joining (video).\n");
     pthread_cond_signal(&info->update_cond);
-    pthread_join(info->video_thread, &v);
+    pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
     debug_message_fnc("joined (video).\n");
   }
@@ -929,7 +920,7 @@ stop_movie(Movie *m)
     fifo_invalidate(info->astream);
   if (info->audio_thread) {
     debug_message_fnc("waiting for joining (audio).\n");
-    pthread_join(info->audio_thread, &a);
+    pthread_join(info->audio_thread, NULL);
     info->audio_thread = 0;
     debug_message_fnc("joined (audio).\n");
   }
