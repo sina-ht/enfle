@@ -1,5 +1,8 @@
 2001-01-14  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/dllloader/kernel32.c, lib/enfle/spi.c: Fixed susie plugin
+	usage.
+
 	* lib/enfle/spi.c: Renamed configuration filename.
 
 	* README: More documentation.
