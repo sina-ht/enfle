@@ -1,8 +1,8 @@
 /*
  * vmpm.h -- Implementation of a variation of MPM header
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug 28 16:06:32 2001.
- * $Id: vmpm.h,v 1.5 2001/08/29 08:37:57 sian Exp $
+ * Last Modified: Thu Sep  6 12:29:53 2001.
+ * $Id: vmpm.h,v 1.6 2001/09/07 04:56:33 sian Exp $
  */
 
 #ifndef _VMPM_H
@@ -36,6 +36,7 @@ struct _vmpm {
   FILE *outfile;
   FILE *statfile;
   unsigned char *buffer;
+  unsigned char *buffer_low;
   unsigned int buffersize;
   unsigned int bufferused;
   Token *token_hash;

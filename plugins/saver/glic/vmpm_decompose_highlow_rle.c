@@ -1,8 +1,8 @@
 /*
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Tue Aug 28 16:12:36 2001.
- * $Id: vmpm_decompose_highlow_rle.c,v 1.6 2001/08/29 08:37:57 sian Exp $
+ * Last Modified: Thu Sep  6 12:34:16 2001.
+ * $Id: vmpm_decompose_highlow_rle.c,v 1.7 2001/09/07 04:56:33 sian Exp $
  */
 
 #include <stdio.h>
@@ -13,23 +13,16 @@
 #define REQUIRE_STRING_H
 #include "compat.h"
 
-#define LOW_MASK(n) ((1 << n) - 1)
-
 #include "vmpm.h"
 #include "vmpm_hash.h"
 #include "vmpm_error.h"
 #include "ipow.h"
-#include "expand.h"
 
 #include "arithcoder.h"
 #include "arithcoder_arith.h"
 #include "arithmodel.h"
 #include "arithmodel_order_zero.h"
 #include "arithmodel_utils.h"
-
-typedef struct _vmpmdecomposer_highlow {
-  unsigned char *buffer_low;
-} VMPMDecomposer_HighLow;
 
 static void init(VMPM *);
 static int decompose(VMPM *, int, int, int);
@@ -55,9 +48,6 @@ static VMPMDecomposer plugin = {
 VMPMDecomposer *
 decomposer_init(VMPM *vmpm)
 {
-  if ((vmpm->method_private = calloc(1, sizeof(VMPMDecomposer_HighLow))) == NULL)
-    return NULL;
-
   if (vmpm->alphabetsize == 0) {
     vmpm->alphabetsize = 256;
     vmpm->bits_per_symbol = 8;
@@ -84,7 +74,7 @@ init(VMPM *vmpm)
 }
 
 static int
-decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
+decompose(VMPM *vmpm, int offset, int level, int blocksize)
 {
   int token_length = 0;
   int ntokens = 0;
@@ -115,7 +105,7 @@ decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
 	/* newly registered token */
 	vmpm->token[level][vmpm->token_index[level]] = t;
 	vmpm->newtoken[level]++;
-	result = decompose_recur(vmpm, offset + i * token_length, level - 1, token_length);
+	result = decompose(vmpm, offset + i * token_length, level - 1, token_length);
       }
       vmpm->token_index[level]++;
     }
@@ -127,38 +117,9 @@ decompose_recur(VMPM *vmpm, int offset, int level, int blocksize)
   }
 
   if (blocksize - ntokens * token_length > 0)
-    decompose_recur(vmpm, offset + ntokens * token_length, level - 1, blocksize - ntokens * token_length);
+    decompose(vmpm, offset + ntokens * token_length, level - 1, blocksize - ntokens * token_length);
 
   return ntokens * token_length;
-}
-
-static int
-decompose(VMPM *vmpm, int offset, int level, int blocksize)
-{
-  VMPMDecomposer_HighLow *d = (VMPMDecomposer_HighLow *)vmpm->method_private;
-  int i;
-
-  debug_message(__FUNCTION__ ": nlowbits = %d\n", vmpm->nlowbits);
-
-  if (d->buffer_low)
-    free(d->buffer_low);
-  if ((d->buffer_low = malloc(blocksize)) == NULL)
-    return 0;
-
-  vmpm->bits_per_symbol = (8 - vmpm->nlowbits);
-  vmpm->alphabetsize = 1 << vmpm->bits_per_symbol;
-
-  for (i = 0; i < blocksize; i++) {
-    unsigned char c;
-
-    c = vmpm->buffer[i];
-    d->buffer_low[i] = c & LOW_MASK(vmpm->nlowbits);
-    vmpm->buffer[i] = c >> vmpm->nlowbits;
-  }
-
-  if (vmpm->bitwise)
-    expand(vmpm);
-  return decompose_recur(vmpm, offset, level, blocksize);
 }
 
 static int
@@ -171,7 +132,6 @@ update_escape_freq(Arithmodel *_am, Index index)
 static void
 encode(VMPM *vmpm)
 {
-  VMPMDecomposer_HighLow *d = (VMPMDecomposer_HighLow *)vmpm->method_private;
   Arithcoder *ac;
   Arithmodel *am;
   Arithmodel *bin_am;
@@ -298,7 +258,7 @@ encode(VMPM *vmpm)
       arithmodel_install_symbol(low_ams[i], 1);
   }
   for (i = 0; i < vmpm->bufferused; i++)
-    arithmodel_encode(low_ams[vmpm->buffer[i]], d->buffer_low[i]);
+    arithmodel_encode(low_ams[vmpm->buffer[i]], vmpm->buffer_low[i]);
   for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
     arithmodel_encode_final(low_ams[i]);
   for (i = 0; i < (1 << (8 - vmpm->nlowbits)); i++)
@@ -306,9 +266,6 @@ encode(VMPM *vmpm)
 
   arithcoder_encode_final(ac);
   arithcoder_destroy(ac);
-
-  free(d->buffer_low);
-  d->buffer_low = NULL;
 }
 
 static void
