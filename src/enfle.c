@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan 28 02:24:42 2004.
- * $Id: enfle.c,v 1.56 2004/01/30 12:41:45 sian Exp $
+ * Last Modified: Tue Feb 10 01:15:43 2004.
+ * $Id: enfle.c,v 1.57 2004/02/14 05:26:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -251,6 +251,7 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
 	    strncasecmp(base_name, "videodecoder_", 13) &&
 	    strncasecmp(base_name, "audio_", 6) &&
 	    strncasecmp(base_name, "audiodecoder_", 13) &&
+	    strncasecmp(base_name, "demultiplexer_", 14) &&
 	    strncasecmp(base_name, "loader_", 7) &&
 	    strncasecmp(base_name, "saver_", 6) &&
 	    strncasecmp(base_name, "player_", 7) &&
