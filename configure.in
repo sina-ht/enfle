@@ -5,7 +5,7 @@ dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
 dnl Last Modified: Fri Jan 12 06:39:34 2001.
-dnl $Id: configure.in,v 1.32 2001/01/11 22:34:10 sian Exp $
+dnl $Id: configure.in,v 1.33 2001/01/12 13:23:16 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -41,10 +41,9 @@ AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
 AC_CANONICAL_HOST
 dnl AC_LIBTOOL_DLOPEN
-AM_PROG_LIBTOOL
+AC_PROG_LIBTOOL
 
 dnl Checks for programs.
-AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_AWK
@@ -150,6 +149,7 @@ fi
 CPPFLAGS_SAVE=$CPPFLAGS
 CPPFLAGS="$INCLUDEADD_AVIFILE $CPPFLAGS"
 AC_LANG_CPLUSPLUS
+AC_PROG_CXX
 AC_CHECK_HEADER(aviplay.h, [ available_avifile=yes; LIBADD_AVIFILE="-laviplay" ])
 LIBADD_STDCC=-lstdc++
 AC_LANG_C
