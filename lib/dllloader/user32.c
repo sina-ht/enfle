@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  7 00:51:30 2001.
- * $Id: user32.c,v 1.9 2001/10/06 16:02:58 sian Exp $
+ * Last Modified: Thu Oct 11 14:43:29 2001.
+ * $Id: user32.c,v 1.10 2001/10/11 10:41:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -100,7 +100,7 @@ DEFINE_W32API(INT, LoadStringA, (HINSTANCE handle, UINT id, LPSTR buffer, INT le
     l = *data << 1;
     s = calloc(1, l + 2);
     memcpy(s, data + 2, l);
-    L = converter_convert(s, &dest, l, (char *)"UNICODE", (char *)"EUC-JP");
+    L = converter_convert(s, &dest, l, (char *)"UCS-2LE", (char *)"EUC-JP");
     strncpy(buffer, dest, len);
     free(dest);
   }
