@@ -1,3 +1,15 @@
+2001-11-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Check -lm. Version up.
+
+	* plugins/loader/png/png.c: Use transparent and background.
+
+	* lib/enfle/image.h, plugins/player/ungif/ungif.c: Declare
+	ImageTransparentDisposal and adapted for it.
+
+	* plugins/ui/normal/normal.c, src/enfle.c, src/enfle.rc:
+	Displaying comments is now optional(-I).
+
 2001-10-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Simplify scroll code. Added the code
