@@ -1,10 +1,10 @@
 /*
  * video.h -- Video header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 13 01:43:33 2000.
- * $Id: video.h,v 1.7 2000/12/12 17:04:36 sian Exp $
+ * Last Modified: Wed Jan  3 15:39:45 2001.
+ * $Id: video.h,v 1.8 2001/01/03 06:42:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,15 +50,19 @@ typedef enum {
 } VideoModifierKey;
 
 typedef enum {
-  ENFLE_Button_None,
-  ENFLE_Button_1,  ENFLE_Button_2,  ENFLE_Button_3,  ENFLE_Button_4,  ENFLE_Button_5
+  ENFLE_Button_None = 0,
+  ENFLE_Button_1    = 1,
+  ENFLE_Button_2    = 2,
+  ENFLE_Button_3    = 4,
+  ENFLE_Button_4    = 8,
+  ENFLE_Button_5    = 16
 } VideoButton;
 
 #define ENFLE_ExposureMask 1
-#define ENFLE_ButtonMask 2
-#define ENFLE_KeyMask 4
-#define ENFLE_PointerMask 8
-#define ENFLE_WindowMask 16
+#define ENFLE_ButtonMask   2
+#define ENFLE_KeyMask      4
+#define ENFLE_PointerMask  8
+#define ENFLE_WindowMask   16
 
 typedef enum {
   ENFLE_Event_Exposure,
@@ -116,8 +120,9 @@ struct _video_window {
   void *private;
   unsigned int x, y;
   unsigned int width, height;
-  unsigned int render_width, render_height;
   unsigned int full_width, full_height;
+  unsigned int render_width, render_height;
+  int offset_x, offset_y;
   int depth, bits_per_pixel;
   int if_fullscreen, if_direct, if_caption, prefer_msb;
   unsigned char *caption;
@@ -132,6 +137,9 @@ struct _video_window {
   int (*set_fullscreen_mode)(VideoWindow *, VideoWindowFullscreenMode);
   int (*resize)(VideoWindow *, unsigned int, unsigned int);
   int (*move)(VideoWindow *, unsigned int, unsigned int);
+  int (*get_offset)(VideoWindow *, int *, int *);
+  int (*set_offset)(VideoWindow *, int, int);
+  int (*adjust_offset)(VideoWindow *, int, int);
   int (*render)(VideoWindow *, Image *);
   void (*update)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   int (*destroy)(VideoWindow *);
@@ -145,6 +153,9 @@ struct _video_window {
 #define video_window_set_fullscreen_mode(vw, m) (vw)->set_fullscreen_mode((vw), (m))
 #define video_window_resize(vw, w, h) (vw)->resize((vw), (w), (h))
 #define video_window_move(vw, x, y) (vw)->move((vw), (x), (y))
+#define video_window_get_offset(vw, xp, yp) (vw)->get_offset((vw), (xp), (yp))
+#define video_window_set_offset(vw, x, y) (vw)->set_offset((vw), (x), (y))
+#define video_window_adjust_offset(vw, x, y) (vw)->adjust_offset((vw), (x), (y))
 #define video_window_render(vw, p) (vw)->render((vw), (p))
 #define video_window_update(vw, x, y, w, h) (vw)->update((vw), (x), (y), (w), (h))
 #define video_window_destroy(vw) (vw)->destroy((vw))

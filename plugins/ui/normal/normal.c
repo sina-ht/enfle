@@ -1,10 +1,10 @@
 /*
  * normal.c -- Normal UI plugin
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Dec 19 01:27:19 2000.
- * $Id: normal.c,v 1.14 2000/12/18 17:01:49 sian Exp $
+ * Last Modified: Wed Jan  3 15:37:23 2001.
+ * $Id: normal.c,v 1.15 2001/01/03 06:42:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,7 +39,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Normal",
-  description: "Normal UI plugin version 0.3.2",
+  description: "Normal UI plugin version 0.3.3",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -166,21 +166,31 @@ main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
   int loop = 1;
   VideoButton button = ENFLE_Button_None;
   VideoKey key = ENFLE_KEY_Unknown;
+  unsigned int old_x, old_y;
+  int first_point = 1;
+  int offset_x, offset_y;
 
   if (p) {
     vw->if_direct = 0;
     magnify_if_requested(vw, p);
-    video_window_resize(vw, p->magnified.width, p->magnified.height);
     video_window_render(vw, p);
+    set_caption_string(vw, path, p->format);
   } else if (m) {
     vw->if_direct = 1;
+    vw->render_width  = m->width;
+    vw->render_height = m->height;
+    set_caption_string(vw, path, m->format);
   }
+
+  video_window_set_offset(vw, 0, 0);
 
   while (loop) {
     if (video_window_dispatch_event(vw, &ev)) {
       switch (ev.type) {
       case ENFLE_Event_ButtonPressed:
 	button = ev.button.button;
+	if (button == ENFLE_Button_1)
+	  first_point = 1;
 	break;
       case ENFLE_Event_ButtonReleased:
 	if (button == ev.button.button)
@@ -253,6 +263,7 @@ main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
 	      magnify_if_requested(vw, p);
 	      video_window_resize(vw, p->magnified.width, p->magnified.height);
 	      video_window_render(vw, p);
+	      video_window_set_offset(vw, 0, 0);
 	    }
 	    break;
 	  default:
@@ -260,6 +271,25 @@ main_loop(VideoWindow *vw, Movie *m, Image *p, char *path)
 	  }
 	}
 	key = ENFLE_KEY_Unknown;
+	break;
+      case ENFLE_Event_PointerMoved:
+	if (ev.pointer.button & ENFLE_Button_1) {
+	  if (first_point) {
+	    old_x = ev.pointer.x;
+	    old_y = ev.pointer.y;
+	    first_point = 0;
+	  } else {
+	    offset_x = ev.pointer.x - old_x;
+	    offset_y = ev.pointer.y - old_y;
+	    old_x = ev.pointer.x;
+	    old_y = ev.pointer.y;
+
+	    if (offset_x != 0 || offset_y != 0) {
+	      button = ENFLE_Button_None;
+	      video_window_adjust_offset(vw, offset_x, offset_y);
+	    }
+	  }
+	}
 	break;
       default:
 	break;
@@ -432,11 +462,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	continue;
       }
 
-      vw->render_width  = m->rendering_width;
-      vw->render_height = m->rendering_height;
-
-      set_caption_string(vw, path, m->format);
-
       dir = main_loop(vw, m, NULL, path);
       movie_unload(m);
     } else {
@@ -448,11 +473,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
 	free(p->comment);
 	p->comment = NULL;
       }
-
-      vw->render_width  = p->width;
-      vw->render_height = p->height;
-
-      set_caption_string(vw, path, p->format);
 
       dir = main_loop(vw, NULL, p, path);
       memory_destroy(p->rendered.image);
@@ -488,8 +508,8 @@ ui_main(UIData *uidata)
 
   uidata->vw = vw = vp->open_window(disp, c, 600, 400);
 
-  video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask);
-  /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyPressMask | ENFLE_PointerMask | ENFLE_WindowMask); */
+  video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask | ENFLE_PointerMask);
+  /* video_window_set_event_mask(vw, ENFLE_ExposureMask | ENFLE_ButtonMask | ENFLE_KeyMask | ENFLE_PointerMask | ENFLE_WindowMask); */
 
   if ((render_method = config_get(c, "/enfle/plugins/ui/normal/render")) != NULL) {
     if (!strcasecmp(render_method, "normal")) {
