@@ -112,7 +112,7 @@ void av_freep(void *arg)
 }
 
 /* encoder management */
-AVCodec *first_avcodec;
+AVCodec *first_avcodec = NULL;
 
 void register_avcodec(AVCodec *format)
 {
@@ -141,6 +141,7 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
     switch(s->pix_fmt){
     case PIX_FMT_YUV420P:
     case PIX_FMT_YUV422:
+    case PIX_FMT_UYVY422:
     case PIX_FMT_YUV422P:
     case PIX_FMT_YUV444P:
     case PIX_FMT_GRAY8:
@@ -218,6 +219,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
         case PIX_FMT_RGB555:
         case PIX_FMT_RGB565:
         case PIX_FMT_YUV422:
+        case PIX_FMT_UYVY422:
             pixel_size=2;
             break;
         case PIX_FMT_RGB24:
@@ -394,6 +396,8 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->lmax= FF_QP2LAMBDA * s->qmax;
     s->sample_aspect_ratio= (AVRational){0,1};
     s->ildct_cmp= FF_CMP_VSAD;
+    s->profile= FF_PROFILE_UNKNOWN;
+    s->level= FF_LEVEL_UNKNOWN;
     
     s->intra_quant_bias= FF_DEFAULT_QUANT_BIAS;
     s->inter_quant_bias= FF_DEFAULT_QUANT_BIAS;

@@ -3484,15 +3484,15 @@ void ff_init_block_index(MpegEncContext *s){ //FIXME maybe rename
     s->block_index[5]= s->mb_stride*(s->mb_y + s->mb_height + 2) + s->b8_stride*s->mb_height*2 + s->mb_x - 1;
     //block_index is not used by mpeg2, so it is not affected by chroma_format
 
-    s->dest[0] = s->current_picture.data[0] + (s->mb_x - 1)*16;
-    s->dest[1] = s->current_picture.data[1] + (s->mb_x - 1)*(16 >> s->chroma_x_shift);
-    s->dest[2] = s->current_picture.data[2] + (s->mb_x - 1)*(16 >> s->chroma_x_shift);
-    
+    s->dest[0] = s->current_picture.data[0] + ((s->mb_x - 1) << 4);
+    s->dest[1] = s->current_picture.data[1] + ((s->mb_x - 1) << (4 - s->chroma_x_shift));
+    s->dest[2] = s->current_picture.data[2] + ((s->mb_x - 1) << (4 - s->chroma_x_shift));
+
     if(!(s->pict_type==B_TYPE && s->avctx->draw_horiz_band && s->picture_structure==PICT_FRAME))
     {
-        s->dest[0] += s->mb_y *   linesize * 16;
-        s->dest[1] += s->mb_y * uvlinesize * (16 >> s->chroma_y_shift);
-        s->dest[2] += s->mb_y * uvlinesize * (16 >> s->chroma_y_shift);
+        s->dest[0] += s->mb_y *   linesize << 4;
+        s->dest[1] += s->mb_y * uvlinesize << (4 - s->chroma_y_shift);
+        s->dest[2] += s->mb_y * uvlinesize << (4 - s->chroma_y_shift);
     }
 }
 
@@ -3573,12 +3573,13 @@ static void encode_mb(MpegEncContext *s, int motion_x, int motion_y)
     ptr_cr = s->new_picture.data[2] + (mb_y * 8 * wrap_c) + mb_x * 8;
 
     if(mb_x*16+16 > s->width || mb_y*16+16 > s->height){
-        ff_emulated_edge_mc(s->edge_emu_buffer            , ptr_y , wrap_y,16,16,mb_x*16,mb_y*16, s->width   , s->height);
-        ptr_y= s->edge_emu_buffer;
-        ff_emulated_edge_mc(s->edge_emu_buffer+18*wrap_y  , ptr_cb, wrap_c, 8, 8, mb_x*8, mb_y*8, s->width>>1, s->height>>1);
-        ptr_cb= s->edge_emu_buffer+18*wrap_y;
-        ff_emulated_edge_mc(s->edge_emu_buffer+18*wrap_y+9, ptr_cr, wrap_c, 8, 8, mb_x*8, mb_y*8, s->width>>1, s->height>>1);
-        ptr_cr= s->edge_emu_buffer+18*wrap_y+9;
+        uint8_t *ebuf= s->edge_emu_buffer + 32;
+        ff_emulated_edge_mc(ebuf            , ptr_y , wrap_y,16,16,mb_x*16,mb_y*16, s->width   , s->height);
+        ptr_y= ebuf;
+        ff_emulated_edge_mc(ebuf+18*wrap_y  , ptr_cb, wrap_c, 8, 8, mb_x*8, mb_y*8, s->width>>1, s->height>>1);
+        ptr_cb= ebuf+18*wrap_y;
+        ff_emulated_edge_mc(ebuf+18*wrap_y+8, ptr_cr, wrap_c, 8, 8, mb_x*8, mb_y*8, s->width>>1, s->height>>1);
+        ptr_cr= ebuf+18*wrap_y+8;
     }
 
     if (s->mb_intra) {
@@ -4652,7 +4653,6 @@ static void merge_context_after_encode(MpegEncContext *dst, MpegEncContext *src)
     MERGE(dct_count[0]); //note, the other dct vars are not part of the context
     MERGE(dct_count[1]);
     MERGE(mv_bits);
-    MERGE(header_bits);
     MERGE(i_tex_bits);
     MERGE(p_tex_bits);
     MERGE(i_count);

@@ -24,14 +24,7 @@
 
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
-#include "enfle-config.h"
-#undef DEBUG
-#define HAVE_LRINTF
-#define HAVE_PTHREADS
-//#define CONFIG_ENCODERS
-#define CONFIG_DECODERS
-#define CONFIG_RISKY
-//#    include "config.h"
+#    include "config.h"
 
 #    include <stdlib.h>
 #    include <stdio.h>
@@ -241,7 +234,8 @@ inline void dprintf(const char* fmt,...) {}
 #    else
 
 #        ifdef DEBUG
-#            define dprintf(fmt,...) av_log(NULL, AV_LOG_DEBUG, fmt, __VA_ARGS__)
+//#            define dprintf(fmt,...) av_log(NULL, AV_LOG_DEBUG, fmt, __VA_ARGS__)
+#            define dprintf(fmt,...)
 #        else
 #            define dprintf(fmt,...)
 #        endif
@@ -1260,7 +1254,7 @@ if((y)<(x)){\
 #endif
 
 #ifdef ARCH_X86
-static inline long long rdtsc(void)
+static inline long long rdtsc()
 {
 	long long l;
 	asm volatile(	"rdtsc\n\t"
@@ -1288,6 +1282,9 @@ tend= rdtsc();\
       av_log(NULL, AV_LOG_DEBUG, "%Ld dezicycles in %s, %d runs, %d skips\n", tsum*10/tcount, id, tcount, tskip_count);\
   }\
 }
+#else
+#define START_TIMER 
+#define STOP_TIMER(id) {}
 #endif
 
 #define CLAMP_TO_8BIT(d) ((d > 0xff) ? 0xff : (d < 0) ? 0 : d)

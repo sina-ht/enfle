@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4718
+#define LIBAVCODEC_BUILD       4721
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -98,6 +98,8 @@ enum CodecID {
     CODEC_ID_MSZH,
     CODEC_ID_ZLIB,
     CODEC_ID_QTRLE,
+    CODEC_ID_SNOW,
+    CODEC_ID_TSCC,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE,
@@ -175,7 +177,7 @@ enum CodecType {
  */
 enum PixelFormat {
     PIX_FMT_YUV420P,   ///< Planar YUV 4:2:0 (1 Cr & Cb sample per 2x2 Y samples)
-    PIX_FMT_YUV422,    
+    PIX_FMT_YUV422,    ///< Packed pixel, Y0 Cb Y1 Cr 
     PIX_FMT_RGB24,     ///< Packed pixel, 3 bytes per pixel, RGBRGB...
     PIX_FMT_BGR24,     ///< Packed pixel, 3 bytes per pixel, BGRBGR...
     PIX_FMT_YUV422P,   ///< Planar YUV 4:2:2 (1 Cr & Cb sample per 2x1 Y samples)
@@ -194,6 +196,7 @@ enum PixelFormat {
     PIX_FMT_YUVJ444P,  ///< Planar YUV 4:4:4 full scale (jpeg)
     PIX_FMT_XVMC_MPEG2_MC,///< XVideo Motion Acceleration via common packet passing(xvmc_render.h)
     PIX_FMT_XVMC_MPEG2_IDCT,
+    PIX_FMT_UYVY422,   ///< Packed pixel, Cb Y0 Cr Y1 
     PIX_FMT_NB,
 };
 
@@ -1622,6 +1625,22 @@ typedef struct AVCodecContext {
      * - decoding: set by user
      */
      int skip_bottom;
+
+    /**
+     * profile
+     * - encoding: set by user
+     * - decoding: set by lavc
+     */
+     int profile;
+#define FF_PROFILE_UNKNOWN -99
+
+    /**
+     * level
+     * - encoding: set by user
+     * - decoding: set by lavc
+     */
+     int level;
+#define FF_LEVEL_UNKNOWN -99
 } AVCodecContext;
 
 
@@ -1748,6 +1767,7 @@ extern AVCodec asv1_encoder;
 extern AVCodec asv2_encoder;
 extern AVCodec vcr1_encoder;
 extern AVCodec ffv1_encoder;
+extern AVCodec snow_encoder;
 extern AVCodec mdec_encoder;
 extern AVCodec zlib_encoder;
 extern AVCodec svq1_encoder;
@@ -1798,6 +1818,7 @@ extern AVCodec asv2_decoder;
 extern AVCodec vcr1_decoder;
 extern AVCodec cljr_decoder;
 extern AVCodec ffv1_decoder;
+extern AVCodec snow_decoder;
 extern AVCodec fourxm_decoder;
 extern AVCodec mdec_decoder;
 extern AVCodec roq_decoder;
@@ -1824,6 +1845,7 @@ extern AVCodec interplay_dpcm_decoder;
 extern AVCodec xan_dpcm_decoder;
 extern AVCodec qtrle_decoder;
 extern AVCodec flac_decoder;
+extern AVCodec tscc_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \

@@ -82,6 +82,10 @@ typedef struct SPS{
     int crop_bottom;            ///< frame_cropping_rect_bottom_offset
     int vui_parameters_present_flag;
     AVRational sar;
+    int timing_info_present_flag;
+    uint32_t num_units_in_tick;
+    uint32_t time_scale;
+    int fixed_frame_rate_flag;
     short offset_for_ref_frame[256]; //FIXME dyn aloc?
 }SPS;
 
@@ -737,6 +741,9 @@ static inline int check_intra_pred_mode(H264Context *h, int mode){
     MpegEncContext * const s = &h->s;
     static const int8_t top [7]= {LEFT_DC_PRED8x8, 1,-1,-1};
     static const int8_t left[7]= { TOP_DC_PRED8x8,-1, 2,-1,DC_128_PRED8x8};
+    
+    if(mode < 0 || mode > 6)
+        return -1;
     
     if(!(h->top_samples_available&0x8000)){
         mode= top[ mode ];
@@ -3039,6 +3046,11 @@ static int decode_slice_header(H264Context *h){
         s->avctx->width = s->width;
         s->avctx->height = s->height;
         s->avctx->sample_aspect_ratio= h->sps.sar;
+
+        if(h->sps.timing_info_present_flag && h->sps.fixed_frame_rate_flag){
+            s->avctx->frame_rate = h->sps.time_scale;
+            s->avctx->frame_rate_base = h->sps.num_units_in_tick;
+        }
     }
 
     if(first_mb_in_slice == 0){
@@ -5136,13 +5148,13 @@ static int decode_slice(H264Context *h){
             int ret = decode_mb_cabac(h);
             int eos = get_cabac_terminate( &h->cabac ); /* End of Slice flag */
 
-            hl_decode_mb(h);
+            if(ret>=0) hl_decode_mb(h);
 
             /* XXX: useless as decode_mb_cabac it doesn't support that ... */
             if( ret >= 0 && h->sps.mb_aff ) { //FIXME optimal? or let mb_decode decode 16x32 ?
                 s->mb_y++;
 
-                ret = decode_mb_cabac(h);
+                if(ret>=0) ret = decode_mb_cabac(h);
                 eos = get_cabac_terminate( &h->cabac );
 
                 hl_decode_mb(h);
@@ -5180,13 +5192,13 @@ static int decode_slice(H264Context *h){
         for(;;){
             int ret = decode_mb_cavlc(h);
 
-            hl_decode_mb(h);
+            if(ret>=0) hl_decode_mb(h);
 
             if(ret>=0 && h->sps.mb_aff){ //FIXME optimal? or let mb_decode decode 16x32 ?
                 s->mb_y++;
                 ret = decode_mb_cavlc(h);
 
-                hl_decode_mb(h);
+                if(ret>=0) hl_decode_mb(h);
                 s->mb_y--;
             }
 
@@ -5299,32 +5311,34 @@ static inline int decode_vui_parameters(H264Context *h, SPS *sps){
         sps->sar.den= 0;
     }
 //            s->avctx->aspect_ratio= sar_width*s->width / (float)(s->height*sar_height);
+
+    if(get_bits1(&s->gb)){      /* overscan_info_present_flag */
+        get_bits1(&s->gb);      /* overscan_appropriate_flag */
+    }
+
+    if(get_bits1(&s->gb)){      /* video_signal_type_present_flag */
+        get_bits(&s->gb, 3);    /* video_format */
+        get_bits1(&s->gb);      /* video_full_range_flag */
+        if(get_bits1(&s->gb)){  /* colour_description_present_flag */
+            get_bits(&s->gb, 8); /* colour_primaries */
+            get_bits(&s->gb, 8); /* transfer_characteristics */
+            get_bits(&s->gb, 8); /* matrix_coefficients */
+        }
+    }
+
+    if(get_bits1(&s->gb)){      /* chroma_location_info_present_flag */
+        get_ue_golomb(&s->gb);  /* chroma_sample_location_type_top_field */
+        get_ue_golomb(&s->gb);  /* chroma_sample_location_type_bottom_field */
+    }
+
+    sps->timing_info_present_flag = get_bits1(&s->gb);
+    if(sps->timing_info_present_flag){
+        sps->num_units_in_tick = get_bits_long(&s->gb, 32);
+        sps->time_scale = get_bits_long(&s->gb, 32);
+        sps->fixed_frame_rate_flag = get_bits1(&s->gb);
+    }
+
 #if 0
-| overscan_info_present_flag                        |0  |u(1)    |
-| if( overscan_info_present_flag )                  |   |        |
-|  overscan_appropriate_flag                        |0  |u(1)    |
-| video_signal_type_present_flag                    |0  |u(1)    |
-| if( video_signal_type_present_flag ) {            |   |        |
-|  video_format                                     |0  |u(3)    |
-|  video_full_range_flag                            |0  |u(1)    |
-|  colour_description_present_flag                  |0  |u(1)    |
-|  if( colour_description_present_flag ) {          |   |        |
-|   colour_primaries                                |0  |u(8)    |
-|   transfer_characteristics                        |0  |u(8)    |
-|   matrix_coefficients                             |0  |u(8)    |
-|  }                                                |   |        |
-| }                                                 |   |        |
-| chroma_location_info_present_flag                 |0  |u(1)    |
-| if ( chroma_location_info_present_flag ) {        |   |        |
-|  chroma_sample_location_type_top_field            |0  |ue(v)   |
-|  chroma_sample_location_type_bottom_field         |0  |ue(v)   |
-| }                                                 |   |        |
-| timing_info_present_flag                          |0  |u(1)    |
-| if( timing_info_present_flag ) {                  |   |        |
-|  num_units_in_tick                                |0  |u(32)   |
-|  time_scale                                       |0  |u(32)   |
-|  fixed_frame_rate_flag                            |0  |u(1)    |
-| }                                                 |   |        |
 | nal_hrd_parameters_present_flag                   |0  |u(1)    |
 | if( nal_hrd_parameters_present_flag  = =  1)      |   |        |
 |  hrd_parameters( )                                |   |        |
