@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Mar  4 22:33:22 2002.
- * $Id: opendivx.c,v 1.22 2002/03/04 20:22:42 sian Exp $
+ * Last Modified: Thu Mar  7 04:21:45 2002.
+ * $Id: opendivx.c,v 1.23 2002/03/06 19:31:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -347,6 +347,7 @@ play(Movie *m)
   }
 
   if (m->has_audio) {
+    m->has_audio = 1;
     if ((info->astream = fifo_create()) == NULL)
       return PLAY_ERROR;
     demultiplexer_avi_set_ast(info->demux, info->astream);
@@ -519,11 +520,24 @@ play_main(Movie *m, VideoWindow *vw)
   if (!m->has_video)
     return PLAY_OK;
 
+  if (demultiplexer_get_eof(info->demux)) {
+    if (info->astream && fifo_is_empty(info->astream))
+      /* Audio existed, but over. */
+      m->has_audio = 2;
+    if ((!info->vstream || fifo_is_empty(info->vstream)) &&
+	(!info->astream || fifo_is_empty(info->astream))) {
+      stop_movie(m);
+      return PLAY_OK;
+    }
+  }
+
   pthread_mutex_lock(&info->update_mutex);
 
   video_time = m->current_frame * 1000 / m->framerate;
-  if (m->has_audio) {
+  if (m->has_audio == 1) {
     audio_time = get_audio_time(m, info->ad);
+    //debug_message("%d frames(v: %d a: %d)\n", i, video_time, audio_time);
+
     /* if too fast to display, wait before render */
     while (video_time > audio_time)
       audio_time = get_audio_time(m, info->ad);
@@ -598,6 +612,8 @@ stop_movie(Movie *m)
     return PLAY_ERROR;
   }
 
+  fifo_destroy(info->vstream);
+  fifo_destroy(info->astream);
   demultiplexer_stop(info->demux);
 
   pthread_mutex_lock(&info->update_mutex);
