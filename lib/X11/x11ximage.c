@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Tue Jun 19 05:26:35 2001.
- * $Id: x11ximage.c,v 1.26 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Jun 19 23:40:34 2001.
+ * $Id: x11ximage.c,v 1.27 2001/06/19 19:21:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -586,31 +586,43 @@ put(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, unsigned i
 #ifdef USE_PTHREAD
     if (xi->use_xv) {
 #ifdef USE_XV
-      XvShmPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, False);
+      if (xi->xvimage) {
+	XvShmPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, False);
+	XSync(x11_display(xi->x11), False);
+      }
 #endif /* USE_XV */
     } else {
-      XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+      if (xi->ximage) {
+	XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+	XSync(x11_display(xi->x11), False);
+      }
     }
-    XSync(x11_display(xi->x11), False);
 #else /* USE_PTHREAD */
     /* delayed sync, intentionally. */
-    XSync(x11_display(xi->x11), False);
     if (x11->use_xv) {
 #ifdef USE_XV
-      XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, Faluse);
+      if (xi->xvimage) {
+	XSync(x11_display(xi->x11), False);
+	XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h, Faluse);
+      }
 #endif
     } else {
-      XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+      if (xi->ximage) {
+	XSync(x11_display(xi->x11), False);
+	XShmPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h, False);
+      }
     }
 #endif /* USE_PTHREAD */
   } else {
 #endif /* USE_SHM */
     if (xi->use_xv) {
 #ifdef USE_XV
-      XvPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h);
+      if (xi->xvimage)
+	XvPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, w, h, dx, dy, w, h);
 #endif
     } else {
-      XPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h);
+      if (xi->ximage)
+	XPutImage(x11_display(xi->x11), pix, gc, xi->ximage, sx, sy, dx, dy, w, h);
     }
 #ifdef USE_SHM
   }
@@ -629,16 +641,21 @@ put_scaled(X11XImage *xi, Pixmap pix, GC gc, int sx, int sy, int dx, int dy, uns
 #ifdef USE_SHM
   if (xi->if_attached) {
 #ifdef USE_PTHREAD
-    XvShmPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
-    XSync(x11_display(xi->x11), False);
+    if (xi->xvimage) {
+      XvShmPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
+      XSync(x11_display(xi->x11), False);
+    }
 #else /* USE_PTHREAD */
     /* delayed sync, intentionally. */
-    XSync(x11_display(xi->x11), False);
-    XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
+    if (xi->xvimage) {
+      XSync(x11_display(xi->x11), False);
+      XvShmPutImage(x11_display(xi->x11), xi->x11->xv->image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh, False);
+    }
 #endif /* USE_PTHREAD */
   } else {
 #endif /* USE_SHM */
-    XvPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
+    if (xi->xvimage)
+      XvPutImage(x11_display(xi->x11), xi->x11->xv.image_port, pix, gc, xi->xvimage, sx, sy, sw, sh, dx, dy, dw, dh);
 #ifdef USE_SHM
   }
 #endif
