@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb 21 00:14:50 2001.
- * $Id: libmpeg2.c,v 1.6 2001/02/20 15:16:35 sian Exp $
+ * Last Modified: Thu Feb 22 01:41:45 2001.
+ * $Id: libmpeg2.c,v 1.7 2001/02/21 17:56:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,10 +24,6 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#include "video_out.h"
-#include "video_out_internal.h"
-#include "yuv2rgb.h"
-
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
@@ -39,6 +35,7 @@
 #include "utils/timer.h"
 #include "enfle/player-plugin.h"
 #include "libmpeg2_vo.h"
+#include "demultiplexer/demultiplexer_mpeg.h"
 
 typedef struct _libmpeg2_info {
   Image *p;
@@ -100,7 +97,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   Libmpeg2_info *info;
   Image *p;
-  int i;
 
   if ((info = calloc(1, sizeof(Libmpeg2_info))) == NULL) {
     show_message("Libmpeg2: play_movie: No enough memory.\n");
@@ -117,13 +113,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
   debug_message("Libmpeg2: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
-  info->demux = demultiplxer_mpeg_create();
+  info->demux = demultiplexer_mpeg_create();
   demultiplexer_mpeg_set_input(info->demux, st);
   if (!demultiplexer_examine(info->demux))
     return PLAY_NOT;
-
-  if ((info->vo = vo_enfle_rgb_open(vw->bits_per_pixel)) == NULL)
-    goto error;
 
   m->has_audio = 0;
   if (demultiplexer_mpeg_naudios(info->demux)) {
@@ -172,6 +165,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   if ((p->rendered.image = memory_create()) == NULL)
     goto error;
   memory_request_type(p->rendered.image, video_window_preferred_memory_type(vw));
+
+  if ((info->vo = vo_enfle_rgb_open(vw, m, p)) == NULL)
+    goto error;
 
   switch (vw->bits_per_pixel) {
   case 32:
@@ -233,9 +229,9 @@ play(Movie *m)
   m->current_frame = 0;
   m->current_sample = 0;
   timer_start(m->timer);
-  demultiplex_set_eof(info->demux, 0);
+  demultiplexer_set_eof(info->demux, 0);
 
-  stream_rewind(st);
+  stream_rewind(m->st);
   demultiplexer_start(info->demux);
 
   if (m->has_video)
@@ -251,25 +247,19 @@ play_video(void *arg)
 {
   Movie *m = arg;
   Libmpeg2_info *info = (Libmpeg2_info *)m->movie_private;
-  int decode_error;
 
   debug_message(__FUNCTION__ "()\n");
 
   while (m->status == _PLAY) {
     if (m->current_frame >= m->num_of_frames) {
-      demultiplex_set_eof(info->demux, 1);
+      demultiplexer_set_eof(info->demux, 1);
       break;
     }
 
     pthread_mutex_lock(&info->update_mutex);
 
-    decode_error =
-      (mpeg3_read_frame(info->file, info->lines,
-			0, 0,
-			m->width, m->height,
-			m->rendering_width, m->rendering_height,
-			info->rendering_type, info->nvstream) == -1) ? 0 : 1;
-    memcpy(memory_ptr(info->p->rendered.image), info->lines[0], info->p->bytes_per_line * info->p->height);
+    /* decoding */
+
     pthread_cond_wait(&info->update_cond, &info->update_mutex);
     pthread_mutex_unlock(&info->update_mutex);
   }
@@ -309,13 +299,13 @@ play_audio(void *arg)
       break;
     if (m->num_of_samples < m->current_sample + samples_to_read)
       samples_to_read = m->num_of_samples - m->current_sample;
-    mpeg3_read_audio(info->file, NULL, input_buffer, 0, samples_to_read, info->nastream);
+    /* read audio */
     if (m->channels == 1) {
       m->ap->write_device(ad, (unsigned char *)input_buffer, samples_to_read * sizeof(short));
     } else {
       int i;
 
-      mpeg3_reread_audio(info->file, NULL, input_buffer + AUDIO_READ_SIZE, 1, samples_to_read, info->nastream);
+      /* read audio */
       for (i = 0; i < samples_to_read; i++) {
 	output_buffer[i * 2    ] = input_buffer[i];
 	output_buffer[i * 2 + 1] = input_buffer[i + AUDIO_READ_SIZE];
@@ -366,7 +356,7 @@ play_main(Movie *m, VideoWindow *vw)
     return PLAY_ERROR;
   }
 
-  if (demultiplex_get_eof(info->demux)) {
+  if (demultiplexer_get_eof(info->demux)) {
     stop_movie(m);
     return PLAY_OK;
   }
@@ -376,7 +366,6 @@ play_main(Movie *m, VideoWindow *vw)
 
   pthread_mutex_lock(&info->update_mutex);
 
-  m->current_frame = mpeg3_get_frame(info->file, info->nvstream);
   video_time = m->current_frame * 1000 / m->framerate;
   if (m->has_audio) {
     audio_time = get_audio_time(m, info->ad);
@@ -390,7 +379,7 @@ play_main(Movie *m, VideoWindow *vw)
     i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
-      mpeg3_drop_frames(info->file, i, info->nvstream);
+      /* drop */
     }
   } else {
     /* if too fast to display, wait before render */
@@ -400,7 +389,7 @@ play_main(Movie *m, VideoWindow *vw)
     i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
-      mpeg3_drop_frames(info->file, i, info->nvstream);
+      /* drop */
     }
   }
 
@@ -484,8 +473,6 @@ unload_movie(Movie *m)
   stop_movie(m);
 
   if (info) {
-    if (info->lines)
-      free(info->lines);
     if (info->p)
       image_destroy(info->p);
 
@@ -494,7 +481,6 @@ unload_movie(Movie *m)
 
     debug_message(__FUNCTION__ ": closing libmpeg2 file\n");
     /* close */
-    mpeg3_close(info->file);
 
     debug_message(__FUNCTION__ ": freeing info\n");
     free(info);

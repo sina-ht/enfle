@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 22:00:18 2001.
- * $Id: libmpeg2_vo.c,v 1.1 2001/02/20 13:54:59 sian Exp $
+ * Last Modified: Thu Feb 22 01:46:17 2001.
+ * $Id: libmpeg2_vo.c,v 1.2 2001/02/21 17:56:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,6 +20,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <stdlib.h>
+#include <inttypes.h>
+
+#include "compat.h"
+#include "common.h"
+
+#include "enfle/image.h"
+#include "enfle/video.h"
+#include "enfle/movie.h"
 #include "libmpeg2_vo.h"
 
 static void
@@ -34,7 +43,7 @@ enfle_draw(vo_frame_t *frame)
 }
 
 static int
-enfle_alloc_frames(vo_instance_t *instance, int width, int height, int frame_size,
+enfle_alloc_frames(vo_instance_t *_instance, int width, int height, int frame_size,
 		   void (*copy)(vo_frame_t *, uint8_t **),
 		   void (*field)(vo_frame_t *, int),
 		   void (*draw)(vo_frame_t *))
@@ -87,57 +96,6 @@ enfle_get_frame(vo_instance_t *_instance, int flags)
   } else
     return instance->frame_ptr[2];
 }
-
-#if 0
-static int
-enfle_setup(vo_instance_t *instance, int width, int height)
-{
-  return enfle_alloc_frames(instance, width, height, sizeof(enfle_frame_t), NULL, NULL, enfle_draw);
-}
-
-vo_instance_t *
-vo_enfle_open(void)
-{
-  enfle_instance_t *instance;
-
-  if ((instance = malloc(sizeof(enfle_instance_t))) == NULL)
-    return NULL;
-
-  instance->vo.setup = enfle_setup;
-  instance->vo.close = enfle_free_frames;
-  instance->vo.get_frame = enfle_get_frame;
-
-  return (vo_instance_t *)instance;
-}
-
-static void
-enfle_copy_slice(vo_frame_t *frame, uint8_t **src)
-{
-}
-
-static int
-enfle_slice_setup(vo_instance_t *instance, int width, int height)
-{
-  return enfle_alloc_frames(instance, width, height,
-			    sizeof(enfle_frame_t),
-			    enfle_copy_slice, NULL, enfle_draw);
-}
-
-vo_instance_t *
-vo_enfle_slice_open(void)
-{
-  enfle_instance_t *instance;
-
-  if ((instance = malloc(sizeof(enfle_instance_t))) == NULL)
-    return NULL;
-
-  instance->vo.setup = enfle_slice_setup;
-  instance->vo.close = enfle_free_frames;
-  instance->vo.get_frame = enfle_get_frame;
-
-  return (vo_instance_t *)instance;
-}
-#endif
 
 static vo_frame_t *
 rgb_get_frame (vo_instance_t *_instance, int flags)
@@ -193,23 +151,38 @@ static int
 enfle_rgb_setup(vo_instance_t *_instance, int width, int height)
 {
   enfle_instance_t *instance;
+  VideoWindow *vw = instance->vw;
+  Movie *m = instance->m;
+  Image *p = instance->p;
 
   instance = (enfle_instance_t *)_instance;
 
-  instance->width = width;
-  instance->rgbstride = (width * instance->bpp + 7) >> 3;
-  instance->rgbdata = malloc(instance->rgbstride * height);
+  m->width  = instance->width = width;
+  m->height                   = height;
+  m->rendering_width  = m->width;
+  m->rendering_height = m->height;
+  p->width  = m->rendering_width;
+  p->height = m->rendering_height;
+  p->bytes_per_line = (p->width * vw->bits_per_pixel) >> 3;
+  instance->rgbstride = (p->width * vw->bits_per_pixel) >> 3;
+  if (memory_alloc(p->rendered.image, p->bytes_per_line * p->height) == NULL)
+    return 0;
+  instance->rgbdata = memory_ptr(p->rendered.image);
+  m->initialize_screen(vw, m, m->rendering_width, m->rendering_height);
 
-  yuv2rgb_init(instance->bpp, MODE_RGB);
+  debug_message("video: (%d,%d) -> (%d,%d)\n",
+		m->width, m->height, m->rendering_width, m->rendering_height);
+
+  yuv2rgb_init(vw->bits_per_pixel, MODE_RGB);
 
   return enfle_alloc_frames((vo_instance_t *)instance,
-			    width, height, sizeof(enfle_frame_t),
+			    p->width, p->height, sizeof(enfle_frame_t),
 			    rgb_copy_slice, rgb_field,
 			    enfle_draw);
 }
 
 vo_instance_t *
-vo_enfle_rgb_open(int bpp)
+vo_enfle_rgb_open(VideoWindow *vw, Movie *m, Image *p)
 {
   enfle_instance_t *instance;
 
@@ -219,7 +192,9 @@ vo_enfle_rgb_open(int bpp)
   instance->vo.setup = enfle_rgb_setup;
   instance->vo.close = enfle_free_frames;
   instance->vo.get_frame = rgb_get_frame;
-  instance->bpp = bpp;
+  instance->vw = vw;
+  instance->m = m;
+  instance->p = p;
 
   return (vo_instance_t *)instance;
 }

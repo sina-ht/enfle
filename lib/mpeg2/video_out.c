@@ -37,7 +37,7 @@ uint32_t vo_mm_accel = 0;
 
 /* Externally visible list of all vo drivers */
 
-extern vo_open_t vo_enfle_open;
+//extern vo_open_t vo_enfle_rgb_open;
 
 void vo_accel (uint32_t accel)
 {
@@ -46,8 +46,8 @@ void vo_accel (uint32_t accel)
 
 static vo_driver_t video_out_drivers[] =
 {
-    {"enfle", vo_enfle_open},
-    {NULL, NULL}
+  //{ "enfle", vo_enfle_rgb_open },
+    { NULL, NULL }
 };
 
 vo_driver_t * vo_drivers (void)

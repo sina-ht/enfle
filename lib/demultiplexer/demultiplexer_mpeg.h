@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb 21 00:15:26 2001.
- * $Id: demultiplexer_mpeg.h,v 1.2 2001/02/20 15:16:35 sian Exp $
+ * Last Modified: Thu Feb 22 01:29:11 2001.
+ * $Id: demultiplexer_mpeg.h,v 1.3 2001/02/21 17:56:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -23,16 +23,28 @@
 #ifndef _DEMULTIPLEXER_MPEG_H
 #define _DEMULTIPLEXER_MPEG_H
 
-#include "stream.h"
+#include "demultiplexer.h"
+#include "enfle/stream.h"
+
+typedef struct _mpeg_info {
+  Stream *st;
+  int v_fd;
+  int a_fd;
+  int ver;
+  int nvstreams;
+  int nastreams;
+  int nvstream;
+  int nastream;
+} MpegInfo;
 
 Demultiplexer *demultiplexer_mpeg_create(void);
 
-#define demultiplexer_mpeg_set_input(de, st) (de)->info->st = (st)
-#define demultiplexer_mpeg_set_vfd(de, vfd) (de)->info->v_fd = (vfd)
-#define demultiplexer_mpeg_set_afd(de, afd) (de)->info->a_fd = (afd)
-#define demultiplexer_mpeg_nvideos(de) (de)->info->nvstreams
-#define demultiplexer_mpeg_naudios(de) (de)->info->nastreams
-#define demultiplexer_mpeg_set_video(de, nv) (de)->info->nvstream = (nv)
-#define demultiplexer_mpeg_set_audio(de, na) (de)->info->nastream = (na)
+#define demultiplexer_mpeg_set_input(de, st) ((MpegInfo *)(de)->private_data)->st = (st)
+#define demultiplexer_mpeg_set_vfd(de, vfd) ((MpegInfo *)(de)->private_data)->v_fd = (vfd)
+#define demultiplexer_mpeg_set_afd(de, afd) ((MpegInfo *)(de)->private_data)->a_fd = (afd)
+#define demultiplexer_mpeg_nvideos(de) ((MpegInfo *)(de)->private_data)->nvstreams
+#define demultiplexer_mpeg_naudios(de) ((MpegInfo *)(de)->private_data)->nastreams
+#define demultiplexer_mpeg_set_video(de, nv) ((MpegInfo *)(de)->private_data)->nvstream = (nv)
+#define demultiplexer_mpeg_set_audio(de, na) ((MpegInfo *)(de)->private_data)->nastream = (na)
 
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Feb 21 00:13:37 2001.
- * $Id: demultiplexer.h,v 1.2 2001/02/20 15:16:35 sian Exp $
+ * Last Modified: Thu Feb 22 01:26:48 2001.
+ * $Id: demultiplexer.h,v 1.3 2001/02/21 17:56:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,12 +54,12 @@ struct _demultiplexer {
 
 Demultiplexer *demultiplexer_create(void);
 
-#define demultiplex_set_eof(de, f) (de)->eof = (f)
-#define demultiplex_get_eof(de) (de)->eof
+#define demultiplexer_set_eof(de, f) (de)->eof = (f)
+#define demultiplexer_get_eof(de) (de)->eof
 
-#define demultiplex_examine(de) (de)->examine((de))
-#define demultiplex_start(de) (de)->start((de))
-#define demultiplex_stop(de) (de)->stop((de))
-#define demultiplex_destroy(de) (de)->destroy((de))
+#define demultiplexer_examine(de) (de)->examine((de))
+#define demultiplexer_start(de) (de)->start((de))
+#define demultiplexer_stop(de) (de)->stop((de))
+#define demultiplexer_destroy(de) (de)->destroy((de))
 
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Feb 20 23:04:51 2001.
- * $Id: demultiplexer_mpeg.c,v 1.2 2001/02/20 15:16:35 sian Exp $
+ * Last Modified: Thu Feb 22 01:28:14 2001.
+ * $Id: demultiplexer_mpeg.c,v 1.3 2001/02/21 17:56:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,24 +26,12 @@
 #include "compat.h"
 #include "common.h"
 
-#include "demultiplexer.h"
 #include "demultiplexer_mpeg.h"
-#include "utils.h"
+#include "enfle/utils.h"
 
 #ifndef USE_PTHREAD
 #  error pthread is mandatory for demultiplexer_mpeg
 #endif
-
-typedef struct _mpeg_info {
-  Stream *st;
-  int v_fd;
-  int a_fd;
-  int ver;
-  int nvstreams;
-  int nastreams;
-  int nvstream;
-  int nastream;
-} MpegInfo;
 
 DECLARE_DEMULTIPLEXER_METHODS;
 PREPARE_DEMULTIPLEXER_TEMPLATE;
