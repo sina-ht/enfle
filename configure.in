@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Oct  6 23:33:19 2001.
-dnl $Id: configure.in,v 1.92 2001/10/06 16:00:38 sian Exp $
+dnl Last Modified: Mon Oct  8 02:15:04 2001.
+dnl $Id: configure.in,v 1.93 2001/10/07 17:35:06 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -36,7 +36,7 @@ AM_CONFIG_HEADER(enfle-config.h)
 dnl Maintainer mode (could be uncommented for production release.)
 dnl AM_MAINTAINER_MODE
 
-AM_INIT_AUTOMAKE(enfle, 20011006)
+AM_INIT_AUTOMAKE(enfle, 20011008)
 AC_CANONICAL_HOST
 
 dnl Checks for programs.
@@ -70,7 +70,9 @@ AC_SUBST(LIBADD_DLOPEN)
 
 available_jpeg=no
 AC_CHECK_HEADER(jpeglib.h, [
-  AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ]) ])
+  AC_CHECK_LIB(jpeg-mmx, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg-mmx; ], [
+    AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ])
+  ])])
 AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
 AC_SUBST(LIBADD_JPEG)
 
@@ -219,9 +221,15 @@ if test "${ac_cv_header_soundcard_h}" = "yes" -o \
 fi
 AM_CONDITIONAL(HAVE_OSS, test "$available_oss" = "yes")
 
+available_alsa=no
+AC_CHECK_HEADER(alsa/asoundlib.h, [
+  AC_CHECK_LIB(asound, snd_pcm_hw_params, [ available_alsa=yes; LIBADD_ALSA="-lasound" ], [], [-lm])])
+AM_CONDITIONAL(HAVE_ALSA, test "$available_alsa" = "yes")
+AC_SUBST(LIBADD_ALSA)
+
 available_esd=no
 AC_CHECK_HEADER(esd.h,
-  AC_CHECK_LIB(esd, esd_play_stream_fallback, [ available_esd=yes; LIBADD_ESD="-lesd" ]))
+  AC_CHECK_LIB(esd, esd_play_stream_fallback, [ available_esd=yes; LIBADD_ESD="-lesd" ], [], [-lm]))
 AM_CONDITIONAL(HAVE_ESD, test "$available_esd" = "yes")
 AC_SUBST(LIBADD_ESD)
 
@@ -458,6 +466,7 @@ AC_CONFIG_FILES([
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
    plugins/audio/Makefile
+    plugins/audio/alsa/Makefile
     plugins/audio/esd/Makefile
     plugins/audio/oss/Makefile
    plugins/effect/Makefile
