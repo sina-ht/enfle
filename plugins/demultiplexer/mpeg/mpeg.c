@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 16 01:16:38 2004.
- * $Id: mpeg.c,v 1.8 2004/06/15 16:17:07 sian Exp $
+ * Last Modified: Mon Jun 21 22:43:13 2004.
+ * $Id: mpeg.c,v 1.9 2004/06/21 13:47:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -69,7 +69,7 @@ ENFLE_PLUGIN_EXIT(demultiplexer_mpeg, p)
 
 /* demultiplexer plugin methods */
 
-#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536
+#define DEMULTIPLEXER_MPEG_BUFFER_SIZE 65536*4
 #define DEMULTIPLEXER_MPEG_IDENTIFY_SIZE 4096
 #define DEMULTIPLEXER_MPEG_DETERMINE_SIZE 65536*8
 
@@ -138,6 +138,7 @@ DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c, priv)
   DemultiplexerStatus ds;
 
   demux->st = st;
+  stream_rewind(st);
   if ((ds = __examine(demux, 0)) != DEMULTIPLEX_OK) {
     destroy(demux);
     return NULL;
@@ -161,7 +162,7 @@ __examine(Demultiplexer *demux, int identify_only)
   MpegInfo *info = (MpegInfo *)demux->private_data;
   DemultiplexerStatus ds;
   unsigned char *buf, id;
-  int read_total, read_size, used_size, used_size_prev = 0, skip;
+  int read_total, read_size, used_size, used_size_prev, skip;
   int nvstream, nastream;
   int vstream, astream;
   int maximum_size = identify_only ? DEMULTIPLEXER_MPEG_IDENTIFY_SIZE : DEMULTIPLEXER_MPEG_DETERMINE_SIZE;
@@ -175,11 +176,12 @@ __examine(Demultiplexer *demux, int identify_only)
 
   if ((buf = malloc(DEMULTIPLEXER_MPEG_BUFFER_SIZE)) == NULL)
     return DEMULTIPLEX_ERROR;
-  used_size = 0;
+  used_size = used_size_prev = 0;
   read_total = 0;
+  skip = 1;
 
   do {
-    if (read_total < maximum_size) {
+    if (used_size < skip && read_total < maximum_size) {
       if ((read_size = stream_read(demux->st, buf + used_size,
 				   DEMULTIPLEXER_MPEG_BUFFER_SIZE - used_size)) < 0) {
 	err_message_fnc("stream_read error.\n");
