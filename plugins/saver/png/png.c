@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 18 13:39:46 2001.
- * $Id: png.c,v 1.8 2001/09/18 05:22:23 sian Exp $
+ * Last Modified: Mon Dec 17 14:55:57 2001.
+ * $Id: png.c,v 1.9 2001/12/17 06:16:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@ DECLARE_SAVER_PLUGIN_METHODS;
 static SaverPlugin plugin = {
   type: ENFLE_PLUGIN_SAVER,
   name: "PNG",
-  description: "PNG Saver plugin version 0.1.2",
+  description: "PNG Saver plugin version 0.1.3",
   author: "Hiroshi Takekawa",
 
   save: save,
@@ -142,7 +142,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     }
   }
 
-  b = config_get_boolean(c, "/enfle/plugins/saver/png/filter", &result);
+  b = config_get_boolean(c, "/enfle/plugins/saver/png/interlace", &result);
   if (result > 0)
     interlace_flag = b ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
   else {
@@ -185,13 +185,15 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
       return 0;
     }
 #endif
+  case _BGR24:
+    png_set_bgr(png_ptr);
   case _RGB24:
     png_set_IHDR(png_ptr, info_ptr, p->width, p->height, 8,
 		 PNG_COLOR_TYPE_RGB, interlace_flag,
 		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     break;
   default:
-    show_message("png: " __FUNCTION__ ": Unsupported type %d.\n", p->type);
+    show_message("png: " __FUNCTION__ ": Unsupported type %s.\n", image_type_to_string(p->type));
     fclose(fp);
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     return 0;
@@ -233,6 +235,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
     for (k = 0; k < p->height; k++)
       row_pointers[k] = memory_ptr(p->image) + k * p->width;
     break;
+  case _BGR24:
   case _RGB24:
     for (k = 0; k < p->height; k++)
       row_pointers[k] = memory_ptr(p->image) + 3 * k * p->width;
