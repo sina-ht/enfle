@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Jun 16 02:43:07 2001.
- * $Id: x11.c,v 1.10 2001/06/15 18:44:05 sian Exp $
+ * Last Modified: Mon Jun 18 05:26:05 2001.
+ * $Id: x11.c,v 1.11 2001/06/17 20:55:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -197,6 +197,8 @@ open(X11 *x11, char *dispname)
 					     &encoding_infos)) == Success) {
 		for (k = 0; k < nencodings; k++) {
 		  debug_message("x11: " __FUNCTION__ ": Xv:   encoding#%d[%s] (%ld x %ld)\n", k, encoding_infos[k].name, encoding_infos[k].width, encoding_infos[k].height);
+		  xv->image_width  = encoding_infos[k].width;
+		  xv->image_height = encoding_infos[k].height;
 
 		  /* XXX: Sorry, XvVideo, XvStill are unsupported */
 		  /* XXX: I can't test the functions which my G450 doesn't support... */
