@@ -1,3 +1,24 @@
+2000-10-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/Makefile.am, lib/enfle/spi-private.h, lib/enfle/spi.c:
+	More spi implementations.
+
+	* lib/utils/Makefile.am: Added misc.[ch].
+
+	* lib/enfle/movie.c, lib/utils/timer.c, lib/utils/timer.h:
+	Work-around timer_create() collision.
+
+	* lib/dllloader/kernel32.c, lib/dllloader/Makefile.am,
+	lib/dllloader/module.c, lib/dllloader/pe_image.c,
+	lib/dllloader/user32.c, lib/dllloader/windef.h: More dll
+	implementations.
+
+	* lib/utils/misc.c, lib/utils/misc.h: New misc functions.
+
+	* lib/dllloader/advapi32.c, lib/dllloader/advapi32.h,
+	lib/dllloader/borlndmm.c, lib/dllloader/borlndmm.h: New dll
+	emulation.
+
 2000-10-28  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/libstring.c: Fixed bug.
