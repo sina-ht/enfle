@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 23 06:28:43 2002.
- * $Id: identify.c,v 1.10 2002/09/22 21:32:39 sian Exp $
+ * Last Modified: Sun Oct  6 01:16:19 2002.
+ * $Id: identify.c,v 1.11 2002/10/05 17:17:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,7 +58,7 @@ identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a, Config *c)
       return IDENTIFY_FILE_MEMORY_ERROR;
 
     if (stat(fullpath, &statbuf)) {
-      show_message("ERROR: %s: %s.\n", fullpath, strerror(errno));
+      err_message("%s: %s.\n", fullpath, strerror(errno));
       free(fullpath);
       return IDENTIFY_FILE_STAT_FAILED;
     }
@@ -94,7 +94,7 @@ identify_file(EnflePlugins *eps, char *path, Stream *s, Archive *a, Config *c)
     }
     free(fullpath);
   } else if (!archive_open(a, s, path)) {
-    show_message("File %s in Archive %s [%s] cannot open.\n", path, a->format, a->path);
+    show_message("File %s in Archive %s[%s] cannot open.\n", path, a->format, a->path);
     return IDENTIFY_FILE_AOPEN_FAILED;
   }
 

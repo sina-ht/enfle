@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:52:45 2002.
- * $Id: tar.c,v 1.9 2002/08/17 02:19:35 sian Exp $
+ * Last Modified: Sat Oct  5 23:28:35 2002.
+ * $Id: tar.c,v 1.10 2002/10/05 17:16:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -22,9 +22,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 
+#define REQUIRE_STRING_H
+#include "compat.h"
 #include "common.h"
 
 #include "enfle/archiver-plugin.h"
@@ -36,7 +37,7 @@ DECLARE_ARCHIVER_PLUGIN_METHODS;
 static ArchiverPlugin plugin = {
   type: ENFLE_PLUGIN_ARCHIVER,
   name: "TAR",
-  description: "TAR Archiver plugin version 0.0.7",
+  description: "TAR Archiver plugin version 0.0.8",
   author: "Hiroshi Takekawa",
   archiver_private: NULL,
 
@@ -176,7 +177,7 @@ tar_destroy(Archive *arc)
   if (arc->path)
     free(arc->path);
   free(arc);
-};
+}
 
 /* methods */
 
