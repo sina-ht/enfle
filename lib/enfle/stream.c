@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  6 01:38:31 2002.
- * $Id: stream.c,v 1.8 2002/10/05 17:18:07 sian Exp $
+ * Last Modified: Fri Nov 29 02:09:59 2002.
+ * $Id: stream.c,v 1.9 2002/11/29 15:57:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,6 +36,11 @@ static int make_fdstream(Stream *, int);
 static int make_filestream(Stream *, char *);
 static void destroy(Stream *);
 
+static int dummy_read(Stream *, unsigned char *, int);
+static int dummy_seek(Stream *, long, StreamWhence);
+static long dummy_tell(Stream *);
+static int dummy_close(Stream *);
+
 static Stream template = {
   data: NULL,
   buffer: NULL,
@@ -46,10 +51,10 @@ static Stream template = {
   make_memorystream: make_memorystream,
   make_fdstream: make_fdstream,
   make_filestream: make_filestream,
-  read: NULL,
-  seek: NULL,
-  tell: NULL,
-  close: NULL,
+  read: dummy_read,
+  seek: dummy_seek,
+  tell: dummy_tell,
+  close: dummy_close,
   destroy: destroy
 };
 
@@ -109,11 +114,20 @@ fdstream_grow(Stream *s , int size)
 /* read functions */
 
 static int
+dummy_read(Stream *s, unsigned char *p, int size)
+{
+  warning_fnc("This function only fills the buffer with 0.\n");
+  memcpy(s, 0, size);
+  return size;
+}
+
+static int
 memorystream_read(Stream *s, unsigned char *p, int size)
 {
+  int remain = s->buffer_size - (s->ptr - s->buffer);
   int read_size;
 
-  read_size = (int)s->buffer_size > size ? size : (int)s->buffer_size;
+  read_size = remain > size ? size : remain;
   if (read_size > 0) {
     memcpy(p, s->ptr, read_size);
     s->ptr += read_size;
@@ -146,6 +160,13 @@ filestream_read(Stream *s, unsigned char *p, int size)
 }
 
 /* seek functions */
+
+static int
+dummy_seek(Stream *s, long offset, StreamWhence whence)
+{
+  warning_fnc("This function always returns 1.\n");
+  return 1;
+}
 
 static int
 memorystream_seek(Stream *s, long offset, StreamWhence whence)
@@ -237,6 +258,13 @@ filestream_seek(Stream *s, long offset, StreamWhence whence)
 /* tell functions */
 
 static long
+dummy_tell(Stream *s)
+{
+  warning_fnc("This function always returns 0\n");
+  return 0;
+}
+
+static long
 memorystream_tell(Stream *s)
 {
   return s->ptr - s->buffer;
@@ -257,7 +285,13 @@ filestream_tell(Stream *s)
 /* close functions */
 
 static int
-memorystream_close(Stream *s)
+dummy_close(Stream *s)
+{
+  return 1;
+}
+
+static void
+free_stream_data(Stream *s)
 {
   if (s->buffer) {
     free(s->buffer);
@@ -271,7 +305,12 @@ memorystream_close(Stream *s)
     free(s->format);
     s->format = NULL;
   }
+}
 
+static int
+memorystream_close(Stream *s)
+{
+  free_stream_data(s);
   return 1;
 }
 
@@ -280,18 +319,7 @@ fdstream_close(Stream *s)
 {
   int f;
 
-  if (s->buffer) {
-    free(s->buffer);
-    s->buffer = NULL;
-  }
-  if (s->path) {
-    free(s->path);
-    s->path = NULL;
-  }
-  if (s->format) {
-    free(s->format);
-    s->format = NULL;
-  }
+  free_stream_data(s);
 
   f = (close((int)s->data) == 0) ? 1 : 0;
   s->data = NULL;
@@ -304,14 +332,8 @@ filestream_close(Stream *s)
 {
   int f;
 
-  if (s->path) {
-    free(s->path);
-    s->path = NULL;
-  }
-  if (s->format) {
-    free(s->format);
-    s->format = NULL;
-  }
+  free_stream_data(s);
+
   if (s->data == NULL)
     return 1;
 
