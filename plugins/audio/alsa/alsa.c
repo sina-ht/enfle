@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar  5 05:20:03 2002.
- * $Id: alsa.c,v 1.5 2002/03/04 20:20:43 sian Exp $
+ * Last Modified: Thu Mar  7 03:51:57 2002.
+ * $Id: alsa.c,v 1.6 2002/03/06 19:30:32 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -45,7 +45,7 @@ static int close_device(AudioDevice *);
 static AudioPlugin plugin = {
   type: ENFLE_PLUGIN_AUDIO,
   name: "ALSA",
-  description: "ALSA Audio plugin version 0.0.2",
+  description: "ALSA Audio plugin version 0.1",
   author: "Hiroshi Takekawa",
 
   open_device: open_device,
@@ -61,8 +61,6 @@ typedef struct _alsa_data {
   snd_pcm_sframes_t buffer_size;
   snd_pcm_sframes_t period_size;
   snd_output_t *log;
-  unsigned int bytes_per_sample;
-  unsigned int bytes_written;
 } ALSA_data;
 
 void *
@@ -102,7 +100,7 @@ open_device(void *data, Config *c)
   }
   ad->private_data = alsa;
 
-  if ((device == NULL) && ((device = config_get(c, "/enfle/plugins/audio/alsa/device")) == NULL))
+  if ((device == NULL) && ((device = config_get_str(c, "/enfle/plugins/audio/alsa/device")) == NULL))
     device = (char *)"default";
 
   err = snd_output_stdio_attach(&alsa->log, stderr, 0);
@@ -112,7 +110,9 @@ open_device(void *data, Config *c)
     perror("ALSA");
     return NULL;
   }
-  alsa->bytes_written = 0;
+
+  ad->bytes_written = 0;
+  ad->opened = 1;
 
   debug_message_fnc("opened device %s successfully.\n", device);
 
@@ -293,7 +293,7 @@ write_device(AudioDevice *ad, unsigned char *data, int size)
       data += r * unit;
     }
   }
-  alsa->bytes_written += size;
+  ad->bytes_written += size;
 
   return 1;
 }
@@ -313,7 +313,7 @@ bytes_written(AudioDevice *ad)
   snd_pcm_status(alsa->fd, pcm_stat);
   delay = snd_pcm_status_get_delay(pcm_stat);
 
-  return alsa->bytes_written - snd_pcm_samples_to_bytes(alsa->fd, delay) * ad->channels;
+  return ad->bytes_written - snd_pcm_samples_to_bytes(alsa->fd, delay) * ad->channels;
 }
 
 static int
@@ -329,7 +329,9 @@ close_device(AudioDevice *ad)
 
   snd_pcm_close(alsa->fd);
   snd_output_close(alsa->log);
+  free(alsa);
   free(ad);
+  ad->opened = 0;
 
   return 1;
 }
