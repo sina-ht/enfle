@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 17 22:21:24 2002.
- * $Id: fifo.c,v 1.9 2002/08/01 12:41:40 sian Exp $
+ * Last Modified: Fri Aug  2 22:43:14 2002.
+ * $Id: fifo.c,v 1.10 2002/08/02 13:58:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,7 @@ struct _fifo_data {
 static int put(FIFO *, void *, FIFO_destructor);
 static int get(FIFO *, void **, FIFO_destructor *);
 static int set_max(FIFO *, unsigned int);
+static void emptify(FIFO *);
 static void destroy(FIFO *);
 
 static FIFO template = {
@@ -50,6 +51,7 @@ static FIFO template = {
   put: put,
   get: get,
   set_max: set_max,
+  emptify: emptify,
   destroy: destroy
 };
 
@@ -134,7 +136,7 @@ get(FIFO *f, void **d_return, FIFO_destructor *destructor_r)
   }
 #endif
   if ((fd = f->next_get) == NULL)
-    return 0;
+    goto unlock_and_return2;
 
   *d_return = fd->data;
   *destructor_r = fd->destructor;
@@ -145,6 +147,7 @@ get(FIFO *f, void **d_return, FIFO_destructor *destructor_r)
 
   ret = 1;
 
+ unlock_and_return2:
 #ifdef USE_PTHREAD
   if (f->maxdata && f->ndata < f->maxdata)
     pthread_cond_signal(&f->put_ok_cond);
@@ -162,6 +165,19 @@ set_max(FIFO *f, unsigned int m)
   f->maxdata = m;
 
   return 1;
+}
+
+static void
+emptify(FIFO *f)
+{
+  void *p;
+  FIFO_destructor dest;
+
+  while (!fifo_is_empty(f)) {
+    debug_message_fnc("%d items left\n", fifo_ndata(f));
+    fifo_get(f, &p, &dest);
+    dest(p);
+  }
 }
 
 static void

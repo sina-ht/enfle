@@ -1,10 +1,10 @@
 /*
  * fifo.h -- First-In First-Out object header
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jul 17 22:19:56 2002.
- * $Id: fifo.h,v 1.5 2002/08/01 12:41:18 sian Exp $
+ * Last Modified: Fri Aug  2 22:08:06 2002.
+ * $Id: fifo.h,v 1.6 2002/08/02 13:58:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,6 +45,7 @@ struct _fifo {
   int (*put)(FIFO *, void *, FIFO_destructor);
   int (*get)(FIFO *, void **, FIFO_destructor *);
   int (*set_max)(FIFO *, unsigned int);
+  void (*emptify)(FIFO *);
   void (*destroy)(FIFO *);
 };
 
@@ -55,6 +56,7 @@ struct _fifo {
 #define fifo_put(f, d, dest) (f)->put((f), (d), (dest))
 #define fifo_get(f, d, dest_r) (f)->get((f), (d), (dest_r))
 #define fifo_set_max(f, m) (f)->set_max((f), (m))
+#define fifo_emptify(f) (f)->emptify((f))
 #define fifo_destroy(f) (f)->destroy((f))
 
 FIFO *fifo_create(void);
