@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 15:24:12 2002.
- * $Id: enfle-plugin.h,v 1.5 2002/08/03 04:57:16 sian Exp $
+ * Last Modified: Thu Aug 15 11:13:40 2002.
+ * $Id: enfle-plugin.h,v 1.6 2002/08/15 12:46:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -54,6 +54,10 @@ typedef struct _enfle_plugin {
 #define ENFLE_PLUGIN_EXIT(pre, p) \
   void plugin_exit(void * p)
 #endif
+
+#define enfle_plugin_name(p) (p)->name
+#define enfle_plugin_description(p) (p)->description
+#define enfle_plugin_author(p) (p)->author
 
 const char *enfle_plugin_type_to_name(PluginType);
 
