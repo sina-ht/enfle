@@ -1,11 +1,17 @@
 2001-01-17  Hiroshi Takekawa  <sian@fennel.org>
 
+	* configure.in: Search for pow() in -lm when checking libmpeg3,
+	suggested by Mr. TAJIRI Yasuhiro. Cosmetic change.
+
+2001-01-17  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Check avifile.h instead of aviplay.h.
 
 	* lib/enfle/audio-plugin.h, plugins/audio/oss/oss.c: New
 	bytes_written() method. This is needed for movie synchronization.
 
-	* lib/enfle/Makefile.am: Added player-extra.h header.
+	* lib/enfle/Makefile.am: Added player-extra.h header, thanks to
+	Mr. Yuki Sawada.
 
 	* plugins/player/libmpeg3/libmpeg3.c,
 	plugins/player/avifile/avifile.cpp: Finally, we got satisfactory
