@@ -1,10 +1,10 @@
 /*
  * libconfig.h -- configuration file manipulation library header
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 18 02:58:44 2002.
- * $Id: libconfig.h,v 1.7 2002/02/17 19:32:57 sian Exp $
+ * Last Modified: Sun Aug 18 12:42:17 2002.
+ * $Id: libconfig.h,v 1.8 2002/08/18 04:18:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,45 +25,27 @@
 
 #include "hash.h"
 
-typedef struct _config Config;
-
-struct _config {
+typedef struct _config {
   Hash *hash;
-
-  int (*load)(Config *, const char *);
-  int (*save)(Config *, char *);
-  int (*parse)(Config *, char *);
-  void *(*get)(Config *, const char *);
-  int (*set)(Config *, char *, void *);
-  char *(*get_str)(Config *, const char *);
-  int (*set_str)(Config *, char *, char *);
-  int (*get_boolean)(Config *, const char *, int *);
-  int (*set_boolean)(Config *, char *, int);
-  int (*get_int)(Config *, const char *, int *);
-  int (*set_int)(Config *, char *, int);
-  char **(*get_list)(Config *, const char *, int *);
-  int (*set_list)(Config *, char *, char *);
-  void (*destroy)(Config *);
-};
-
-#define config_load(c, p) (c)->load((c), (p))
-#define config_save(c, p) (c)->save((c), (p))
-#define config_parse(c, s) (c)->parse((c), (s))
-#define config_get(c, p) (c)->get((c), (p))
-#define config_set(c, p, d) (c)->set((c), (p), (d))
-#define config_get_str(c, p) (c)->get_str((c), (p))
-#define config_set_str(c, p, d) (c)->set_str((c), (p), (d))
-#define config_get_boolean(c, p, r) (c)->get_boolean((c), (p), (r))
-#define config_set_boolean(c, p, d) (c)->set_boolean((c), (p), (d))
-#define config_get_int(c, p, r) (c)->get_int((c), (p), (r))
-#define config_set_int(c, p, d) (c)->set_int((c), (p), (d))
-#define config_get_list(c, p, r) (c)->get_list((c), (p), (r))
-#define config_set_list(c, p, d) (c)->set_list((c), (p), (d))
-#define config_destroy(c) (c)->destroy((c))
+} Config;
 
 Config *config_create(void);
+int config_load(Config *, const char *);
+int config_save(Config *, char *);
+int config_parse(Config *, char *);
+void *config_get(Config *, const char *);
+int config_set(Config *, char *, void *);
+char *config_get_str(Config *, const char *);
+int config_set_str(Config *, char *, char *);
+int config_get_boolean(Config *, const char *, int *);
+int config_set_boolean(Config *, char *, int);
+int config_get_int(Config *, const char *, int *);
+int config_set_int(Config *, char *, int);
+char **config_get_list(Config *, const char *, int *);
+int config_set_list(Config *, char *, char *);
+void config_destroy(Config *);
 
-/* TODO: should be replaced by extendable hash */
+/* TODO: should be replaced by extensible hash */
 #define LIBCONFIG_HASH_SIZE 8192
 
 #endif

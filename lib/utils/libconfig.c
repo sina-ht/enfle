@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:46:22 2002.
- * $Id: libconfig.c,v 1.22 2002/08/17 02:19:36 sian Exp $
+ * Last Modified: Sun Aug 18 13:03:52 2002.
+ * $Id: libconfig.c,v 1.23 2002/08/18 04:18:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,7 +25,6 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-#define REQUIRE_FATAL
 #include "common.h"
 
 #include "libstring.h"
@@ -33,42 +32,8 @@
 #include "misc.h"
 #include "stdio-support.h"
 
-static int load(Config *, const char *);
-static int save(Config *, char *);
-static int parse(Config *, char *);
-static void *get(Config *, const char *);
-static int set(Config *, char *, void *);
-static char *get_str(Config *, const char *);
-static int set_str(Config *, char *, char *);
-static int get_boolean(Config *, const char *, int *);
-static int set_boolean(Config *, char *, int);
-static int get_int(Config *, const char *, int *);
-static int set_int(Config *, char *, int);
-static char **get_list(Config *, const char *, int *);
-static int set_list(Config *, char *, char *);
-static void destroy(Config *);
-
 #define DQUOTATION 0x22
 #define SQUOTATION 0x27
-
-static Config config_template = {
-  hash: NULL,
-
-  load: load,
-  save: save,
-  parse: parse,
-  get: get,
-  set: set,
-  get_str: get_str,
-  set_str: set_str,
-  get_boolean: get_boolean,
-  set_boolean: set_boolean,
-  get_int: get_int,
-  set_int: set_int,
-  get_list: get_list,
-  set_list: set_list,
-  destroy: destroy
-};
 
 Config *
 config_create(void)
@@ -77,8 +42,6 @@ config_create(void)
 
   if ((c = calloc(1, sizeof(Config))) == NULL)
     return NULL;
-  memcpy(c, &config_template, sizeof(Config));
-
   if ((c->hash = hash_create(LIBCONFIG_HASH_SIZE)) == NULL) {
     free(c);
     return NULL;
@@ -93,7 +56,7 @@ static inline void parse_error(char *, String *) __attribute__ ((noreturn));
 static inline void
 parse_error(char *p, String *path)
 {
-  fatal(1, "Parse error: %s in %s\n", p, string_get(path));
+  fatal("Parse error: %s in %s\n", p, string_get(path));
 }
 
 static char *
@@ -176,31 +139,31 @@ set_internal(Config *c, String *config_path, char *path, char *remain, int is_li
   int f;
 
   if ((value_path = string_dup(config_path)) == NULL)
-    fatal(1, "libconfig: %s(): No enough memory.\n", __FUNCTION__);
+    fatal("libconfig: %s(): No enough memory.\n", __FUNCTION__);
   if (path != NULL) {
     string_cat(value_path, "/");
     string_cat(value_path, (const char *)path);
   }
 
   if (is_list) {
-    f = set_list(c, string_get(value_path), remain);
+    f = config_set_list(c, string_get(value_path), remain);
   } else {
     if (*remain == '"') {
       char *end, *quoted;
 
       if ((end = strrchr((const char *)remain, '"')) == NULL || remain == end)
-	fatal(1, "libconfig: %s(): Non-terminated double quoted string.\n", __FUNCTION__);
+	fatal("libconfig: %s(): Non-terminated double quoted string.\n", __FUNCTION__);
       if ((quoted = malloc(end - remain)) == NULL)
-	fatal(1, "libconfig: %s(): No enough memory\n", __FUNCTION__);
+	fatal("libconfig: %s(): No enough memory\n", __FUNCTION__);
       if (*(end + 1) != '\n' && *(end + 1) != '\0')
 	show_message("libconfig: %s(): Ignored trailing garbage: %s\n", __FUNCTION__, end + 1);
       memcpy(quoted, remain + 1, end - remain - 1);
       quoted[end - remain - 1] = '\0';
-      f = set_str(c, string_get(value_path), quoted);
+      f = config_set_str(c, string_get(value_path), quoted);
     } else if (isdigit(*remain) || ((*remain == '+' || *remain == '-') && isdigit(*(remain + 1)))) {
-      f = set_int(c, string_get(value_path), atoi(remain));
+      f = config_set_int(c, string_get(value_path), atoi(remain));
     } else {
-      f = set_str(c, string_get(value_path), strdup(remain));
+      f = config_set_str(c, string_get(value_path), strdup(remain));
     }
   }
   string_destroy(value_path);
@@ -210,8 +173,8 @@ set_internal(Config *c, String *config_path, char *path, char *remain, int is_li
 
 /* methods */
 
-static int
-load(Config *c, const char *filepath)
+int
+config_load(Config *c, const char *filepath)
 {
   String *config_path;
   FILE *fp;
@@ -256,7 +219,7 @@ load(Config *c, const char *filepath)
 	char *path;
 
 	path = get_token(p + 8);
-	load(c, path);
+	config_load(c, path);
 	free(path);
       } else {
 	show_message("Unknown directive\n");
@@ -315,15 +278,15 @@ load(Config *c, const char *filepath)
   }
 }
 
-static int
-save(Config *c, char *path)
+int
+config_save(Config *c, char *path)
 {
   err_message("Not implemented yet\n");
   return 0;
 }
 
-static int
-parse(Config *c, char *str)
+int
+config_parse(Config *c, char *str)
 {
   char *name, *namestart, *nameend;
   char *value, *valuestart;
@@ -347,42 +310,42 @@ parse(Config *c, char *str)
     valuestart++;
   value = strdup(valuestart);
 
-  r = (isdigit(*value) || ((*value == '+' || *value == '-') && isdigit(*(value + 1)))) ? set_int(c, name, atoi(value)) : set_str(c, name, (char *)value);
+  r = (isdigit(*value) || ((*value == '+' || *value == '-') && isdigit(*(value + 1)))) ? config_set_int(c, name, atoi(value)) : config_set_str(c, name, (char *)value);
   free(name);
 
   return r;
 }
 
-static void *
-get(Config *c, const char *path)
+void *
+config_get(Config *c, const char *path)
 {
   return hash_lookup_str(c->hash, (char *)path);
 }
 
-static int
-set(Config *c, char *path, void *value)
+int
+config_set(Config *c, char *path, void *value)
 {
   return hash_set_str(c->hash, path, value);
 }
 
-static char *
-get_str(Config *c, const char *path)
+char *
+config_get_str(Config *c, const char *path)
 {
   return hash_lookup_str(c->hash, path);
 }
 
-static int
-set_str(Config *c, char *path, char *value)
+int
+config_set_str(Config *c, char *path, char *value)
 {
   return hash_set_str(c->hash, path, value);
 }
 
-static int
-get_boolean(Config *c, const char *path, int *is_success)
+int
+config_get_boolean(Config *c, const char *path, int *is_success)
 {
   char *tmp;
 
-  if ((tmp = get_str(c, path)) == NULL) {
+  if ((tmp = config_get_str(c, path)) == NULL) {
     *is_success = 0;
     return 0;
   } else if (strcasecmp(tmp, "yes") == 0 || strcasecmp(tmp, "true") == 0) {
@@ -397,14 +360,14 @@ get_boolean(Config *c, const char *path, int *is_success)
   return 0;
 }
 
-static int
-set_boolean(Config *c, char *path, int boolean)
+int
+config_set_boolean(Config *c, char *path, int boolean)
 {
   char *tmp;
 
   if ((tmp = strdup(boolean ? "yes" : "no")) == NULL)
     return 0;
-  return set_str(c, path, tmp);
+  return config_set_str(c, path, tmp);
 }
 
 static char *
@@ -412,7 +375,7 @@ check_typed_data(Config *c, const char *path, const char *type)
 {
   char *p;
 
-  if ((p = (char *)get(c, path)) == NULL)
+  if ((p = (char *)config_get(c, path)) == NULL)
     return NULL;
   if (*p != '\0' || memcmp(p + 1, type, 3))
     return NULL;
@@ -433,8 +396,8 @@ setup_typed_data(Config *c, char *path, const char *type, int size)
   return p;
 }
 
-static int
-get_int(Config *c, const char *path, int *is_success)
+int
+config_get_int(Config *c, const char *path, int *is_success)
 {
   char *p;
 
@@ -447,8 +410,8 @@ get_int(Config *c, const char *path, int *is_success)
   return *((int *)(p + 4));
 }
 
-static int
-set_int(Config *c, char *path, int value)
+int
+config_set_int(Config *c, char *path, int value)
 {
   char *p;
 
@@ -456,11 +419,11 @@ set_int(Config *c, char *path, int value)
     return 0;
   *((int *)(p + 4)) = value;
 
-  return set(c, path, (void *)p);
+  return config_set(c, path, (void *)p);
 }
 
-static char **
-get_list(Config *c, const char *path, int *is_success)
+char **
+config_get_list(Config *c, const char *path, int *is_success)
 {
   char *p;
 
@@ -473,8 +436,8 @@ get_list(Config *c, const char *path, int *is_success)
   return *((char ***)(p + 4));
 }
 
-static int
-set_list(Config *c, char *path, char *lstr)
+int
+config_set_list(Config *c, char *path, char *lstr)
 {
   char *p;
   char **list;
@@ -488,11 +451,11 @@ set_list(Config *c, char *path, char *lstr)
   }
   *((char ***)(p + 4)) = list;
 
-  return set(c, path, (void *)p);
+  return config_set(c, path, (void *)p);
 }
 
-static void
-destroy(Config *c)
+void
+config_destroy(Config *c)
 {
   hash_destroy(c->hash);
   free(c);
