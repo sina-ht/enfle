@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Mon Aug  6 02:36:36 2001.
- * $Id: arithmodel_order_zero.c,v 1.4 2001/08/06 04:59:38 sian Exp $
+ * Last Modified: Tue Aug  7 17:11:36 2001.
+ * $Id: arithmodel_order_zero.c,v 1.5 2001/08/07 09:28:20 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -83,6 +83,7 @@ arithmodel_order_zero_create(int default_initial_eof_freq, int default_initial_e
   if ((am = calloc(1, sizeof(Arithmodel_order_zero))) == NULL)
     return NULL;
   am->install_symbol = install_symbol;
+  am->uninstall_symbol = uninstall_symbol;
   am->reset = reset;
   am->encode_init = encode_init;
   am->encode = encode;
@@ -119,6 +120,32 @@ install_symbol(Arithmodel *_am, Freq freq)
   else
     am->freq[0] = freq;
   am->nsymbols++;
+
+  return 1;
+}
+
+static int
+uninstall_symbol(Arithmodel *_am, Index index)
+{
+  Arithmodel_order_zero *am = (Arithmodel_order_zero *)_am;
+  Freq freq;
+
+  debug_message(__FUNCTION__ "(index %d)\n", index);
+
+  if (index < am->start_symbol)
+    am->start_symbol--;
+  if (index == am->escape_symbol)
+    am->escape_symbol = -1;
+
+  if (index > 0)
+    freq = am->freq[index] - am->freq[index - 1];
+  else
+    freq = am->freq[index];
+  for (index++; index < am->nsymbols; index++)
+    am->freq[index - 1] = am->freq[index] - freq;
+
+  /* We can shrink the memory size, but leave it as is. */
+  am->nsymbols--;
 
   return 1;
 }

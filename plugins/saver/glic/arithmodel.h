@@ -1,8 +1,8 @@
 /*
  * arithmodel.h -- Statistical model layer
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Thu Apr  5 16:25:19 2001.
- * $Id: arithmodel.h,v 1.1 2001/04/18 05:43:31 sian Exp $
+ * Last Modified: Tue Aug  7 16:55:50 2001.
+ * $Id: arithmodel.h,v 1.2 2001/08/07 09:28:20 sian Exp $
  */
 
 #ifndef _ARITHMODEL_H
@@ -14,6 +14,7 @@ typedef struct _arithmodel Arithmodel;
   Arithcoder *ac; \
   Index nsymbols; \
   int (*install_symbol)(Arithmodel *, unsigned int); \
+  int (*uninstall_symbol)(Arithmodel *, Index); \
   int (*reset)(Arithmodel *); \
   int (*encode_init)(Arithmodel *, Arithcoder *); \
   int (*encode)(Arithmodel *, Index); \
@@ -25,6 +26,7 @@ typedef struct _arithmodel Arithmodel;
 
 #define ARITHMODEL_METHOD_DECLARE \
  static int install_symbol(Arithmodel *, unsigned int); \
+ static int uninstall_symbol(Arithmodel *, Index); \
  static int reset(Arithmodel *); \
  static int encode_init(Arithmodel *, Arithcoder *); \
  static int encode(Arithmodel *, Index); \
@@ -39,6 +41,7 @@ struct _arithmodel {
 };
 
 #define arithmodel_install_symbol(am, f) (am)->install_symbol((am), (f))
+#define arithmodel_uninstall_symbol(am, i) (am)->uninstall_symbol((am), (i))
 #define arithmodel_reset(am) (am)->reset((am))
 #define arithmodel_encode_init(am, ac) (am)->encode_init((am), (ac))
 #define arithmodel_encode(am, i) (am)->encode((am), (i))
