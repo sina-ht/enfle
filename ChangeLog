@@ -1,3 +1,17 @@
+2001-03-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2/libmpeg2_vo.c: Added several
+	debug_message()'s.
+
+	* plugins/player/libmpeg2/libmpeg2.c: Try to use socketpair()
+	instead of pipe().
+
+	* lib/mpeg2/cpu_accel.c: Revert hack.
+
+	* lib/mpeg2/Makefile.am: Clean up.
+
+	* README, README.e: Updated documentations.
+
 2001-02-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg2/libmpeg2.c,
