@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 18 20:29:32 2001.
- * $Id: spi.c,v 1.13 2001/06/18 16:23:47 sian Exp $
+ * Last Modified: Mon Sep 10 16:59:48 2001.
+ * $Id: spi.c,v 1.14 2001/09/10 11:58:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -96,7 +96,7 @@ loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
 
   memset(buf, 0, 2048);
   stream_read(st, buf, 2048);
-  debug_message("loader_identify() called\n");
+  debug_message(__FUNCTION__ "() called\n");
 #if 0
   if ((err = sl->is_supported(st->path, (DWORD)buf)) != SPI_SUCCESS)
     return LOAD_ERROR;
@@ -118,7 +118,7 @@ loader_identify(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
     debug_message("(%ld, %ld) depth %d\n", info.width, info.height, info.colorDepth);
     return LOAD_OK;
   }
-  debug_message("loader_identify(): %s\n", spi_errormsg[err]);
+  debug_message(__FUNCTION__ ": %s\n", spi_errormsg[err]);
 
   return LOAD_ERROR;
 #else
@@ -140,7 +140,7 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
   BITMAPINFOHEADER *bih;
   int i, err, bpl;
 
-  debug_message("loader_load() called\n");
+  debug_message(__FUNCTION__ "() called\n");
   if ((err = sl->get_pic(st->path, 0, 0, (HANDLE *)&bih, (HANDLE *)&image,
 			 susie_loader_progress_callback, 0)) == SPI_SUCCESS) {
     p->type = _BGR24;
@@ -163,7 +163,7 @@ loader_load(Image *p, Stream *st, VideoWindow *vw, Config *c, void *priv)
     return LOAD_OK;
   }
 
-  debug_message("loader_load(): %s\n", spi_errormsg[err]);
+  debug_message(__FUNCTION__ "(): %s\n", spi_errormsg[err]);
 
   return LOAD_ERROR;
 }
@@ -174,7 +174,7 @@ archiver_identify(Archive *a, Stream *st, void *priv)
   SusieArchiver *sa = priv;
   unsigned char buffer[2048];
 
-  debug_message("archiver_identify() called\n");
+  debug_message(__FUNCTION__ "() called\n");
 
   memset(buffer, 0, 2048);
   stream_read(st, buffer, 2048);
@@ -197,14 +197,14 @@ susie_archive_open(Archive *a, Stream *st, char *path)
   Susie_archiver_info *sai;
   unsigned char *dest;
 
-  debug_message("susie_archive_open: %s: %s: %s\n", a->format, a->st->path, path);
+  debug_message(__FUNCTION__ ": %s: %s: %s\n", a->format, a->st->path, path);
 
   if ((sai = (Susie_archiver_info *)archive_get(a, path)) == NULL)
     return 0;
 
   if ((sai->get_file(a->st->path, sai->position, (LPSTR)&dest, 0x100,
 		     susie_archive_progress_callback, 0)) != SPI_SUCCESS) {
-    show_message("archive_open: GetFile() failed.\n");
+    show_message(__FUNCTION__ ": GetFile() failed.\n");
     return 0;
   }
 
@@ -228,13 +228,13 @@ archiver_open(Archive *a, Stream *st, void *priv)
   fileInfo *info;
 
   if ((err = sa->get_archive_info(st->path, 0, 0, (HLOCAL *)&info)) != SPI_SUCCESS) {
-    show_message("archive_open: %s: %s\n", st->path, spi_errormsg[err]);
+    show_message(__FUNCTION__ ": %s: %s\n", st->path, spi_errormsg[err]);
     return OPEN_ERROR;
   }
 
   for (i = 0; info[i].method[0]; i++) {
     if ((sai = malloc(sizeof(Susie_archiver_info))) == NULL) {
-      show_message("archiver_open: No enough memory.\n");
+      show_message(__FUNCTION__ ": No enough memory.\n");
       free(info);
       return OPEN_ERROR;
     }
@@ -283,7 +283,7 @@ spi_plugin_exit(void *p)
     }
     break;
   default:
-    show_message("spi_plugin_exit: inappropriate type %d\n", ep->type);
+    show_message(__FUNCTION__ ": inappropriate type %d\n", ep->type);
     break;
   }
 
@@ -305,7 +305,7 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   char buf[256];
   int err;
 
-  debug_message("spi_load %s...\n", path);
+  debug_message(__FUNCTION__ ": %s...\n", path);
   pe = peimage_create();
   if (!peimage_load(pe, path)) {
     show_message("peimage_load() failed: %s\n", path);
