@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 17 01:45:57 2003.
- * $Id: avcodec.c,v 1.3 2003/12/16 16:53:17 sian Exp $
+ * Last Modified: Tue Dec 23 20:03:49 2003.
+ * $Id: avcodec.c,v 1.4 2003/12/23 11:04:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,15 @@
 #include "utils/libstring.h"
 #include "enfle/fourcc.h"
 
-typedef struct _divx_info {
+typedef struct __picture_buffer {
+  Memory *base;
+  unsigned char * data[3];
+  int linesize[3];
+} Picture_buffer;
+
+#define N_PICTURE_BUFFER 32
+
+typedef struct __avcodec_info {
   Config *c;
   Demultiplexer *demux;
   Image *p;
@@ -53,6 +61,8 @@ typedef struct _divx_info {
   const char *vcodec_name;
   AVCodecContext *vcodec_ctx;
   AVFrame *vcodec_picture;
+  Picture_buffer picture_buffer[N_PICTURE_BUFFER];
+  int picture_buffer_count;
   AVCodec *acodec;
   AVCodecContext *acodec_ctx;
   enum CodecID acodec_id;
@@ -83,7 +93,7 @@ static PlayerStatus play(Movie *);
 static PlayerStatus pause_movie(Movie *);
 static PlayerStatus stop_movie(Movie *);
 
-#define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.2"
+#define PLAYER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Player plugin version 0.3"
 
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
@@ -413,7 +423,8 @@ get_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
 {
   avcodec_info *info = (avcodec_info *)vcodec_ctx->opaque;
   int width, height;
-        
+  Picture_buffer *buf;
+
   /* alignment */
   width  = (vcodec_ctx->width  + 15) & ~15;
   height = (vcodec_ctx->height + 15) & ~15;
@@ -422,32 +433,66 @@ get_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
       width != vcodec_ctx->width || height != vcodec_ctx->height) {
     debug_message_fnc("avcodec: unsupported frame format, DR1 disabled.\n");
     info->vcodec_ctx->get_buffer = avcodec_default_get_buffer;
+    info->vcodec_ctx->reget_buffer = avcodec_default_reget_buffer;
     info->vcodec_ctx->release_buffer = avcodec_default_release_buffer;
     return avcodec_default_get_buffer(vcodec_ctx, vcodec_picture);
   }
 
-  vcodec_picture->data[0] = memory_ptr(image_rendered_image(info->p));
-  vcodec_picture->data[1] = vcodec_picture->data[0] + image_width(info->p) * image_height(info->p);
-  vcodec_picture->data[2] = vcodec_picture->data[1] + (image_width(info->p) >> 1) * (image_height(info->p) >> 1);
+  buf = &info->picture_buffer[info->picture_buffer_count];
+  if (buf->base == NULL) {
+    int *cnt;
 
-  vcodec_picture->linesize[0] = image_width(info->p);
-  vcodec_picture->linesize[1] = image_width(info->p) >> 1;
-  vcodec_picture->linesize[2] = image_width(info->p) >> 1;
+    buf->base = memory_create();
+    if (memory_alloc(buf->base, sizeof(int) + image_bpl(info->p) * image_height(info->p)) == NULL) {
+      err_message_fnc("No enough memory.\n");
+      return 0;
+    }
+    //memset(memory_ptr(image_rendered_image(p)), 128, image_bpl(p) * image_height(p));
 
-  /*
-   * We should keep track of the ages of frames (see
-   * avcodec_default_get_buffer in lib/avcodec/utils.c) For the moment
-   * tell ffmpeg that every frame is new (age = bignumber)
-   */
+    cnt = (int *)memory_ptr(buf->base);
+    *cnt = info->picture_buffer_count;
+    buf->data[0] = memory_ptr(buf->base) + sizeof(int);
+    buf->data[1] = buf->data[0] + image_width(info->p) * image_height(info->p);
+    buf->data[2] = buf->data[1] + (image_width(info->p) >> 1) * (image_height(info->p) >> 1);
+
+    buf->linesize[0] = image_width(info->p);
+    buf->linesize[1] = image_width(info->p) >> 1;
+    buf->linesize[2] = image_width(info->p) >> 1;
+  }
+
+  vcodec_picture->data[0] = buf->data[0];
+  vcodec_picture->data[1] = buf->data[1];
+  vcodec_picture->data[2] = buf->data[2];
+  vcodec_picture->linesize[0] = buf->linesize[0];
+  vcodec_picture->linesize[1] = buf->linesize[1];
+  vcodec_picture->linesize[2] = buf->linesize[2];
+
   vcodec_picture->age = 256 * 256 * 256 * 64;
-
   vcodec_picture->type = FF_BUFFER_TYPE_USER;
+  info->picture_buffer_count++;
 
   return 0;
 }
 
 static void
-release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture){
+release_buffer(AVCodecContext *vcodec_ctx, AVFrame *vcodec_picture)
+{
+  avcodec_info *info = (avcodec_info *)vcodec_ctx->opaque;
+  Picture_buffer *buf, *last, t;
+  int i;
+
+  for (i = 0; i < info->picture_buffer_count; i++) {
+    buf = &info->picture_buffer[info->picture_buffer_count];
+    if (buf->base && memory_ptr(buf->base) == vcodec_picture->data[0])
+      break;
+  }
+  info->picture_buffer_count--;
+  last = &info->picture_buffer[info->picture_buffer_count];
+
+  t = *buf;
+  *buf = *last;
+  *last = t;
+
   vcodec_picture->data[0] = NULL;
   vcodec_picture->data[1] = NULL;
   vcodec_picture->data[2] = NULL;
@@ -505,12 +550,15 @@ play(Movie *m)
     }
     if (info->vcodec_ctx->pix_fmt == PIX_FMT_YUV420P &&
 	info->vcodec->capabilities & CODEC_CAP_DR1) {
+      info->vcodec_ctx->flags |= CODEC_FLAG_EMU_EDGE;
       info->vcodec_ctx->get_buffer = get_buffer;
+      info->vcodec_ctx->reget_buffer= get_buffer;
       info->vcodec_ctx->release_buffer = release_buffer;
       show_message("DR1 direct rendering enabled.\n");
-#if 1
+#if 0
       // XXX: direct rendering causes seg. fault...
       info->vcodec_ctx->get_buffer = avcodec_default_get_buffer;
+      info->vcodec_ctx->reget_buffer = avcodec_default_reget_buffer;
       info->vcodec_ctx->release_buffer = avcodec_default_release_buffer;
       show_message("DR1 direct rendering disabled.\n");
 #endif
@@ -601,7 +649,12 @@ play_video(void *arg)
 	info->drop--;
       } else {
 	pthread_mutex_lock(&info->update_mutex);
-	if (info->vcodec_ctx->get_buffer != get_buffer) {
+	if (info->vcodec_ctx->get_buffer == get_buffer) {
+	  int *cnt;
+
+	  cnt = (int *)(info->vcodec_picture->data[0] - sizeof(int));
+	  image_rendered_set_image(info->p, info->picture_buffer[*cnt].base);
+	} else {
 	  int y;
 
 	  for (y = 0; y < m->height; y++) {
@@ -646,6 +699,7 @@ play_audio(void *arg)
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");
+    return (void *)PLAY_OK;
   }
   info->ad = ad;
 
@@ -852,12 +906,24 @@ stop_movie(Movie *m)
   pthread_cond_signal(&info->update_cond);
   pthread_mutex_unlock(&info->update_mutex);
   if (info->video_thread) {
+#if defined(DEBUG)
+    debug_message_fnc("waiting for joining (video).\n");
     pthread_join(info->video_thread, &v);
+    debug_message_fnc("joined (video).\n");
+#else
+    pthread_cancel(info->video_thread);
+#endif
     info->video_thread = 0;
   }
 
   if (info->audio_thread) {
+#if defined(DEBUG)
+    debug_message_fnc("waiting for joining (audio).\n");
     pthread_join(info->audio_thread, &a);
+    debug_message_fnc("joined (audio).\n");
+#else
+    pthread_cancel(info->audio_thread);
+#endif
     info->audio_thread = 0;
   }
 
@@ -878,6 +944,7 @@ static void
 unload_movie(Movie *m)
 {
   avcodec_info *info = (avcodec_info *)m->movie_private;
+  int i;
 
   debug_message_fn("()\n");
 
@@ -890,6 +957,13 @@ unload_movie(Movie *m)
       demultiplexer_destroy(info->demux);
     pthread_mutex_destroy(&info->update_mutex);
     pthread_cond_destroy(&info->update_cond);
+
+    /* free picture_buffer */
+    for (i = 0; i < info->picture_buffer_count; i++) {
+      if (info->picture_buffer[i].base)
+	memory_destroy(info->picture_buffer[i].base);
+    }
+
     debug_message_fnc("freeing info\n");
     free(info);
     m->movie_private = NULL;
