@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:47:27 2004.
- * $Id: x11ximage.c,v 1.51 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Apr 18 03:43:47 2004.
+ * $Id: x11ximage.c,v 1.52 2004/04/18 06:22:33 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -494,7 +494,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	  }
 	  break;
 	default:
-	  show_message("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
+	  show_message_fnc("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	}
       }
@@ -558,7 +558,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	  show_message("render image [type %s] is not implemented yet. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	default:
-	  show_message("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
+	  show_message_fnc("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	}
       }
@@ -624,7 +624,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	  }
 	  break;
 	default:
-	  show_message("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
+	  show_message_fnc("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
 	}
       }
