@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:06:32 2004.
- * $Id: normal.c,v 1.81 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Aug 15 19:27:33 2004.
+ * $Id: normal.c,v 1.82 2004/08/16 11:08:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -932,13 +932,18 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	arc = archive_create(a);
 	if (archiver_identify(eps, arc, s, c)) {
 	  debug_message("Archiver identified as %s\n", arc->format);
-	  if (archiver_open(eps, arc, arc->format, s)) {
+	  if ((r = archiver_open(eps, arc, arc->format, s)) == OPEN_OK && archive_nfiles(arc) > 0) {
+	    debug_message("archiver_open() OK: %d files\n", archive_nfiles(arc));
 	    (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
 	    ret = process_files_of_archive(uidata, arc, gui);
 	    archive_destroy(arc);
 	    continue;
 	  } else {
-	    show_message("Archive %s [%s] cannot open\n", arc->format, path);
+	    if (r == OPEN_OK) {
+	      show_message("Archive %s [%s] contains 0 files.\n", arc->format, path);
+	    } else {
+	      show_message("Archive %s [%s] cannot open\n", arc->format, path);
+	    }
 	    ret = MAIN_LOOP_DELETE_FROM_LIST;
 	    archive_destroy(arc);
 	    continue;
