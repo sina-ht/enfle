@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  8 20:21:55 2002.
- * $Id: libconfig.c,v 1.18 2002/02/08 11:30:33 sian Exp $
+ * Last Modified: Fri Feb  8 21:09:54 2002.
+ * $Id: libconfig.c,v 1.19 2002/02/08 12:14:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -184,6 +184,7 @@ set_internal(Config *c, String *config_path, char *path, char *remain, int is_li
   }
 
   if (is_list) {
+    f = set_list(c, string_get(value_path), remain);
   } else {
     if (*remain == '"') {
       char *end, *quoted;
