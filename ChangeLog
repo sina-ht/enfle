@@ -1,3 +1,14 @@
+2001-02-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/libmpeg2/libmpeg2.c,
+	lib/demultiplexer/demultiplexer.c,
+	lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/demultiplexer_mpeg.c: Trial and error...
+
+	* lib/enfle/archive.c: Deleted unused debug messages.
+
+	* plugins/ui/normal/normal.c: Fixed key response.
+
 2001-02-22  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg2/libmpeg2.c,
