@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr 24 14:31:30 2001.
- * $Id: enfle.c,v 1.27 2001/04/24 16:46:26 sian Exp $
+ * Last Modified: Wed Apr 25 14:36:00 2001.
+ * $Id: enfle.c,v 1.28 2001/04/25 16:12:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,14 +62,15 @@ typedef struct _option {
 } Option;
 
 static Option enfle_options[] = {
-  { "ui",      'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
-  { "video",   'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
-  { "audio",   'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
-  { "convert", 'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG)." },
-  { "include", 'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
-  { "exclude", 'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
-  { "info",    'I', _NO_ARGUMENT,       "Print more information." },
-  { "help",    'h', _NO_ARGUMENT,       "Show help message." },
+  { "ui",        'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
+  { "video",     'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
+  { "audio",     'a', _REQUIRED_ARGUMENT, "Specify which audio to use." },
+  { "wallpaper", 'w', _NO_ARGUMENT,       "Set the first image as wallpaper(alias for -u Wallpaper)." },
+  { "convert",   'C', _OPTIONAL_ARGUMENT, "Convert images automatically (default PNG)." },
+  { "include",   'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
+  { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
+  { "info",      'I', _NO_ARGUMENT,       "Print more information." },
+  { "help",      'h', _NO_ARGUMENT,       "Show help message." },
   { NULL }
 };
 
@@ -319,6 +320,9 @@ main(int argc, char **argv)
 	format = strdup(optarg);
       else
 	format = strdup("PNG");
+      break;
+    case 'w':
+      ui_name = strdup("Wallpaper");
       break;
     case '?':
     default:
