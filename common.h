@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Oct 10 16:39:20 2000.
- * $Id: common.h,v 1.3 2000/10/10 11:46:53 sian Exp $
+ * Last Modified: Wed Oct 11 17:00:49 2000.
+ * $Id: common.h,v 1.4 2000/10/12 03:46:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,7 +32,7 @@
 
 #ifdef DEBUG
 #  define PROGNAME PACKAGE "-debug"
-#  define debug_message(format, args...) fprintf(stderr, "\033[01m\033[31m" format "\033[00m", ## args)
+#  define debug_message(format, args...) fprintf(stderr, format, ## args)
 #  define IDENTIFY_BEFORE_OPEN
 #  define IDENTIFY_BEFORE_LOAD
 #  define IDENTIFY_BEFORE_PLAY
