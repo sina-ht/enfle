@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:31:39 2004.
- * $Id: demultiplexer.h,v 1.2 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Fri Mar 19 00:18:01 2004.
+ * $Id: demultiplexer.h,v 1.3 2004/03/24 15:00:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,8 @@ typedef enum {
   DEMULTIPLEX_OK
 } DemultiplexerStatus;
 
+#define MAX_VSTREAMS 4
+#define MAX_ASTREAMS 8
 struct _demultiplexer {
   Stream *st;
   FIFO *vstream;
@@ -47,7 +49,8 @@ struct _demultiplexer {
   int nastreams;
   int nvstream;
   int nastream;
-  int av_contig_number;
+  int vstreams[MAX_VSTREAMS];
+  int astreams[MAX_ASTREAMS];
   pthread_t thread;
   int running;
   int eof;

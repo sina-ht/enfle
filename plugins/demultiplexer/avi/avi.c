@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:10:14 2004.
- * $Id: avi.c,v 1.3 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Mon Mar 22 22:02:32 2004.
+ * $Id: avi.c,v 1.4 2004/03/24 15:00:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,6 +32,7 @@
 #endif
 
 #include "enfle/demultiplexer-plugin.h"
+#include "enfle/demultiplexer_types.h"
 #include "demultiplexer_avi.h"
 #include "demultiplexer_avi_private.h"
 
@@ -188,9 +189,8 @@ __examine(Demultiplexer *demux, int identify_only)
 
   //debug_message_fn("()\n");
 
-  demux->nastreams = 0;
-  demux->nvstreams = 0;
-  demux->av_contig_number = 1;
+  demux->vstreams[0] = 0;
+  demux->astreams[0] = 1;
 
   if ((info->rf = riff_file_create()) == NULL)
     return DEMULTIPLEX_ERROR;

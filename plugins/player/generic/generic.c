@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Mar 14 20:35:01 2004.
- * $Id: generic.c,v 1.8 2004/03/14 16:50:06 sian Exp $
+ * Last Modified: Tue Mar 23 00:04:12 2004.
+ * $Id: generic.c,v 1.9 2004/03/24 15:00:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -124,7 +124,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       warning("Audio will not be played.\n");
     else {
       /* XXX: stream should be selectable */
-      info->nastream = m->demux->av_contig_number;
+      info->nastream = m->demux->astreams[0];
       demultiplexer_set_audio(m->demux, info->nastream);
 
       show_message("audio(%d streams)\n", info->nastreams);
@@ -145,7 +145,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
   m->has_video = 0;
   if (info->nvstreams > 0) {
-    info->nvstream = 0;
+    info->nvstream = m->demux->vstreams[0];
     demultiplexer_set_video(m->demux, info->nvstream);
 
     if ((m->v_codec_name = videodecoder_codec_name(m->v_fourcc)) == NULL) {

@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:09:09 2004.
- * $Id: ogg.c,v 1.2 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Fri Mar 19 00:22:16 2004.
+ * $Id: ogg.c,v 1.3 2004/03/24 15:00:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -153,7 +153,8 @@ __examine(Demultiplexer *demux, int identify_only)
 
   demux->nastreams = 0;
   demux->nvstreams = 0;
-  demux->av_contig_number = 1;
+  demux->vstreams[0] = 0;
+  demux->astreams[0] = 1;
 
   if (stream_read(demux->st, buffer, 4) != 4)
     return DEMULTIPLEX_NOT;
