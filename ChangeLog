@@ -1,3 +1,25 @@
+2000-10-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added pthread and libmpeg3 checking. Backup $LIBS
+	to avoid linking Xlib against enfle executable.
+
+	* src/enfle.c, src/enfle.rc: Temporizing implementation to disable
+	mpeg_lib.
+
+	* lib/utils/plugin.c: Condition out dlclose() to avoid seg. fault.
+
+	* lib/enfle/stream.c: Setting path.
+
+	* lib/X11/x11ximage.c: Disabled annoying debugging message.
+
+	* plugins/ui/Xlib/Xlib.c: Faster rendering.
+
+	* plugins/player/mpeg_lib/mpeg_lib.c: No copy image to render
+	faster.
+
+	* plugins/player/Makefile.am, plugins/player/libmpeg3/*: Added new
+	libmpeg3 player plugin.
+
 2000-10-13  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11.h: Added x11_free_gc() macro.
