@@ -3,10 +3,14 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jan 23 09:23:17 2001.
- * $Id: opendivx.c,v 1.1 2001/01/23 08:08:23 sian Exp $
+ * Last Modified: Wed Jan 24 06:50:49 2001.
+ * $Id: opendivx.c,v 1.2 2001/01/23 23:26:52 sian Exp $
  *
- *  Requires libdivxdecore
+ * This plugin uses library from OpenDivX and is released as a "Larger
+ * Work" under that license. Consistant with that license, this plugin
+ * is released under the GNU General Public License. The OpenDivX
+ * license can be found at OpenDivX-LICENSE in source tree, or
+ * http://www.projectmayo.com/opendivx/docs.php.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -19,8 +23,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
- */
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -172,6 +175,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 	show_message("audio sync may be incorrect.\n");
       m->has_audio = 1;
       show_message("Audio support is not yet implemented.\n");
+      m->has_audio = 0;
     }
   } else {
     debug_message("No audio streams.\n");
