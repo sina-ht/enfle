@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Thu Jul 25 22:42:47 2002.
- * $Id: x11.h,v 1.18 2002/08/02 13:57:17 sian Exp $
+ * Last Modified: Sun Oct 12 12:55:33 2003.
+ * $Id: x11.h,v 1.19 2003/10/12 04:08:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -118,6 +118,7 @@ struct _x11 {
 #define x11_map_raised(x, win) XMapRaised(x11_display((x)), (win))
 #define x11_unmap_window(x, win) XUnmapWindow(x11_display((x)), (win))
 #define x11_storename(x, win, s) XStoreName(x11_display((x)), (win), (s))
+#define x11_setwmname(x, win, t) XSetWMName(x11_display((x)), (win), (t))
 #define x11_destroy_window(x, win) XDestroyWindow(x11_display((x)), (win))
 #define x11_create_ximage(x, v, dep, d, w, h, p, bpl) \
                     XCreateImage(x11_display((x)), (v), (dep), ZPixmap, \

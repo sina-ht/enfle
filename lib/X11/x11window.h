@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Aug 10 02:25:46 2001.
- * $Id: x11window.h,v 1.4 2001/08/09 17:33:20 sian Exp $
+ * Last Modified: Sun Oct 12 04:00:07 2003.
+ * $Id: x11window.h,v 1.5 2003/10/12 04:08:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -53,6 +53,7 @@ struct _x11window {
 #define x11window_wait_mapped(xw) (xw)->wait_mapped((xw))
 #define x11window_unmap(xw) x11_unmap_window(x11window_x11((xw)), x11window_win((xw)))
 #define x11window_storename(xw, s) x11_storename(x11window_x11((xw)), x11window_win((xw)), s)
+#define x11window_setwmname(xw, t) x11_setwmname(x11window_x11((xw)), x11window_win((xw)), t)
 
 #define x11window_destroy(xw) (xw)->destroy((xw))
 
