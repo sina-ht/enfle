@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec  7 16:36:28 2000.
- * $Id: Xlib.c,v 1.11 2000/12/07 13:39:04 sian Exp $
+ * Last Modified: Sat Dec  9 03:22:35 2000.
+ * $Id: Xlib.c,v 1.12 2000/12/10 13:17:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,7 +56,6 @@ typedef struct {
   WindowResource current;
   WindowResource normal;
   WindowResource full;
-  unsigned int full_width, full_height;
   int share_image;
 } X11Window_info;
 
@@ -79,7 +78,7 @@ static void destroy(void *);
 static VideoPlugin plugin = {
   type: ENFLE_PLUGIN_VIDEO,
   name: "Xlib",
-  description: "Xlib Video plugin version 0.2.1",
+  description: "Xlib Video plugin version 0.3.1",
   author: "Hiroshi Takekawa",
 
   open_video: open_video,
@@ -213,6 +212,8 @@ open_window(void *data, unsigned int w, unsigned int h)
   xwi->current.xw = xwi->normal.xw = xw = x11window_create(x11, NULL, w, h);
   xwi->xi = x11ximage_create(x11);
 
+  vw->full_width = WidthOfScreen(x11_sc(x11));
+  vw->full_height = HeightOfScreen(x11_sc(x11));
   vw->depth = x11_depth(x11);
   vw->bits_per_pixel = x11_bpp(x11);
   vw->prefer_msb = x11_prefer_msb(x11);
@@ -340,6 +341,7 @@ set_event_mask(VideoWindow *vw, int mask)
 }
 
 #define TRANSLATE(k) case XK_##k: ev->key.key = ENFLE_KEY_##k; break
+#define TRANSLATE_S(k,s) case XK_##k: ev->key.key = ENFLE_KEY_##s; break
 
 static int
 dispatch_event(VideoWindow *vw, VideoEventData *ev)
@@ -419,6 +421,13 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 
 	ev->type = (xev.type == KeyPress) ?
 	  ENFLE_Event_KeyPressed : ENFLE_Event_KeyReleased;
+	ev->key.modkey = ENFLE_MOD_NONE;
+	if (xev.xkey.state & ShiftMask)
+	  ev->key.modkey |= ENFLE_MOD_Shift;
+	if (xev.xkey.state & ControlMask)
+	  ev->key.modkey |= ENFLE_MOD_Ctrl;
+	if (xev.xkey.state & Mod1Mask)
+	  ev->key.modkey |= ENFLE_MOD_Alt;
 	XLookupString((XKeyEvent *)&xev, &c, 1, &keysym, NULL);
 	switch (keysym) {
 	TRANSLATE(0); TRANSLATE(1); TRANSLATE(2); TRANSLATE(3); TRANSLATE(4);
@@ -433,6 +442,13 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	TRANSLATE(l); TRANSLATE(m); TRANSLATE(n); TRANSLATE(o); TRANSLATE(p);
 	TRANSLATE(q); TRANSLATE(r); TRANSLATE(s); TRANSLATE(t); TRANSLATE(u);
 	TRANSLATE(v); TRANSLATE(w); TRANSLATE(x); TRANSLATE(y); TRANSLATE(z);
+	TRANSLATE_S(A,a); TRANSLATE_S(B,b); TRANSLATE_S(C,c); TRANSLATE_S(D,d);
+	TRANSLATE_S(E,e); TRANSLATE_S(F,f); TRANSLATE_S(G,g); TRANSLATE_S(H,h);
+	TRANSLATE_S(I,i); TRANSLATE_S(J,j); TRANSLATE_S(K,k); TRANSLATE_S(L,l);
+	TRANSLATE_S(M,m); TRANSLATE_S(N,n); TRANSLATE_S(O,o); TRANSLATE_S(P,p);
+	TRANSLATE_S(Q,q); TRANSLATE_S(R,r); TRANSLATE_S(S,s); TRANSLATE_S(T,t);
+	TRANSLATE_S(U,u); TRANSLATE_S(V,v); TRANSLATE_S(W,w); TRANSLATE_S(X,x);
+	TRANSLATE_S(Y,y); TRANSLATE_S(Z,z);
 	default:
 	  ev->key.key = ENFLE_KEY_Unknown;
 	  break;
@@ -523,21 +539,14 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     xwi->normal.gc  = xwi->current.gc;
     x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0, 0, 0, vw->width, vw->height);
   } else {
-    unsigned int full_w, full_h;
-
-    full_w = WidthOfScreen(x11_sc(x11));
-    full_h = HeightOfScreen(x11_sc(x11));
-
     if (xwi->full.xw == NULL) {
       XSetWindowAttributes set_attr;
 
-      xwi->full.xw = x11window_create(x11, NULL, full_w, full_h);
-      xwi->full_width = full_w;
-      xwi->full_height = full_h;
+      xwi->full.xw = x11window_create(x11, NULL, vw->full_width, vw->full_height);
       x11window_set_event_mask(xwi->full.xw, ExposureMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
       xwi->current.pix = 0;
       xwi->current.gc = NULL;
-      create_window_doublebuffer(vw, full_w, full_h);
+      create_window_doublebuffer(vw, vw->full_width, vw->full_height);
       xwi->full.pix = xwi->current.pix;
       xwi->full.gc = xwi->current.gc;
       set_attr.override_redirect = True;
@@ -546,9 +555,9 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     xwi->current.xw = xwi->full.xw;
     xwi->current.pix = xwi->full.pix;
     xwi->current.gc = xwi->full.gc;
-    XFillRectangle(x11_display(x11), xwi->current.pix, xwi->current.gc, 0, 0, full_w, full_h);
+    XFillRectangle(x11_display(x11), xwi->current.pix, xwi->current.gc, 0, 0, vw->full_width, vw->full_height);
     x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0,
-		  (full_w - vw->width) >> 1, (full_h - vw->height) >> 1, vw->width, vw->height);
+		  (vw->full_width - vw->width) >> 1, (vw->full_height - vw->height) >> 1, vw->width, vw->height);
   }
 
   x11window_map_raised(xwi->current.xw);
@@ -575,9 +584,9 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   } else {
     if (vw->width > w || vw->height > h) {
       XFillRectangle(x11_display(x11), xwi->current.pix,  xwi->current.gc, 0, 0,
-		     xwi->full_width, xwi->full_height);
+		     vw->full_width, vw->full_height);
       XFillRectangle(x11_display(x11), x11window_win(xw), xwi->current.gc, 0, 0,
-		     xwi->full_width, xwi->full_height);
+		     vw->full_width, vw->full_height);
     }
   }
 
@@ -620,20 +629,22 @@ render(VideoWindow *vw, Image *p)
   if (vw->if_fullscreen) {
     if (vw->if_direct) {
       x11ximage_put(xwi->xi, x11window_win(xw), xwi->current.gc, 0, 0,
-		    (xwi->full_width - p->width) >> 1, (xwi->full_height - p->height) >> 1,
-		    p->width, p->height);
+		    (vw->full_width  - p->rendered.width ) >> 1,
+		    (vw->full_height - p->rendered.height) >> 1,
+		    p->rendered.width, p->rendered.height);
     } else {
       x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0,
-		    (xwi->full_width - p->width) >> 1, (xwi->full_height - p->height) >> 1,
-		    p->width, p->height);
-      update(vw, p->left + ((xwi->full_width - p->width) >> 1), p->top + ((xwi->full_height - p->height) >> 1), p->width, p->height);
+		    (vw->full_width  - p->rendered.width ) >> 1,
+		    (vw->full_height - p->rendered.height) >> 1,
+		    p->rendered.width, p->rendered.height);
+      update(vw, p->left + ((vw->full_width - p->rendered.width) >> 1), p->top + ((vw->full_height - p->rendered.height) >> 1), p->rendered.width, p->rendered.height);
     }
   } else {
     if (vw->if_direct) {
-      x11ximage_put(xwi->xi, x11window_win(xw), xwi->current.gc, 0, 0, 0, 0, p->width, p->height);
+      x11ximage_put(xwi->xi, x11window_win(xw), xwi->current.gc, 0, 0, 0, 0, p->rendered.width, p->rendered.height);
     } else {
-      x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0, 0, 0, p->width, p->height);
-      update(vw, p->left, p->top, p->width, p->height);
+      x11ximage_put(xwi->xi, xwi->current.pix, xwi->current.gc, 0, 0, 0, 0, p->rendered.width, p->rendered.height);
+      update(vw, p->left, p->top, p->rendered.width, p->rendered.height);
     }
   }
 
