@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct  6 14:13:26 2001.
- * $Id: jpeg.c,v 1.16 2001/10/06 16:00:52 sian Exp $
+ * Last Modified: Sun Oct  7 15:53:15 2001.
+ * $Id: jpeg.c,v 1.17 2001/10/07 17:36:57 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -44,7 +44,7 @@ static const unsigned int types = (IMAGE_I420 | IMAGE_RGB24);
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_JPEG_PLUGIN_DESCRIPTION "JPEG Loader plugin version 0.2.1"
+#define LOADER_JPEG_PLUGIN_DESCRIPTION "JPEG Loader plugin version 0.2.2"
 
 static LoaderPlugin plugin = {
   type: ENFLE_PLUGIN_LOADER,
@@ -281,6 +281,35 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   jpeg_create_decompress(cinfo);
   attach_stream_src(cinfo, st);
   (void)jpeg_read_header(cinfo, TRUE);
+
+  cinfo->dct_method = JDCT_DEFAULT;
+  {
+    char *dm;
+    if ((dm = config_get(c, "/enfle/plugins/loader/jpeg/dct_method"))) {
+      if (strcasecmp(dm, "default") == 0) {
+	cinfo->dct_method = JDCT_DEFAULT;
+      } else if (strcasecmp(dm, "fast") == 0) {
+	cinfo->dct_method = JDCT_IFAST;
+      } else if (strcasecmp(dm, "slow") == 0) {
+	cinfo->dct_method = JDCT_ISLOW;
+      } else if (strcasecmp(dm, "float") == 0) {
+	cinfo->dct_method = JDCT_FLOAT;
+      } else if (strcasecmp(dm, "fastest")) {
+	cinfo->dct_method = JDCT_FASTEST;
+      }
+    }
+  }
+
+#if 0
+  debug_message("Using DCT method: ");
+  switch (cinfo->dct_method) {
+  case JDCT_IFAST: debug_message("IFAST"); break;
+  case JDCT_ISLOW: debug_message("ISLOW"); break;
+  case JDCT_FLOAT: debug_message("FLOAT"); break;
+  default: debug_message("UNKNOWN"); break;
+  }
+  debug_message("\n");
+#endif
 
 #ifdef ENABLE_YUV
   if (vw) {
