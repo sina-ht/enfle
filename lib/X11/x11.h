@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Dec  3 15:21:21 2000.
- * $Id: x11.h,v 1.6 2000/12/03 08:40:03 sian Exp $
+ * Last Modified: Sun Dec  3 19:57:09 2000.
+ * $Id: x11.h,v 1.7 2000/12/03 11:03:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@ struct _x11 {
   int screen;
   int depth;
   int bits_per_pixel;
+  int prefer_msb;
   unsigned long white;
   unsigned long black;
   unsigned int extensions;
@@ -50,6 +51,7 @@ struct _x11 {
 #define x11_screen(x) (x)->screen
 #define x11_depth(x) (x)->depth
 #define x11_bpp(x) (x)->bits_per_pixel
+#define x11_prefer_msb(x) (x)->prefer_msb
 #define x11_white(x) (x)->white
 #define x11_black(x) (x)->black
 

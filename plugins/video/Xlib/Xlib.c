@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec  3 17:10:07 2000.
- * $Id: Xlib.c,v 1.7 2000/12/03 08:40:04 sian Exp $
+ * Last Modified: Sun Dec  3 19:56:55 2000.
+ * $Id: Xlib.c,v 1.8 2000/12/03 11:04:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -213,6 +213,7 @@ open_window(void *data, unsigned int w, unsigned int h)
 
   vw->depth = x11_depth(x11);
   vw->bits_per_pixel = x11_bpp(x11);
+  vw->prefer_msb = x11_prefer_msb(x11);
   create_window_resource(vw, w, h);
   xwi->normal.pix = xwi->current.pix;
   xwi->normal.gc  = xwi->current.gc;

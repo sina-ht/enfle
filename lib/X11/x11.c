@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Dec  3 13:57:18 2000.
- * $Id: x11.c,v 1.5 2000/12/03 08:40:03 sian Exp $
+ * Last Modified: Sun Dec  3 19:51:14 2000.
+ * $Id: x11.c,v 1.6 2000/12/03 11:03:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -119,6 +119,15 @@ open(X11 *x11, char *dispname)
     debug_message("x11: " __FUNCTION__ ": MIT-SHM Extension OK\n");
   }
 #endif
+
+  {
+    XImage *xi;
+
+    xi = XCreateImage(x11_display(x11), x11_visual(x11), x11_depth(x11),
+		      ZPixmap, 0, NULL, 16, 16, 8, 0);
+    x11->prefer_msb = (xi->byte_order == LSBFirst) ? 0 : 1;
+    XDestroyImage(xi);
+  }
 
 #ifdef DEBUG
   debug_message("x11: " __FUNCTION__ ": bits_per_pixel = %d\n", x11_bpp(x11));
