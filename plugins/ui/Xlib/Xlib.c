@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 17:28:15 2000.
- * $Id: Xlib.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Mon Oct  9 02:18:08 2000.
+ * $Id: Xlib.c,v 1.2 2000/10/08 17:33:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,7 +45,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   type: ENFLE_PLUGIN_UI,
   name: "Xlib",
-  description: "Xlib UI plugin version 0.3.3",
+  description: "Xlib UI plugin version 0.3.4",
   author: "Hiroshi Takekawa",
 
   ui_main: ui_main,
@@ -70,6 +70,12 @@ plugin_exit(void *p)
 }
 
 /* for internal use */
+
+static int
+play_movie(X11 *x11, X11Window *xw, Image *p)
+{
+  return 0;
+}
 
 static int
 show_image(X11 *x11, X11Window *xw, Image *p)
@@ -202,6 +208,7 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
   Loader *ld = uidata->ld;
   Streamer *st = uidata->st;
   Archiver *ar = uidata->ar;
+  Player *player = uidata->player;
   Archive *arc;
   Stream *s;
   Image *p;
@@ -308,9 +315,19 @@ process_files_of_archive(UIData *uidata, X11 *x11, X11Window *xw, Archive *a)
     }
 
     if (f != LOAD_OK) {
-      stream_close(s);
-      show_message("%s load failed\n", path);
-      archive_iteration_delete(a);
+      if (player_identify(player, p, s)) {
+
+	debug_message("Movie(Animation) identified as %s\n", p->format);
+
+	if ((f = player_play(player, p->format, p, s)) != PLAY_OK) {
+	  stream_close(s);
+	  show_message("%s load failed\n", path);
+	  archive_iteration_delete(a);
+	  continue;
+	}
+      }
+
+      dir = play_movie(x11, xw, p);
     } else {
       stream_close(s);
 

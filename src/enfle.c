@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  2 19:23:36 2000.
- * $Id: enfle.c,v 1.3 2000/10/02 15:43:23 sian Exp $
+ * Last Modified: Mon Oct  9 02:07:57 2000.
+ * $Id: enfle.c,v 1.4 2000/10/08 17:33:44 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,7 @@
 #include "streamer.h"
 #include "loader.h"
 #include "archiver.h"
+#include "player.h"
 
 typedef enum _argument_requirement {
   _NO_ARGUMENT,
@@ -120,6 +121,7 @@ main(int argc, char **argv)
   Streamer *st;
   Loader *ld;
   Archiver *ar;
+  Player *player;
   Archive *a;
   int i, ch;
   char *plugin_path, *path, *ext, *name, *ui_name = NULL;
@@ -161,6 +163,7 @@ main(int argc, char **argv)
   ui = ui_create();
   ld = uidata.ld = loader_create();
   ar = uidata.ar = archiver_create();
+  player = uidata.player = player_create();
 
   /* scanning... */
   if ((plugin_path = config_get(c, "/enfle/plugins/dir")) == NULL) {
@@ -204,9 +207,14 @@ main(int argc, char **argv)
 	       archiver_get_description(ar, name),
 	       archiver_get_author(ar, name));
 	break;
+      case ENFLE_PLUGIN_PLAYER:
+	name = player_load(player, plugin);
+	printf("%s by %s\n",
+	       player_get_description(player, name),
+	       player_get_author(player, name));
+	break;
       case ENFLE_PLUGIN_SAVER:
       case ENFLE_PLUGIN_EFFECT:
-      case ENFLE_PLUGIN_PLAYER:
 	fprintf(stderr, "not yet implemented.\n");
 	break;
       default:

@@ -1,10 +1,10 @@
 /*
- * ui-plugin.h -- UI plugin interface header
+ * player-plugin.h -- player plugin interface header
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  9 02:07:38 2000.
- * $Id: ui-plugin.h,v 1.2 2000/10/08 17:33:44 sian Exp $
+ * Last Modified: Mon Oct  9 02:00:00 2000.
+ * $Id: player-plugin.h,v 1.1 2000/10/08 17:38:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -20,31 +20,29 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#ifndef _UI_PLUGIN_H
-#define _UI_PLUGIN_H
+// Far from complete...
+
+#ifndef _PLAYER_PLUGIN_H
+#define _PLAYER_PLUGIN_H
 
 #include "enfle-plugin.h"
-#include "libconfig.h"
-#include "streamer.h"
-#include "loader.h"
-#include "archiver.h"
-#include "player.h"
+#include "stream.h"
+#include "image.h"
 
-typedef struct _ui_data {
-  Config *c;
-  Streamer *st;
-  Loader *ld;
-  Archiver *ar;
-  Player *player;
-  Archive *a;
-} UIData;
+typedef enum {
+  PLAY_ERROR = -1,
+  PLAY_NOT,
+  PLAY_OK
+} PlayerStatus;
 
-typedef struct _ui_plugin {
+typedef struct _player_plugin {
   ENFLE_PLUGIN_COMMON_DATA;
 
-  int (*ui_main)(UIData *);
-} UIPlugin;
+  PlayerStatus (*identify)(Image *, Stream *);
+  PlayerStatus (*play)(Image *, Stream *);
+} PlayerPlugin;
 
-ENFLE_PLUGIN_ENTRIES;
+void *plugin_entry(void);
+void plugin_exit(void *);
 
 #endif
