@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Nov 11 00:46:31 2003.
- * $Id: libriff.c,v 1.6 2003/11/17 13:59:26 sian Exp $
+ * Last Modified: Mon Jan 12 18:56:10 2004.
+ * $Id: libriff.c,v 1.7 2004/01/12 12:11:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -137,10 +137,14 @@ read_chunk_header(RIFF_File *rf, RIFF_Chunk *rc)
     rf->err = _RIFF_ERR_PREMATURE_CHUNK;
     return 0;
   }
+  rc->pos = rf->tell_func(rf->func_arg);
+  if (rc->pos > rf->size) {
+    rf->err = _RIFF_ERR_EOF;
+    return 0;
+  }
   memcpy(rc->name, buffer, 4);
   rc->name[4] = '\0';
   rc->fourcc = (((((rc->name[3] << 8) | rc->name[2]) << 8) | rc->name[1]) << 8) | rc->name[0];
-  rc->pos = rf->tell_func(rf->func_arg);
   rc->size = (((((buffer[7] << 8) | buffer[6]) << 8) | buffer[5]) << 8) | buffer[4];
   rc->_size = (rc->size + 1) & ~1;
 
