@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon May 20 00:10:19 2002.
-dnl $Id: configure.in,v 1.112 2002/05/19 15:12:35 sian Exp $
+dnl Last Modified: Fri Aug  2 22:59:48 2002.
+dnl $Id: configure.in,v 1.113 2002/08/02 14:00:28 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_INIT(enfle, 20020518, sian@big.or.jp)
+AC_INIT(enfle, 20020802, sian@big.or.jp)
 AC_CONFIG_SRCDIR(src/enfle.c)
 AM_CONFIG_HEADER(enfle-config.h)
 AM_INIT_AUTOMAKE
@@ -58,6 +58,60 @@ if test -d /usr/local/lib; then
     CPPFLAGS="$CPPFLAGS -I/usr/local/include"
   fi
 fi
+
+dnl plugin enablers
+
+Plugins_dirs="loader saver video audio ui player effect archiver streamer"
+Plugins=""
+dnl recognize available plugins
+echo -n "checking for available plugins... "
+search_topdir="$srcdir/plugins"
+for kind in $Plugins_dirs; do
+  search_dir="$search_topdir/$kind"
+  for plugin_dir in $search_dir/*; do
+    plugin=`basename $plugin_dir`
+    makefileam="$plugin_dir/Makefile.am"
+    if test -d "$plugin_dir" -a -f $makefileam ; then
+      if test "${plugin}" != "ungif" -a "${plugin}" != "gif"; then
+        ENFLE_APPEND(Plugins, "${kind}/${plugin}")
+      fi
+      eval "exists_${kind}_${plugin}=yes"
+    fi
+  done
+done
+echo "$Plugins"
+
+Static_plugin_objs=""
+Static_plugin_proto=""
+Static_plugin_add=""
+AC_ARG_ENABLE(all-static,
+    [  --enable-all-static     Link all plugins statically.],
+    [ for p in $Plugins; do
+        kind=`echo $p | sed 's/\/.*$//'`
+        p=`echo $p | sed 's/^.*\///'`
+        ENFLE_PLUGIN_ENABLE(Static_plugins, $p, $kind)
+      done],
+    [ Static_plugins=""])
+
+ENFLE_LINKED_PLUGIN_ENABLER(loader, [        ])
+ENFLE_LINKED_PLUGIN_ENABLER(saver, [         ])
+ENFLE_LINKED_PLUGIN_ENABLER(video, [         ])
+ENFLE_LINKED_PLUGIN_ENABLER(audio, [         ])
+ENFLE_LINKED_PLUGIN_ENABLER(ui, [            ])
+ENFLE_LINKED_PLUGIN_ENABLER(player, [        ])
+ENFLE_LINKED_PLUGIN_ENABLER(effect, [        ])
+ENFLE_LINKED_PLUGIN_ENABLER(archiver, [      ])
+ENFLE_LINKED_PLUGIN_ENABLER(streamer, [      ])
+
+echo "Static plugins: $Static_plugins"
+echo "Static plugin objs: $Static_plugin_objs"
+
+AC_SUBST(Static_plugins)
+AC_SUBST(Static_plugin_objs)
+AC_DEFINE_UNQUOTED(STATIC_PLUGIN_PROTO, $Static_plugin_proto, [Define static plugin prototypes])
+AC_DEFINE_UNQUOTED(STATIC_PLUGIN_ADD, $Static_plugin_add, [Define static plugin add calls])
+
+dnl checks
 
 available_dlopen=no
 AC_CHECK_LIB(dl, dlopen, [ available_dlopen=yes; LIBADD_DLOPEN=-ldl; ], [
@@ -140,7 +194,7 @@ if test "$available_zlib" = "yes"; then
     png_header_ok=yes
    ], [ png_header_ok=no ])
   ])
-  if test png_header_ok = yes; then
+  if test "$png_header_ok" = yes; then
     AC_CHECK_LIB(png, png_get_IHDR, [
         available_png=yes; LIBADD_PNG="$LIBADD_POW $LIBADD_PNG -lpng";
       ], [], [$LIBADD_POW $LIBADD_ZLIB])
@@ -151,7 +205,7 @@ AC_SUBST(LIBADD_PNG)
 
 available_mng=no
 if test "$available_zlib" = "yes" -a "$available_jpeg" = "yes"; then
-  LIBADD_MNG="-lz -ljpeg"
+  LIBADD_MNG="-lz -ljpeg -lm"
   AC_CHECK_HEADER(libmng.h, [
     AC_CHECK_LIB(mng, mng_initialize, [ available_mng=yes; LIBADD_MNG="$LIBADD_MNG -lmng"; ], [], $LIBADD_MNG )])
 else
@@ -320,6 +374,20 @@ elif test "$with_ungif" = "yes"; then
 fi
 AM_CONDITIONAL(HAVE_UNGIF, test "$available_ungif" = "yes")
 
+available_gif=no
+AC_ARG_ENABLE(gif,
+        [  --enable-gif            build gif plugin ])
+if test "${enable_gif-set}" = "set"; then
+  enable_gif=no
+elif test "$enable_gif" = "yes"; then
+  if test -f "$srcdir/plugins/loader/gif/gifimage.c"; then
+    available_gif=yes
+  else
+    echo "*** GIF plugin source is not included in this distribution to avoid infamous LZW patent problem"
+  fi
+fi
+AM_CONDITIONAL(HAVE_GIF, test "$available_gif" = "yes")
+
 LIBS=$LIBS_BACKUP
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -426,12 +494,13 @@ AM_WITH_DMALLOCTH
 
 dnl do not put this line at earlier position to avoid confusing configure script.
 if test "$CC" = "gcc"; then
+  CFLAGS_warn="-Wall -Wno-trigraphs"
   if test "`uname -s`" = "SunOS"; then
     dnl Supress insignificant warnings
-    CFLAGS="-Wall -Wno-implicit-int -pipe $CFLAGS"
+    CFLAGS="$CFLAGS_warn -Wno-implicit-int -pipe $CFLAGS"
   else
     test "$enable_debug" = "yes" && CFLAGS="-std=c9x -D_GNU_SOURCE=1 $CFLAGS"
-    CFLAGS="-Wall -pipe $CFLAGS"
+    CFLAGS="$CFLAGS_warn -pipe $CFLAGS"
   fi
   test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
 fi
@@ -466,6 +535,7 @@ AC_CONFIG_FILES([
     plugins/loader/png/Makefile
     plugins/loader/pnm/Makefile
     plugins/loader/ungif/Makefile
+    plugins/loader/gif/Makefile
     plugins/loader/xbm/Makefile
     plugins/loader/xpm/Makefile
    plugins/archiver/Makefile
