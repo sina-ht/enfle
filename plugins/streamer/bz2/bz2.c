@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 13 15:24:37 2002.
- * $Id: bz2.c,v 1.6 2002/11/06 14:12:07 sian Exp $
+ * Last Modified: Wed Feb  5 22:25:30 2003.
+ * $Id: bz2.c,v 1.7 2003/02/05 15:22:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,8 +48,7 @@ static StreamerPlugin plugin = {
   open: open
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(streamer_bz2)
 {
   StreamerPlugin *stp;
   String *s;
@@ -69,8 +68,7 @@ plugin_entry(void)
 
 #undef STREAMER_BZ2_PLUGIN_DESCRIPTION
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(streamer_bz2, p)
 {
   StreamerPlugin *stp = (StreamerPlugin *)p;
 

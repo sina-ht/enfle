@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jul  1 22:22:03 2002.
- * $Id: convert.c,v 1.16 2002/08/03 05:08:37 sian Exp $
+ * Last Modified: Wed Feb  5 22:24:39 2003.
+ * $Id: convert.c,v 1.17 2003/02/05 15:22:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,8 +51,7 @@ static UIPlugin plugin = {
   ui_main: ui_main,
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(ui_convert)
 {
   UIPlugin *uip;
 
@@ -63,8 +62,7 @@ plugin_entry(void)
   return (void *)uip;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(ui_convert, p)
 {
   free(p);
 }

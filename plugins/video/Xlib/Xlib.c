@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov 29 01:36:37 2002.
- * $Id: Xlib.c,v 1.50 2002/11/29 16:00:53 sian Exp $
+ * Last Modified: Wed Feb  5 22:24:14 2003.
+ * $Id: Xlib.c,v 1.51 2003/02/05 15:22:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -152,8 +152,7 @@ static VideoWindow template = {
   discard_button_event: discard_button_event
 };
 
-void *
-plugin_entry(void)
+ENFLE_PLUGIN_ENTRY(video_Xlib)
 {
   VideoPlugin *vp;
   char *tmp;
@@ -185,8 +184,7 @@ plugin_entry(void)
   return (void *)vp;
 }
 
-void
-plugin_exit(void *p)
+ENFLE_PLUGIN_EXIT(video_Xlib, p)
 {
   free(p);
 }
@@ -317,7 +315,7 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
     if (fontsetname) {
       xwi->xfontset = XCreateFontSet(x11_display(x11), fontsetname, &miss, &misscount, &def);
       if (misscount > 0) {
-	warning("%d miss for '%s'\n", miss, fontsetname);
+	warning("%d miss for '%s'\n", misscount, fontsetname);
 	xwi->caption_font = XLoadFont(x11_display(x11), fontname);
 	xwi->fontset = 0;
       } else {
