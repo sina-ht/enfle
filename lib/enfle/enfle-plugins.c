@@ -1,10 +1,10 @@
 /*
  * enfle-plugins.c -- enfle plugin interface
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 26 08:35:40 2001.
- * $Id: enfle-plugins.c,v 1.10 2001/12/26 00:57:25 sian Exp $
+ * Last Modified: Mon Jul  1 22:23:54 2002.
+ * $Id: enfle-plugins.c,v 1.11 2002/08/03 04:57:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,8 +30,11 @@
 #include "enfle-plugin.h"
 #include "enfle-plugins.h"
 
+EnflePlugins *global_enfle_plugins;
+
 static char *load(EnflePlugins *, char *, PluginType *);
 static int unload(EnflePlugins *, PluginType, char *);
+static char *add(EnflePlugins *, void *(*)(void), void (*)(void *), PluginType *);
 static void *get(EnflePlugins *, PluginType, char *);
 static void destroy(EnflePlugins *);
 static Dlist *get_names(EnflePlugins *, PluginType);
@@ -41,6 +44,7 @@ static const unsigned char *get_author(EnflePlugins *, PluginType, char *);
 static EnflePlugins template = {
   load: load,
   unload: unload,
+  add: add,
   get: get,
   destroy: destroy,
   get_names: get_names,
@@ -116,6 +120,28 @@ unload(EnflePlugins *eps, PluginType type, char *pluginname)
   plugin_unload(p);
 
   return f;
+}
+
+static char *
+add(EnflePlugins *eps, void *(*plugin_entry)(void), void (*plugin_exit)(void *), PluginType *type_return)
+{
+  Plugin *p = plugin_create_from_static(plugin_entry, plugin_exit);
+  PluginList *pl;
+  EnflePlugin *ep;
+
+  if (!p)
+    return NULL;
+
+  ep = plugin_get(p);
+  pl = eps->pls[ep->type];
+
+  if (!pluginlist_add(pl, p, ep->name)) {
+    plugin_destroy(p);
+    return NULL;
+  }
+
+  *type_return = ep->type;
+  return (char *)ep->name;
 }
 
 static void *

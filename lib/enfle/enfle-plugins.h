@@ -1,10 +1,10 @@
 /*
  * enfle-plugins.h -- enfle plugin interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 01:13:10 2001.
- * $Id: enfle-plugins.h,v 1.3 2001/01/06 23:55:25 sian Exp $
+ * Last Modified: Mon Jul  1 22:24:45 2002.
+ * $Id: enfle-plugins.h,v 1.4 2002/08/03 04:57:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -32,6 +32,7 @@ struct _enfle_plugins {
 
   char *(*load)(EnflePlugins *, char *, PluginType *);
   int (*unload)(EnflePlugins *, PluginType, char *);
+  char *(*add)(EnflePlugins *, void *(*)(void), void (*)(void *), PluginType *);
   void *(*get)(EnflePlugins *, PluginType, char *);
   void (*destroy)(EnflePlugins *);
   Dlist *(*get_names)(EnflePlugins *, PluginType);
@@ -41,11 +42,16 @@ struct _enfle_plugins {
 
 #define enfle_plugins_load(eps, p, pt) (eps)->load((eps), (p), (pt))
 #define enfle_plugins_unload(eps, pt, n) (eps)->unload((eps), (pt), (n))
+#define enfle_plugins_add(eps, ent, ext, pt) (eps)->add((eps), (ent), (ext), (pt))
 #define enfle_plugins_get(eps, pt, n) (eps)->get((eps), (pt), (n))
 #define enfle_plugins_destroy(eps) (eps)->destroy((eps))
 #define enfle_plugins_get_names(eps, pt) (eps)->get_names((eps), (pt))
 #define enfle_plugins_get_description(eps, pt, n) (eps)->get_description((eps), (pt), (n))
 #define enfle_plugins_get_author(eps, pt, n) (eps)->get_author((eps), (pt), (n))
+
+extern EnflePlugins *global_enfle_plugins;
+#define set_enfle_plugins(eps) global_enfle_plugins = eps
+#define get_enfle_plugins() global_enfle_plugins
 
 EnflePlugins *enfle_plugins_create(void);
 
