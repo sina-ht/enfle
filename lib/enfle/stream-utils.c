@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Aug 14 16:34:48 2001.
- * $Id: stream-utils.c,v 1.5 2001/08/15 06:37:23 sian Exp $
+ * Last Modified: Fri Feb 15 03:53:01 2002.
+ * $Id: stream-utils.c,v 1.6 2002/02/14 19:19:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -119,4 +119,36 @@ stream_gets(Stream *st)
   }
 
   return tmp;
+}
+
+char *
+stream_ngets(Stream *st, char *buf, int size)
+{
+  char *p = buf;
+  int len = 0;
+
+  /* XXX: hmm... */
+  while (len < size - 1) {
+    if (stream_read(st, p, 1) != 1) {
+      if (len)
+	break;
+      return NULL;
+    }
+    if (*p++ == '\n')
+      break;
+    len++;
+  }
+  *p = '\0';
+
+  return buf;
+}
+
+int
+stream_getc(Stream *st)
+{
+  char c;
+
+  if (stream_read(st, &c, 1) != 1)
+    return -1;
+  return (int)c;
 }
