@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 22:44:22 2002.
- * $Id: pluginlist.c,v 1.8 2002/08/17 02:19:36 sian Exp $
+ * Last Modified: Sun Aug 18 23:39:38 2002.
+ * $Id: pluginlist.c,v 1.9 2002/08/18 14:41:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,20 +28,6 @@
 
 #include "pluginlist.h"
 
-static int add(PluginList *, Plugin *, const char *);
-static Plugin *get(PluginList *, char *);
-static int delete(PluginList *, char *);
-static Dlist *get_names(PluginList *);
-static void destroy(PluginList *);
-
-static PluginList pluginlist_template = {
-  add: add,
-  get: get,
-  delete: delete,
-  get_names: get_names,
-  destroy: destroy
-};
-
 PluginList *
 pluginlist_create(void)
 {
@@ -49,7 +35,6 @@ pluginlist_create(void)
 
   if ((pl = (PluginList *)calloc(1, sizeof(PluginList))) == NULL)
     return NULL;
-  memcpy(pl, &pluginlist_template, sizeof(PluginList));
 
   if ((pl->hash = hash_create(PLUGINLIST_HASH_SIZE)) == NULL) {
     free(pl);
@@ -59,34 +44,34 @@ pluginlist_create(void)
   return pl;
 }
 
-static int
-add(PluginList *pl, Plugin *p, const char *name)
+int
+pluginlist_add(PluginList *pl, Plugin *p, const char *name)
 {
   return hash_set_str_value(pl->hash, name, p);
 }
 
-static Plugin *
-get(PluginList *pl, char *name)
+Plugin *
+pluginlist_get(PluginList *pl, char *name)
 {
   return hash_lookup_str(pl->hash, name);
 }
 
-static int
-delete(PluginList *pl, char *name)
+int
+pluginlist_delete(PluginList *pl, char *name)
 {
   return hash_delete_str(pl->hash, name);
 }
 
-static Dlist *
-get_names(PluginList *pl)
+Dlist *
+pluginlist_get_names(PluginList *pl)
 {
   if (!pl)
     return NULL;
   return hash_get_keys(pl->hash);
 }
 
-static void
-destroy(PluginList *pl)
+void
+pluginlist_destroy(PluginList *pl)
 {
   Plugin *p;
   void *k;

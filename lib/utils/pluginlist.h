@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 11:08:20 2002.
- * $Id: pluginlist.h,v 1.5 2002/08/15 12:47:21 sian Exp $
+ * Last Modified: Sun Aug 18 23:38:58 2002.
+ * $Id: pluginlist.h,v 1.6 2002/08/18 14:41:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,26 +29,19 @@
 typedef struct _pluginlist PluginList;
 struct _pluginlist {
   Hash *hash;
-
-  int (*add)(PluginList *, Plugin *, const char *);
-  Plugin *(*get)(PluginList *, char *);
-  int (*delete)(PluginList *, char *);
-  Dlist *(*get_names)(PluginList *);
-  void (*destroy)(PluginList *);
 };
 
 #define PLUGINLIST_HASH_SIZE 1024
 
-#define pluginlist_add(pl, p, n) (pl)->add((pl), (p), (n))
-#define pluginlist_get(pl, n) (pl)->get((pl), (n))
-#define pluginlist_delete(pl, n) (pl)->delete((pl), (n))
-#define pluginlist_get_names(pl) (pl)->get_names((pl))
-#define pluginlist_destroy(pl) (pl)->destroy((pl))
+PluginList *pluginlist_create(void);
+int pluginlist_add(PluginList *, Plugin *, const char *);
+Plugin *pluginlist_get(PluginList *, char *);
+int pluginlist_delete(PluginList *, char *);
+Dlist *pluginlist_get_names(PluginList *);
+void pluginlist_destroy(PluginList *);
 
 #define pluginlist_iter(pl, k, kl, p) hash_iter((pl)->hash, k, kl, p)
 #define pluginlist_move_to_top dlist_move_to_top(hash_iter_dl, hash_iter_dd)
 #define pluginlist_iter_end hash_iter_end
-
-PluginList *pluginlist_create(void);
 
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Aug 15 11:24:47 2002.
- * $Id: plugin.c,v 1.11 2002/08/15 12:47:01 sian Exp $
+ * Last Modified: Sun Aug 18 23:36:12 2002.
+ * $Id: plugin.c,v 1.12 2002/08/18 14:38:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,18 +30,6 @@
 
 #include "plugin.h"
 
-static int load(Plugin *, char *, const char *, const char *);
-static int unload(Plugin *);
-static void *get(Plugin *);
-static void destroy(Plugin *);
-
-static Plugin plugin_template = {
-  load: load,
-  unload: unload,
-  get: get,
-  destroy: destroy
-};
-
 Plugin *
 plugin_create(void)
 {
@@ -49,8 +37,6 @@ plugin_create(void)
 
   if ((p = calloc(1, sizeof(Plugin))) == NULL)
     return NULL;
-
-  memcpy(p, &plugin_template, sizeof(Plugin));
 
   return p;
 }
@@ -72,8 +58,8 @@ plugin_create_from_static(void *(*plugin_entry)(void), void (*plugin_exit)(void 
   return p;
 }
 
-static int
-load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbol)
+int
+plugin_load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbol)
 {
   void *(*entry)(void) = NULL;
 
@@ -107,8 +93,8 @@ load(Plugin *p, char *filepath, const char *entry_symbol, const char *exit_symbo
   return 1;
 }
 
-static int
-unload(Plugin *p)
+int
+plugin_unload(Plugin *p)
 {
   if (p->substance) {
     if (p->substance_unload)
@@ -127,16 +113,10 @@ unload(Plugin *p)
   return 1;
 }
 
-static void *
-get(Plugin *p)
+void
+plugin_destroy(Plugin *p)
 {
-  return p->substance;
-}
-
-static void
-destroy(Plugin *p)
-{
-  unload(p);
+  plugin_unload(p);
 
   if (p->filepath)
     free(p->filepath);

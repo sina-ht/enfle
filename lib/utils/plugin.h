@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun 23 16:15:02 2002.
- * $Id: plugin.h,v 1.3 2002/08/02 14:01:14 sian Exp $
+ * Last Modified: Sun Aug 18 23:36:02 2002.
+ * $Id: plugin.h,v 1.4 2002/08/18 14:38:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,19 +30,14 @@ struct _plugin {
   void (*substance_unload)(void *);
   char *filepath;
   char *err;
-
-  int (*load)(Plugin *, char *, const char *, const char *);
-  int (*unload)(Plugin *);
-  void *(*get)(Plugin *);
-  void (*destroy)(Plugin *);
 };
-
-#define plugin_load(p, n, en, ex) (p)->load((p), n, en, ex)
-#define plugin_unload(p) (p)->unload((p))
-#define plugin_get(p) (p)->get((p))
-#define plugin_destroy(p) (p)->destroy(p)
 
 Plugin *plugin_create(void);
 Plugin *plugin_create_from_static(void *(*)(void), void (*)(void *));
+int plugin_load(Plugin *, char *, const char *, const char *);
+int plugin_unload(Plugin *);
+void plugin_destroy(Plugin *);
+
+#define plugin_get(p) (p)->substance
 
 #endif
