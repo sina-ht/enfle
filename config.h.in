@@ -1,0 +1,137 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define if your bzlib needs BZ2_ prefix. */
+#undef BZAPI_NEEDS_PREFIX
+
+/* Define if you want to debug. */
+#undef DEBUG
+
+/* Define if you have the <dirent.h> header file, and it defines `DIR'. */
+#undef HAVE_DIRENT_H
+
+/* Define if you have the `bsd' library (-lbsd). */
+#undef HAVE_LIBBSD
+
+/* Define if you have the `bz2' library (-lbz2). */
+#undef HAVE_LIBBZ2
+
+/* Define if you have the `c' library (-lc). */
+#undef HAVE_LIBC
+
+/* Define if you have the `dir' library (-ldir). */
+#undef HAVE_LIBDIR
+
+/* Define if you have the `dl' library (-ldl). */
+#undef HAVE_LIBDL
+
+/* Define if you have the `dnet' library (-ldnet). */
+#undef HAVE_LIBDNET
+
+/* Define if you have the `dnet_stub' library (-ldnet_stub). */
+#undef HAVE_LIBDNET_STUB
+
+/* Define if you have the `ICE' library (-lICE). */
+#undef HAVE_LIBICE
+
+/* Define if you have the `ipc' library (-lipc). */
+#undef HAVE_LIBIPC
+
+/* Define if you have the `jpeg' library (-ljpeg). */
+#undef HAVE_LIBJPEG
+
+/* Define if you have the `m' library (-lm). */
+#undef HAVE_LIBM
+
+/* Define if you have the `nsl' library (-lnsl). */
+#undef HAVE_LIBNSL
+
+/* Define if you have the `png' library (-lpng). */
+#undef HAVE_LIBPNG
+
+/* Define if you have the `posix' library (-lposix). */
+#undef HAVE_LIBPOSIX
+
+/* Define if you have the `socket' library (-lsocket). */
+#undef HAVE_LIBSOCKET
+
+/* Define if you have the `ungif' library (-lungif). */
+#undef HAVE_LIBUNGIF
+
+/* Define if you have the `x' library (-lx). */
+#undef HAVE_LIBX
+
+/* Define if you have the `X11' library (-lX11). */
+#undef HAVE_LIBX11
+
+/* Define if you have the `z' library (-lz). */
+#undef HAVE_LIBZ
+
+/* Define if your system has a working `malloc' function. */
+#undef HAVE_MALLOC
+
+/* Define if you have the <ndir.h> header file, and it defines `DIR'. */
+#undef HAVE_NDIR_H
+
+/* Define if you have the `select' function. */
+#undef HAVE_SELECT
+
+/* Define if `stat' has the bug that it succeeds when given the zero-length
+   file name argument. */
+#undef HAVE_STAT_EMPTY_STRING_BUG
+
+/* Define if you have the `strdup' function. */
+#undef HAVE_STRDUP
+
+/* Define if you have the <sys/dir.h> header file, and it defines `DIR'. */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/ndir.h> header file, and it defines `DIR'. */
+#undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define if `lstat' dereferences a symlink specified with a trailing slash.
+   */
+#undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define if the `S_IS*' macros in <sys/stat.h> do not work properly. */
+#undef STAT_MACROS_BROKEN
+
+/* Define if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define if you can safely include both <sys/time.h> and <time.h>. */
+#undef TIME_WITH_SYS_TIME
+
+/* Version number of package */
+#undef VERSION
+
+/* Define if using the dmalloc debugging malloc package */
+#undef WITH_DMALLOC
+
+/* Define if you want to use nasm. */
+#undef WITH_NASM
+
+/* Define if your processor stores words with the most significant byte first
+   (like Motorola and SPARC, unlike Intel and VAX). */
+#undef WORDS_BIGENDIAN
+
+/* Define if the X Window System is missing or not being used. */
+#undef X_DISPLAY_MISSING
+
+/* Define as `__inline' if that's what the C compiler calls it, or to nothing
+   if it is not supported. */
+#undef inline
+
+/* Define to `unsigned' if <sys/types.h> does not define. */
+#undef size_t

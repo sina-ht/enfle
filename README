@@ -1,0 +1,181 @@
+***************************************************
+
+     Simple Plugin-based Graphic Loader Enfle
+			*** DEVELOPING VERSION ***
+
+ (C)Copyright 1998, 99, 2000 by Hiroshi Takekawa.
+
+     Last Modified: Sat Sep 30 06:34:55 2000.
+
+ This file is part of Enfle.
+
+ Enfle is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 as
+ published by the Free Software Foundation.
+
+ Enfle is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+
+ ATTENTION: GPL version 2 only. You cannot apply any later
+ version. This situation may change.
+
+***************************************************
+
+
+Sorry Japanese only. Are there any volunteers for translation?
+
+This software is based in part on the work of the Independent JPEG Group
+
+The Graphics Interchange Format(c) is
+the Copyright property of CompuServe Incorporated.
+GIF(sm) is a Service Mark property of CompuServe Incorporated.
+
+
+1.はじめに
+
+このプログラムは、たくさんの画像をさくさく見ることを目標にしています。
+ただ、クリックして画像を次々見るだけのものです。いまのところGIF, JPEG,
+PNG, BMPに対応しています。
+
+各フォーマットへの対応はプラグインによって実装されております。画像の他
+に特殊なアーカイブ、tarなどの一般的なアーカイブ、圧縮されたgzなどのファ
+イルなどへの対応もプラグインによって実装されており、公開されている仕様
+を参考にすることにより、誰でもプラグインを作って拡張することが可能です。
+
+GIFプラグインはLZWのpatent(特許)の問題で含まれておりません。decode に
+は特許は及ばないというのが大方の見方ですがpatent holderであるUnisys が
+否定しているので一応含まないでおきます。代わりにlibungifを使うungifプ
+ラグインが含まれています。ungifプラグイン自体はLZW関連のcodeを含んでい
+ません。ただし、libungifのLZW codeを使用できるかどうかとは別ですので、
+各自の責任において使用してください。
+
+以下のpluginにはlibraryが別途必要です。動作するであろうversionを書いて
+おきます。
+
+JPEG: jpegsrc-6b (libjpeg)
+PNG: libpng-1.0.2 or later (recommended: 1.0.8)
+gz: zlib-1.1.3 or later
+bz2: bzip2-1.0.0 or later
+ungif: libungif-3.1.0 or later (recommended: 4.1.0)
+
+
+2.動作環境
+
+Xサーバのdepthが 16, 24(bpp 24, 32)では動くと思われます。その他はいま
+のところunsupportedです。今あげたdepthで表示できなかった場合はxdpyinfo
+の出力と詳しい環境をお知らせください。なお、depth 16のmaskが
+0xf800,0x7e0,0x1f でない場合ばけると思われます。今のところこれは仕様で
+すが、そのうち改良されるかもしれません。
+
+今のところ以下の環境での動作が確認されています。
+
+Linux(2.4.0-test8 w/ glibc-2.1)
+FreeBSD-4.1R
+
+私のメインの開発環境は2000/09/16現在 以下の通りです。
+
+Kernel: Linux-2.4.0-test8
+CPU: Celeron/366 (running at 550)
+X server: XFree86-4.0.1
+Video: Matrox MillenniumII/AGP 8M
+Compiler: gcc version 2.95.2 19991024 (release)
+libc: glibc-2.1.3
+
+
+3.コンパイル
+
+コンパイルにはgccが必要です。コードにgccのextensionを使っています。
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+基本はconfigure して make するだけです。うまくいかない際には、どのよう
+なエラーがでたか報告していただければ幸いです。configureが生成する
+config.logなども参考になります。報告先は後述してあります。
+
+#if 1
+makeが通ったら、srcに移動して./enfleとして起動してください。ソースツリー
+上でbuildしてない場合(recommended)にはsrc/enfle.rcを
+$(objdir)/src/enfle.rcにcpして、$(objdir)/src/にcdして./enfleとしてく
+ださい。
+#else
+makeが通ったらmake installします。
+#endif
+
+configureスクリプトの指定できるオプションは、./configure --helpで詳細
+がみれます。
+
+プラグインはshared objectとしてcompileされます。ファイル名は.soでおわっ
+ている必要があります。compileは通るが.so以外になってしまって動かないと
+いう方がいらっしゃいましたら御一報ください。ただし.aができている場合に
+はshared objectが作れていない可能性もあります。
+
+
+4.コマンドライン
+
+Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
+けて指定するだけです。ディレクトリを指定した場合はその下のファイルを再
+帰的に追加します。対応してるアーカイブを指定した場合には、その中味も読
+まれます。/* -hとすればヘルプがみれます。 */
+
+
+5.使い方
+
+左クリック		次の画像へ
+右クリック		前の画像へ
+中クリック		終了
+
+また、全ての画像を表示し終わっても終了します。
+
+
+6.その他
+
+w3mの外部ビューアとしてenfleを使う方法
+
+~/.mailcap に
+image/*;enfle %s
+なんて感じに書いてください。システム全体でenfleにしてやるぜ、という方は
+/etc/mailcapにでも書いてください。
+
+mewの外部ビューアとしてenfleを使う方法(obsolete?)
+以下を~/.emacsに書いてください。例はjpegをenfleで表示します。
+
+; use enfle w/ mew
+(eval-after-load "mew"
+  '(setq mew-prog-jpeg
+         (if (and window-system mew-xemacs-p
+                  (valid-image-instantiator-format-p 'jpeg))
+             '(mew-mime-image/jpeg () nil)
+           '("enfle" () t))))
+;                    ↑ここにoptionをいれられます。
+
+
+7.連絡先
+
+バグの報告、御意見、御感想は歓迎します。Enfleに関するMLがあるので、そ
+ちらをご利用ください。自動登録となります。講読するには、
+
+ subscribe あなたの名前
+
+とだけ本文に書いて、<enfle-ctl@fennel.org>に送ってください。
+
+ 例: subscribe Hiroshi Takekawa
+
+その後折り返し届いたメールにしたがってconfirm(登録の確認)をしてくださ
+い。投稿されたメールは私に各種権利があるものとします。(ログの公開、検
+索の提供等を楽にするためくらいの意味しかないです)
+
+どうしてもという場合には私に直接でも結構です。
+
+        Hiroshi Takekawa <sian@big.or.jp>
+                         <sian@fennel.org>
+
+
+8.配布について
+
+EnfleはGNU GENERAL PUBLIC LICENSE Version 2に従います。それ以降の
+Versionにするオプションはありません。GPL2についてはCOPYINGをお読みくだ
+さい。補助として日本語訳COPYING.jもつけてあります。

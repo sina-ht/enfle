@@ -1,0 +1,192 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl NOTE: autoconf should be 2.49a or later, though older may work.
+dnl
+dnl (C)Copyright 1999, 2000 by Hiroshi Takekawa
+dnl This file is part of Enfle.
+dnl
+dnl Last Modified: Sat Sep 30 05:17:27 2000.
+dnl $Id: configure.in,v 1.1 2000/09/30 17:36:36 sian Exp $
+dnl
+dnl Enfle is free software; you can redistribute it and/or modify it
+dnl under the terms of the GNU General Public License version 2 as
+dnl published by the Free Software Foundation.
+dnl
+dnl Enfle is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+dnl GNU General Public License for more details.
+dnl
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+
+AC_INIT(src/enfle.c)
+
+if test "`uname -s`" = "SunOS"; then
+  dnl Supress insignificant warnings
+  CFLAGS="-Wall -Wno-implicit-int -pipe $CFLAGS"
+else
+  CFLAGS="-Wall -pipe $CFLAGS"
+fi
+
+dnl use config.h
+AM_CONFIG_HEADER(config.h)
+
+dnl Maintainer mode (uncomment for production release.)
+dnl AM_MAINTAINER_MODE
+
+AM_INIT_AUTOMAKE(enfle.dev, 20000930)
+
+AC_ENABLE_SHARED(yes)
+AC_ENABLE_STATIC(no)
+AC_CANONICAL_HOST
+dnl AC_LIBTOOL_DLOPEN
+AM_PROG_LIBTOOL
+
+dnl Checks for programs.
+AC_PROG_CC
+dnl This might be commented out if autoconf is older.
+AC_PROG_CC_STDC
+AC_PROG_CPP
+AC_PROG_AWK
+AC_PROG_MAKE_SET
+AC_PROG_INSTALL
+AC_PROG_LN_S
+dnl AC_PROG_RANLIB
+
+dnl Checks for libraries.
+if test -d /usr/local/lib; then
+  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+  CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+fi
+
+available_dlopen=no
+dnl I want to write like this... but fails.
+dnl AC_CHECK_LIB(dl, dlopen, [ available_dlopen=yes; LIBS="-ldl $LIBS"; ],
+dnl   AC_CHECK_LIB(c, dlopen, [ available_dlopen=yes; ]))
+dnl So, I must write as follows:
+AC_CHECK_LIB(dl, dlopen, [ available_dlopen=yes; LIBS="-ldl $LIBS"; ])
+if test "$available_dlopen" = "no"; then
+  AC_CHECK_LIB(c, dlopen, [ available_dlopen=yes; ])
+fi
+AM_CONDITIONAL(HAVE_DLOPEN, test "$available_dlopen" = "yes")
+
+available_jpeg=no
+AC_CHECK_HEADER(jpeglib.h,
+  AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ]))
+AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
+AC_SUBST(LIBADD_JPEG)
+
+available_zlib=no
+AC_CHECK_HEADER(zlib.h,
+  AC_CHECK_LIB(z, gzseek, [ available_zlib=yes; LIBADD_ZLIB=-lz; ]))
+AM_CONDITIONAL(HAVE_ZLIB, test "$available_zlib" = "yes")
+AC_SUBST(LIBADD_ZLIB)
+
+available_png=no
+if test "$available_zlib" = "yes"; then
+  LIBADD_PNG=-lz
+  dnl Some libpng needs pow
+  AC_CHECK_HEADER(png.h, [
+    AC_CHECK_LIB(png, png_get_IHDR, [ available_png=yes; LIBADD_PNG="$LIBADD_PNG -lpng"; ])
+    if test "$avalable_png" = "no"; then
+      AC_CHECK_LIB(m, pow)
+      AC_CHECK_LIB(png, png_get_IHDR, [ available_png=yes; LIBADD_PNG="$LIBADD_PNG -lm -lpng"; ])
+    fi;
+  ])
+fi
+AM_CONDITIONAL(HAVE_PNG, test "$available_png" = "yes")
+AC_SUBST(LIBADD_PNG)
+
+available_bzlib=no
+AC_CHECK_HEADER(bzlib.h, [
+  dnl It appears that autoconf 2.49a's AC_CHECK_LIB cannot have 'else' part... 
+  AC_CHECK_LIB(bz2, bzopen, [ available_bzlib=yes; LIBADD_BZLIB="-lbz2" ])
+  if test "$available_bzlib" = "no"; then
+    AC_CHECK_LIB(bz2, BZ2_bzopen, [ available_bzlib=yes; LIBADD_BZLIB="-lbz2"; AC_DEFINE(BZAPI_NEEDS_PREFIX, 1, [Define if your bzlib needs BZ2_ prefix.])])
+  fi
+])
+AM_CONDITIONAL(HAVE_BZLIB, test "$available_bzlib" = "yes")
+AC_SUBST(LIBADD_BZLIB)
+
+AC_PATH_PROG(nasm_path,nasm)
+AC_ARG_ENABLE(nasm,
+        [  --enable-nasm           Use x86 assembler.],
+        [ enable_nasm=$enableval ],
+        [ enable_nasm=no ])
+use_nasm=no
+if test "$enable_nasm" = "yes"; then
+  if test "$nasm_path" != ""; then
+    AC_DEFINE(WITH_NASM, 1, [Define if you want to use nasm.])
+    use_nasm=yes
+  else
+    echo "*** asm requested but assembler nasm not found"
+  fi
+fi
+AM_CONDITIONAL(USE_NASM, test "$use_nasm" = "yes")
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_STAT
+AC_CHECK_HEADERS(sys/stat.h sys/time.h unistd.h)
+
+dnl Checks for X libraries.
+AC_PATH_XTRA
+CPPFLAGS="$CPPFLAGS -I$x_includes"
+LDFLAGS="$LDFLAGS $X_LIBS"
+LIBS="$X_PRELIBS $LIBS"
+AC_CHECK_LIB(X11, XOpenDisplay)
+AM_CONDITIONAL(HAVE_X11, test "$have_x" = "yes")
+
+dnl Checks for libraries which require X library.
+available_ungif=no
+AC_CHECK_HEADER(gif_lib.h,
+  AC_CHECK_LIB(ungif, DGifOpen, [ available_ungif=yes; LIBADD_UNGIF=-lungif; ]))
+AM_CONDITIONAL(HAVE_UNGIF, test "$available_ungif" = "yes")
+AC_SUBST(LIBADD_UNGIF)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
+AC_C_INLINE
+
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+AC_FUNC_STAT
+AC_CHECK_FUNCS([select strdup])
+
+dnl debug option
+AC_ARG_ENABLE(debug,
+        [  --enable-debug          Build a debugging version.],
+        [ enable_debug=$enableval ],
+        [ enable_debug=no ])
+test "$enable_debug" = yes && AC_DEFINE(DEBUG, 1, [Define if you want to debug.])
+
+dnl with dmalloc
+AM_WITH_DMALLOC
+
+AC_OUTPUT(
+ Makefile
+  lib/Makefile
+   lib/utils/Makefile
+   lib/enfle/Makefile
+   lib/X11/Makefile
+  src/Makefile
+  plugins/Makefile
+   plugins/ui/Makefile
+    plugins/ui/Xlib/Makefile
+   plugins/streamer/Makefile
+    plugins/streamer/gz/Makefile
+    plugins/streamer/bz2/Makefile
+   plugins/loader/Makefile
+    plugins/loader/jpeg/Makefile
+    plugins/loader/png/Makefile
+    plugins/loader/bmp/Makefile
+    plugins/loader/ungif/Makefile
+   plugins/archiver/Makefile
+    plugins/archiver/tar/Makefile
+)

@@ -1,0 +1,372 @@
+/*
+ * png.c -- png loader plugin
+ * (C)Copyright 2000 by Hiroshi Takekawa
+ * This file is part of Enfle.
+ *
+ * Last Modified: Fri Sep 29 20:08:36 2000.
+ * $Id: png.c,v 1.1 2000/09/30 17:36:36 sian Exp $
+ *
+ * Enfle is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * Enfle is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <png.h>
+
+#include "common.h"
+
+#include "loader-plugin.h"
+
+/* png_jmpbuf() macro is not defined prior to libpng-1.0.6. */
+#ifndef png_jmpbuf
+#  define png_jmpbuf(png_ptr) ((png_ptr)->jmpbuf)
+#endif
+
+#define DISPLAY_GAMMA 2.20
+
+static LoaderStatus identify(Image *, Stream *);
+static LoaderStatus load(Image *, Stream *);
+
+static LoaderPlugin plugin = {
+  type: ENFLE_PLUGIN_LOADER,
+  name: "PNG",
+  description: "PNG Loader plugin version 0.1",
+  author: "Hiroshi Takekawa",
+
+  identify: identify,
+  load: load
+};
+
+void *
+plugin_entry(void)
+{
+  LoaderPlugin *lp;
+
+  if ((lp = (LoaderPlugin *)calloc(1, sizeof(LoaderPlugin))) == NULL)
+    return NULL;
+  memcpy(lp, &plugin, sizeof(LoaderPlugin));
+
+  return (void *)lp;
+}
+
+void
+plugin_exit(void *p)
+{
+  free(p);
+}
+
+/* png data source functions */
+
+static void
+read_data(png_structp png_ptr, png_bytep data, png_uint_32 len)
+{
+  Stream *st = png_get_io_ptr(png_ptr);
+
+  stream_read(st, data, len);
+}
+
+/* error handler */
+
+static void
+error_handler(png_structp png_ptr, png_const_charp error_msg)
+{
+  int *try_when_error = (int *)png_get_error_ptr(png_ptr);
+
+  if (!strcmp(error_msg, "incorrect data check"))
+    *try_when_error = 1;
+  else
+    fprintf(stderr, "enfle: png loader error: %s\n", error_msg);
+
+  longjmp(png_jmpbuf(png_ptr), 1);
+}
+
+static void
+warning_handler(png_structp png_ptr, png_const_charp warning_msg)
+{
+  fprintf(stderr, "enfle: png loader warning: %s\n", warning_msg);
+}
+
+/* methods */
+
+#define PNG_BYTES_TO_CHECK 4
+
+static LoaderStatus
+identify(Image *p, Stream *st)
+{
+  char buf[PNG_BYTES_TO_CHECK];
+
+  /* Read in the signature bytes */
+  if (stream_read(st, buf, PNG_BYTES_TO_CHECK) != PNG_BYTES_TO_CHECK)
+    return LOAD_NOT;
+
+  /* Compare the first PNG_BYTES_TO_CHECK bytes of the signature. */
+  if (png_sig_cmp(buf, (png_size_t)0, PNG_BYTES_TO_CHECK) != 0)
+    return LOAD_NOT;
+
+  return LOAD_OK;
+}
+
+static LoaderStatus
+load(Image *p, Stream *st)
+{
+  png_structp png_ptr;
+  png_infop info_ptr;
+  png_uint_32 width, height;
+  png_bytep *image_array;
+  png_textp text_ptr;
+  png_color_16 my_background, *image_background;
+  int bit_depth, color_type, interlace_type;
+  int i, num_text, text_len;
+  int try_when_error;
+#if 0
+  int num_trans;
+  png_color_16p trans_values;
+  png_bytep trans;
+#endif
+
+  debug_message("png loader: load() called\n");
+
+#ifdef IDENTIFY_BEFORE_LOAD
+  {
+    LoaderStatus status;
+
+    if ((status = identify(p, st)) != LOAD_OK)
+      return status;
+  }
+#endif
+  try_when_error = 0;
+
+  /* Create and initialize the png_struct */
+  if ((png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (void *)&try_when_error,
+					error_handler, warning_handler)) == NULL)
+    return LOAD_ERROR;
+
+  /* Allocate/initialize the memory for image information. */
+  if ((info_ptr = png_create_info_struct(png_ptr)) == NULL) {
+    png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+    return LOAD_ERROR;
+  }
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    return try_when_error ? LOAD_OK : LOAD_ERROR;
+  }
+
+  png_set_read_fn(png_ptr, (voidp)st, (png_rw_ptr)read_data);
+#ifdef IDENTIFY_BEFORE_LOAD
+  png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
+#endif
+  png_read_info(png_ptr, info_ptr);
+  png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+	       &interlace_type, NULL, NULL);
+
+#ifdef DEBUG
+  debug_message("png color type: ");
+  switch (color_type) {
+  case PNG_COLOR_TYPE_PALETTE:
+    debug_message("PALETTE");
+    break;
+  case PNG_COLOR_TYPE_RGB:
+    debug_message("RGB");
+    break;
+  case PNG_COLOR_TYPE_RGB_ALPHA:
+    debug_message("RGB_ALPHA");
+    break;
+  case PNG_COLOR_TYPE_GRAY:
+    debug_message("GRAY");
+    break;
+  case PNG_COLOR_TYPE_GRAY_ALPHA:
+    debug_message("GRAY_ALPHA");
+    break;
+  default:
+    debug_message("UNKNOWN");
+    break;
+  }
+  debug_message("\n");
+#endif
+
+  p->width = width;
+  p->height = height;
+  p->top = 0;
+  p->left = 0;
+
+  /* read comment */
+  if ((num_text = png_get_text(png_ptr, info_ptr, &text_ptr, 0)) > 0) {
+    text_len = 0;
+    for (i = 0; i < num_text; i++)
+      text_len += strlen(text_ptr[i].key) + 2 + strlen(text_ptr[i].text) + 1;
+    if ((p->comment = calloc(1, text_len + 1)) == NULL) {
+      png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+      return LOAD_ERROR;
+    }
+    for (i = 0; i < num_text; i++) {
+      strcat(p->comment, text_ptr[i].key);
+      strcat(p->comment, ": ");
+      strcat(p->comment, text_ptr[i].text);
+      strcat(p->comment, "\n");
+    }
+  }
+
+  if (bit_depth == 16)
+    png_set_strip_16(png_ptr);
+  else if (bit_depth < 8)
+    png_set_packing(png_ptr);
+
+  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    png_set_expand(png_ptr);
+
+  /* Set the background color */
+  switch (color_type) {
+  case PNG_COLOR_TYPE_RGB_ALPHA:
+  case PNG_COLOR_TYPE_GRAY_ALPHA:
+    png_get_bKGD(png_ptr, info_ptr, &image_background);
+    break;
+  default:
+    if (png_get_bKGD(png_ptr, info_ptr, &image_background)) {
+      png_set_background(png_ptr, image_background, PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
+    } else {
+      my_background.red = my_background.green = my_background.blue = my_background.gray = 0;
+      png_set_background(png_ptr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, DISPLAY_GAMMA);
+    }
+    break;
+  }
+
+  png_read_update_info(png_ptr, info_ptr);
+
+#if 0
+  /* Set the transparent color */
+  if (png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values)) {
+    int i;
+
+    p->transparent_disposal = info->transparent_disposal;
+    switch (color_type) {
+    case PNG_COLOR_TYPE_PALETTE:
+      for (i = 0; i < num_trans; i++) {
+	if (trans[i] == 0) {
+	  p->transparent.index = i;
+	  break;
+	}
+      }
+      break;
+    case PNG_COLOR_TYPE_RGB:
+    case PNG_COLOR_TYPE_RGB_ALPHA:
+      p->transparent.red = info_ptr->trans_values.red >> 8;
+      p->transparent.green = info_ptr->trans_values.green >> 8;
+      p->transparent.blue = info_ptr->trans_values.blue >> 8;
+      break;
+    case PNG_COLOR_TYPE_GRAY:
+    case PNG_COLOR_TYPE_GRAY_ALPHA:
+      p->transparent.index = info_ptr->trans_values.gray;
+      break;
+    default:
+    }
+  }
+#endif
+
+  /* prepare image data, store palette if exists */
+  switch (color_type) {
+  case PNG_COLOR_TYPE_RGB:
+    p->type = _RGB24;
+    p->depth = 24;
+    p->bits_per_pixel = 24;
+    p->bytes_per_line = width * 3;
+    break;
+  case PNG_COLOR_TYPE_RGB_ALPHA:
+    p->type = _RGBA32;
+    p->depth = 24;
+    p->bits_per_pixel = 32;
+    p->bytes_per_line = width * 4;
+    break;
+  case PNG_COLOR_TYPE_GRAY:
+    p->type = _GRAY;
+    p->ncolors = 256;
+    p->depth = 8;
+    p->bits_per_pixel = 8;
+    p->bytes_per_line = width;
+    break;
+  case PNG_COLOR_TYPE_GRAY_ALPHA:
+    p->type = _GRAY_ALPHA;
+    p->ncolors = 256;
+    p->depth = 8;
+    p->bits_per_pixel = 16;
+    p->bytes_per_line = width * 2;
+    break;
+  default:
+    p->type = _INDEX;
+    p->ncolors = info_ptr->num_palette;
+    p->depth = 8;
+    p->bits_per_pixel = 8;
+    p->bytes_per_line = width;
+
+    for (i = 0; i < p->ncolors; i++) {
+      p->colormap[i][0] = info_ptr->palette[i].red;
+      p->colormap[i][1] = info_ptr->palette[i].green;
+      p->colormap[i][2] = info_ptr->palette[i].blue;
+    }
+  }
+  p->image_size = p->bytes_per_line * p->height;
+
+  /* allocate memory for returned image */
+  if ((p->image = calloc(1, p->image_size)) == NULL) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    return LOAD_ERROR;
+  }
+
+  /* allocate memory for pointer array */
+  if ((image_array = calloc(height, sizeof(png_bytep))) == NULL) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    free(p->image);
+    p->image = NULL;
+    return LOAD_ERROR;
+  }
+
+  for (i = 0; i < height; i++)
+    image_array[i] = p->image + png_get_rowbytes(png_ptr, info_ptr) * i;
+
+  /* read image */
+  png_read_image(png_ptr, image_array);
+
+  /* read rest of file, and get additional chunks in info_ptr */
+  png_read_end(png_ptr, info_ptr);
+
+#if 0
+  /* process alpha channel if exists */
+  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
+    if (!png_process_alpha_rgb(p)) {
+      png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+      free(p->image);
+      p->image = NULL;
+      return LOAD_ERROR;
+    } else
+      p->transparent_disposal = info->transparent_disposal;
+  } else if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+    if (!png_process_alpha_gray(p)) {
+      png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+      free(p->image);
+      p->image = NULL;
+      return LOAD_ERROR;
+    } else
+      p->transparent_disposal = info->transparent_disposal;
+  }
+#endif
+
+  /* clean up after the read, and free any memory allocated */
+  png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+
+  /* free temporary memory */
+  free(image_array);
+
+  return LOAD_OK;
+}
