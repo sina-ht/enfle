@@ -1,5 +1,8 @@
 2001-06-24  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/mpeg2/Makefile.am: Added attributes.h to include the
+	distribution.
+
 	* plugins/player/Makefile.am: LibMPEG2 is now not experimental.
 
 	* lib/Makefile.am: mpeg2 and demultiplexer are now not
