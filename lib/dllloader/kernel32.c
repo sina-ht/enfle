@@ -217,11 +217,13 @@ DEFINE_W32API(BOOL, ReadFile,
 	       LPDWORD bytes_read, LPOVERLAPPED overlapped))
 {
   more_debug_message("ReadFile(%d bytes) called\n", bytes_to_read);
+
   if (bytes_read)
     *bytes_read = 0;
   if (bytes_to_read == 0)
     return TRUE;
   *bytes_read = fread(buffer, 1, bytes_to_read, (FILE *)handle);
+
   return (*bytes_read >= 0) ? TRUE : FALSE;
 }
 
@@ -452,24 +454,141 @@ DEFINE_W32API(VOID, GlobalMemoryStatus,
   more_debug_message("GlobalMemoryStatus() called\n");
 }
 
+typedef struct _vm_commited VMCommited;
+struct _vm_commited {
+  void *address;
+  unsigned int size;
+  VMCommited *next;
+  VMCommited *prev;
+};
+
+typedef struct _vm_reserved VMReserved;
+struct _vm_reserved {
+  void *base;
+  unsigned int size;
+  VMCommited *commited;
+  VMReserved *next;
+  VMReserved *prev;
+};
+
+static VMReserved *vmr = NULL;
+
 DEFINE_W32API(LPVOID, VirtualAlloc,
 	      (LPVOID ptr, DWORD size, DWORD type, DWORD protect))
 {
-  more_debug_message("VirtualAlloc(%p size %d %d %d) called\n", ptr, size, type, protect);
+  void *p;
 
-  /* XXX */
-  return w32api_mem_alloc(size);
+  more_debug_message("VirtualAlloc(%p, size %d, type 0x%X, protect %d) called\n", ptr, size, type, protect);
+
+  if (type & MEM_RESERVE) {
+    p = w32api_mem_alloc(size);
+    if (vmr == NULL) {
+      if ((vmr = calloc(1, sizeof(VMReserved))) == NULL)
+	return NULL;
+    } else {
+      if ((vmr->next = calloc(1, sizeof(VMReserved))) == NULL)
+	return NULL;
+      vmr->next->prev = vmr;
+      vmr = vmr->next;
+    }
+    vmr->base = p;
+    vmr->size = size;
+    /* vmr->commited = NULL; vmr->next = vmr->prev = NULL; (calloc() do this) */
+
+    debug_message("VirtualAlloc: reserve: %p\n", p);
+
+    return p;
+  }
+
+  if (type & MEM_COMMIT) {
+    VMReserved *v;
+
+    for (v = vmr; v; v = v->prev) {
+      if (v->base <= ptr && ptr + size < v->base + v->size) {
+	VMCommited *vc;
+
+	if (v->commited) {
+	  for (vc = v->commited; vc; vc = vc->prev) {
+	    if (vc->address <= ptr && ptr < vc->address + vc->size)
+	      return NULL;
+	    if (vc->address <= ptr + size && ptr + size < vc->address + vc->size)
+	      return NULL;
+	  }
+	  if ((v->commited->next = calloc(1, sizeof(VMCommited))) == NULL)
+	    return NULL;
+	  v->commited->next->prev = v->commited;
+	  v->commited = v->commited->next;
+	} else {
+	  if ((v->commited = calloc(1, sizeof(VMCommited))) == NULL)
+	    return NULL;
+	}
+	v->commited->address = ptr;
+	v->commited->size = size;
+
+	debug_message("VirtualAlloc: commit: %p\n", ptr);
+
+	return ptr;
+      }
+    }
+    return NULL;
+  }
+
+  debug_message("VirtualAlloc: neither MEM_RESERVE nor MEM_COMMIT\n");
+  return NULL;
 }
 
 DEFINE_W32API(BOOL, VirtualFree,
 	      (LPVOID ptr, DWORD size, DWORD type))
 {
-  more_debug_message("VirtualFree(%p size %d %d) called\n", ptr, size, type);
+  more_debug_message("VirtualFree(%p, size %d, type 0x%X) called\n", ptr, size, type);
 
-  /* XXX */
-  free(ptr);
+  if (type & MEM_RELEASE) {
+    VMReserved *v;
+    VMCommited *vc, *vc_p;
 
-  return TRUE;
+    for (v = vmr; v; v = v->prev) {
+      if (v->base == ptr) {
+	free(ptr);
+	if (v->next)
+	  v->next->prev = v->prev;
+	if (v->prev)
+	  v->prev->next = v->next;
+	for (vc = v->commited; vc; vc = vc_p) {
+	  vc_p = vc->prev;
+	  free(vc);
+	}
+	free(v);
+	return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  if (type & MEM_DECOMMIT) {
+    VMReserved *v;
+
+    for (v = vmr; v; v = v->prev) {
+      if (v->base <= ptr && ptr + size <= v->base + v->size) {
+	VMCommited *vc;
+
+	for (vc = v->commited; vc; vc = vc->prev) {
+	  if (vc->address == ptr) {
+	    if (vc->next)
+	      vc->next->prev = vc->prev;
+	    if (vc->prev)
+	      vc->prev->next = vc->next;
+	    free(vc);
+	    return TRUE;
+	  }
+	}
+	return FALSE;
+      }
+    }
+    return FALSE;
+  }
+
+  debug_message("VirtualFree: neither MEM_RELEASE nor MEM_DECOMMIT\n");
+  return FALSE;
 }
 
 DEFINE_W32API(DWORD, VirtualQuery, (LPCVOID p, LPMEMORY_BASIC_INFORMATION info, DWORD len))
@@ -493,8 +612,16 @@ DEFINE_W32API(HANDLE, HeapCreate,
 DEFINE_W32API(LPVOID, HeapAlloc,
 	      (HANDLE handle, DWORD flags, DWORD size))
 {
-  more_debug_message("HeapAlloc(%p, %X, %d) called\n", handle, flags, size);
-  return w32api_mem_alloc(size);
+  void *p;
+
+  p = w32api_mem_alloc(size);
+
+  more_debug_message("HeapAlloc(%p, %X, %d) called -> %p\n", handle, flags, size, p);
+
+  if ((flags & HEAP_ZERO_MEMORY) && p)
+    memset(p, 0, size);
+
+  return p;
 }
 
 DEFINE_W32API(LPVOID, HeapReAlloc,
@@ -550,7 +677,7 @@ DEFINE_W32API(INT, lstrlenA,
 DEFINE_W32API(LPSTR, lstrcpyA,
 	      (LPSTR dest, LPCSTR src))
 {
-  debug_message("lstrcpyA(%p, %s) called\n", dest, src);
+  /* debug_message("lstrcpyA(%p, %s) called\n", dest, src); */
 
   memcpy(dest, src, strlen(src) + 1);
 
@@ -749,6 +876,8 @@ DEFINE_W32API(INT, GetLocaleInfoA,
 	      (LCID id, LCTYPE type, LPSTR buf, INT len))
 {
   debug_message("GetLocaleInfoA(%d, %d)\n", id, type);
+  if (len)
+    buf[0] = '\0';
   return 0;
 }
 
