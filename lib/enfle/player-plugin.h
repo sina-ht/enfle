@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 19 01:44:01 2001.
- * $Id: player-plugin.h,v 1.10 2001/06/19 08:16:19 sian Exp $
+ * Last Modified: Tue Feb 10 00:03:17 2004.
+ * $Id: player-plugin.h,v 1.11 2004/02/14 05:28:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,6 +48,8 @@ typedef struct _player_plugin {
  static PlayerStatus \
  load(VideoWindow * vw , Movie * m , Stream * st , Config * c , void * priv )
 
+#ifndef STATIC
 ENFLE_PLUGIN_ENTRIES;
+#endif
 
 #endif

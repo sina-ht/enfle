@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep  2 11:34:36 2001.
- * $Id: streamer-plugin.h,v 1.2 2001/09/02 05:45:51 sian Exp $
+ * Last Modified: Tue Feb 10 00:03:28 2004.
+ * $Id: streamer-plugin.h,v 1.3 2004/02/14 05:28:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -50,6 +50,8 @@ typedef struct _streamer_plugin {
  static StreamerStatus \
  open(Stream * st , char * p )
 
+#ifndef STATIC
 ENFLE_PLUGIN_ENTRIES;
+#endif
 
 #endif
