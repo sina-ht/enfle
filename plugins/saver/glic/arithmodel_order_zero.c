@@ -1,8 +1,8 @@
 /*
  * arithmodel_order_zero.c -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
- * Last Modified: Wed Sep 19 16:37:07 2001.
- * $Id: arithmodel_order_zero.c,v 1.13 2001/09/19 07:44:26 sian Exp $
+ * Last Modified: Fri Sep 21 17:19:23 2001.
+ * $Id: arithmodel_order_zero.c,v 1.14 2001/09/21 10:12:50 sian Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -413,7 +413,7 @@ decode_bulk(Arithmodel *_am, Index *index_return, Index low, Index high)
   update_freq(_am, index);
 
   if (IS_ESCAPE_INSTALLED(am) && index == am->escape_symbol) {
-    *index_return = am->nsymbols - am->start_symbol;
+    *index_return = am->nsymbols;
     install_symbol(_am, 1);
     return 2;
   }
