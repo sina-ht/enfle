@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.2 2000/10/08 17:33:44 sian Exp $
+# $Id: Makefile.am,v 1.3 2000/10/09 20:25:38 sian Exp $
 
 lib_LTLIBRARIES = libenfle.la
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib/utils
@@ -16,6 +16,7 @@ libenfle_la_SOURCES = \
 	stream-utils.c stream-utils.h \
 	stream.c stream.h \
 	archive.c archive.h \
+	movie.c movie.h \
 	image_magnify.c \
 	image.c image.h
 libenfle_la_LIBADD = $(top_builddir)/lib/utils/libenfleutils.la
