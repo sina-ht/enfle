@@ -1,11 +1,10 @@
-***************************************************
+***************************************************************************
 
-     Simple Plugin-based Graphic Loader Enfle
-			*** DEVELOPING VERSION ***
+             Simple Plugin-based Graphic Loader Enfle
 
- (C)Copyright 1998, 99, 2000, 2001 by Hiroshi Takekawa.
+   (C) Copyright 1998, 99, 2000, 2001, 2002 by Hiroshi Takekawa.
 
-     Last Modified: Fri Oct 12 01:19:30 2001.
+             Last Modified: Wed Jul 17 20:58:08 2002.
 
  This file is part of Enfle.
 
@@ -13,10 +12,10 @@
  under the terms of the GNU General Public License version 2 as
  published by the Free Software Foundation.
 
- Enfle is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+ Enfle is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
 
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
@@ -25,7 +24,7 @@
  ATTENTION: GPL version 2 only. You cannot apply any later
  version. This situation may change.
 
-***************************************************
+***************************************************************************
 
  JPEG Loader plugin and JPEG Saver plugin are based in part on the
  work of the Independent JPEG Group
@@ -33,9 +32,9 @@
  -- libjpeg is only linked, not distributed with this archive. You
  -- should install it.
 
- The Graphics Interchange Format(c) is
+ The Graphics Interchange Format (c) is
  the Copyright property of CompuServe Incorporated.
- GIF(sm) is a Service Mark property of CompuServe Incorporated.
+ GIF (sm) is a Service Mark property of CompuServe Incorporated.
 
  -- libungif is only linked, not distributed with this
  -- archive. Moreover, libungif is not used by default, for avoiding
@@ -43,12 +42,12 @@
 
  It seems I should include this sentence: "This product includes
  software developed by or derived from software developed by Project
- Mayo". Strictly speaking, Enfle and OpenDivX plugin itself don't
- include any portion of software by them. OpenDivX plugin will be
- dynamically linked with libdivxdecore. I'm not sure this plugin is
- regarded as "Larger Work". But it doesn't matter because this plugin
- can be and is released under GPL. See
- plugins/player/opendivx/opendivx.c for detail.
+ Mayo".  Strictly speaking, Enfle and OpenDivX plugin itself don't
+ include any portion of software by them.  OpenDivX plugin will be
+ dynamically linked with libdivxdecore.  I'm not sure this plugin is
+ regarded as "Larger Work".  But it doesn't matter because this plugin
+ can be and is released under GPL.  See
+ plugins/player/opendivx/opendivx.c for further details.
 
  This archive includes mpglib by Michael Hipp. Read lib/mpglib/README.
 
@@ -62,7 +61,7 @@
 
 OK, legal part is over. The rest is fun.
 
-Enfle is a clipped form of Enfleurage. Enfleurage means: A process of
+Enfle is a clipped form of Enfleurage.  Enfleurage means: A process of
 extracting perfumes by exposing absorbents, as fixed oils or fats, to
 the exhalations of the flowers. It is used for plants whose volatile
 oils are too delicate to be separated by distillation. (Webster's
@@ -74,58 +73,58 @@ See README.e if you don't read Japanese, but English.
 1.はじめに
 
 このプログラムは、たくさんの画像をさくさく見ることを目標とした画像ロー
-ダです。ガンマ補正、拡大縮小、90度回転、軸対称変換などが行えます。動画
+ダです。ガンマ補正、拡大縮小、 90 度回転、軸対称変換などが行えます。動画
 にも対応しています。
 
  対応フォーマット
- BMP, GIF, JPEG, PCX, PNG, PNM
- spi(不安定, Susie pluginを利用できる)
+ BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM
+ spi (不安定, Susie plugin を利用できる)
  animated GIF
  mng
- mpeg(mpeg1, mpeg2)
- avi,asf(avifileを利用)
+ mpeg (mpeg1, mpeg2)
+ avi,asf (avifile を利用)
  DivX in AVI format supported by divx4linux
 
 各フォーマットへの対応はプラグインによって実装されております。画像の他
-に特殊なアーカイブ、tarなどの一般的なアーカイブ、圧縮されたgzなどのファ
+に特殊なアーカイブ、 tar などの一般的なアーカイブ、圧縮された gz などのファ
 イルなどへの対応もプラグインによって実装されており、公開されている仕様
-を参考にすることにより（開発バージョンのドキュメントはまだなし）、誰で
+を参考にすることにより (開発バージョンのドキュメントはまだなし) 、誰で
 もプラグインを作って拡張することが可能です。
 
 ***
-GIFのdecodeにはLZWのdecodeが必要ですが、patent(特許)の問題があるので、
-enfleのコード自体にはLZW decoderは含まれておりません。decodeには特許は
-及ばないというのが大方の見方ですがpatent holderであるUnisysが否定して
-いるので一応含まないでおきます。libungifを使うungifプラグインが含まれ
-ていますが、ungifプラグイン自体はLZW関連のcodeを含んでいません。ただし、
-libungifのLZW codeを使用できるかどうかとは別ですので、各自の責任におい
-て使用してください。ungif pluginを利用するには、configure時に
---with-ungifを明示的に指定する必要があります。
+GIF の decode には LZW の decode が必要ですが、 patent (特許) の問題があるので、
+enfle のコード自体には LZW decoder は含まれておりません。 decode には特許は
+及ばないというのが大方の見方ですが patent holder である Unisys が否定して
+いるので一応含まないでおきます。 libungif を使う ungif プラグインが含まれ
+ていますが、 ungif プラグイン自体は LZW 関連の code を含んでいません。ただし、
+libungif の LZW code を使用できるかどうかとは別ですので、各自の責任におい
+て使用してください。 ungif plugin を利用するには、 configure 時に
+--with-ungif を明示的に指定する必要があります。
 ***
 
-以下のpluginにはlibraryが別途必要です。動作するであろうversionを書いて
+以下の plugin には library が別途必要です。動作するであろう version を書いて
 おきます。
 
 JPEG: jpegsrc-6b (libjpeg)
-PNG: libpng-1.0.2 or later (recommended: 1.0.9 or 1.2.0)
-gz: zlib-1.1.3 or later
+PNG: libpng-1.0.2 or later (recommended: 1.0.9 or 1.2.3)
+gz: zlib-1.1.4 or later (Note: versions prior to 1.1.3 include the security hole)
 bz2: bzip2-1.0.0 or later
-ungif: libungif-3.1.0 or later でとりあえず動作しますが、現時点で最新の4.1.0にもバグがあります。
+ungif: libungif-3.1.0 or later でとりあえず動作しますが、現時点で最新の 4.1.0 にもバグがあります。
        (recommended: cvs version)
 mng: libmng-1.0.0 or later
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (パッチが必要な場合は私までどうぞ)
 avifile: avifile-0.53.5 or avifile-0.6 in CVS
-opendivx: divx4linux-20010807
+opendivx: divx4linux-20010807, divx4linux501-20020418
 
 
 2.動作環境
 
-Xサーバのdepthが 16, 24(bpp 24, 32)では動くと思われます。その他はいま
-のところunsupportedです。今あげたdepthで表示できなかった場合はxdpyinfo
-の出力と詳しい環境をお知らせください。なお、depth 16のmaskが
-0xf800,0x7e0,0x1f でない場合ばけると思われます。今のところこれは仕様で
-すが、そのうち改善されるかもしれません。
+X サーバの depth が 16, 24 (bpp 24, 32) では動くと思われます。その他は
+いまのところ unsupported です。今あげた depth で表示できなかった場合は 
+xdpyinfo の出力と詳しい環境をお知らせください。なお、 depth 16 の mask 
+が0xf800,0x7e0,0x1f でない場合ばけると思われます。今のところこれは仕様
+ですが、そのうち改善されるかもしれません。
 
 今のところ以下の環境での動作が確認されています。
 
@@ -134,61 +133,68 @@ FreeBSD (4.1R, x86)
 
 同じ/他の環境下で試された方は結果を御報告ください。
 
-私のメインの開発環境は2001/10/12現在 以下の通りです。
+私のメインの開発環境は 2002/07/17 現在 以下の通りです。
 
-Kernel: Linux-2.4.10-ac11
-CPU: PentiumIII/1GHz
-X server: XFree86-4.1.0
-Video: Matrox Millennium G450 DH/AGP 16M
-Compiler: gcc version 2.95.3 or 3.0.1
-libc: glibc-2.2.4
+Kernel: Linux-2.5.25
+CPU: PentiumIII/1GHz or PentiumIII/700MHz
+X server: XFree86-4.2.0
+Video: Matrox Millennium G450 DH/AGP 16M or Silicon Motion, Inc. SM720 Lynx3DM
+Compiler: gcc version 2.95.3 or 3.1
+libc: glibc-2.2.5
 
 
 3.コンパイル
 
-コンパイルにはgccが必要です。コードにgccのextensionを使っています。
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-基本はconfigure して make するだけです。うまくいかない際には、どのよう
-なエラーがでたか報告していただければ幸いです。configureが生成する
-config.logなども参考になります。報告先は後述してあります。
+コンパイルには gcc が必要です。コードに gcc の extension を使っています。
+~~~~~~~~~~~~~~~~~~~~~~~~~
+基本は configure して make するだけです。うまくいかない際には、どのよ
+うなエラーがでたか報告していただければ幸いです。configure が生成する
+config.log なども参考になります。報告先は後述してあります。
 
-makeが通ったら、make installするか、srcに移動してenfle.rcを編集して
-./enfleと起動してください。
+make が通ったら、 make install するか、 src に移動して enfle.rc を編集
+し ./enfle と起動してください。
 
-configureスクリプトの指定できるオプションは、./configure --helpで詳細
-がみれます。nasmは必要なくなりました。
+configure スクリプトの指定できるオプションは、./configure --help で詳
+細がみれます。nasm は必要なくなりました。
 
-プラグインはshared objectとしてcompileされます。ファイル名は.soでおわっ
-ている必要があります。compileは通るが.so以外になってしまって動かないと
-いう方がいらっしゃいましたら御一報ください。ただし.aができている場合に
-はshared objectが作れない/使えない環境である可能性もあります。
+プラグインは shared object として compile されます。ファイル名は.so で
+おわっている必要があります。compile は通るが.so 以外になってしまって動
+かないという方がいらっしゃいましたら御一報ください。ただし.a ができて
+いる場合には shared object が作れない/使えない環境である可能性もありま
+す。
 
-susieのpluginを使いたい場合には--enable-spiが必要です。
-ungif pluginを使いたい場合には--with-ungifが必要です。
+susie の plugin を使いたい場合には--enable-spi が必要です。
+ungif plugin を使いたい場合には--with-ungif が必要です。
 
-Susieのpluginはとりあえず/usr/(local/)lib/enfle/plugins/spis/など適当
-な検索される場所に置けばロードされます。ロードされても画像が読めないか
-もしれませんし、ロードすらされない可能性があります。どのプラグインが成
-功した/失敗したという情報をお待ちしております。
+Susie の plugin はとりあえず/usr/(local/)lib/enfle/plugins/spis/など適
+当な検索される場所に置けばロードされます。ロードされても画像が読めない
+かもしれませんし、ロードすらされない可能性があります。どのプラグインが
+成功した/失敗したという情報をお待ちしております。
 
 
 4.コマンドライン
 
-Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
+Enfle は非常にシンプルなプログラムです。引数に表示したいファイル名を続
 けて指定するだけです。ディレクトリを指定した場合はその下のファイルを再
 帰的に追加します。対応してるアーカイブを指定した場合には、その中味も読
 まれます。
 
 オプション:
 
--Cはbatch作業で自動変換します。引数でSaver pluginの名前を指定できます。
-省略するとPNGになります。
--iは指定したパターンのファイル名のみ対象とします。
--xは指定したパターンのファイル名を対象から外します。
--wは最初に読みこんだ画像を壁紙にして終了します。
--mは拡大表示方法を指定します。
-  0: normal 1: double 2: short 3: long
--cはconfigの上書きをします。複数指定可。
+-C は batch 作業で自動変換します。引数で Saver plugin の名前を指定でき
+      ます。省略すると PNG になります。
+-i は指定したパターンのファイル名のみ対象とします。
+-x は指定したパターンのファイル名を対象から外します。
+-w は最初に読みこんだ画像を壁紙にして終了します。
+-m は拡大表示方法を指定します。
+      0: normal 1: double 2: short 3: long
+-c は config の上書きをします。複数指定可。
+-u は 使用する UI plugin を指定します。
+-v は 使用する video plugin を指定します。
+-a は 使用する audio plugin を指定します。
+-I は プラグインの詳細情報を表示します。
+-h は ヘルプを表示します。
+-V は バージョンを表示します。
 
 
 5.使い方
@@ -197,52 +203,50 @@ Enfleは非常にシンプルなプログラムです。引数に表示したいファイル名を続
 右クリック,b		前の画像へ
 中クリック,N		次のアーカイブへ
 d			今表示してるファイルを表示リストからはずす
-D(shift+d)		今表示してるファイルを削除する
+D (shift+d)		今表示してるファイルを削除する
 q			終了
-f			フルスクリーンon/off
-S(shift+s)		拡大アルゴリズムの変更(nointerpolate/bilinear)
-C-s			表示中の画像をPNG形式で保存
-Alt-S			configで指定した形式で保存
+f			フルスクリーン on/off
+S (shift+s)		拡大アルゴリズムの変更 (nointerpolate/bilinear)
+C-s			表示中の画像を PNG 形式で保存
+Alt-S			config で指定した形式で保存
 h,v			それぞれ水平、垂直方向の軸に対して線対称に変換
-l,r			それぞれ90度、-90度に回転変換
-m			2倍拡大
-M(shift+m)		画像の長辺が画面いっぱいになるように拡大
+l,r			それぞれ 90 度、-90 度に回転変換
+m			2 倍拡大
+M (shift+m)		画像の長辺が画面いっぱいになるように拡大
 Alt-m			画像の短辺が画面いっぱいになるように拡大
-1-3,5-7			ガンマ補正。それぞれ、2.2, 1.7, 1.45, 1/1.45, 1/1.7, 1/2.2。
-			繰り返すとどんどん重ねて行われる
-4			画像を元に戻す
+1-7			ガンマ補正。それぞれ、 2.2, 1.7, 1.45, 1, 1/1.45, 1/1.7, 1/2.2
 
 また、全ての画像を表示し終わっても終了します。
 
-マウスのwheelにも対応しています。今のところ、前にまわすと次の画像、後
-にまわすと前の画像にうつります。
+マウスの wheel にも対応しています。今のところ、前にまわすと次の画像、
+後にまわすと前の画像にうつります。
 
 
 6.カスタマイズ
 
-installすると$prefix/share/enfle/enfle.rc(だいたい
-/usr/local/share/enfle/enfle.rcとかそのあたり)という設定ファイルが
-installされます。カスタマイズするには、
+install すると$prefix/share/enfle/enfle.rc (だいたい
+/usr/local/share/enfle/enfle.rc とかそのあたり) という設定ファイルが
+install されます。カスタマイズするには、
 
 mkdir ~/.enfle
 cp /usr/share/enfle/enfle.rc ~/.enfle/config
 
-とコピーして~/.enfle/configを書きかえてください。
+とコピーして~/.enfle/config を書きかえてください。
 
 キャプションのカスタマイズ
-enfle.rc(~/.enfle/config)のcaption_template = "%p %f %xx%y"で設定しま
-す。今の所、使用できるのは以下の通り。
+enfle.rc (~/.enfle/config) の caption_template = "%p %f %xx%y"で設定し
+ます。今の所、使用できるのは以下の通り。
 
 %%
  %そのもの
 %) or %> 
- 拡大アルゴリズムを)または>で表示
+ 拡大アルゴリズムを) または>で表示
 %x, %y
  画像のサイズ
 %f
  ファイルのフォーマット
 %F
- ファイルのフォーマット(簡略)
+ ファイルのフォーマット (簡略)
 %p
  ファイルのパス
 %P
@@ -253,18 +257,18 @@ enfle.rc(~/.enfle/config)のcaption_template = "%p %f %xx%y"で設定しま
 
 7.その他
 
-w3mの外部ビューアとしてenfleを使う方法
+w3m の外部ビューアとして enfle を使う方法
 
 ~/.mailcap に
 image/*;enfle %s
-なんて感じに書いてください。システム全体でenfleにしてやるぜ、という方は
-/etc/mailcapにでも書いてください。
+なんて感じに書いてください。システム全体で enfle にしてやるぜ、という
+方は/etc/mailcap にでも書いてください。
 
 
 8.連絡先
 
-バグの報告、御意見、御感想は歓迎します。Enfleに関するMLがあるので、そ
-ちらをご利用ください。自動登録となります。講読するには、
+バグの報告、御意見、御感想は歓迎します。Enfle に関する ML があるので、
+そちらをご利用ください。自動登録となります。講読するには、
 
  subscribe あなたの名前
 
@@ -272,9 +276,9 @@ image/*;enfle %s
 
  例: subscribe Hiroshi Takekawa
 
-その後折り返し届いたメールにしたがってconfirm(登録の確認)をしてくださ
-い。投稿されたメールは私に各種権利があるものとします。(ログの公開、検
-索の提供等を楽にするためくらいの意味しかないです)
+その後折り返し届いたメールにしたがって confirm (登録の確認) をしてくだ
+さい。投稿されたメールは私に各種権利があるものとします。(ログの公開、
+検索の提供等を楽にするためくらいの意味しかないです)
 
 どうしてもという場合には私に直接でも結構です。
 
@@ -284,7 +288,7 @@ image/*;enfle %s
 
 9.配布について
 
-EnfleはGNU GENERAL PUBLIC LICENSE Version 2に従います。Version 2のみで、
-それ以降のVersionにするオプションはいまのところありません。GPL2につい
-てはCOPYINGをお読みください。補助として日本語訳COPYING.jもつけてありま
-す。
+Enfle は GNU GENERAL PUBLIC LICENSE Version 2 に従います。Version 2 の
+みで、それ以降の Version にするオプションはいまのところありません。
+GPL2 については COPYING をお読みください。補助として日本語訳 COPYING.j 
+もつけてあります。
