@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 10 18:33:43 2001.
- * $Id: pe_image.c,v 1.19 2001/10/10 09:34:38 sian Exp $
+ * Last Modified: Wed Oct 10 19:54:38 2001.
+ * $Id: pe_image.c,v 1.20 2001/10/10 14:42:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -343,7 +343,7 @@ load(PE_image *p, char *path)
     show_message("PE_image: " __FUNCTION__ ": Cannot open %s\n", path);
     return 0;
   }
-  p->filepath = path;
+  p->filepath = strdup(path);
 
   fread(dos_header, 1, DOS_HEADER_SIZE, fp);
   pe_header_start = PE_HEADER_START(dos_header);
@@ -615,6 +615,8 @@ destroy(PE_image *p)
     hash_destroy(p->resource, 1);
   if (p->export_symbols)
     hash_destroy(p->export_symbols, 0);
+  if (p->filepath)
+    free(p->filepath);
   if (p->image)
     free(p->image);
   free(p);
