@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar 12 01:00:29 2004.
- * $Id: generic.c,v 1.6 2004/03/11 16:01:14 sian Exp $
+ * Last Modified: Fri Mar 12 22:08:10 2004.
+ * $Id: generic.c,v 1.7 2004/03/12 13:13:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -391,8 +391,8 @@ play_video(void *arg)
   show_message("videodecoder %s\n", m->vdec->name);
 
   vds = VD_OK;
-  while (m->status == _PLAY) {
-    while (m->status == _PLAY && vds == VD_OK)
+  while (m->status == _PLAY || m->status == _RESIZING) {
+    while ((m->status == _PLAY || m->status == _RESIZING) && vds == VD_OK)
       vds = videodecoder_decode(m->vdec, m, info->p, NULL, 0, NULL);
     if (vds == VD_NEED_MORE_DATA) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
