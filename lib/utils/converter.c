@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  7 00:25:22 2001.
- * $Id: converter.c,v 1.1 2001/10/06 16:00:24 sian Exp $
+ * Last Modified: Mon Oct  8 03:33:58 2001.
+ * $Id: converter.c,v 1.2 2001/10/09 00:57:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,18 +26,15 @@
 #define REQUIRE_STRING_H
 #include "compat.h"
 
-#ifdef USE_ICONV
-
 #include "converter.h"
 
-#define ICONV_OUTPUT_SIZE 65536
-#ifndef USE_GICONV
-# include <iconv.h>
-#else
-# include <giconv.h>
-#endif
+#ifdef HAVE_ICONV
 
-int converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
+#define ICONV_OUTPUT_SIZE 65536
+#include <iconv.h>
+
+int
+converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
 {
   iconv_t cd;
   char d[ICONV_OUTPUT_SIZE];
@@ -70,7 +67,7 @@ int converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
   outptr = d;
   avail = ICONV_OUTPUT_SIZE - 1;
 
-  if ((nconv = iconv(cd, (char **)&inptr, &insize, &outptr, &avail)) != (size_t)-1) {
+  if ((nconv = iconv(cd, (ICONV_CONST char **)&inptr, &insize, &outptr, &avail)) != (size_t)-1) {
     *outptr = '\0';
     *d_r = strdup(d);
   } else {
@@ -88,11 +85,19 @@ int converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
       perror("converter_convert");
       break;
     }
+    *outptr = '\0';
     *d_r = strdup(s);
   }
 
   iconv_close(cd);
 
+  return strlen(*d_r);
+}
+#else
+int
+converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
+{
+  *d_r = strdup(s);
   return strlen(*d_r);
 }
 #endif

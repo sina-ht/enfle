@@ -5,8 +5,8 @@ dnl
 dnl (C)Copyright 1999, 2000, 2001 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Oct  8 02:15:04 2001.
-dnl $Id: configure.in,v 1.93 2001/10/07 17:35:06 sian Exp $
+dnl Last Modified: Mon Oct  8 04:56:27 2001.
+dnl $Id: configure.in,v 1.94 2001/10/09 00:57:02 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -49,6 +49,7 @@ AC_PROG_LN_S
 dnl AC_PROG_RANLIB
 AC_PROG_GCC_TRADITIONAL
 AM_PROG_AS
+AM_ICONV
 
 dnl libtool
 AC_ENABLE_SHARED(yes)
@@ -70,9 +71,7 @@ AC_SUBST(LIBADD_DLOPEN)
 
 available_jpeg=no
 AC_CHECK_HEADER(jpeglib.h, [
-  AC_CHECK_LIB(jpeg-mmx, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg-mmx; ], [
-    AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ])
-  ])])
+  AC_CHECK_LIB(jpeg, jpeg_finish_decompress, [ available_jpeg=yes; LIBADD_JPEG=-ljpeg; ])])
 AM_CONDITIONAL(HAVE_JPEG, test "$available_jpeg" = "yes")
 AC_SUBST(LIBADD_JPEG)
 
@@ -359,34 +358,34 @@ fi
 AM_CONDITIONAL(USE_SPI, test "$enable_spi" = "yes")
 
 dnl iconv needed for spi support(LoadString or so)
-AC_ARG_ENABLE(iconv,
-    [  --enable-iconv          Enable iconv support.],
-    [  enable_iconv=$enableval ],
-    [  enable_iconv=yes ])
-iconv_ok=no
-AC_CHECK_FUNC(iconv, [ iconv_ok=yes; LIBADD_ICONV= ], [
-  AC_CHECK_LIB(iconv, iconv, [ iconv_ok=yes; LIBADD_ICONV=-liconv ], [
-    AC_CHECK_LIB(giconv, iconv, [
-      iconv_ok=yes;
-      LIBADD_ICONV=-lgiconv;
-      AC_DEFINE(USE_GICONV,, [Define if you want to use libgiconv instead of libiconv.])
-    ])
-  ])
-])
-AC_SUBST(LIBADD_ICONV)
+dnl AC_ARG_ENABLE(iconv,
+dnl     [  --enable-iconv          Enable iconv support.],
+dnl     [  enable_iconv=$enableval ],
+dnl     [  enable_iconv=yes ])
+dnl iconv_ok=no
+dnl AC_CHECK_FUNC(iconv, [ iconv_ok=yes; LIBADD_ICONV= ], [
+dnl   AC_CHECK_LIB(iconv, iconv, [ iconv_ok=yes; LIBADD_ICONV=-liconv ], [
+dnl     AC_CHECK_LIB(giconv, iconv, [
+dnl       iconv_ok=yes;
+dnl       LIBADD_ICONV=-lgiconv;
+dnl       AC_DEFINE(USE_GICONV,, [Define if you want to use libgiconv instead of libiconv.])
+dnl     ])
+dnl   ])
+dnl ])
+dnl AC_SUBST(LIBADD_ICONV)
 
-AC_MSG_CHECKING(if iconv support wanted)
-if test "$enable_iconv" = "yes"; then
-  if test "$iconv_ok" = "yes"; then
-    AC_DEFINE(USE_ICONV,, [Define if you want to use iconv().])
-    AC_MSG_RESULT(yes)
-  else
-    enable_iconv=no
-    AC_MSG_RESULT([yes, but lack of iconv functions])
-  fi
-else
-  AC_MSG_RESULT(no)
-fi
+dnl AC_MSG_CHECKING(if iconv support wanted)
+dnl if test "$enable_iconv" = "yes"; then
+dnl   if test "$iconv_ok" = "yes"; then
+dnl     AC_DEFINE(USE_ICONV,, [Define if you want to use iconv().])
+dnl     AC_MSG_RESULT(yes)
+dnl   else
+dnl     enable_iconv=no
+dnl     AC_MSG_RESULT([yes, but lack of iconv functions])
+dnl   fi
+dnl else
+dnl   AC_MSG_RESULT(no)
+dnl fi
 
 dnl more warning
 AC_ARG_ENABLE(warnings,
