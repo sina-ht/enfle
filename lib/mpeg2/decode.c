@@ -20,7 +20,7 @@
  */
 
 #include <stdio.h>
-#include <string.h>	/* memcpy/memset, try to remove */
+#include <string.h>
 #include <stdlib.h>
 #include <inttypes.h>
 
@@ -34,14 +34,6 @@
 #include "mm_accel.h"
 #include "attributes.h"
 #include "mmx.h"
-
-#ifdef HAVE_MEMALIGN
-/* some systems have memalign() but no declaration for it */
-void * memalign (size_t align, size_t size);
-#else
-/* assume malloc alignment is sufficient */
-#define memalign(align,size) malloc (size)
-#endif
 
 mpeg2_config_t config;
 
