@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Sep 21 11:54:06 2001.
- * $Id: libmpeg2.c,v 1.26 2001/09/21 02:57:54 sian Exp $
+ * Last Modified: Sun Sep 23 04:00:36 2001.
+ * $Id: libmpeg2.c,v 1.27 2001/09/22 19:00:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,7 +60,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   type: ENFLE_PLUGIN_PLAYER,
   name: "LibMPEG2",
-  description: "LibMPEG2 Player plugin version 0.2.1 with integrated libmpeg2(mpeg2dec-0.2.0)",
+  description: "LibMPEG2 Player plugin version 0.2.2 with integrated libmpeg2(mpeg2dec-0.2.0)",
   author: "Hiroshi Takekawa",
   identify: identify,
   load: load
@@ -637,18 +637,21 @@ stop_movie(Movie *m)
 
   if (m->has_video && info->vstream) {
     fifo_destroy(info->vstream);
+    debug_message(__FUNCTION__ ": fifo for video destroyed\n");
     info->vstream = NULL;
   }
   if (m->has_audio && info->astream) {
     fifo_destroy(info->astream);
+    debug_message(__FUNCTION__ ": fifo for audio destroyed\n");
     info->astream = NULL;
   }
 
   debug_message(__FUNCTION__ ": waiting for video thread to exit... \n");
 
   if (info->video_thread) {
-    //pthread_join(info->video_thread, NULL);
-    pthread_cancel(info->video_thread);
+    info->to_render = 0;
+    pthread_cond_signal(&info->update_cond);
+    pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
   }
 
