@@ -31,7 +31,8 @@
 #define MAX_DECOMPOSITIONS 8
 #define MAX_PLANES 4
 #define DWTELEM int
-#define QROOT 8 
+#define QSHIFT 5
+#define QROOT (1<<QSHIFT)
 #define LOSSLESS_QLOG -128
 #define FRAC_BITS 8
 
@@ -70,6 +71,24 @@ static const int8_t quant3b[256]={
 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+};
+static const int8_t quant3bA[256]={
+ 0, 0, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
+ 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
 };
 static const int8_t quant5[256]={
  0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -371,6 +390,11 @@ typedef struct BlockNode{
 #define LOG2_MB_SIZE 4
 #define MB_SIZE (1<<LOG2_MB_SIZE)
 
+typedef struct x_and_coeff{
+    int16_t x;
+    uint16_t coeff;
+} x_and_coeff;
+
 typedef struct SubBand{
     int level;
     int stride;
@@ -378,8 +402,10 @@ typedef struct SubBand{
     int height;
     int qlog;                                   ///< log(qscale)/log[2^(1/6)]
     DWTELEM *buf;
-    int16_t *x;
-    DWTELEM *coeff;
+    int buf_x_offset;
+    int buf_y_offset;
+    int stride_line; ///< Stride measured in lines, not pixels.
+    x_and_coeff * x_coeff;
     struct SubBand *parent;
     uint8_t state[/*7*2*/ 7 + 512][32];
 }SubBand;
@@ -389,6 +415,17 @@ typedef struct Plane{
     int height;
     SubBand band[MAX_DECOMPOSITIONS][4];
 }Plane;
+
+/** Used to minimize the amount of memory used in order to optimize cache performance. **/
+typedef struct {
+    DWTELEM * * line; ///< For use by idwt and predict_slices.
+    DWTELEM * * data_stack; ///< Used for internal purposes.
+    int data_stack_top;
+    int line_count;
+    int line_width;
+    int data_count;
+    DWTELEM * base_buffer; ///< Buffer that this structure is caching.
+} slice_buffer;
 
 typedef struct SnowContext{
 //    MpegEncContext m; // needed for motion estimation, should not be used for anything else, the idea is to make the motion estimation eventually independant of MpegEncContext, so this will be removed then (FIXME/XXX)
@@ -426,22 +463,117 @@ typedef struct SnowContext{
     int block_max_depth;
     Plane plane[MAX_PLANES];
     BlockNode *block;
+    slice_buffer sb;
 
     MpegEncContext m; // needed for motion estimation, should not be used for anything else, the idea is to make the motion estimation eventually independant of MpegEncContext, so this will be removed then (FIXME/XXX)
 }SnowContext;
+
+typedef struct {
+    DWTELEM *b0;
+    DWTELEM *b1;
+    DWTELEM *b2;
+    DWTELEM *b3;
+    int y;
+} dwt_compose_t;
+
+#define slice_buffer_get_line(slice_buf, line_num) ((slice_buf)->line[line_num] ? (slice_buf)->line[line_num] : slice_buffer_load_line((slice_buf), (line_num)))
+//#define slice_buffer_get_line(slice_buf, line_num) (slice_buffer_load_line((slice_buf), (line_num)))
+
+static void slice_buffer_init(slice_buffer * buf, int line_count, int max_allocated_lines, int line_width, DWTELEM * base_buffer)
+{
+    int i;
+  
+    buf->base_buffer = base_buffer;
+    buf->line_count = line_count;
+    buf->line_width = line_width;
+    buf->data_count = max_allocated_lines;
+    buf->line = (DWTELEM * *) av_mallocz (sizeof(DWTELEM *) * line_count);
+    buf->data_stack = (DWTELEM * *) av_malloc (sizeof(DWTELEM *) * max_allocated_lines);
+  
+    for (i = 0; i < max_allocated_lines; i++)
+    {
+      buf->data_stack[i] = (DWTELEM *) av_malloc (sizeof(DWTELEM) * line_width);
+    }
+    
+    buf->data_stack_top = max_allocated_lines - 1;
+}
+
+static DWTELEM * slice_buffer_load_line(slice_buffer * buf, int line)
+{
+    int i;
+    int offset;
+    DWTELEM * buffer;
+  
+//  av_log(NULL, AV_LOG_DEBUG, "Cache hit: %d\n", line);  
+  
+    assert(buf->data_stack_top >= 0);
+//  assert(!buf->line[line]);
+    if (buf->line[line])
+        return buf->line[line];
+    
+    offset = buf->line_width * line;
+    buffer = buf->data_stack[buf->data_stack_top];
+    buf->data_stack_top--;
+    buf->line[line] = buffer;
+  
+//  av_log(NULL, AV_LOG_DEBUG, "slice_buffer_load_line: line: %d remaining: %d\n", line, buf->data_stack_top + 1);
+  
+    return buffer;
+}
+
+static void slice_buffer_release(slice_buffer * buf, int line)
+{
+    int i;
+    int offset;
+    DWTELEM * buffer;
+
+    assert(line >= 0 && line < buf->line_count);
+    assert(buf->line[line]);
+
+    offset = buf->line_width * line;
+    buffer = buf->line[line];
+    buf->data_stack_top++;
+    buf->data_stack[buf->data_stack_top] = buffer;
+    buf->line[line] = NULL;
+  
+//  av_log(NULL, AV_LOG_DEBUG, "slice_buffer_release: line: %d remaining: %d\n", line, buf->data_stack_top + 1);
+}
+
+static void slice_buffer_flush(slice_buffer * buf)
+{
+    int i;
+    for (i = 0; i < buf->line_count; i++)
+    {
+        if (buf->line[i])
+        {
+//      av_log(NULL, AV_LOG_DEBUG, "slice_buffer_flush: line: %d \n", i);
+            slice_buffer_release(buf, i);
+        }
+    }
+}
+
+static void slice_buffer_destroy(slice_buffer * buf)
+{
+    int i;
+    slice_buffer_flush(buf);
+  
+    for (i = buf->data_count - 1; i >= 0; i--)
+    {
+        assert(buf->data_stack[i]);
+        av_free(buf->data_stack[i]);
+    }
+    assert(buf->data_stack);
+    av_free(buf->data_stack);
+    assert(buf->line);
+    av_free(buf->line);
+}
 
 #ifdef	__sgi
 // Avoid a name clash on SGI IRIX
 #undef	qexp
 #endif
 #define QEXPSHIFT (7-FRAC_BITS+8) //FIXME try to change this to 0
-static const uint8_t qexp[8]={
-    128, 140, 152, 166, 181, 197, 215, 235
-//   64,  70,  76,  83,  91,  99, 108, 117
-//   32,  35,  38,  41,  45,  49,  54,  59
-//   16,  17,  19,  21,  23,  25,  27,  29
-//    8,   9,  10,  10,  11,  12,  13,  15
-};
+static uint8_t qexp[QROOT];
 
 static inline int mirror(int v, int m){
     if     (v<0) return -v;
@@ -1166,14 +1298,51 @@ static void vertical_compose53iL0(DWTELEM *b0, DWTELEM *b1, DWTELEM *b2, int wid
     }
 }
 
-static void spatial_compose53i(DWTELEM *buffer, int width, int height, int stride){
-    int y;
-    DWTELEM *b0= buffer + mirror(-1-1, height-1)*stride;
-    DWTELEM *b1= buffer + mirror(-1  , height-1)*stride;
-  
-    for(y=-1; y<=height; y+=2){
-        DWTELEM *b2= buffer + mirror(y+1, height-1)*stride;
-        DWTELEM *b3= buffer + mirror(y+2, height-1)*stride;
+static void spatial_compose53i_buffered_init(dwt_compose_t *cs, slice_buffer * sb, int height, int stride_line){
+    cs->b0 = slice_buffer_get_line(sb, mirror(-1-1, height-1) * stride_line);
+    cs->b1 = slice_buffer_get_line(sb, mirror(-1  , height-1) * stride_line);
+    cs->y = -1;
+}
+
+static void spatial_compose53i_init(dwt_compose_t *cs, DWTELEM *buffer, int height, int stride){
+    cs->b0 = buffer + mirror(-1-1, height-1)*stride;
+    cs->b1 = buffer + mirror(-1  , height-1)*stride;
+    cs->y = -1;
+}
+
+static void spatial_compose53i_dy_buffered(dwt_compose_t *cs, slice_buffer * sb, int width, int height, int stride_line){
+    int y= cs->y;
+    int mirror0 = mirror(y-1, height-1);
+    int mirror1 = mirror(y  , height-1);
+    int mirror2 = mirror(y+1, height-1);
+    int mirror3 = mirror(y+2, height-1);
+    
+    DWTELEM *b0= cs->b0;
+    DWTELEM *b1= cs->b1;
+    DWTELEM *b2= slice_buffer_get_line(sb, mirror2 * stride_line);
+    DWTELEM *b3= slice_buffer_get_line(sb, mirror3 * stride_line);
+
+{START_TIMER
+        if(mirror1 <= mirror3) vertical_compose53iL0(b1, b2, b3, width);
+        if(mirror0 <= mirror2) vertical_compose53iH0(b0, b1, b2, width);
+STOP_TIMER("vertical_compose53i*")}
+
+{START_TIMER
+        if(y-1 >= 0) horizontal_compose53i(b0, width);
+        if(mirror0 <= mirror2) horizontal_compose53i(b1, width);
+STOP_TIMER("horizontal_compose53i")}
+
+    cs->b0 = b2;
+    cs->b1 = b3;
+    cs->y += 2;
+}
+
+static void spatial_compose53i_dy(dwt_compose_t *cs, DWTELEM *buffer, int width, int height, int stride){
+    int y= cs->y;
+    DWTELEM *b0= cs->b0;
+    DWTELEM *b1= cs->b1;
+    DWTELEM *b2= buffer + mirror(y+1, height-1)*stride;
+    DWTELEM *b3= buffer + mirror(y+2, height-1)*stride;
 
 {START_TIMER
         if(b1 <= b3) vertical_compose53iL0(b1, b2, b3, width);
@@ -1185,9 +1354,16 @@ STOP_TIMER("vertical_compose53i*")}
         if(b0 <= b2) horizontal_compose53i(b1, width);
 STOP_TIMER("horizontal_compose53i")}
 
-        b0=b2;
-        b1=b3;
-    }
+    cs->b0 = b2;
+    cs->b1 = b3;
+    cs->y += 2;
+}
+
+static void spatial_compose53i(DWTELEM *buffer, int width, int height, int stride){
+    dwt_compose_t cs;
+    spatial_compose53i_init(&cs, buffer, height, stride);
+    while(cs.y <= height)
+        spatial_compose53i_dy(&cs, buffer, width, height, stride);
 }   
 
  
@@ -1240,16 +1416,90 @@ static void vertical_compose97iL1(DWTELEM *b0, DWTELEM *b1, DWTELEM *b2, int wid
     }
 }
 
-static void spatial_compose97i(DWTELEM *buffer, int width, int height, int stride){
-    int y;
-    DWTELEM *b0= buffer + mirror(-3-1, height-1)*stride;
-    DWTELEM *b1= buffer + mirror(-3  , height-1)*stride;
-    DWTELEM *b2= buffer + mirror(-3+1, height-1)*stride;
-    DWTELEM *b3= buffer + mirror(-3+2, height-1)*stride;
+static void vertical_compose97i(DWTELEM *b0, DWTELEM *b1, DWTELEM *b2, DWTELEM *b3, DWTELEM *b4, DWTELEM *b5, int width){
+    int i;
+    
+    for(i=0; i<width; i++){
+        int r;
+        b4[i] -= (W_DM*(b3[i] + b5[i])+W_DO)>>W_DS;
+#ifdef lift5
+        b3[i] -= (W_CM*(b2[i] + b4[i])+W_CO)>>W_CS;
+#else
+        r= 3*(b2[i] + b4[i]);
+        r+= r>>4;
+        r+= r>>8;
+        b3[i] -= (r+W_CO)>>W_CS;
+#endif
+        b2[i] += (W_BM*(b1[i] + b3[i])+W_BO)>>W_BS;
+        b1[i] += (W_AM*(b0[i] + b2[i])+W_AO)>>W_AS;
+    }
+}
 
-    for(y=-3; y<=height; y+=2){
-        DWTELEM *b4= buffer + mirror(y+3, height-1)*stride;
-        DWTELEM *b5= buffer + mirror(y+4, height-1)*stride;
+static void spatial_compose97i_buffered_init(dwt_compose_t *cs, slice_buffer * sb, int height, int stride_line){
+    cs->b0 = slice_buffer_get_line(sb, mirror(-3-1, height-1) * stride_line);
+    cs->b1 = slice_buffer_get_line(sb, mirror(-3  , height-1) * stride_line);
+    cs->b2 = slice_buffer_get_line(sb, mirror(-3+1, height-1) * stride_line);
+    cs->b3 = slice_buffer_get_line(sb, mirror(-3+2, height-1) * stride_line);
+    cs->y = -3;
+}
+
+static void spatial_compose97i_init(dwt_compose_t *cs, DWTELEM *buffer, int height, int stride){
+    cs->b0 = buffer + mirror(-3-1, height-1)*stride;
+    cs->b1 = buffer + mirror(-3  , height-1)*stride;
+    cs->b2 = buffer + mirror(-3+1, height-1)*stride;
+    cs->b3 = buffer + mirror(-3+2, height-1)*stride;
+    cs->y = -3;
+}
+
+static void spatial_compose97i_dy_buffered(dwt_compose_t *cs, slice_buffer * sb, int width, int height, int stride_line){
+    int y = cs->y;
+    
+    int mirror0 = mirror(y - 1, height - 1);
+    int mirror1 = mirror(y + 0, height - 1);
+    int mirror2 = mirror(y + 1, height - 1);
+    int mirror3 = mirror(y + 2, height - 1);
+    int mirror4 = mirror(y + 3, height - 1);
+    int mirror5 = mirror(y + 4, height - 1);
+    DWTELEM *b0= cs->b0;
+    DWTELEM *b1= cs->b1;
+    DWTELEM *b2= cs->b2;
+    DWTELEM *b3= cs->b3;
+    DWTELEM *b4= slice_buffer_get_line(sb, mirror4 * stride_line);
+    DWTELEM *b5= slice_buffer_get_line(sb, mirror5 * stride_line);
+        
+{START_TIMER
+    if(y>0 && y+4<height){
+        vertical_compose97i(b0, b1, b2, b3, b4, b5, width);
+    }else{
+        if(mirror3 <= mirror5) vertical_compose97iL1(b3, b4, b5, width);
+        if(mirror2 <= mirror4) vertical_compose97iH1(b2, b3, b4, width);
+        if(mirror1 <= mirror3) vertical_compose97iL0(b1, b2, b3, width);
+        if(mirror0 <= mirror2) vertical_compose97iH0(b0, b1, b2, width);
+    }
+if(width>400){
+STOP_TIMER("vertical_compose97i")}}
+
+{START_TIMER
+        if(y-1>=  0) horizontal_compose97i(b0, width);
+        if(mirror0 <= mirror2) horizontal_compose97i(b1, width);
+if(width>400 && mirror0 <= mirror2){
+STOP_TIMER("horizontal_compose97i")}}
+
+    cs->b0=b2;
+    cs->b1=b3;
+    cs->b2=b4;
+    cs->b3=b5;
+    cs->y += 2;
+}
+
+static void spatial_compose97i_dy(dwt_compose_t *cs, DWTELEM *buffer, int width, int height, int stride){
+    int y = cs->y;
+    DWTELEM *b0= cs->b0;
+    DWTELEM *b1= cs->b1;
+    DWTELEM *b2= cs->b2;
+    DWTELEM *b3= cs->b3;
+    DWTELEM *b4= buffer + mirror(y+3, height-1)*stride;
+    DWTELEM *b5= buffer + mirror(y+4, height-1)*stride;
 
         if(stride == width && y+4 < height && 0){ 
             int x;
@@ -1272,23 +1522,93 @@ STOP_TIMER("vertical_compose97i")}}
         if(b0 <= b2) horizontal_compose97i(b1, width);
 if(width>400 && b0 <= b2){
 STOP_TIMER("horizontal_compose97i")}}
-        
-        b0=b2;
-        b1=b3;
-        b2=b4;
-        b3=b5;
+
+    cs->b0=b2;
+    cs->b1=b3;
+    cs->b2=b4;
+    cs->b3=b5;
+    cs->y += 2;
+}
+
+static void spatial_compose97i(DWTELEM *buffer, int width, int height, int stride){
+    dwt_compose_t cs;
+    spatial_compose97i_init(&cs, buffer, height, stride);
+    while(cs.y <= height)
+        spatial_compose97i_dy(&cs, buffer, width, height, stride);
+}
+
+void ff_spatial_idwt_buffered_init(dwt_compose_t *cs, slice_buffer * sb, int width, int height, int stride_line, int type, int decomposition_count){
+    int level;
+    for(level=decomposition_count-1; level>=0; level--){
+        switch(type){
+        case 0: spatial_compose97i_buffered_init(cs+level, sb, height>>level, stride_line<<level); break;
+        case 1: spatial_compose53i_buffered_init(cs+level, sb, height>>level, stride_line<<level); break;
+        /* not slicified yet */
+        case 2: /*spatial_composeX(buffer, width>>level, height>>level, stride<<level); break;*/
+          av_log(NULL, AV_LOG_ERROR, "spatial_composeX neither buffered nor slicified yet.\n"); break;
+        }
+    }
+}
+
+void ff_spatial_idwt_init(dwt_compose_t *cs, DWTELEM *buffer, int width, int height, int stride, int type, int decomposition_count){
+    int level;
+    for(level=decomposition_count-1; level>=0; level--){
+        switch(type){
+        case 0: spatial_compose97i_init(cs+level, buffer, height>>level, stride<<level); break;
+        case 1: spatial_compose53i_init(cs+level, buffer, height>>level, stride<<level); break;
+        /* not slicified yet */
+        case 2: spatial_composeX(buffer, width>>level, height>>level, stride<<level); break;
+        }
+    }
+}
+
+void ff_spatial_idwt_slice(dwt_compose_t *cs, DWTELEM *buffer, int width, int height, int stride, int type, int decomposition_count, int y){
+    const int support = type==1 ? 3 : 5;
+    int level;
+    if(type==2) return;
+
+    for(level=decomposition_count-1; level>=0; level--){
+        while(cs[level].y <= FFMIN((y>>level)+support, height>>level)){
+            switch(type){
+            case 0: spatial_compose97i_dy(cs+level, buffer, width>>level, height>>level, stride<<level);
+                    break;
+            case 1: spatial_compose53i_dy(cs+level, buffer, width>>level, height>>level, stride<<level);
+                    break;
+            case 2: break;
+            }
+        }
+    }
+}
+
+void ff_spatial_idwt_buffered_slice(dwt_compose_t *cs, slice_buffer * slice_buf, int width, int height, int stride_line, int type, int decomposition_count, int y){
+    const int support = type==1 ? 3 : 5;
+    int level;
+    if(type==2) return;
+
+    for(level=decomposition_count-1; level>=0; level--){
+        while(cs[level].y <= FFMIN((y>>level)+support, height>>level)){
+            switch(type){
+            case 0: spatial_compose97i_dy_buffered(cs+level, slice_buf, width>>level, height>>level, stride_line<<level);
+                    break;
+            case 1: spatial_compose53i_dy_buffered(cs+level, slice_buf, width>>level, height>>level, stride_line<<level);
+                    break;
+            case 2: break;
+            }
+        }
     }
 }
 
 void ff_spatial_idwt(DWTELEM *buffer, int width, int height, int stride, int type, int decomposition_count){
-    int level;
-
-    for(level=decomposition_count-1; level>=0; level--){
-        switch(type){
-        case 0: spatial_compose97i(buffer, width>>level, height>>level, stride<<level); break;
-        case 1: spatial_compose53i(buffer, width>>level, height>>level, stride<<level); break;
-        case 2: spatial_composeX  (buffer, width>>level, height>>level, stride<<level); break;
-        }
+    if(type==2){
+        int level;
+        for(level=decomposition_count-1; level>=0; level--)
+            spatial_composeX  (buffer, width>>level, height>>level, stride<<level);
+    }else{
+        dwt_compose_t cs[MAX_DECOMPOSITIONS];
+        int y;
+        ff_spatial_idwt_init(cs, buffer, width, height, stride, type, decomposition_count);
+        for(y=0; y<height; y+=4)
+            ff_spatial_idwt_slice(cs, buffer, width, height, stride, type, decomposition_count, y);
     }
 }
 
@@ -1395,9 +1715,11 @@ static int encode_subband_c0run(SnowContext *s, SubBand *b, DWTELEM *src, DWTELE
                 }
                 if(v){
                     int context= av_log2(/*ABS(ll) + */3*ABS(l) + ABS(lt) + 2*ABS(t) + ABS(rt) + ABS(p));
+                    int l2= 2*ABS(l) + (l<0);
+                    int t2= 2*ABS(t) + (t<0);
 
                     put_symbol2(&s->c, b->state[context + 2], ABS(v)-1, context-4);
-                    put_rac(&s->c, &b->state[0][16 + 1 + 3 + quant3b[l&0xFF] + 3*quant3b[t&0xFF]], v<0);
+                    put_rac(&s->c, &b->state[0][16 + 1 + 3 + quant3bA[l2&0xFF] + 3*quant3bA[t2&0xFF]], v<0);
                 }
             }
         }
@@ -1412,21 +1734,11 @@ static int encode_subband(SnowContext *s, SubBand *b, DWTELEM *src, DWTELEM *par
 //    encode_subband_dzr(s, b, src, parent, stride, orientation);
 }
 
-static inline void decode_subband(SnowContext *s, SubBand *b, DWTELEM *src, DWTELEM *parent, int stride, int orientation){
+static inline void unpack_coeffs(SnowContext *s, SubBand *b, SubBand * parent, int orientation){
     const int w= b->width;
     const int h= b->height;
     int x,y;
-    const int qlog= clip(s->qlog + b->qlog, 0, 128);
-    int qmul= qexp[qlog&7]<<(qlog>>3);
-    int qadd= (s->qbias*qmul)>>QBIAS_SHIFT;
     
-    START_TIMER
-
-    if(b->buf == s->spatial_dwt_buffer || s->qlog == LOSSLESS_QLOG){
-        qadd= 0;
-        qmul= 1<<QEXPSHIFT;
-    }
-
     if(1){
         int run;
         int index=0;
@@ -1434,17 +1746,14 @@ static inline void decode_subband(SnowContext *s, SubBand *b, DWTELEM *src, DWTE
         int prev2_index=0;
         int parent_index= 0;
         int prev_parent_index= 0;
-        
-        for(y=0; y<b->height; y++)
-            memset(&src[y*stride], 0, b->width*sizeof(DWTELEM));
 
         run= get_symbol2(&s->c, b->state[1], 3);
         for(y=0; y<h; y++){
             int v=0;
             int lt=0, t=0, rt=0;
 
-            if(y && b->x[prev_index] == 0){
-                rt= b->coeff[prev_index];
+            if(y && b->x_coeff[prev_index].x == 0){
+                rt= b->x_coeff[prev_index].coeff;
             }
             for(x=0; x<w; x++){
                 int p=0;
@@ -1453,23 +1762,23 @@ static inline void decode_subband(SnowContext *s, SubBand *b, DWTELEM *src, DWTE
                 lt= t; t= rt;
 
                 if(y){
-                    if(b->x[prev_index] <= x)
+                    if(b->x_coeff[prev_index].x <= x)
                         prev_index++;
-                    if(b->x[prev_index] == x + 1)
-                        rt= b->coeff[prev_index];
+                    if(b->x_coeff[prev_index].x == x + 1)
+                        rt= b->x_coeff[prev_index].coeff;
                     else
                         rt=0;
                 }
                 if(parent){
-                    if(x>>1 > b->parent->x[parent_index]){
+                    if(x>>1 > parent->x_coeff[parent_index].x){
                         parent_index++;
                     }
-                    if(x>>1 == b->parent->x[parent_index]){
-                        p= b->parent->coeff[parent_index];
+                    if(x>>1 == parent->x_coeff[parent_index].x){
+                        p= parent->x_coeff[parent_index].coeff;
                     }
                 }
                 if(/*ll|*/l|lt|t|rt|p){
-                    int context= av_log2(/*ABS(ll) + */3*ABS(l) + ABS(lt) + 2*ABS(t) + ABS(rt) + ABS(p));
+                    int context= av_log2(/*ABS(ll) + */3*(l>>1) + (lt>>1) + (t&~1) + (rt>>1) + (p>>1));
 
                     v=get_rac(&s->c, &b->state[0][context]);
                 }else{
@@ -1483,48 +1792,87 @@ static inline void decode_subband(SnowContext *s, SubBand *b, DWTELEM *src, DWTE
                         if(y && parent){
                             int max_run;
 
-                            max_run= FFMIN(run, b->x[prev_index] - x - 2);
-                            max_run= FFMIN(max_run, 2*b->parent->x[parent_index] - x - 1);
+                            max_run= FFMIN(run, b->x_coeff[prev_index].x - x - 2);
+                            max_run= FFMIN(max_run, 2*parent->x_coeff[parent_index].x - x - 1);
                             x+= max_run;
                             run-= max_run;
                         }
                     }
                 }
                 if(v){
-                    int context= av_log2(/*ABS(ll) + */3*ABS(l) + ABS(lt) + 2*ABS(t) + ABS(rt) + ABS(p));
-                    v= get_symbol2(&s->c, b->state[context + 2], context-4) + 1;
-                    if(get_rac(&s->c, &b->state[0][16 + 1 + 3 + quant3b[l&0xFF] + 3*quant3b[t&0xFF]])){
-                        src[x + y*stride]=-(( v*qmul + qadd)>>(QEXPSHIFT));
-                        v= -v;
-                    }else{
-                        src[x + y*stride]= (( v*qmul + qadd)>>(QEXPSHIFT));
-                    }
-                    b->x[index]=x; //FIXME interleave x/coeff
-                    b->coeff[index++]= v;
+                    int context= av_log2(/*ABS(ll) + */3*(l>>1) + (lt>>1) + (t&~1) + (rt>>1) + (p>>1));
+                    v= 2*(get_symbol2(&s->c, b->state[context + 2], context-4) + 1);
+                    v+=get_rac(&s->c, &b->state[0][16 + 1 + 3 + quant3bA[l&0xFF] + 3*quant3bA[t&0xFF]]);
+                       
+                    b->x_coeff[index].x=x;
+                    b->x_coeff[index++].coeff= v;
                 }
             }
-            b->x[index++]= w+1; //end marker
+            b->x_coeff[index++].x= w+1; //end marker
             prev_index= prev2_index;
             prev2_index= index;
             
             if(parent){
-                while(b->parent->x[parent_index] != b->parent->width+1)
-                    parent_index++;
-                parent_index++;
                 if(y&1){
+                    while(parent->x_coeff[parent_index].x != parent->width+1)
+                        parent_index++;
+                    parent_index++;
                     prev_parent_index= parent_index;
                 }else{
                     parent_index= prev_parent_index;
                 }
             }
         }
-        b->x[index++]= w+1; //end marker
-        if(w > 200 /*level+1 == s->spatial_decomposition_count*/){
-            STOP_TIMER("decode_subband")
-        }
-        
-        return;
+
+        b->x_coeff[index++].x= w+1; //end marker
     }
+}
+
+static inline void decode_subband_slice_buffered(SnowContext *s, SubBand *b, slice_buffer * sb, int start_y, int h, int save_state[1]){
+    const int w= b->width;
+    int x,y;
+    const int qlog= clip(s->qlog + b->qlog, 0, QROOT*16);
+    int qmul= qexp[qlog&(QROOT-1)]<<(qlog>>QSHIFT);
+    int qadd= (s->qbias*qmul)>>QBIAS_SHIFT;
+    int new_index = 0;
+    
+    START_TIMER
+
+    if(b->buf == s->spatial_dwt_buffer || s->qlog == LOSSLESS_QLOG){
+        qadd= 0;
+        qmul= 1<<QEXPSHIFT;
+    }
+
+    /* If we are on the second or later slice, restore our index. */
+    if (start_y != 0)
+        new_index = save_state[0];
+
+        
+    for(y=start_y; y<h; y++){
+        int x = 0;
+        int v;
+        DWTELEM * line = slice_buffer_get_line(sb, y * b->stride_line + b->buf_y_offset) + b->buf_x_offset;
+        memset(line, 0, b->width*sizeof(DWTELEM));
+        v = b->x_coeff[new_index].coeff;
+        x = b->x_coeff[new_index++].x;
+        while(x < w)
+        {
+            register int t= ( (v>>1)*qmul + qadd)>>QEXPSHIFT;
+            register int u= -(v&1);
+            line[x] = (t^u) - u;
+
+            v = b->x_coeff[new_index].coeff;
+            x = b->x_coeff[new_index++].x;
+        }
+    }
+    if(w > 200 && start_y != 0/*level+1 == s->spatial_decomposition_count*/){
+        STOP_TIMER("decode_subband")
+    }
+        
+    /* Save our variables for the next slice. */
+    save_state[0] = new_index;
+        
+    return;
 }
 
 static void reset_contexts(SnowContext *s){
@@ -2057,6 +2405,160 @@ static always_inline int same_block(BlockNode *a, BlockNode *b){
 }
 
 //FIXME name clenup (b_w, block_w, b_width stuff)
+static always_inline void add_yblock_buffered(SnowContext *s, slice_buffer * sb, DWTELEM *old_dst, uint8_t *dst8, uint8_t *src, uint8_t *obmc, int src_x, int src_y, int b_w, int b_h, int w, int h, int dst_stride, int src_stride, int obmc_stride, int b_x, int b_y, int add, int plane_index){
+    DWTELEM * dst = NULL;
+    const int b_width = s->b_width  << s->block_max_depth;
+    const int b_height= s->b_height << s->block_max_depth;
+    const int b_stride= b_width;
+    BlockNode *lt= &s->block[b_x + b_y*b_stride];
+    BlockNode *rt= lt+1;
+    BlockNode *lb= lt+b_stride;
+    BlockNode *rb= lb+1;
+    uint8_t *block[4]; 
+    uint8_t tmp[src_stride*(b_h+5)]; //FIXME align
+    int x,y;
+
+    if(b_x<0){
+        lt= rt;
+        lb= rb;
+    }else if(b_x + 1 >= b_width){
+        rt= lt;
+        rb= lb;
+    }
+    if(b_y<0){
+        lt= lb;
+        rt= rb;
+    }else if(b_y + 1 >= b_height){
+        lb= lt;
+        rb= rt;
+    }
+        
+    if(src_x<0){ //FIXME merge with prev & always round internal width upto *16
+        obmc -= src_x;
+        b_w += src_x;
+        src_x=0;
+    }else if(src_x + b_w > w){
+        b_w = w - src_x;
+    }
+    if(src_y<0){
+        obmc -= src_y*obmc_stride;
+        b_h += src_y;
+        src_y=0;
+    }else if(src_y + b_h> h){
+        b_h = h - src_y;
+    }
+    
+    if(b_w<=0 || b_h<=0) return;
+
+assert(src_stride > 7*MB_SIZE);
+//    old_dst += src_x + src_y*dst_stride;
+    dst8+= src_x + src_y*src_stride;
+//    src += src_x + src_y*src_stride;
+
+    block[0]= tmp+3*MB_SIZE;
+    pred_block(s, block[0], src, tmp, src_stride, src_x, src_y, b_w, b_h, lt, plane_index, w, h);    
+
+    if(same_block(lt, rt)){
+        block[1]= block[0];
+    }else{
+        block[1]= tmp + 4*MB_SIZE;
+        pred_block(s, block[1], src, tmp, src_stride, src_x, src_y, b_w, b_h, rt, plane_index, w, h);
+    }
+        
+    if(same_block(lt, lb)){
+        block[2]= block[0];
+    }else if(same_block(rt, lb)){
+        block[2]= block[1];
+    }else{
+        block[2]= tmp+5*MB_SIZE;
+        pred_block(s, block[2], src, tmp, src_stride, src_x, src_y, b_w, b_h, lb, plane_index, w, h);
+    }
+
+    if(same_block(lt, rb) ){
+        block[3]= block[0];
+    }else if(same_block(rt, rb)){
+        block[3]= block[1];
+    }else if(same_block(lb, rb)){
+        block[3]= block[2];
+    }else{
+        block[3]= tmp+6*MB_SIZE;
+        pred_block(s, block[3], src, tmp, src_stride, src_x, src_y, b_w, b_h, rb, plane_index, w, h);
+    }
+#if 0
+    for(y=0; y<b_h; y++){
+        for(x=0; x<b_w; x++){
+            int v=   obmc [x + y*obmc_stride] * block[3][x + y*src_stride] * (256/OBMC_MAX);
+            if(add) dst[x + y*dst_stride] += v;
+            else    dst[x + y*dst_stride] -= v;
+        }
+    }
+    for(y=0; y<b_h; y++){
+        uint8_t *obmc2= obmc + (obmc_stride>>1);
+        for(x=0; x<b_w; x++){
+            int v=   obmc2[x + y*obmc_stride] * block[2][x + y*src_stride] * (256/OBMC_MAX);
+            if(add) dst[x + y*dst_stride] += v;
+            else    dst[x + y*dst_stride] -= v;
+        }
+    }
+    for(y=0; y<b_h; y++){
+        uint8_t *obmc3= obmc + obmc_stride*(obmc_stride>>1);
+        for(x=0; x<b_w; x++){
+            int v=   obmc3[x + y*obmc_stride] * block[1][x + y*src_stride] * (256/OBMC_MAX);
+            if(add) dst[x + y*dst_stride] += v;
+            else    dst[x + y*dst_stride] -= v;
+        }
+    }
+    for(y=0; y<b_h; y++){
+        uint8_t *obmc3= obmc + obmc_stride*(obmc_stride>>1);
+        uint8_t *obmc4= obmc3+ (obmc_stride>>1);
+        for(x=0; x<b_w; x++){
+            int v=   obmc4[x + y*obmc_stride] * block[0][x + y*src_stride] * (256/OBMC_MAX);
+            if(add) dst[x + y*dst_stride] += v;
+            else    dst[x + y*dst_stride] -= v;
+        }
+    }
+#else
+{
+
+    START_TIMER
+    
+    int block_index = 0;
+    for(y=0; y<b_h; y++){
+        //FIXME ugly missue of obmc_stride
+        uint8_t *obmc1= obmc + y*obmc_stride;
+        uint8_t *obmc2= obmc1+ (obmc_stride>>1);
+        uint8_t *obmc3= obmc1+ obmc_stride*(obmc_stride>>1);
+        uint8_t *obmc4= obmc3+ (obmc_stride>>1);
+        dst = slice_buffer_get_line(sb, src_y + y);
+        for(x=0; x<b_w; x++){
+            int v=   obmc1[x] * block[3][x + y*src_stride]
+                    +obmc2[x] * block[2][x + y*src_stride]
+                    +obmc3[x] * block[1][x + y*src_stride]
+                    +obmc4[x] * block[0][x + y*src_stride];
+
+            v <<= 8 - LOG2_OBMC_MAX;
+            if(FRAC_BITS != 8){
+                v += 1<<(7 - FRAC_BITS);
+                v >>= 8 - FRAC_BITS;
+            }
+            if(add){
+//                v += old_dst[x + y*dst_stride];
+                v += dst[x + src_x];
+                v = (v + (1<<(FRAC_BITS-1))) >> FRAC_BITS;
+                if(v&(~255)) v= ~(v>>31);
+                dst8[x + y*src_stride] = v;
+            }else{
+//                old_dst[x + y*dst_stride] -= v;
+                dst[x + src_x] -= v;
+            }
+        }
+    }
+        STOP_TIMER("Inner add y block")
+}
+#endif
+}
+
+//FIXME name clenup (b_w, block_w, b_width stuff)
 static always_inline void add_yblock(SnowContext *s, DWTELEM *dst, uint8_t *dst8, uint8_t *src, uint8_t *obmc, int src_x, int src_y, int b_w, int b_h, int w, int h, int dst_stride, int src_stride, int obmc_stride, int b_x, int b_y, int add, int plane_index){
     const int b_width = s->b_width  << s->block_max_depth;
     const int b_height= s->b_height << s->block_max_depth;
@@ -2199,11 +2701,11 @@ assert(src_stride > 7*MB_SIZE);
 #endif
 }
 
-static always_inline void predict_plane(SnowContext *s, DWTELEM *buf, int plane_index, int add){
+static always_inline void predict_slice_buffered(SnowContext *s, slice_buffer * sb, DWTELEM * old_buffer, int plane_index, int add, int mb_y){
     Plane *p= &s->plane[plane_index];
     const int mb_w= s->b_width  << s->block_max_depth;
     const int mb_h= s->b_height << s->block_max_depth;
-    int x, y, mb_x, mb_y;
+    int x, y, mb_x;
     int block_size = MB_SIZE >> s->block_max_depth;
     int block_w    = plane_index ? block_size/2 : block_size;
     const uint8_t *obmc  = plane_index ? obmc_tab[s->block_max_depth+1] : obmc_tab[s->block_max_depth];
@@ -2216,8 +2718,79 @@ static always_inline void predict_plane(SnowContext *s, DWTELEM *buf, int plane_
     START_TIMER
     
     if(s->keyframe || (s->avctx->debug&512)){
+        if(mb_y==mb_h)
+            return;
+
         if(add){
-            for(y=0; y<h; y++){
+            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++)
+            {
+//                DWTELEM * line = slice_buffer_get_line(sb, y);
+                DWTELEM * line = sb->line[y];
+                for(x=0; x<w; x++)
+                {
+//                    int v= buf[x + y*w] + (128<<FRAC_BITS) + (1<<(FRAC_BITS-1));
+                    int v= line[x] + (128<<FRAC_BITS) + (1<<(FRAC_BITS-1));
+                    v >>= FRAC_BITS;
+                    if(v&(~255)) v= ~(v>>31);
+                    dst8[x + y*ref_stride]= v;
+                }
+            }
+        }else{
+            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++)
+            {
+//                DWTELEM * line = slice_buffer_get_line(sb, y);
+                DWTELEM * line = sb->line[y];
+                for(x=0; x<w; x++)
+                {
+                    line[x] -= 128 << FRAC_BITS;
+//                    buf[x + y*w]-= 128<<FRAC_BITS;
+                }
+            }
+        }
+
+        return;
+    }
+    
+        for(mb_x=0; mb_x<=mb_w; mb_x++){
+            START_TIMER
+
+            add_yblock_buffered(s, sb, old_buffer, dst8, ref, obmc, 
+                       block_w*mb_x - block_w/2,
+                       block_w*mb_y - block_w/2,
+                       block_w, block_w,
+                       w, h,
+                       w, ref_stride, obmc_stride,
+                       mb_x - 1, mb_y - 1,
+                       add, plane_index);
+            
+            STOP_TIMER("add_yblock")
+        }
+    
+    STOP_TIMER("predict_slice")
+}
+
+static always_inline void predict_slice(SnowContext *s, DWTELEM *buf, int plane_index, int add, int mb_y){
+    Plane *p= &s->plane[plane_index];
+    const int mb_w= s->b_width  << s->block_max_depth;
+    const int mb_h= s->b_height << s->block_max_depth;
+    int x, y, mb_x;
+    int block_size = MB_SIZE >> s->block_max_depth;
+    int block_w    = plane_index ? block_size/2 : block_size;
+    const uint8_t *obmc  = plane_index ? obmc_tab[s->block_max_depth+1] : obmc_tab[s->block_max_depth];
+    int obmc_stride= plane_index ? block_size : 2*block_size;
+    int ref_stride= s->current_picture.linesize[plane_index];
+    uint8_t *ref  = s->last_picture.data[plane_index];
+    uint8_t *dst8= s->current_picture.data[plane_index];
+    int w= p->width;
+    int h= p->height;
+    START_TIMER
+    
+    if(s->keyframe || (s->avctx->debug&512)){
+        if(mb_y==mb_h)
+            return;
+
+        if(add){
+            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++){
                 for(x=0; x<w; x++){
                     int v= buf[x + y*w] + (128<<FRAC_BITS) + (1<<(FRAC_BITS-1));
                     v >>= FRAC_BITS;
@@ -2226,7 +2799,7 @@ static always_inline void predict_plane(SnowContext *s, DWTELEM *buf, int plane_
                 }
             }
         }else{
-            for(y=0; y<h; y++){
+            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++){
                 for(x=0; x<w; x++){
                     buf[x + y*w]-= 128<<FRAC_BITS;
                 }
@@ -2236,7 +2809,6 @@ static always_inline void predict_plane(SnowContext *s, DWTELEM *buf, int plane_
         return;
     }
     
-    for(mb_y=0; mb_y<=mb_h; mb_y++){
         for(mb_x=0; mb_x<=mb_w; mb_x++){
             START_TIMER
 
@@ -2251,21 +2823,25 @@ static always_inline void predict_plane(SnowContext *s, DWTELEM *buf, int plane_
             
             STOP_TIMER("add_yblock")
         }
-    }
     
-    STOP_TIMER("predict_plane")
+    STOP_TIMER("predict_slice")
+}
+
+static always_inline void predict_plane(SnowContext *s, DWTELEM *buf, int plane_index, int add){
+    const int mb_h= s->b_height << s->block_max_depth;
+    int mb_y;
+    for(mb_y=0; mb_y<=mb_h; mb_y++)
+        predict_slice(s, buf, plane_index, add, mb_y);
 }
 
 static void quantize(SnowContext *s, SubBand *b, DWTELEM *src, int stride, int bias){
     const int level= b->level;
     const int w= b->width;
     const int h= b->height;
-    const int qlog= clip(s->qlog + b->qlog, 0, 128);
-    const int qmul= qexp[qlog&7]<<(qlog>>3);
+    const int qlog= clip(s->qlog + b->qlog, 0, QROOT*16);
+    const int qmul= qexp[qlog&(QROOT-1)]<<(qlog>>QSHIFT);
     int x,y, thres1, thres2;
     START_TIMER
-
-    assert(QROOT==8);
 
     if(s->qlog == LOSSLESS_QLOG) return;
  
@@ -2319,19 +2895,45 @@ static void quantize(SnowContext *s, SubBand *b, DWTELEM *src, int stride, int b
     }
 }
 
-static void dequantize(SnowContext *s, SubBand *b, DWTELEM *src, int stride){
+static void dequantize_buffered(SnowContext *s, slice_buffer * sb, SubBand *b, DWTELEM *src, int stride){
     const int w= b->width;
     const int h= b->height;
-    const int qlog= clip(s->qlog + b->qlog, 0, 128);
-    const int qmul= qexp[qlog&7]<<(qlog>>3);
+    const int qlog= clip(s->qlog + b->qlog, 0, QROOT*16);
+    const int qmul= qexp[qlog&(QROOT-1)]<<(qlog>>QSHIFT);
     const int qadd= (s->qbias*qmul)>>QBIAS_SHIFT;
     int x,y;
     START_TIMER
     
     if(s->qlog == LOSSLESS_QLOG) return;
     
-    assert(QROOT==8);
+    for(y=0; y<h; y++){
+//        DWTELEM * line = slice_buffer_get_line_from_address(sb, src + (y * stride));
+        DWTELEM * line = slice_buffer_get_line(sb, (y * b->stride_line) + b->buf_y_offset) + b->buf_x_offset;
+        for(x=0; x<w; x++){
+            int i= line[x];
+            if(i<0){
+                line[x]= -((-i*qmul + qadd)>>(QEXPSHIFT)); //FIXME try different bias
+            }else if(i>0){
+                line[x]=  (( i*qmul + qadd)>>(QEXPSHIFT));
+            }
+        }
+    }
+    if(w > 200 /*level+1 == s->spatial_decomposition_count*/){
+        STOP_TIMER("dquant")
+    }
+}
 
+static void dequantize(SnowContext *s, SubBand *b, DWTELEM *src, int stride){
+    const int w= b->width;
+    const int h= b->height;
+    const int qlog= clip(s->qlog + b->qlog, 0, QROOT*16);
+    const int qmul= qexp[qlog&(QROOT-1)]<<(qlog>>QSHIFT);
+    const int qadd= (s->qbias*qmul)>>QBIAS_SHIFT;
+    int x,y;
+    START_TIMER
+    
+    if(s->qlog == LOSSLESS_QLOG) return;
+    
     for(y=0; y<h; y++){
         for(x=0; x<w; x++){
             int i= src[x + y*stride];
@@ -2369,6 +2971,38 @@ static void decorrelate(SnowContext *s, SubBand *b, DWTELEM *src, int stride, in
             }
         }
     }
+}
+
+static void correlate_buffered(SnowContext *s, slice_buffer * sb, SubBand *b, DWTELEM *src, int stride, int inverse, int use_median){
+    const int w= b->width;
+    const int h= b->height;
+    int x,y;
+    
+//    START_TIMER
+    
+    DWTELEM * line;
+    DWTELEM * prev;
+    
+    for(y=0; y<h; y++){
+        prev = line;
+//        line = slice_buffer_get_line_from_address(sb, src + (y * stride));
+        line = slice_buffer_get_line(sb, (y * b->stride_line) + b->buf_y_offset) + b->buf_x_offset;
+        for(x=0; x<w; x++){
+            if(x){
+                if(use_median){
+                    if(y && x+1<w) line[x] += mid_pred(line[x - 1], prev[x], prev[x + 1]);
+                    else  line[x] += line[x - 1];
+                }else{
+                    if(y) line[x] += mid_pred(line[x - 1], prev[x], line[x - 1] + prev[x] - prev[x - 1]);
+                    else  line[x] += line[x - 1];
+                }
+            }else{
+                if(y) line[x] += prev[x];
+            }
+        }
+    }
+    
+//    STOP_TIMER("correlate")
 }
 
 static void correlate(SnowContext *s, SubBand *b, DWTELEM *src, int stride, int inverse, int use_median){
@@ -2484,6 +3118,16 @@ static int decode_header(SnowContext *s){
     return 0;
 }
 
+static void init_qexp(){
+    int i;
+    double v=128;
+
+    for(i=0; i<QROOT; i++){
+        qexp[i]= lrintf(v);
+        v *= pow(2, 1.0 / QROOT); 
+    }
+}
+
 static int common_init(AVCodecContext *avctx){
     SnowContext *s = avctx->priv_data;
     int width, height;
@@ -2530,7 +3174,10 @@ static int common_init(AVCodecContext *avctx){
     mcfh(8, 0)
     mcfh(0, 8)
     mcfh(8, 8)
-        
+
+    if(!qexp[0])
+        init_qexp();
+
     dec= s->spatial_decomposition_count= 5;
     s->spatial_decomposition_type= avctx->prediction_method; //FIXME add decorrelator type r transform_type
     
@@ -2568,13 +3215,22 @@ static int common_init(AVCodecContext *avctx){
                 b->width = (w + !(orientation&1))>>1;
                 b->height= (h + !(orientation>1))>>1;
                 
-                if(orientation&1) b->buf += (w+1)>>1;
-                if(orientation>1) b->buf += b->stride>>1;
+                b->stride_line = 1 << (s->spatial_decomposition_count - level);
+                b->buf_x_offset = 0;
+                b->buf_y_offset = 0;
+                
+                if(orientation&1){
+                    b->buf += (w+1)>>1;
+                    b->buf_x_offset = (w+1)>>1;
+                }
+                if(orientation>1){
+                    b->buf += b->stride>>1;
+                    b->buf_y_offset = b->stride_line >> 1;
+                }
                 
                 if(level)
                     b->parent= &s->plane[plane_index].band[level-1][orientation];
-                b->x    = av_mallocz(((b->width+1) * b->height+1)*sizeof(int16_t));
-                b->coeff= av_mallocz(((b->width+1) * b->height+1)*sizeof(DWTELEM));
+                b->x_coeff=av_mallocz(((b->width+1) * b->height+1)*sizeof(x_and_coeff));
             }
             w= (w+1)>>1;
             h= (h+1)>>1;
@@ -2713,7 +3369,7 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
     if(pict->quality){
         s->qlog= rint(QROOT*log(pict->quality / (float)FF_QP2LAMBDA)/log(2));
         //<64 >60
-        s->qlog += 61;
+        s->qlog += 61*QROOT/8;
     }else{
         s->qlog= LOSSLESS_QLOG;
     }
@@ -2800,7 +3456,7 @@ redo_frame:
         if(s->qlog == LOSSLESS_QLOG){
             for(y=0; y<h; y++){
                 for(x=0; x<w; x++){
-                    s->spatial_dwt_buffer[y*w + x]= (s->spatial_dwt_buffer[y*w + x] + (1<<(FRAC_BITS-1)))>>FRAC_BITS;
+                    s->spatial_dwt_buffer[y*w + x]= (s->spatial_dwt_buffer[y*w + x] + (1<<(FRAC_BITS-1))-1)>>FRAC_BITS;
                 }
             }
         }
@@ -2880,8 +3536,7 @@ static void common_end(SnowContext *s){
             for(orientation=level ? 1 : 0; orientation<4; orientation++){
                 SubBand *b= &s->plane[plane_index].band[level][orientation];
                 
-                av_freep(&b->x);
-                av_freep(&b->coeff);
+                av_freep(&b->x_coeff);
             }
         }
     }
@@ -2898,9 +3553,17 @@ static int encode_end(AVCodecContext *avctx)
 
 static int decode_init(AVCodecContext *avctx)
 {
-//    SnowContext *s = avctx->priv_data;
+    SnowContext *s = avctx->priv_data;
+    int block_size;
 
     common_init(avctx);
+    
+    block_size = MB_SIZE >> s->block_max_depth;
+    /* FIXME block_size * 2 is determined empirically. block_size * 1.5 is definitely needed, but I (Robert) cannot figure out why more than that is needed. Perhaps there is a bug, or perhaps I overlooked some demands that are placed on the buffer. */
+    /* FIXME The formula is WRONG. For height > 480, the buffer will overflow. */
+    /* FIXME For now, I will use a full frame of lines. Fortunately, this should not materially effect cache performance because lines are allocated using a stack, so if in fact only 50 out of 496 lines are needed at a time, the other 446 will sit allocated but never accessed. */
+//    slice_buffer_init(s->plane[0].sb, s->plane[0].height, (block_size * 2) + (s->spatial_decomposition_count * s->spatial_decomposition_count), s->plane[0].width, s->spatial_dwt_buffer);
+    slice_buffer_init(&s->sb, s->plane[0].height, s->plane[0].height, s->plane[0].width, s->spatial_dwt_buffer);
     
     return 0;
 }
@@ -2931,6 +3594,8 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8
         int w= p->width;
         int h= p->height;
         int x, y;
+        int decode_state[MAX_DECOMPOSITIONS][4][1]; /* Stored state info for unpack_coeffs. 1 variable per instance. */
+        SubBand * correlate_band;
         
 if(s->avctx->debug&2048){
         memset(s->spatial_dwt_buffer, 0, sizeof(DWTELEM)*w*h);
@@ -2943,30 +3608,93 @@ if(s->avctx->debug&2048){
             }
         }
 }
-        for(level=0; level<s->spatial_decomposition_count; level++){
-            for(orientation=level ? 1 : 0; orientation<4; orientation++){
-                SubBand *b= &p->band[level][orientation];
 
-                decode_subband(s, b, b->buf, b->parent ? b->parent->buf : NULL, b->stride, orientation);
-                if(orientation==0){
-                    correlate(s, b, b->buf, b->stride, 1, 0);
-                    dequantize(s, b, b->buf, b->stride);
-                    assert(b->buf == s->spatial_dwt_buffer);
-                }
-            }
+{   START_TIMER
+    for(level=0; level<s->spatial_decomposition_count; level++){
+        for(orientation=level ? 1 : 0; orientation<4; orientation++){
+            SubBand *b= &p->band[level][orientation];
+            unpack_coeffs(s, b, b->parent, orientation);
         }
+    }
+    STOP_TIMER("unpack coeffs");
+}
+        
+        /* Handle level 0, orientation 0 specially. It is particularly resistant to slicing but fortunately quite small, so process it in one pass. */
+        correlate_band = &p->band[0][0];
+        decode_subband_slice_buffered(s, correlate_band, &s->sb, 0, correlate_band->height, decode_state[0][0]);
+        correlate_buffered(s, &s->sb, correlate_band, correlate_band->buf, correlate_band->stride, 1, 0);
+        dequantize_buffered(s, &s->sb, correlate_band, correlate_band->buf, correlate_band->stride);
 
-        ff_spatial_idwt(s->spatial_dwt_buffer, w, h, w, s->spatial_decomposition_type, s->spatial_decomposition_count);
-        if(s->qlog == LOSSLESS_QLOG){
-            for(y=0; y<h; y++){
-                for(x=0; x<w; x++){
-                    s->spatial_dwt_buffer[y*w + x]<<=FRAC_BITS;
-                }
-            }
-        }
 {START_TIMER
-        predict_plane(s, s->spatial_dwt_buffer, plane_index, 1);
-STOP_TIMER("predict_plane conv2")}
+    const int mb_h= s->b_height << s->block_max_depth;
+    const int block_size = MB_SIZE >> s->block_max_depth;
+    const int block_w    = plane_index ? block_size/2 : block_size;
+    int mb_y;
+    dwt_compose_t cs[MAX_DECOMPOSITIONS];
+    int yd=0, yq=0;
+    int y;
+    int end_y;
+
+    ff_spatial_idwt_buffered_init(cs, &s->sb, w, h, 1, s->spatial_decomposition_type, s->spatial_decomposition_count);
+    for(mb_y=0; mb_y<=mb_h; mb_y++){
+        
+        const int slice_starty = block_w*mb_y;
+        const int slice_h = block_w*(mb_y+1);
+
+        {        
+        START_TIMER
+        for(level=0; level<s->spatial_decomposition_count; level++){
+            for(orientation=level ? 1 : 1; orientation<4; orientation++){
+                SubBand *b= &p->band[level][orientation];
+                int start_y;
+                int end_y;
+                int our_mb_start = mb_y;
+                int our_mb_end = (mb_y + 1);
+                start_y = FFMIN(b->height, (mb_y ? ((block_w * our_mb_start - 4) >> (s->spatial_decomposition_count - level)) + 5 : 0));
+                end_y = FFMIN(b->height, (((block_w * our_mb_end - 4) >> (s->spatial_decomposition_count - level)) + 5));
+                    
+                if (start_y != end_y)
+                    decode_subband_slice_buffered(s, b, &s->sb, start_y, end_y, decode_state[level][orientation]);
+            }
+        }
+        STOP_TIMER("decode_subband_slice");
+        }
+        
+{   START_TIMER
+        for(; yd<slice_h; yd+=4){
+            ff_spatial_idwt_buffered_slice(cs, &s->sb, w, h, 1, s->spatial_decomposition_type, s->spatial_decomposition_count, yd);
+        }
+    STOP_TIMER("idwt slice");}
+
+        
+        if(s->qlog == LOSSLESS_QLOG){
+            for(; yq<slice_h && yq<h; yq++){
+                DWTELEM * line = slice_buffer_get_line(&s->sb, yq);
+                for(x=0; x<w; x++){
+                    line[x] <<= FRAC_BITS;
+                }
+            }
+        }
+
+        predict_slice_buffered(s, &s->sb, s->spatial_dwt_buffer, plane_index, 1, mb_y);
+        
+        /* Nasty hack based empirically on how predict_slice_buffered() hits the buffer. */
+        /* FIXME If possible, make predict_slice fit into the slice. As of now, it works on some previous lines (up to slice_height / 2) if the condition on the next line is false. */
+        if (s->keyframe || (s->avctx->debug&512)){
+            y = FFMIN(p->height, slice_starty);
+            end_y = FFMIN(p->height, slice_h);
+        }
+        else{
+            y = FFMAX(0, FFMIN(p->height, slice_starty - (block_w >> 1)));
+            end_y = FFMAX(0, FFMIN(p->height, slice_h - (block_w >> 1)));
+        }
+        while(y < end_y)
+            slice_buffer_release(&s->sb, y++);
+    }
+    
+    slice_buffer_flush(&s->sb);
+    
+STOP_TIMER("idwt + predict_slices")}
     }
             
     emms_c();
@@ -2991,6 +3719,8 @@ static int decode_end(AVCodecContext *avctx)
 {
     SnowContext *s = avctx->priv_data;
 
+    slice_buffer_destroy(&s->sb);
+    
     common_end(s);
 
     return 0;

@@ -95,6 +95,9 @@ void avcodec_register_all(void)
     register_avcodec(&dvvideo_encoder);
     register_avcodec(&sonic_encoder);
     register_avcodec(&sonic_ls_encoder);
+#ifdef CONFIG_X264
+    register_avcodec(&x264_encoder);
+#endif
 #endif /* CONFIG_ENCODERS */
     register_avcodec(&rawvideo_encoder);
     register_avcodec(&rawvideo_decoder);
@@ -126,6 +129,8 @@ void avcodec_register_all(void)
     register_avcodec(&xl_decoder);
     register_avcodec(&qpeg_decoder);
     register_avcodec(&loco_decoder);
+    register_avcodec(&wnv1_decoder);
+    register_avcodec(&aasc_decoder);
 #ifdef CONFIG_FAAD
     register_avcodec(&aac_decoder);
     register_avcodec(&mpeg4aac_decoder);
@@ -197,6 +202,7 @@ void avcodec_register_all(void)
     register_avcodec(&flac_decoder);
     register_avcodec(&shorten_decoder);
     register_avcodec(&alac_decoder);
+    register_avcodec(&ws_snd1_decoder);
 #endif /* CONFIG_DECODERS */
 
 #ifdef AMR_NB

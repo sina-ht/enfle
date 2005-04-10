@@ -1050,7 +1050,7 @@ static int mpeg_decode_mb(MpegEncContext *s,
                           DCTELEM block[12][64])
 {
     int i, j, k, cbp, val, mb_type, motion_type;
-    const int mb_block_count = 4 + (1<< s->chroma_format)
+    const int mb_block_count = 4 + (1<< s->chroma_format);
 
     dprintf("decode_mb: x=%d y=%d\n", s->mb_x, s->mb_y);
 
@@ -1080,6 +1080,15 @@ static int mpeg_decode_mb(MpegEncContext *s,
             s->mb_skiped = 1;
             s->current_picture.mb_type[ s->mb_x + s->mb_y*s->mb_stride ]= MB_TYPE_SKIP | MB_TYPE_L0 | MB_TYPE_16x16;
         } else {
+            int mb_type;
+            
+            if(s->mb_x)
+                mb_type= s->current_picture.mb_type[ s->mb_x + s->mb_y*s->mb_stride - 1];
+            else
+                mb_type= s->current_picture.mb_type[ s->mb_width + (s->mb_y-1)*s->mb_stride - 1]; // FIXME not sure if this is allowed in mpeg at all, 
+            if(IS_INTRA(mb_type))
+                return -1;
+            
             /* if B type, reuse previous vectors and directions */
             s->mv[0][0][0] = s->last_mv[0][0][0];
             s->mv[0][0][1] = s->last_mv[0][0][1];
@@ -1087,7 +1096,7 @@ static int mpeg_decode_mb(MpegEncContext *s,
             s->mv[1][0][1] = s->last_mv[1][0][1];
 
             s->current_picture.mb_type[ s->mb_x + s->mb_y*s->mb_stride ]= 
-                s->current_picture.mb_type[ s->mb_x + s->mb_y*s->mb_stride - 1] | MB_TYPE_SKIP;
+                mb_type | MB_TYPE_SKIP;
 //            assert(s->current_picture.mb_type[ s->mb_x + s->mb_y*s->mb_stride - 1]&(MB_TYPE_16x16|MB_TYPE_16x8));
 
             if((s->mv[0][0][0]|s->mv[0][0][1]|s->mv[1][0][0]|s->mv[1][0][1])==0) 
@@ -1972,7 +1981,7 @@ static int mpeg_decode_postinit(AVCodecContext *avctx){
     	(s1->mpeg_enc_ctx_allocated == 0)|| 
         avctx->coded_width  != s->width ||
         avctx->coded_height != s->height||
-//      s1->save_aspect_info != avctx->aspect_ratio_info||
+        s1->save_aspect_info != s->aspect_ratio_info||
         0)
     {
     
@@ -2104,6 +2113,8 @@ static int mpeg1_decode_picture(AVCodecContext *avctx,
 
     ref = get_bits(&s->gb, 10); /* temporal ref */
     s->pict_type = get_bits(&s->gb, 3);
+    if(s->pict_type == 0 || s->pict_type > 3)
+        return -1;
 
     vbv_delay= get_bits(&s->gb, 16);
     if (s->pict_type == P_TYPE || s->pict_type == B_TYPE) {
@@ -2125,8 +2136,8 @@ static int mpeg1_decode_picture(AVCodecContext *avctx,
     s->current_picture.pict_type= s->pict_type;
     s->current_picture.key_frame= s->pict_type == I_TYPE;
     
-//    if(avctx->debug & FF_DEBUG_PICT_INFO)
-//        av_log(avctx, AV_LOG_DEBUG, "vbv_delay %d, ref %d\n", vbv_delay, ref);
+    if(avctx->debug & FF_DEBUG_PICT_INFO)
+        av_log(avctx, AV_LOG_DEBUG, "vbv_delay %d, ref %d type:%d\n", vbv_delay, ref, s->pict_type);
     
     s->y_dc_scale = 8;
     s->c_dc_scale = 8;
@@ -2707,7 +2718,7 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
 #ifdef DEBUG
         dprintf("intra matrix present\n");
         for(i=0;i<64;i++)
-            dprintf(" %d", s->intra_matrix[s->dsp.idct_permutation[i]);
+            dprintf(" %d", s->intra_matrix[s->dsp.idct_permutation[i]]);
         printf("\n");
 #endif
     } else {
@@ -2732,7 +2743,7 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
 #ifdef DEBUG
         dprintf("non intra matrix present\n");
         for(i=0;i<64;i++)
-            dprintf(" %d", s->inter_matrix[s->dsp.idct_permutation[i]);
+            dprintf(" %d", s->inter_matrix[s->dsp.idct_permutation[i]]);
         printf("\n");
 #endif
     } else {
@@ -3142,6 +3153,7 @@ AVCodec mpeg1video_encoder = {
     MPV_encode_picture,
     MPV_encode_end,
     .supported_framerates= frame_rate_tab+1,
+    .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUV420P, -1},
     .capabilities= CODEC_CAP_DELAY,
 };
 
@@ -3154,6 +3166,7 @@ AVCodec mpeg2video_encoder = {
     MPV_encode_picture,
     MPV_encode_end,
     .supported_framerates= frame_rate_tab+1,
+    .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUV420P, -1},
     .capabilities= CODEC_CAP_DELAY,
 };
 #endif

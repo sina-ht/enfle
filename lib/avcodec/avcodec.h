@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4745
+#define LIBAVCODEC_BUILD       4752
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -105,6 +105,8 @@ enum CodecID {
     CODEC_ID_VC9,
     CODEC_ID_WMV3,
     CODEC_ID_LOCO,
+    CODEC_ID_WNV1,
+    CODEC_ID_AASC,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -165,12 +167,13 @@ enum CodecID {
     CODEC_ID_MP3ADU,
     CODEC_ID_MP3ON4,
     CODEC_ID_SHORTEN,
+    CODEC_ID_ALAC,
+    CODEC_ID_WESTWOOD_SND1,
     
     CODEC_ID_OGGTHEORA= 0x16000, 
     
     CODEC_ID_MPEG2TS= 0x20000, /* _FAKE_ codec to indicate a raw MPEG2 transport
                          stream (only used by libavformat) */
-    CODEC_ID_ALAC,
 };
 
 /* CODEC_ID_MP3LAME is absolete */
@@ -909,7 +912,7 @@ typedef struct AVCodecContext {
     
     /**
      * workaround bugs in encoders which sometimes cannot be detected automatically.
-     * - encoding: unused
+     * - encoding: set by user
      * - decoding: set by user
      */
     int workaround_bugs;
@@ -927,6 +930,7 @@ typedef struct AVCodecContext {
 #define FF_BUG_EDGE             1024
 #define FF_BUG_HPEL_CHROMA      2048
 #define FF_BUG_DC_CLIP          4096
+#define FF_BUG_MS               8192 ///< workaround various bugs in microsofts broken decoders
 //#define FF_BUG_FAKE_SCALABILITY 16 //autodetection should work 100%
         
     /**
@@ -1779,6 +1783,13 @@ typedef struct AVCodecContext {
      * - decoding: unused
      */
     int mb_lmax;
+
+    /**
+     * 
+     * - encoding: set by user.
+     * - decoding: unused
+     */
+    int me_penalty_compensation;
 } AVCodecContext;
 
 
@@ -1818,15 +1829,6 @@ typedef struct AVOption {
 } AVOption;
 
 /**
- * Parse option(s) and sets fields in passed structure
- * @param strct	structure where the parsed results will be written
- * @param list  list with AVOptions
- * @param opts	string with options for parsing
- */
-int avoption_parse(void* strct, const AVOption* list, const char* opts);
-
-
-/**
  * AVCodec.
  */
 typedef struct AVCodec {
@@ -1840,7 +1842,7 @@ typedef struct AVCodec {
     int (*decode)(AVCodecContext *, void *outdata, int *outdata_size,
                   uint8_t *buf, int buf_size);
     int capabilities;
-    const AVOption *options;
+    void *dummy; // FIXME remove next time we break binary compatibility
     struct AVCodec *next;
     void (*flush)(AVCodecContext *);
     const AVRational *supported_framerates; ///array of supported framerates, or NULL if any, array is terminated by {0,0}
@@ -1920,6 +1922,7 @@ extern AVCodec zlib_encoder;
 extern AVCodec sonic_encoder;
 extern AVCodec sonic_ls_encoder;
 extern AVCodec svq1_encoder;
+extern AVCodec x264_encoder;
 
 extern AVCodec h263_decoder;
 extern AVCodec h261_decoder;
@@ -2012,7 +2015,10 @@ extern AVCodec xl_decoder;
 extern AVCodec qpeg_decoder;
 extern AVCodec shorten_decoder;
 extern AVCodec loco_decoder;
+extern AVCodec wnv1_decoder;
+extern AVCodec aasc_decoder;
 extern AVCodec alac_decoder;
+extern AVCodec ws_snd1_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
