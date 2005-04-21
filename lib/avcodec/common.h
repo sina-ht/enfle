@@ -465,6 +465,16 @@ if((y)<(x)){\
 #endif
 
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
+#if defined(ARCH_X86_64)
+static inline uint64_t rdtsc(void)
+{
+	uint64_t a, d;
+	asm volatile(	"rdtsc\n\t"
+		: "=a" (a), "=d" (d)
+	);
+	return (d << 32) | (a & 0xffffffff);
+}
+#else
 static inline long long rdtsc(void)
 {
 	long long l;
@@ -473,6 +483,7 @@ static inline long long rdtsc(void)
 	);
 	return l;
 }
+#endif
 
 #define START_TIMER \
 uint64_t tend;\
@@ -497,8 +508,6 @@ tend= rdtsc();\
 #define START_TIMER 
 #define STOP_TIMER(id) {}
 #endif
-
-#define CLAMP_TO_8BIT(d) ((d > 0xff) ? 0xff : (d < 0) ? 0 : d)
 
 /* avoid usage of various functions */
 #define malloc please_use_av_malloc

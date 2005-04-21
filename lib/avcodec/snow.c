@@ -756,6 +756,29 @@ static always_inline void lift5(DWTELEM *dst, DWTELEM *src, DWTELEM *ref, int ds
     }
 }
 
+static always_inline void liftS(DWTELEM *dst, DWTELEM *src, DWTELEM *ref, int dst_step, int src_step, int ref_step, int width, int mul, int add, int shift, int highpass, int inverse){
+    const int mirror_left= !highpass;
+    const int mirror_right= (width&1) ^ highpass;
+    const int w= (width>>1) - 1 + (highpass & width);
+    int i;
+
+    assert(shift == 4);
+#define LIFTS(src, ref, inv) ((inv) ? (src) - (((ref) - 4*(src))>>shift): (16*4*(src) + 4*(ref) + 8 + (5<<27))/(5*16) - (1<<23))
+    if(mirror_left){
+        dst[0] = LIFTS(src[0], mul*2*ref[0]+add, inverse);
+        dst += dst_step;
+        src += src_step;
+    }
+    
+    for(i=0; i<w; i++){
+        dst[i*dst_step] = LIFTS(src[i*src_step], mul*(ref[i*ref_step] + ref[(i+1)*ref_step])+add, inverse);
+    }
+    
+    if(mirror_right){
+        dst[w*dst_step] = LIFTS(src[w*src_step], mul*2*ref[w*ref_step]+add, inverse);
+    }
+}
+
 
 static void inplace_lift(DWTELEM *dst, int width, int *coeffs, int n, int shift, int start, int inverse){
     int x, i;
@@ -1070,24 +1093,25 @@ STOP_TIMER("vertical_decompose53i*")}
     }
 }
 
+#define liftS lift
 #define lift5 lift
 #if 1
 #define W_AM 3
 #define W_AO 0
 #define W_AS 1
 
+#undef liftS
 #define W_BM 1
 #define W_BO 8
 #define W_BS 4
 
-#undef lift5
-#define W_CM 9999
-#define W_CO 2
-#define W_CS 2
+#define W_CM 1
+#define W_CO 0
+#define W_CS 0
 
-#define W_DM 15
-#define W_DO 16
-#define W_DS 5
+#define W_DM 3
+#define W_DO 4
+#define W_DS 3
 #elif 0
 #define W_AM 55
 #define W_AO 16
@@ -1144,7 +1168,7 @@ static void horizontal_decompose97i(DWTELEM *b, int width){
     const int w2= (width+1)>>1;
 
     lift (temp+w2, b    +1, b      , 1, 2, 2, width, -W_AM, W_AO, W_AS, 1, 0);
-    lift (temp   , b      , temp+w2, 1, 2, 1, width, -W_BM, W_BO, W_BS, 0, 0);
+    liftS(temp   , b      , temp+w2, 1, 2, 1, width, -W_BM, W_BO, W_BS, 0, 0);
     lift5(b   +w2, temp+w2, temp   , 1, 1, 1, width,  W_CM, W_CO, W_CS, 1, 0);
     lift (b      , temp   , b   +w2, 1, 1, 1, width,  W_DM, W_DO, W_DS, 0, 0);
 }
@@ -1177,7 +1201,11 @@ static void vertical_decompose97iL0(DWTELEM *b0, DWTELEM *b1, DWTELEM *b2, int w
     int i;
     
     for(i=0; i<width; i++){
+#ifdef liftS
         b1[i] -= (W_BM*(b0[i] + b2[i])+W_BO)>>W_BS;
+#else
+        b1[i] = (16*4*b1[i] - 4*(b0[i] + b2[i]) + 8*5 + (5<<27)) / (5*16) - (1<<23);
+#endif
     }
 }
 
@@ -1373,7 +1401,7 @@ static void horizontal_compose97i(DWTELEM *b, int width){
 
     lift (temp   , b      , b   +w2, 1, 1, 1, width,  W_DM, W_DO, W_DS, 0, 1);
     lift5(temp+w2, b   +w2, temp   , 1, 1, 1, width,  W_CM, W_CO, W_CS, 1, 1);
-    lift (b      , temp   , temp+w2, 2, 1, 1, width, -W_BM, W_BO, W_BS, 0, 1);
+    liftS(b      , temp   , temp+w2, 2, 1, 1, width, -W_BM, W_BO, W_BS, 0, 1);
     lift (b+1    , temp+w2, b      , 2, 1, 2, width, -W_AM, W_AO, W_AS, 1, 1);
 }
 
@@ -1404,7 +1432,11 @@ static void vertical_compose97iL0(DWTELEM *b0, DWTELEM *b1, DWTELEM *b2, int wid
     int i;
     
     for(i=0; i<width; i++){
+#ifdef liftS
         b1[i] += (W_BM*(b0[i] + b2[i])+W_BO)>>W_BS;
+#else
+        b1[i] += (W_BM*(b0[i] + b2[i])+4*b1[i]+W_BO)>>W_BS;
+#endif
     }
 }
 
@@ -1430,7 +1462,11 @@ static void vertical_compose97i(DWTELEM *b0, DWTELEM *b1, DWTELEM *b2, DWTELEM *
         r+= r>>8;
         b3[i] -= (r+W_CO)>>W_CS;
 #endif
+#ifdef liftS
         b2[i] += (W_BM*(b1[i] + b3[i])+W_BO)>>W_BS;
+#else
+        b2[i] += (W_BM*(b1[i] + b3[i])+4*b2[i]+W_BO)>>W_BS;
+#endif
         b1[i] += (W_AM*(b0[i] + b2[i])+W_AO)>>W_AS;
     }
 }
@@ -1621,6 +1657,7 @@ static int encode_subband_c0run(SnowContext *s, SubBand *b, DWTELEM *src, DWTELE
         int run=0;
         int runs[w*h];
         int run_index=0;
+        int max_index;
                 
         for(y=0; y<h; y++){
             for(x=0; x<w; x++){
@@ -1660,11 +1697,14 @@ static int encode_subband_c0run(SnowContext *s, SubBand *b, DWTELEM *src, DWTELE
                 }
             }
         }
+        max_index= run_index;
         runs[run_index++]= run;
         run_index=0;
         run= runs[run_index++];
 
-        put_symbol2(&s->c, b->state[1], run, 3);
+        put_symbol2(&s->c, b->state[30], max_index, 0);
+        if(run_index <= max_index)
+            put_symbol2(&s->c, b->state[1], run, 3);
         
         for(y=0; y<h; y++){
             if(s->c.bytestream_end - s->c.bytestream < w*40){
@@ -1706,7 +1746,8 @@ static int encode_subband_c0run(SnowContext *s, SubBand *b, DWTELEM *src, DWTELE
                     if(!run){
                         run= runs[run_index++];
 
-                        put_symbol2(&s->c, b->state[1], run, 3);
+                        if(run_index <= max_index)
+                            put_symbol2(&s->c, b->state[1], run, 3);
                         assert(v);
                     }else{
                         run--;
@@ -1740,20 +1781,23 @@ static inline void unpack_coeffs(SnowContext *s, SubBand *b, SubBand * parent, i
     int x,y;
     
     if(1){
-        int run;
-        int index=0;
-        int prev_index=-1;
-        int prev2_index=0;
-        int parent_index= 0;
-        int prev_parent_index= 0;
+        int run, runs;
+        x_and_coeff *xc= b->x_coeff;
+        x_and_coeff *prev_xc= NULL;
+        x_and_coeff *prev2_xc= xc;
+        x_and_coeff *parent_xc= parent ? parent->x_coeff : NULL;
+        x_and_coeff *prev_parent_xc= parent_xc;
 
-        run= get_symbol2(&s->c, b->state[1], 3);
+        runs= get_symbol2(&s->c, b->state[30], 0);
+        if(runs-- > 0) run= get_symbol2(&s->c, b->state[1], 3);
+        else           run= INT_MAX;
+
         for(y=0; y<h; y++){
             int v=0;
             int lt=0, t=0, rt=0;
 
-            if(y && b->x_coeff[prev_index].x == 0){
-                rt= b->x_coeff[prev_index].coeff;
+            if(y && prev_xc->x == 0){
+                rt= prev_xc->coeff;
             }
             for(x=0; x<w; x++){
                 int p=0;
@@ -1762,69 +1806,72 @@ static inline void unpack_coeffs(SnowContext *s, SubBand *b, SubBand * parent, i
                 lt= t; t= rt;
 
                 if(y){
-                    if(b->x_coeff[prev_index].x <= x)
-                        prev_index++;
-                    if(b->x_coeff[prev_index].x == x + 1)
-                        rt= b->x_coeff[prev_index].coeff;
+                    if(prev_xc->x <= x)
+                        prev_xc++;
+                    if(prev_xc->x == x + 1)
+                        rt= prev_xc->coeff;
                     else
                         rt=0;
                 }
-                if(parent){
-                    if(x>>1 > parent->x_coeff[parent_index].x){
-                        parent_index++;
+                if(parent_xc){
+                    if(x>>1 > parent_xc->x){
+                        parent_xc++;
                     }
-                    if(x>>1 == parent->x_coeff[parent_index].x){
-                        p= parent->x_coeff[parent_index].coeff;
+                    if(x>>1 == parent_xc->x){
+                        p= parent_xc->coeff;
                     }
                 }
                 if(/*ll|*/l|lt|t|rt|p){
                     int context= av_log2(/*ABS(ll) + */3*(l>>1) + (lt>>1) + (t&~1) + (rt>>1) + (p>>1));
 
                     v=get_rac(&s->c, &b->state[0][context]);
+                    if(v){
+                        v= 2*(get_symbol2(&s->c, b->state[context + 2], context-4) + 1);
+                        v+=get_rac(&s->c, &b->state[0][16 + 1 + 3 + quant3bA[l&0xFF] + 3*quant3bA[t&0xFF]]);
+                        
+                        xc->x=x;
+                        (xc++)->coeff= v;
+                    }
                 }else{
                     if(!run){
-                        run= get_symbol2(&s->c, b->state[1], 3);
-                        v=1;
+                        if(runs-- > 0) run= get_symbol2(&s->c, b->state[1], 3);
+                        else           run= INT_MAX;
+                        v= 2*(get_symbol2(&s->c, b->state[0 + 2], 0-4) + 1);
+                        v+=get_rac(&s->c, &b->state[0][16 + 1 + 3]);
+                        
+                        xc->x=x;
+                        (xc++)->coeff= v;
                     }else{
+                        int max_run;
                         run--;
                         v=0;
 
-                        if(y && parent){
-                            int max_run;
-
-                            max_run= FFMIN(run, b->x_coeff[prev_index].x - x - 2);
-                            max_run= FFMIN(max_run, 2*parent->x_coeff[parent_index].x - x - 1);
-                            x+= max_run;
-                            run-= max_run;
-                        }
+                        if(y) max_run= FFMIN(run, prev_xc->x - x - 2);
+                        else  max_run= FFMIN(run, w-x-1);
+                        if(parent_xc)
+                            max_run= FFMIN(max_run, 2*parent_xc->x - x - 1);
+                        x+= max_run;
+                        run-= max_run;
                     }
                 }
-                if(v){
-                    int context= av_log2(/*ABS(ll) + */3*(l>>1) + (lt>>1) + (t&~1) + (rt>>1) + (p>>1));
-                    v= 2*(get_symbol2(&s->c, b->state[context + 2], context-4) + 1);
-                    v+=get_rac(&s->c, &b->state[0][16 + 1 + 3 + quant3bA[l&0xFF] + 3*quant3bA[t&0xFF]]);
-                       
-                    b->x_coeff[index].x=x;
-                    b->x_coeff[index++].coeff= v;
-                }
             }
-            b->x_coeff[index++].x= w+1; //end marker
-            prev_index= prev2_index;
-            prev2_index= index;
+            (xc++)->x= w+1; //end marker
+            prev_xc= prev2_xc;
+            prev2_xc= xc;
             
-            if(parent){
+            if(parent_xc){
                 if(y&1){
-                    while(parent->x_coeff[parent_index].x != parent->width+1)
-                        parent_index++;
-                    parent_index++;
-                    prev_parent_index= parent_index;
+                    while(parent_xc->x != parent->width+1)
+                        parent_xc++;
+                    parent_xc++;
+                    prev_parent_xc= parent_xc;
                 }else{
-                    parent_index= prev_parent_index;
+                    parent_xc= prev_parent_xc;
                 }
             }
         }
 
-        b->x_coeff[index++].x= w+1; //end marker
+        (xc++)->x= w+1; //end marker
     }
 }
 
@@ -2312,8 +2359,13 @@ START_TIMER
 
 //            if(b_w==16) am= 8*(a1+a2);
 
-            if(dx<8) tmp[x]= (32*a2*( 8-dx) +    am* dx    + 128)>>8;
-            else     tmp[x]= (   am*(16-dx) + 32*a3*(dx-8) + 128)>>8;
+            if(dx<8) am = (32*a2*( 8-dx) +    am* dx    + 128)>>8;
+            else     am = (   am*(16-dx) + 32*a3*(dx-8) + 128)>>8;
+            
+            /* FIXME Try increasing tmp buffer to 16 bits and not clipping here. Should give marginally better results. - Robert*/
+            if(am&(~255)) am= ~(am>>31);
+            
+            tmp[x] = am;
 
 /*            if     (dx< 4) tmp[x + y*stride]= (16*a1*( 4-dx) +    aL* dx     + 32)>>6;
             else if(dx< 8) tmp[x + y*stride]= (   aL*( 8-dx) +    am*(dx- 4) + 32)>>6;
@@ -2340,9 +2392,12 @@ START_TIMER
             
 //            if(b_w==16) am= 8*(a1+a2);
 
-            if(dy<8) dst[x]= (32*a2*( 8-dy) +    am* dy    + 128)>>8;
-            else     dst[x]= (   am*(16-dy) + 32*a3*(dy-8) + 128)>>8;
+            if(dy<8) am =  (32*a2*( 8-dy) +    am* dy    + 128)>>8;
+            else     am = (   am*(16-dy) + 32*a3*(dy-8) + 128)>>8;
 
+            if(am&(~255)) am= ~(am>>31);
+            
+            dst[x] = am;
 /*            if     (dy< 4) tmp[x + y*stride]= (16*a1*( 4-dy) +    aL* dy     + 32)>>6;
             else if(dy< 8) tmp[x + y*stride]= (   aL*( 8-dy) +    am*(dy- 4) + 32)>>6;
             else if(dy<12) tmp[x + y*stride]= (   am*(12-dy) +    aR*(dy- 8) + 32)>>6;
@@ -2722,7 +2777,7 @@ static always_inline void predict_slice_buffered(SnowContext *s, slice_buffer * 
             return;
 
         if(add){
-            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++)
+            for(y=block_w*mb_y; y<FFMIN(h,block_w*(mb_y+1)); y++)
             {
 //                DWTELEM * line = slice_buffer_get_line(sb, y);
                 DWTELEM * line = sb->line[y];
@@ -2736,7 +2791,7 @@ static always_inline void predict_slice_buffered(SnowContext *s, slice_buffer * 
                 }
             }
         }else{
-            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++)
+            for(y=block_w*mb_y; y<FFMIN(h,block_w*(mb_y+1)); y++)
             {
 //                DWTELEM * line = slice_buffer_get_line(sb, y);
                 DWTELEM * line = sb->line[y];
@@ -2790,7 +2845,7 @@ static always_inline void predict_slice(SnowContext *s, DWTELEM *buf, int plane_
             return;
 
         if(add){
-            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++){
+            for(y=block_w*mb_y; y<FFMIN(h,block_w*(mb_y+1)); y++){
                 for(x=0; x<w; x++){
                     int v= buf[x + y*w] + (128<<FRAC_BITS) + (1<<(FRAC_BITS-1));
                     v >>= FRAC_BITS;
@@ -2799,7 +2854,7 @@ static always_inline void predict_slice(SnowContext *s, DWTELEM *buf, int plane_
                 }
             }
         }else{
-            for(y=block_w*mb_y; y<block_w*(mb_y+1); y++){
+            for(y=block_w*mb_y; y<FFMIN(h,block_w*(mb_y+1)); y++){
                 for(x=0; x<w; x++){
                     buf[x + y*w]-= 128<<FRAC_BITS;
                 }
@@ -3293,10 +3348,23 @@ static int encode_init(AVCodecContext *avctx)
  
     s->version=0;
     
+    s->m.avctx   = avctx;
+    s->m.flags   = avctx->flags;
+    s->m.bit_rate= avctx->bit_rate;
+
     s->m.me.scratchpad= av_mallocz((avctx->width+64)*2*16*2*sizeof(uint8_t));
     s->m.me.map       = av_mallocz(ME_MAP_SIZE*sizeof(uint32_t));
     s->m.me.score_map = av_mallocz(ME_MAP_SIZE*sizeof(uint32_t));
     h263_encode_init(&s->m); //mv_penalty
+
+    if(avctx->flags&CODEC_FLAG_PASS1){
+        if(!avctx->stats_out)
+            avctx->stats_out = av_mallocz(256);
+    }
+    if(avctx->flags&CODEC_FLAG_PASS2){
+        if(ff_rate_control_init(&s->m) < 0)
+            return -1;
+    }
 
     for(plane_index=0; plane_index<3; plane_index++){
         calculate_vissual_weight(s, &s->plane[plane_index]);
@@ -3363,8 +3431,16 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
     
     s->input_picture = *pict;
 
-    s->keyframe=avctx->gop_size==0 || avctx->frame_number % avctx->gop_size == 0;
-    pict->pict_type= s->keyframe ? FF_I_TYPE : FF_P_TYPE;
+    if(avctx->flags&CODEC_FLAG_PASS2){
+        s->m.pict_type =
+        pict->pict_type= s->m.rc_context.entry[avctx->frame_number].new_pict_type;
+        s->keyframe= pict->pict_type==FF_I_TYPE;
+        s->m.picture_number= avctx->frame_number;
+        pict->quality= ff_rate_estimate_qscale(&s->m);
+    }else{
+        s->keyframe= avctx->gop_size==0 || avctx->frame_number % avctx->gop_size == 0;
+        pict->pict_type= s->keyframe ? FF_I_TYPE : FF_P_TYPE;
+    }
     
     if(pict->quality){
         s->qlog= rint(QROOT*log(pict->quality / (float)FF_QP2LAMBDA)/log(2));
@@ -3377,6 +3453,7 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
     frame_start(s);
     s->current_picture.key_frame= s->keyframe;
 
+    s->m.current_picture_ptr= &s->m.current_picture;
     if(pict->pict_type == P_TYPE){
         int block_width = (width +15)>>4;
         int block_height= (height+15)>>4;
@@ -3389,7 +3466,6 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
         s->m.current_picture.data[0]= s->current_picture.data[0];
         s->m.   last_picture.data[0]= s->   last_picture.data[0];
         s->m.    new_picture.data[0]= s->  input_picture.data[0];
-        s->m.current_picture_ptr= &s->m.current_picture;
         s->m.   last_picture_ptr= &s->m.   last_picture;
         s->m.linesize=
         s->m.   last_picture.linesize[0]=
@@ -3424,7 +3500,9 @@ redo_frame:
     s->qbias= pict->pict_type == P_TYPE ? 2 : 0;
 
     encode_header(s);
+    s->m.misc_bits = 8*(s->c.bytestream - s->c.bytestream_start);
     encode_blocks(s);
+    s->m.mv_bits = 8*(s->c.bytestream - s->c.bytestream_start) - s->m.misc_bits;
       
     for(plane_index=0; plane_index<3; plane_index++){
         Plane *p= &s->plane[plane_index];
@@ -3515,6 +3593,21 @@ STOP_TIMER("pred-conv")}
     if(s->last_picture.data[0])
         avctx->release_buffer(avctx, &s->last_picture);
 
+    s->current_picture.coded_picture_number = avctx->frame_number;
+    s->current_picture.pict_type = pict->pict_type;
+    s->current_picture.quality = pict->quality;
+    if(avctx->flags&CODEC_FLAG_PASS1){
+        s->m.p_tex_bits = 8*(s->c.bytestream - s->c.bytestream_start) - s->m.misc_bits - s->m.mv_bits;
+        s->m.current_picture.display_picture_number =
+        s->m.current_picture.coded_picture_number = avctx->frame_number;
+        s->m.pict_type = pict->pict_type;
+        s->m.current_picture.quality = pict->quality;
+        ff_write_pass1_stats(&s->m);
+    }
+    if(avctx->flags&CODEC_FLAG_PASS2){
+        s->m.total_bits += 8*(s->c.bytestream - s->c.bytestream_start);
+    }
+
     emms_c();
     
     return ff_rac_terminate(c);
@@ -3547,6 +3640,7 @@ static int encode_end(AVCodecContext *avctx)
     SnowContext *s = avctx->priv_data;
 
     common_end(s);
+    av_free(avctx->stats_out);
 
     return 0;
 }

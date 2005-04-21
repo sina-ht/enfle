@@ -429,7 +429,7 @@ static inline int get_bits_count(GetBitContext *s){
 #   define UPDATE_CACHE(name, gb)\
     if(name##_bit_count >= 0){\
         name##_cache+= (int)be2me_16(*(uint16_t*)name##_buffer_ptr) << name##_bit_count;\
-        ((uint16_t*)name##_buffer_ptr)++;\
+        name##_buffer_ptr += 2;\
         name##_bit_count-= 16;\
     }\
 
@@ -727,7 +727,7 @@ void free_vlc(VLC *vlc);
     SKIP_BITS(name, gb, n)\
 }
 
-#define GET_RL_VLC(level, run, name, gb, table, bits, max_depth)\
+#define GET_RL_VLC(level, run, name, gb, table, bits, max_depth, need_update)\
 {\
     int n, index, nb_bits;\
 \
@@ -736,8 +736,10 @@ void free_vlc(VLC *vlc);
     n     = table[index].len;\
 \
     if(max_depth > 1 && n < 0){\
-        LAST_SKIP_BITS(name, gb, bits)\
-        UPDATE_CACHE(name, gb)\
+        SKIP_BITS(name, gb, bits)\
+        if(need_update){\
+            UPDATE_CACHE(name, gb)\
+        }\
 \
         nb_bits = -n;\
 \
