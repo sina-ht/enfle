@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:05:41 2004.
- * $Id: alsa.c,v 1.13 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:59:59 2005.
+ * $Id: alsa.c,v 1.14 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -35,7 +35,7 @@
 #include "enfle/audio-plugin.h"
 
 static AudioDevice *open_device(void *, Config *);
-static int set_params(AudioDevice *, AudioFormat *, int *, int *);
+static int set_params(AudioDevice *, AudioFormat *, int *, unsigned int *);
 static int write_device(AudioDevice *, unsigned char *, int);
 static int bytes_written(AudioDevice *);
 static int sync_device(AudioDevice *);
@@ -116,7 +116,7 @@ open_device(void *data, Config *c)
 }
 
 static int
-set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
+set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, unsigned int *rate_p)
 {
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
   int r, err;
@@ -125,7 +125,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
   snd_pcm_hw_params_t *hwparams;
   snd_pcm_sw_params_t *swparams;
   int ch = *ch_p;
-  int rate = *rate_p;
+  unsigned int rate = *rate_p;
   unsigned int buffer, period;
 
   snd_pcm_hw_params_alloca(&hwparams);

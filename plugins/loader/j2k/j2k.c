@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:19:22 2004.
- * $Id: j2k.c,v 1.2 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:53:31 2005.
+ * $Id: j2k.c,v 1.3 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -59,7 +59,7 @@ ENFLE_PLUGIN_ENTRY(loader_j2k)
   s = string_create();
   string_set(s, LOADER_J2K_PLUGIN_DESCRIPTION);
   string_catf(s, " with integrated libj2k " LIBJ2K_VERSION);
-  lp->description = (const unsigned char *)strdup(string_get(s));
+  lp->description = strdup(string_get(s));
   string_destroy(s);
 
   return (void *)lp;
@@ -123,7 +123,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   /* Read whole stream into buffer... */
   size = 0;
   {
-    char *tmp;
+    unsigned char *tmp;
     int len;
     int bufsize = 65536;
 

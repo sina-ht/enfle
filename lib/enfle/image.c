@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 25 22:22:08 2002.
- * $Id: image.c,v 1.15 2002/08/03 05:08:40 sian Exp $
+ * Last Modified: Sun May  1 16:47:36 2005.
+ * $Id: image.c,v 1.16 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -87,7 +87,7 @@ image_dup(Image *p)
   if (p->mask && (new->mask = memory_dup(p->mask)) == NULL)
     goto error;
 
-  if (p->comment && (new->comment = (unsigned char *)strdup((const char *)p->comment)) == NULL)
+  if (p->comment && (new->comment = strdup((const char *)p->comment)) == NULL)
     goto error;
 
   if (p->next && (new->next = image_dup(p->next)) == NULL)

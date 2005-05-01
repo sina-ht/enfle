@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Mar  6 12:22:10 2005.
- * $Id: normal.c,v 1.85 2005/03/06 03:23:49 sian Exp $
+ * Last Modified: Sun May  1 16:44:56 2005.
+ * $Id: normal.c,v 1.86 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -318,11 +318,11 @@ set_caption_string(MainLoop *ml)
     char *to = config_get_str(ml->uidata->c, "/enfle/plugins/ui/normal/filename_code_to");
 
     if (to && strcasecmp(to, "EUC-JISX0213") == 0) {
-      unsigned char *p = string_get(cap);
+      char *p = string_get(cap);
       int i, l = 0, len = strlen(p);
 
       for (i = 0; i < len; i += l) {
-	if (*p == 0xa2 && *(p + 1) == 0xb2) {
+	if (*p == (char)0xa2 && *(p + 1) == (char)0xb2) {
 	  *p = 0xa1;
 	  *(p + 1) = 0xc1;
 	  l = 2;

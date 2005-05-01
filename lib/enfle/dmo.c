@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  1 18:20:03 2004.
- * $Id: dmo.c,v 1.5 2004/05/15 04:10:16 sian Exp $
+ * Last Modified: Sun May  1 16:43:52 2005.
+ * $Id: dmo.c,v 1.6 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -719,8 +719,8 @@ dmo_load(EnflePlugins *eps, char *path, PluginType *type_return)
     strcpy(tmp, plugin_desc);
     strcat(tmp, desc);
     tmp[strlen(plugin_desc) + strlen(desc)]  = '\0';
-    ep->description = (const char *)tmp;
-    ep->author = (char *)"DMO author";
+    ep->description = tmp;
+    ep->author = "DMO author";
 
     p = plugin_create();
     p->filepath = strdup(path);

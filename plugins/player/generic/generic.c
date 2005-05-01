@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 16 01:15:49 2004.
- * $Id: generic.c,v 1.17 2004/06/15 16:16:20 sian Exp $
+ * Last Modified: Sun May  1 16:58:00 2005.
+ * $Id: generic.c,v 1.18 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -356,7 +356,7 @@ play_video(void *arg)
   void *data;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
-  int used;
+  unsigned int used;
 
   debug_message_fn("()\n");
 
@@ -437,7 +437,7 @@ play_audio(void *arg)
   unsigned int remain;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
-  int used;
+  unsigned int used;
   AudioDevice *ad;
 
   debug_message_fn("()\n");
@@ -594,7 +594,7 @@ play_main(Movie *m, VideoWindow *vw)
   pthread_mutex_lock(&m->vdec->update_mutex);
 
   if (!info->if_initialized && m->width && m->height) {
-    unsigned int dw, dh;
+    int dw, dh;
 
     image_rendered_width(p) = m->width;
     image_rendered_height(p) = m->height;

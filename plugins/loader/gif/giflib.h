@@ -3,8 +3,8 @@
  * (C)Copyright 1997,98 by Hiroshi Takekawa <t80679@hongo.ecc.u-tokyo.ac.jp>
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 21 21:20:31 2004.
- * $Id: giflib.h,v 1.3 2004/06/21 12:22:23 sian Exp $
+ * Last Modified: Sun May  1 16:49:45 2005.
+ * $Id: giflib.h,v 1.4 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -109,7 +109,7 @@ struct GIFImage {
 typedef struct GIFFileInfomation {
   int revision; /* 87 or 89 */
   int npics;
-  unsigned char *comment;
+  char *comment;
   unsigned char *applcode;
   char *err;
   void *pixels;

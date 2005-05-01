@@ -3,8 +3,8 @@
  * (C)Copyright 1997, 98, 99, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 21 21:20:08 2004.
- * $Id: giflib.c,v 1.4 2004/06/21 12:22:23 sian Exp $
+ * Last Modified: Sun May  1 16:50:47 2005.
+ * $Id: giflib.c,v 1.5 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -135,7 +135,8 @@ GIFReadSignature(Stream *st, int *c)
     return NULL;
   }
 
-  info->comment = info->applcode = info->err = (char *)NULL;
+  info->comment = info->err = NULL;
+  info->applcode = NULL;
   info->sd = (GIF_sd *)NULL;
   info->top = info->image = (GIF_image *)NULL;
 

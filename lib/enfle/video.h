@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jul  6 22:46:41 2002.
- * $Id: video.h,v 1.21 2002/08/03 05:08:40 sian Exp $
+ * Last Modified: Sun May  1 16:56:52 2005.
+ * $Id: video.h,v 1.22 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -146,7 +146,7 @@ struct _video_window {
 
   MemoryType (*preferred_memory_type)(VideoWindow *);
   ImageType (*request_type)(VideoWindow *, unsigned int, int *);
-  int (*calc_magnified_size)(VideoWindow *, int, unsigned int, unsigned int, unsigned int *, unsigned int *);
+  int (*calc_magnified_size)(VideoWindow *, int, unsigned int, unsigned int, int *, int *);
   int (*set_event_mask)(VideoWindow *, int);
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
   void (*set_caption)(VideoWindow *, char *);

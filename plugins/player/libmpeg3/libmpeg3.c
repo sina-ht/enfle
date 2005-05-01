@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:15:28 2004.
- * $Id: libmpeg3.c,v 1.44 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:57:42 2005.
+ * $Id: libmpeg3.c,v 1.45 2005/05/01 15:37:55 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -189,7 +189,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->num_of_frames = mpeg3_video_frames(info->file, info->nvstream);
 
     {
-      unsigned int dw, dh;
+      int dw, dh;
 
       video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
 
@@ -488,7 +488,7 @@ play_main(Movie *m, VideoWindow *vw)
     break;
   case _RESIZING:
     {
-      unsigned int dw, dh;
+      int dw, dh;
 
       video_window_resize(vw, m->rendering_width, m->rendering_height);
       video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);

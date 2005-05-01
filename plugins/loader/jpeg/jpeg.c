@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:18:56 2004.
- * $Id: jpeg.c,v 1.24 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:46:17 2005.
+ * $Id: jpeg.c,v 1.25 2005/05/01 15:37:55 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -69,7 +69,7 @@ ENFLE_PLUGIN_ENTRY(loader_jpeg)
   string_set(s, LOADER_JPEG_PLUGIN_DESCRIPTION);
   /* 'compiled' means that the version string is compiled in. */
   string_catf(s, " compiled with libjpeg %02d", JPEG_LIB_VERSION);
-  lp->description = (const unsigned char *)strdup(string_get(s));
+  lp->description = strdup(string_get(s));
   string_destroy(s);
 
   return (void *)lp;

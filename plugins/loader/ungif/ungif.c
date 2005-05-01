@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:18:01 2004.
- * $Id: ungif.c,v 1.18 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:48:11 2005.
+ * $Id: ungif.c,v 1.19 2005/05/01 15:37:55 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -208,7 +208,7 @@ load_image(Image *p, Stream *st)
 	switch (extcode) {
 	case COMMENT_EXT_FUNC_CODE:
 	  {
-	    unsigned char *tmp;
+	    char *tmp;
 
 	    if ((tmp = realloc(p->comment, strlen((const char *)p->comment) + Extension[0] + 1)) == NULL) {
 	      warning("No enough memory for comment(append). Truncated.\n");

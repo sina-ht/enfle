@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:19:10 2004.
- * $Id: jasper.c,v 1.3 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:52:36 2005.
+ * $Id: jasper.c,v 1.4 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -67,7 +67,7 @@ ENFLE_PLUGIN_ENTRY(loader_jasper)
   s = string_create();
   string_set(s, LOADER_JASPER_PLUGIN_DESCRIPTION);
   string_catf(s, " with libjasper %s", jas_getversion());
-  lp->description = (const unsigned char *)strdup(string_get(s));
+  lp->description = strdup(string_get(s));
   string_destroy(s);
 
   if (jas_init()) {
@@ -140,7 +140,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 	return LOAD_ERROR;
       }
       buf = tmp;
-      len = stream_read(st, buf + size, bufsize - size);
+      len = stream_read(st, (unsigned char *)(buf + size), bufsize - size);
       size += len;
       if (len < bufsize - size)
 	break;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:04:19 2004.
- * $Id: Xlib.c,v 1.58 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:58:56 2005.
+ * $Id: Xlib.c,v 1.59 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,7 +84,7 @@ static VideoWindow *open_window(void *, VideoWindow *, unsigned int, unsigned in
 static void set_wallpaper(void *, Image *);
 
 static ImageType request_type(VideoWindow *, unsigned int, int *);
-static int calc_magnified_size(VideoWindow *, int, unsigned int, unsigned int, unsigned int *, unsigned int *);
+static int calc_magnified_size(VideoWindow *, int, unsigned int, unsigned int, int *, int *);
 static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
 static int dispatch_event(VideoWindow *, VideoEventData *);
@@ -414,6 +414,9 @@ draw_caption(VideoWindow *vw)
     int y = vw->full_height - (xwi->fs->ascent + xwi->fs->descent);
     int oy = (vw->full_height + vw->render_height) >> 1;
 
+    if (x < 0)
+      x = 0;
+
     if (oy < y) {
       x11_lock(x11);
       XSetForeground(x11_display(x11), xwi->full.gc, x11_white(x11));
@@ -588,7 +591,7 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
 
 static int
 calc_magnified_size(VideoWindow *vw, int use_hw_scale, unsigned int sw, unsigned int sh,
-		    unsigned int *dw_return, unsigned int *dh_return)
+		    int *dw_return, int *dh_return)
 {
   double s, ws, hs;
   unsigned int fw, fh;
@@ -1278,7 +1281,7 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   unsigned int sw, sh;
-  unsigned int dw, dh;
+  int dw, dh;
   int use_hw_scale;
 
 #ifdef USE_XV

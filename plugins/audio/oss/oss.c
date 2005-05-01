@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:04:44 2004.
- * $Id: oss.c,v 1.14 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 17:01:49 2005.
+ * $Id: oss.c,v 1.15 2005/05/01 15:37:55 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -50,7 +50,7 @@
 #include "enfle/audio-plugin.h"
 
 static AudioDevice *open_device(void *, Config *);
-static int set_params(AudioDevice *, AudioFormat *, int *, int *);
+static int set_params(AudioDevice *, AudioFormat *, int *, unsigned int *);
 static int write_device(AudioDevice *, unsigned char *, int);
 static int bytes_written(AudioDevice *);
 static int sync_device(AudioDevice *);
@@ -117,12 +117,12 @@ open_device(void *data, Config *c)
 }
 
 static int
-set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
+set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, unsigned int *rate_p)
 {
   int c, f, r;
   AudioFormat format = *format_p;
   int ch = *ch_p;
-  int rate = *rate_p;
+  unsigned int rate = *rate_p;
 
   /* format part */
   switch (format) {

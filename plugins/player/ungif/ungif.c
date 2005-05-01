@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:13:02 2004.
- * $Id: ungif.c,v 1.31 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:53:52 2005.
+ * $Id: ungif.c,v 1.32 2005/05/01 15:37:55 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -403,7 +403,7 @@ play_main(Movie *m, VideoWindow *vw)
 	switch (extcode) {
 	case COMMENT_EXT_FUNC_CODE:
 	  {
-	    unsigned char *tmp;
+	    char *tmp;
 
 	    if ((tmp = realloc(p->comment, strlen((const char *)p->comment) + extension[0] + 1)) == NULL) {
 	      show_message("No enough memory for comment(append). Truncated.\n");

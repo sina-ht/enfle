@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:18:30 2004.
- * $Id: png.c,v 1.16 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:46:34 2005.
+ * $Id: png.c,v 1.17 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,7 +74,7 @@ ENFLE_PLUGIN_ENTRY(loader_png)
   string_set(s, LOADER_PNG_PLUGIN_DESCRIPTION);
   /* 'compiled' means that the version string is compiled in. */
   string_cat(s, " compiled with libpng " PNG_LIBPNG_VER_STRING);
-  lp->description = (const unsigned char *)strdup(string_get(s));
+  lp->description = strdup(string_get(s));
   string_destroy(s);
 
   return (void *)lp;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun 16 00:33:13 2004.
- * $Id: movie.h,v 1.24 2004/06/15 16:17:19 sian Exp $
+ * Last Modified: Sun May  1 17:01:07 2005.
+ * $Id: movie.h,v 1.25 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -73,7 +73,8 @@ struct _movie {
   int has_audio;
   unsigned int current_sample, num_of_samples;
   AudioFormat sampleformat, sampleformat_actual;
-  int channels, channels_actual, samplerate, samplerate_actual;
+  int channels, channels_actual;
+  unsigned int samplerate, samplerate_actual;
   char *player_name, *format;
   int timer_offset_set;
   int timer_offset;

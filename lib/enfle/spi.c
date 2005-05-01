@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:53:13 2004.
- * $Id: spi.c,v 1.25 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:43:37 2005.
+ * $Id: spi.c,v 1.26 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -463,8 +463,8 @@ spi_load(EnflePlugins *eps, char *path, PluginType *type_return)
   debug_message("OK\n");
 
   ep->name = strdup(misc_basename(path));
-  ep->description = (const unsigned char *)strdup(buf);
-  ep->author = (char *)"SPI author";
+  ep->description = strdup(buf);
+  ep->author = "SPI author";
 
   p = plugin_create();
   p->filepath = strdup(path);

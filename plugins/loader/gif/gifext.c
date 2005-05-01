@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 21 21:17:20 2004.
- * $Id: gifext.c,v 1.3 2004/06/21 12:22:23 sian Exp $
+ * Last Modified: Sun May  1 16:52:48 2005.
+ * $Id: gifext.c,v 1.4 2005/05/01 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,14 +86,14 @@ GIFParseCommentBlock(Stream *st, GIF_info *info)
       return PARSE_ERROR;
     }
 
-    if (stream_read(st, info->comment, len) > 0) {
+    if (stream_read(st, (unsigned char *)info->comment, len) > 0) {
       *(info->comment + len) = '\0';
       while ((size = stream_getc(st)) > 0) {
 	if ((info->comment = realloc(info->comment, size + len + 1)) == NULL) {
 	  info->err = (char *)"No enough memory for comment (reallocation)";
 	  return PARSE_ERROR;
 	}
-	if (stream_read(st, info->comment + len, size) > 0) {
+	if (stream_read(st, (unsigned char *)(info->comment + len), size) > 0) {
 	  *(info->comment + len + size) = '\0';
 	  len += size;
 	} else

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:15:10 2004.
- * $Id: mng.c,v 1.22 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun May  1 16:54:08 2005.
+ * $Id: mng.c,v 1.23 2005/05/01 15:37:55 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -71,7 +71,7 @@ ENFLE_PLUGIN_ENTRY(player_mng)
   string_set(s, PLAYER_MNG_PLUGIN_DESCRIPTION);
   /* The version string is fetched dynamically, not statically compiled-in. */
   string_catf(s, " with libmng %s", mng_version_text());
-  pp->description = (const unsigned char *)strdup(string_get(s));
+  pp->description = strdup(string_get(s));
   string_destroy(s);
 
   return (void *)pp;

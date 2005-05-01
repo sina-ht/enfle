@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 21 21:16:03 2004.
- * $Id: gif.c,v 1.4 2004/06/21 12:22:23 sian Exp $
+ * Last Modified: Sun May  1 16:46:57 2005.
+ * $Id: gif.c,v 1.5 2005/05/01 15:37:55 sian Exp $
  *
  *             The Graphics Interchange Format(c) is
  *       the Copyright property of CompuServe Incorporated.
@@ -182,7 +182,7 @@ load_image(Image *p, Stream *st)
   } while (c == PARSE_OK);
 
   if (g_info->comment != NULL)
-    p->comment = (unsigned char *)strdup(g_info->comment);
+    p->comment = strdup(g_info->comment);
 
   if (c == PARSE_ERROR)
     err_message("gif loader: Parse error: %s at 0x%lX.\n", g_info->err, stream_tell(st));
