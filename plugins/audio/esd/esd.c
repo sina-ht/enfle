@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:05:04 2004.
- * $Id: esd.c,v 1.7 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Tue May  3 09:36:32 2005.
+ * $Id: esd.c,v 1.8 2005/05/03 01:08:30 sian Exp $
  *
  * Note: Audio support is incomplete.
  *
@@ -36,7 +36,7 @@
 #include "enfle/audio-plugin.h"
 
 static AudioDevice *open_device(void *, Config *);
-static int set_params(AudioDevice *, AudioFormat *, int *, int *);
+static int set_params(AudioDevice *, AudioFormat *, int *, unsigned int *);
 static int write_device(AudioDevice *, unsigned char *, int);
 static int bytes_written(AudioDevice *);
 static int sync_device(AudioDevice *);
@@ -110,7 +110,7 @@ open_device(void *data, Config *c)
 }
 
 static int
-set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, int *rate_p)
+set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, unsigned int *rate_p)
 {
   ESD_data *esd = (ESD_data *)ad->private_data;
   int bits, channels;

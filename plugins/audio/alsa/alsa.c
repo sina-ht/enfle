@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:59:59 2005.
- * $Id: alsa.c,v 1.14 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Tue May  3 09:32:24 2005.
+ * $Id: alsa.c,v 1.15 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -57,8 +57,8 @@ static AudioPlugin plugin = {
 
 typedef struct _alsa_data {
   snd_pcm_t *fd;
-  snd_pcm_sframes_t buffer_size;
-  snd_pcm_sframes_t period_size;
+  snd_pcm_uframes_t buffer_size;
+  snd_pcm_uframes_t period_size;
   snd_output_t *log;
 } ALSA_data;
 

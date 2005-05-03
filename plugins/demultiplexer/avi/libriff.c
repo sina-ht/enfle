@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jan 19 20:51:49 2004.
- * $Id: libriff.c,v 1.1 2004/02/14 05:22:04 sian Exp $
+ * Last Modified: Tue May  3 09:42:38 2005.
+ * $Id: libriff.c,v 1.2 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -181,10 +181,10 @@ riff_file_read_data(RIFF_File *rf, RIFF_Chunk *rc)
   return 1;
 }
 
-const unsigned char *
+const char *
 riff_file_get_errmsg(RIFF_File *rf)
 {
-  static const unsigned char *errmsg[] = {
+  static const char *errmsg[] = {
     "Success.",
     "File size too small.",
     "RIFF tag not found.",

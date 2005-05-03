@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 24 15:09:12 2004.
- * $Id: ogg.c,v 1.4 2004/04/27 12:23:37 sian Exp $
+ * Last Modified: Tue May  3 09:48:15 2005.
+ * $Id: ogg.c,v 1.5 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -175,7 +175,7 @@ __examine(Demultiplexer *demux, int identify_only)
     } else if (res == 0) {
       /* Need more data */
       buf = ogg_sync_buffer(&info->oy, OGG_BLOCK_SIZE);
-      if ((read_size = stream_read(demux->st, buf, OGG_BLOCK_SIZE)) < 0) {
+      if ((read_size = stream_read(demux->st, (unsigned char *)buf, OGG_BLOCK_SIZE)) < 0) {
 	err_message_fnc("stream_read error.\n");
 	ds = DEMULTIPLEX_ERROR;
 	goto error;
@@ -190,11 +190,11 @@ __examine(Demultiplexer *demux, int identify_only)
     ogg_stream_init(&os, ogg_page_serialno(&og));
     ogg_stream_pagein(&os, &og);
     ogg_stream_packetout(&os, &op);
-    if (op.bytes >= 7 && strncmp(&op.packet[1], "vorbis", 6) == 0) {
+    if (op.bytes >= 7 && strncmp((char *)&op.packet[1], "vorbis", 6) == 0) {
       demux->nastreams++;
       info->a_serialno = ogg_page_serialno(&og);
       debug_message_fnc("vorbis stream(%d) found.\n", info->a_serialno);
-    } else if (op.bytes >= 6 && strncmp(op.packet + 1, "video", 5) == 0) {
+    } else if (op.bytes >= 6 && strncmp((char *)&op.packet[1], "video", 5) == 0) {
       demux->nvstreams++;
       info->v_serialno = ogg_page_serialno(&og);
       debug_message_fnc("video stream(%d) found: ", info->v_serialno);
@@ -209,7 +209,7 @@ __examine(Demultiplexer *demux, int identify_only)
       info->width = utils_get_little_uint32(op.packet + 45);
       info->height = utils_get_little_uint32(op.packet + 49);
       debug_message_fnc("(%d,%d) %f fps\n", info->width, info->height, info->framerate);
-    } else if (op.bytes >= 6 && strncmp(&op.packet[1], "audio", 5) == 0) {
+    } else if (op.bytes >= 6 && strncmp((char *)&op.packet[1], "audio", 5) == 0) {
       demux->nastreams++;
       info->a_serialno = ogg_page_serialno(&og);
       debug_message_fnc("audio stream(%d) found, but not supported yet...\n", info->a_serialno);
@@ -272,7 +272,7 @@ demux_main(void *arg)
     } else if (res == 0) {
       /* Need more data */
       buf = ogg_sync_buffer(&info->oy, OGG_BLOCK_SIZE);
-      if ((read_size = stream_read(demux->st, buf, OGG_BLOCK_SIZE)) < 0) {
+      if ((read_size = stream_read(demux->st, (unsigned char *)buf, OGG_BLOCK_SIZE)) < 0) {
 	err_message_fnc("stream_read error.\n");
 	ds = DEMULTIPLEX_ERROR;
 	goto error;

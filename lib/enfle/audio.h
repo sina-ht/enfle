@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar  7 03:44:48 2002.
- * $Id: audio.h,v 1.4 2002/03/06 19:30:02 sian Exp $
+ * Last Modified: Tue May  3 09:35:33 2005.
+ * $Id: audio.h,v 1.5 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -51,8 +51,8 @@ struct _audio_device {
   AudioFormat format;
   unsigned int bytes_written;
   int bytes_per_sample;
-  int channels;
-  int speed;
+  unsigned int channels;
+  unsigned int speed;
 };
 
 #endif

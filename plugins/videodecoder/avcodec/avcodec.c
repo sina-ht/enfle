@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 19 10:30:59 2004.
- * $Id: avcodec.c,v 1.9 2004/09/22 19:28:35 sian Exp $
+ * Last Modified: Tue May  3 09:41:33 2005.
+ * $Id: avcodec.c,v 1.10 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -95,9 +95,9 @@ ENFLE_PLUGIN_ENTRY(videodecoder_avcodec)
   memcpy(vdp, &plugin, sizeof(VideoDecoderPlugin));
 
   s = string_create();
-  string_set(s, (const char *)VIDEODECODER_AVCODEC_PLUGIN_DESCRIPTION);
-  string_catf(s, (const char *)" with " LIBAVCODEC_IDENT);
-  vdp->description = (const unsigned char *)strdup((const char *)string_get(s));
+  string_set(s, VIDEODECODER_AVCODEC_PLUGIN_DESCRIPTION);
+  string_catf(s, " with " LIBAVCODEC_IDENT);
+  vdp->description = strdup((const char *)string_get(s));
   string_destroy(s);
 
   /* avcodec initialization */

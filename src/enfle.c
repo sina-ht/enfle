@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 18 02:12:25 2004.
- * $Id: enfle.c,v 1.68 2004/09/17 17:25:50 sian Exp $
+ * Last Modified: Tue May  3 09:50:04 2005.
+ * $Id: enfle.c,v 1.69 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -189,7 +189,7 @@ print_plugin_info(EnflePlugins *eps, const char *path, int level)
   unsigned int kl;
   const char *plugintypename;
   char *pluginname;
-  const unsigned char *description, *author;
+  const char *description, *author;
 
   printf("Plugins: path = %s\n", path);
   for (i = 0; i < ENFLE_PLUGIN_END; i++) {

@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 18 14:01:53 2004.
- * $Id: libriff.h,v 1.1 2004/02/14 05:22:04 sian Exp $
+ * Last Modified: Tue May  3 09:42:58 2005.
+ * $Id: libriff.h,v 1.2 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -102,7 +102,7 @@ int riff_file_open(RIFF_File *);
 int riff_file_read_chunk_header(RIFF_File *, RIFF_Chunk *);
 int riff_file_skip_chunk_data(RIFF_File *, RIFF_Chunk *);
 int riff_file_read_data(RIFF_File *, RIFF_Chunk *);
-const unsigned char *riff_file_get_errmsg(RIFF_File *);
+const char *riff_file_get_errmsg(RIFF_File *);
 int riff_file_destroy(RIFF_File *);
 
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Apr 10 18:00:48 2004.
- * $Id: mpglib.c,v 1.6 2004/04/12 04:15:05 sian Exp $
+ * Last Modified: Tue May  3 09:38:01 2005.
+ * $Id: mpglib.c,v 1.7 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,7 +74,7 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
   struct audiodecoder_mpglib *adm = (struct audiodecoder_mpglib *)adec->opaque;
   int ret, write_size;
 
-  ret = decodeMP3(&adm->mp, buf, len, adm->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+  ret = decodeMP3(&adm->mp, (char *)buf, len, (char *)adm->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
   if (!adm->param_is_set) {
     m->sampleformat = _AUDIO_FORMAT_S16_LE;
     m->channels = adm->mp.fr.stereo;
@@ -90,7 +90,7 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
   while (ret == MP3_OK) {
     m->ap->write_device(ad, adm->output_buffer, write_size);
     ret = decodeMP3(&adm->mp, NULL, 0,
-		    adm->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
+		    (char *)adm->output_buffer, MP3_DECODE_BUFFER_SIZE, &write_size);
   }
   if (used_r)
     *used_r = len;

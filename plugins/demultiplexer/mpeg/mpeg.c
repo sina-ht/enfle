@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 21 22:43:13 2004.
- * $Id: mpeg.c,v 1.9 2004/06/21 13:47:26 sian Exp $
+ * Last Modified: Tue May  3 10:00:32 2005.
+ * $Id: mpeg.c,v 1.10 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -491,7 +491,7 @@ demux_main(void *arg)
       if ((v_or_a == 1 && nvstream == demux->nvstream) ||
 	  (v_or_a == 2 && nastream == demux->nastream)) {
 	unsigned char *p;
-	unsigned int pts, dts;
+	unsigned int pts = 0, dts = 0;
 
 	/* stuffing */
 	for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;

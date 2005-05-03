@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 29 00:31:45 2004.
- * $Id: avcodec.c,v 1.4 2004/06/28 15:32:52 sian Exp $
+ * Last Modified: Tue May  3 09:40:56 2005.
+ * $Id: avcodec.c,v 1.5 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,7 +56,7 @@ struct audiodecoder_avcodec {
   AVCodec *acodec;
   AVCodecContext *acodec_ctx;
   unsigned char *buf;
-  unsigned short int *outbuf;
+  int16_t *outbuf;
   int offset, size;
   int nframe;
 };
@@ -71,9 +71,9 @@ ENFLE_PLUGIN_ENTRY(audiodecoder_avcodec)
   memcpy(adp, &plugin, sizeof(AudioDecoderPlugin));
 
   s = string_create();
-  string_set(s, (const char *)AUDIODECODER_AVCODEC_PLUGIN_DESCRIPTION);
-  string_catf(s, (const char *)" with " LIBAVCODEC_IDENT);
-  adp->description = (const unsigned char *)strdup((const char *)string_get(s));
+  string_set(s, AUDIODECODER_AVCODEC_PLUGIN_DESCRIPTION);
+  string_catf(s, " with " LIBAVCODEC_IDENT);
+  adp->description = strdup((const char *)string_get(s));
   string_destroy(s);
 
   /* avcodec initialization */

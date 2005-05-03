@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 30 07:20:25 2001.
- * $Id: getopt-support.h,v 1.1 2001/04/30 01:05:13 sian Exp $
+ * Last Modified: Tue May  3 09:49:05 2005.
+ * $Id: getopt-support.h,v 1.2 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,7 +33,7 @@ typedef struct _option {
   const char *longopt; /* not supported so far */
   char opt;
   ArgumentRequirement argreq;
-  const unsigned char *description;
+  const char *description;
 } Option;
 
 char *gen_optstring(Option []);

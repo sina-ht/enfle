@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun 12 13:13:48 2004.
- * $Id: divx.c,v 1.8 2004/06/12 06:11:29 sian Exp $
+ * Last Modified: Tue May  3 09:41:59 2005.
+ * $Id: divx.c,v 1.9 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -79,9 +79,9 @@ ENFLE_PLUGIN_ENTRY(videodecoder_divx)
   memcpy(vdp, &plugin, sizeof(VideoDecoderPlugin));
 
   s = string_create();
-  string_set(s, (const char *)VIDEODECODER_DIVX_PLUGIN_DESCRIPTION);
-  string_catf(s, (const char *)" with libdivxdecore %d", DECORE_VERSION);
-  vdp->description = (const unsigned char *)strdup((const char *)string_get(s));
+  string_set(s, VIDEODECODER_DIVX_PLUGIN_DESCRIPTION);
+  string_catf(s, " with libdivxdecore %d", DECORE_VERSION);
+  vdp->description = strdup((const char *)string_get(s));
   string_destroy(s);
 
   return (void *)vdp;
