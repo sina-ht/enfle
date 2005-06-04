@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4752
+#define LIBAVCODEC_BUILD       4756
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -28,6 +28,7 @@ extern "C" {
 
 #define AV_NOPTS_VALUE int64_t_C(0x8000000000000000)
 #define AV_TIME_BASE 1000000
+#define AV_TIME_BASE_Q (AVRational){1, AV_TIME_BASE}
 
 enum CodecID {
     CODEC_ID_NONE, 
@@ -108,6 +109,7 @@ enum CodecID {
     CODEC_ID_WNV1,
     CODEC_ID_AASC,
     CODEC_ID_INDEO2,
+    CODEC_ID_FRAPS,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -170,8 +172,13 @@ enum CodecID {
     CODEC_ID_SHORTEN,
     CODEC_ID_ALAC,
     CODEC_ID_WESTWOOD_SND1,
+    CODEC_ID_GSM,    
     
     CODEC_ID_OGGTHEORA= 0x16000, 
+
+    /* subtitle codecs */
+    CODEC_ID_DVD_SUBTITLE= 0x17000, 
+    CODEC_ID_DVB_SUBTITLE, 
     
     CODEC_ID_MPEG2TS= 0x20000, /* _FAKE_ codec to indicate a raw MPEG2 transport
                          stream (only used by libavformat) */
@@ -185,6 +192,7 @@ enum CodecType {
     CODEC_TYPE_VIDEO,
     CODEC_TYPE_AUDIO,
     CODEC_TYPE_DATA,
+    CODEC_TYPE_SUBTITLE,
 };
 
 /**
@@ -206,6 +214,7 @@ enum CodecType {
  * to run on the IBM VGA graphics adapter use 6-bit palette components.
  */
 enum PixelFormat {
+    PIX_FMT_NONE= -1,
     PIX_FMT_YUV420P,   ///< Planar YUV 4:2:0 (1 Cr & Cb sample per 2x2 Y samples)
     PIX_FMT_YUV422,    ///< Packed pixel, Y0 Cb Y1 Cr 
     PIX_FMT_RGB24,     ///< Packed pixel, 3 bytes per pixel, RGBRGB...
@@ -441,8 +450,8 @@ typedef struct AVPanScan{
     int pict_type;\
 \
     /**\
-     * presentation timestamp in AV_TIME_BASE (=micro seconds currently) (time when frame should be shown to user)\
-     * if AV_NOPTS_VALUE then the frame_rate will be used as reference\
+     * presentation timestamp in time_base units (time when frame should be shown to user)\
+     * if AV_NOPTS_VALUE then frame_rate = 1/time_base will be assumed\
      * - encoding: MUST be set by user\
      * - decoding: set by lavc\
      */\
@@ -720,13 +729,11 @@ typedef struct AVCodecContext {
     
     /* video only */
     /**
-     * frames per sec multiplied by frame_rate_base.
-     * for variable fps this is the precission, so if the timestamps 
-     * can be specified in msec precssion then this is 1000*frame_rate_base
+     * time base in which the timestamps are specified.
      * - encoding: MUST be set by user
-     * - decoding: set by lavc. 0 or the frame_rate if available
+     * - decoding: set by lavc.
      */
-    int frame_rate;
+    AVRational time_base;
     
     /**
      * picture width / height.
@@ -954,7 +961,12 @@ typedef struct AVCodecContext {
      * - decoding: unused
      */
     int strict_std_compliance;
-    
+#define FF_COMPLIANCE_VERY_STRICT   2 ///< strictly conform to a older more strict version of the spec or reference software
+#define FF_COMPLIANCE_STRICT        1 ///< strictly conform to all the things in the spec no matter what consequences
+#define FF_COMPLIANCE_NORMAL        0
+#define FF_COMPLIANCE_INOFFICIAL   -1 ///< allow inofficial extensions
+#define FF_COMPLIANCE_EXPERIMENTAL -2 ///< allow non standarized experimental things
+
     /**
      * qscale offset between ip and b frames.
      * if > 0 then the last p frame quantizer will be used (q= lastp_q*factor+offset)
@@ -1172,6 +1184,8 @@ typedef struct AVCodecContext {
 #define FF_IDCT_SH4          9
 #define FF_IDCT_SIMPLEARM    10
 #define FF_IDCT_H264         11
+#define FF_IDCT_VP3          12
+#define FP_IDCT_IPP          13
 
     /**
      * slice count.
@@ -1419,15 +1433,6 @@ typedef struct AVCodecContext {
      */
     int me_range;
 
-    /**
-     * frame_rate_base.
-     * for variable fps this is 1
-     * - encoding: set by user.
-     * - decoding: set by lavc.
-     * @todo move this after frame_rate
-     */
-
-    int frame_rate_base;
     /**
      * intra quantizer bias.
      * - encoding: set by user.
@@ -1691,14 +1696,14 @@ typedef struct AVCodecContext {
      int nsse_weight;
 
     /**
-     * number of macroblock rows at the top which are skiped.
+     * number of macroblock rows at the top which are skipped.
      * - encoding: unused
      * - decoding: set by user
      */
      int skip_top;
 
     /**
-     * number of macroblock rows at the bottom which are skiped.
+     * number of macroblock rows at the bottom which are skipped.
      * - encoding: unused
      * - decoding: set by user
      */
@@ -1880,6 +1885,20 @@ typedef struct AVPaletteControl {
 
 } AVPaletteControl;
 
+typedef struct AVSubtitle {
+    uint16_t format; /* 0 = graphics */
+    uint16_t x;
+    uint16_t y;
+    uint16_t w;
+    uint16_t h;
+    uint16_t nb_colors;
+    uint32_t start_display_time; /* relative to packet pts, in ms */
+    uint32_t end_display_time; /* relative to packet pts, in ms */
+    int linesize;
+    uint32_t *rgba_palette;
+    uint8_t *bitmap;
+} AVSubtitle;
+
 extern AVCodec ac3_encoder;
 extern AVCodec mp2_encoder;
 extern AVCodec mp3lame_encoder;
@@ -2021,6 +2040,10 @@ extern AVCodec aasc_decoder;
 extern AVCodec alac_decoder;
 extern AVCodec ws_snd1_decoder;
 extern AVCodec indeo2_decoder;
+extern AVCodec vorbis_decoder;
+extern AVCodec fraps_decoder;
+extern AVCodec libgsm_encoder;
+extern AVCodec libgsm_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -2062,6 +2085,10 @@ extern AVCodec rawvideo_decoder;
 /* the following codecs use external GPL libs */
 extern AVCodec ac3_decoder;
 extern AVCodec dts_decoder;
+
+/* subtitles */
+extern AVCodec dvdsub_decoder;
+extern AVCodec dvbsub_encoder;
 
 /* resample.c */
 
@@ -2200,6 +2227,9 @@ int avcodec_decode_audio(AVCodecContext *avctx, int16_t *samples,
 int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture, 
                          int *got_picture_ptr,
                          uint8_t *buf, int buf_size);
+int avcodec_decode_subtitle(AVCodecContext *avctx, AVSubtitle *sub,
+                            int *got_sub_ptr,
+                            const uint8_t *buf, int buf_size);
 int avcodec_parse_frame(AVCodecContext *avctx, uint8_t **pdata, 
                         int *data_size_ptr,
                         uint8_t *buf, int buf_size);
@@ -2207,6 +2237,8 @@ int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
                          const short *samples);
 int avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size, 
                          const AVFrame *pict);
+int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size, 
+                            const AVSubtitle *sub);
 
 int avcodec_close(AVCodecContext *avctx);
 
@@ -2242,6 +2274,11 @@ int64_t av_rescale(int64_t a, int64_t b, int64_t c);
  * a simple a*b/c isnt possible as it can overflow
  */
 int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding);
+
+/**
+ * rescale a 64bit integer by 2 rational numbers.
+ */
+int64_t av_rescale_q(int64_t a, AVRational bq, AVRational cq);
 
 /* frame parsing */
 typedef struct AVCodecParserContext {
@@ -2301,6 +2338,7 @@ extern AVCodecParser mjpeg_parser;
 extern AVCodecParser pnm_parser;
 extern AVCodecParser mpegaudio_parser;
 extern AVCodecParser ac3_parser;
+extern AVCodecParser dvdsub_parser;
 
 /* memory */
 void *av_malloc(unsigned int size);
@@ -2355,6 +2393,8 @@ extern void av_log_set_callback(void (*)(void*, int, const char*, va_list));
                    (((uint8_t*)(x))[1] << 8) | \
                     ((uint8_t*)(x))[0])
 #endif
+
+extern unsigned int av_xiphlacing(unsigned char *s, unsigned int v);
 
 #ifdef __cplusplus
 }

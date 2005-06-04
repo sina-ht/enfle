@@ -201,9 +201,9 @@ static int find_frame_rate_index(MpegEncContext *s){
     int64_t d;
 
     for(i=1;i<14;i++) {
-        int64_t n0= 1001LL/frame_rate_tab[i].den*frame_rate_tab[i].num*s->avctx->frame_rate_base;
-        int64_t n1= 1001LL*s->avctx->frame_rate;
-        if(s->avctx->strict_std_compliance >= 0 && i>=9) break;
+        int64_t n0= 1001LL/frame_rate_tab[i].den*frame_rate_tab[i].num*s->avctx->time_base.num;
+        int64_t n1= 1001LL*s->avctx->time_base.den;
+        if(s->avctx->strict_std_compliance > FF_COMPLIANCE_INOFFICIAL && i>=9) break;
 
         d = ABS(n0 - n1);
         if(d < dmin){
@@ -225,11 +225,11 @@ static int encode_init(AVCodecContext *avctx)
         return -1;
 
     if(find_frame_rate_index(s) < 0){
-        if(s->strict_std_compliance >=0){
-            av_log(avctx, AV_LOG_ERROR, "MPEG1/2 doesnt support %d/%d fps\n", avctx->frame_rate, avctx->frame_rate_base);
+        if(s->strict_std_compliance > FF_COMPLIANCE_EXPERIMENTAL){
+            av_log(avctx, AV_LOG_ERROR, "MPEG1/2 does not support %d/%d fps\n", avctx->time_base.den, avctx->time_base.num);
             return -1;
         }else{
-            av_log(avctx, AV_LOG_INFO, "MPEG1/2 doesnt support %d/%d fps, there may be AV sync issues\n", avctx->frame_rate, avctx->frame_rate_base);
+            av_log(avctx, AV_LOG_INFO, "MPEG1/2 does not support %d/%d fps, there may be AV sync issues\n", avctx->time_base.den, avctx->time_base.num);
         }
     }
     
@@ -468,8 +468,8 @@ void mpeg1_encode_picture_header(MpegEncContext *s, int picture_number)
         put_bits(&s->pb, 1, s->intra_vlc_format);
         put_bits(&s->pb, 1, s->alternate_scan);
         put_bits(&s->pb, 1, s->repeat_first_field);
-        put_bits(&s->pb, 1, s->chroma_420_type=1);
         s->progressive_frame = s->progressive_sequence;
+        put_bits(&s->pb, 1, s->chroma_420_type=s->progressive_frame);
         put_bits(&s->pb, 1, s->progressive_frame);
         put_bits(&s->pb, 1, 0); //composite_display_flag
     }
@@ -1055,11 +1055,11 @@ static int mpeg_decode_mb(MpegEncContext *s,
 
     dprintf("decode_mb: x=%d y=%d\n", s->mb_x, s->mb_y);
 
-    assert(s->mb_skiped==0);
+    assert(s->mb_skipped==0);
 
     if (s->mb_skip_run-- != 0) {
         if(s->pict_type == I_TYPE){
-            av_log(s->avctx, AV_LOG_ERROR, "skiped MB in I frame at %d %d\n", s->mb_x, s->mb_y);
+            av_log(s->avctx, AV_LOG_ERROR, "skipped MB in I frame at %d %d\n", s->mb_x, s->mb_y);
             return -1;
         }
     
@@ -1078,7 +1078,7 @@ static int mpeg_decode_mb(MpegEncContext *s,
             s->last_mv[0][0][0] = s->last_mv[0][0][1] = 0;
             s->last_mv[0][1][0] = s->last_mv[0][1][1] = 0;
             s->field_select[0][0]= s->picture_structure - 1;
-            s->mb_skiped = 1;
+            s->mb_skipped = 1;
             s->current_picture.mb_type[ s->mb_x + s->mb_y*s->mb_stride ]= MB_TYPE_SKIP | MB_TYPE_L0 | MB_TYPE_16x16;
         } else {
             int mb_type;
@@ -1101,7 +1101,7 @@ static int mpeg_decode_mb(MpegEncContext *s,
 //            assert(s->current_picture.mb_type[ s->mb_x + s->mb_y*s->mb_stride - 1]&(MB_TYPE_16x16|MB_TYPE_16x8));
 
             if((s->mv[0][0][0]|s->mv[0][0][1]|s->mv[1][0][0]|s->mv[1][0][1])==0) 
-                s->mb_skiped = 1;
+                s->mb_skipped = 1;
         }
 
         return 0;
@@ -1140,6 +1140,12 @@ static int mpeg_decode_mb(MpegEncContext *s,
     dprintf("mb_type=%x\n", mb_type);
 //    motion_type = 0; /* avoid warning */
     if (IS_INTRA(mb_type)) {
+        s->dsp.clear_blocks(s->block[0]);
+    
+        if(!s->chroma_y_shift){
+            s->dsp.clear_blocks(s->block[6]);
+        }
+    
         /* compute dct type */
         if (s->picture_structure == PICT_FRAME && //FIXME add a interlaced_dct coded var?
             !s->frame_pred_frame_dct) {
@@ -1357,8 +1363,13 @@ static int mpeg_decode_mb(MpegEncContext *s,
         }
         
         s->mb_intra = 0;
-
         if (HAS_CBP(mb_type)) {
+            s->dsp.clear_blocks(s->block[0]);
+        
+            if(!s->chroma_y_shift){
+                s->dsp.clear_blocks(s->block[6]);
+            }
+
             cbp = get_vlc2(&s->gb, mb_pat_vlc.table, MB_PAT_VLC_BITS, 1);
             if (cbp < 0 || ((cbp == 0) && (s->chroma_format < 2)) ){
                 av_log(s->avctx, AV_LOG_ERROR, "invalid cbp at %d %d\n", s->mb_x, s->mb_y);
@@ -2072,7 +2083,10 @@ static int mpeg_decode_postinit(AVCodecContext *avctx){
     {
     
         if (s1->mpeg_enc_ctx_allocated) {
+            ParseContext pc= s->parse_context;
+            s->parse_context.buffer=0;
             MPV_common_end(s);
+            s->parse_context= pc;
         }
 
 	if( (s->width == 0 )||(s->height == 0))
@@ -2088,8 +2102,8 @@ static int mpeg_decode_postinit(AVCodecContext *avctx){
 
         if(avctx->sub_id==1){//s->codec_id==avctx->codec_id==CODEC_ID
             //mpeg1 fps
-            avctx->frame_rate     = frame_rate_tab[s->frame_rate_index].num;
-            avctx->frame_rate_base= frame_rate_tab[s->frame_rate_index].den;
+            avctx->time_base.den     = frame_rate_tab[s->frame_rate_index].num;
+            avctx->time_base.num= frame_rate_tab[s->frame_rate_index].den;
             //mpeg1 aspect
             avctx->sample_aspect_ratio= av_d2q(
                     1.0/mpeg1_aspect[s->aspect_ratio_info], 255);
@@ -2097,8 +2111,8 @@ static int mpeg_decode_postinit(AVCodecContext *avctx){
         }else{//mpeg2
         //mpeg2 fps
             av_reduce(
-                &s->avctx->frame_rate, 
-                &s->avctx->frame_rate_base, 
+                &s->avctx->time_base.den, 
+                &s->avctx->time_base.num, 
                 frame_rate_tab[s->frame_rate_index].num * s1->frame_rate_ext.num,
                 frame_rate_tab[s->frame_rate_index].den * s1->frame_rate_ext.den,
                 1<<30);
@@ -2578,10 +2592,6 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
             XVMC_init_block(s);//set s->block
 #endif
 
-	s->dsp.clear_blocks(s->block[0]);
-        if(!s->chroma_y_shift){
-            s->dsp.clear_blocks(s->block[6]);
-        }
         ret = mpeg_decode_mb(s, s->block);
         s->chroma_qscale= s->qscale;
 
@@ -2614,6 +2624,7 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
                     s->current_picture.motion_val[dir][xy + 1][1] = motion_y;
                     s->current_picture.ref_index [dir][xy    ]=
                     s->current_picture.ref_index [dir][xy + 1]= s->field_select[dir][i];
+                    assert(s->field_select[dir][i]==0 || s->field_select[dir][i]==1);
                 }
                 xy += wrap;
             }
