@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May  3 09:40:56 2005.
- * $Id: avcodec.c,v 1.5 2005/05/03 01:08:30 sian Exp $
+ * Last Modified: Sun Jun  5 05:19:53 2005.
+ * $Id: avcodec.c,v 1.6 2005/06/30 13:04:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -155,7 +155,8 @@ destroy(AudioDecoder *adec)
 
   if (adm) {
     if (adm->acodec_ctx) {
-      avcodec_close(adm->acodec_ctx);
+      if (adm->acodec_ctx->codec)
+	avcodec_close(adm->acodec_ctx);
       av_free(adm->acodec_ctx);
     }
     if (adm->outbuf)
