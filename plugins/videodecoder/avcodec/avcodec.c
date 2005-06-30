@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May  3 09:41:33 2005.
- * $Id: avcodec.c,v 1.10 2005/05/03 01:08:30 sian Exp $
+ * Last Modified: Sun Jun  5 05:07:51 2005.
+ * $Id: avcodec.c,v 1.11 2005/06/30 13:02:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -242,7 +242,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
   if (!vdm->if_image_alloced && vdm->vcodec_ctx->width > 0) {
     m->width = image_width(p) = vdm->vcodec_ctx->width;
     m->height = image_height(p) = vdm->vcodec_ctx->height;
-    m->framerate = (double)vdm->vcodec_ctx->frame_rate / vdm->vcodec_ctx->frame_rate_base;
+    m->framerate = (double)vdm->vcodec_ctx->time_base.den / vdm->vcodec_ctx->time_base.num;
     show_message_fnc("(%d, %d) fps %2.5f\n", m->width, m->height, m->framerate);
     image_bpl(p) = vdm->vcodec_ctx->width * 2; /* XXX: hmm... */
     if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
