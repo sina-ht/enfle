@@ -18,12 +18,6 @@
 /* only include the following when compiling package */
 #include "enfle-config.h"
 #undef DEBUG
-#define HAVE_LRINTF
-#define HAVE_PTHREADS
-#define HAVE_THREADS
-//#define CONFIG_ENCODERS
-#define CONFIG_DECODERS
-#define CONFIG_RISKY
 //#    include "config.h"
 
 #    include <stdlib.h>
@@ -133,13 +127,13 @@
 #endif
 
 #ifdef EMULATE_FAST_INT
-/* note that we don't emulate 64bit ints */
 typedef signed char int_fast8_t;
 typedef signed int  int_fast16_t;
 typedef signed int  int_fast32_t;
 typedef unsigned char uint_fast8_t;
 typedef unsigned int  uint_fast16_t;
 typedef unsigned int  uint_fast32_t;
+typedef uint64_t      uint_fast64_t;
 #endif
 
 #ifndef INT_BIT

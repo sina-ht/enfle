@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Jun  5 04:59:13 2005.
-# $Id: Makefile.am,v 1.26 2005/06/04 19:59:58 sian Exp $
+# Last Modified: Sun Jun  5 05:11:25 2005.
+# $Id: Makefile.am,v 1.27 2005/06/30 13:00:08 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -139,6 +139,8 @@ libavcodec_la_SOURCES = \
 	dpcm.c \
 	dsputil.c \
 	dv.c \
+	dvbsub.c \
+	dvdsub.c \
 	error_resilience.c \
 	eval.c \
 	faandct.c \
