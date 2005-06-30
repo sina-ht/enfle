@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:42:59 2005.
- * $Id: enfle-plugins.c,v 1.17 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Wed Jun  1 00:03:11 2005.
+ * $Id: enfle-plugins.c,v 1.18 2005/06/30 13:03:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -110,7 +110,8 @@ enfle_plugins_create(const char *path, int use_cache)
 	    fclose(fp);
 	    goto error;
 	  }
-	  
+	  free(line);
+
 	  p = plugin_create();
 	  plugin_autoload(p, list[2]);
 	  if (!pluginlist_add(eps->pls[enfle_plugin_name_to_type(list[0])], p, list[1])) {
@@ -225,6 +226,8 @@ destroy(EnflePlugins *eps)
 
   for (i = 0; i < ENFLE_PLUGIN_END; i++)
     pluginlist_destroy(eps->pls[i]);
+  if (eps->cache_path)
+    free(eps->cache_path);
   free(eps->pls);
   free(eps);
 }
