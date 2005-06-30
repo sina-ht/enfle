@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:58:00 2005.
- * $Id: generic.c,v 1.18 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Sun Jun  5 05:23:21 2005.
+ * $Id: generic.c,v 1.19 2005/06/30 13:01:15 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -455,7 +455,8 @@ play_audio(void *arg)
   }
   if (!audiodecoder_setup(m->adec, m)) {
     err_message_fnc("audiodecoder_setup() failed.\n");
-    return (void *)VD_ERROR;
+    audiodecoder_destroy(m->adec);
+    return (void *)AD_ERROR;
   }
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     err_message("Cannot open device. Audio disabled.\n");
