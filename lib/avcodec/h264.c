@@ -2964,7 +2964,7 @@ static int alloc_tables(H264Context *h){
             shift -= 2;
         for(x=0; x<64; x++)
             h->dequant8_coeff[q][x] = dequant8_coeff_init[idx][
-                dequant8_coeff_init_scan[(x>>1)&12 | x&3] ] << shift;
+                dequant8_coeff_init_scan[((x>>1)&12) | (x&3)] ] << shift;
     }
     if(h->sps.transform_bypass){
         for(x=0; x<16; x++)
@@ -4234,13 +4234,16 @@ static int decode_slice_header(H264Context *h){
             s->picture_structure= PICT_TOP_FIELD + get_bits1(&s->gb); //bottom_field_flag
         } else {
             s->picture_structure= PICT_FRAME;
-            first_mb_in_slice <<= 1;
+            first_mb_in_slice <<= h->sps.mb_aff;
             h->mb_aff_frame = h->sps.mb_aff;
         }
     }
 
     s->resync_mb_x = s->mb_x = first_mb_in_slice % s->mb_width;
     s->resync_mb_y = s->mb_y = first_mb_in_slice / s->mb_width;
+    if(s->mb_y >= s->mb_height){
+        return -1;
+    }
     
     if(s->picture_structure==PICT_FRAME){
         h->curr_pic_num=   h->frame_num;
@@ -4400,7 +4403,7 @@ static inline int get_dct8x8_allowed(H264Context *h){
     int i;
     for(i=0; i<4; i++){
         if(!IS_SUB_8X8(h->sub_mb_type[i])
-           || !h->sps.direct_8x8_inference_flag && IS_DIRECT(h->sub_mb_type[i]))
+           || (!h->sps.direct_8x8_inference_flag && IS_DIRECT(h->sub_mb_type[i])))
             return 0;
     }
     return 1;
@@ -7130,6 +7133,13 @@ static int find_frame_end(H264Context *h, const uint8_t *buf, int buf_size){
             }
             pc->frame_start_found = 1;
         }
+        if((state&0xFFFFFF1F) == 0x107 || (state&0xFFFFFF1F) == 0x108 || (state&0xFFFFFF1F) == 0x109){
+           if(pc->frame_start_found){
+                pc->state=-1; 
+                pc->frame_start_found= 0;
+                return i-4;               
+           }
+        }
         if (i<buf_size)
             state= (state<<8) | buf[i];
     }
@@ -7159,6 +7169,31 @@ static int h264_parse(AVCodecParserContext *s,
     *poutbuf_size = buf_size;
     return next;
 }
+
+static int h264_split(AVCodecContext *avctx,
+                      const uint8_t *buf, int buf_size)
+{
+    int i;
+    uint32_t state = -1;
+    int has_sps= 0;
+
+    for(i=0; i<=buf_size; i++){
+        if((state&0xFFFFFF1F) == 0x107)
+            has_sps=1;
+/*        if((state&0xFFFFFF1F) == 0x101 || (state&0xFFFFFF1F) == 0x102 || (state&0xFFFFFF1F) == 0x105){
+        }*/
+        if((state&0xFFFFFF00) == 0x100 && (state&0xFFFFFF1F) != 0x107 && (state&0xFFFFFF1F) != 0x108 && (state&0xFFFFFF1F) != 0x109){
+            if(has_sps){
+                while(i>4 && buf[i-5]==0) i--;
+                return i-4;
+            }
+        }
+        if (i<buf_size)
+            state= (state<<8) | buf[i];
+    }
+    return 0;
+}
+
 
 static int decode_nal_units(H264Context *h, uint8_t *buf, int buf_size){
     MpegEncContext * const s = &h->s;
@@ -7222,7 +7257,10 @@ static int decode_nal_units(H264Context *h, uint8_t *buf, int buf_size){
             h->inter_gb_ptr= &s->gb;
             s->data_partitioning = 0;
             
-            if(decode_slice_header(h) < 0) return -1;
+            if(decode_slice_header(h) < 0){
+                av_log(h->s.avctx, AV_LOG_ERROR, "decode_slice_header error\n");
+                break;
+            }
             if(h->redundant_pic_count==0 && s->hurry_up < 5 )
                 decode_slice(h);
             break;
@@ -7232,7 +7270,9 @@ static int decode_nal_units(H264Context *h, uint8_t *buf, int buf_size){
             h->inter_gb_ptr= NULL;
             s->data_partitioning = 1;
             
-            if(decode_slice_header(h) < 0) return -1;
+            if(decode_slice_header(h) < 0){
+                av_log(h->s.avctx, AV_LOG_ERROR, "decode_slice_header error\n");
+            }
             break;
         case NAL_DPB:
             init_get_bits(&h->intra_gb, ptr, bit_length);
@@ -7701,6 +7741,7 @@ AVCodecParser h264_parser = {
     NULL,
     h264_parse,
     ff_parse_close,
+    h264_split,
 };
 
 #include "svq3.c"

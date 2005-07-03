@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "0.4.9-pre1"
-#define LIBAVCODEC_BUILD       4756
+#define LIBAVCODEC_BUILD       4757
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
@@ -341,6 +341,7 @@ extern int motion_estimation_method;
 #define CODEC_FLAG2_FAST          0x00000001 ///< allow non spec compliant speedup tricks
 #define CODEC_FLAG2_STRICT_GOP    0x00000002 ///< strictly enforce GOP size
 #define CODEC_FLAG2_NO_OUTPUT     0x00000004 ///< skip bitstream encoding
+#define CODEC_FLAG2_LOCAL_HEADER  0x00000008 ///< place global headers at every keyframe instead of in extradata
 
 /* Unsupported options :
  * 		Syntax Arithmetic coding (SAC)
@@ -796,7 +797,10 @@ typedef struct AVCodecContext {
     enum SampleFormat sample_fmt;  ///< sample format, currenly unused 
 
     /* the following data should not be initialized */
-    int frame_size;     ///< in samples, initialized when calling 'init' 
+    /**
+     * samples per packet. initialized when calling 'init' 
+     */
+    int frame_size;
     int frame_number;   ///< audio or video frame number 
     int real_pict_num;  ///< returns the real picture number of previous encoded frame 
     
@@ -1013,8 +1017,12 @@ typedef struct AVCodecContext {
      * - decoding: set by lavc
      */
     int has_b_frames;
-    
-    int block_align; ///< used by some WAV based audio codecs
+
+    /**
+     * number of bytes per packet if constant and known or 0
+     * used by some WAV based audio codecs
+     */
+    int block_align;
     
     int parse_only; /* - decoding only: if true, only parsing is done
                        (function avcodec_parse_frame()). The frame
@@ -1185,7 +1193,7 @@ typedef struct AVCodecContext {
 #define FF_IDCT_SIMPLEARM    10
 #define FF_IDCT_H264         11
 #define FF_IDCT_VP3          12
-#define FP_IDCT_IPP          13
+#define FF_IDCT_IPP          13
 
     /**
      * slice count.
@@ -1228,6 +1236,9 @@ typedef struct AVCodecContext {
 #define FF_MM_SSE2	0x0010 /* PIV SSE2 functions */
 #define FF_MM_3DNOWEXT	0x0020 /* AMD 3DNowExt */
 #endif /* HAVE_MMX */
+#ifdef HAVE_IWMMXT
+#define FF_MM_IWMMXT	0x0100 /* XScale IWMMXT */
+#endif /* HAVE_IWMMXT */
 
     /**
      * bits per sample/pixel from the demuxer (needed for huffyuv).
@@ -2315,6 +2326,7 @@ typedef struct AVCodecParser {
                         uint8_t **poutbuf, int *poutbuf_size, 
                         const uint8_t *buf, int buf_size);
     void (*parser_close)(AVCodecParserContext *s);
+    int (*split)(AVCodecContext *avctx, const uint8_t *buf, int buf_size);
     struct AVCodecParser *next;
 } AVCodecParser;
 
@@ -2327,6 +2339,10 @@ int av_parser_parse(AVCodecParserContext *s,
                     uint8_t **poutbuf, int *poutbuf_size, 
                     const uint8_t *buf, int buf_size,
                     int64_t pts, int64_t dts);
+int av_parser_change(AVCodecParserContext *s,
+                     AVCodecContext *avctx,
+                     uint8_t **poutbuf, int *poutbuf_size, 
+                     const uint8_t *buf, int buf_size, int keyframe);
 void av_parser_close(AVCodecParserContext *s);
 
 extern AVCodecParser mpegvideo_parser;
