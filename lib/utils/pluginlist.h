@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 23:38:58 2002.
- * $Id: pluginlist.h,v 1.6 2002/08/18 14:41:06 sian Exp $
+ * Last Modified: Sun Jul  3 13:42:07 2005.
+ * $Id: pluginlist.h,v 1.7 2005/07/03 13:02:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,7 +31,8 @@ struct _pluginlist {
   Hash *hash;
 };
 
-#define PLUGINLIST_HASH_SIZE 1024
+/* Must be prime */
+#define PLUGINLIST_HASH_SIZE 1031
 
 PluginList *pluginlist_create(void);
 int pluginlist_add(PluginList *, Plugin *, const char *);

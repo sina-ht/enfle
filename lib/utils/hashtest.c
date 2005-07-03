@@ -17,7 +17,7 @@ main(int argc, char **argv)
   unsigned char *k;
   void *d;
 
-  h = hash_create(1024);
+  h = hash_create(1031);
   hash_set(h, "key1", "data1");
   hash_set(h, "key2", "data2");
   if (hash_set(h, "3key", "3data") != 1) {

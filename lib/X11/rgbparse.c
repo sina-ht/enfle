@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  6 01:42:29 2002.
- * $Id: rgbparse.c,v 1.4 2002/10/05 17:16:12 sian Exp $
+ * Last Modified: Sun Jul  3 13:37:01 2005.
+ * $Id: rgbparse.c,v 1.5 2005/07/03 13:02:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,6 +29,7 @@
 
 #include "rgbparse.h"
 
+/* Must be prime */
 #define COLOR_MAX 2017
 
 static char *

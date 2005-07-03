@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 18 12:42:17 2002.
- * $Id: libconfig.h,v 1.8 2002/08/18 04:18:26 sian Exp $
+ * Last Modified: Sun Jul  3 13:41:50 2005.
+ * $Id: libconfig.h,v 1.9 2005/07/03 13:02:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,6 +25,10 @@
 
 #include "hash.h"
 
+/* Must be prime */
+#define LIBCONFIG_HASH_SIZE 8209
+
+/* TODO: should be replaced by extensible hash */
 typedef struct _config {
   Hash *hash;
 } Config;
@@ -44,8 +48,5 @@ int config_set_int(Config *, char *, int);
 char **config_get_list(Config *, const char *, int *);
 int config_set_list(Config *, char *, char *);
 void config_destroy(Config *);
-
-/* TODO: should be replaced by extensible hash */
-#define LIBCONFIG_HASH_SIZE 8192
 
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:17:04 2004.
- * $Id: xpm.c,v 1.4 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Jul  3 13:45:05 2005.
+ * $Id: xpm.c,v 1.5 2005/07/03 13:02:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -271,10 +271,10 @@ parse_color(Image *p, Stream *st, int cpp)
   chars[cpp] = '\0';
 
   /* create hash for color lookup */
-  size = 2017;
+  size = 2069;
   t = p->ncolors >> 8;
   while (t > 1) {
-    size <<= 1;
+    size = (size << 1) + 1;
     t >>= 1;
   }
   if ((colortable = hash_create(size)) == NULL)
