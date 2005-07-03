@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Mon Jun 21 23:05:31 2004.
+             Last Modified: Sun Jul  3 12:59:03 2005.
 
 ***************************************************************************
 
@@ -102,12 +102,12 @@ Some plugins use libraries which is not included in distribution.  You
 should install corresponding libraries to use them.
 
 JPEG: jpegsrc-6b (libjpeg)
-PNG: libpng-1.0.2 or later (recommended: 1.0.9 or 1.2.3)
-gz: zlib-1.1.4 or later (Note: versions prior to 1.1.3 include the security hole)
-bz2: bzip2-1.0.0 or later
+PNG: libpng-1.0.2 or later (recommended: 1.2.7)
+gz: zlib-1.2.2 or later (Note: versions prior to 1.2.1 include the security hole)
+bz2: bzip2-1.0.0 or later (recommended: 1.0.3)
 ungif: libungif-3.1.0 or later may work..., but even 4.1.0 has bug.
        (recommended: cvs version or ask me the patch)
-mng: libmng-1.0.0 or later
+mng: libmng-1.0.0 or later (plugin unmaintained)
 libmpeg3: libmpeg3-1.2.2 or later
 mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
 avifile: avifile-0.53.5 or avifile-0.6 in CVS
@@ -115,6 +115,7 @@ divx: divx4linux-20030428 (old version will not work)
 alsa: require ALSA_PCM_NEW_HW_PARAMS_API.
 ogg: libogg-1.1
 vorbis: libvorbis-1.0.1
+theora: libtheora-1.0-alpha4
 
 
 2. Requirements
@@ -127,20 +128,20 @@ be supported sometime.
 
 These environments are checked:
 
-Linux (kernel 2.2/2.4/2.6 + glibc-2.1/2.2/2.3, x86)
+Linux (kernel 2.2/2.4/2.6 + glibc-2.1/2.2/2.3, x86(-64))
 FreeBSD (4.1R, x86)
 
 Other similar environments should work.  Please let me know if you try
 on the same/other environments.
 
-My main environment (2004/02/21) is:
+My main environment (2005/07/03) is:
 
-Kernel: Linux-2.6.3-rc1
+Kernel: Linux-2.6.12-mm1
 CPU: PentiumIV/3GHz or PentiumIII/700MHz
 X server: XFree86-4.3.99.902
 Video: NVIDIA GeForce4 Ti4800 SE or Silicon Motion, Inc. SM720 Lynx3DM
-Compiler: gcc version 2.95.3 or 3.3.3, icc 8.0
-libc: glibc-2.3.2
+Compiler: gcc version 2.95.3 or 3.4.4, icc 8.0
+libc: glibc-2.3.5/cvs/nptl
 
 
 3. Compile
@@ -171,6 +172,9 @@ vary. Please inform me of your result.
 Put Windows DMO DLL on the directory specified by dmo/dir in
 configuration file.  It might be able to decode pictures, or might
 fail to decode, or even might fail to load...
+
+Compiling avcodec takes much time.  If you don't need this, disable it
+by --disable-avcodec option.
 
 
 4. Command line
@@ -223,6 +227,7 @@ Yes, Enfle will also quit when all pictures are viewed.
 
 If you have wheel, you can use it for Left, Right click.
 
+
 6. Customize
 
 There is the configuration file in
@@ -273,7 +278,7 @@ If you insist, you can send me directly.
                          <sian@fennel.org>
 
 
-9. Distribution
+8. Distribution
 
 Enfle is distributed under GNU GENERAL PUBLIC LICENSE Version 2.  See
 COPYING in detail.  You cannot apply any later version without my
