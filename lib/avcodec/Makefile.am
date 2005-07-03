@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Jun  5 05:11:25 2005.
-# $Id: Makefile.am,v 1.27 2005/06/30 13:00:08 sian Exp $
+# Last Modified: Sun Jul  3 12:37:30 2005.
+# $Id: Makefile.am,v 1.28 2005/07/03 03:44:43 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -182,6 +182,7 @@ libavcodec_la_SOURCES = \
 	msmpeg4.c \
 	msrle.c \
 	msvideo1.c \
+	oggtheora.c \
 	oggvorbis.c \
 	opts.c \
 	parser.c \
