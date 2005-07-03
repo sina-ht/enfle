@@ -1,3 +1,145 @@
+2005-07-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/videodecoder.c: NULL check.
+
+	* lib/X11/rgbparse.c, lib/dllloader/pe_image.h,
+	lib/enfle/archive.h, lib/utils/hashtest.c, lib/utils/libconfig.h,
+	lib/utils/pluginlist.h, plugins/loader/xpm/xpm.c: The size of hash
+	must be prime.
+
+	* configure.in: More avcodec stuff.
+
+	* lib/avcodec/alac.c, lib/avcodec/armv4l/dsputil_arm.c,
+	lib/avcodec/armv4l/dsputil_iwmmxt.c,
+	lib/avcodec/armv4l/mpegvideo_iwmmxt.c, lib/avcodec/avcodec.h,
+	lib/avcodec/dsputil.h, lib/avcodec/h264.c, lib/avcodec/parser.c,
+	lib/avcodec/ppc/dsputil_ppc.c, lib/avcodec/ppc/mpegvideo_ppc.c,
+	lib/avcodec/ulti.c, lib/avcodec/vc9.c, lib/avcodec/wmadec.c:
+	Updated.
+
+	* configure.in: More avcodec check.
+
+	* README, README.e: Updated.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/oggtheora.c: Added
+	oggtheora.
+
+2005-06-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audiodecoder/avcodec/avcodec.c: NULL check.
+
+	* plugins/demultiplexer/asf/asf.c: Added more IDs.
+
+	* lib/enfle/enfle-plugins.c: Plugged a memory leak.
+
+	* plugins/videodecoder/avcodec/avcodec.c: Adapted to avcodec
+	changes.
+
+	* plugins/player/generic/generic.c: Fixed typo and memory leak.
+
+	* configure.in: Added avcodec configuration.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/apiexample.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.h,
+	lib/avcodec/common.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/h264data.h,
+	lib/avcodec/motion_est.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/utils.c: Updated.
+
+2005-06-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/i386/dsputil_h264_template_mmx.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/h264dsp_mmx.c,
+	lib/avcodec/i386/idct_mmx.c, lib/avcodec/i386/vp3dsp_mmx.c,
+	lib/avcodec/i386/vp3dsp_sse2.c, lib/avcodec/4xm.c,
+	lib/avcodec/Makefile.am, lib/avcodec/ac3enc.c,
+	lib/avcodec/adpcm.c, lib/avcodec/allcodecs.c,
+	lib/avcodec/apiexample.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.c,
+	lib/avcodec/bitstream.h, lib/avcodec/bswap.h, lib/avcodec/cabac.h,
+	lib/avcodec/common.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c,
+	lib/avcodec/error_resilience.c, lib/avcodec/faad.c,
+	lib/avcodec/ffv1.c, lib/avcodec/flac.c, lib/avcodec/fraps.c,
+	lib/avcodec/g726.c, lib/avcodec/h261.c, lib/avcodec/h263.c,
+	lib/avcodec/h263data.h, lib/avcodec/h263dec.c, lib/avcodec/h264.c,
+	lib/avcodec/h264data.h, lib/avcodec/h264idct.c,
+	lib/avcodec/huffyuv.c, lib/avcodec/indeo2.c,
+	lib/avcodec/indeo2data.h, lib/avcodec/lcl.c,
+	lib/avcodec/motion_est.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpeg12data.h, lib/avcodec/mpeg4data.h,
+	lib/avcodec/mpegaudio.c, lib/avcodec/mpegaudiodec.c,
+	lib/avcodec/mpegaudiodectab.h, lib/avcodec/mpegaudiotab.h,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/msmpeg4.c, lib/avcodec/msmpeg4data.h,
+	lib/avcodec/oggvorbis.c, lib/avcodec/parser.c, lib/avcodec/png.c,
+	lib/avcodec/pnm.c, lib/avcodec/ratecontrol.c, lib/avcodec/raw.c,
+	lib/avcodec/rpza.c, lib/avcodec/rv10.c, lib/avcodec/snow.c,
+	lib/avcodec/sp5x.h, lib/avcodec/truemotion1.c,
+	lib/avcodec/truemotion1data.h, lib/avcodec/ulti_cb.h,
+	lib/avcodec/utils.c, lib/avcodec/vc9.c, lib/avcodec/vorbis.c,
+	lib/avcodec/vorbis.h, lib/avcodec/vp3.c, lib/avcodec/vp3data.h,
+	lib/avcodec/vp3dsp.c, lib/avcodec/wmv2.c, lib/avcodec/xvmcvideo.c:
+	Updated.
+
+2005-05-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/audio.h, plugins/audio/alsa/alsa.c,
+	plugins/audio/esd/esd.c, plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/demultiplexer/avi/libriff.c,
+	plugins/demultiplexer/avi/libriff.h,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/demultiplexer/ogg/ogg.c,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c, src/enfle.c,
+	src/getopt-support.h: Fixed signed-ness problems.
+
+2005-05-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/audio-plugin.h, lib/enfle/dmo.c,
+	lib/enfle/enfle-plugin.h, lib/enfle/enfle-plugins.c,
+	lib/enfle/enfle-plugins.h, lib/enfle/image.c, lib/enfle/image.h,
+	lib/enfle/movie.h, lib/enfle/spi.c, lib/enfle/video.h,
+	plugins/audio/alsa/alsa.c, plugins/audio/oss/oss.c,
+	plugins/loader/gif/gif.c, plugins/loader/gif/gifext.c,
+	plugins/loader/gif/giflib.c, plugins/loader/gif/giflib.h,
+	plugins/loader/j2k/j2k.c, plugins/loader/jasper/jasper.c,
+	plugins/loader/jpeg/jpeg.c, plugins/loader/png/png.c,
+	plugins/loader/ungif/ungif.c, plugins/player/generic/generic.c,
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
+	plugins/player/ungif/ungif.c, plugins/streamer/bz2/bz2.c,
+	plugins/streamer/gz/gz.c, plugins/ui/normal/normal.c,
+	plugins/video/Xlib/Xlib.c: Fixed many signedness issues (but not
+	all fixed).
+
+2005-04-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.h,
+	lib/avcodec/common.h, lib/avcodec/dv.c, lib/avcodec/h263.c,
+	lib/avcodec/i386/dsputil_mmx_avg.h, lib/avcodec/indeo2.c,
+	lib/avcodec/indeo2data.h, lib/avcodec/mdec.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/msmpeg4.c, lib/avcodec/ppc/fdct_altivec.c,
+	lib/avcodec/snow.c, lib/avcodec/svq3.c: Updated.
+
+2005-04-10  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/aasc.c, lib/avcodec/alac.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
+	lib/avcodec/apiexample.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.h,
+	lib/avcodec/common.h, lib/avcodec/error_resilience.c,
+	lib/avcodec/fft-test.c, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/huffyuv.c, lib/avcodec/indeo3.c,
+	lib/avcodec/lcl.c, lib/avcodec/loco.c, lib/avcodec/motion_est.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/parser.c, lib/avcodec/qpeg.c, lib/avcodec/snow.c,
+	lib/avcodec/utils.c, lib/avcodec/wnv1.c, lib/avcodec/ws-snd1.c,
+	config.guess, config.sub, ltmain.sh: Updated.
+
 2005-03-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c, lib/avcodec/adx.c,
