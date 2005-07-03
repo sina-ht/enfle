@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2005 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Jul  3 12:59:20 2005.
-dnl $Id: configure.in,v 1.167 2005/07/03 03:59:46 sian Exp $
+dnl Last Modified: Sun Jul  3 15:52:22 2005.
+dnl $Id: configure.in,v 1.168 2005/07/03 13:00:17 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -622,10 +622,10 @@ test "$available_lrintf" = "yes" && AC_DEFINE(HAVE_LRINTF, 1, [Define if you hav
 AC_DEFINE(CONFIG_DECODERS, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_RISKY, 1, [Define if you need this for avcodec.])
 
-AC_DEFINE(CONFIG_AAC_DECODER, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_AAC_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_AASC_DECODER, 1, [Define if you need this for avcodec.])
-AC_DEFINE(CONFIG_AC3, 1, [Define if you need this for avcodec.])
-AC_DEFINE(CONFIG_AC3_DECODER, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_AC3, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_AC3_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_ALAC_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_AMR_NB_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_AMR_WB_DECODER, 1, [Define if you need this for avcodec.])
@@ -634,8 +634,8 @@ AC_DEFINE(CONFIG_ASV2_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_CINEPAK_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_CLJR_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_CYUV_DECODER, 1, [Define if you need this for avcodec.])
-AC_DEFINE(CONFIG_DTS, 1, [Define if you need this for avcodec.])
-AC_DEFINE(CONFIG_DTS_DECODER, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_DTS, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_DTS_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_DVVIDEO_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_EIGHTBPS_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_FAAC, 1, [Define if you need this for avcodec.])
@@ -671,7 +671,7 @@ AC_DEFINE(CONFIG_MP3ON4_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_MP3_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_MPEG1VIDEO_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_MPEG2VIDEO_DECODER, 1, [Define if you need this for avcodec.])
-AC_DEFINE(CONFIG_MPEG4AAC_DECODER, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_MPEG4AAC_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_MPEG4_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_MPEGVIDEO_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_MPEG_XVMC_DECODER, 1, [Define if you need this for avcodec.])
