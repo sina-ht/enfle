@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 19 10:28:24 2004.
- * $Id: videodecoder.c,v 1.6 2004/09/22 19:28:35 sian Exp $
+ * Last Modified: Sun Jul  3 13:58:43 2005.
+ * $Id: videodecoder.c,v 1.7 2005/07/03 13:02:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -202,7 +202,10 @@ videodecoder_query(EnflePlugins *eps, Movie *m, unsigned int fourcc, unsigned in
 	return 0;
       }
       if ((p = pluginlist_get(pl, pluginname))) {
-	vdp = plugin_get(p);
+	if ((vdp = plugin_get(p)) == NULL) {
+	  err_message_fnc("plugin %s (prefered for %s) is NULL.\n", pluginname, codec_name);
+	  continue;
+	}
 	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
 	if ((*types_r = vdp->query(fourcc, vdp->vd_private)) != 0)
 	  return 1;
