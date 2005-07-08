@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.11 2004/02/21 09:06:47 sian Exp $
+# $Id: Makefile.am,v 1.12 2005/07/08 18:16:20 sian Exp $
 
 noinst_LTLIBRARIES = libenfleutils.la
 INCLUDES = -I$(top_srcdir)
@@ -26,4 +26,5 @@ libenfleutils_la_SOURCES = \
 	converter.c converter.h \
 	fifo.c fifo.h \
 	hash.c hash.h \
-	dlist.c dlist.h
+	dlist.c dlist.h \
+	cache.c cache.h

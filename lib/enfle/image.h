@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:47:18 2005.
- * $Id: image.h,v 1.20 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Thu Jun 30 23:56:48 2005.
+ * $Id: image.h,v 1.21 2005/07/08 18:16:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -124,6 +124,7 @@ int image_magnify(Image *, int, int, int, int, ImageInterpolateMethod);
 int image_data_alloc_from_other(Image *, int, int);
 int image_data_copy(Image *, int, int);
 int image_data_swap(Image *, int, int);
+void image_clean(Image *);
 void image_destroy(Image *);
 
 #define image_by_index(p, idx) ((p)->data[idx])

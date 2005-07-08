@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:44:56 2005.
- * $Id: normal.c,v 1.86 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Sat Jul  9 02:53:37 2005.
+ * $Id: normal.c,v 1.87 2005/07/08 18:16:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,6 +45,7 @@
 #include "enfle/streamer.h"
 #include "enfle/archiver.h"
 #include "enfle/identify.h"
+#include "enfle/cache_image.h"
 #ifdef ENABLE_GUI_GTK
 # include "eventnotifier.h"
 # include "gui_gtk.h"
@@ -782,23 +783,140 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   return ml.ret;
 }
 
+static int process_files_of_archive(UIData *uidata, Archive *a, void *gui);
 static int
-process_files_of_archive(UIData *uidata, Archive *a, void *gui)
+process_file(UIData *uidata, char *path, Archive *a, Stream *s, Movie *m, void *gui, int prev_ret)
 {
   EnflePlugins *eps = get_enfle_plugins();
   VideoWindow *vw = uidata->vw;
   Config *c = uidata->c;
-  Archive *arc;
-  Stream *s;
   Image *p;
+  Archive *arc;
+  char *tmp;
+  int r, res, ret = 0;
+
+  if (uidata->cache) {
+    char *fullpath = archive_getpathname(a, path);
+
+    if ((p = cache_get_image(uidata->cache, fullpath)) != NULL) {
+      free(fullpath);
+      debug_message_fnc("Using cached image for %s\n", fullpath);
+      s->format = strdup("CACHED");
+      return main_loop(uidata, vw, NULL, p, s, a, path, gui);
+    }
+    free(fullpath);
+  }
+
+  video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
+  r = identify_file(eps, path, s, a, c);
+  switch (r) {
+  case IDENTIFY_FILE_DIRECTORY:
+    arc = archive_create(a);
+    debug_message("Reading %s.\n", path);
+
+    if (!archive_read_directory(arc, path, 1)) {
+      show_message("Error in reading %s.\n", path);
+      archive_destroy(arc);
+      return MAIN_LOOP_DELETE_FROM_LIST;
+    }
+    (prev_ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
+    ret = process_files_of_archive(uidata, arc, gui);
+    if (arc->nfiles == 0) {
+      /* Now that all paths are deleted in this archive, should be deleted wholly. */
+      ret = MAIN_LOOP_DELETE_FROM_LIST;
+    }
+    archive_destroy(arc);
+    return ret;
+  case IDENTIFY_FILE_STREAM:
+    if ((tmp = config_get_str(c, "/enfle/plugins/ui/normal/archiver/disabled")) == NULL ||
+	strcasecmp(tmp, "yes") != 0) {
+      arc = archive_create(a);
+      if (archiver_identify(eps, arc, s, c)) {
+	debug_message("Archiver identified as %s\n", arc->format);
+	if ((r = archiver_open(eps, arc, arc->format, s)) == OPEN_OK && archive_nfiles(arc) > 0) {
+	  debug_message("archiver_open() OK: %d files\n", archive_nfiles(arc));
+	  (prev_ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
+	  ret = process_files_of_archive(uidata, arc, gui);
+	  archive_destroy(arc);
+	  return ret;
+	} else {
+	  if (r == OPEN_OK) {
+	    show_message("Archive %s [%s] contains 0 files.\n", arc->format, path);
+	  } else {
+	    show_message("Archive %s [%s] cannot open\n", arc->format, path);
+	  }
+	  ret = MAIN_LOOP_DELETE_FROM_LIST;
+	  archive_destroy(arc);
+	  return ret;
+	}
+      }
+      archive_destroy(arc);
+    }
+    break;
+  case IDENTIFY_FILE_NOTREG:
+  case IDENTIFY_FILE_SOPEN_FAILED:
+  case IDENTIFY_FILE_AOPEN_FAILED:
+  case IDENTIFY_FILE_STAT_FAILED:
+  case IDENTIFY_FILE_ZERO_SIZE:
+  default:
+    return MAIN_LOOP_DELETE_FROM_LIST;
+  }
+
+  p = image_create();
+  r = identify_stream(eps, p, m, s, vw, c);
+  switch (r) {
+  case IDENTIFY_STREAM_MOVIE_FAILED:
+  case IDENTIFY_STREAM_IMAGE_FAILED:
+    show_message("%s load failed\n", path);
+    ret = MAIN_LOOP_DELETE_FROM_LIST;
+    break;
+  case IDENTIFY_STREAM_FAILED:
+    show_message("%s identification failed\n", path);
+    ret = MAIN_LOOP_DELETE_FROM_LIST_DIR;
+    break;
+  case IDENTIFY_STREAM_IMAGE:
+    debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
+    if (p->comment && config_get_boolean(c, "/enfle/plugins/ui/normal/show_comment", &res)) {
+      show_message("comment: %s\n", p->comment);
+      free(p->comment);
+      p->comment = NULL;
+    }
+
+    ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
+    if (uidata->cache) {
+      char *fullpath = archive_getpathname(a, path);
+      cache_add_image(uidata->cache, p, fullpath);
+      free(fullpath);
+    }
+    goto cached_exit;
+  case IDENTIFY_STREAM_MOVIE:
+    ret = main_loop(uidata, vw, m, NULL, s, a, path, gui);
+    movie_unload(m);
+    m->width = m->height = 0;
+    break;
+  default:
+    ret = MAIN_LOOP_DELETE_FROM_LIST;
+    break;
+  }
+
+  image_destroy(p);
+ cached_exit:
+  stream_close(s);
+
+  return ret;
+}
+
+static int
+process_files_of_archive(UIData *uidata, Archive *a, void *gui)
+{
+  Stream *s;
   Movie *m;
-  char *path, *tmp;
-  int ret, res, r;
+  char *path;
+  int i, ret;
 
   //debug_message_fnc("path = %s\n", a->path);
 
   s = stream_create();
-  p = image_create();
   m = movie_create();
 
   m->initialize_screen = initialize_screen;
@@ -807,8 +925,6 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 
   path = NULL;
   if (uidata->nth > 1 && archive_nfiles(a) > 1 && archive_iteration_start(a)) {
-    int i;
-
     for (i = 0; i < uidata->nth - 2; i++) {
       path = archive_iteration_next(a);
       if (!path)
@@ -871,22 +987,16 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	break;
       case MAIN_LOOP_NEXT5:
 	debug_message("MAIN_LOOP_NEXT5\n");
-	{
-	  int i = 0;
-	  for (i = 0; i < 5 && path; i++) {
-	    path = archive_iteration_next(a);
-	    debug_message(" skip %s\n", path);
-	  }
+	for (i = 0; i < 5 && path; i++) {
+	  path = archive_iteration_next(a);
+	  debug_message(" skip %s\n", path);
 	}
 	break;
       case MAIN_LOOP_PREV5:
 	debug_message("MAIN_LOOP_PREV5\n");
-	{
-	  int i = 0;
-	  for (i = 0; i < 5 && path; i++) {
-	    path = archive_iteration_prev(a);
-	    debug_message(" skip %s\n", path);
-	  }
+	for (i = 0; i < 5 && path; i++) {
+	  path = archive_iteration_prev(a);
+	  debug_message(" skip %s\n", path);
 	}
 	break;
       case MAIN_LOOP_NEXTARCHIVE5:
@@ -920,99 +1030,10 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
     if (!path)
       break;
 
-    video_window_set_cursor(vw, _VIDEO_CURSOR_WAIT);
-    r = identify_file(eps, path, s, a, c);
-    switch (r) {
-    case IDENTIFY_FILE_DIRECTORY:
-      arc = archive_create(a);
-      debug_message("Reading %s.\n", path);
-
-      if (!archive_read_directory(arc, path, 1)) {
-	show_message("Error in reading %s.\n", path);
-	archive_destroy(arc);
-	ret = MAIN_LOOP_DELETE_FROM_LIST;
-	continue;
-      }
-      (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
-      ret = process_files_of_archive(uidata, arc, gui);
-      if (arc->nfiles == 0) {
-	/* Now that all paths are deleted in this archive, should be deleted wholly. */
-	ret = MAIN_LOOP_DELETE_FROM_LIST;
-      }
-      archive_destroy(arc);
-      continue;
-    case IDENTIFY_FILE_STREAM:
-      if ((tmp = config_get_str(c, "/enfle/plugins/ui/normal/archiver/disabled")) == NULL ||
-	  strcasecmp(tmp, "yes") != 0) {
-	arc = archive_create(a);
-	if (archiver_identify(eps, arc, s, c)) {
-	  debug_message("Archiver identified as %s\n", arc->format);
-	  if ((r = archiver_open(eps, arc, arc->format, s)) == OPEN_OK && archive_nfiles(arc) > 0) {
-	    debug_message("archiver_open() OK: %d files\n", archive_nfiles(arc));
-	    (ret == MAIN_LOOP_PREV) ? archive_iteration_last(arc) : archive_iteration_first(arc);
-	    ret = process_files_of_archive(uidata, arc, gui);
-	    archive_destroy(arc);
-	    continue;
-	  } else {
-	    if (r == OPEN_OK) {
-	      show_message("Archive %s [%s] contains 0 files.\n", arc->format, path);
-	    } else {
-	      show_message("Archive %s [%s] cannot open\n", arc->format, path);
-	    }
-	    ret = MAIN_LOOP_DELETE_FROM_LIST;
-	    archive_destroy(arc);
-	    continue;
-	  }
-	}
-	archive_destroy(arc);
-      }
-      break;
-    case IDENTIFY_FILE_NOTREG:
-    case IDENTIFY_FILE_SOPEN_FAILED:
-    case IDENTIFY_FILE_AOPEN_FAILED:
-    case IDENTIFY_FILE_STAT_FAILED:
-    case IDENTIFY_FILE_ZERO_SIZE:
-    default:
-      ret = MAIN_LOOP_DELETE_FROM_LIST;
-      continue;
-    }
-
-    r = identify_stream(eps, p, m, s, vw, c);
-    switch (r) {
-    case IDENTIFY_STREAM_MOVIE_FAILED:
-    case IDENTIFY_STREAM_IMAGE_FAILED:
-      show_message("%s load failed\n", path);
-      ret = MAIN_LOOP_DELETE_FROM_LIST;
-      break;
-    case IDENTIFY_STREAM_FAILED:
-      show_message("%s identification failed\n", path);
-      ret = MAIN_LOOP_DELETE_FROM_LIST_DIR;
-      break;
-    case IDENTIFY_STREAM_IMAGE:
-      debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
-      if (p->comment && config_get_boolean(c, "/enfle/plugins/ui/normal/show_comment", &res)) {
-	show_message("comment: %s\n", p->comment);
-	free(p->comment);
-	p->comment = NULL;
-      }
-
-      ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
-      break;
-    case IDENTIFY_STREAM_MOVIE:
-      ret = main_loop(uidata, vw, m, NULL, s, a, path, gui);
-      movie_unload(m);
-      m->width = m->height = 0;
-      break;
-    default:
-      ret = MAIN_LOOP_DELETE_FROM_LIST;
-      break;
-    }
-
-    stream_close(s);
+    ret = process_file(uidata, path, a, s, m, gui, ret);
   }
 
   movie_destroy(m);
-  image_destroy(p);
   stream_destroy(s);
 
   return ret;
@@ -1050,7 +1071,7 @@ ui_main(UIData *uidata)
   void *disp;
   char *render_method, *interpolate_method;
   Hash *actionhash;
-  int group_id = 0;
+  int r, group_id = 0;
 #ifdef ENABLE_GUI_GTK
   GUI_Gtk gui;
   pthread_t gui_thread;
@@ -1058,7 +1079,8 @@ ui_main(UIData *uidata)
 
   debug_message("Normal: %s()\n", __FUNCTION__);
 
-  if ((actionhash = hash_create(8192)) == NULL)
+  /* Must be prime */
+  if ((actionhash = hash_create(8209)) == NULL)
     return 0;
 
   if ((disp = vp->open_video(NULL, c)) == NULL) {
@@ -1122,6 +1144,24 @@ ui_main(UIData *uidata)
     }
   }
 
+  uidata->cache = NULL;
+  if (!config_get_boolean(c, "/enfle/plugins/ui/normal/disable_image_cache", &r)) {
+    int cache_max, hash_size;
+    cache_max = config_get_int(c, "/enfle/plugins/ui/normal/image_cache_max", &r);
+    if (!r || cache_max == 0)
+      cache_max = 4;
+
+    /* hash_size must be prime */
+    if (cache_max < 64)
+      hash_size = 257;
+    else if (cache_max < 1024)
+      hash_size = 4099;
+    else
+      hash_size = 65537;
+
+    uidata->cache = cache_create(cache_max, hash_size);
+  }
+
 #ifdef ENABLE_GUI_GTK
   gui.en = eventnotifier_create();
   gui.uidata = uidata;
@@ -1131,6 +1171,7 @@ ui_main(UIData *uidata)
   process_files_of_archive(uidata, uidata->a, NULL);
 #endif
 
+  cache_destroy(uidata->cache);
   hash_destroy(actionhash);
   video_window_destroy(vw);
   vp->close_video(disp);

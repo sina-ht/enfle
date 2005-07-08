@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:47:36 2005.
- * $Id: image.c,v 1.16 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Thu Jun 30 23:56:38 2005.
+ * $Id: image.c,v 1.17 2005/07/08 18:16:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -162,6 +162,12 @@ image_data_swap(Image *p, int idx1, int idx2)
   memcpy(&image_by_index(p, idx2), &tmp, sizeof(ImageData));
 
   return 1;
+}
+
+void
+image_clean(Image *p)
+{
+  memory_free(image_work_image(p));
 }
 
 void

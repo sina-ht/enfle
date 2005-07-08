@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Mon Aug 16 19:27:46 2004.
-; $Id: enfle.rc,v 1.48 2004/08/16 11:09:49 sian Exp $
+; Last Modified: Sat Jul  9 03:11:13 2005.
+; $Id: enfle.rc,v 1.49 2005/07/08 18:16:20 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -41,6 +41,10 @@ enfle {
 	;filename_code_from := EUC-JP:UTF-8:Shift_JIS
 	;filename_code_to = EUC-JP
 	;;filename_code_to = EUC-JISX0213
+	; disable image cache
+	;disable_image_cache = yes
+	; image cache max
+	image_cache_max = 4
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -128,6 +132,7 @@ enfle {
     audiodecoder {
       preference {
         mp3 := mad:avcodec:mpglib:.
+	vorbis := vorbis:avcodec:.
       }
     }
     player {

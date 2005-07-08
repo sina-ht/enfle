@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:58:13 2004.
- * $Id: hash.c,v 1.19 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Jul  3 13:47:48 2005.
+ * $Id: hash.c,v 1.20 2005/07/08 18:16:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,7 +34,7 @@
 #define HASH_DESTROYED_KEY ((Dlist_data *)-1)
 
 static unsigned int default_hash_function(void *, unsigned int);
-static unsigned int default_hash_function2(void *, unsigned int);
+static unsigned int default_hash_function2(void *, unsigned int, unsigned int);
 
 static Hash hash_template = {
   .hash_function = default_hash_function,
@@ -54,14 +54,12 @@ default_hash_function(void *key, unsigned int len)
     h += c + (c << 17);
     h ^= (h >> 2);
   }
-  h += l + (l << 17);
-  h ^= (h >> 2);
 
   return h;
 }
 
 static unsigned int
-default_hash_function2(void *key, unsigned int len)
+default_hash_function2(void *key, unsigned int len, unsigned int count)
 {
   unsigned char c, *k;
   unsigned int h = 0, l;
@@ -72,9 +70,8 @@ default_hash_function2(void *key, unsigned int len)
     c = *k++;
     h += c + (c << 13);
     h ^= (h >> 3);
+    h += count + (count << 9);
   }
-  h += l + (l << 13);
-  h ^= (h >> 3);
 
   return 17 - (h % 17);
 }
@@ -90,6 +87,10 @@ hash_create(int size)
   if (unlikely(h == NULL))
     return NULL;
   memcpy(h, &hash_template, sizeof(Hash));
+
+  /* 16411, 8209, 4099, 1031, 257 */
+  if (size == 16384 || size == 8192 || size == 4096 || size == 1024 || size == 256)
+    warning_fnc("hash_size[%d] must be prime!\n", size);
 
   h->data = (Hash_data **)calloc(size, sizeof(Hash_data *));
   if (unlikely(h->data ==NULL))
@@ -125,21 +126,6 @@ lookup_internal(Hash *h, void *k, unsigned int len, int flag)
   Dlist_data *dd;
 
   hash = h->hash_function(k, len) % h->size;
-  dd = h->data[hash]->key;
-  if (dd == HASH_DESTROYED_KEY) {
-    if (flag == HASH_LOOKUP_ACCEPT_DELETED)
-      return hash;
-  } else {
-    if (dd == NULL)
-      return hash;
-    hk = dlist_data(dd);
-    if (hk->len == len && memcmp(hk->key, k, len) == 0)
-      return hash;
-  }
-
-  skip = h->hash_function2(k, len);
-  hash = (hash + skip) % h->size;
-
   for (;;) {
     dd = h->data[hash]->key;
     if (dd == HASH_DESTROYED_KEY) {
@@ -152,11 +138,14 @@ lookup_internal(Hash *h, void *k, unsigned int len, int flag)
       if (hk->len == len && memcmp(hk->key, k, len) == 0)
 	break;
     }
+    skip = h->hash_function2(k, len, count);
     hash = (hash + skip) % h->size;
     count++;
 
-    bug_on(count > 100000);
-
+    if (count > 1000) {
+      debug_message_fnc("size = %d, skip = %d, len = %d\n", h->size, skip, len);
+      bug_on(count > 1020);
+    }
   }
 
   return hash;
@@ -204,7 +193,7 @@ hash_set_function(Hash *h, unsigned int (*function)(void *, unsigned int))
 }
 
 void
-hash_set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int))
+hash_set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int, unsigned int))
 {
   h->hash_function2 = function2;
 }
