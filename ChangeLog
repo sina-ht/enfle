@@ -1,3 +1,29 @@
+2005-07-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/archiver/arc/arc.c: Memory clean up at the end.
+
+	* lib/enfle/Makefile.am, lib/enfle/image.c, lib/enfle/image.h,
+	lib/enfle/memory.c, lib/enfle/ui-extra.h, lib/utils/Makefile.am,
+	lib/utils/hash.c, lib/utils/hash.h, plugins/ui/normal/normal.c,
+	src/enfle.rc: Implemented image cache.
+
+	* lib/enfle/cache_image.c, lib/enfle/cache_image.h,
+	lib/utils/cache.c, lib/utils/cache.h: Cache base stuff.
+
+	* lib/enfle/dmo.c, lib/enfle/movie.h,
+	plugins/demultiplexer/asf/asf.c, plugins/demultiplexer/avi/avi.c,
+	plugins/demultiplexer/avi/demultiplexer_avi.h,
+	plugins/demultiplexer/mp3/mp3.c,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/demultiplexer/ogg/demultiplexer_ogg.h,
+	plugins/demultiplexer/ogg/ogg.c, plugins/player/generic/generic.c,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpglib/mpglib.c,
+	plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/raw/raw.c: Use rational for framerate.
+
 2005-07-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/videodecoder.c: NULL check.
