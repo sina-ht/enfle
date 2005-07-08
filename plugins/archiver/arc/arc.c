@@ -4,8 +4,8 @@
  * Adapted for newer version by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 16 01:57:14 2004.
- * $Id: arc.c,v 1.5 2005/03/06 03:26:02 sian Exp $
+ * Last Modified: Sat Jul  9 03:09:51 2005.
+ * $Id: arc.c,v 1.6 2005/07/08 18:16:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -60,6 +60,7 @@ ENFLE_PLUGIN_ENTRY(archiver_arc)
 
 ENFLE_PLUGIN_EXIT(archiver_arc, p)
 {
+  free_global_mblock();
   free(p);
 }
 
@@ -113,6 +114,7 @@ arc_destroy(Archive *arc)
   if (arc->path)
     free(arc->path);
   free(arc);
+  free_archive_files();
 }
 
 /* methods */
