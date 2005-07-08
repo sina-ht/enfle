@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jun  5 05:23:21 2005.
- * $Id: generic.c,v 1.19 2005/06/30 13:01:15 sian Exp $
+ * Last Modified: Sun Jul  3 17:04:41 2005.
+ * $Id: generic.c,v 1.20 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -246,8 +246,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
   else
     show_message("video");
   if (image_width(p) > 0)
-    show_message(": (%d,%d) %f fps %d frames",
-		 m->width, m->height, m->framerate, m->num_of_frames);
+    show_message(": (%d,%d) %2.5f fps %d frames",
+		 m->width, m->height, rational_to_double(m->framerate), m->num_of_frames);
   show_message("\n");
 
   p->type = m->requested_type;
@@ -358,7 +358,7 @@ play_video(void *arg)
   FIFO_destructor destructor;
   unsigned int used;
 
-  debug_message_fn("()\n");
+  debug_message_fn(": codec %s: (%d,%d)\n", m->v_codec_name, m->width, m->height);
 
   if (videodecoder_select(info->eps, m, m->v_fourcc, info->c) == 0) {
     show_message("videodecoder for %s not found\n", m->v_codec_name);
@@ -440,7 +440,7 @@ play_audio(void *arg)
   unsigned int used;
   AudioDevice *ad;
 
-  debug_message_fn("()\n");
+  debug_message_fn(": codec %s\n", m->a_codec_name);
 
   if (audiodecoder_select(info->eps, m, m->a_fourcc, info->c) == 0) {
     show_message("audiodecoder for %s not found\n", m->a_codec_name);
@@ -543,6 +543,7 @@ play_main(Movie *m, VideoWindow *vw)
   Image *p = info->p;
   int video_time, diff_time;
   int i = 0;
+  float rate;
 
   switch (m->status) {
   case _PLAY:
@@ -612,9 +613,10 @@ play_main(Movie *m, VideoWindow *vw)
     info->if_initialized++;
   }
 
+  rate = rational_to_double(m->framerate);
   if (m->vdec->ts_base == 0) {
     /* videodecoder didn't provide pts */
-    video_time = m->current_frame * 1000 / m->framerate;
+    video_time = m->current_frame * 1000 / rate;
   } else if (m->vdec->ts_base == 1000) {
     /* videodecoder provided pts in milli-seconds */
     video_time = m->vdec->pts;
@@ -642,7 +644,7 @@ play_main(Movie *m, VideoWindow *vw)
       int audio_time = get_audio_time(m, info->ad);
 
       while (video_time > audio_time) {
-	if (timer_get_milli(m->timer) > video_time + 10 * 1000 / m->framerate) {
+	if (timer_get_milli(m->timer) > video_time + 10 * 1000 / rate) {
 	  warning_fnc("might have bad audio: %d (r: %d v: %d a: %d)\n", m->current_frame, (int)timer_get_milli(m->timer), video_time, audio_time);
 	  break;
 	}
@@ -651,7 +653,7 @@ play_main(Movie *m, VideoWindow *vw)
 #endif
     } else {
       /* skip if delayed */
-      i = (get_audio_time(m, info->ad) * m->framerate / 1000) - m->current_frame - 1;
+      i = (get_audio_time(m, info->ad) * rate / 1000) - m->current_frame - 1;
       if (i > 0) {
 	//debug_message("dropped %d frames(v: %d a: %d)\n", i, video_time, audio_time);
 	info->to_skip = i;
@@ -677,7 +679,7 @@ play_main(Movie *m, VideoWindow *vw)
 #endif
     } else {
       /* skip if delayed */
-      i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
+      i = (timer_get_milli(m->timer) * rate / 1000) - m->current_frame - 1;
       if (i > 0) {
 	//debug_message("dropped %d frames(v: %d t: %d)\n", i, video_time, (int)timer_get_milli(m->timer));
 	info->to_skip = i;

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  1 19:24:41 2004.
- * $Id: raw.c,v 1.5 2004/05/15 04:10:16 sian Exp $
+ * Last Modified: Sun Jul  3 17:07:37 2005.
+ * $Id: raw.c,v 1.6 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -97,7 +97,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 
   m->current_frame++;
   vdec->ts_base = dp->ts_base;
-  vdec->pts = m->current_frame * 1000 / m->framerate;
+  vdec->pts = m->current_frame * 1000 / rational_to_double(m->framerate);
   vdec->to_render++;
   while (m->status == _PLAY && vdec->to_render > 0)
     pthread_cond_wait(&vdec->update_cond, &vdec->update_mutex);

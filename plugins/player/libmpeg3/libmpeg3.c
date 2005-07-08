@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:57:42 2005.
- * $Id: libmpeg3.c,v 1.45 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Sun Jul  3 17:01:58 2005.
+ * $Id: libmpeg3.c,v 1.46 2005/07/08 18:14:27 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -169,7 +169,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->has_video = 0;
     m->width = 120;
     m->height = 80;
-    m->framerate = 0;
+    rational_set_0(m->framerate);
     m->num_of_frames = 1;
     m->rendering_width = m->width;
     m->rendering_height = m->height;
@@ -185,7 +185,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
     m->width = mpeg3_video_width(info->file, info->nvstream);
     m->height = mpeg3_video_height(info->file, info->nvstream);
-    m->framerate = mpeg3_frame_rate(info->file, info->nvstream);
+    m->framerate.num = mpeg3_frame_rate(info->file, info->nvstream) * 1000;
+    m->framerate.den = 1000;
     m->num_of_frames = mpeg3_video_frames(info->file, info->nvstream);
 
     {
@@ -204,7 +205,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
     show_message("video(%d streams): s (%d,%d) r (%d,%d) %f fps %d frames\n", info->nvstreams,
 		 m->width, m->height, m->rendering_width, m->rendering_height,
-		 m->framerate, m->num_of_frames);
+		 rational_to_double(m->framerate), m->num_of_frames);
 
     image_width(p) = m->rendering_width;
     image_height(p) = m->rendering_height;
@@ -482,6 +483,7 @@ play_main(Movie *m, VideoWindow *vw)
   Image *p = info->p;
   int i = 0;
   int video_time, audio_time;
+  float rate;
 
   switch (m->status) {
   case _PLAY:
@@ -524,7 +526,8 @@ play_main(Movie *m, VideoWindow *vw)
   pthread_mutex_lock(&info->update_mutex);
 
   m->current_frame = mpeg3_get_frame(info->file, info->nvstream);
-  video_time = m->current_frame * 1000 / m->framerate;
+  rate = rational_to_double(m->framerate);
+  video_time = m->current_frame * 1000 / rate;
   if (m->has_audio) {
     audio_time = get_audio_time(m, info->ad);
     //debug_message("v: %d a=%d (%d frame)\n", (int)timer_get_milli(m->timer), audio_time, m->current_frame);
@@ -534,7 +537,7 @@ play_main(Movie *m, VideoWindow *vw)
       audio_time = get_audio_time(m, info->ad);
 
     /* skip if delayed */
-    i = (audio_time * m->framerate / 1000) - m->current_frame - 1;
+    i = (audio_time * rate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
       mpeg3_drop_frames(info->file, i, info->nvstream);
@@ -544,7 +547,7 @@ play_main(Movie *m, VideoWindow *vw)
     while (video_time > timer_get_milli(m->timer)) ;
 
     /* skip if delayed */
-    i = (timer_get_milli(m->timer) * m->framerate / 1000) - m->current_frame - 1;
+    i = (timer_get_milli(m->timer) * rate / 1000) - m->current_frame - 1;
     if (i > 0) {
       debug_message("dropped %d frames\n", i);
       mpeg3_drop_frames(info->file, i, info->nvstream);

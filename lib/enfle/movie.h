@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 17:01:07 2005.
- * $Id: movie.h,v 1.25 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Sun Jul  3 17:01:52 2005.
+ * $Id: movie.h,v 1.26 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,6 +46,13 @@ typedef enum {
   _UNLOADED
 } MovieStatus;
 
+struct rational {
+  int den;
+  int num;
+};
+#define rational_to_double(r) ((double)r.num / (double)r.den)
+#define rational_set_0(r) do {r.num = 0; r.den = 1;} while(0)
+
 struct _movie {
   void *movie_private;
   Stream *st;
@@ -59,7 +66,7 @@ struct _movie {
   int width, height;
   int rendering_width, rendering_height;
   unsigned int current_frame, num_of_frames;
-  float framerate;
+  struct rational framerate;
   int direct_decode;
   unsigned int v_fourcc;
   const char *v_codec_name;

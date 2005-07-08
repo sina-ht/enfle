@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 01:35:00 2004.
- * $Id: demultiplexer_ogg.h,v 1.1 2004/02/20 17:17:58 sian Exp $
+ * Last Modified: Sun Jul  3 17:11:56 2005.
+ * $Id: demultiplexer_ogg.h,v 1.2 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@ typedef struct _ogg_info {
   /* From video header */
   unsigned int vhandler, ahandler;
   unsigned int swidth, sheight, nframes, rate, length;
-  double framerate;
+  struct rational framerate;
   unsigned int width, height, num_of_frames;
   /* From audio header */
   unsigned int nchannels, samples_per_sec, num_of_samples;

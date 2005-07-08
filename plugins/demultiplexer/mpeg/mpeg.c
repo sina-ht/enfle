@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May  3 10:00:32 2005.
- * $Id: mpeg.c,v 1.10 2005/05/03 01:08:30 sian Exp $
+ * Last Modified: Sun Jul  3 17:10:48 2005.
+ * $Id: mpeg.c,v 1.11 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -147,7 +147,7 @@ DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c, priv)
   /* These will be set after reading SEQUENCE_START. */
   m->width = 0;
   m->height = 0;
-  m->framerate = 0;
+  rational_set_0(m->framerate);
   m->num_of_frames = 0;
 
   m->v_fourcc = info->ver == 1 ? FCC_mpg1 : FCC_mpg2;

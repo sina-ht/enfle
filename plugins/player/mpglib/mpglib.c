@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:14:40 2004.
- * $Id: mpglib.c,v 1.10 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Jul  3 17:02:10 2005.
+ * $Id: mpglib.c,v 1.11 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -128,7 +128,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   m->has_video = 0;
   m->width = 120;
   m->height = 80;
-  m->framerate = 0;
+  rational_set_0(m->framerate);
   m->num_of_frames = 1;
   m->rendering_width = m->width;
   m->rendering_height = m->height;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:43:52 2005.
- * $Id: dmo.c,v 1.6 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Sun Jul  3 16:56:25 2005.
+ * $Id: dmo.c,v 1.7 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -331,7 +331,7 @@ vd_decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned in
   }
 
   if (!vdm->if_image_alloced) {
-    show_message_fnc("(%d, %d) fps %2.5f buffer %d bytes\n", m->width, m->height, m->framerate, image_bpl(p) * image_height(p));
+    show_message_fnc("(%d, %d) fps %2.5f buffer %d bytes\n", m->width, m->height, rational_to_double(m->framerate), image_bpl(p) * image_height(p));
     if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
       err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
       return VD_ERROR;

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun 21 21:59:45 2004.
- * $Id: libmpeg2.c,v 1.10 2004/06/21 13:47:01 sian Exp $
+ * Last Modified: Sun Jul  3 17:07:13 2005.
+ * $Id: libmpeg2.c,v 1.11 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -100,8 +100,9 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     if (m->width == 0) {
       m->width = seq->width;
       m->height = seq->height;
-      m->framerate = 27000000.0 / seq->frame_period;
-      show_message("dimension (%d, %d)  %2.5f fps\n", m->width, m->height, m->framerate);
+      m->framerate.num = 27000000;
+      m->framerate.den = seq->frame_period;
+      show_message("dimension (%d, %d)  %2.5f fps\n", m->width, m->height, rational_to_double(m->framerate));
       if (memory_alloc(image_rendered_image(p), size) == NULL) {
 	show_message_fnc("No enough memory (%d bytes) for rendered image.\n", size);
 	return VD_ERROR;

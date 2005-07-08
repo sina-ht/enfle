@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May  1 19:23:46 2004.
- * $Id: avi.c,v 1.8 2004/05/15 04:10:16 sian Exp $
+ * Last Modified: Sun Jul  3 17:10:19 2005.
+ * $Id: avi.c,v 1.9 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -335,7 +335,8 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	info->sheight = mah.dwHeight;
 	info->rate = mah.dwRate;
 	info->length = mah.dwLength;
-	info->framerate = 1000000.0 / mah.dwMicroSecPerFrame;
+	info->framerate.num = 1000000;
+	info->framerate.den = mah.dwMicroSecPerFrame;
 #if defined(DEBUG)
 	debug_message_fnc("AVI Flags: ");
 	if (mah.dwFlags & AVIF_HASINDEX)
@@ -387,8 +388,9 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	    if (info->vhandler == 0)
 	      debug_message_fnc("strh fccHandler == 0\n");
 	    if (ash.dwScale != 0) {
-	      info->framerate = (double)ash.dwRate / (double)ash.dwScale;
-	      debug_message_fnc("rate %d / %d scale = %f\n", ash.dwRate, ash.dwScale, info->framerate);
+	      info->framerate.num = ash.dwRate;
+	      info->framerate.den = ash.dwScale;
+	      debug_message_fnc("rate/scale = %d / %d = %2.5f\n", ash.dwRate, ash.dwScale, rational_to_double(info->framerate));
 	    }
 	    info->num_of_frames = ash.dwLength;
 	  } else if (ash.fccType == FCC_auds) {
@@ -396,7 +398,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	    if (demux->nastreams == 0)
 	      info->ahandler = ash.fccHandler;
 	    if (ash.dwScale != 0) {
-	      debug_message_fnc("rate %d / %d scale = %f\n", ash.dwRate, ash.dwScale, (double)ash.dwRate / (double)ash.dwScale);
+	      debug_message_fnc("rate/scale = %d / %d = %2.5f\n", ash.dwRate, ash.dwScale, (double)ash.dwRate / (double)ash.dwScale);
 	    }
 	  } else {
 	    show_message_fnc("Unknown fccType %X\n", ash.fccType);

@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May  3 09:48:15 2005.
- * $Id: ogg.c,v 1.5 2005/05/03 01:08:30 sian Exp $
+ * Last Modified: Sun Jul  3 17:11:38 2005.
+ * $Id: ogg.c,v 1.6 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -200,15 +200,17 @@ __examine(Demultiplexer *demux, int identify_only)
       debug_message_fnc("video stream(%d) found: ", info->v_serialno);
       info->vhandler = utils_get_little_uint32(op.packet + 9);
       if (utils_get_little_uint32(op.packet + 21) == 0) {
-	info->framerate = 10000000.0 / utils_get_little_uint32(op.packet + 17);
+	info->framerate.num = 10000000;
+	info->framerate.den = utils_get_little_uint32(op.packet + 17);
       } else {
 	err_message_fnc("time_unit beyond 32 bits (%X)...\n", utils_get_little_uint32(op.packet + 21));
 	/* XXX: gee... */
-	info->framerate = 10000000.0 / utils_get_little_uint32(op.packet + 17);
+	info->framerate.num = 10000000;
+	info->framerate.den = utils_get_little_uint32(op.packet + 17);
       }
       info->width = utils_get_little_uint32(op.packet + 45);
       info->height = utils_get_little_uint32(op.packet + 49);
-      debug_message_fnc("(%d,%d) %f fps\n", info->width, info->height, info->framerate);
+      debug_message_fnc("(%d,%d) %2.5f fps\n", info->width, info->height, rational_to_double(info->framerate));
     } else if (op.bytes >= 6 && strncmp((char *)&op.packet[1], "audio", 5) == 0) {
       demux->nastreams++;
       info->a_serialno = ogg_page_serialno(&og);

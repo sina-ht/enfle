@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Apr  6 00:03:36 2004.
- * $Id: demultiplexer_avi.h,v 1.2 2004/04/05 15:51:22 sian Exp $
+ * Last Modified: Sun Jul  3 17:08:58 2005.
+ * $Id: demultiplexer_avi.h,v 1.3 2005/07/08 18:14:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,7 +48,7 @@ typedef struct _avi_info {
   unsigned int vhandler, ahandler;
   /* From MainAVIHeader */
   unsigned int swidth, sheight, nframes, rate, length;
-  double framerate;
+  struct rational framerate;
   /* From BITMAPINFOHEADER */
   unsigned int width, height, num_of_frames;
   /* From WAVEFORMATEX */
