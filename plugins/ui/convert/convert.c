@@ -1,10 +1,10 @@
 /*
  * convert.c -- Convert UI plugin
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:06:56 2004.
- * $Id: convert.c,v 1.18 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Jul 17 03:46:08 2005.
+ * $Id: convert.c,v 1.19 2005/07/16 18:52:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -45,7 +45,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   .type = ENFLE_PLUGIN_UI,
   .name = "Convert",
-  .description = "Convert UI plugin version 0.1.4",
+  .description = "Convert UI plugin version 0.1.5",
   .author = "Hiroshi Takekawa",
 
   .ui_main = ui_main,
@@ -78,6 +78,10 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
   FILE *fp;
   int fd;
 
+  if (strcasecmp(format, "test") == 0 ||
+      strcasecmp(format, "null") == 0)
+    return 1;
+
   if ((ext = saver_get_ext(eps, format, uidata->c)) == NULL)
     return 0;
   if ((outpath = misc_replace_ext(path, ext)) == NULL) {
@@ -91,18 +95,19 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
     show_message_fnc("file %s exists\n", outpath);
     return 0;
   }
+
   if ((fp = fopen(outpath, "wb+")) == NULL) {
     show_message_fnc("Cannot open %s for writing.\n", outpath);
     free(outpath);
     return 0;
-  } else {
-    config_set_str(uidata->c, (char *)"/enfle/plugins/ui/convert/source_path", outpath);
-    if (!saver_save(eps, format, p, fp, uidata->c, NULL)) {
-      show_message("Save failed.\n");
-      unlink(outpath);
-    }
-    fclose(fp);
   }
+
+  config_set_str(uidata->c, (char *)"/enfle/plugins/ui/convert/source_path", outpath);
+  if (!saver_save(eps, format, p, fp, uidata->c, NULL)) {
+    show_message("Save failed.\n");
+    unlink(outpath);
+  }
+  fclose(fp);
   free(outpath);
 
   return 1;
@@ -169,16 +174,14 @@ process_files_of_archive(UIData *uidata, Archive *a)
     }
 
     f = LOAD_NOT;
-    debug_message("Image identifying...\n");
     r = identify_stream(eps, p, NULL, s, NULL, c);
+    stream_close(s);
     switch (r) {
     case IDENTIFY_STREAM_MOVIE_FAILED:
     case IDENTIFY_STREAM_IMAGE_FAILED:
-      stream_close(s);
       show_message("%s load failed\n", path);
       continue;
     case IDENTIFY_STREAM_FAILED:
-      stream_close(s);
       show_message("%s identification failed\n", path);
       continue;
     case IDENTIFY_STREAM_IMAGE:
