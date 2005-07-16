@@ -1,3 +1,27 @@
+2005-07-16  Hiroshi Takekawa  <sian@fennel.org>
+
+	* compat.h, configure.in, src/enfle.c, src/getopt-support.c,
+	src/getopt-support.h: Long option support.
+
+	* plugins/ui/convert/convert.c: 'null' or 'test' format support.
+
+	* plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/video/Xlib/Makefile.am,
+	plugins/videodecoder/avcodec/Makefile.am: --without-pic needs
+	these.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
+	lib/avcodec/h261.c, lib/avcodec/h263dec.c, lib/avcodec/h264.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c, lib/avcodec/svq1.c,
+	lib/avcodec/svq3.c, lib/avcodec/utils.c: Updated.
+
+2005-07-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/8bps.c, lib/avcodec/cinepak.c,
+	lib/avcodec/imgconvert.c, lib/avcodec/indeo2.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/mpeg12.c: Updated.
+
 2005-07-08  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/archiver/arc/arc.c: Memory clean up at the end.
