@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May  3 09:49:05 2005.
- * $Id: getopt-support.h,v 1.2 2005/05/03 01:08:30 sian Exp $
+ * Last Modified: Sun Jul 17 03:50:39 2005.
+ * $Id: getopt-support.h,v 1.3 2005/07/16 18:52:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,13 +30,13 @@ typedef enum _argument_requirement {
 } ArgumentRequirement;
 
 typedef struct _option {
-  const char *longopt; /* not supported so far */
+  const char *longopt;
   char opt;
   ArgumentRequirement argreq;
   const char *description;
 } Option;
 
-char *gen_optstring(Option []);
+char *gen_optstring(Option [], struct option **);
 void print_option_usage(Option []);
 
 #endif

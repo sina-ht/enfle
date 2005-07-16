@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 21 18:16:31 2004.
- * $Id: compat.h,v 1.13 2004/02/21 09:17:24 sian Exp $
+ * Last Modified: Sun Jul 17 01:17:10 2005.
+ * $Id: compat.h,v 1.14 2005/07/16 18:52:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -93,4 +93,15 @@ void *memalign(size_t, size_t);
 
 #ifdef REQUIRE_FNMATCH_H
 #  include <fnmatch.h>
+#endif
+
+#ifdef HAVE_GETOPT_LONG
+#  include <getopt.h>
+#else
+struct option {
+  const char *name;
+  int has_arg;
+  int *flag;
+  int val;
+};
 #endif

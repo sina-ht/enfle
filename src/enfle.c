@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May  3 09:50:04 2005.
- * $Id: enfle.c,v 1.69 2005/05/03 01:08:30 sian Exp $
+ * Last Modified: Sun Jul 17 01:26:56 2005.
+ * $Id: enfle.c,v 1.70 2005/07/16 18:52:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,10 +27,6 @@
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
 #include "compat.h"
-
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
 
 #include "common.h"
 
@@ -380,6 +376,8 @@ main(int argc, char **argv)
 {
   extern char *optarg;
   extern int optind;
+  struct option *long_opt;
+  int option_index = 0;
   UIData uidata;
   EnflePlugins *eps;
   Config *c;
@@ -401,8 +399,12 @@ main(int argc, char **argv)
   Dlist_data *dd;
 
   override_config = dlist_create();
-  optstr = gen_optstring(enfle_options);
+  optstr = gen_optstring(enfle_options, &long_opt);
+#if defined(HAVE_GETOPT_LONG)
+  while ((ch = getopt_long(argc, argv, optstr, long_opt, &option_index)) != -1) {
+#else
   while ((ch = getopt(argc, argv, optstr)) != -1) {
+#endif
     i = 0;
     switch (ch) {
     case 'h':
@@ -420,16 +422,16 @@ main(int argc, char **argv)
       audio_name = strdup(optarg);
       break;
     case 'i':
-      if (include_fnmatch) {
-	err_message("Sorry, only one -i option is permitted.\n");
+      if (include_fnmatch || exclude_fnmatch) {
+	err_message("Sorry, only one -i/-x option is permitted.\n");
 	return 1;
       }
       include_fnmatch = 1;
       pattern = strdup(optarg);
       break;
     case 'x':
-      if (exclude_fnmatch) {
-	err_message("Sorry, only one -x option is permitted.\n");
+      if (include_fnmatch || exclude_fnmatch) {
+	err_message("Sorry, only one -i/-x option is permitted.\n");
 	return 1;
       }
       exclude_fnmatch = 1;
@@ -444,6 +446,7 @@ main(int argc, char **argv)
 	format = strdup(optarg);
       else
 	format = strdup("PNG");
+      debug_message_fnc("format = %s\n", format);
       break;
     case 'm':
       magnify_method = atoi(optarg);
@@ -583,6 +586,11 @@ main(int argc, char **argv)
   uidata.nth = nth;
   uidata.a = archive_create(ARCHIVE_ROOT);
 
+  if (include_fnmatch)
+    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_INCLUDE);
+  else if (exclude_fnmatch)
+    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE);
+
   if (strcmp(argv[optind], "-") == 0) {
     archive_add(uidata.a, argv[optind], strdup(argv[optind]));
   } else {
@@ -594,11 +602,6 @@ main(int argc, char **argv)
       }
     }
   }
-
-  if (include_fnmatch)
-    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_INCLUDE);
-  else if (exclude_fnmatch)
-    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE);
 
   if (ui_name == NULL && ((ui_name = config_get_str(c, "/enfle/plugins/ui/default")) == NULL)) {
     err_message("Cannot get UI plugin name\n");
