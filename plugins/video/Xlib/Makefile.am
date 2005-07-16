@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.6 2003/12/16 16:51:55 sian Exp $
+# $Id: Makefile.am,v 1.7 2005/07/16 18:48:26 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -19,4 +19,4 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 video_Xlib_la_LDFLAGS = $(MORE_LDFLAGS) -module
 video_Xlib_la_CFLAGS = $(MORE_CFLAGS)
 video_Xlib_la_SOURCES = Xlib.c Xlib.h
-video_Xlib_la_LIBADD = $(top_builddir)/lib/X11/libenfleX11.la @LIBADD_PTHREAD@
+video_Xlib_la_LIBADD = $(top_builddir)/lib/enfle/libenfle.la $(top_builddir)/lib/X11/libenfleX11.la @LIBADD_PTHREAD@
