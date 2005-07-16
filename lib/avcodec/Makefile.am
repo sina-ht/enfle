@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Jul  3 12:37:30 2005.
-# $Id: Makefile.am,v 1.28 2005/07/03 03:44:43 sian Exp $
+# Last Modified: Sun Jul 17 03:20:19 2005.
+# $Id: Makefile.am,v 1.29 2005/07/16 18:47:16 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -20,7 +20,7 @@ DEFS = -DHAVE_AV_CONFIG_H
 if USE_MMX
 DEFS += -DHAVE_MMX -Dasm=__asm -Dvolatile=__volatile
 # We want many registers... so you must omit frame pointer.
-CFLAGS_POST = -Wno-error -Wno-unused -O4 -ffast-math -fomit-frame-pointer $(CFLAGS_POST_SSE)
+CFLAGS_POST = -Wno-error -Wno-unused -O3 -ffast-math $(CFLAGS_POST_SSE)
 #CFLAGS_POST = -Wno-error -Wno-unused -O -fomit-frame-pointer $(CFLAGS_POST_SSE)
 MMX_SRCS = \
 	i386/fdct_mmx.c i386/cputest.c \
