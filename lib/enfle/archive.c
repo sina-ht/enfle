@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:51:14 2004.
- * $Id: archive.c,v 1.36 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Mon Jul 18 16:48:33 2005.
+ * $Id: archive.c,v 1.37 2005/07/23 21:24:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -172,14 +172,12 @@ read_directory(Archive *arc, char *path, int depth)
     free(arc->path);
     if ((arc->path = misc_canonical_pathname(path)) == NULL)
       return 0;
-    dl = dlist_create();
-    if ((c = read_directory_recursively(dl, arc->path, (char *)"", depth)) < 0)
-      return 0;
-  } else {
-    dl = dlist_create();
-    if ((c = read_directory_recursively(dl, arc->path, path, depth)) < 0)
-      return 0;
+    path = (char *)"";
   }
+
+  dl = dlist_create();
+  if ((c = read_directory_recursively(dl, arc->path, path, depth)) < 0)
+    return 0;
 
   dlist_set_compfunc(dl, archive_key_compare);
   dlist_sort(dl);
@@ -239,7 +237,7 @@ add(Archive *arc, char *path, void *reminder)
       return;
   }
 
-  if (hash_define_str(arc->filehash, path, reminder) < 0) {
+  if (unlikely(hash_define_str(arc->filehash, path, reminder) < 0)) {
     warning("%s: %s: %s already in filehash.\n", __FILE__, __FUNCTION__, path);
   } else {
     arc->nfiles++;
