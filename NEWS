@@ -1,4 +1,15 @@
-NEWS  Last Modified: Mon Nov 22 22:54:03 2004.
+NEWS  Last Modified: Sun Jul 24 06:29:25 2005.
+
+20050724:
+ Image caching.
+ Long option support.
+ Fixed signedness issues.
+ Plugged many memory leaks.
+ Use rational for framerate.
+ Hash improvement.
+
+20050306:
+ Plugged a memory leak.
 
 20041122:
  Fix for non-x86 architecture.
