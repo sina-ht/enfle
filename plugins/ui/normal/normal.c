@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jul  9 02:53:37 2005.
- * $Id: normal.c,v 1.87 2005/07/08 18:16:20 sian Exp $
+ * Last Modified: Mon Jul 18 16:53:41 2005.
+ * $Id: normal.c,v 1.88 2005/07/23 21:24:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -986,26 +986,26 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
 	ret = MAIN_LOOP_PREV;
 	break;
       case MAIN_LOOP_NEXT5:
-	debug_message("MAIN_LOOP_NEXT5\n");
+	//debug_message("MAIN_LOOP_NEXT5\n");
 	for (i = 0; i < 5 && path; i++) {
 	  path = archive_iteration_next(a);
-	  debug_message(" skip %s\n", path);
+	  //debug_message(" skip %s\n", path);
 	}
 	break;
       case MAIN_LOOP_PREV5:
-	debug_message("MAIN_LOOP_PREV5\n");
+	//debug_message("MAIN_LOOP_PREV5\n");
 	for (i = 0; i < 5 && path; i++) {
 	  path = archive_iteration_prev(a);
-	  debug_message(" skip %s\n", path);
+	  //debug_message(" skip %s\n", path);
 	}
 	break;
       case MAIN_LOOP_NEXTARCHIVE5:
-	debug_message("MAIN_LOOP_NEXTARCHIVE5\n");
+	//debug_message("MAIN_LOOP_NEXTARCHIVE5\n");
 	path = NULL;
 	ret = MAIN_LOOP_NEXT5;
 	break;
       case MAIN_LOOP_PREVARCHIVE5:
-	debug_message("MAIN_LOOP_PREVARCHIVE5\n");
+	//debug_message("MAIN_LOOP_PREVARCHIVE5\n");
 	path = NULL;
 	ret = MAIN_LOOP_PREV5;
 	break;
