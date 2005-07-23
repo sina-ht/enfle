@@ -17,7 +17,7 @@ extern "C" {
 
 #define FFMPEG_VERSION_INT     0x000409
 #define FFMPEG_VERSION         "CVS"
-#define LIBAVCODEC_BUILD       4758
+#define LIBAVCODEC_BUILD       4759
 
 
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
@@ -1930,18 +1930,23 @@ typedef struct AVPaletteControl {
 
 } AVPaletteControl;
 
-typedef struct AVSubtitle {
-    uint16_t format; /* 0 = graphics */
+typedef struct AVSubtitleRect {
     uint16_t x;
     uint16_t y;
     uint16_t w;
     uint16_t h;
     uint16_t nb_colors;
-    uint32_t start_display_time; /* relative to packet pts, in ms */
-    uint32_t end_display_time; /* relative to packet pts, in ms */
     int linesize;
     uint32_t *rgba_palette;
     uint8_t *bitmap;
+} AVSubtitleRect;
+
+typedef struct AVSubtitle {
+    uint16_t format; /* 0 = graphics */
+    uint32_t start_display_time; /* relative to packet pts, in ms */
+    uint32_t end_display_time; /* relative to packet pts, in ms */
+    uint32_t num_rects;
+    AVSubtitleRect *rects;
 } AVSubtitle;
 
 extern AVCodec ac3_encoder;
@@ -2135,6 +2140,7 @@ extern AVCodec dts_decoder;
 /* subtitles */
 extern AVCodec dvdsub_decoder;
 extern AVCodec dvbsub_encoder;
+extern AVCodec dvbsub_decoder;
 
 /* resample.c */
 
@@ -2326,6 +2332,12 @@ int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding);
  */
 int64_t av_rescale_q(int64_t a, AVRational bq, AVRational cq);
 
+double av_int2dbl(int64_t v);
+float av_int2flt(int32_t v);
+int64_t av_dbl2int(double d);
+int32_t av_flt2int(float d);
+
+
 /* frame parsing */
 typedef struct AVCodecParserContext {
     void *priv_data;
@@ -2390,6 +2402,7 @@ extern AVCodecParser pnm_parser;
 extern AVCodecParser mpegaudio_parser;
 extern AVCodecParser ac3_parser;
 extern AVCodecParser dvdsub_parser;
+extern AVCodecParser dvbsub_parser;
 
 /* memory */
 void *av_malloc(unsigned int size);
