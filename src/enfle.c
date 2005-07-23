@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 17 01:26:56 2005.
- * $Id: enfle.c,v 1.70 2005/07/16 18:52:28 sian Exp $
+ * Last Modified: Sun Jul 17 18:04:38 2005.
+ * $Id: enfle.c,v 1.71 2005/07/23 07:32:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -476,6 +476,8 @@ main(int argc, char **argv)
     }
   }
   free(optstr);
+  if (long_opt)
+    free(long_opt);
 
   if ((homedir = getenv("HOME")) == NULL) {
     err_message("Please set HOME environment.\n");
