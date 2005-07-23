@@ -1,3 +1,14 @@
+2005-07-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Less verbose.
+
+	* lib/enfle/archive.c: Simplified.
+
+	* src/enfle.c: Free long_opt.
+
+	* lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
+	lib/avcodec/mjpeg.c, lib/avcodec/utils.c: Updated.
+
 2005-07-16  Hiroshi Takekawa  <sian@fennel.org>
 
 	* compat.h, configure.in, src/enfle.c, src/getopt-support.c,
