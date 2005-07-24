@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Jul 25 02:49:50 2005.
-# $Id: Makefile.am,v 1.30 2005/07/24 17:50:38 sian Exp $
+# Last Modified: Mon Jul 25 02:51:17 2005.
+# $Id: Makefile.am,v 1.31 2005/07/24 17:51:39 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
@@ -13,7 +13,7 @@ EXTRA_DIST = \
 	i386/idct_mmx.c i386/motion_est_mmx.c \
 	i386/simple_idct_mmx.c i386/fft_sse.c \
 	i386/dsputil_mmx_avg.h i386/dsputil_mmx_rnd.h i386/mmx.h \
-	i386/h264dsp_mmx.c dsputil_h264_template_mmx.c \
+	i386/h264dsp_mmx.c i386/dsputil_h264_template_mmx.c \
 	svq3.c mdec.c motion_est_template.c wmv2.c
 
 DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H
