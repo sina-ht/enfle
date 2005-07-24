@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.4 2005/07/16 18:48:26 sian Exp $
+# $Id: Makefile.am,v 1.5 2005/07/24 18:02:42 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -19,4 +19,4 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 videodecoder_avcodec_la_LDFLAGS = $(MORE_LDFLAGS) -module -export-symbols-regex 'plugin_*'
 videodecoder_avcodec_la_CFLAGS = $(MORE_CFLAGS)
 videodecoder_avcodec_la_SOURCES = avcodec.c
-videodecoder_avcodec_la_LIBADD = $(top_builddir)/lib/avcodec/libavcodec.la @LIBADD_VORBIS@ @LIBADD_THEORA@
+videodecoder_avcodec_la_LIBADD = $(top_builddir)/lib/avcodec/libavcodec.la @LIBADD_VORBIS@ @LIBADD_THEORA@ @LIBADD_ZLIB@
