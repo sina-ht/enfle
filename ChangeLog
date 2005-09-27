@@ -1,3 +1,27 @@
+2005-09-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/movie.h, plugins/player/ungif/ungif.c,
+	plugins/ui/normal/normal.c, plugins/ui/wallpaper/wallpaper.c:
+	Added _REWINDING to indicate the current movie should be played
+	from the beginning.
+
+	* lib/utils/hash.c, lib/utils/hash.h: Split lookup_internal() into
+	lookup_key() and lookup_key_or_vacancy().  Renamed destroy_datum()
+	to delete_key().
+
+	* lib/utils/cache.c, lib/utils/cache.h: Choose the hash size
+	automatically.
+
+2005-07-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/Makefile.am: Needs zlib.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/dvbsub.c,
+	lib/avcodec/dvbsubdec.c, lib/avcodec/dvdsub.c, lib/avcodec/h263.c,
+	lib/avcodec/h264.c, lib/avcodec/mjpeg.c, lib/avcodec/mpegvideo.h:
+	Updated.
+
 2005-07-23  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Less verbose.
