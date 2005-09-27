@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Apr 18 03:43:47 2004.
- * $Id: x11ximage.c,v 1.52 2004/04/18 06:22:33 sian Exp $
+ * Last Modified: Wed Sep 28 00:52:20 2005.
+ * $Id: x11ximage.c,v 1.53 2005/09/27 15:53:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -557,6 +557,25 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	case _ABGR32:
 	  show_message("render image [type %s] is not implemented yet. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
+	case _BGR_WITH_BITMASK:
+	case _RGB_WITH_BITMASK:
+	  if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
+	    fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
+
+	  dest = memory_ptr(dst_img);
+	  s = memory_ptr(src_img);
+	  ximage->byte_order = MSBFirst;
+	  for (j = 0; j < h; j++) {
+	    d = dest + j * ximage->bytes_per_line;
+	    for (i = 0; i < w * 2; i += 2) {
+	      unsigned short pp = (s[i] << 8) | s[i + 1];
+	      *d++ = ((pp & p->red_mask) >> p->red_shift) << 3;
+	      *d++ = ((pp & p->green_mask) >> p->green_shift) << 3;
+	      *d++ = ((pp & p->blue_mask) >> p->blue_shift) << 3;
+	    }
+	    s += bytes_per_line_s;
+	  }
+	  break;
 	default:
 	  show_message_fnc("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
@@ -619,6 +638,26 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	      *d++ = p->colormap[s[i]][1];
 	      *d++ = p->colormap[s[i]][0];
 	      d++;
+	    }
+	    s += bytes_per_line_s;
+	  }
+	  break;
+	case _RGB_WITH_BITMASK:
+	case _BGR_WITH_BITMASK:
+	  if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
+	    fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
+
+	  dest = memory_ptr(dst_img);
+	  s = memory_ptr(src_img);
+	  ximage->byte_order = MSBFirst;
+	  for (j = 0; j < h; j++) {
+	    d = dest + j * ximage->bytes_per_line;
+	    for (i = 0; i < w * 2; i += 2) {
+	      unsigned int pp = (s[i + 1] << 8) | s[i];
+	      d++;
+	      *d++ = ((pp & p->red_mask) >> p->red_shift) << 3;
+	      *d++ = ((pp & p->green_mask) >> p->green_shift) << 3;
+	      *d++ = ((pp & p->blue_mask) >> p->blue_shift) << 3;
 	    }
 	    s += bytes_per_line_s;
 	  }
