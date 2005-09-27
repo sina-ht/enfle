@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May 17 00:18:30 2005.
- * $Id: hash.h,v 1.9 2005/07/08 18:16:20 sian Exp $
+ * Last Modified: Fri Aug 12 07:58:20 2005.
+ * $Id: hash.h,v 1.10 2005/09/27 13:49:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,7 +43,7 @@ struct _hash {
   Hash_data **data;
   Dlist *keys;
   unsigned int (*hash_function)(void *, unsigned int);
-  unsigned int (*hash_function2)(void *, unsigned int, unsigned int);
+  unsigned int (*hash_function2)(void *, unsigned int);
 };
 
 Hash *hash_create(int);
@@ -56,7 +56,7 @@ int hash_set_value(Hash *, void *, unsigned int, void *);
 void *hash_lookup(Hash *, void *, unsigned int);
 int hash_delete(Hash *, void *, unsigned int);
 void hash_set_function(Hash *, unsigned int (*)(void *, unsigned int));
-void hash_set_function2(Hash *, unsigned int (*)(void *, unsigned int, unsigned int));
+void hash_set_function2(Hash *, unsigned int (*)(void *, unsigned int));
 int hash_get_key_size(Hash *);
 void hash_destroy(Hash *);
 

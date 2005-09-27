@@ -1,10 +1,10 @@
 /*
  * hash.c -- Hash Table Library
- * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 1999-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 13:47:48 2005.
- * $Id: hash.c,v 1.20 2005/07/08 18:16:20 sian Exp $
+ * Last Modified: Tue Sep 27 22:47:55 2005.
+ * $Id: hash.c,v 1.21 2005/09/27 13:49:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,12 +29,10 @@
 
 #include "hash.h"
 
-#define HASH_LOOKUP_SEARCH_MATCH 0
-#define HASH_LOOKUP_ACCEPT_DELETED 1
-#define HASH_DESTROYED_KEY ((Dlist_data *)-1)
+#define HASH_DELETED_KEY ((Dlist_data *)-1)
 
 static unsigned int default_hash_function(void *, unsigned int);
-static unsigned int default_hash_function2(void *, unsigned int, unsigned int);
+static unsigned int default_hash_function2(void *, unsigned int);
 
 static Hash hash_template = {
   .hash_function = default_hash_function,
@@ -59,7 +57,7 @@ default_hash_function(void *key, unsigned int len)
 }
 
 static unsigned int
-default_hash_function2(void *key, unsigned int len, unsigned int count)
+default_hash_function2(void *key, unsigned int len)
 {
   unsigned char c, *k;
   unsigned int h = 0, l;
@@ -70,7 +68,6 @@ default_hash_function2(void *key, unsigned int len, unsigned int count)
     c = *k++;
     h += c + (c << 13);
     h ^= (h >> 3);
-    h += count + (count << 9);
   }
 
   return 17 - (h % 17);
@@ -93,7 +90,7 @@ hash_create(int size)
     warning_fnc("hash_size[%d] must be prime!\n", size);
 
   h->data = (Hash_data **)calloc(size, sizeof(Hash_data *));
-  if (unlikely(h->data ==NULL))
+  if (unlikely(h->data == NULL))
     goto error_h;
 
   d = (Hash_data *)calloc(size, sizeof(Hash_data));
@@ -117,8 +114,46 @@ hash_create(int size)
   return NULL;
 }
 
+static Hash_data *
+lookup_key(Hash *h, void *k, unsigned int len)
+{
+  int count = 0;
+  unsigned int hash, first_hash, skip;
+  Hash_data *d;
+  Hash_key *hk;
+  Dlist_data *dd;
+
+  hash = h->hash_function(k, len) % h->size;
+  first_hash = hash;
+  skip = h->hash_function2(k, len);
+  for (;;) {
+    d = h->data[hash];
+    dd = d->key;
+
+    if (dd == NULL)
+      return NULL;
+
+    if (dd != HASH_DELETED_KEY) {
+      hk = dlist_data(dd);
+      if (hk->len == len && memcmp(hk->key, k, len) == 0)
+	break;
+    }
+
+    hash = (hash + skip) % h->size;
+    if (hash == first_hash) {
+      debug_message_fnc("*** hash wrapped around. ***\n");
+      return NULL;
+    }
+
+    count++;
+    bug_on(count > 1030);
+  }
+
+  return d;
+}
+
 static unsigned int
-lookup_internal(Hash *h, void *k, unsigned int len, int flag)
+lookup_key_or_vacancy(Hash *h, void *k, unsigned int len)
 {
   int count = 0;
   unsigned int hash, skip;
@@ -126,26 +161,18 @@ lookup_internal(Hash *h, void *k, unsigned int len, int flag)
   Dlist_data *dd;
 
   hash = h->hash_function(k, len) % h->size;
+  skip = h->hash_function2(k, len);
   for (;;) {
     dd = h->data[hash]->key;
-    if (dd == HASH_DESTROYED_KEY) {
-      if (flag == HASH_LOOKUP_ACCEPT_DELETED)
-	break;
-    } else {
-      if (dd == NULL)
-	break;
-      hk = dlist_data(dd);
-      if (hk->len == len && memcmp(hk->key, k, len) == 0)
-	break;
-    }
-    skip = h->hash_function2(k, len, count);
+    if (dd == HASH_DELETED_KEY || dd == NULL)
+      break;
+    hk = dlist_data(dd);
+    if (hk->len == len && memcmp(hk->key, k, len) == 0)
+      break;
     hash = (hash + skip) % h->size;
-    count++;
 
-    if (count > 1000) {
-      debug_message_fnc("size = %d, skip = %d, len = %d\n", h->size, skip, len);
-      bug_on(count > 1020);
-    }
+    count++;
+    bug_on(count > 1000);
   }
 
   return hash;
@@ -193,7 +220,7 @@ hash_set_function(Hash *h, unsigned int (*function)(void *, unsigned int))
 }
 
 void
-hash_set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int, unsigned int))
+hash_set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int))
 {
   h->hash_function2 = function2;
 }
@@ -201,10 +228,10 @@ hash_set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int, unsi
 int
 hash_define_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destructor dest)
 {
-  unsigned int i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
+  unsigned int i = lookup_key_or_vacancy(h, k, len);
   Hash_key *hk;
 
-  if (h->data[i]->key != NULL && h->data[i]->key != HASH_DESTROYED_KEY)
+  if (h->data[i]->key != NULL && h->data[i]->key != HASH_DELETED_KEY)
     return -1; /* already registered */
 
   hk = hash_key_create(k, len);
@@ -245,10 +272,10 @@ destroy_hash_data(Hash_data *d)
 int
 hash_set_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destructor dest)
 {
-  unsigned int i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
+  unsigned int i = lookup_key_or_vacancy(h, k, len);
   Hash_key *hk;
 
-  if (h->data[i]->key == NULL || h->data[i]->key == HASH_DESTROYED_KEY) {
+  if (h->data[i]->key == NULL || h->data[i]->key == HASH_DELETED_KEY) {
     hk = hash_key_create(k, len);
     if (unlikely(hk == NULL))
       return 0;
@@ -290,21 +317,22 @@ hash_get_key_size(Hash *h)
 void *
 hash_lookup(Hash *h, void *k, unsigned int len)
 {
-  unsigned int i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
-  return (h->data[i]->key == NULL) ? NULL : h->data[i]->datum;
+  Hash_data *d = lookup_key(h, k, len);
+
+  if (d == NULL)
+    return NULL;
+  return d->datum;
 }
 
 static int
-destroy_datum(Hash *h, int i)
+delete_key(Hash *h, Hash_data *d)
 {
-  Hash_data *d = h->data[i];
-
-  if (d->key == HASH_DESTROYED_KEY)
+  if (d->key == HASH_DELETED_KEY)
     return 0;
   if (d->key != NULL) {
     if (unlikely(!dlist_delete(h->keys, d->key)))
       return 0;
-    d->key = HASH_DESTROYED_KEY;
+    d->key = HASH_DELETED_KEY;
   }
   destroy_hash_data(d);
 
@@ -314,12 +342,12 @@ destroy_datum(Hash *h, int i)
 int
 hash_delete(Hash *h, void *k, unsigned int len)
 {
-  int i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
+  Hash_data *d = lookup_key(h, k, len);
 
-  if (h->data[i]->key == NULL)
+  if (d == NULL)
     return 0;
 
-  if (unlikely(!destroy_datum(h, i)))
+  if (unlikely(!delete_key(h, d)))
     return 0;
 
   return 1;
