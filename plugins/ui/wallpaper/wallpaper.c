@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:06:08 2004.
- * $Id: wallpaper.c,v 1.15 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Mon Sep 26 15:56:25 2005.
+ * $Id: wallpaper.c,v 1.16 2005/09/27 13:57:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -98,6 +98,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
       switch (m->status) {
       case _PLAY:
       case _RESIZING:
+      case _REWINDING:
 	if (movie_play_main(m, vw) != PLAY_OK) {
 	  show_message_fnc("movie_play_main() failed.\n");
 	  return 0;

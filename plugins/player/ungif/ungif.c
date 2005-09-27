@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:53:52 2005.
- * $Id: ungif.c,v 1.32 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Tue Sep 27 22:55:05 2005.
+ * $Id: ungif.c,v 1.33 2005/09/27 13:57:03 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -60,7 +60,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   .type = ENFLE_PLUGIN_PLAYER,
   .name = "UNGIF",
-  .description = "UNGIF Player plugin version 0.4 with libungif",
+  .description = "UNGIF Player plugin version 0.4.1 with libungif",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -180,6 +180,7 @@ play(Movie *m)
   case _PAUSE:
     return pause_movie(m);
   case _STOP:
+  case _REWINDING:
     m->status = _PLAY;
     break;
   case _UNLOADED:
@@ -200,7 +201,7 @@ play(Movie *m)
     return PLAY_ERROR;
   }
 
-  return PLAY_ERROR;
+  return PLAY_OK;
 }
 
 static PlayerStatus
@@ -227,6 +228,7 @@ play_main(Movie *m, VideoWindow *vw)
     break;
   case _PAUSE:
   case _STOP:
+  case _REWINDING:
     return PLAY_OK;
   case _UNLOADED:
     return PLAY_ERROR;
@@ -435,6 +437,8 @@ play_main(Movie *m, VideoWindow *vw)
       if (info->max_loop_count)
 	debug_message("UNGIF: loop %d/%d\n", info->loop_count, info->max_loop_count);
       stop_movie(m);
+      if (info->max_loop_count == 0 || info->loop_count < info->max_loop_count)
+	m->status = _REWINDING;
       return PLAY_OK;
     default:
       break;
@@ -467,6 +471,7 @@ pause_movie(Movie *m)
     m->status = _PLAY;
     return PLAY_OK;
   case _STOP:
+  case _REWINDING:
     return PLAY_OK;
   case _UNLOADED:
     return PLAY_ERROR;
@@ -490,6 +495,7 @@ stop_movie(Movie *m)
     break;
   case _PAUSE:
   case _STOP:
+  case _REWINDING:
     return PLAY_OK;
   case _UNLOADED:
     return PLAY_ERROR;

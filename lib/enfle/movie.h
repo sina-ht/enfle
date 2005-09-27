@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 17:01:52 2005.
- * $Id: movie.h,v 1.26 2005/07/08 18:14:27 sian Exp $
+ * Last Modified: Mon Sep 26 15:53:24 2005.
+ * $Id: movie.h,v 1.27 2005/09/27 13:57:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,6 +43,7 @@ typedef enum {
   _PAUSE,
   _PLAY,
   _RESIZING,
+  _REWINDING,
   _UNLOADED
 } MovieStatus;
 

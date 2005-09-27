@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jul 18 16:53:41 2005.
- * $Id: normal.c,v 1.88 2005/07/23 21:24:28 sian Exp $
+ * Last Modified: Mon Sep 26 16:04:56 2005.
+ * $Id: normal.c,v 1.89 2005/09/27 13:57:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -758,6 +758,9 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 	  ml.ret = MAIN_LOOP_NEXT;
 	}
 	break;
+      case _REWINDING:
+	movie_play(m);
+	break;
       case _PAUSE:
 	break;
       case _STOP:
@@ -1146,20 +1149,12 @@ ui_main(UIData *uidata)
 
   uidata->cache = NULL;
   if (!config_get_boolean(c, "/enfle/plugins/ui/normal/disable_image_cache", &r)) {
-    int cache_max, hash_size;
+    int cache_max;
     cache_max = config_get_int(c, "/enfle/plugins/ui/normal/image_cache_max", &r);
     if (!r || cache_max == 0)
       cache_max = 4;
 
-    /* hash_size must be prime */
-    if (cache_max < 64)
-      hash_size = 257;
-    else if (cache_max < 1024)
-      hash_size = 4099;
-    else
-      hash_size = 65537;
-
-    uidata->cache = cache_create(cache_max, hash_size);
+    uidata->cache = cache_create(cache_max);
   }
 
 #ifdef ENABLE_GUI_GTK
