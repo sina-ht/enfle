@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 17:06:08 2005.
- * $Id: avcodec.c,v 1.12 2005/07/08 18:14:27 sian Exp $
+ * Last Modified: Wed Sep 28 00:51:26 2005.
+ * $Id: avcodec.c,v 1.13 2005/09/27 15:54:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -221,6 +221,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
   struct videodecoder_avcodec *vdm = (struct videodecoder_avcodec *)vdec->opaque;
   unsigned char *buf = dp->data;
   int l;
+  int y;
   int got_picture;
 
   if (vdm->size <= 0) {
@@ -244,8 +245,8 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     m->height = image_height(p) = vdm->vcodec_ctx->height;
     m->framerate.num = vdm->vcodec_ctx->time_base.den;
     m->framerate.den = vdm->vcodec_ctx->time_base.num;
-    show_message_fnc("(%d, %d) fps %2.5f\n", m->width, m->height, rational_to_double(m->framerate));
     image_bpl(p) = vdm->vcodec_ctx->width * 2; /* XXX: hmm... */
+    show_message_fnc("(%d, %d) bpl %d, fps %2.5f\n", m->width, m->height, image_bpl(p), rational_to_double(m->framerate));
     if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
       err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
       return VD_ERROR;
@@ -273,9 +274,11 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     image_rendered_set_image(vdm->p, pb->mem);
   } else
 #endif
-  {
-    int y;
-
+  if (vdm->vcodec_ctx->pix_fmt == PIX_FMT_RGB555) {
+    for (y = 0; y < m->height; y++) {
+      memcpy(memory_ptr(image_rendered_image(p)) + m->width * 2 * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, m->width * 2);
+    }
+  } else {
     for (y = 0; y < m->height; y++) {
       memcpy(memory_ptr(image_rendered_image(p)) + m->width * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, m->width);
     }
@@ -377,6 +380,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 static unsigned int
 query(unsigned int fourcc, void *priv)
 {
+  /* Should get image color type from avcodec */
   switch (fourcc) {
   case 0:
   case FCC_H263: // h263
@@ -440,16 +444,17 @@ query(unsigned int fourcc, void *priv)
   case FCC_mrle: // msrle
   case FCC_0x01000000:
   case FCC_cvid: // cinepak
+    return (IMAGE_I420 |
+	    IMAGE_BGRA32 | IMAGE_ARGB32 |
+	    IMAGE_RGB24 | IMAGE_BGR24 |
+	    IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
   case FCC_MSVC: // msvideo1
   case FCC_msvc:
   case FCC_CRAM:
   case FCC_cram:
   case FCC_WHAM:
   case FCC_wham:
-    return (IMAGE_I420 |
-	    IMAGE_BGRA32 | IMAGE_ARGB32 |
-	    IMAGE_RGB24 | IMAGE_BGR24 |
-	    IMAGE_BGR_WITH_BITMASK | IMAGE_RGB_WITH_BITMASK);
+    return IMAGE_RGB_WITH_BITMASK | IMAGE_INDEX;
   default:
     break;
   }

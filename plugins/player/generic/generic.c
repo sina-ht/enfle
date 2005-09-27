@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 17:04:41 2005.
- * $Id: generic.c,v 1.20 2005/07/08 18:14:27 sian Exp $
+ * Last Modified: Wed Sep 28 00:52:07 2005.
+ * $Id: generic.c,v 1.21 2005/09/27 15:54:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -173,10 +173,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
   }
 
   m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  if (!m->direct_decode) {
-    err_message_fnc("Cannot direct decoding...\n");
-    return PLAY_ERROR;
-  }
+  if (!m->direct_decode)
+    warning_fnc("Cannot direct decoding...\n");
   debug_message("requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   p = info->p = image_create();
@@ -225,8 +223,30 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       p->bits_per_pixel = 32;
       image_bpl(p) = image_width(p) * 4;
       m->out_fourcc = (p->type == _BGRA32) ? 0 : FCC_ABGR;
-      m->out_fourcc = FCC_RGB2;
       m->out_bitcount = 32;
+      break;
+    case _RGB_WITH_BITMASK:
+    case _BGR_WITH_BITMASK:
+      p->depth = 16;
+      p->bits_per_pixel = 16;
+      image_bpl(p) = image_width(p) * 2;
+      if (m->requested_type == _RGB_WITH_BITMASK) {
+	p->red_mask = 0x1f << 10;
+	p->red_shift = 10;
+	p->green_mask = 0x1f << 5;
+	p->green_shift = 5;
+	p->blue_mask = 0x1f;
+	p->blue_shift = 0;
+      } else {
+	p->red_mask = 0x1f;
+	p->red_shift = 0;
+	p->green_mask = 0x1f << 5;
+	p->green_shift = 5;
+	p->blue_mask = 0x1f << 10;
+	p->blue_shift = 10;
+      }
+      m->out_fourcc = 0;
+      m->out_bitcount = 16;
       break;
     default:
       err_message("Cannot render type %d\n", m->requested_type);
@@ -252,19 +272,11 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
   p->type = m->requested_type;
 
-  if (info->use_xv) {
-    if ((image_rendered_image(p) = memory_create()) == NULL) {
-      err_message("No enough memory for image object.\n");
-      goto error;
-    }
-    memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
-  } else {
-    if ((image_image(p) = memory_create()) == NULL) {
-      err_message("No enough memory for image object.\n");
-      goto error;
-    }
-    memory_request_type(image_image(p), video_window_preferred_memory_type(vw));
+  if ((image_rendered_image(p) = memory_create()) == NULL) {
+    err_message("No enough memory for image object.\n");
+    goto error;
   }
+  memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
 
   m->st = st;
   m->status = _STOP;
