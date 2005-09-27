@@ -3,8 +3,8 @@
  * (C)Copyright 2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May 31 23:57:33 2005.
- * $Id: cache.c,v 1.1 2005/07/08 18:15:26 sian Exp $
+ * Last Modified: Thu Jul 28 21:57:38 2005.
+ * $Id: cache.c,v 1.2 2005/09/27 13:45:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,12 +27,21 @@
 #include "cache.h"
 
 Cache *
-cache_create(int size, int hashsize)
+cache_create(int size)
 {
   Cache *c;
+  int hash_size;
 
-  if (size > hashsize)
+  if (size <= 0)
     return NULL;
+
+  /* hash_size must be prime */
+  if (size < 64)
+    hash_size = 257;
+  else if (size < 1024)
+    hash_size = 4099;
+  else
+    hash_size = 65537;
 
   c = calloc(1, sizeof(*c));
   if (c == NULL)
@@ -42,7 +51,7 @@ cache_create(int size, int hashsize)
   if (c->dl == NULL)
     goto out;
 
-  c->hash = hash_create(hashsize);
+  c->hash = hash_create(hash_size);
   if (c->hash == NULL)
     goto out2;
 
