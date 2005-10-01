@@ -1,10 +1,26 @@
+2005-10-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/bmp/bmp.c: Support bpp 16 bmp.
+
+	* lib/X11/x11ximage.c, lib/enfle/dmo.c, lib/enfle/image.c,
+	lib/enfle/image.h, lib/enfle/image_magnify.c,
+	plugins/player/generic/generic.c,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpglib/mpglib.c, plugins/saver/jpeg/jpeg.c,
+	plugins/video/Xlib/Xlib.c, plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: Abandoned
+	_RGB_WITH_BITMASK and _BGR_WITH_BITMASK.  Use _RGB555, _BGR555,
+	_RGB565, and _BGR565 instead.
+
 2005-09-27  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/player/generic/generic.c, plugins/video/Xlib/Xlib.c, plugins/videodecoder/avcodec/avcodec.c:
-	Do dirty tricks to support RGB555 used for such as msvideo1.
+	* plugins/player/generic/generic.c, plugins/video/Xlib/Xlib.c,
+	plugins/videodecoder/avcodec/avcodec.c: Do dirty tricks to support
+	RGB555 used for such as msvideo1.
 
-	* lib/X11/x11ximage.c:
-	Implemented WITH_BITMASK rendering for depth 24, 32.
+	* lib/X11/x11ximage.c: Implemented WITH_BITMASK rendering for
+	depth 24, 32.
 
 	* lib/enfle/image.h: Added mask shifts.
 
