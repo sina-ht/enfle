@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 28 00:52:07 2005.
- * $Id: generic.c,v 1.21 2005/09/27 15:54:54 sian Exp $
+ * Last Modified: Sun Oct  2 02:38:38 2005.
+ * $Id: generic.c,v 1.22 2005/10/01 18:11:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -166,7 +166,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     m->height = 128;
     m->num_of_frames = 0;
     types =
-      IMAGE_RGB_WITH_BITMASK | IMAGE_BGR_WITH_BITMASK |
+      IMAGE_RGB555 | IMAGE_BGR555 |
+      IMAGE_RGB565 | IMAGE_BGR565 |
       IMAGE_RGB24 | IMAGE_BGR24 |
       IMAGE_RGBA32 | IMAGE_ABGR32 |
       IMAGE_ARGB32 | IMAGE_BGRA32;
@@ -225,26 +226,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       m->out_fourcc = (p->type == _BGRA32) ? 0 : FCC_ABGR;
       m->out_bitcount = 32;
       break;
-    case _RGB_WITH_BITMASK:
-    case _BGR_WITH_BITMASK:
+    case _RGB555:
+    case _BGR555:
+    case _RGB565:
+    case _BGR565:
       p->depth = 16;
       p->bits_per_pixel = 16;
       image_bpl(p) = image_width(p) * 2;
-      if (m->requested_type == _RGB_WITH_BITMASK) {
-	p->red_mask = 0x1f << 10;
-	p->red_shift = 10;
-	p->green_mask = 0x1f << 5;
-	p->green_shift = 5;
-	p->blue_mask = 0x1f;
-	p->blue_shift = 0;
-      } else {
-	p->red_mask = 0x1f;
-	p->red_shift = 0;
-	p->green_mask = 0x1f << 5;
-	p->green_shift = 5;
-	p->blue_mask = 0x1f << 10;
-	p->blue_shift = 10;
-      }
       m->out_fourcc = 0;
       m->out_bitcount = 16;
       break;

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 27 23:39:17 2005.
- * $Id: image.h,v 1.22 2005/09/27 15:53:18 sian Exp $
+ * Last Modified: Sun Oct  2 02:30:52 2005.
+ * $Id: image.h,v 1.23 2005/10/01 18:11:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,8 +31,10 @@ typedef enum _image_type {
   _GRAY,
   _GRAY_ALPHA,
   _INDEX,
-  _RGB_WITH_BITMASK,
-  _BGR_WITH_BITMASK,
+  _RGB555,
+  _BGR555,
+  _RGB565,
+  _BGR565,
   _RGB24,
   _BGR24,
   _RGBA32,
@@ -51,18 +53,20 @@ typedef enum _image_type {
 #define IMAGE_GRAY             (1 <<  2)
 #define IMAGE_GRAY_ALPHA       (1 <<  3)
 #define IMAGE_INDEX            (1 <<  4)
-#define IMAGE_RGB_WITH_BITMASK (1 <<  5)
-#define IMAGE_BGR_WITH_BITMASK (1 <<  6)
-#define IMAGE_RGB24            (1 <<  7)
-#define IMAGE_BGR24            (1 <<  8)
-#define IMAGE_RGBA32           (1 <<  9)
-#define IMAGE_ABGR32           (1 << 10)
-#define IMAGE_ARGB32           (1 << 11)
-#define IMAGE_BGRA32           (1 << 12)
-#define IMAGE_YUY2             (1 << 13)
-#define IMAGE_YV12             (1 << 14)
-#define IMAGE_I420             (1 << 15)
-#define IMAGE_UYVY             (1 << 16)
+#define IMAGE_RGB555           (1 <<  5)
+#define IMAGE_BGR555           (1 <<  6)
+#define IMAGE_RGB565           (1 <<  7)
+#define IMAGE_BGR565           (1 <<  8)
+#define IMAGE_RGB24            (1 <<  9)
+#define IMAGE_BGR24            (1 << 10)
+#define IMAGE_RGBA32           (1 << 11)
+#define IMAGE_ABGR32           (1 << 12)
+#define IMAGE_ARGB32           (1 << 13)
+#define IMAGE_BGRA32           (1 << 14)
+#define IMAGE_YUY2             (1 << 15)
+#define IMAGE_YV12             (1 << 16)
+#define IMAGE_I420             (1 << 17)
+#define IMAGE_UYVY             (1 << 18)
 
 typedef enum {
   _NOINTERPOLATE,
@@ -111,8 +115,6 @@ struct _image {
   int bits_per_pixel;
   unsigned int ncolors;
   unsigned char colormap[256][3];
-  unsigned long red_mask, green_mask, blue_mask;
-  unsigned long red_shift, green_shift, blue_shift;
   Image *next;
 };
 

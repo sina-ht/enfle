@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jul  8 23:19:45 2002.
- * $Id: image_magnify.c,v 1.9 2002/08/03 05:08:40 sian Exp $
+ * Last Modified: Sun Oct  2 02:32:08 2005.
+ * $Id: image_magnify.c,v 1.10 2005/10/01 18:11:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -380,8 +380,10 @@ image_magnify(Image *p, int src, int dst, int dw, int dh, ImageInterpolateMethod
     image_bpl_by_index(p, dst) = dw;
     canonicalize(p, src, image_width_by_index(p, src));
     break;
-  case _RGB_WITH_BITMASK:
-  case _BGR_WITH_BITMASK:
+  case _RGB555:
+  case _BGR555:
+  case _RGB565:
+  case _BGR565:
     image_bpl_by_index(p, dst) = dw << 1;
     canonicalize(p, src, image_width_by_index(p, src) << 1);
     break;
@@ -417,8 +419,10 @@ image_magnify(Image *p, int src, int dst, int dw, int dh, ImageInterpolateMethod
   case _INDEX:
     magnify_generic8(memory_ptr(image_image_by_index(p, dst)), memory_ptr(image_image_by_index(p, src)), image_width_by_index(p, src), image_height_by_index(p, src), dw, dh);
     break;
-  case _RGB_WITH_BITMASK:
-  case _BGR_WITH_BITMASK:
+  case _RGB555:
+  case _BGR555:
+  case _RGB565:
+  case _BGR565:
     magnify_generic16((unsigned short *)memory_ptr(image_image_by_index(p, dst)), (unsigned short *)memory_ptr(image_image_by_index(p, src)), image_width_by_index(p, src), image_height_by_index(p, src), dw, dh);
     break;
   case _RGB24:

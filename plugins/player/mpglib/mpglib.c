@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 17:02:10 2005.
- * $Id: mpglib.c,v 1.11 2005/07/08 18:14:27 sian Exp $
+ * Last Modified: Sun Oct  2 02:38:04 2005.
+ * $Id: mpglib.c,v 1.12 2005/10/01 18:11:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -47,7 +47,7 @@ typedef struct _mpglib_info {
 } Mpglib_info;
 
 static const unsigned int types =
-  (IMAGE_RGBA32 | IMAGE_BGRA32 | IMAGE_RGB24 | IMAGE_BGR24 | IMAGE_BGR_WITH_BITMASK);
+  (IMAGE_RGBA32 | IMAGE_BGRA32 | IMAGE_RGB24 | IMAGE_BGR24 | IMAGE_BGR565);
 
 DECLARE_PLAYER_PLUGIN_METHODS;
 

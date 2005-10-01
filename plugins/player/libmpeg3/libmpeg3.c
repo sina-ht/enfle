@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 17:01:58 2005.
- * $Id: libmpeg3.c,v 1.46 2005/07/08 18:14:27 sian Exp $
+ * Last Modified: Sun Oct  2 02:37:43 2005.
+ * $Id: libmpeg3.c,v 1.47 2005/10/01 18:11:08 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -65,7 +65,7 @@ static const unsigned int types =
   (IMAGE_I420 |
    IMAGE_RGBA32 | IMAGE_BGRA32 |
    IMAGE_RGB24 | IMAGE_BGR24 |
-   IMAGE_BGR_WITH_BITMASK);
+   IMAGE_RGB565 | IMAGE_BGR565);
 
 DECLARE_PLAYER_PLUGIN_METHODS;
 
@@ -267,8 +267,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 	break;
       case 16:
 	switch (p->type) {
-	case _RGB_WITH_BITMASK:
-	case _BGR_WITH_BITMASK:
+	case _RGB565:
+	case _BGR565:
 	  info->rendering_type = MPEG3_RGB565;
 	  break;
 	default:

@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:02:01 2004.
- * $Id: jpeg.c,v 1.4 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Oct  2 02:41:12 2005.
+ * $Id: jpeg.c,v 1.5 2005/10/01 18:11:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -118,8 +118,10 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
   case _BITMAP_MSBFirst:
   case _GRAY_ALPHA:
   case _INDEX:
-  case _RGB_WITH_BITMASK:
-  case _BGR_WITH_BITMASK:
+  case _RGB565:
+  case _BGR565:
+  case _RGB555:
+  case _BGR555:
   case _BGR24:
   case _RGBA32:
   case _ABGR32:

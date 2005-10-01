@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jun 30 23:56:38 2005.
- * $Id: image.c,v 1.17 2005/07/08 18:16:20 sian Exp $
+ * Last Modified: Sun Oct  2 03:03:14 2005.
+ * $Id: image.c,v 1.18 2005/10/01 18:11:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,8 +34,10 @@ static const char *image_type_to_string_array[] = {
   "_GRAY",
   "_GRAY_ALPHA",
   "_INDEX",
-  "_RGB_WITH_BITMASK",
-  "_BGR_WITH_BITMASK",
+  "_RGB555",
+  "_BGR555",
+  "_RGB565",
+  "_BGR565",
   "_RGB24",
   "_BGR24",
   "_RGBA32",

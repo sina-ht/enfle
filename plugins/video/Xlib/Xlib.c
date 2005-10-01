@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 28 00:07:28 2005.
- * $Id: Xlib.c,v 1.60 2005/09/27 15:54:54 sian Exp $
+ * Last Modified: Sun Oct  2 02:40:50 2005.
+ * $Id: Xlib.c,v 1.61 2005/10/01 18:11:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -489,32 +489,32 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
     _ARGB32, _RGB24, _BGRA32, _BGR24, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_32_msb[] = {
     _RGBA32, _ABGR32,
-    _RGB_WITH_BITMASK, _BGR_WITH_BITMASK,
+    _RGB565, _BGR565, _RGB555, _BGR555,
     _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_MSBFirst, _BITMAP_LSBFirst, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_32_lsb_direct[] = {
     _BGRA32, _BGR24, _ARGB32, _RGB24, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_32_lsb[] = {
     _RGBA32, _ABGR32,
-    _BGR_WITH_BITMASK, _RGB_WITH_BITMASK,
+    _BGR565, _RGB565, _BGR555, _RGB555,
     _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_24_msb_direct[] = { _RGB24, _BGR24, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_24_msb[] = {
     _RGBA32, _BGRA32, _ARGB32, _ABGR32,
-    _RGB_WITH_BITMASK, _BGR_WITH_BITMASK,
+    _RGB565, _BGR565, _RGB555, _BGR555,
     _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_24_lsb_direct[] = { _BGR24, _RGB24, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_24_lsb[] = {
     _BGRA32, _RGBA32, _ABGR32, _ARGB32,
-    _BGR_WITH_BITMASK, _RGB_WITH_BITMASK,
+    _BGR565, _RGB565, _BGR555, _RGB555,
     _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_16_msb_direct[] = {
-    _RGB_WITH_BITMASK, _BGR_WITH_BITMASK, _IMAGETYPE_TERMINATOR };
+    _RGB565, _BGR565, _RGB555, _BGR555, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_16_msb[] = {
     _BGR24, _RGB24,
     _BGRA32, _RGBA32, _ABGR32, _ARGB32,
     _INDEX, _GRAY, _GRAY_ALPHA, _BITMAP_LSBFirst, _BITMAP_MSBFirst, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_16_lsb_direct[] = {
-    _BGR_WITH_BITMASK, _RGB_WITH_BITMASK, _IMAGETYPE_TERMINATOR };
+    _BGR565, _RGB565, _BGR555, _RGB555, _IMAGETYPE_TERMINATOR };
   static ImageType prefer_16_lsb[] = {
     _BGR24, _RGB24,
     _BGRA32, _RGBA32, _ABGR32, _ARGB32,
