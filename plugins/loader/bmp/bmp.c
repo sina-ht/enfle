@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:27:29 2004.
- * $Id: bmp.c,v 1.13 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Oct  2 03:02:30 2005.
+ * $Id: bmp.c,v 1.14 2005/10/01 18:11:42 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -116,8 +116,9 @@ load_image(Image *p, Stream *st)
     p->depth = p->bits_per_pixel;
     break;
   case 16:
-    show_message("bmp: read_header: bpp 16 detected.\n");
-    return 0;
+    p->type = _RGB555;
+    p->depth = 16;
+    break;
   case 24:
     p->type = _BGR24;
     p->depth = 24;
@@ -148,6 +149,20 @@ load_image(Image *p, Stream *st)
       p->colormap[i][1] = buf[bytes_per_pal * i + 1];
       p->colormap[i][2] = buf[bytes_per_pal * i + 0];
     }
+  } else if (p->depth == 16 && compress_method == 3) {
+    /* Read bitmasks */
+    if (stream_read(st, buf, 3 * 4) != 3 * 4)
+      return 0;
+    unsigned int rm = utils_get_little_uint32(buf);
+    unsigned int gm = utils_get_little_uint32(buf + 4);
+    unsigned int bm = utils_get_little_uint32(buf + 8);
+    if (rm == 0xf800)
+      p->type = _RGB565;
+    else if (rm == 0x7c00)
+      p->type = _RGB555;
+    else
+      warning_fnc("Mask: R %X G %X B %X is not supported\n", rm, gm, bm);
+    compress_method = 0;
   }
 
   image_bpl(p) = (image_width(p) * p->bits_per_pixel) >> 3;
@@ -164,7 +179,7 @@ load_image(Image *p, Stream *st)
       pp -= image_bpl(p);
     }
   } else {
-    show_message("Compressed bitmap not yet supported.\n");
+    show_message("Compressed bitmap not yet supported (method = %d).\n", compress_method);
     return 0;
   }
 
