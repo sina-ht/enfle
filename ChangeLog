@@ -1,3 +1,163 @@
+2005-12-27  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+
+	* configure.in: Version up.
+
+	* plugins/player/avcodec/avcodec.c, plugins/player/divx/divx.c,
+	plugins/player/generic/generic.c,
+	plugins/player/libmpeg2.old/libmpeg2.c,
+	plugins/player/libmpeg2/libmpeg2.c: We must wait for decoder to
+	give us enough information (such as movie screen dimension).
+	Don't use pts when its value equals -1.  stop_movie() calls
+	pthread_cond_signal() to finish videodecoder thread.  But
+	videodecoder thread might have been finished earlier.  If
+	videodecoder thread destroyed VideoDecoder object, then
+	stop_movie() would call pthread_cond_signal() with an invalid
+	pointer.  Don't do that.
+
+	* plugins/videodecoder/libmpeg2/libmpeg2.c: Don't calculate
+	next_pts when pts == -1.
+
+	* lib/avcodec/Makefile.am: Added i386/idct_mmx_xvid.c.
+
+	* lib/avcodec/alpha/asm.h, lib/avcodec/alpha/dsputil_alpha.c,
+	lib/avcodec/alpha/dsputil_alpha_asm.S,
+	lib/avcodec/alpha/motion_est_alpha.c,
+	lib/avcodec/alpha/motion_est_mvi_asm.S,
+	lib/avcodec/alpha/mpegvideo_alpha.c,
+	lib/avcodec/alpha/simple_idct_alpha.c,
+	lib/avcodec/armv4l/dsputil_arm.c,
+	lib/avcodec/armv4l/dsputil_arm_s.S,
+	lib/avcodec/armv4l/dsputil_iwmmxt.c,
+	lib/avcodec/armv4l/dsputil_iwmmxt_rnd.h,
+	lib/avcodec/armv4l/jrevdct_arm.S,
+	lib/avcodec/armv4l/mpegvideo_arm.c,
+	lib/avcodec/armv4l/simple_idct_arm.S, lib/avcodec/i386/cputest.c,
+	lib/avcodec/i386/dsputil_h264_template_mmx.c,
+	lib/avcodec/i386/dsputil_mmx.c,
+	lib/avcodec/i386/dsputil_mmx_avg.h,
+	lib/avcodec/i386/dsputil_mmx_rnd.h, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/i386/fft_sse.c, lib/avcodec/i386/h264dsp_mmx.c,
+	lib/avcodec/i386/idct_mmx.c, lib/avcodec/i386/idct_mmx_xvid.c,
+	lib/avcodec/i386/mmx.h, lib/avcodec/i386/motion_est_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx_template.c,
+	lib/avcodec/i386/simple_idct_mmx.c, lib/avcodec/i386/vp3dsp_mmx.c,
+	lib/avcodec/i386/vp3dsp_sse2.c, lib/avcodec/mlib/dsputil_mlib.c,
+	lib/avcodec/ppc/dsputil_altivec.c,
+	lib/avcodec/ppc/dsputil_h264_altivec.c,
+	lib/avcodec/ppc/dsputil_h264_template_altivec.c,
+	lib/avcodec/ppc/dsputil_ppc.c, lib/avcodec/ppc/dsputil_ppc.h,
+	lib/avcodec/ppc/fdct_altivec.c, lib/avcodec/ppc/fft_altivec.c,
+	lib/avcodec/ppc/gcc_fixes.h, lib/avcodec/ppc/gmc_altivec.c,
+	lib/avcodec/ppc/idct_altivec.c,
+	lib/avcodec/ppc/mpegvideo_altivec.c,
+	lib/avcodec/ppc/mpegvideo_ppc.c, lib/avcodec/ps2/dsputil_mmi.c,
+	lib/avcodec/ps2/idct_mmi.c, lib/avcodec/ps2/mmi.h,
+	lib/avcodec/ps2/mpegvideo_mmi.c, lib/avcodec/sh4/dsputil_align.c,
+	lib/avcodec/sh4/dsputil_sh4.c, lib/avcodec/sh4/idct_sh4.c,
+	lib/avcodec/sh4/qpel.c, lib/avcodec/sparc/dsputil_vis.c,
+	lib/avcodec/sparc/vis.h, lib/avcodec/4xm.c, lib/avcodec/8bps.c,
+	lib/avcodec/Makefile.am, lib/avcodec/a52dec.c, lib/avcodec/ac3.h,
+	lib/avcodec/ac3dec.c, lib/avcodec/ac3enc.c, lib/avcodec/ac3tab.h,
+	lib/avcodec/adpcm.c, lib/avcodec/adx.c, lib/avcodec/alac.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
+	lib/avcodec/apiexample.c, lib/avcodec/asv1.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.c,
+	lib/avcodec/bitstream.h, lib/avcodec/cabac.c, lib/avcodec/cabac.h,
+	lib/avcodec/cinepak.c, lib/avcodec/cljr.c, lib/avcodec/cyuv.c,
+	lib/avcodec/dct-test.c, lib/avcodec/dpcm.c, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c, lib/avcodec/dvbsub.c,
+	lib/avcodec/dvbsubdec.c, lib/avcodec/dvdata.h,
+	lib/avcodec/dvdsub.c, lib/avcodec/error_resilience.c,
+	lib/avcodec/eval.c, lib/avcodec/faac.c, lib/avcodec/faad.c,
+	lib/avcodec/faandct.c, lib/avcodec/faandct.h,
+	lib/avcodec/fdctref.c, lib/avcodec/fft-test.c, lib/avcodec/fft.c,
+	lib/avcodec/ffv1.c, lib/avcodec/flac.c, lib/avcodec/flicvideo.c,
+	lib/avcodec/fraps.c, lib/avcodec/g726.c, lib/avcodec/golomb.c,
+	lib/avcodec/golomb.h, lib/avcodec/h261.c, lib/avcodec/h263.c,
+	lib/avcodec/h263data.h, lib/avcodec/h263dec.c, lib/avcodec/h264.c,
+	lib/avcodec/h264data.h, lib/avcodec/h264idct.c,
+	lib/avcodec/huffyuv.c, lib/avcodec/imgconvert.c,
+	lib/avcodec/imgconvert_template.h, lib/avcodec/imgresample.c,
+	lib/avcodec/indeo2.c, lib/avcodec/indeo2data.h,
+	lib/avcodec/indeo3.c, lib/avcodec/indeo3data.h,
+	lib/avcodec/interplayvideo.c, lib/avcodec/jfdctfst.c,
+	lib/avcodec/jfdctint.c, lib/avcodec/jrevdct.c, lib/avcodec/lcl.c,
+	lib/avcodec/loco.c, lib/avcodec/mace.c, lib/avcodec/mdct.c,
+	lib/avcodec/mdec.c, lib/avcodec/mem.c, lib/avcodec/mjpeg.c,
+	lib/avcodec/motion_est.c, lib/avcodec/motion_est_template.c,
+	lib/avcodec/motion_test.c, lib/avcodec/mp3lameaudio.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpeg12data.h,
+	lib/avcodec/mpeg4data.h, lib/avcodec/mpegaudio.c,
+	lib/avcodec/mpegaudio.h, lib/avcodec/mpegaudiodec.c,
+	lib/avcodec/mpegaudiodectab.h, lib/avcodec/mpegaudiotab.h,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/msmpeg4.c, lib/avcodec/msmpeg4data.h,
+	lib/avcodec/msvideo1.c, lib/avcodec/oggtheora.c,
+	lib/avcodec/oggvorbis.c, lib/avcodec/parser.c, lib/avcodec/pcm.c,
+	lib/avcodec/png.c, lib/avcodec/pnm.c, lib/avcodec/pthread.c,
+	lib/avcodec/qdrw.c, lib/avcodec/qpeg.c, lib/avcodec/qtrle.c,
+	lib/avcodec/ra144.c, lib/avcodec/ra144.h, lib/avcodec/ra288.c,
+	lib/avcodec/ra288.h, lib/avcodec/rangecoder.c,
+	lib/avcodec/rangecoder.h, lib/avcodec/ratecontrol.c,
+	lib/avcodec/raw.c, lib/avcodec/resample.c,
+	lib/avcodec/resample2.c, lib/avcodec/roqvideo.c,
+	lib/avcodec/rpza.c, lib/avcodec/rv10.c, lib/avcodec/simple_idct.c,
+	lib/avcodec/simple_idct.h, lib/avcodec/smc.c, lib/avcodec/snow.c,
+	lib/avcodec/sonic.c, lib/avcodec/sp5x.h, lib/avcodec/svq1.c,
+	lib/avcodec/svq1_cb.h, lib/avcodec/svq1_vlc.h, lib/avcodec/svq3.c,
+	lib/avcodec/truemotion1.c, lib/avcodec/truemotion1data.h,
+	lib/avcodec/tscc.c, lib/avcodec/ulti.c, lib/avcodec/utils.c,
+	lib/avcodec/vc9.c, lib/avcodec/vc9data.h, lib/avcodec/vcr1.c,
+	lib/avcodec/vmdav.c, lib/avcodec/vorbis.c, lib/avcodec/vp3.c,
+	lib/avcodec/vp3data.h, lib/avcodec/vp3dsp.c,
+	lib/avcodec/vqavideo.c, lib/avcodec/wmadata.h,
+	lib/avcodec/wmadec.c, lib/avcodec/wmv2.c, lib/avcodec/wnv1.c,
+	lib/avcodec/ws-snd1.c, lib/avcodec/xan.c, lib/avcodec/xl.c,
+	lib/avcodec/xvmcvideo.c: Updated.
+
+	* lib/avcodec/bmp.c, lib/avcodec/config.h, lib/avcodec/cook.c,
+	lib/avcodec/cookdata.h, lib/avcodec/dvdsubenc.c,
+	lib/avcodec/opt.c, lib/avcodec/opt.h, lib/avcodec/qdm2.c,
+	lib/avcodec/qdm2data.h, lib/avcodec/truemotion2.c,
+	lib/avutil/Makefile.am, lib/avutil/avutil.h, lib/avutil/bswap.h,
+	lib/avutil/common.h, lib/avutil/eval.c, lib/avutil/integer.c,
+	lib/avutil/integer.h, lib/avutil/intfloat_readwrite.c,
+	lib/avutil/intfloat_readwrite.h, lib/avutil/mathematics.c,
+	lib/avutil/mathematics.h, lib/avutil/rational.c,
+	lib/avutil/rational.h: New files.
+
+	* configure.in: DMO depends on dllloader.  Added lib/avutil.
+
+	* src/enfle.c, plugins/player/generic/generic.c: Fix a warning.
+
+	* plugins/demultiplexer/asf/asf.c,
+	plugins/demultiplexer/avi/avi.c, plugins/demultiplexer/mp3/mp3.c,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/demultiplexer/ogg/ogg.c,
+	plugins/player/avifile/avifile.cpp,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpglib/mpglib.c: Use return instead of
+	pthread_exit().
+
+	* plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/avcodec.c: libavcodec now needs
+	libavutil.
+
+	* plugins/audio/alsa/alsa.c: Don't need #define
+	ALSA_PCM_NEW_HW_PARAMS_API any more.  The version string now has
+	the version string of the alsa library.
+
+	* lib/enfle/audiodecoder.c: Fixed typo.
+
+	* lib/Makefile.am: Added avutil.
+
+2005-11-26  Hiroshi Takekawa  <sian@fennel.org>
+
+	* config.guess, config.sub, ltmain.sh: Updated.
+
 2005-10-01  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/loader/bmp/bmp.c: Support bpp 16 bmp.
