@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2005 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Oct  2 03:11:56 2005.
-dnl $Id: configure.in,v 1.174 2005/10/01 18:12:02 sian Exp $
+dnl Last Modified: Tue Dec  6 21:54:47 2005.
+dnl $Id: configure.in,v 1.175 2005/12/27 14:45:45 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT([enfle],[20051002],[sian@big.or.jp])
+AC_INIT([enfle],[20051201],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -568,16 +568,20 @@ if test "${enable_spi-set}" = "set"; then
 elif test "$enable_spi" = yes; then
   AC_DEFINE(USE_SPI, 1, [Define if you want susie plugin support.])
 fi
-AM_CONDITIONAL(USE_SPI, test "$enable_spi" = "yes")
 
 dnl dmo support
 AC_ARG_ENABLE(dmo,
-        [  --enable-dmo            dmo support(i386 or later required).])
+        [  --enable-dmo            dmo support(implies spi, i386 or later required).])
 if test "${enable_dmo-set}" = "set"; then
   enable_dmo=no
 elif test "$enable_dmo" = yes; then
   AC_DEFINE(USE_DMO, 1, [Define if you want dmo support.])
+  dnl dmo depends on spi's dll loader
+  enable_spi=yes
+  AC_DEFINE(USE_SPI, 1, [Define if you want susie plugin support.])
 fi
+
+AM_CONDITIONAL(USE_SPI, test "$enable_spi" = "yes")
 AM_CONDITIONAL(USE_DMO, test "$enable_dmo" = "yes")
 
 dnl iconv needed for spi support(LoadString or so)
@@ -824,6 +828,7 @@ AC_CONFIG_FILES([
   lib/Makefile
    lib/X11/Makefile
    lib/avcodec/Makefile
+   lib/avutil/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
    lib/j2k/Makefile
