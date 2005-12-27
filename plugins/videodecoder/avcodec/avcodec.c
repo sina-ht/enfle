@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 02:41:57 2005.
- * $Id: avcodec.c,v 1.14 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Sun Nov 27 00:15:02 2005.
+ * $Id: avcodec.c,v 1.15 2005/12/27 14:42:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@
 #include <pthread.h>
 
 #include "enfle/videodecoder-plugin.h"
+#include "avutil/common.h"
 #include "avcodec/avcodec.h"
 #include "utils/libstring.h"
 
