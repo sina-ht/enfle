@@ -18,36 +18,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
+
 /**
  * @file utils.c
  * utils.
  */
- 
+
 #include "avcodec.h"
 #include "dsputil.h"
 #include "mpegvideo.h"
 #include "integer.h"
+#include "opt.h"
 #include <stdarg.h>
 #include <limits.h>
-
-const uint8_t ff_sqrt_tab[128]={
-        0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-        8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-        9, 9, 9, 9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,11,11,11,11,11,11,11
-};
-
-const uint8_t ff_log2_tab[256]={
-        0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
-        5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
-        6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-        6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
-};
+#include <float.h>
 
 const uint8_t ff_reverse[256]={
 0x00,0x80,0x40,0xC0,0x20,0xA0,0x60,0xE0,0x10,0x90,0x50,0xD0,0x30,0xB0,0x70,0xF0,
@@ -68,12 +52,14 @@ const uint8_t ff_reverse[256]={
 0x0F,0x8F,0x4F,0xCF,0x2F,0xAF,0x6F,0xEF,0x1F,0x9F,0x5F,0xDF,0x3F,0xBF,0x7F,0xFF,
 };
 
+static int volatile entangled_thread_counter=0;
+
 void avcodec_default_free_buffers(AVCodecContext *s);
 
 void *av_mallocz(unsigned int size)
 {
     void *ptr;
-    
+
     ptr = av_malloc(size);
     if (!ptr)
         return NULL;
@@ -98,9 +84,9 @@ char *av_strdup(const char *s)
  */
 void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size)
 {
-    if(min_size < *size) 
+    if(min_size < *size)
         return ptr;
-    
+
     *size= FFMAX(17*min_size/16 + 32, min_size);
 
     return av_realloc(ptr, *size);
@@ -118,7 +104,7 @@ void *av_mallocz_static(unsigned int size)
 {
     void *ptr = av_mallocz(size);
 
-    if(ptr){ 
+    if(ptr){
         array_static =av_fast_realloc(array_static, &allocated_static, sizeof(void*)*(last_static+1));
         if(!array_static)
             return NULL;
@@ -157,6 +143,17 @@ void av_free_static(void)
         av_freep(&array_static[--last_static]);
     }
     av_freep(&array_static);
+}
+
+/**
+ * Call av_free_static automatically before it's too late
+ */
+
+static void do_free() __attribute__ ((destructor));
+
+static void do_free()
+{
+    av_free_static();
 }
 
 /**
@@ -201,9 +198,9 @@ typedef struct InternalBuffer{
 #define ALIGN(x, a) (((x)+(a)-1)&~((a)-1))
 
 void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
-    int w_align= 1;    
-    int h_align= 1;    
-    
+    int w_align= 1;
+    int h_align= 1;
+
     switch(s->pix_fmt){
     case PIX_FMT_YUV420P:
     case PIX_FMT_YUV422:
@@ -257,7 +254,7 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
 int avcodec_check_dimensions(void *av_log_ctx, unsigned int w, unsigned int h){
     if((int)w>0 && (int)h>0 && (w+128)*(uint64_t)(h+128) < INT_MAX/4)
         return 0;
-    
+
     av_log(av_log_ctx, AV_LOG_ERROR, "picture size invalid (%ux%u)\n", w, h);
     return -1;
 }
@@ -280,64 +277,65 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
     }
 #if 0
     s->internal_buffer= av_fast_realloc(
-        s->internal_buffer, 
-        &s->internal_buffer_size, 
+        s->internal_buffer,
+        &s->internal_buffer_size,
         sizeof(InternalBuffer)*FFMAX(99,  s->internal_buffer_count+1)/*FIXME*/
         );
 #endif
-     
+
     buf= &((InternalBuffer*)s->internal_buffer)[s->internal_buffer_count];
     picture_number= &(((InternalBuffer*)s->internal_buffer)[INTERNAL_BUFFER_SIZE-1]).last_pic_num; //FIXME ugly hack
     (*picture_number)++;
-    
+
     if(buf->base[0]){
         pic->age= *picture_number - buf->last_pic_num;
         buf->last_pic_num= *picture_number;
     }else{
         int h_chroma_shift, v_chroma_shift;
-        int pixel_size;
-        
+        int pixel_size, size[3];
+        AVPicture picture;
+
         avcodec_get_chroma_sub_sample(s->pix_fmt, &h_chroma_shift, &v_chroma_shift);
-        
-        switch(s->pix_fmt){
-        case PIX_FMT_RGB555:
-        case PIX_FMT_RGB565:
-        case PIX_FMT_YUV422:
-        case PIX_FMT_UYVY422:
-            pixel_size=2;
-            break;
-        case PIX_FMT_RGB24:
-        case PIX_FMT_BGR24:
-            pixel_size=3;
-            break;
-        case PIX_FMT_RGBA32:
-            pixel_size=4;
-            break;
-        default:
-            pixel_size=1;
-        }
 
         avcodec_align_dimensions(s, &w, &h);
-            
+
         if(!(s->flags&CODEC_FLAG_EMU_EDGE)){
             w+= EDGE_WIDTH*2;
             h+= EDGE_WIDTH*2;
         }
-        
-        buf->last_pic_num= -256*256*256*64;
+        avpicture_fill(&picture, NULL, s->pix_fmt, w, h);
+        pixel_size= picture.linesize[0]*8 / w;
+//av_log(NULL, AV_LOG_ERROR, "%d %d %d %d\n", (int)picture.data[1], w, h, s->pix_fmt);
+        assert(pixel_size>=1);
+            //FIXME next ensures that linesize= 2^x uvlinesize, thats needed because some MC code assumes it
+        if(pixel_size == 3*8)
+            w= ALIGN(w, STRIDE_ALIGN<<h_chroma_shift);
+        else
+            w= ALIGN(pixel_size*w, STRIDE_ALIGN<<(h_chroma_shift+3)) / pixel_size;
+        size[1] = avpicture_fill(&picture, NULL, s->pix_fmt, w, h);
+        size[0] = picture.linesize[0] * h;
+        size[1] -= size[0];
+        if(picture.data[2])
+            size[1]= size[2]= size[1]/2;
+        else
+            size[2]= 0;
 
-        for(i=0; i<3; i++){
+        buf->last_pic_num= -256*256*256*64;
+        memset(buf->base, 0, sizeof(buf->base));
+        memset(buf->data, 0, sizeof(buf->data));
+
+        for(i=0; i<3 && size[i]; i++){
             const int h_shift= i==0 ? 0 : h_chroma_shift;
             const int v_shift= i==0 ? 0 : v_chroma_shift;
 
-            //FIXME next ensures that linesize= 2^x uvlinesize, thats needed because some MC code assumes it
-            buf->linesize[i]= ALIGN(pixel_size*w>>h_shift, STRIDE_ALIGN<<(h_chroma_shift-h_shift)); 
+            buf->linesize[i]= picture.linesize[i];
 
-            buf->base[i]= av_malloc((buf->linesize[i]*h>>v_shift)+16); //FIXME 16
+            buf->base[i]= av_malloc(size[i]+16); //FIXME 16
             if(buf->base[i]==NULL) return -1;
-            memset(buf->base[i], 128, buf->linesize[i]*h>>v_shift);
-        
-            if(s->flags&CODEC_FLAG_EMU_EDGE)
+            memset(buf->base[i], 128, size[i]);
+
+            // no edge if EDEG EMU or not planar YUV, we check for PAL8 redundantly to protect against a exploitable bug regression ...
+            if((s->flags&CODEC_FLAG_EMU_EDGE) || (s->pix_fmt == PIX_FMT_PAL8) || !size[2])
                 buf->data[i] = buf->base[i];
             else
                 buf->data[i] = buf->base[i] + ALIGN((buf->linesize[i]*EDGE_WIDTH>>v_shift) + (EDGE_WIDTH>>h_shift), STRIDE_ALIGN);
@@ -434,12 +432,289 @@ static const char* context_to_name(void* ptr) {
     AVCodecContext *avc= ptr;
 
     if(avc && avc->codec && avc->codec->name)
-        return avc->codec->name; 
+        return avc->codec->name;
     else
         return "NULL";
 }
 
-static AVClass av_codec_context_class = { "AVCodecContext", context_to_name };
+#define OFFSET(x) (int)&((AVCodecContext*)0)->x
+#define DEFAULT 0 //should be NAN but it doesnt work as its not a constant in glibc as required by ANSI/ISO C
+//these names are too long to be readable
+#define V AV_OPT_FLAG_VIDEO_PARAM
+#define A AV_OPT_FLAG_AUDIO_PARAM
+#define S AV_OPT_FLAG_SUBTITLE_PARAM
+#define E AV_OPT_FLAG_ENCODING_PARAM
+#define D AV_OPT_FLAG_DECODING_PARAM
+
+static AVOption options[]={
+{"bit_rate", NULL, OFFSET(bit_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|A|E},
+{"bit_rate_tolerance", NULL, OFFSET(bit_rate_tolerance), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"flags", NULL, OFFSET(flags), FF_OPT_TYPE_FLAGS, DEFAULT, INT_MIN, INT_MAX, V|A|E|D, "flags"},
+{"mv4", "use four motion vector by macroblock (mpeg4)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_4MV, INT_MIN, INT_MAX, V|E, "flags"},
+{"obmc", "use overlapped block motion compensation (h263+)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_OBMC, INT_MIN, INT_MAX, V|E, "flags"},
+{"qpel", "use 1/4 pel motion compensation", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_QPEL, INT_MIN, INT_MAX, V|E, "flags"},
+{"loop", "use loop filter", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_LOOP_FILTER, INT_MIN, INT_MAX, V|E, "flags"},
+{"qscale", "use fixed qscale", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_QSCALE, INT_MIN, INT_MAX, 0, "flags"},
+{"gmc", "use gmc", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_GMC, INT_MIN, INT_MAX, V|E, "flags"},
+{"mv0", "always try a mb with mv=<0,0>", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_MV0, INT_MIN, INT_MAX, V|E, "flags"},
+{"part", "use data partitioning", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_PART, INT_MIN, INT_MAX, V|E, "flags"},
+{"input_preserved", NULL, 0, FF_OPT_TYPE_CONST, CODEC_FLAG_INPUT_PRESERVED, INT_MIN, INT_MAX, 0, "flags"},
+{"pass1", "use internal 2pass ratecontrol in first  pass mode", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_PASS1, INT_MIN, INT_MAX, 0, "flags"},
+{"pass2", "use internal 2pass ratecontrol in second pass mode", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_PASS2, INT_MIN, INT_MAX, 0, "flags"},
+{"extern_huff", "use external huffman table (for mjpeg)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_EXTERN_HUFF, INT_MIN, INT_MAX, 0, "flags"},
+{"gray", "only decode/encode grayscale", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_GRAY, INT_MIN, INT_MAX, V|E|D, "flags"},
+{"emu_edge", "don't draw edges", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_EMU_EDGE, INT_MIN, INT_MAX, 0, "flags"},
+{"psnr", "error[?] variables will be set during encoding", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_PSNR, INT_MIN, INT_MAX, V|E, "flags"},
+{"truncated", NULL, 0, FF_OPT_TYPE_CONST, CODEC_FLAG_TRUNCATED, INT_MIN, INT_MAX, 0, "flags"},
+{"naq", "normalize adaptive quantization", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_NORMALIZE_AQP, INT_MIN, INT_MAX, V|E, "flags"},
+{"ildct", "use interlaced dct", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_INTERLACED_DCT, INT_MIN, INT_MAX, V|E, "flags"},
+{"low_delay", "force low delay", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_LOW_DELAY, INT_MIN, INT_MAX, V|D, "flags"},
+{"alt", "enable alternate scantable (mpeg2/mpeg4)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_ALT_SCAN, INT_MIN, INT_MAX, V|E, "flags"},
+{"trell", "use trellis quantization", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_TRELLIS_QUANT, INT_MIN, INT_MAX, V|E, "flags"},
+{"global_header", "place global headers in extradata instead of every keyframe", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_GLOBAL_HEADER, INT_MIN, INT_MAX, 0, "flags"},
+{"bitexact", "use only bitexact stuff (except (i)dct)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_BITEXACT, INT_MIN, INT_MAX, A|V|S|D|E, "flags"},
+{"aic", "h263 advanced intra coding / mpeg4 ac prediction", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_AC_PRED, INT_MIN, INT_MAX, V|E, "flags"},
+{"umv", "use unlimited motion vectors", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_H263P_UMV, INT_MIN, INT_MAX, V|E, "flags"},
+{"cbp", "use rate distortion optimization for cbp", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_CBP_RD, INT_MIN, INT_MAX, V|E, "flags"},
+{"qprd", "use rate distortion optimization for qp selection", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_QP_RD, INT_MIN, INT_MAX, V|E, "flags"},
+{"aiv", "h263 alternative inter vlc", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_H263P_AIV, INT_MIN, INT_MAX, V|E, "flags"},
+{"slice", NULL, 0, FF_OPT_TYPE_CONST, CODEC_FLAG_H263P_SLICE_STRUCT, INT_MIN, INT_MAX, V|E, "flags"},
+{"ilme", "interlaced motion estimation", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_INTERLACED_ME, INT_MIN, INT_MAX, V|E, "flags"},
+{"scan_offset", "will reserve space for svcd scan offset user data", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_SVCD_SCAN_OFFSET, INT_MIN, INT_MAX, V|E, "flags"},
+{"cgop", "closed gop", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_CLOSED_GOP, INT_MIN, INT_MAX, V|E, "flags"},
+{"fast", "allow non spec compliant speedup tricks", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_FAST, INT_MIN, INT_MAX, V|E, "flags2"},
+{"sgop", "strictly enforce gop size", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_STRICT_GOP, INT_MIN, INT_MAX, V|E, "flags2"},
+{"noout", "skip bitstream encoding", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_NO_OUTPUT, INT_MIN, INT_MAX, V|E, "flags2"},
+{"local_header", "place global headers at every keyframe instead of in extradata", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_LOCAL_HEADER, INT_MIN, INT_MAX, V|E, "flags2"},
+{"sub_id", NULL, OFFSET(sub_id), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"me_method", NULL, OFFSET(me_method), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "me_method"},
+{"extradata_size", NULL, OFFSET(extradata_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"time_base", NULL, OFFSET(time_base), FF_OPT_TYPE_RATIONAL, DEFAULT, INT_MIN, INT_MAX},
+{"gop_size", NULL, OFFSET(gop_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"rate_emu", NULL, OFFSET(rate_emu), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"sample_rate", NULL, OFFSET(sample_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"channels", NULL, OFFSET(channels), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"frame_size", NULL, OFFSET(frame_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"frame_number", NULL, OFFSET(frame_number), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"real_pict_num", NULL, OFFSET(real_pict_num), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"delay", NULL, OFFSET(delay), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"qcompress", NULL, OFFSET(qcompress), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"qblur", NULL, OFFSET(qblur), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"qmin", NULL, OFFSET(qmin), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"qmax", NULL, OFFSET(qmax), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"max_qdiff", NULL, OFFSET(max_qdiff), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"max_b_frames", NULL, OFFSET(max_b_frames), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"b_quant_factor", NULL, OFFSET(b_quant_factor), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"rc_strategy", NULL, OFFSET(rc_strategy), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"b_frame_strategy", NULL, OFFSET(b_frame_strategy), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"hurry_up", NULL, OFFSET(hurry_up), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|D},
+{"rtp_mode", NULL, OFFSET(rtp_mode), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"rtp_payload_size", NULL, OFFSET(rtp_payload_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"mv_bits", NULL, OFFSET(mv_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"header_bits", NULL, OFFSET(header_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"i_tex_bits", NULL, OFFSET(i_tex_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"p_tex_bits", NULL, OFFSET(p_tex_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"i_count", NULL, OFFSET(i_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"p_count", NULL, OFFSET(p_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"skip_count", NULL, OFFSET(skip_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"misc_bits", NULL, OFFSET(misc_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"frame_bits", NULL, OFFSET(frame_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"codec_tag", NULL, OFFSET(codec_tag), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"bugs", NULL, OFFSET(workaround_bugs), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|D, "bug"},
+{"autodetect", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_AUTODETECT, INT_MIN, INT_MAX, V|D, "bug"},
+{"old_msmpeg4", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_OLD_MSMPEG4, INT_MIN, INT_MAX, V|D, "bug"},
+{"xvid_ilace", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_XVID_ILACE, INT_MIN, INT_MAX, V|D, "bug"},
+{"ump4", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_UMP4, INT_MIN, INT_MAX, V|D, "bug"},
+{"no_padding", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_NO_PADDING, INT_MIN, INT_MAX, V|D, "bug"},
+{"amv", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_AMV, INT_MIN, INT_MAX, V|D, "bug"},
+{"ac_vlc", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_AC_VLC, INT_MIN, INT_MAX, V|D, "bug"},
+{"qpel_chroma", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_QPEL_CHROMA, INT_MIN, INT_MAX, V|D, "bug"},
+{"std_qpel", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_STD_QPEL, INT_MIN, INT_MAX, V|D, "bug"},
+{"qpel_chroma2", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_QPEL_CHROMA2, INT_MIN, INT_MAX, V|D, "bug"},
+{"direct_blocksize", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_DIRECT_BLOCKSIZE, INT_MIN, INT_MAX, V|D, "bug"},
+{"edge", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_EDGE, INT_MIN, INT_MAX, V|D, "bug"},
+{"hpel_chroma", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_HPEL_CHROMA, INT_MIN, INT_MAX, V|D, "bug"},
+{"dc_clip", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_DC_CLIP, INT_MIN, INT_MAX, V|D, "bug"},
+{"ms", NULL, 0, FF_OPT_TYPE_CONST, FF_BUG_MS, INT_MIN, INT_MAX, V|D, "bug"},
+{"lelim", "single coefficient elimination threshold for luminance (negative values also consider dc coefficient)", OFFSET(luma_elim_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"celim", "single coefficient elimination threshold for chrominance (negative values also consider dc coefficient)", OFFSET(chroma_elim_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"strict", NULL, OFFSET(strict_std_compliance), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "strict"},
+{"very", NULL, 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_VERY_STRICT, INT_MIN, INT_MAX, V|E, "strict"},
+{"strict", NULL, 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_STRICT, INT_MIN, INT_MAX, V|E, "strict"},
+{"normal", NULL, 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_NORMAL, INT_MIN, INT_MAX, V|E, "strict"},
+{"inofficial", NULL, 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_INOFFICIAL, INT_MIN, INT_MAX, V|E, "strict"},
+{"experimental", NULL, 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_EXPERIMENTAL, INT_MIN, INT_MAX, V|E, "strict"},
+{"b_quant_offset", NULL, OFFSET(b_quant_offset), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"er", NULL, OFFSET(error_resilience), FF_OPT_TYPE_INT, FF_ER_CAREFUL, INT_MIN, INT_MAX, V|D, "er"},
+{"careful", NULL, 0, FF_OPT_TYPE_CONST, FF_ER_CAREFUL, INT_MIN, INT_MAX, V|D, "er"},
+{"compliant", NULL, 0, FF_OPT_TYPE_CONST, FF_ER_COMPLIANT, INT_MIN, INT_MAX, V|D, "er"},
+{"aggressive", NULL, 0, FF_OPT_TYPE_CONST, FF_ER_AGGRESSIVE, INT_MIN, INT_MAX, V|D, "er"},
+{"very_aggressive", NULL, 0, FF_OPT_TYPE_CONST, FF_ER_VERY_AGGRESSIVE, INT_MIN, INT_MAX, V|D, "er"},
+{"has_b_frames", NULL, OFFSET(has_b_frames), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"block_align", NULL, OFFSET(block_align), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"parse_only", NULL, OFFSET(parse_only), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"mpeg_quant", NULL, OFFSET(mpeg_quant), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"stats_out", NULL, OFFSET(stats_out), FF_OPT_TYPE_STRING, DEFAULT, CHAR_MIN, CHAR_MAX},
+{"stats_in", NULL, OFFSET(stats_in), FF_OPT_TYPE_STRING, DEFAULT, CHAR_MIN, CHAR_MAX},
+{"rc_qsquish", NULL, OFFSET(rc_qsquish), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"rc_qmod_amp", NULL, OFFSET(rc_qmod_amp), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"rc_qmod_freq", NULL, OFFSET(rc_qmod_freq), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"rc_override_count", NULL, OFFSET(rc_override_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"rc_eq", NULL, OFFSET(rc_eq), FF_OPT_TYPE_STRING, DEFAULT, CHAR_MIN, CHAR_MAX, V|E},
+{"rc_max_rate", NULL, OFFSET(rc_max_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"rc_min_rate", NULL, OFFSET(rc_min_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"rc_buffer_size", NULL, OFFSET(rc_buffer_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"rc_buf_aggressivity", NULL, OFFSET(rc_buffer_aggressivity), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"i_quant_factor", NULL, OFFSET(i_quant_factor), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"i_quant_offset", NULL, OFFSET(i_quant_offset), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"rc_initial_cplx", NULL, OFFSET(rc_initial_cplx), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"dct", NULL, OFFSET(dct_algo), FF_OPT_TYPE_INT, DEFAULT, 0, INT_MAX, V|E, "dct"},
+{"auto", NULL, 0, FF_OPT_TYPE_CONST, FF_DCT_AUTO, INT_MIN, INT_MAX, V|E, "dct"},
+{"fastint", NULL, 0, FF_OPT_TYPE_CONST, FF_DCT_FASTINT, INT_MIN, INT_MAX, V|E, "dct"},
+{"int", NULL, 0, FF_OPT_TYPE_CONST, FF_DCT_INT, INT_MIN, INT_MAX, V|E, "dct"},
+{"mmx", NULL, 0, FF_OPT_TYPE_CONST, FF_DCT_MMX, INT_MIN, INT_MAX, V|E, "dct"},
+{"mlib", NULL, 0, FF_OPT_TYPE_CONST, FF_DCT_MLIB, INT_MIN, INT_MAX, V|E, "dct"},
+{"altivec", NULL, 0, FF_OPT_TYPE_CONST, FF_DCT_ALTIVEC, INT_MIN, INT_MAX, V|E, "dct"},
+{"faan", NULL, 0, FF_OPT_TYPE_CONST, FF_DCT_FAAN, INT_MIN, INT_MAX, V|E, "dct"},
+{"lumi_mask", "lumimasking", OFFSET(lumi_masking), FF_OPT_TYPE_FLOAT, 0, FLT_MIN, FLT_MAX, V|E},
+{"tcplx_mask", "temporal complexity masking", OFFSET(temporal_cplx_masking), FF_OPT_TYPE_FLOAT, 0, FLT_MIN, FLT_MAX, V|E},
+{"scplx_mask", "spatial complexity masking", OFFSET(spatial_cplx_masking), FF_OPT_TYPE_FLOAT, 0, FLT_MIN, FLT_MAX, V|E},
+{"p_mask", "inter masking", OFFSET(p_masking), FF_OPT_TYPE_FLOAT, 0, FLT_MIN, FLT_MAX, V|E},
+{"dark_mask", "darkness masking", OFFSET(dark_masking), FF_OPT_TYPE_FLOAT, 0, FLT_MIN, FLT_MAX, V|E},
+{"unused", NULL, OFFSET(unused), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"idct", NULL, OFFSET(idct_algo), FF_OPT_TYPE_INT, DEFAULT, 0, INT_MAX, V|E|D, "idct"},
+{"auto", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_AUTO, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"int", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_INT, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simple", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_SIMPLE, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simplemmx", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_SIMPLEMMX, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"libmpeg2mmx", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_LIBMPEG2MMX, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"ps2", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_PS2, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"mlib", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_MLIB, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"arm", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_ARM, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"altivec", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_ALTIVEC, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"sh4", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_SH4, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simplearm", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_SIMPLEARM, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"h264", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_H264, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"vp3", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_VP3, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"ipp", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_IPP, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"xvidmmx", NULL, 0, FF_OPT_TYPE_CONST, FF_IDCT_XVIDMMX, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"slice_count", NULL, OFFSET(slice_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"ec", NULL, OFFSET(error_concealment), FF_OPT_TYPE_FLAGS, 3, INT_MIN, INT_MAX, V|D, "ec"},
+{"guess_mvs", NULL, 0, FF_OPT_TYPE_CONST, FF_EC_GUESS_MVS, INT_MIN, INT_MAX, V|D, "ec"},
+{"deblock", NULL, 0, FF_OPT_TYPE_CONST, FF_EC_DEBLOCK, INT_MIN, INT_MAX, V|D, "ec"},
+{"bits_per_sample", NULL, OFFSET(bits_per_sample), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"pred", "prediction method", OFFSET(prediction_method), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "pred"},
+{"left", NULL, 0, FF_OPT_TYPE_CONST, FF_PRED_LEFT, INT_MIN, INT_MAX, V|E, "pred"},
+{"plane", NULL, 0, FF_OPT_TYPE_CONST, FF_PRED_PLANE, INT_MIN, INT_MAX, V|E, "pred"},
+{"median", NULL, 0, FF_OPT_TYPE_CONST, FF_PRED_MEDIAN, INT_MIN, INT_MAX, V|E, "pred"},
+{"aspect", NULL, OFFSET(sample_aspect_ratio), FF_OPT_TYPE_RATIONAL, DEFAULT, 0, 10, V|E},
+{"debug", "print specific debug info", OFFSET(debug), FF_OPT_TYPE_FLAGS, DEFAULT, 0, INT_MAX, V|A|S|E|D, "debug"},
+{"pict", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_PICT_INFO, INT_MIN, INT_MAX, V|D, "debug"},
+{"rc", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_RC, INT_MIN, INT_MAX, V|E, "debug"},
+{"bitstream", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_BITSTREAM, INT_MIN, INT_MAX, V|D, "debug"},
+{"mb_type", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_MB_TYPE, INT_MIN, INT_MAX, V|D, "debug"},
+{"qp", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_QP, INT_MIN, INT_MAX, V|D, "debug"},
+{"mv", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_MV, INT_MIN, INT_MAX, V|D, "debug"},
+{"dct_coeff", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_DCT_COEFF, INT_MIN, INT_MAX, V|D, "debug"},
+{"skip", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_SKIP, INT_MIN, INT_MAX, V|D, "debug"},
+{"startcode", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_STARTCODE, INT_MIN, INT_MAX, V|D, "debug"},
+{"pts", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_PTS, INT_MIN, INT_MAX, V|D, "debug"},
+{"er", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_ER, INT_MIN, INT_MAX, V|D, "debug"},
+{"mmco", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_MMCO, INT_MIN, INT_MAX, V|D, "debug"},
+{"bugs", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_BUGS, INT_MIN, INT_MAX, V|D, "debug"},
+{"vis_qp", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_VIS_QP, INT_MIN, INT_MAX, V|D, "debug"},
+{"vis_mb_type", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_VIS_MB_TYPE, INT_MIN, INT_MAX, V|D, "debug"},
+{"vismv", "visualize motion vectors", OFFSET(debug_mv), FF_OPT_TYPE_INT, DEFAULT, 0, INT_MAX, V|D, "debug_mv"},
+{"pf", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_VIS_MV_P_FOR, INT_MIN, INT_MAX, V|D, "debug_mv"},
+{"bf", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_VIS_MV_B_FOR, INT_MIN, INT_MAX, V|D, "debug_mv"},
+{"bb", NULL, 0, FF_OPT_TYPE_CONST, FF_DEBUG_VIS_MV_B_BACK, INT_MIN, INT_MAX, V|D, "debug_mv"},
+{"mb_qmin", NULL, OFFSET(mb_qmin), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"mb_qmax", NULL, OFFSET(mb_qmax), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"cmp", "full pel me compare function", OFFSET(me_cmp), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"subcmp", "sub pel me compare function", OFFSET(me_sub_cmp), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"mbcmp", "macroblock compare function", OFFSET(mb_cmp), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"ildctcmp", "interlaced dct compare function", OFFSET(ildct_cmp), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"dia_size", NULL, OFFSET(dia_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"last_pred", NULL, OFFSET(last_predictor_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"preme", NULL, OFFSET(pre_me), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"precmp", "pre motion estimation compare function", OFFSET(me_pre_cmp), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"sad", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_SAD, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"sse", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_SSE, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"satd", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_SATD, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"dct", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_DCT, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"psnr", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_PSNR, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"bit", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_BIT, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"rd", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_RD, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"zero", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_ZERO, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"vsad", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_VSAD, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"vsse", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_VSSE, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"nsse", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_NSSE, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"w53", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_W53, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"w97", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_W97, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"dctmax", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_DCTMAX, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"chroma", NULL, 0, FF_OPT_TYPE_CONST, FF_CMP_CHROMA, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"pre_dia_size", NULL, OFFSET(pre_dia_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"subq", "sub pel motion estimation quality", OFFSET(me_subpel_quality), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"dtg_active_format", NULL, OFFSET(dtg_active_format), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"me_range", NULL, OFFSET(me_range), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"ibias", NULL, OFFSET(intra_quant_bias), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"pbias", NULL, OFFSET(inter_quant_bias), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"color_table_id", NULL, OFFSET(color_table_id), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"internal_buffer_count", NULL, OFFSET(internal_buffer_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"global_quality", NULL, OFFSET(global_quality), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"coder", NULL, OFFSET(coder_type), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "coder"},
+{"vlc", "variable length coder / huffman coder", 0, FF_OPT_TYPE_CONST, FF_CODER_TYPE_VLC, INT_MIN, INT_MAX, V|E, "coder"},
+{"ac", "arithmetic coder", 0, FF_OPT_TYPE_CONST, FF_CODER_TYPE_AC, INT_MIN, INT_MAX, V|E, "coder"},
+{"context", "context model", OFFSET(context_model), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"slice_flags", NULL, OFFSET(slice_flags), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"xvmc_acceleration", NULL, OFFSET(xvmc_acceleration), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"mbd", NULL, OFFSET(mb_decision), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "mbd"},
+{"simple", NULL, 0, FF_OPT_TYPE_CONST, FF_MB_DECISION_SIMPLE, INT_MIN, INT_MAX, V|E, "mbd"},
+{"bits", NULL, 0, FF_OPT_TYPE_CONST, FF_MB_DECISION_BITS, INT_MIN, INT_MAX, V|E, "mbd"},
+{"rd", NULL, 0, FF_OPT_TYPE_CONST, FF_MB_DECISION_RD, INT_MIN, INT_MAX, V|E, "mbd"},
+{"stream_codec_tag", NULL, OFFSET(stream_codec_tag), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"sc_threshold", NULL, OFFSET(scenechange_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"lmin", "min lagrange factor", OFFSET(lmin), FF_OPT_TYPE_INT,  2*FF_QP2LAMBDA, 0, INT_MAX, V|E},
+{"lmax", "max lagrange factor", OFFSET(lmax), FF_OPT_TYPE_INT, 31*FF_QP2LAMBDA, 0, INT_MAX, V|E},
+{"nr", "noise reduction", OFFSET(noise_reduction), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"rc_init_occupancy", NULL, OFFSET(rc_initial_buffer_occupancy), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"inter_threshold", NULL, OFFSET(inter_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"flags2", NULL, OFFSET(flags2), FF_OPT_TYPE_FLAGS, DEFAULT, INT_MIN, INT_MAX},
+{"error_rate", NULL, OFFSET(error_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"antialias", NULL, OFFSET(antialias_algo), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|D, "aa"},
+{"auto", NULL, 0, FF_OPT_TYPE_CONST, FF_AA_AUTO, INT_MIN, INT_MAX, V|D, "aa"},
+{"fastint", NULL, 0, FF_OPT_TYPE_CONST, FF_AA_FASTINT, INT_MIN, INT_MAX, V|D, "aa"},
+{"int", NULL, 0, FF_OPT_TYPE_CONST, FF_AA_INT, INT_MIN, INT_MAX, V|D, "aa"},
+{"float", NULL, 0, FF_OPT_TYPE_CONST, FF_AA_FLOAT, INT_MIN, INT_MAX, V|D, "aa"},
+{"qns", "quantizer noise shaping", OFFSET(quantizer_noise_shaping), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"thread_count", NULL, OFFSET(thread_count), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E|D},
+{"me_threshold", "motion estimaton threshold", OFFSET(me_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"mb_threshold", NULL, OFFSET(mb_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"dc", NULL, OFFSET(intra_dc_precision), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"nssew", "nsse weight", OFFSET(nsse_weight), FF_OPT_TYPE_INT, 8, INT_MIN, INT_MAX, V|E},
+{"skip_top", NULL, OFFSET(skip_top), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|D},
+{"skip_bottom", NULL, OFFSET(skip_bottom), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|D},
+{"profile", NULL, OFFSET(profile), FF_OPT_TYPE_INT, FF_PROFILE_UNKNOWN, INT_MIN, INT_MAX, V|A|E, "profile"},
+{"unknown", NULL, 0, FF_OPT_TYPE_CONST, FF_PROFILE_UNKNOWN, INT_MIN, INT_MAX, V|A|E, "profile"},
+{"level", NULL, OFFSET(level), FF_OPT_TYPE_INT, FF_LEVEL_UNKNOWN, INT_MIN, INT_MAX, V|A|E, "level"},
+{"unknown", NULL, 0, FF_OPT_TYPE_CONST, FF_LEVEL_UNKNOWN, INT_MIN, INT_MAX, V|A|E, "level"},
+{"lowres", NULL, OFFSET(lowres), FF_OPT_TYPE_INT, 0, 0, INT_MAX, V|D},
+{"frame_skip_threshold", NULL, OFFSET(frame_skip_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"frame_skip_factor", NULL, OFFSET(frame_skip_factor), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"frame_skip_exp", NULL, OFFSET(frame_skip_exp), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"skipcmp", "frame skip compare function", OFFSET(frame_skip_cmp), FF_OPT_TYPE_INT, FF_CMP_DCTMAX, INT_MIN, INT_MAX, V|E, "cmp_func"},
+{"border_mask", NULL, OFFSET(border_masking), FF_OPT_TYPE_FLOAT, DEFAULT, FLT_MIN, FLT_MAX, V|E},
+{"mb_lmin", NULL, OFFSET(mb_lmin), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"mb_lmax", NULL, OFFSET(mb_lmax), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"me_penalty_compensation", NULL, OFFSET(me_penalty_compensation), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"bidir_refine", NULL, OFFSET(bidir_refine), FF_OPT_TYPE_INT, DEFAULT, 0, 4, V|E},
+{NULL},
+};
+
+#undef A
+#undef V
+
+static AVClass av_codec_context_class = { "AVCodecContext", context_to_name, options };
 
 void avcodec_get_context_defaults(AVCodecContext *s){
     memset(s, 0, sizeof(AVCodecContext));
@@ -478,7 +753,9 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->level= FF_LEVEL_UNKNOWN;
     s->me_penalty_compensation= 256;
     s->pix_fmt= PIX_FMT_NONE;
-    
+    s->frame_skip_cmp= FF_CMP_DCTMAX;
+    s->nsse_weight= 8;
+
     s->intra_quant_bias= FF_DEFAULT_QUANT_BIAS;
     s->inter_quant_bias= FF_DEFAULT_QUANT_BIAS;
     s->palctrl = NULL;
@@ -487,15 +764,15 @@ void avcodec_get_context_defaults(AVCodecContext *s){
 
 /**
  * allocates a AVCodecContext and set it to defaults.
- * this can be deallocated by simply calling free() 
+ * this can be deallocated by simply calling free()
  */
 AVCodecContext *avcodec_alloc_context(void){
     AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext));
-    
+
     if(avctx==NULL) return NULL;
-    
+
     avcodec_get_context_defaults(avctx);
-    
+
     return avctx;
 }
 
@@ -508,32 +785,38 @@ void avcodec_get_frame_defaults(AVFrame *pic){
 
 /**
  * allocates a AVPFrame and set it to defaults.
- * this can be deallocated by simply calling free() 
+ * this can be deallocated by simply calling free()
  */
 AVFrame *avcodec_alloc_frame(void){
     AVFrame *pic= av_malloc(sizeof(AVFrame));
-    
+
     if(pic==NULL) return NULL;
-    
+
     avcodec_get_frame_defaults(pic);
-    
+
     return pic;
 }
 
 int avcodec_open(AVCodecContext *avctx, AVCodec *codec)
 {
-    int ret;
+    int ret= -1;
+
+    entangled_thread_counter++;
+    if(entangled_thread_counter != 1){
+        av_log(avctx, AV_LOG_ERROR, "insufficient thread locking around avcodec_open/close()\n");
+        goto end;
+    }
 
     if(avctx->codec)
-        return -1;
+        goto end;
 
     avctx->codec = codec;
     avctx->codec_id = codec->id;
     avctx->frame_number = 0;
     if (codec->priv_data_size > 0) {
         avctx->priv_data = av_mallocz(codec->priv_data_size);
-        if (!avctx->priv_data) 
-            return -ENOMEM;
+        if (!avctx->priv_data)
+            goto end;
     } else {
         avctx->priv_data = NULL;
     }
@@ -545,18 +828,21 @@ int avcodec_open(AVCodecContext *avctx, AVCodec *codec)
 
     if((avctx->coded_width||avctx->coded_height) && avcodec_check_dimensions(avctx,avctx->coded_width,avctx->coded_height)){
         av_freep(&avctx->priv_data);
-        return -1;
+        goto end;
     }
 
     ret = avctx->codec->init(avctx);
     if (ret < 0) {
         av_freep(&avctx->priv_data);
-        return ret;
+        goto end;
     }
-    return 0;
+    ret=0;
+end:
+    entangled_thread_counter--;
+    return ret;
 }
 
-int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size, 
+int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
                          const short *samples)
 {
     if(buf_size < FF_MIN_BUFFER_SIZE && 0){
@@ -571,7 +857,7 @@ int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
         return 0;
 }
 
-int avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size, 
+int avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size,
                          const AVFrame *pict)
 {
     if(buf_size < FF_MIN_BUFFER_SIZE){
@@ -584,13 +870,13 @@ int avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size,
         int ret = avctx->codec->encode(avctx, buf, buf_size, (void *)pict);
         avctx->frame_number++;
         emms_c(); //needed to avoid an emms_c() call before every return;
-    
+
         return ret;
     }else
         return 0;
 }
 
-int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size, 
+int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size,
                             const AVSubtitle *sub)
 {
     int ret;
@@ -599,31 +885,31 @@ int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size,
     return ret;
 }
 
-/** 
- * decode a frame. 
+/**
+ * decode a frame.
  * @param buf bitstream buffer, must be FF_INPUT_BUFFER_PADDING_SIZE larger then the actual read bytes
  * because some optimized bitstream readers read 32 or 64 bit at once and could read over the end
  * @param buf_size the size of the buffer in bytes
  * @param got_picture_ptr zero if no frame could be decompressed, Otherwise, it is non zero
  * @return -1 if error, otherwise return the number of
- * bytes used. 
+ * bytes used.
  */
-int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture, 
+int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,
                          int *got_picture_ptr,
                          uint8_t *buf, int buf_size)
 {
     int ret;
-    
+
     *got_picture_ptr= 0;
     if((avctx->coded_width||avctx->coded_height) && avcodec_check_dimensions(avctx,avctx->coded_width,avctx->coded_height))
         return -1;
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || buf_size){
-        ret = avctx->codec->decode(avctx, picture, got_picture_ptr, 
+        ret = avctx->codec->decode(avctx, picture, got_picture_ptr,
                                 buf, buf_size);
 
         emms_c(); //needed to avoid an emms_c() call before every return;
-    
-        if (*got_picture_ptr)                           
+
+        if (*got_picture_ptr)
             avctx->frame_number++;
     }else
         ret= 0;
@@ -635,7 +921,7 @@ int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,
    *number of bytes used. If no frame could be decompressed,
    *frame_size_ptr is zero. Otherwise, it is the decompressed frame
    *size in BYTES. */
-int avcodec_decode_audio(AVCodecContext *avctx, int16_t *samples, 
+int avcodec_decode_audio(AVCodecContext *avctx, int16_t *samples,
                          int *frame_size_ptr,
                          uint8_t *buf, int buf_size)
 {
@@ -643,7 +929,7 @@ int avcodec_decode_audio(AVCodecContext *avctx, int16_t *samples,
 
     *frame_size_ptr= 0;
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || buf_size){
-        ret = avctx->codec->decode(avctx, samples, frame_size_ptr, 
+        ret = avctx->codec->decode(avctx, samples, frame_size_ptr,
                                 buf, buf_size);
         avctx->frame_number++;
     }else
@@ -661,7 +947,7 @@ int avcodec_decode_subtitle(AVCodecContext *avctx, AVSubtitle *sub,
     int ret;
 
     *got_sub_ptr = 0;
-    ret = avctx->codec->decode(avctx, sub, got_sub_ptr, 
+    ret = avctx->codec->decode(avctx, sub, got_sub_ptr,
                                (uint8_t *)buf, buf_size);
     if (*got_sub_ptr)
         avctx->frame_number++;
@@ -670,11 +956,19 @@ int avcodec_decode_subtitle(AVCodecContext *avctx, AVSubtitle *sub,
 
 int avcodec_close(AVCodecContext *avctx)
 {
+    entangled_thread_counter++;
+    if(entangled_thread_counter != 1){
+        av_log(avctx, AV_LOG_ERROR, "insufficient thread locking around avcodec_open/close()\n");
+        entangled_thread_counter--;
+        return -1;
+    }
+
     if (avctx->codec->close)
         avctx->codec->close(avctx);
     avcodec_default_free_buffers(avctx);
     av_freep(&avctx->priv_data);
     avctx->codec = NULL;
+    entangled_thread_counter--;
     return 0;
 }
 
@@ -755,12 +1049,14 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
         codec_name = enc->codec_name;
     } else {
         /* output avi tags */
-        if (enc->codec_type == CODEC_TYPE_VIDEO) {
-            snprintf(buf1, sizeof(buf1), "%c%c%c%c", 
+        if(   isprint(enc->codec_tag&0xFF) && isprint((enc->codec_tag>>8)&0xFF)
+           && isprint((enc->codec_tag>>16)&0xFF) && isprint((enc->codec_tag>>24)&0xFF)){
+            snprintf(buf1, sizeof(buf1), "%c%c%c%c / 0x%04X",
                      enc->codec_tag & 0xff,
                      (enc->codec_tag >> 8) & 0xff,
                      (enc->codec_tag >> 16) & 0xff,
-                     (enc->codec_tag >> 24) & 0xff);
+                     (enc->codec_tag >> 24) & 0xff,
+                      enc->codec_tag);
         } else {
             snprintf(buf1, sizeof(buf1), "0x%04x", enc->codec_tag);
         }
@@ -779,9 +1075,14 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
         }
         if (enc->width) {
             snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", %dx%d, %0.2f fps",
-                     enc->width, enc->height, 
-                     1/av_q2d(enc->time_base));
+                     ", %dx%d",
+                     enc->width, enc->height);
+            if(av_log_get_level() >= AV_LOG_DEBUG){
+                int g= ff_gcd(enc->time_base.num, enc->time_base.den);
+                snprintf(buf + strlen(buf), buf_size - strlen(buf),
+                     ", %d/%d",
+                     enc->time_base.num/g, enc->time_base.den/g);
+            }
         }
         if (encode) {
             snprintf(buf + strlen(buf), buf_size - strlen(buf),
@@ -813,9 +1114,22 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                      enc->sample_rate,
                      channels_str);
         }
-        
+
         /* for PCM codecs, compute bitrate directly */
         switch(enc->codec_id) {
+        case CODEC_ID_PCM_S32LE:
+        case CODEC_ID_PCM_S32BE:
+        case CODEC_ID_PCM_U32LE:
+        case CODEC_ID_PCM_U32BE:
+            bitrate = enc->sample_rate * enc->channels * 32;
+            break;
+        case CODEC_ID_PCM_S24LE:
+        case CODEC_ID_PCM_S24BE:
+        case CODEC_ID_PCM_U24LE:
+        case CODEC_ID_PCM_U24BE:
+        case CODEC_ID_PCM_S24DAUD:
+            bitrate = enc->sample_rate * enc->channels * 24;
+            break;
         case CODEC_ID_PCM_S16LE:
         case CODEC_ID_PCM_S16BE:
         case CODEC_ID_PCM_U16LE:
@@ -854,7 +1168,7 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                      ", pass 2");
     }
     if (bitrate != 0) {
-        snprintf(buf + strlen(buf), buf_size - strlen(buf), 
+        snprintf(buf + strlen(buf), buf_size - strlen(buf),
                  ", %d kb/s", bitrate / 1000);
     }
 }
@@ -875,7 +1189,7 @@ void avcodec_init(void)
     static int inited = 0;
 
     if (inited != 0)
-	return;
+        return;
     inited = 1;
 
     dsputil_static_init();
@@ -894,7 +1208,7 @@ void avcodec_default_free_buffers(AVCodecContext *s){
     int i, j;
 
     if(s->internal_buffer==NULL) return;
-    
+
     for(i=0; i<INTERNAL_BUFFER_SIZE; i++){
         InternalBuffer *buf= &((InternalBuffer*)s->internal_buffer)[i];
         for(j=0; j<4; j++){
@@ -903,121 +1217,20 @@ void avcodec_default_free_buffers(AVCodecContext *s){
         }
     }
     av_freep(&s->internal_buffer);
-    
+
     s->internal_buffer_count=0;
 }
 
 char av_get_pict_type_char(int pict_type){
     switch(pict_type){
-    case I_TYPE: return 'I'; 
-    case P_TYPE: return 'P'; 
-    case B_TYPE: return 'B'; 
-    case S_TYPE: return 'S'; 
-    case SI_TYPE:return 'i'; 
-    case SP_TYPE:return 'p'; 
+    case I_TYPE: return 'I';
+    case P_TYPE: return 'P';
+    case B_TYPE: return 'B';
+    case S_TYPE: return 'S';
+    case SI_TYPE:return 'i';
+    case SP_TYPE:return 'p';
     default:     return '?';
     }
-}
-
-int av_reduce(int *dst_nom, int *dst_den, int64_t nom, int64_t den, int64_t max){
-    AVRational a0={0,1}, a1={1,0};
-    int sign= (nom<0) ^ (den<0);
-    int64_t gcd= ff_gcd(ABS(nom), ABS(den));
-
-    nom = ABS(nom)/gcd;
-    den = ABS(den)/gcd;
-    if(nom<=max && den<=max){
-        a1= (AVRational){nom, den};
-        den=0;
-    }
-    
-    while(den){
-        int64_t x       = nom / den;
-        int64_t next_den= nom - den*x;
-        int64_t a2n= x*a1.num + a0.num;
-        int64_t a2d= x*a1.den + a0.den;
-
-        if(a2n > max || a2d > max) break;
-
-        a0= a1;
-        a1= (AVRational){a2n, a2d};
-        nom= den;
-        den= next_den;
-    }
-    assert(ff_gcd(a1.num, a1.den) == 1);
-    
-    *dst_nom = sign ? -a1.num : a1.num;
-    *dst_den = a1.den;
-    
-    return den==0;
-}
-
-int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding rnd){
-    AVInteger ai;
-    int64_t r=0;
-    assert(c > 0);
-    assert(b >=0);
-    assert(rnd >=0 && rnd<=5 && rnd!=4);
-    
-    if(a<0 && a != INT64_MIN) return -av_rescale_rnd(-a, b, c, rnd ^ ((rnd>>1)&1)); 
-    
-    if(rnd==AV_ROUND_NEAR_INF) r= c/2;
-    else if(rnd&1)             r= c-1;
-
-    if(b<=INT_MAX && c<=INT_MAX){
-        if(a<=INT_MAX)
-            return (a * b + r)/c;
-        else
-            return a/c*b + (a%c*b + r)/c;
-    }
-    
-    ai= av_mul_i(av_int2i(a), av_int2i(b));
-    ai= av_add_i(ai, av_int2i(r));
-    
-    return av_i2int(av_div_i(ai, av_int2i(c)));
-}
-
-int64_t av_rescale(int64_t a, int64_t b, int64_t c){
-    return av_rescale_rnd(a, b, c, AV_ROUND_NEAR_INF);
-}
-
-int64_t av_rescale_q(int64_t a, AVRational bq, AVRational cq){
-    int64_t b= bq.num * (int64_t)cq.den;
-    int64_t c= cq.num * (int64_t)bq.den;
-    return av_rescale_rnd(a, b, c, AV_ROUND_NEAR_INF);
-}
-
-int64_t ff_gcd(int64_t a, int64_t b){
-    if(b) return ff_gcd(b, a%b);
-    else  return a;
-}
-
-double av_int2dbl(int64_t v){
-    if(v+v > 0xFFELLU<<52)
-        return 0.0/0.0;
-    return ldexp(((v&(1LL<<52)-1) + (1LL<<52)) * (v>>63|1), (v>>52&0x7FF)-1075);
-}
-
-float av_int2flt(int32_t v){
-    if(v+v > 0xFF000000U)
-        return 0.0/0.0;
-    return ldexp(((v&0x7FFFFF) + (1<<23)) * (v>>31|1), (v>>23&0xFF)-150);
-}
-
-int64_t av_dbl2int(double d){
-    int e;
-    if     ( !d) return 0;
-    else if(d-d) return 0x7FF0000000000000LL + ((int64_t)(d<0)<<63) + (d!=d);
-    d= frexp(d, &e);
-    return (int64_t)(d<0)<<63 | (e+1022LL)<<52 | (int64_t)((fabs(d)-0.5)*(1LL<<53));
-}
-
-int32_t av_flt2int(float d){
-    int e;
-    if     ( !d) return 0;
-    else if(d-d) return 0x7F800000 + ((d<0)<<31) + (d!=d);
-    d= frexp(d, &e);
-    return (d<0)<<31 | (e+126)<<23 | (int64_t)((fabs(d)-0.5)*(1<<24));
 }
 
 /* av_log API */
@@ -1029,15 +1242,15 @@ static void av_log_default_callback(void* ptr, int level, const char* fmt, va_li
     static int print_prefix=1;
     AVClass* avc= ptr ? *(AVClass**)ptr : NULL;
     if(level>av_log_level)
-	return;
+        return;
 #undef fprintf
     if(print_prefix && avc) {
-	    fprintf(stderr, "[%s @ %p]", avc->item_name(ptr), avc);
+            fprintf(stderr, "[%s @ %p]", avc->item_name(ptr), avc);
     }
 #define fprintf please_use_av_log
-        
+
     print_prefix= strstr(fmt, "\n") != NULL;
-        
+
     vfprintf(stderr, fmt, vl);
 }
 

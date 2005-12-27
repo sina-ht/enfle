@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Jul 25 02:59:40 2005.
-# $Id: Makefile.am,v 1.32 2005/07/24 18:01:51 sian Exp $
+# Last Modified: Wed Dec 28 00:12:50 2005.
+# $Id: Makefile.am,v 1.33 2005/12/27 15:14:49 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
 endif
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
+INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir)/lib/avutil -I$(top_srcdir)/lib/avcodec -I$(top_srcdir)
 EXTRA_DIST = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c i386/mpegvideo_mmx_template.c \
@@ -79,50 +79,55 @@ endif
 
 noinst_HEADERS = \
 	ac3.h \
-	bitstream.h \
-	common.h \
-	golomb.h \
-	mpeg12data.h \
-	mpegvideo.h \
-	rational.h \
-	truemotion1data.h \
 	ac3tab.h \
-	dsputil.h \
-	h263data.h \
-	mpeg4data.h \
-	msmpeg4data.h \
-	simple_idct.h \
-	vp3data.h \
 	avcodec.h \
-	dvdata.h \
-	h261data.h \
-	h264data.h \
-	indeo2data.h \
-	mpegaudio.h \
-	oggvorbis.h \
-	sp5x.h \
-	wmadata.h \
-	bswap.h \
-	faandct.h \
-	imgconvert_template.h \
-	mpegaudiodectab.h \
-	ra144.h \
-	svq1_cb.h \
+	bitstream.h \
 	cabac.h \
+	config.h \
+	cookdata.h \
+	dsputil.h \
+	dvdata.h \
+	faandct.h \
+	golomb.h \
+	h261data.h \
+	h263data.h \
+	h264data.h \
+	imgconvert_template.h \
+	indeo2data.h \
 	indeo3data.h \
+	mpeg12data.h \
+	mpeg4data.h \
+	mpegaudio.h \
+	mpegaudiodectab.h \
 	mpegaudiotab.h \
+	mpegvideo.h \
+	msmpeg4data.h \
+	opt.h \
+	qdm2data.h \
+	ra144.h \
 	ra288.h \
-	svq1_vlc.h \
-	integer.h \
-	ulti_cb.h \
 	rangecoder.h \
+	simple_idct.h \
+	sp5x.h \
+	svq1_cb.h \
+	svq1_vlc.h \
+	truemotion1data.h \
+	ulti_cb.h \
 	vc9data.h \
-	vorbis.h
+	vorbis.h \
+	vp3data.h \
+	wmadata.h
 
-#	a52dec.c	ac3dec.c	ac3enc.c
-#	amr.c		faac.c		faad.c
-#	mp3lameaudio.c	dtsdec.c	xvidff.c
-#	x264.c		libgsm.c
+# a52dec.c ac3dec.c ac3enc.c amr.c apiexample.c
+# beosthread.c
+# dct-test.c dtsdec.c
+# faac.c faad.c fft-test.c
+# libgsm.c
+# mdec.c motion_est_template.c motion_test.c mp3lameaudio.c
+# svq3.c
+# w32thread.c
+# wmv2.c
+# x264.c xvidff.c
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -133,9 +138,11 @@ libavcodec_la_SOURCES = \
 	allcodecs.c \
 	asv1.c \
 	bitstream.c \
+	bmp.c \
 	cabac.c \
 	cinepak.c \
 	cljr.c \
+	cook.c \
 	cyuv.c \
 	dpcm.c \
 	dsputil.c \
@@ -143,6 +150,7 @@ libavcodec_la_SOURCES = \
 	dvbsub.c \
 	dvbsubdec.c \
 	dvdsub.c \
+	dvdsubenc.c \
 	error_resilience.c \
 	eval.c \
 	faandct.c \
@@ -165,7 +173,6 @@ libavcodec_la_SOURCES = \
 	imgresample.c \
 	indeo2.c \
 	indeo3.c \
-	integer.c \
 	interplayvideo.c \
 	jfdctfst.c \
 	jfdctint.c \
@@ -186,12 +193,13 @@ libavcodec_la_SOURCES = \
 	msvideo1.c \
 	oggtheora.c \
 	oggvorbis.c \
-	opts.c \
+	opt.c \
 	parser.c \
 	pcm.c \
 	png.c \
 	pnm.c \
 	pthread.c \
+	qdm2.c \
 	qdrw.c \
 	qpeg.c \
 	qtrle.c \
@@ -199,7 +207,6 @@ libavcodec_la_SOURCES = \
 	ra288.c \
 	rangecoder.c \
 	ratecontrol.c \
-	rational.c \
 	raw.c \
 	resample.c \
 	resample2.c \
@@ -213,6 +220,7 @@ libavcodec_la_SOURCES = \
 	sonic.c \
 	svq1.c \
 	truemotion1.c \
+	truemotion2.c \
 	tscc.c \
 	ulti.c \
 	utils.c \

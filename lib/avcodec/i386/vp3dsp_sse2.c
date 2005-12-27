@@ -36,21 +36,21 @@ static const unsigned short __align16 SSE2_dequant_const[] =
 };
 
 static const unsigned int __align16 eight_data[] =
-{ 
-    0x00080008, 
+{
     0x00080008,
-    0x00080008, 
-    0x00080008 
-}; 
+    0x00080008,
+    0x00080008,
+    0x00080008
+};
 
 static const unsigned short __align16 SSE2_idct_data[7 * 8] =
 {
-    64277,64277,64277,64277,64277,64277,64277,64277, 
-    60547,60547,60547,60547,60547,60547,60547,60547, 
-    54491,54491,54491,54491,54491,54491,54491,54491, 
-    46341,46341,46341,46341,46341,46341,46341,46341, 
-    36410,36410,36410,36410,36410,36410,36410,36410, 
-    25080,25080,25080,25080,25080,25080,25080,25080, 
+    64277,64277,64277,64277,64277,64277,64277,64277,
+    60547,60547,60547,60547,60547,60547,60547,60547,
+    54491,54491,54491,54491,54491,54491,54491,54491,
+    46341,46341,46341,46341,46341,46341,46341,46341,
+    36410,36410,36410,36410,36410,36410,36410,36410,
+    25080,25080,25080,25080,25080,25080,25080,25080,
     12785,12785,12785,12785,12785,12785,12785,12785
 };
 
@@ -799,7 +799,6 @@ static const unsigned short __align16 SSE2_idct_data[7 * 8] =
 void ff_vp3_idct_sse2(int16_t *input_data)
 {
     unsigned char *input_bytes = (unsigned char *)input_data;
-    unsigned char *dequant_const_bytes = (unsigned char *)SSE2_dequant_const;
     unsigned char *output_data_bytes = (unsigned char *)input_data;
     unsigned char *idct_data_bytes = (unsigned char *)SSE2_idct_data;
     unsigned char *Eight = (unsigned char *)eight_data;
@@ -821,6 +820,6 @@ void ff_vp3_idct_sse2(int16_t *input_data)
     SSE2_Row_IDCT();
 
     SSE2_Transpose();
-        
+
     SSE2_Column_IDCT();
 }

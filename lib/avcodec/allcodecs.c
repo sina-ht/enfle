@@ -28,14 +28,14 @@
    formats you want to support */
 
 /**
- * simple call to register all the codecs. 
+ * simple call to register all the codecs.
  */
 void avcodec_register_all(void)
 {
     static int inited = 0;
-    
+
     if (inited != 0)
-	return;
+        return;
     inited = 1;
 
     /* encoders */
@@ -131,6 +131,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_LJPEG_ENCODER
     register_avcodec(&ljpeg_encoder);
 #endif //CONFIG_LJPEG_ENCODER
+#ifdef CONFIG_JPEGLS_ENCODER
+    register_avcodec(&jpegls_encoder);
+#endif //CONFIG_JPEGLS_ENCODER
 #ifdef CONFIG_ZLIB
 #ifdef CONFIG_PNG_ENCODER
     register_avcodec(&png_encoder);
@@ -189,13 +192,10 @@ void avcodec_register_all(void)
 #ifdef CONFIG_LIBGSM
     register_avcodec(&libgsm_encoder);
 #endif //CONFIG_LIBGSM
-#endif /* CONFIG_ENCODERS */
 #ifdef CONFIG_RAWVIDEO_ENCODER
     register_avcodec(&rawvideo_encoder);
 #endif //CONFIG_RAWVIDEO_ENCODER
-#ifdef CONFIG_RAWVIDEO_DECODER
-    register_avcodec(&rawvideo_decoder);
-#endif //CONFIG_RAWVIDEO_DECODER
+#endif /* CONFIG_ENCODERS */
 
     /* decoders */
 #ifdef CONFIG_DECODERS
@@ -424,6 +424,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_TRUEMOTION1_DECODER
     register_avcodec(&truemotion1_decoder);
 #endif //CONFIG_TRUEMOTION1_DECODER
+#ifdef CONFIG_TRUEMOTION2_DECODER
+    register_avcodec(&truemotion2_decoder);
+#endif //CONFIG_TRUEMOTION2_DECODER
 #ifdef CONFIG_VMDVIDEO_DECODER
     register_avcodec(&vmdvideo_decoder);
 #endif //CONFIG_VMDVIDEO_DECODER
@@ -488,6 +491,15 @@ void avcodec_register_all(void)
 #ifdef CONFIG_LIBGSM
     register_avcodec(&libgsm_decoder);
 #endif //CONFIG_LIBGSM
+#ifdef CONFIG_QDM2_DECODER
+    register_avcodec(&qdm2_decoder);
+#endif //CONFIG_QDM2_DECODER
+#ifdef CONFIG_COOK_DECODER
+    register_avcodec(&cook_decoder);
+#endif //CONFIG_COOK_DECODER
+#ifdef CONFIG_RAWVIDEO_DECODER
+    register_avcodec(&rawvideo_decoder);
+#endif //CONFIG_RAWVIDEO_DECODER
 #endif /* CONFIG_DECODERS */
 
 #ifdef AMR_NB
@@ -512,18 +524,32 @@ void avcodec_register_all(void)
 #endif //CONFIG_ENCODERS
 #endif /* AMR_WB */
 
-    /* pcm codecs */
-
-#ifdef CONFIG_ENCODERS
-#define PCM_CODEC(id, name) \
-    register_avcodec(& name ## _encoder); \
-    register_avcodec(& name ## _decoder); \
-
-#else
-#define PCM_CODEC(id, name) \
-    register_avcodec(& name ## _decoder);
+#ifdef CONFIG_BMP_DECODER
+    register_avcodec(&bmp_decoder);
 #endif
 
+    /* pcm codecs */
+#if defined (CONFIG_ENCODERS) && defined (CONFIG_DECODERS)
+    #define PCM_CODEC(id, name) \
+        register_avcodec(& name ## _encoder); \
+        register_avcodec(& name ## _decoder);
+#elif defined (CONFIG_ENCODERS)
+    #define PCM_CODEC(id, name) \
+        register_avcodec(& name ## _encoder);
+#elif defined (CONFIG_DECODERS)
+    #define PCM_CODEC(id, name) \
+        register_avcodec(& name ## _decoder);
+#endif
+
+PCM_CODEC(CODEC_ID_PCM_S32LE, pcm_s32le);
+PCM_CODEC(CODEC_ID_PCM_S32BE, pcm_s32be);
+PCM_CODEC(CODEC_ID_PCM_U32LE, pcm_u32le);
+PCM_CODEC(CODEC_ID_PCM_U32BE, pcm_u32be);
+PCM_CODEC(CODEC_ID_PCM_S24LE, pcm_s24le);
+PCM_CODEC(CODEC_ID_PCM_S24BE, pcm_s24be);
+PCM_CODEC(CODEC_ID_PCM_U24LE, pcm_u24le);
+PCM_CODEC(CODEC_ID_PCM_U24BE, pcm_u24be);
+PCM_CODEC(CODEC_ID_PCM_S24DAUD, pcm_s24daud);
 PCM_CODEC(CODEC_ID_PCM_S16LE, pcm_s16le);
 PCM_CODEC(CODEC_ID_PCM_S16BE, pcm_s16be);
 PCM_CODEC(CODEC_ID_PCM_U16LE, pcm_u16le);
@@ -549,15 +575,24 @@ PCM_CODEC(CODEC_ID_ADPCM_G726, adpcm_g726);
 PCM_CODEC(CODEC_ID_ADPCM_CT, adpcm_ct);
 PCM_CODEC(CODEC_ID_ADPCM_SWF, adpcm_swf);
 PCM_CODEC(CODEC_ID_ADPCM_YAMAHA, adpcm_yamaha);
-
 #undef PCM_CODEC
 
-    /* subtitles */ 
+    /* subtitles */
+#ifdef CONFIG_DVDSUB_DECODER
     register_avcodec(&dvdsub_decoder);
-    register_avcodec(&dvbsub_encoder);
-    register_avcodec(&dvbsub_decoder);
+#endif
+#ifdef CONFIG_DVDSUB_ENCODER
+    register_avcodec(&dvdsub_encoder);
+#endif
 
-    /* parsers */ 
+#ifdef CONFIG_DVBSUB_DECODER
+    register_avcodec(&dvbsub_decoder);
+#endif
+#ifdef CONFIG_DVBSUB_ENCODER
+    register_avcodec(&dvbsub_encoder);
+#endif
+
+    /* parsers */
     av_register_codec_parser(&mpegvideo_parser);
     av_register_codec_parser(&mpeg4video_parser);
 #if defined(CONFIG_H261_DECODER) || defined(CONFIG_H261_ENCODER)
@@ -574,7 +609,12 @@ PCM_CODEC(CODEC_ID_ADPCM_YAMAHA, adpcm_yamaha);
 #ifdef CONFIG_AC3
     av_register_codec_parser(&ac3_parser);
 #endif
+
+#ifdef CONFIG_DVDSUB_DECODER
     av_register_codec_parser(&dvdsub_parser);
+#endif
+#ifdef CONFIG_DVBSUB_DECODER
     av_register_codec_parser(&dvbsub_parser);
+#endif
 }
 
