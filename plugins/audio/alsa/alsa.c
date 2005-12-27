@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May  3 09:32:24 2005.
- * $Id: alsa.c,v 1.15 2005/05/03 01:08:30 sian Exp $
+ * Last Modified: Sat Dec 24 21:14:47 2005.
+ * $Id: alsa.c,v 1.16 2005/12/27 14:41:41 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -24,7 +24,6 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <errno.h>
-#define ALSA_PCM_NEW_HW_PARAMS_API
 #include <alsa/asoundlib.h>
 
 #define REQUIRE_UNISTD_H
@@ -33,6 +32,7 @@
 #include "common.h"
 
 #include "enfle/audio-plugin.h"
+#include "utils/libstring.h"
 
 static AudioDevice *open_device(void *, Config *);
 static int set_params(AudioDevice *, AudioFormat *, int *, unsigned int *);
@@ -41,12 +41,13 @@ static int bytes_written(AudioDevice *);
 static int sync_device(AudioDevice *);
 static int close_device(AudioDevice *);
 
+#define AUDIO_ALSA_PLUGIN_DESCRIPTION "ALSA Audio plugin version 0.2.1"
+
 static AudioPlugin plugin = {
   .type = ENFLE_PLUGIN_AUDIO,
   .name = "ALSA",
-  .description = "ALSA Audio plugin version 0.2.1",
   .author = "Hiroshi Takekawa",
-
+  .description = NULL,
   .open_device = open_device,
   .set_params = set_params,
   .write_device = write_device,
@@ -65,10 +66,16 @@ typedef struct _alsa_data {
 ENFLE_PLUGIN_ENTRY(audio_alsa)
 {
   AudioPlugin *ap;
+  String *s;
 
   if ((ap = (AudioPlugin *)calloc(1, sizeof(AudioPlugin))) == NULL)
     return NULL;
   memcpy(ap, &plugin, sizeof(AudioPlugin));
+  s = string_create();
+  string_set(s, AUDIO_ALSA_PLUGIN_DESCRIPTION);
+  string_catf(s, " with alsa-lib version %s (compiled with " SND_LIB_VERSION_STR ")", snd_asoundlib_version());
+  ap->description = strdup(string_get(s));
+  string_destroy(s);
 
   return (void *)ap;
 }
