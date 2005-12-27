@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 17 18:04:38 2005.
- * $Id: enfle.c,v 1.71 2005/07/23 07:32:08 sian Exp $
+ * Last Modified: Thu Dec  1 01:22:05 2005.
+ * $Id: enfle.c,v 1.72 2005/12/27 14:44:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -615,10 +615,9 @@ main(int argc, char **argv)
 
   uidata.ap = NULL;
   if (audio_name) {
+    debug_message("Audio plugin %s\n", audio_name);
     if ((uidata.ap = enfle_plugins_get(eps, ENFLE_PLUGIN_AUDIO, audio_name)) == NULL)
       err_message("No %s Audio plugin\n", audio_name);
-    else
-      debug_message("Audio plugin %s\n", audio_name);
   } else {
     show_message("No audio plugin specified.\n");
   }

@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 02:38:38 2005.
- * $Id: generic.c,v 1.22 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Sat Dec 24 21:30:59 2005.
+ * $Id: generic.c,v 1.23 2005/12/27 14:44:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -433,7 +433,7 @@ play_audio(void *arg)
   generic_info *info = (generic_info *)m->movie_private;
   AudioDecoderStatus ads;
   void *data;
-  unsigned char *p;
+  unsigned char *p = NULL;
   unsigned int remain;
   DemuxedPacket *dp = NULL;
   FIFO_destructor destructor;
