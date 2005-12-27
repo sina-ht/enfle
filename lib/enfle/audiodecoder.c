@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Jun 29 00:29:43 2004.
- * $Id: audiodecoder.c,v 1.6 2004/06/28 15:32:53 sian Exp $
+ * Last Modified: Thu Dec  1 00:56:50 2005.
+ * $Id: audiodecoder.c,v 1.7 2005/12/27 14:40:19 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,18 +31,18 @@
 AudioDecoder *
 _audiodecoder_init(void)
 {
-  AudioDecoder *vdec;
+  AudioDecoder *adec;
 
-  if ((vdec = calloc(1, sizeof(*vdec))) == NULL)
+  if ((adec = calloc(1, sizeof(*adec))) == NULL)
     return NULL;
-  return vdec;
+  return adec;
 }
 
 void
-_audiodecoder_destroy(AudioDecoder *vdec)
+_audiodecoder_destroy(AudioDecoder *adec)
 {
-  if (vdec)
-    free(vdec);
+  if (adec)
+    free(adec);
 }
 
 const char *
