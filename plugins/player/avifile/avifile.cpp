@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 25 23:04:18 2002.
- * $Id: avifile.cpp,v 1.37 2002/08/03 05:08:39 sian Exp $
+ * Last Modified: Mon Dec 26 01:15:05 2005.
+ * $Id: avifile.cpp,v 1.38 2005/12/27 14:44:07 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -510,7 +510,7 @@ play_video(void *arg)
 
   debug_message("AviFile: play_video() exit\n");
 
-  pthread_exit((void *)PLAY_OK);
+  return (void *)PLAY_OK;
 }
 
 static void *
@@ -527,7 +527,7 @@ play_audio(void *arg)
 
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open audio device.\n");
-    pthread_exit((void *)PLAY_ERROR);
+    return (void *)PLAY_ERROR;
   }
 
   m->sampleformat_actual = m->sampleformat;
@@ -563,7 +563,7 @@ play_audio(void *arg)
 
   debug_message("AviFile: play_audio() exit\n");
 
-  pthread_exit((void *)PLAY_OK);
+  return (void *)PLAY_OK;
 }
 
 PlayerStatus

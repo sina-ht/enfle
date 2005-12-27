@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 17:10:48 2005.
- * $Id: mpeg.c,v 1.11 2005/07/08 18:14:27 sian Exp $
+ * Last Modified: Mon Dec 26 01:13:03 2005.
+ * $Id: mpeg.c,v 1.12 2005/12/27 14:44:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -358,10 +358,10 @@ demux_main(void *arg)
   int v_or_a;
 
   if (demux->running)
-    pthread_exit((void *)0);
+    return (void *)0;
 
   if ((buf = malloc(DEMULTIPLEXER_MPEG_BUFFER_SIZE)) == NULL)
-    pthread_exit((void *)0);
+    return (void *)0;
   used_size = 0;
   read_total = 0;
 
@@ -458,7 +458,7 @@ demux_main(void *arg)
       if (used_size < skip) {
 	CONTINUE_IF_RUNNING;
       }
-      debug_message_fnc("MPEG_PRIVATE_STREAM1\n");
+      debug_message_fnc("MPEG_PRIVATE_STREAM1 (AC3)\n");
       break;
     case MPEG_PADDING:
       skip = 6 + utils_get_big_uint16(buf + 4);
@@ -587,7 +587,7 @@ demux_main(void *arg)
   demux->running = 0;
   free(buf);
   debug_message_fnc("exiting.\n");
-  pthread_exit((void *)1);
+  return (void *)1;
 
  error:
   demux->running = 0;

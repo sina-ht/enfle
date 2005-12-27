@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 02:37:43 2005.
- * $Id: libmpeg3.c,v 1.47 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Mon Dec 26 01:13:59 2005.
+ * $Id: libmpeg3.c,v 1.48 2005/12/27 14:44:07 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -420,7 +420,7 @@ play_audio(void *arg)
   if ((ad = m->ap->open_device(NULL, info->c)) == NULL) {
     show_message("Cannot open device.\n");
     m->has_audio = 0;
-    pthread_exit((void *)PLAY_ERROR);
+    return (void *)PLAY_ERROR;
   }
   info->ad = ad;
 

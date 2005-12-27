@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 17:10:19 2005.
- * $Id: avi.c,v 1.9 2005/07/08 18:14:27 sian Exp $
+ * Last Modified: Mon Dec 26 01:12:24 2005.
+ * $Id: avi.c,v 1.10 2005/12/27 14:44:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -508,11 +508,11 @@ demux_main(void *arg)
 
   if (!info->rf) {
     if (!__examine(demux, 0))
-      pthread_exit((void *)0);
+      return (void *)0;
   }
 
   if ((rc = riff_chunk_create()) == NULL)
-    pthread_exit((void *)0);
+    return (void *)0;
 
   demux->running = 1;
   while (demux->running) {
@@ -584,7 +584,7 @@ demux_main(void *arg)
 
   if (riff_file_get_err(info->rf) != _RIFF_ERR_SUCCESS) {
     show_message_fnc("Abort: %s.\n", riff_file_get_errmsg(info->rf));
-    pthread_exit((void *)0);
+    return (void *)0;
   }
 
   debug_message_fnc("EOF\n");
