@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 02:42:49 2005.
- * $Id: libmpeg2.c,v 1.12 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Wed Dec 28 02:06:16 2005.
+ * $Id: libmpeg2.c,v 1.13 2005/12/27 17:13:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,6 +123,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
       //vdec->pts = m->current_frame * 1000 / m->framerate;
       {
 	const mpeg2_picture_t *mpeg2_pic = mpeg2dec_info->display_picture;
+
 	vdec->ts_base = 0;
 	if (mpeg2_pic) {
 	  vdec->ts_base = dp->ts_base;
@@ -139,7 +140,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 	    default: debug_message("?\n"); break;
 	    }
 #endif
-	  } else {
+	  } else if (vdec->pts != -1 ){
 	    int next_pts = vdec->pts + (vdec->pts - vdec->prev_pts);
 
 	    vdec->prev_pts = vdec->pts;
