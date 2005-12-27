@@ -1,10 +1,10 @@
 /*
  * libmpeg2.c -- libmpeg2 video decoder plugin
- * (C)Copyright 2004 by Hiroshi Takekawa
+ * (C)Copyright 2004-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 28 02:06:16 2005.
- * $Id: libmpeg2.c,v 1.13 2005/12/27 17:13:48 sian Exp $
+ * Last Modified: Wed Dec 28 02:14:08 2005.
+ * $Id: libmpeg2.c,v 1.14 2005/12/27 17:14:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@ DECLARE_VIDEODECODER_PLUGIN_METHODS;
 static VideoDecoderPlugin plugin = {
   .type = ENFLE_PLUGIN_VIDEODECODER,
   .name = "LibMPEG2",
-  .description = "libmpeg2 Video Decoder plugin version 0.2 with integrated libmpeg2(mpeg2dec-0.4.0)",
+  .description = "libmpeg2 Video Decoder plugin version 0.3 with integrated libmpeg2(mpeg2dec-0.4.0)",
   .author = "Hiroshi Takekawa",
 
   .query = query,
