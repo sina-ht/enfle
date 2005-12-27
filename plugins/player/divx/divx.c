@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:16:26 2004.
- * $Id: divx.c,v 1.9 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Wed Dec 28 02:17:38 2005.
+ * $Id: divx.c,v 1.10 2005/12/27 17:31:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -434,6 +434,8 @@ play_video(void *arg)
   while (m->status == _PLAY) {
     while (m->status == _PLAY && vds == VD_OK)
       vds = videodecoder_decode(info->vdec, m, info->p, NULL, 0, NULL);
+    if (m->status != _PLAY && m->status != _RESIZING)
+      goto quit;
     if (vds == VD_NEED_MORE_DATA) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
@@ -466,11 +468,7 @@ play_video(void *arg)
   if (dp)
     destructor(dp);
 
-  debug_message_fnc("videodecoder_destroy() ");
-  videodecoder_destroy(info->vdec);
-  debug_message("OK\n");
-
-  debug_message_fnc("exit\n");
+  debug_message_fnc("exit.\n");
 
   return (void *)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
 }
@@ -538,9 +536,7 @@ play_audio(void *arg)
     info->ad = NULL;
   }
 
-  debug_message_fnc("audiodecoder_destroy()... ");
-  audiodecoder_destroy(info->adec);
-  debug_message("OK. exit.\n");
+  debug_message_fnc("exit.\n");
 
   return (void *)PLAY_OK;
 }
@@ -702,12 +698,20 @@ stop_movie(Movie *m)
   if (info->vstream)
     fifo_invalidate(info->vstream);
   if (info->video_thread) {
-    info->vdec->to_render = 0;
     debug_message_fnc("waiting for joining (video).\n");
-    pthread_cond_signal(&info->vdec->update_cond);
+    if (info->vdec) {
+      pthread_mutex_lock(&info->vdec->update_mutex);
+      pthread_cond_signal(&info->vdec->update_cond);
+      pthread_mutex_unlock(&info->vdec->update_mutex);
+    }
     pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
     debug_message_fnc("joined (video).\n");
+
+    debug_message_fnc("videodecoder_destroy()... ");
+    videodecoder_destroy(info->vdec);
+    info->vdec = NULL;
+    debug_message("OK.\n");
   }
 
   if (info->astream)
@@ -717,6 +721,11 @@ stop_movie(Movie *m)
     pthread_join(info->audio_thread, NULL);
     info->audio_thread = 0;
     debug_message_fnc("joined (audio).\n");
+
+    debug_message_fnc("audiodecoder_destroy()... ");
+    audiodecoder_destroy(info->adec);
+    info->adec = NULL;
+    debug_message("OK.\n");
   }
 
   if (info->demux) {

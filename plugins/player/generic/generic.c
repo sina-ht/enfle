@@ -1,10 +1,10 @@
 /*
  * generic.c -- generic player plugin
- * (C)Copyright 2000-2004 by Hiroshi Takekawa
+ * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 24 21:30:59 2005.
- * $Id: generic.c,v 1.23 2005/12/27 14:44:36 sian Exp $
+ * Last Modified: Wed Dec 28 02:18:33 2005.
+ * $Id: generic.c,v 1.24 2005/12/27 17:31:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   .type = ENFLE_PLUGIN_PLAYER,
   .name = "generic",
-  .description = "generic Player plugin version 0.3",
+  .description = "generic Player plugin version 0.4",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -381,6 +381,8 @@ play_video(void *arg)
   while (m->status == _PLAY || m->status == _RESIZING) {
     while ((m->status == _PLAY || m->status == _RESIZING) && vds == VD_OK)
       vds = videodecoder_decode(m->vdec, m, info->p, dp, 0, NULL);
+    if (m->status != _PLAY && m->status != _RESIZING)
+      goto quit;
     if (vds == VD_NEED_MORE_DATA) {
       if (!fifo_get(info->vstream, &data, &destructor)) {
 	debug_message_fnc("fifo_get() failed.\n");
@@ -417,11 +419,7 @@ play_video(void *arg)
   if (dp)
     destructor(dp);
 
-  debug_message_fnc("videodecoder_destroy() ");
-  videodecoder_destroy(m->vdec);
-  debug_message("OK\n");
-
-  debug_message_fnc("exit\n");
+  debug_message_fnc("exit.\n");
 
   return (void *)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
 }
@@ -529,9 +527,7 @@ play_audio(void *arg)
     info->ad = NULL;
   }
 
-  debug_message_fnc("audiodecoder_destroy()... ");
-  audiodecoder_destroy(m->adec);
-  debug_message("OK. exit.\n");
+  debug_message_fnc("exit.\n");
 
   return (void *)PLAY_OK;
 }
@@ -593,10 +589,12 @@ play_main(Movie *m, VideoWindow *vw)
   if (m->vdec->to_render == 0)
     return PLAY_OK;
 
-  pthread_mutex_lock(&m->vdec->update_mutex);
-
-  if (!info->if_initialized && m->width && m->height) {
+  if (!info->if_initialized) {
     int dw, dh;
+
+    /* Waiting for decoder to fill these values */
+    if (!m->width || !m->height)
+      return PLAY_OK;
 
     image_rendered_width(p) = m->width;
     image_rendered_height(p) = m->height;
@@ -613,8 +611,11 @@ play_main(Movie *m, VideoWindow *vw)
     info->if_initialized++;
   }
 
+  pthread_mutex_lock(&m->vdec->update_mutex);
+
   rate = rational_to_double(m->framerate);
-  if (m->vdec->ts_base == 0) {
+  //debug_message_fnc("frame %d, pts %ld prev_pts %ld\n", m->current_frame, m->vdec->pts, m->vdec->prev_pts);
+  if (m->vdec->ts_base == 0 || m->vdec->pts == -1) {
     /* videodecoder didn't provide pts */
     video_time = m->current_frame * 1000 / rate;
   } else if (m->vdec->ts_base == 1000) {
@@ -626,7 +627,7 @@ play_main(Movie *m, VideoWindow *vw)
   }
 
   if (m->has_audio == 1 && info->ad) {
-    debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, get_audio_time(m, info->ad));
+    //debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, get_audio_time(m, info->ad));
     if ((diff_time = video_time - get_audio_time(m, info->ad)) >= 0) {
       /* if too fast to display, wait before render */
 #if 1
@@ -750,12 +751,20 @@ stop_movie(Movie *m)
   if (info->vstream)
     fifo_invalidate(info->vstream);
   if (info->video_thread) {
-    m->vdec->to_render = 0;
     debug_message_fnc("waiting for joining (video).\n");
-    pthread_cond_signal(&m->vdec->update_cond);
+    if (m->vdec) {
+      pthread_mutex_lock(&m->vdec->update_mutex);
+      pthread_cond_signal(&m->vdec->update_cond);
+      pthread_mutex_unlock(&m->vdec->update_mutex);
+    }
     pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
     debug_message_fnc("joined (video).\n");
+
+    debug_message_fnc("videodecoder_destroy()... ");
+    videodecoder_destroy(m->vdec);
+    m->vdec = NULL;
+    debug_message("OK.\n");
   }
 
   if (info->astream)
@@ -765,6 +774,11 @@ stop_movie(Movie *m)
     pthread_join(info->audio_thread, NULL);
     info->audio_thread = 0;
     debug_message_fnc("joined (audio).\n");
+
+    debug_message_fnc("audiodecoder_destroy()... ");
+    audiodecoder_destroy(m->adec);
+    m->adec = NULL;
+    debug_message("OK.\n");
   }
 
   if (m->demux) {

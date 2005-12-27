@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2003 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:15:41 2004.
- * $Id: libmpeg2.c,v 1.7 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Wed Dec 28 01:15:54 2005.
+ * $Id: libmpeg2.c,v 1.8 2005/12/27 17:31:43 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -675,7 +675,9 @@ stop_movie(Movie *m)
   if (info->video_thread) {
     info->to_render = 0;
     debug_message_fnc("waiting for joining (video).\n");
+    pthread_mutex_lock(&info->update_mutex);
     pthread_cond_signal(&info->update_cond);
+    pthread_mutex_unlock(&info->update_mutex);
     pthread_join(info->video_thread, NULL);
     info->video_thread = 0;
     debug_message_fnc("joined (video).\n");
