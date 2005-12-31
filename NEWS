@@ -1,4 +1,10 @@
-NEWS  Last Modified: Sun Jul 24 06:29:25 2005.
+NEWS  Last Modified: Sat Dec 31 12:23:42 2005.
+
+20051231:
+ Fixed a GIF loop count bug.
+ Supported 'bpp 16' bmps.
+ Updated avcodec.
+ Fixed nasty deadlocks in playing movies.
 
 20050724:
  Image caching.
