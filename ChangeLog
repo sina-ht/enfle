@@ -1,4 +1,9 @@
-2005-12-27  Hiroshi Takekawa  <sian@madrigal.fennel.home>
+2005-12-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* NEWS, common.h, configure.in, INSTALL, install-sh, ltmain.sh,
+	missing, mkinstalldirs: Updated.
+
+2005-12-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Version up.
 
