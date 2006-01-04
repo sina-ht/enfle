@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf must be 2.59 or later, automake should be 1.8.2 or later.
 dnl
-dnl (C)Copyright 1999-2005 by Hiroshi Takekawa
+dnl (C)Copyright 1999-2006 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Dec 31 12:23:48 2005.
-dnl $Id: configure.in,v 1.177 2005/12/31 03:35:33 sian Exp $
+dnl Last Modified: Wed Jan  4 16:46:59 2006.
+dnl $Id: configure.in,v 1.178 2006/01/04 07:53:38 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT([enfle],[20051231],[sian@big.or.jp])
+AC_INIT([enfle],[20060104],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -270,11 +270,10 @@ AC_SUBST(LIBADD_MNG)
 
 available_avifile=no
 AC_ARG_WITH(avifile,
-        [  --with-avifile-path     specify avifile path (default: auto detect).])
-if test "${with_avifile-set}" = "set"; then
-  with_avifile=yes
-  ac_configure_args="$ac_configure_args --with-avifile"
-fi
+        [  --with-avifile=path     use avifile (default: no).],
+	[ AC_MSG_WARN([*** avifile is marked as obsolete, probably not working.]);
+          with_avifile=$withval ],
+     	[ with_avifile=no ])
 if test "$with_avifile" = "yes"; then
   for i in /usr/local/include /usr/include; do
     if test -d "$i/avifile"; then
@@ -759,6 +758,7 @@ ENFLE_LINKED_PLUGIN_ENABLER(effect, [        ])
 ENFLE_LINKED_PLUGIN_ENABLER(archiver, [      ])
 ENFLE_LINKED_PLUGIN_ENABLER(streamer, [      ])
 
+echo "Dynamic plugins: $Plugins"
 echo "Static plugins: $Static_plugins"
 echo "Static plugin objs: $Static_plugin_objs"
 
