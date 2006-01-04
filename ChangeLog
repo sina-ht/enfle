@@ -1,3 +1,11 @@
+2006-01-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Marked avifile as obsolete.  Version up.
+
+	* common.h: Updated.
+
+	* lib/avcodec/Makefile.am: Avoid 'two common.h' problem.
+
 2005-12-31  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS, common.h, configure.in, INSTALL, install-sh, ltmain.sh,
