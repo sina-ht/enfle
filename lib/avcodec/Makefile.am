@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Dec 31 13:56:45 2005.
-# $Id: Makefile.am,v 1.35 2006/01/04 07:46:44 sian Exp $
+# Last Modified: Thu Jan  5 00:51:07 2006.
+# $Id: Makefile.am,v 1.36 2006/01/04 15:53:19 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -115,6 +115,7 @@ noinst_HEADERS = \
 	svq1_cb.h \
 	svq1_vlc.h \
 	truemotion1data.h \
+	truespeech_data.h \
 	ulti_cb.h \
 	vc9data.h \
 	vorbis.h \
@@ -224,6 +225,7 @@ libavcodec_la_SOURCES = \
 	svq1.c \
 	truemotion1.c \
 	truemotion2.c \
+	truespeech.c \
 	tscc.c \
 	ulti.c \
 	utils.c \

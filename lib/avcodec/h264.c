@@ -1286,8 +1286,8 @@ static inline void pred_direct_motion(H264Context * const h, int *mb_type){
         }
 
         if(IS_16X16(*mb_type)){
-            fill_rectangle(&h->ref_cache[0][scan8[0]], 4, 4, 8, ref[0], 1);
-            fill_rectangle(&h->ref_cache[1][scan8[0]], 4, 4, 8, ref[1], 1);
+            fill_rectangle(&h->ref_cache[0][scan8[0]], 4, 4, 8, (uint8_t)ref[0], 1);
+            fill_rectangle(&h->ref_cache[1][scan8[0]], 4, 4, 8, (uint8_t)ref[1], 1);
             if(!IS_INTRA(mb_type_col)
                && (   (l1ref0[0] == 0 && ABS(l1mv0[0][0]) <= 1 && ABS(l1mv0[0][1]) <= 1)
                    || (l1ref0[0]  < 0 && l1ref1[0] == 0 && ABS(l1mv1[0][0]) <= 1 && ABS(l1mv1[0][1]) <= 1
@@ -1315,14 +1315,23 @@ static inline void pred_direct_motion(H264Context * const h, int *mb_type){
 
                 fill_rectangle(&h->mv_cache[0][scan8[i8*4]], 2, 2, 8, pack16to32(mv[0][0],mv[0][1]), 4);
                 fill_rectangle(&h->mv_cache[1][scan8[i8*4]], 2, 2, 8, pack16to32(mv[1][0],mv[1][1]), 4);
-                fill_rectangle(&h->ref_cache[0][scan8[i8*4]], 2, 2, 8, ref[0], 1);
-                fill_rectangle(&h->ref_cache[1][scan8[i8*4]], 2, 2, 8, ref[1], 1);
+                fill_rectangle(&h->ref_cache[0][scan8[i8*4]], 2, 2, 8, (uint8_t)ref[0], 1);
+                fill_rectangle(&h->ref_cache[1][scan8[i8*4]], 2, 2, 8, (uint8_t)ref[1], 1);
 
                 /* col_zero_flag */
                 if(!IS_INTRA(mb_type_col) && (   l1ref0[x8 + y8*h->b8_stride] == 0
                                               || (l1ref0[x8 + y8*h->b8_stride] < 0 && l1ref1[x8 + y8*h->b8_stride] == 0
                                                   && (h->x264_build>33 || !h->x264_build)))){
                     const int16_t (*l1mv)[2]= l1ref0[x8 + y8*h->b8_stride] == 0 ? l1mv0 : l1mv1;
+                    if(IS_SUB_8X8(sub_mb_type)){
+                        const int16_t *mv_col = l1mv[x8*3 + y8*3*h->b_stride];
+                        if(ABS(mv_col[0]) <= 1 && ABS(mv_col[1]) <= 1){
+                            if(ref[0] == 0)
+                                fill_rectangle(&h->mv_cache[0][scan8[i8*4]], 2, 2, 8, 0, 4);
+                            if(ref[1] == 0)
+                                fill_rectangle(&h->mv_cache[1][scan8[i8*4]], 2, 2, 8, 0, 4);
+                        }
+                    }else
                     for(i4=0; i4<4; i4++){
                         const int16_t *mv_col = l1mv[x8*2 + (i4&1) + (y8*2 + (i4>>1))*h->b_stride];
                         if(ABS(mv_col[0]) <= 1 && ABS(mv_col[1]) <= 1){
@@ -1383,6 +1392,13 @@ static inline void pred_direct_motion(H264Context * const h, int *mb_type){
 
                 fill_rectangle(&h->ref_cache[0][scan8[i8*4]], 2, 2, 8, ref0, 1);
                 fill_rectangle(&h->ref_cache[1][scan8[i8*4]], 2, 2, 8, 0, 1);
+                if(IS_SUB_8X8(sub_mb_type)){
+                    const int16_t *mv_col = l1mv[x8*3 + y8*3*h->b_stride];
+                    int mx = (dist_scale_factor * mv_col[0] + 128) >> 8;
+                    int my = (dist_scale_factor * mv_col[1] + 128) >> 8;
+                    fill_rectangle(&h->mv_cache[0][scan8[i8*4]], 2, 2, 8, pack16to32(mx,my), 4);
+                    fill_rectangle(&h->mv_cache[1][scan8[i8*4]], 2, 2, 8, pack16to32(mx-mv_col[0],my-mv_col[1]), 4);
+                }else
                 for(i4=0; i4<4; i4++){
                     const int16_t *mv_col = l1mv[x8*2 + (i4&1) + (y8*2 + (i4>>1))*h->b_stride];
                     int16_t *mv_l0 = h->mv_cache[0][scan8[i8*4+i4]];
@@ -2957,6 +2973,7 @@ static void init_dequant8_coeff_table(H264Context *h){
 
 static void init_dequant4_coeff_table(H264Context *h){
     int i,j,q,x;
+    const int transpose = (h->s.dsp.h264_idct_add != ff_h264_idct_add_c); //FIXME ugly
     for(i=0; i<6; i++ ){
         h->dequant4_coeff[i] = h->dequant4_buffer[i];
         for(j=0; j<i; j++){
@@ -2972,7 +2989,8 @@ static void init_dequant4_coeff_table(H264Context *h){
             int shift = div6[q] + 2;
             int idx = rem6[q];
             for(x=0; x<16; x++)
-                h->dequant4_coeff[i][q][x] = ((uint32_t)dequant4_coeff_init[idx][(x&1) + ((x>>2)&1)] *
+                h->dequant4_coeff[i][q][transpose ? (x>>2)|((x<<2)&0xF) : x] =
+                    ((uint32_t)dequant4_coeff_init[idx][(x&1) + ((x>>2)&1)] *
                     h->pps.scaling_matrix4[i][x]) << shift;
         }
     }
@@ -4856,8 +4874,13 @@ decode_intra_mb:
                 h->sub_mb_type[i]=      b_sub_mb_type_info[ h->sub_mb_type[i] ].type;
             }
             if(   IS_DIRECT(h->sub_mb_type[0]) || IS_DIRECT(h->sub_mb_type[1])
-               || IS_DIRECT(h->sub_mb_type[2]) || IS_DIRECT(h->sub_mb_type[3]))
+               || IS_DIRECT(h->sub_mb_type[2]) || IS_DIRECT(h->sub_mb_type[3])) {
                 pred_direct_motion(h, &mb_type);
+                h->ref_cache[0][scan8[4]] =
+                h->ref_cache[1][scan8[4]] =
+                h->ref_cache[0][scan8[12]] =
+                h->ref_cache[1][scan8[12]] = PART_NOT_AVAILABLE;
+            }
         }else{
             assert(h->slice_type == P_TYPE || h->slice_type == SP_TYPE); //FIXME SP correct ?
             for(i=0; i<4; i++){
@@ -4896,7 +4919,10 @@ decode_intra_mb:
             if(ref_count == 0) continue;
 
             for(i=0; i<4; i++){
-                if(IS_DIRECT(h->sub_mb_type[i])) continue;
+                if(IS_DIRECT(h->sub_mb_type[i])) {
+                    h->ref_cache[list][ scan8[4*i] ] = h->ref_cache[list][ scan8[4*i]+1 ];
+                    continue;
+                }
                 h->ref_cache[list][ scan8[4*i]   ]=h->ref_cache[list][ scan8[4*i]+1 ]=
                 h->ref_cache[list][ scan8[4*i]+8 ]=h->ref_cache[list][ scan8[4*i]+9 ]= ref[list][i];
 
@@ -7088,18 +7114,19 @@ static inline int decode_vui_parameters(H264Context *h, SPS *sps){
     return 0;
 }
 
-static void decode_scaling_list(H264Context *h, uint8_t *factors, int size, const uint8_t *default_list){
+static void decode_scaling_list(H264Context *h, uint8_t *factors, int size,
+                                const uint8_t *jvt_list, const uint8_t *fallback_list){
     MpegEncContext * const s = &h->s;
     int i, last = 8, next = 8;
     const uint8_t *scan = size == 16 ? zigzag_scan : zigzag_scan8x8;
-    if(!get_bits1(&s->gb)) /* matrix not written, we use the default one */
-        memcpy(factors, default_list, size*sizeof(uint8_t));
+    if(!get_bits1(&s->gb)) /* matrix not written, we use the predicted one */
+        memcpy(factors, fallback_list, size*sizeof(uint8_t));
     else
     for(i=0;i<size;i++){
         if(next)
             next = (last + get_se_golomb(&s->gb)) & 0xff;
-        if(!i && !next){ /* matrix not written, we use the default one */
-            memcpy(factors, default_list, size*sizeof(uint8_t));
+        if(!i && !next){ /* matrix not written, we use the preset one */
+            memcpy(factors, jvt_list, size*sizeof(uint8_t));
             break;
         }
         last = factors[scan[i]] = next ? next : last;
@@ -7118,15 +7145,15 @@ static void decode_scaling_matrices(H264Context *h, SPS *sps, PPS *pps, int is_s
     };
     if(get_bits1(&s->gb)){
         sps->scaling_matrix_present |= is_sps;
-        decode_scaling_list(h,scaling_matrix4[0],16,fallback[0]); // Intra, Y
-        decode_scaling_list(h,scaling_matrix4[1],16,scaling_matrix4[0]); // Intra, Cr
-        decode_scaling_list(h,scaling_matrix4[2],16,scaling_matrix4[1]); // Intra, Cb
-        decode_scaling_list(h,scaling_matrix4[3],16,fallback[1]); // Inter, Y
-        decode_scaling_list(h,scaling_matrix4[4],16,scaling_matrix4[3]); // Inter, Cr
-        decode_scaling_list(h,scaling_matrix4[5],16,scaling_matrix4[4]); // Inter, Cb
+        decode_scaling_list(h,scaling_matrix4[0],16,default_scaling4[0],fallback[0]); // Intra, Y
+        decode_scaling_list(h,scaling_matrix4[1],16,default_scaling4[0],scaling_matrix4[0]); // Intra, Cr
+        decode_scaling_list(h,scaling_matrix4[2],16,default_scaling4[0],scaling_matrix4[1]); // Intra, Cb
+        decode_scaling_list(h,scaling_matrix4[3],16,default_scaling4[1],fallback[1]); // Inter, Y
+        decode_scaling_list(h,scaling_matrix4[4],16,default_scaling4[1],scaling_matrix4[3]); // Inter, Cr
+        decode_scaling_list(h,scaling_matrix4[5],16,default_scaling4[1],scaling_matrix4[4]); // Inter, Cb
         if(is_sps || pps->transform_8x8_mode){
-            decode_scaling_list(h,scaling_matrix8[0],64,fallback[2]);  // Intra, Y
-            decode_scaling_list(h,scaling_matrix8[1],64,fallback[3]);  // Inter, Y
+            decode_scaling_list(h,scaling_matrix8[0],64,default_scaling8[0],fallback[2]);  // Intra, Y
+            decode_scaling_list(h,scaling_matrix8[1],64,default_scaling8[1],fallback[3]);  // Inter, Y
         }
     } else if(fallback_sps) {
         memcpy(scaling_matrix4, sps->scaling_matrix4, 6*16*sizeof(uint8_t));
