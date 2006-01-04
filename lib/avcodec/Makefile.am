@@ -1,12 +1,15 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Wed Dec 28 00:20:15 2005.
-# $Id: Makefile.am,v 1.34 2005/12/27 15:21:10 sian Exp $
+# Last Modified: Sat Dec 31 13:56:45 2005.
+# $Id: Makefile.am,v 1.35 2006/01/04 07:46:44 sian Exp $
+
+AUTOMAKE_OPTIONS = nostdinc
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
 endif
-INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir)/lib/avutil -I$(top_srcdir)/lib/avcodec -I$(top_srcdir)
+
+AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/lib/avutil -I$(top_srcdir)/lib/avcodec -I$(top_srcdir) -I$(top_builddir)
 EXTRA_DIST = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c i386/mpegvideo_mmx_template.c \
@@ -14,7 +17,7 @@ EXTRA_DIST = \
 	i386/simple_idct_mmx.c i386/fft_sse.c \
 	i386/dsputil_mmx_avg.h i386/dsputil_mmx_rnd.h i386/mmx.h \
 	i386/h264dsp_mmx.c i386/dsputil_h264_template_mmx.c \
-	svq3.c mdec.c motion_est_template.c wmv2.c
+	svq3.c mdec.c motion_est_template.c wmv2.c jpeg_ls.c
 
 DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H
 
