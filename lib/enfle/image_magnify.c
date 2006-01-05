@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 02:32:08 2005.
- * $Id: image_magnify.c,v 1.10 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Fri Jan  6 04:31:57 2006.
+ * $Id: image_magnify.c,v 1.11 2006/01/05 19:32:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -282,7 +282,6 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
 	  t = y * h / dh * w;
 
-
 	  if (t < yt) {
 	    for (x = 0; x < dw; x++) {
 	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
@@ -319,6 +318,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	    t3 = x * w / dw + t;
 	    for (i = 0; i < 3; i++)
 	      *dd++ = s[(t3 << 2) + i];
+	    dd++;
 	  }
 	}
       }
@@ -350,6 +350,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 	  t3 = x * dw / w + t;
 	  for (i = 0; i < 3; i++)
 	    d[(t3 << 2) + i] = *s++;
+	  s++;
 	}
       }
 }
