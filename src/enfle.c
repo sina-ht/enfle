@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec  1 01:22:05 2005.
- * $Id: enfle.c,v 1.72 2005/12/27 14:44:58 sian Exp $
+ * Last Modified: Fri Jan 27 10:06:26 2006.
+ * $Id: enfle.c,v 1.73 2006/01/27 06:27:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -68,6 +68,8 @@ static Option enfle_options[] = {
   { "recache",   'N', _NO_ARGUMENT,       "Re-create cache file." },
   { "include",   'i', _REQUIRED_ARGUMENT, "Specify the pattern to include." },
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
+  { "minwidth",  'X', _REQUIRED_ARGUMENT, "Specify the minimum width of an image to display." },
+  { "minheight", 'Y', _REQUIRED_ARGUMENT, "Specify the minimum height of an image to display." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
   { "help",      'h', _NO_ARGUMENT,       "Show help message." },
   { "version",   'V', _NO_ARGUMENT,       "Show version." },
@@ -389,6 +391,7 @@ main(int argc, char **argv)
   int exclude_fnmatch = 0;
   int if_use_cache = -1;
   int nth = 0;
+  int minw = 0, minh = 0;
   char *pattern = NULL;
   char *homedir;
   char *plugin_path;
@@ -465,6 +468,12 @@ main(int argc, char **argv)
       break;
     case 'w':
       ui_name = strdup("Wallpaper");
+      break;
+    case 'X':
+      minw = atoi(optarg);
+      break;
+    case 'Y':
+      minh = atoi(optarg);
       break;
     case 'V':
       printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n");
@@ -586,6 +595,8 @@ main(int argc, char **argv)
   }
 
   uidata.nth = nth;
+  uidata.minw = minw;
+  uidata.minh = minh;
   uidata.a = archive_create(ARCHIVE_ROOT);
 
   if (include_fnmatch)

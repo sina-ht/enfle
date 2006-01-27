@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May 14 22:04:42 2005.
- * $Id: ui-extra.h,v 1.10 2005/07/08 18:16:20 sian Exp $
+ * Last Modified: Fri Jan 27 10:06:02 2006.
+ * $Id: ui-extra.h,v 1.11 2006/01/27 06:27:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -43,6 +43,7 @@ struct _ui_data {
   void *disp;
   void *priv;
   int nth;
+  int minw, minh;
 };
 
 #endif

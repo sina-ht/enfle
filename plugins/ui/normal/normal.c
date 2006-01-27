@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 26 16:04:56 2005.
- * $Id: normal.c,v 1.89 2005/09/27 13:57:03 sian Exp $
+ * Last Modified: Fri Jan 27 10:08:12 2006.
+ * $Id: normal.c,v 1.90 2006/01/27 06:27:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -879,6 +879,12 @@ process_file(UIData *uidata, char *path, Archive *a, Stream *s, Movie *m, void *
     break;
   case IDENTIFY_STREAM_IMAGE:
     debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
+    if (image_width(p) < uidata->minw || image_height(p) < uidata->minh) {
+      debug_message("Too small image.  Skipped.\n");
+      ret = MAIN_LOOP_DELETE_FROM_LIST;
+      break;
+    }
+
     if (p->comment && config_get_boolean(c, "/enfle/plugins/ui/normal/show_comment", &res)) {
       show_message("comment: %s\n", p->comment);
       free(p->comment);
