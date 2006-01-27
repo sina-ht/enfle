@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  * gmc & q-pel & 32/64 bit based MC by Michael Niedermayer <michaelni@gmx.at>
  */
@@ -1487,6 +1487,17 @@ H264_CHROMA_MC(avg_       , op_avg)
 #undef op_avg
 #undef op_put
 
+static inline void copy_block2(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
+{
+    int i;
+    for(i=0; i<h; i++)
+    {
+        ST16(dst   , LD16(src   ));
+        dst+=dstStride;
+        src+=srcStride;
+    }
+}
+
 static inline void copy_block4(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
 {
     int i;
@@ -2052,6 +2063,68 @@ QPEL_MC(0, avg_       , _       , op_avg)
 
 #if 1
 #define H264_LOWPASS(OPNAME, OP, OP2) \
+static void OPNAME ## h264_qpel2_h_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride){\
+    const int h=2;\
+    uint8_t *cm = cropTbl + MAX_NEG_CROP;\
+    int i;\
+    for(i=0; i<h; i++)\
+    {\
+        OP(dst[0], (src[0]+src[1])*20 - (src[-1]+src[2])*5 + (src[-2]+src[3]));\
+        OP(dst[1], (src[1]+src[2])*20 - (src[0 ]+src[3])*5 + (src[-1]+src[4]));\
+        dst+=dstStride;\
+        src+=srcStride;\
+    }\
+}\
+\
+static void OPNAME ## h264_qpel2_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride){\
+    const int w=2;\
+    uint8_t *cm = cropTbl + MAX_NEG_CROP;\
+    int i;\
+    for(i=0; i<w; i++)\
+    {\
+        const int srcB= src[-2*srcStride];\
+        const int srcA= src[-1*srcStride];\
+        const int src0= src[0 *srcStride];\
+        const int src1= src[1 *srcStride];\
+        const int src2= src[2 *srcStride];\
+        const int src3= src[3 *srcStride];\
+        const int src4= src[4 *srcStride];\
+        OP(dst[0*dstStride], (src0+src1)*20 - (srcA+src2)*5 + (srcB+src3));\
+        OP(dst[1*dstStride], (src1+src2)*20 - (src0+src3)*5 + (srcA+src4));\
+        dst++;\
+        src++;\
+    }\
+}\
+\
+static void OPNAME ## h264_qpel2_hv_lowpass(uint8_t *dst, int16_t *tmp, uint8_t *src, int dstStride, int tmpStride, int srcStride){\
+    const int h=2;\
+    const int w=2;\
+    uint8_t *cm = cropTbl + MAX_NEG_CROP;\
+    int i;\
+    src -= 2*srcStride;\
+    for(i=0; i<h+5; i++)\
+    {\
+        tmp[0]= (src[0]+src[1])*20 - (src[-1]+src[2])*5 + (src[-2]+src[3]);\
+        tmp[1]= (src[1]+src[2])*20 - (src[0 ]+src[3])*5 + (src[-1]+src[4]);\
+        tmp+=tmpStride;\
+        src+=srcStride;\
+    }\
+    tmp -= tmpStride*(h+5-2);\
+    for(i=0; i<w; i++)\
+    {\
+        const int tmpB= tmp[-2*tmpStride];\
+        const int tmpA= tmp[-1*tmpStride];\
+        const int tmp0= tmp[0 *tmpStride];\
+        const int tmp1= tmp[1 *tmpStride];\
+        const int tmp2= tmp[2 *tmpStride];\
+        const int tmp3= tmp[3 *tmpStride];\
+        const int tmp4= tmp[4 *tmpStride];\
+        OP2(dst[0*dstStride], (tmp0+tmp1)*20 - (tmpA+tmp2)*5 + (tmpB+tmp3));\
+        OP2(dst[1*dstStride], (tmp1+tmp2)*20 - (tmp0+tmp3)*5 + (tmpA+tmp4));\
+        dst++;\
+        tmp++;\
+    }\
+}\
 static void OPNAME ## h264_qpel4_h_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride){\
     const int h=4;\
     uint8_t *cm = cropTbl + MAX_NEG_CROP;\
@@ -2398,6 +2471,7 @@ static void OPNAME ## h264_qpel ## SIZE ## _mc32_c(uint8_t *dst, uint8_t *src, i
 
 H264_LOWPASS(put_       , op_put, op2_put)
 H264_LOWPASS(avg_       , op_avg, op2_avg)
+H264_MC(put_, 2)
 H264_MC(put_, 4)
 H264_MC(put_, 8)
 H264_MC(put_, 16)
@@ -2415,7 +2489,7 @@ H264_MC(avg_, 16)
 #define op_scale2(x)  dst[x] = clip_uint8( (src[x]*weights + dst[x]*weightd + offset) >> (log2_denom+1))
 #define H264_WEIGHT(W,H) \
 static void weight_h264_pixels ## W ## x ## H ## _c(uint8_t *block, int stride, int log2_denom, int weight, int offset){ \
-    int attribute_unused x, y; \
+    int y; \
     offset <<= log2_denom; \
     if(log2_denom) offset += 1<<(log2_denom-1); \
     for(y=0; y<H; y++, block += stride){ \
@@ -2440,10 +2514,9 @@ static void weight_h264_pixels ## W ## x ## H ## _c(uint8_t *block, int stride, 
         op_scale1(15); \
     } \
 } \
-static void biweight_h264_pixels ## W ## x ## H ## _c(uint8_t *dst, uint8_t *src, int stride, int log2_denom, int weightd, int weights, int offsetd, int offsets){ \
-    int attribute_unused x, y; \
-    int offset = (offsets + offsetd + 1) >> 1; \
-    offset = ((offset << 1) + 1) << log2_denom; \
+static void biweight_h264_pixels ## W ## x ## H ## _c(uint8_t *dst, uint8_t *src, int stride, int log2_denom, int weightd, int weights, int offset){ \
+    int y; \
+    offset = ((offset + 1) | 1) << log2_denom; \
     for(y=0; y<H; y++, dst += stride, src += stride){ \
         op_scale2(0); \
         op_scale2(1); \
@@ -3115,6 +3188,9 @@ void ff_set_cmp(DSPContext* c, me_cmp_func *cmp, int type){
         case FF_CMP_DCT:
             cmp[i]= c->dct_sad[i];
             break;
+        case FF_CMP_DCT264:
+            cmp[i]= c->dct264_sad[i];
+            break;
         case FF_CMP_DCTMAX:
             cmp[i]= c->dct_max[i];
             break;
@@ -3340,6 +3416,59 @@ static int dct_sad8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2
 
     return sum;
 }
+
+#ifdef CONFIG_GPL
+#define DCT8_1D {\
+    const int s07 = SRC(0) + SRC(7);\
+    const int s16 = SRC(1) + SRC(6);\
+    const int s25 = SRC(2) + SRC(5);\
+    const int s34 = SRC(3) + SRC(4);\
+    const int a0 = s07 + s34;\
+    const int a1 = s16 + s25;\
+    const int a2 = s07 - s34;\
+    const int a3 = s16 - s25;\
+    const int d07 = SRC(0) - SRC(7);\
+    const int d16 = SRC(1) - SRC(6);\
+    const int d25 = SRC(2) - SRC(5);\
+    const int d34 = SRC(3) - SRC(4);\
+    const int a4 = d16 + d25 + (d07 + (d07>>1));\
+    const int a5 = d07 - d34 - (d25 + (d25>>1));\
+    const int a6 = d07 + d34 - (d16 + (d16>>1));\
+    const int a7 = d16 - d25 + (d34 + (d34>>1));\
+    DST(0,  a0 + a1     ) ;\
+    DST(1,  a4 + (a7>>2)) ;\
+    DST(2,  a2 + (a3>>1)) ;\
+    DST(3,  a5 + (a6>>2)) ;\
+    DST(4,  a0 - a1     ) ;\
+    DST(5,  a6 - (a5>>2)) ;\
+    DST(6, (a2>>1) - a3 ) ;\
+    DST(7, (a4>>2) - a7 ) ;\
+}
+
+static int dct264_sad8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2, int stride, int h){
+    MpegEncContext * const s= (MpegEncContext *)c;
+    int16_t dct[8][8];
+    int i;
+    int sum=0;
+
+    s->dsp.diff_pixels(dct, src1, src2, stride);
+
+#define SRC(x) dct[i][x]
+#define DST(x,v) dct[i][x]= v
+    for( i = 0; i < 8; i++ )
+        DCT8_1D
+#undef SRC
+#undef DST
+
+#define SRC(x) dct[x][i]
+#define DST(x,v) sum += ABS(v)
+    for( i = 0; i < 8; i++ )
+        DCT8_1D
+#undef SRC
+#undef DST
+    return sum;
+}
+#endif
 
 static int dct_max8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2, int stride, int h){
     MpegEncContext * const s= (MpegEncContext *)c;
@@ -3587,6 +3716,9 @@ static int vsse16_c(/*MpegEncContext*/ void *c, uint8_t *s1, uint8_t *s2, int st
 WARPER8_16_SQ(hadamard8_diff8x8_c, hadamard8_diff16_c)
 WARPER8_16_SQ(hadamard8_intra8x8_c, hadamard8_intra16_c)
 WARPER8_16_SQ(dct_sad8x8_c, dct_sad16_c)
+#ifdef CONFIG_GPL
+WARPER8_16_SQ(dct264_sad8x8_c, dct264_sad16_c)
+#endif
 WARPER8_16_SQ(dct_max8x8_c, dct_max16_c)
 WARPER8_16_SQ(quant_psnr8x8_c, quant_psnr16_c)
 WARPER8_16_SQ(rd8x8_c, rd16_c)
@@ -3820,6 +3952,7 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     dspfunc(put_h264_qpel, 0, 16);
     dspfunc(put_h264_qpel, 1, 8);
     dspfunc(put_h264_qpel, 2, 4);
+    dspfunc(put_h264_qpel, 3, 2);
     dspfunc(avg_h264_qpel, 0, 16);
     dspfunc(avg_h264_qpel, 1, 8);
     dspfunc(avg_h264_qpel, 2, 4);
@@ -3870,6 +4003,9 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->hadamard8_diff[4]= hadamard8_intra16_c;
     SET_CMP_FUNC(dct_sad)
     SET_CMP_FUNC(dct_max)
+#ifdef CONFIG_GPL
+    SET_CMP_FUNC(dct264_sad)
+#endif
     c->sad[0]= pix_abs16_c;
     c->sad[1]= pix_abs8_c;
     c->sse[0]= sse16_c;

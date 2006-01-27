@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 /**
@@ -75,13 +75,6 @@ static void* dlsymm(void* handle, const char* symbol)
     if (!f)
         av_log( NULL, AV_LOG_ERROR, "A52 Decoder - function '%s' can't be resolved\n", symbol);
     return f;
-}
-
-int ff_a52_syncinfo( AVCodecContext * avctx, uint8_t * buf, int * flags, int * sample_rate, int * bit_rate )
-{
-    AC3DecodeState *s = avctx->priv_data;
-
-    return s->a52_syncinfo(buf, flags, sample_rate, bit_rate);
 }
 #endif
 

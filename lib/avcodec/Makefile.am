@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Jan  5 00:51:07 2006.
-# $Id: Makefile.am,v 1.36 2006/01/04 15:53:19 sian Exp $
+# Last Modified: Fri Jan 27 15:24:59 2006.
+# $Id: Makefile.am,v 1.37 2006/01/27 06:26:28 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -98,6 +98,7 @@ noinst_HEADERS = \
 	imgconvert_template.h \
 	indeo2data.h \
 	indeo3data.h \
+	lzo.h \
 	mpeg12data.h \
 	mpeg4data.h \
 	mpegaudio.h \
@@ -146,6 +147,7 @@ libavcodec_la_SOURCES = \
 	cabac.c \
 	cinepak.c \
 	cljr.c \
+	cscd.c \
 	cook.c \
 	cyuv.c \
 	dpcm.c \
@@ -183,6 +185,7 @@ libavcodec_la_SOURCES = \
 	jrevdct.c \
 	lcl.c \
 	loco.c \
+	lzo.c \
 	mace.c \
 	mdct.c \
 	mem.c \

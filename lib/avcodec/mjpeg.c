@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  * Support for external huffman table, various fixes (AVID workaround),
  * aspecting, new decode_frame mechanism and apple mjpeg-b support
@@ -1144,7 +1144,6 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
 
         s->width = width;
         s->height = height;
-        avcodec_set_dimensions(s->avctx, width, height);
 
         /* test interlaced mode */
         if (s->first_picture &&
@@ -1153,8 +1152,10 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
             s->interlaced = 1;
 //            s->bottom_field = (s->interlace_polarity) ? 1 : 0;
             s->bottom_field = 0;
-            s->avctx->height *= 2;
+            height *= 2;
         }
+
+        avcodec_set_dimensions(s->avctx, width, height);
 
         s->qscale_table= av_mallocz((s->width+15)/16);
 

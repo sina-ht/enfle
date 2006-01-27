@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 /**
@@ -2178,7 +2178,7 @@ static int find_start_code(const uint8_t **pbuf_ptr, const uint8_t *buf_end)
     const uint8_t *buf_ptr= *pbuf_ptr;
 
     buf_ptr++; //gurantees that -1 is within the array
-    buf_end -= 2; // gurantees that +2 is within the array
+    buf_end -= 3; // gurantees that +3 is within the array
 
     while (buf_ptr < buf_end) {
         if(*buf_ptr==0){
@@ -2192,7 +2192,7 @@ static int find_start_code(const uint8_t **pbuf_ptr, const uint8_t *buf_end)
         }
         buf_ptr += 2;
     }
-    buf_end += 2; //undo the hack above
+    buf_end += 3; //undo the hack above
 
     *pbuf_ptr = buf_end;
     return -1;

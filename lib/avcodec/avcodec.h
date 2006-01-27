@@ -21,8 +21,8 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(0<<8)+0)
-#define LIBAVCODEC_VERSION      51.0.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(1<<8)+0)
+#define LIBAVCODEC_VERSION      51.1.0
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
@@ -114,6 +114,7 @@ enum CodecID {
     CODEC_ID_FRAPS,
     CODEC_ID_TRUEMOTION2,
     CODEC_ID_BMP,
+    CODEC_ID_CSCD,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -1402,6 +1403,7 @@ typedef struct AVCodecContext {
 #define FF_CMP_W53  11
 #define FF_CMP_W97  12
 #define FF_CMP_DCTMAX 13
+#define FF_CMP_DCT264 14
 #define FF_CMP_CHROMA 256
 
     /**
@@ -1980,6 +1982,20 @@ typedef struct AVCodecContext {
      * - decoding: unused
      */
     int directpred;
+    
+    /**
+     * audio cutoff bandwidth (0 means "automatic") . Currently used only by FAAC
+     * - encoding: set by user.
+     * - decoding: unused
+     */
+    int cutoff;
+
+    /**
+     * multiplied by qscale for each frame and added to scene_change_score
+     * - encoding: set by user.
+     * - decoding: unused
+     */
+    int scenechange_factor;
 } AVCodecContext;
 
 /**
@@ -2189,6 +2205,7 @@ extern AVCodec sonic_decoder;
 extern AVCodec qtrle_decoder;
 extern AVCodec flac_decoder;
 extern AVCodec tscc_decoder;
+extern AVCodec cscd_decoder;
 extern AVCodec ulti_decoder;
 extern AVCodec qdraw_decoder;
 extern AVCodec xl_decoder;

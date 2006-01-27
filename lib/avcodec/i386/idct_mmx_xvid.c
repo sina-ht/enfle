@@ -16,10 +16,11 @@
 // *  GNU General Public License for more details.
 // *
 // *  You should have received a copy of the GNU General Public License
-// *  along with this program; if not, write to the Free Software
-// *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// *  along with this program; if not, write to the Free Software Foundation,
+// *  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+//
 // *
-// * $Id: idct_mmx_xvid.c,v 1.1 2005/12/27 15:19:30 sian Exp $
+// * $Id: idct_mmx_xvid.c,v 1.2 2006/01/27 06:26:28 sian Exp $
 // *
 // ***************************************************************************/
 
