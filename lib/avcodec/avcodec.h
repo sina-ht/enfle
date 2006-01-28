@@ -892,6 +892,8 @@ typedef struct AVCodecContext {
 
     /** obsolete FIXME remove */
     int rc_strategy;
+#define FF_RC_STRATEGY_XVID 1
+
     int b_frame_strategy;
 
     /**
@@ -1982,7 +1984,7 @@ typedef struct AVCodecContext {
      * - decoding: unused
      */
     int directpred;
-    
+
     /**
      * audio cutoff bandwidth (0 means "automatic") . Currently used only by FAAC
      * - encoding: set by user.

@@ -162,7 +162,7 @@ typedef struct H264Context{
 #define NAL_SPS_EXT             13
 #define NAL_AUXILIARY_SLICE     19
     uint8_t *rbsp_buffer;
-    int rbsp_buffer_size;
+    unsigned int rbsp_buffer_size;
 
     /**
       * Used to parse AVC variant of h264
@@ -4310,10 +4310,10 @@ static int decode_slice_header(H264Context *h){
 
         if(h->sps.timing_info_present_flag){
             s->avctx->time_base= (AVRational){h->sps.num_units_in_tick * 2, h->sps.time_scale};
-	    if(h->x264_build > 0 && h->x264_build < 44)
-		s->avctx->time_base.den *= 2;
-	    av_reduce(&s->avctx->time_base.num, &s->avctx->time_base.den,
-		      s->avctx->time_base.num, s->avctx->time_base.den, 1<<30);
+            if(h->x264_build > 0 && h->x264_build < 44)
+                s->avctx->time_base.den *= 2;
+            av_reduce(&s->avctx->time_base.num, &s->avctx->time_base.den,
+                      s->avctx->time_base.num, s->avctx->time_base.den, 1<<30);
         }
     }
 
