@@ -199,14 +199,14 @@ typedef struct H264Context{
      * non zero coeff count cache.
      * is 64 if not available.
      */
-    uint8_t non_zero_count_cache[6*8] __align8;
+    DECLARE_ALIGNED_8(uint8_t, non_zero_count_cache[6*8]);
     uint8_t (*non_zero_count)[16];
 
     /**
      * Motion vector cache.
      */
-    int16_t mv_cache[2][5*8][2] __align8;
-    int8_t ref_cache[2][5*8] __align8;
+    DECLARE_ALIGNED_8(int16_t, mv_cache[2][5*8][2]);
+    DECLARE_ALIGNED_8(int8_t, ref_cache[2][5*8]);
 #define LIST_NOT_USED -1 //FIXME rename?
 #define PART_NOT_AVAILABLE -2
 
@@ -335,7 +335,7 @@ typedef struct H264Context{
     GetBitContext *intra_gb_ptr;
     GetBitContext *inter_gb_ptr;
 
-    DCTELEM mb[16*24] __align8;
+    DECLARE_ALIGNED_8(DCTELEM, mb[16*24]);
 
     /**
      * Cabac
@@ -352,7 +352,7 @@ typedef struct H264Context{
     uint8_t     *chroma_pred_mode_table;
     int         last_qscale_diff;
     int16_t     (*mvd_table[2])[2];
-    int16_t     mvd_cache[2][5*8][2] __align8;
+    DECLARE_ALIGNED_8(int16_t, mvd_cache[2][5*8][2]);
     uint8_t     *direct_table;
     uint8_t     direct_cache[5*8];
 
@@ -5741,7 +5741,7 @@ static int decode_cabac_residual( H264Context *h, DCTELEM *block, int cat, int n
     return 0;
 }
 
-void inline compute_mb_neighboors(H264Context *h)
+static void inline compute_mb_neighbors(H264Context *h)
 {
     MpegEncContext * const s = &h->s;
     const int mb_xy  = s->mb_x + s->mb_y*s->mb_stride;
@@ -5801,7 +5801,7 @@ static int decode_mb_cabac(H264Context *h) {
 
     h->prev_mb_skipped = 0;
 
-    compute_mb_neighboors(h);
+    compute_mb_neighbors(h);
     if( ( mb_type = decode_cabac_mb_type( h ) ) < 0 ) {
         av_log( h->s.avctx, AV_LOG_ERROR, "decode_cabac_mb_type failed\n" );
         return -1;

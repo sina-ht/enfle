@@ -134,7 +134,7 @@ typedef struct ScanTable{
     uint8_t raster_end[64];
 #ifdef ARCH_POWERPC
                 /** Used by dct_quantise_alitvec to find last-non-zero */
-    uint8_t __align8 inverse[64];
+    DECLARE_ALIGNED_8(uint8_t, inverse[64]);
 #endif
 } ScanTable;
 
@@ -494,7 +494,7 @@ typedef struct MpegEncContext {
     uint16_t (*q_inter_matrix16)[2][64];
     int block_last_index[12];  ///< last non zero coefficient in block
     /* scantables */
-    ScanTable __align8 intra_scantable;
+    DECLARE_ALIGNED_8(ScanTable, intra_scantable);
     ScanTable intra_h_scantable;
     ScanTable intra_v_scantable;
     ScanTable inter_scantable; ///< if inter == intra then intra should be used to reduce tha cache usage
@@ -773,6 +773,7 @@ void ff_write_quant_matrix(PutBitContext *pb, int16_t *matrix);
 int ff_find_unused_picture(MpegEncContext *s, int shared);
 void ff_denoise_dct(MpegEncContext *s, DCTELEM *block);
 void ff_update_duplicate_context(MpegEncContext *dst, MpegEncContext *src);
+const uint8_t *ff_find_start_code(const uint8_t *p, const uint8_t *end, uint32_t *state);
 
 void ff_er_frame_start(MpegEncContext *s);
 void ff_er_frame_end(MpegEncContext *s);

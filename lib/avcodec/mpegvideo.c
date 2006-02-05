@@ -228,6 +228,32 @@ void ff_write_quant_matrix(PutBitContext *pb, int16_t *matrix){
 }
 #endif //CONFIG_ENCODERS
 
+const uint8_t *ff_find_start_code(const uint8_t * restrict p, const uint8_t *end, uint32_t * restrict state){
+    int i;
+
+    for(i=0; i<3; i++){
+        uint32_t tmp= *state << 8;
+        *state= tmp + *(p++);
+        if(tmp == 0x100 || p==end)
+            return p;
+    }
+
+    while(p<end){
+        if     (p[-1] > 1      ) p+= 3;
+        else if(p[-2]          ) p+= 2;
+        else if(p[-3]|(p[-1]-1)) p++;
+        else{
+            p++;
+            break;
+        }
+    }
+
+    p= FFMIN(p, end)-4;
+    *state=  be2me_32(unaligned32(p));
+
+    return p+4;
+}
+
 /* init common dct for both encoder and decoder */
 int DCT_common_init(MpegEncContext *s)
 {
@@ -5937,7 +5963,7 @@ static int dct_quantize_refine(MpegEncContext *s, //FIXME breaks denoise?
                         DCTELEM *block, int16_t *weight, DCTELEM *orig,
                         int n, int qscale){
     int16_t rem[64];
-    DCTELEM d1[64] __align16;
+    DECLARE_ALIGNED_16(DCTELEM, d1[64]);
     const int *qmat;
     const uint8_t *scantable= s->intra_scantable.scantable;
     const uint8_t *perm_scantable= s->intra_scantable.permutated;
