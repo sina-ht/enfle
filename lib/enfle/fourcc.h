@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Sep 19 10:28:18 2004.
- * $Id: fourcc.h,v 1.14 2004/09/22 19:28:35 sian Exp $
+ * Last Modified: Fri Jan 27 17:51:32 2006.
+ * $Id: fourcc.h,v 1.15 2006/02/05 14:36:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -59,6 +59,7 @@
 #define FCC_BLZ0 FCC('B', 'L', 'Z', '0')
 #define FCC_mp4v FCC('m', 'p', '4', 'v')
 #define FCC_UMP4 FCC('U', 'M', 'P', '4')
+#define FCC_FMP4 FCC('F', 'M', 'P', '4')
 #define FCC_XVID FCC('X', 'V', 'I', 'D')
 #define FCC_xvid FCC('x', 'v', 'i', 'd')
 
@@ -138,6 +139,8 @@
 #define FCC_FFV1 FCC('F', 'F', 'V', '1')
 #define FCC_Xxan FCC('X', 'x', 'a', 'n')
 #define FCC_cvid FCC('c', 'v', 'i', 'd')
+
+#define FCC_GIF  FCC('G', 'I', 'F', ' ')
 
 #define FCC_NONE FCC(0xff, 0xff, 0xff, 0xff)
 

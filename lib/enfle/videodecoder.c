@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 13:58:43 2005.
- * $Id: videodecoder.c,v 1.7 2005/07/03 13:02:57 sian Exp $
+ * Last Modified: Fri Jan 27 17:55:58 2006.
+ * $Id: videodecoder.c,v 1.8 2006/02/05 14:36:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -87,6 +87,7 @@ videodecoder_codec_name(unsigned int fourcc)
   case FCC_BLZ0:
   case FCC_mp4v:
   case FCC_UMP4:
+  case FCC_FMP4:
     return "mpeg4";
   case FCC_DIV3: // invalid_asf
   case FCC_div3: // invalid_asf

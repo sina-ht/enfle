@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 27 00:15:02 2005.
- * $Id: avcodec.c,v 1.15 2005/12/27 14:42:25 sian Exp $
+ * Last Modified: Fri Jan 27 17:52:26 2006.
+ * $Id: avcodec.c,v 1.16 2006/02/05 14:36:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -400,6 +400,7 @@ query(unsigned int fourcc, void *priv)
   case FCC_BLZ0:
   case FCC_mp4v:
   case FCC_UMP4:
+  case FCC_FMP4:
   case FCC_DIV3: // msmpeg4
   case FCC_div3:
   case FCC_DIV4:
@@ -486,6 +487,7 @@ init(unsigned int fourcc, void *priv)
   case FCC_BLZ0:
   case FCC_mp4v:
   case FCC_UMP4:
+  case FCC_FMP4:
   case FCC_DIV3: // msmpeg4
   case FCC_div3:
   case FCC_DIV4:
