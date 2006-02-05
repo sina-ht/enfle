@@ -1,3 +1,37 @@
+2006-02-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/generic/generic.c: Show more informative message
+	when no videodecoder is found.
+
+	* lib/enfle/fourcc.h, lib/enfle/videodecoder.c,
+	plugins/videodecoder/avcodec/avcodec.c: Added FMP4 fourcc.
+
+	* lib/avcodec/4xm.c, lib/avcodec/alac.c, lib/avcodec/asv1.c,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h, lib/avcodec/dv.c,
+	lib/avcodec/dvdsub.c, lib/avcodec/flicvideo.c, lib/avcodec/h261.c,
+	lib/avcodec/h264.c, lib/avcodec/i386/dsputil_h264_template_mmx.c,
+	lib/avcodec/i386/dsputil_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx_template.c,
+	lib/avcodec/i386/vp3dsp_sse2.c, lib/avcodec/imgresample.c,
+	lib/avcodec/jpeg_ls.c, lib/avcodec/mdec.c, lib/avcodec/mem.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/parser.c, lib/avcodec/ppc/dsputil_h264_altivec.c,
+	lib/avcodec/qdm2.c, lib/avcodec/raw.c, lib/avcodec/snow.c,
+	lib/avcodec/utils.c, lib/avcodec/vc9.c, lib/avcodec/vorbis.c,
+	lib/avcodec/vorbis.h, lib/avcodec/vp3.c, lib/avcodec/wmadec.c,
+	lib/avcodec/wmv2.c: Updated.
+
+2006-01-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/4xm.c, lib/avcodec/asv1.c, lib/avcodec/avcodec.h,
+	lib/avcodec/flac.c, lib/avcodec/h263.c, lib/avcodec/h264.c,
+	lib/avcodec/huffyuv.c, lib/avcodec/jpeg_ls.c, lib/avcodec/mdec.c,
+	lib/avcodec/mem.c, lib/avcodec/mpeg4data.h,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/parser.c, lib/avcodec/ratecontrol.c,
+	lib/avcodec/shorten.c, lib/avcodec/snow.c: Updated.
+
 2006-01-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c:
