@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 28 02:18:33 2005.
- * $Id: generic.c,v 1.24 2005/12/27 17:31:43 sian Exp $
+ * Last Modified: Fri Jan 27 17:50:04 2006.
+ * $Id: generic.c,v 1.25 2006/02/05 14:37:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -149,7 +149,12 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     demultiplexer_set_video(m->demux, info->nvstream);
 
     if ((m->v_codec_name = videodecoder_codec_name(m->v_fourcc)) == NULL) {
-      show_message("No videodecoder for %X\n", m->v_fourcc);
+      show_message("No videodecoder for %c%c%c%c(%08X)\n",
+		    m->v_fourcc        & 0xff,
+		   (m->v_fourcc >>  8) & 0xff,
+		   (m->v_fourcc >> 16) & 0xff,
+		   (m->v_fourcc >> 24) & 0xff,
+		   m->v_fourcc);
       warning("Video will not be played.\n");
     } else {
       m->has_video = 1;
