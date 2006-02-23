@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Jan 27 15:24:59 2006.
-# $Id: Makefile.am,v 1.37 2006/01/27 06:26:28 sian Exp $
+# Last Modified: Thu Feb 23 22:33:10 2006.
+# $Id: Makefile.am,v 1.38 2006/02/23 13:34:20 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -142,6 +142,7 @@ libavcodec_la_SOURCES = \
 	alac.c \
 	allcodecs.c \
 	asv1.c \
+	avs.c \
 	bitstream.c \
 	bmp.c \
 	cabac.c \
@@ -190,6 +191,7 @@ libavcodec_la_SOURCES = \
 	mdct.c \
 	mem.c \
 	mjpeg.c \
+	mmvideo.c \
 	motion_est.c \
 	mpeg12.c \
 	mpegaudio.c \
@@ -230,6 +232,7 @@ libavcodec_la_SOURCES = \
 	truemotion2.c \
 	truespeech.c \
 	tscc.c \
+	tta.c \
 	ulti.c \
 	utils.c \
 	vc9.c \
@@ -245,4 +248,5 @@ libavcodec_la_SOURCES = \
 	xan.c \
 	xl.c \
 	xvmcvideo.c \
+	zmbv.c \
 	$(MMX_SRCS)

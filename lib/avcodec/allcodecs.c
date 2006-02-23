@@ -444,6 +444,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_ZLIB_DECODER
     register_avcodec(&zlib_decoder);
 #endif //CONFIG_ZLIB_DECODER
+#ifdef CONFIG_ZMBV_DECODER
+    register_avcodec(&zmbv_decoder);
+#endif //CONFIG_ZMBV_DECODER
 #ifdef CONFIG_SONIC_DECODER
     register_avcodec(&sonic_decoder);
 #endif //CONFIG_SONIC_DECODER
@@ -505,6 +508,12 @@ void avcodec_register_all(void)
 #ifdef CONFIG_TRUESPEECH_DECODER
     register_avcodec(&truespeech_decoder);
 #endif //CONFIG_TRUESPEECH_DECODER
+#ifdef CONFIG_TTA_DECODER
+    register_avcodec(&tta_decoder);
+#endif //CONFIG_TTA_DECODER
+#ifdef CONFIG_AVS_DECODER
+    register_avcodec(&avs_decoder);
+#endif //CONFIG_AVS_DECODER
 #ifdef CONFIG_RAWVIDEO_DECODER
     register_avcodec(&rawvideo_decoder);
 #endif //CONFIG_RAWVIDEO_DECODER
@@ -535,6 +544,10 @@ void avcodec_register_all(void)
 #ifdef CONFIG_BMP_DECODER
     register_avcodec(&bmp_decoder);
 #endif
+
+#if CONFIG_MMVIDEO_DECODER
+    register_avcodec(&mmvideo_decoder);
+#endif //CONFIG_MMVIDEO_DECODER
 
     /* pcm codecs */
 #if defined (CONFIG_ENCODERS) && defined (CONFIG_DECODERS)
@@ -583,6 +596,9 @@ PCM_CODEC(CODEC_ID_ADPCM_G726, adpcm_g726);
 PCM_CODEC(CODEC_ID_ADPCM_CT, adpcm_ct);
 PCM_CODEC(CODEC_ID_ADPCM_SWF, adpcm_swf);
 PCM_CODEC(CODEC_ID_ADPCM_YAMAHA, adpcm_yamaha);
+PCM_CODEC(CODEC_ID_ADPCM_SBPRO_4, adpcm_sbpro_4);
+PCM_CODEC(CODEC_ID_ADPCM_SBPRO_3, adpcm_sbpro_3);
+PCM_CODEC(CODEC_ID_ADPCM_SBPRO_2, adpcm_sbpro_2);
 #undef PCM_CODEC
 
     /* subtitles */
@@ -622,5 +638,6 @@ PCM_CODEC(CODEC_ID_ADPCM_YAMAHA, adpcm_yamaha);
 #ifdef CONFIG_DVBSUB_DECODER
     av_register_codec_parser(&dvbsub_parser);
 #endif
+    av_register_codec_parser(&aac_parser);
 }
 
