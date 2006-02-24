@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 01:38:29 2006.
- * $Id: archive.h,v 1.15 2006/02/24 16:56:58 sian Exp $
+ * Last Modified: Sat Feb 25 02:24:06 2006.
+ * $Id: archive.h,v 1.16 2006/02/24 17:55:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@ typedef enum _archive_fnmatch {
 
 typedef struct _archive Archive;
 struct _archive {
+  Archive *parent;
   int nfiles;
   Hash *filehash;
   Stream *st;

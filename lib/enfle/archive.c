@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 01:34:16 2006.
- * $Id: archive.c,v 1.38 2006/02/24 16:56:58 sian Exp $
+ * Last Modified: Sat Feb 25 02:49:48 2006.
+ * $Id: archive.c,v 1.39 2006/02/24 17:55:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,15 +58,16 @@ archive_create(Archive *parent)
     return NULL;
   }
   arc->format = (char *)"NORMAL";
-  if (parent) {
+
+  if (parent == ARCHIVE_ROOT) {
+    arc->path = strdup("");
+  } else {
+    arc->parent = parent;
     if (parent->pattern) {
       arc->fnmatch = parent->fnmatch;
       arc->pattern = strdup(parent->pattern);
     }
-    if (parent->path)
-      arc->path = strdup(parent->path);
-  } else
-    arc->path = strdup("");
+  }
 
   return arc;
 }
@@ -85,7 +86,11 @@ read_directory_recursively(Dlist *dl, char *basepath, char *addpath, int depth)
   strcpy(path, basepath);
   strcat(path, addpath);
 
-  if (stat(path, &statbuf) || !S_ISDIR(statbuf.st_mode))
+  if (stat(path, &statbuf)) {
+    err_message_fnc("stat for [%s] failed\n", path);
+    return -1;
+  }
+  if (!S_ISDIR(statbuf.st_mode))
     return -1;
 
   if ((dir = opendir(path)) == NULL)
@@ -142,10 +147,21 @@ archive_read_directory(Archive *arc, char *path, int depth)
   Dlist *dl;
   Dlist_data *dd;
 
-  if (strlen(arc->path) == 0) {
-    free(arc->path);
-    if ((arc->path = misc_canonical_pathname(path)) == NULL)
-      return 0;
+  if (arc->path == NULL) {
+    if (!arc->parent) {
+      arc->path = strdup(path);
+    } else {
+      int p_path_len = strlen(arc->parent->path);
+      arc->path = malloc(p_path_len + 1 + strlen(path) +1);
+      if (!arc->path)
+	return 0;
+      strcpy(arc->path, arc->parent->path);
+      if (p_path_len > 0 && arc->path[p_path_len - 1] != '/') {
+	arc->path[p_path_len] = '/';
+	arc->path[p_path_len + 1] = '\0';
+      }
+      strcat(arc->path, path);
+    }
     path = (char *)"";
   }
 
