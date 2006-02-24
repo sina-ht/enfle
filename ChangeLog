@@ -1,3 +1,32 @@
+2006-02-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: When arc has a parent, prepend
+	parent's path to get a more informative path name.
+
+	* lib/enfle/archive.c, lib/enfle/archive.h: New member 'parent'.
+	When arc has a parent, concatenate parent's path and a given
+	path (should be relative) to make arc's path.
+
+	* lib/enfle/archive.c, lib/enfle/archive.h: Simplified so that
+	only open() and destroy() can be overridden.
+
+2006-02-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c,
+	lib/avcodec/alac.c, lib/avcodec/allcodecs.c,
+	lib/avcodec/alpha/dsputil_alpha_asm.S,
+	lib/avcodec/alpha/motion_est_mvi_asm.S, lib/avcodec/avcodec.h,
+	lib/avcodec/avs.c, lib/avcodec/cook.c, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c, lib/avcodec/faac.c,
+	lib/avcodec/faad.c, lib/avcodec/ffv1.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/h264idct.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/h264dsp_mmx.c,
+	lib/avcodec/mmvideo.c, lib/avcodec/mpegvideo.c, lib/avcodec/opt.c,
+	lib/avcodec/parser.c,
+	lib/avcodec/ppc/dsputil_h264_template_altivec.c,
+	lib/avcodec/tscc.c, lib/avcodec/tta.c, lib/avcodec/utils.c,
+	lib/avcodec/wmadec.c, lib/avcodec/zmbv.c: Updated.
+
 2006-02-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/generic/generic.c: Show more informative message
