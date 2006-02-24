@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 02:48:05 2006.
- * $Id: normal.c,v 1.91 2006/02/24 17:56:40 sian Exp $
+ * Last Modified: Sat Feb 25 04:30:45 2006.
+ * $Id: normal.c,v 1.92 2006/02/24 19:33:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -203,7 +203,7 @@ convert_cat(String *cap, char *s, Config *c)
 static void
 convert_path(String *cap, char *s, Config *c)
 {
-  static char delimiters[] = { '/', '\0' };
+  static char delimiters[] = { '/', '#', '\0' };
   char *part, **parts, *used_delim;
   int i;
 
@@ -230,6 +230,7 @@ set_caption_string(MainLoop *ml)
   String *cap;
   VideoWindow *vw = ml->vw;
   char *template;
+  char *fullpath;
   int i;
   int literal_start, literal_mode;
 
@@ -290,10 +291,14 @@ set_caption_string(MainLoop *ml)
       case 'F':
 	string_cat(cap, ml->p->format); break;
       case 'p':
-	if (ml->a->parent)
+	if (ml->a->parent && strcmp(ml->a->parent->format, "NORMAL") != 0 && ml->a->parent->path[0] != 0) {
+	  debug_message_fnc("parent path = %s\n", ml->a->parent->path);
 	  convert_path(cap, misc_basename(ml->a->parent->path), ml->uidata->c);
-	convert_path(cap, misc_basename(ml->a->path), ml->uidata->c);
-	convert_path(cap, ml->path, ml->uidata->c); break;
+	}
+	fullpath = archive_getpathname(ml->a, ml->path);
+	convert_path(cap, fullpath, ml->uidata->c);
+	free(fullpath);
+	break;
       case 'P':
 	convert_path(cap, ml->a->path, ml->uidata->c);
 	convert_path(cap, ml->path, ml->uidata->c); break;

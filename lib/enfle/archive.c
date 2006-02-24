@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 03:53:49 2006.
- * $Id: archive.c,v 1.40 2006/02/24 18:55:38 sian Exp $
+ * Last Modified: Sat Feb 25 04:31:35 2006.
+ * $Id: archive.c,v 1.41 2006/02/24 19:33:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -103,10 +103,12 @@ read_directory_recursively(Dlist *dl, char *basepath, char *addpath, int depth)
     if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
       continue;
     strcpy(fullpath, path);
-    strcat(fullpath, "/");
+    if (fullpath[0] != 0 && fullpath[strlen(fullpath) - 1] != '/')
+      strcat(fullpath, "/");
     strcat(fullpath, ent->d_name);
     strcpy(filepath, addpath);
-    strcat(filepath, "/");
+    if (filepath[0] != 0 && filepath[strlen(filepath) - 1] != '/')
+      strcat(filepath, "/");
     strcat(filepath, ent->d_name);
 
     if (!stat(fullpath, &statbuf)) {
@@ -251,9 +253,8 @@ archive_getpathname(Archive *arc, char *path)
   if ((fullpath = malloc(strlen(arc->path) + strlen(path) + 2)) == NULL)
     return NULL;
   strcpy(fullpath, arc->path);
-  if (strcmp(arc->format, "NORMAL") != 0)
-    strcat(fullpath, "#");
-  else if (fullpath[strlen(fullpath) - 1] != '/')
+
+  if (strcmp(arc->format, "NORMAL") == 0 && fullpath[0] != 0 && fullpath[strlen(fullpath) - 1] != '/')
     strcat(fullpath, "/");
   strcat(fullpath, path);
 
