@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 02:49:48 2006.
- * $Id: archive.c,v 1.39 2006/02/24 17:55:48 sian Exp $
+ * Last Modified: Sat Feb 25 03:53:49 2006.
+ * $Id: archive.c,v 1.40 2006/02/24 18:55:38 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -97,19 +97,20 @@ read_directory_recursively(Dlist *dl, char *basepath, char *addpath, int depth)
     fatal_perror(__FUNCTION__);
 
   while ((ent = readdir(dir))) {
-    char fullpath[strlen(path) + strlen(ent->d_name) + 1];
+    char fullpath[strlen(path) + strlen(ent->d_name) + 2];
     char filepath[strlen(addpath) + strlen(ent->d_name) + 2];
-    /* +2 is needed for last '/'. */
 
     if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
       continue;
     strcpy(fullpath, path);
+    strcat(fullpath, "/");
     strcat(fullpath, ent->d_name);
     strcpy(filepath, addpath);
+    strcat(filepath, "/");
     strcat(filepath, ent->d_name);
+
     if (!stat(fullpath, &statbuf)) {
       if (S_ISDIR(statbuf.st_mode)) {
-	strcat(filepath, "/");
 	if (depth > 1)
 	  depth--;
 	if (depth == 0 || depth > 1) {
@@ -252,6 +253,8 @@ archive_getpathname(Archive *arc, char *path)
   strcpy(fullpath, arc->path);
   if (strcmp(arc->format, "NORMAL") != 0)
     strcat(fullpath, "#");
+  else if (fullpath[strlen(fullpath) - 1] != '/')
+    strcat(fullpath, "/");
   strcat(fullpath, path);
 
   return fullpath;
