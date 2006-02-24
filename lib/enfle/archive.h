@@ -1,10 +1,10 @@
 /*
  * archive.h -- archive interface header
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May 15 01:43:53 2005.
- * $Id: archive.h,v 1.14 2005/07/03 13:02:30 sian Exp $
+ * Last Modified: Sat Feb 25 01:38:29 2006.
+ * $Id: archive.h,v 1.15 2006/02/24 16:56:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,54 +34,32 @@ typedef enum _archive_fnmatch {
 
 typedef struct _archive Archive;
 struct _archive {
+  int nfiles;
   Hash *filehash;
-  Dlist_data *current;
   Stream *st;
   char *format;
   char *path;
+
   char *pattern;
   Archive_fnmatch fnmatch;
-  int direction;
-  int nfiles;
+
   int iteration_index;
+  int direction;
+  Dlist_data *current;
+
   void *data;
 
-  int (*read_directory)(Archive *, char *, int);
-  void (*set_fnmatch)(Archive *, char *, Archive_fnmatch);
-  void (*add)(Archive *, char *, void *);
-  void *(*get)(Archive *, char *);
-  char *(*delete_and_get)(Archive *, int);
-  char *(*getpathname)(Archive *, char *);
-  char *(*iteration_start)(Archive *);
-  char *(*iteration_first)(Archive *);
-  char *(*iteration_last)(Archive *);
-  char *(*iteration_next)(Archive *);
-  char *(*iteration_prev)(Archive *);
-  char *(*iteration)(Archive *);
-  char *(*iteration_delete)(Archive *);
+  /* Overridden by an archive plugin */
   int (*open)(Archive *, Stream *, char *);
   void (*destroy)(Archive *);
 };
 
 #define ARCHIVE_FILEHASH_SIZE 65537
 
-#define archive_direction(a) (a)->direction
-#define archive_read_directory(a, p, d) (a)->read_directory((a), (p), (d))
-#define archive_set_fnmatch(a, p, f) (a)->set_fnmatch((a), (p), (f))
-#define archive_add(a, p, rem) (a)->add((a), (p), (rem))
-#define archive_get(a, p) (a)->get((a), (p))
-#define archive_delete(a, d) (a)->delete_and_get((a), (d))
-#define archive_getpathname(a, p) (a)->getpathname((a), (p))
-#define archive_iteration_start(a) (a)->iteration_start((a))
-#define archive_iteration_first(a) (a)->iteration_first((a))
-#define archive_iteration_last(a) (a)->iteration_last((a))
-#define archive_iteration_next(a) (a)->iteration_next((a))
-#define archive_iteration_prev(a) (a)->iteration_prev((a))
-#define archive_iteration(a) (a)->iteration((a))
-#define archive_iteration_delete(a) (a)->iteration_delete((a))
 #define archive_open(a, st, n) (a)->open((a), (st), (n))
 #define archive_destroy(a) (a)->destroy((a))
 
+#define archive_direction(a) ((a)->direction)
 #define archive_nfiles(a) ((a)->nfiles)
 #define archive_iteration_index(a) ((a)->iteration_index)
 
@@ -89,5 +67,18 @@ struct _archive {
 
 Archive *archive_create(Archive *);
 int archive_key_compare(const void *, const void *);
+int archive_read_directory(Archive *arc, char *path, int depth);
+void archive_set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnm);
+void archive_add(Archive *arc, char *path, void *reminder);
+void *archive_get(Archive *arc, char *path);
+char *archive_delete(Archive *arc, int dir);
+char *archive_getpathname(Archive *arc, char *path);
+char *archive_iteration_start(Archive *arc);
+char *archive_iteration_first(Archive *arc);
+char *archive_iteration_last(Archive *arc);
+char *archive_iteration_next(Archive *arc);
+char *archive_iteration_prev(Archive *arc);
+char *archive_iteration(Archive *arc);
+char *archive_iteration_delete(Archive *arc);
 
 #endif

@@ -1,10 +1,10 @@
 /*
  * archive.c -- archive interface
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jul 18 16:48:33 2005.
- * $Id: archive.c,v 1.37 2005/07/23 21:24:06 sian Exp $
+ * Last Modified: Sat Feb 25 01:34:16 2006.
+ * $Id: archive.c,v 1.38 2006/02/24 16:56:58 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -36,37 +36,11 @@
 #include "archive.h"
 #include "utils/misc.h"
 
-static int read_directory(Archive *, char *, int);
-static void set_fnmatch(Archive *, char *, Archive_fnmatch);
-static void add(Archive *, char *, void *);
-static void *get(Archive *, char *);
-static char *getpathname(Archive *, char *);
 static void delete_path(Archive *, char *);
-static char *delete_and_get(Archive *, int);
-static char *iteration_start(Archive *);
-static char *iteration_first(Archive *);
-static char *iteration_last(Archive *);
-static char *iteration_next(Archive *);
-static char *iteration_prev(Archive *);
-static char *iteration(Archive *);
-static char *iteration_delete(Archive *);
 static int open(Archive *, Stream *, char *);
 static void destroy(Archive *);
 
 static Archive archive_template = {
-  .read_directory = read_directory,
-  .set_fnmatch = set_fnmatch,
-  .add = add,
-  .get = get,
-  .delete_and_get = delete_and_get,
-  .getpathname = getpathname,
-  .iteration_start = iteration_start,
-  .iteration_first = iteration_first,
-  .iteration_last = iteration_last,
-  .iteration_next = iteration_next,
-  .iteration_prev = iteration_prev,
-  .iteration = iteration,
-  .iteration_delete = iteration_delete,
   .open = open,
   .destroy = destroy
 };
@@ -161,8 +135,8 @@ archive_key_compare(const void *a, const void *b)
 
 /* methods */
 
-static int
-read_directory(Archive *arc, char *path, int depth)
+int
+archive_read_directory(Archive *arc, char *path, int depth)
 {
   int c;
   Dlist *dl;
@@ -182,7 +156,7 @@ read_directory(Archive *arc, char *path, int depth)
   dlist_set_compfunc(dl, archive_key_compare);
   dlist_sort(dl);
   dlist_iter (dl, dd) {
-    add(arc, dlist_data(dd), strdup(dlist_data(dd)));
+    archive_add(arc, dlist_data(dd), strdup(dlist_data(dd)));
   }
   dlist_destroy(dl);
 
@@ -191,8 +165,8 @@ read_directory(Archive *arc, char *path, int depth)
   return 1;
 }
 
-static void
-set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnm)
+void
+archive_set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnm)
 {
   if (arc->pattern)
     free(arc->pattern);
@@ -201,8 +175,8 @@ set_fnmatch(Archive *arc, char *pattern, Archive_fnmatch fnm)
 }
 
 /* reminder should be a free-able region or NULL */
-static void
-add(Archive *arc, char *path, void *reminder)
+void
+archive_add(Archive *arc, char *path, void *reminder)
 {
   //debug_message_fnc("%s\n", path);
 
@@ -244,14 +218,14 @@ add(Archive *arc, char *path, void *reminder)
   }
 }
 
-static void *
-get(Archive *arc, char *path)
+void *
+archive_get(Archive *arc, char *path)
 {
   return hash_lookup_str(arc->filehash, path);
 }
 
-static char *
-getpathname(Archive *arc, char *path)
+char *
+archive_getpathname(Archive *arc, char *path)
 {
   char *fullpath;
 
@@ -301,11 +275,11 @@ __iteration_index(Archive *arc)
   return i;
 }
 
-static char *
-iteration_start(Archive *arc)
+char *
+archive_iteration_start(Archive *arc)
 {
   if (!arc->current)
-    return iteration_first(arc);
+    return archive_iteration_first(arc);
 
   if (!dlist_data(arc->current))
     return NULL;
@@ -315,8 +289,8 @@ iteration_start(Archive *arc)
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
 
-static char *
-iteration_first(Archive *arc)
+char *
+archive_iteration_first(Archive *arc)
 {
   Dlist *dl = hash_get_keys(arc->filehash);
 
@@ -334,8 +308,8 @@ iteration_first(Archive *arc)
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
 
-static char *
-iteration_last(Archive *arc)
+char *
+archive_iteration_last(Archive *arc)
 {
   Dlist *dl = hash_get_keys(arc->filehash);
 
@@ -353,8 +327,8 @@ iteration_last(Archive *arc)
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
 
-static char *
-iteration_next(Archive *arc)
+char *
+archive_iteration_next(Archive *arc)
 {
   Dlist *dl = hash_get_keys(arc->filehash);
 
@@ -370,8 +344,8 @@ iteration_next(Archive *arc)
   return hash_key_key((Hash_key *)dlist_data(arc->current));
 }
 
-static char *
-iteration_prev(Archive *arc)
+char *
+archive_iteration_prev(Archive *arc)
 {
   Dlist *dl = hash_get_keys(arc->filehash);
 
@@ -387,14 +361,14 @@ iteration_prev(Archive *arc)
   return hash_key_key(dlist_data(arc->current));
 }
 
-static char *
-iteration(Archive *arc)
+char *
+archive_iteration(Archive *arc)
 {
-  return arc->direction == 1 ? iteration_next(arc) : iteration_prev(arc);
+  return arc->direction == 1 ? archive_iteration_next(arc) : archive_iteration_prev(arc);
 }
 
-static char *
-delete_and_get(Archive *arc, int dir)
+char *
+archive_delete(Archive *arc, int dir)
 {
   Dlist *dl = hash_get_keys(arc->filehash);
   Dlist_data *dl_n;
@@ -416,10 +390,10 @@ delete_and_get(Archive *arc, int dir)
 #undef __dlist_next_or_null
 #undef __dlist_prev_or_null
 
-static char *
-iteration_delete(Archive *arc)
+char *
+archive_iteration_delete(Archive *arc)
 {
-  return delete_and_get(arc, arc->direction);
+  return archive_delete(arc, arc->direction);
 }
 
 static int
