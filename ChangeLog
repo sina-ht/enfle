@@ -1,5 +1,12 @@
 2006-02-24  Hiroshi Takekawa  <sian@fennel.org>
 
+	* lib/enfle/archive.c, plugins/ui/normal/normal.c: Clean up path
+	mess.
+
+	* lib/enfle/archive.c: Path concatenation bug fix.
+
+	* src/enfle.c: Check the return value of archive_read_directory().
+
 	* plugins/ui/normal/normal.c: When arc has a parent, prepend
 	parent's path to get a more informative path name.
 
