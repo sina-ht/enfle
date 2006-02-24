@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 27 10:06:26 2006.
- * $Id: enfle.c,v 1.73 2006/01/27 06:27:53 sian Exp $
+ * Last Modified: Sat Feb 25 03:48:50 2006.
+ * $Id: enfle.c,v 1.74 2006/02/24 18:54:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -331,7 +331,8 @@ scan_and_load_plugins(EnflePlugins *eps, Config *c, char *plugin_path)
   }
 
   a = archive_create(ARCHIVE_ROOT);
-  archive_read_directory(a, plugin_path, 0);
+  if (!archive_read_directory(a, plugin_path, 0))
+    return 0;
   path = archive_iteration_start(a);
   while (path) {
     base_name = misc_basename(path);
