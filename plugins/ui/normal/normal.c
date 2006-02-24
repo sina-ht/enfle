@@ -1,10 +1,10 @@
 /*
  * normal.c -- Normal UI plugin
- * (C)Copyright 2000-2004 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 27 10:08:12 2006.
- * $Id: normal.c,v 1.90 2006/01/27 06:27:53 sian Exp $
+ * Last Modified: Sat Feb 25 02:48:05 2006.
+ * $Id: normal.c,v 1.91 2006/02/24 17:56:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,7 +56,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   .type = ENFLE_PLUGIN_UI,
   .name = "Normal",
-  .description = "Normal UI plugin version 0.6.1",
+  .description = "Normal UI plugin version 0.6.2",
   .author = "Hiroshi Takekawa",
 
   .ui_main = ui_main,
@@ -290,6 +290,8 @@ set_caption_string(MainLoop *ml)
       case 'F':
 	string_cat(cap, ml->p->format); break;
       case 'p':
+	if (ml->a->parent)
+	  convert_path(cap, misc_basename(ml->a->parent->path), ml->uidata->c);
 	convert_path(cap, misc_basename(ml->a->path), ml->uidata->c);
 	convert_path(cap, ml->path, ml->uidata->c); break;
       case 'P':
@@ -802,8 +804,8 @@ process_file(UIData *uidata, char *path, Archive *a, Stream *s, Movie *m, void *
     char *fullpath = archive_getpathname(a, path);
 
     if ((p = cache_get_image(uidata->cache, fullpath)) != NULL) {
-      free(fullpath);
       debug_message_fnc("Using cached image for %s\n", fullpath);
+      free(fullpath);
       s->format = strdup("CACHED");
       return main_loop(uidata, vw, NULL, p, s, a, path, gui);
     }
