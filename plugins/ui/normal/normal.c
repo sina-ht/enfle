@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 04:30:45 2006.
- * $Id: normal.c,v 1.92 2006/02/24 19:33:28 sian Exp $
+ * Last Modified: Fri Mar  3 01:43:08 2006.
+ * $Id: normal.c,v 1.93 2006/03/03 16:46:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -345,7 +345,7 @@ set_caption_string(MainLoop *ml)
   }
 
   video_window_set_caption(vw, string_get(cap));
-#if defined(DEBUG)
+#if defined(MORE_DEBUG)
   if (!vw->if_fullscreen)
     debug_message_fnc("%s\n", string_get(cap));
 #endif

@@ -3,8 +3,8 @@
  * (C)Copyright 2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 28 21:57:38 2005.
- * $Id: cache.c,v 1.2 2005/09/27 13:45:58 sian Exp $
+ * Last Modified: Fri Mar  3 01:44:17 2006.
+ * $Id: cache.c,v 1.3 2006/03/03 16:46:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -153,7 +153,7 @@ cache_add(Cache *c, CachedObject *co, CachedObjectDestructor cod)
   }
   dlist_move_to_top(c->dl, dd);
 
-  debug_message_fnc("Cache: %d objects\n", dlist_size(c->dl));
+  //debug_message_fnc("Cache: %d objects\n", dlist_size(c->dl));
 
   return 1;
 }

@@ -4,8 +4,8 @@
  * Adapted for newer version by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jul  9 03:09:51 2005.
- * $Id: arc.c,v 1.6 2005/07/08 18:16:40 sian Exp $
+ * Last Modified: Fri Mar  3 01:45:25 2006.
+ * $Id: arc.c,v 1.7 2006/03/03 16:46:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -122,9 +122,7 @@ DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
 {
   char *tmp;
 
-  debug_message_fnc("%s\n", st->path);
   if ((tmp = strchr(st->path, '#')) != NULL) {
-    debug_message_fnc("tmp %p, path %p\n", tmp, st->path);
     if (tmp != st->path) {
       tmp--;
      if (*tmp != '/')
