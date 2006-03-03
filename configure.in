@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2006 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Feb 25 02:57:56 2006.
-dnl $Id: configure.in,v 1.179 2006/02/24 17:58:39 sian Exp $
+dnl Last Modified: Sat Mar  4 01:47:27 2006.
+dnl $Id: configure.in,v 1.180 2006/03/03 16:54:03 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT([enfle],[20060225],[sian@big.or.jp])
+AC_INIT([enfle],[20060304],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -853,6 +853,7 @@ AC_CONFIG_FILES([
     plugins/loader/pcx/Makefile
     plugins/loader/png/Makefile
     plugins/loader/pnm/Makefile
+    plugins/loader/tga/Makefile
     plugins/loader/ungif/Makefile
     plugins/loader/gif/Makefile
     plugins/loader/xbm/Makefile
@@ -891,11 +892,11 @@ AC_CONFIG_FILES([
     plugins/videodecoder/libmpeg2/Makefile
     plugins/videodecoder/raw/Makefile
    plugins/demultiplexer/Makefile
+    plugins/demultiplexer/asf/Makefile
     plugins/demultiplexer/avi/Makefile
+    plugins/demultiplexer/mp3/Makefile
     plugins/demultiplexer/mpeg/Makefile
     plugins/demultiplexer/ogg/Makefile
-    plugins/demultiplexer/mp3/Makefile
-    plugins/demultiplexer/asf/Makefile
 ])
 
 AC_OUTPUT
