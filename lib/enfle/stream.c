@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:50:49 2004.
- * $Id: stream.c,v 1.12 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sat Mar  4 01:40:25 2006.
+ * $Id: stream.c,v 1.13 2006/03/03 16:45:12 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -198,7 +198,7 @@ memorystream_seek(Stream *s, long offset, StreamWhence whence)
       err_message_fnc("_END: underflow (offset = %ld)\n", offset);
       return 0;
     }
-    s->ptr = s->buffer + s->buffer_size - offset;
+    s->ptr = s->buffer + s->buffer_size + offset;
     return 1;
   }
 
