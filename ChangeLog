@@ -1,3 +1,19 @@
+2006-03-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/loader/Makefile.am,
+	plugins/loader/tga/.cvsignore, plugins/loader/tga/Makefile.am,
+	plugins/loader/tga/tga.c: Added TGA loader plugin.  Version up.
+
+	* lib/enfle/cache_image.c, lib/utils/cache.c,
+	plugins/archiver/arc/arc.c, plugins/ui/normal/normal.c: Suppress
+	some debug messages.
+
+	* lib/enfle/stream.c: Fixed a memorystream_seek() bug.
+
+2006-03-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/mad/synth.c: Fixed gcc-4.1.0 warnings.
+
 2006-02-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/archive.c, plugins/ui/normal/normal.c: Clean up path
