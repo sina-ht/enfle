@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar  3 01:43:08 2006.
- * $Id: normal.c,v 1.93 2006/03/03 16:46:31 sian Exp $
+ * Last Modified: Sun Mar 12 17:17:39 2006.
+ * $Id: normal.c,v 1.94 2006/03/12 08:25:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -294,10 +294,14 @@ set_caption_string(MainLoop *ml)
 	if (ml->a->parent && strcmp(ml->a->parent->format, "NORMAL") != 0 && ml->a->parent->path[0] != 0) {
 	  debug_message_fnc("parent path = %s\n", ml->a->parent->path);
 	  convert_path(cap, misc_basename(ml->a->parent->path), ml->uidata->c);
+	  fullpath = archive_getpathname(ml->a, ml->path);
+	  convert_path(cap, fullpath, ml->uidata->c);
+	  free(fullpath);
+	} else {
+	  convert_path(cap, misc_basename(ml->a->path), ml->uidata->c);
+	  string_cat_ch(cap, '/');
+	  convert_path(cap, ml->path, ml->uidata->c); break;
 	}
-	fullpath = archive_getpathname(ml->a, ml->path);
-	convert_path(cap, fullpath, ml->uidata->c);
-	free(fullpath);
 	break;
       case 'P':
 	convert_path(cap, ml->a->path, ml->uidata->c);
