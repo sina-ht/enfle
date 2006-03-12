@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Jul  9 03:11:13 2005.
-; $Id: enfle.rc,v 1.49 2005/07/08 18:16:20 sian Exp $
+; Last Modified: Sat Mar  4 01:43:20 2006.
+; $Id: enfle.rc,v 1.50 2006/03/12 08:25:18 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -100,6 +100,7 @@ enfle {
 	png := PNG:.
 	pbm := PNM:.
 	ppm := PNM:.
+	tga := TGA:.
 	xpm := XPM:.
 	xbm := XBM:.
       }
