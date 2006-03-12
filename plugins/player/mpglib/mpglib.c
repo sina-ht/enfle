@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 26 01:13:34 2005.
- * $Id: mpglib.c,v 1.13 2005/12/27 14:44:07 sian Exp $
+ * Last Modified: Wed Mar  1 00:33:04 2006.
+ * $Id: mpglib.c,v 1.14 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -91,7 +91,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 {
   Mpglib_info *info;
   Image *p;
-  int read_size, write_size;
+  int read_size, write_size, direct_renderable;
 
   if ((info = calloc(1, sizeof(Mpglib_info))) == NULL) {
     show_message("Mpglib: play_movie: No enough memory.\n");
@@ -118,9 +118,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   ExitMP3(&info->mp);
 
-  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  if (!m->direct_decode) {
-    show_message_fnc("Cannot direct decoding...\n");
+  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
+  if (!direct_renderable) {
+    show_message_fnc("Cannot render directly...\n");
     return PLAY_ERROR;
   }
   debug_message("Mpglib: requested type: %s direct\n", image_type_to_string(m->requested_type));
@@ -134,6 +134,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   m->rendering_height = m->height;
 
   p = info->p = image_create();
+  p->direct_renderable = direct_renderable;
   image_width(p) = m->rendering_width;
   image_height(p) = m->rendering_height;
   p->type = m->requested_type;

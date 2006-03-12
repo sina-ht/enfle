@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 27 17:52:26 2006.
- * $Id: avcodec.c,v 1.16 2006/02/05 14:36:51 sian Exp $
+ * Last Modified: Wed Mar  1 02:09:30 2006.
+ * $Id: avcodec.c,v 1.17 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -248,7 +248,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     m->framerate.den = vdm->vcodec_ctx->time_base.num;
     image_bpl(p) = vdm->vcodec_ctx->width * 2; /* XXX: hmm... */
     show_message_fnc("(%d, %d) bpl %d, fps %2.5f\n", m->width, m->height, image_bpl(p), rational_to_double(m->framerate));
-    if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
+    if (memory_alloc(image_renderable_image(p), image_bpl(p) * image_height(p)) == NULL) {
       err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
       return VD_ERROR;
     }
@@ -277,17 +277,17 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 #endif
   if (vdm->vcodec_ctx->pix_fmt == PIX_FMT_RGB555) {
     for (y = 0; y < m->height; y++) {
-      memcpy(memory_ptr(image_rendered_image(p)) + m->width * 2 * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, m->width * 2);
+      memcpy(memory_ptr(image_renderable_image(p)) + m->width * 2 * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, m->width * 2);
     }
   } else {
     for (y = 0; y < m->height; y++) {
-      memcpy(memory_ptr(image_rendered_image(p)) + m->width * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, m->width);
+      memcpy(memory_ptr(image_renderable_image(p)) + m->width * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, m->width);
     }
     for (y = 0; y < m->height >> 1; y++) {
-      memcpy(memory_ptr(image_rendered_image(p)) + (m->width >> 1) * y + m->width * m->height, vdm->vcodec_picture->data[1] + vdm->vcodec_picture->linesize[1] * y, m->width >> 1);
+      memcpy(memory_ptr(image_renderable_image(p)) + (m->width >> 1) * y + m->width * m->height, vdm->vcodec_picture->data[1] + vdm->vcodec_picture->linesize[1] * y, m->width >> 1);
     }
     for (y = 0; y < m->height >> 1; y++) {
-      memcpy(memory_ptr(image_rendered_image(p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), vdm->vcodec_picture->data[2] + vdm->vcodec_picture->linesize[2] * y, m->width >> 1);
+      memcpy(memory_ptr(image_renderable_image(p)) + (m->width >> 1) * y + m->width * m->height + (m->width >> 1) * (m->height >> 1), vdm->vcodec_picture->data[2] + vdm->vcodec_picture->linesize[2] * y, m->width >> 1);
     }
   }
   vdec->ts_base = dp->ts_base;
@@ -336,7 +336,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   vdm->p = p;
   vdm->if_image_alloced = 0;
   if (image_width(p) > 0) {
-    if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL) {
+    if (memory_alloc(image_renderable_image(p), image_bpl(p) * image_height(p)) == NULL) {
       err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
       return 0;
     }

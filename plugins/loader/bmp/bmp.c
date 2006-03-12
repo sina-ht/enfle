@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 03:02:30 2005.
- * $Id: bmp.c,v 1.14 2005/10/01 18:11:42 sian Exp $
+ * Last Modified: Wed Mar  1 00:22:54 2006.
+ * $Id: bmp.c,v 1.15 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -182,8 +182,6 @@ load_image(Image *p, Stream *st)
     show_message("Compressed bitmap not yet supported (method = %d).\n", compress_method);
     return 0;
   }
-
-  p->next = NULL;
 
   return 1;
 }

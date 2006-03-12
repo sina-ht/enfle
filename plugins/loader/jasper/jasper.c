@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:52:36 2005.
- * $Id: jasper.c,v 1.4 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Wed Mar  1 00:23:46 2006.
+ * $Id: jasper.c,v 1.5 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -205,8 +205,6 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 	*d++ = jas_image_readcmptsample(ji, cmp[k], j, i);
     }
   }
-
-  p->next = NULL;
 
   jas_image_destroy(ji);
 

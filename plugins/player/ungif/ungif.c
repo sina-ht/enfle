@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 27 22:55:05 2005.
- * $Id: ungif.c,v 1.33 2005/09/27 13:57:03 sian Exp $
+ * Last Modified: Wed Mar  1 00:32:34 2006.
+ * $Id: ungif.c,v 1.34 2006/03/12 08:24:16 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -96,7 +96,7 @@ ungif_input_func(GifFileType *GifFile, GifByteType *p, int s)
 static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
-  int i, size;
+  int i, size, direct_renderable;
   UNGIF_info *info;
   Image *p;
 
@@ -105,8 +105,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
-  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  debug_message("UNGIF: requested type: %s %s\n", image_type_to_string(m->requested_type), m->direct_decode ? "direct" : "not direct");
+  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
+  debug_message("UNGIF: requested type: %s %s\n", image_type_to_string(m->requested_type), direct_renderable ? "direct" : "not direct");
 
   if ((info->gf = DGifOpen(st, ungif_input_func)) == NULL) {
     PrintGifError();
@@ -120,15 +120,15 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   m->rendering_height = m->height;
 
   p = info->p = image_create();
+  p->direct_renderable = direct_renderable;
   image_width(p) = m->rendering_width;
   image_height(p) = m->rendering_height;
   p->type = _INDEX;
   p->depth = 8;
   image_bpl(p) = m->width;
   p->bits_per_pixel = 8;
-  p->next = NULL;
 
-  if (m->direct_decode) {
+  if (p->direct_renderable) {
     image_rendered_image(p) = memory_create();
     //memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(vw));
     if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
@@ -328,7 +328,7 @@ play_main(Movie *m, VideoWindow *vw)
 	}
       }
 
-      if (m->direct_decode) {
+      if (p->direct_renderable) {
 	if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
 	  return PLAY_ERROR;
 	memcpy(memory_ptr(image_rendered_image(p)), info->buffer[0], memory_used(image_rendered_image(p)));

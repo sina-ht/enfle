@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 02:40:50 2005.
- * $Id: Xlib.c,v 1.61 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Wed Mar  1 00:34:56 2006.
+ * $Id: Xlib.c,v 1.62 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -379,6 +379,9 @@ recreate_pixmap_if_resized(VideoWindow *vw, WindowResource *wr)
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
+
+  if (vw->render_width == 0 || vw->render_height == 0)
+    warning_fnc("vw->render_width == 0 || vm->render_height == 0!\n");
 
   if (wr->pix_width != vw->render_width || wr->pix_height != vw->render_height) {
     x11_lock(x11);
@@ -1290,8 +1293,7 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
   use_hw_scale = 0;
 #endif
 
-  if (image_image(p)) {
-    /* Not direct rendering */
+  if (!p->direct_renderable) {
     image_data_copy(p, IMAGE_INDEX_ORIGINAL, IMAGE_INDEX_RENDERED);
   } else {
     image_rendered_bpl(p) = image_bpl(p);

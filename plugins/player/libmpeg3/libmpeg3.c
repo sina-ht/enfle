@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 26 01:13:59 2005.
- * $Id: libmpeg3.c,v 1.48 2005/12/27 14:44:07 sian Exp $
+ * Last Modified: Wed Mar  1 00:27:23 2006.
+ * $Id: libmpeg3.c,v 1.49 2006/03/12 08:24:16 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -107,6 +107,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   LibMPEG3_info *info;
   Image *p;
   unsigned int i;
+  int direct_renderable;
 
   if ((info = calloc(1, sizeof(LibMPEG3_info))) == NULL) {
     show_message("LibMPEG3: play_movie: No enough memory.\n");
@@ -122,9 +123,9 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   pthread_mutex_init(&info->update_mutex, NULL);
   pthread_cond_init(&info->update_cond, NULL);
 
-  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  if (!m->direct_decode) {
-    show_message_fnc("Cannot do direct decoding...\n");
+  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
+  if (!direct_renderable) {
+    show_message_fnc("Cannot render directly...\n");
     return PLAY_ERROR;
   }
   debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
@@ -163,6 +164,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   }
 
   p = info->p = image_create();
+  p->direct_renderable = direct_renderable;
 
   m->has_video = 1;
   if (!mpeg3_has_video(info->file)) {

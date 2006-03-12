@@ -1,10 +1,10 @@
 /*
  * movie.h -- movie interface header
- * (C)Copyright 2000 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 26 15:53:24 2005.
- * $Id: movie.h,v 1.27 2005/09/27 13:57:03 sian Exp $
+ * Last Modified: Wed Mar  1 00:40:41 2006.
+ * $Id: movie.h,v 1.28 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -68,7 +68,6 @@ struct _movie {
   int rendering_width, rendering_height;
   unsigned int current_frame, num_of_frames;
   struct rational framerate;
-  int direct_decode;
   unsigned int v_fourcc;
   const char *v_codec_name;
   VideoDecoder *vdec;

@@ -3,8 +3,8 @@
  * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:48:11 2005.
- * $Id: ungif.c,v 1.19 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Wed Mar  1 00:23:16 2006.
+ * $Id: ungif.c,v 1.20 2006/03/12 08:24:16 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -189,7 +189,6 @@ load_image(Image *p, Stream *st)
       case GRAPHICS_EXT_FUNC_CODE:
 	if (Extension[1] & 1) {
 	  p->alpha_enabled = 1;
-	  p->mask = NULL; /* to be auto-generated */
 	  p->transparent_color.index = Extension[4];
 	}
 	/* ignore image disposal and delay in this loader plugin */
@@ -244,7 +243,6 @@ load_image(Image *p, Stream *st)
   p->depth = 8;
   p->bits_per_pixel = 8;
   image_bpl(p) = image_width(p);
-  p->next = NULL;
 
   if ((d = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL)
     goto error_after_closed;

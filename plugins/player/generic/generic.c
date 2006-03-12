@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 27 17:50:04 2006.
- * $Id: generic.c,v 1.25 2006/02/05 14:37:52 sian Exp $
+ * Last Modified: Wed Mar  1 01:51:14 2006.
+ * $Id: generic.c,v 1.26 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -94,6 +94,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
   generic_info *info = (generic_info *)m->movie_private;
   Image *p;
   unsigned int types;
+  int direct_renderable;
 
   if (info)
     err_message("info should be NULL.\n");
@@ -178,12 +179,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       IMAGE_ARGB32 | IMAGE_BGRA32;
   }
 
-  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  if (!m->direct_decode)
-    warning_fnc("Cannot direct decoding...\n");
-  debug_message("requested type: %s direct\n", image_type_to_string(m->requested_type));
+  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
+  if (!direct_renderable)
+    warning_fnc("Cannot render directly...\n");
+  debug_message_fnc("requested type: %s\n", image_type_to_string(m->requested_type));
 
   p = info->p = image_create();
+  p->direct_renderable = direct_renderable;
   image_width(p) = m->width;
   image_height(p) = m->height;
 
@@ -241,6 +243,13 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       m->out_fourcc = 0;
       m->out_bitcount = 16;
       break;
+    case _INDEX:
+      p->depth = 8;
+      p->bits_per_pixel = 8;
+      image_bpl(p) = image_width(p);
+      m->out_fourcc = 0;
+      m->out_bitcount = 8;
+      break;
     default:
       err_message("Cannot render type %d\n", m->requested_type);
       return PLAY_ERROR;
@@ -265,6 +274,10 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
   p->type = m->requested_type;
 
+  if ((image_image(p) = memory_create()) == NULL) {
+    err_message("No enough memory for image object.\n");
+    goto error;
+  }
   if ((image_rendered_image(p) = memory_create()) == NULL) {
     err_message("No enough memory for image object.\n");
     goto error;

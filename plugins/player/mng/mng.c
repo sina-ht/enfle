@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:54:08 2005.
- * $Id: mng.c,v 1.23 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Wed Mar  1 00:31:10 2006.
+ * $Id: mng.c,v 1.24 2006/03/12 08:24:16 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -133,14 +133,12 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 {
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
   Movie *m = this->m;
-  Image *p;
+  Image *p = this->p;
 
   m->width  = width;
   m->height = height;
   m->rendering_width  = m->width;
   m->rendering_height = m->height;
-
-  p = this->p = image_create();
 
   image_width(p)  = m->rendering_width;
   image_height(p) = m->rendering_height;
@@ -162,7 +160,7 @@ processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
   image_bpl(p) = image_width(p) * (p->bits_per_pixel >> 3);
   image_rendered_image(p) = memory_create();
   memory_request_type(image_rendered_image(p), video_window_preferred_memory_type(this->vw));
-  if (m->direct_decode) {
+  if (p->direct_renderable) {
     if (memory_alloc(image_rendered_image(p), image_bpl(p) * image_height(p)) == NULL)
       return PLAY_ERROR;
   } else {
@@ -184,7 +182,7 @@ getcanvasline(mng_handle mng, mng_uint32 nthline)
   unsigned char *d;
 
   p = this->p;
-  d = memory_ptr(this->m->direct_decode ? image_rendered_image(p) : image_image(p));
+  d = memory_ptr(p->direct_renderable ? image_rendered_image(p) : image_image(p));
 
   return (mng_ptr)&d[image_bpl(p) * nthline];
 }
@@ -354,15 +352,15 @@ static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   MNG_info *this;
-  int err = 0;
+  int err = 0, direct_renderable;
 
   if ((this = calloc(1, sizeof(MNG_info))) == NULL) {
     show_message("MNG: %s: No enough memory.\n", __FUNCTION__);
     return PLAY_ERROR;
   }
 
-  m->requested_type = video_window_request_type(vw, types, &m->direct_decode);
-  debug_message("MNG: requested type: %s %s\n", image_type_to_string(m->requested_type), m->direct_decode ? "direct" : "not direct");
+  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
+  debug_message("MNG: requested type: %s %s\n", image_type_to_string(m->requested_type), direct_renderable ? "direct" : "not direct");
 
   m->st = st;
   m->movie_private = (void *)this;
@@ -371,6 +369,8 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
 
   this->vw = vw;
   this->m = m;
+  this->p = image_create();
+  this->p->direct_renderable = direct_renderable;
 
   this->mng = mng_initialize((mng_ptr)this, memalloc, memfree, NULL);
   if (mng_setcb_openstream   (this->mng, openstream   )) err++;

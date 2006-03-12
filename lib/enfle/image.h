@@ -1,10 +1,10 @@
 /*
  * image.h -- image interface header
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 02:30:52 2005.
- * $Id: image.h,v 1.23 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Wed Mar  1 02:08:30 2006.
+ * $Id: image.h,v 1.24 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,8 +84,8 @@ typedef struct _image_color {
 typedef struct _image_data {
   unsigned int width, height;
   unsigned int swidth, sheight;
+  unsigned int left, top;
   unsigned int bytes_per_line;
-  int left, top;
   Memory *image;
 } ImageData;
 
@@ -99,7 +99,8 @@ typedef enum {
 #define IMAGE_INDEX_ORIGINAL 0
 #define IMAGE_INDEX_RENDERED 1
 #define IMAGE_INDEX_WORK 2
-#define IMAGE_INDEX_MAX 3
+#define IMAGE_INDEX_MASK 3
+#define IMAGE_INDEX_MAX 4
 typedef struct _image Image;
 struct _image {
   ImageType type;
@@ -107,15 +108,14 @@ struct _image {
   ImageColor background_color;
   ImageColor transparent_color;
   ImageTransparentDisposal transparent_disposal;
-  Memory *mask;
   char *comment;
   char *format, *format_detail;
   int alpha_enabled;
+  int direct_renderable;
   int depth;
   int bits_per_pixel;
   unsigned int ncolors;
   unsigned char colormap[256][3];
-  Image *next;
 };
 
 Image *image_create(void);
@@ -159,6 +159,14 @@ void image_destroy(Image *);
 #define image_rendered_bpl(p) (image_bpl_by_index(p,IMAGE_INDEX_RENDERED))
 #define image_rendered_image(p) (image_image_by_index(p,IMAGE_INDEX_RENDERED))
 #define image_rendered_set_image(p, m) image_image_by_index(p,IMAGE_INDEX_RENDERED) = (m)
+#define image_mask_width(p) (image_width_by_index(p,IMAGE_INDEX_MASK))
+#define image_mask_height(p) (image_height_by_index(p,IMAGE_INDEX_MASK))
+#define image_mask_left(p) (image_left_by_index(p,IMAGE_INDEX_MASK))
+#define image_mask_top(p) (image_top_by_index(p,IMAGE_INDEX_MASK))
+#define image_mask_bpl(p) (image_bpl_by_index(p,IMAGE_INDEX_MASK))
+#define image_mask_image(p) (image_image_by_index(p,IMAGE_INDEX_MASK))
+#define image_mask_set_image(p, m) image_image_by_index(p,IMAGE_INDEX_MASK) = (m)
+#define image_renderable_image(p) (p)->direct_renderable ? image_rendered_image(p) : image_image(p)
 
 #define image_width(p) image_original_width(p)
 #define image_height(p) image_original_height(p)

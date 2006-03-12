@@ -1,10 +1,10 @@
 /*
  * image.c -- image interface
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 03:03:14 2005.
- * $Id: image.c,v 1.18 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Wed Mar  1 00:40:21 2006.
+ * $Id: image.c,v 1.19 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,13 +86,10 @@ image_dup(Image *p)
   if (image_image(p) && (image_image(new) = memory_dup(image_image(p))) == NULL)
     goto error;
 
-  if (p->mask && (new->mask = memory_dup(p->mask)) == NULL)
+  if (image_mask_image(p) && (image_mask_image(new) = memory_dup(image_mask_image(p))) == NULL)
     goto error;
 
   if (p->comment && (new->comment = strdup((const char *)p->comment)) == NULL)
-    goto error;
-
-  if (p->next && (new->next = image_dup(p->next)) == NULL)
     goto error;
 
   return new;
@@ -175,18 +172,14 @@ image_clean(Image *p)
 void
 image_destroy(Image *p)
 {
-  if (p->next) {
-    image_destroy(p->next);
-    p->next = NULL;
-  }
   if (image_rendered_image(p))
     memory_destroy(image_rendered_image(p));
   if (image_work_image(p))
     memory_destroy(image_work_image(p));
   if (image_image(p))
     memory_destroy(image_image(p));
-  if (p->mask)
-    memory_destroy(p->mask);
+  if (image_mask_image(p))
+    memory_destroy(image_mask_image(p));
   if (p->comment)
     free(p->comment);
   free(p);

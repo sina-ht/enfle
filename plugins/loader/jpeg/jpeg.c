@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:46:17 2005.
- * $Id: jpeg.c,v 1.25 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Wed Mar  1 00:22:23 2006.
+ * $Id: jpeg.c,v 1.26 2006/03/12 08:24:16 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -424,8 +424,6 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   default:
     break;
   }
-
-  p->next = NULL;
 
   (void)jpeg_finish_decompress(cinfo);
   jpeg_destroy_decompress(cinfo);

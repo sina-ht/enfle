@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:18:44 2004.
- * $Id: pcx.c,v 1.9 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Wed Mar  1 00:23:31 2006.
+ * $Id: pcx.c,v 1.10 2006/03/12 08:24:16 sian Exp $
  *
  * Note: This plugin is not complete.
  *
@@ -292,8 +292,6 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
     }
     dd += image_bpl(p);
   }
-
-  p->next = NULL;
 
   return LOAD_OK;
 }
