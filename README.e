@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2003 by Hiroshi Takekawa.
 
-             Last Modified: Sun Jul  3 12:59:03 2005.
+             Last Modified: Sun Mar 12 17:00:14 2006.
 
 ***************************************************************************
 
@@ -197,6 +197,10 @@ directory will be added recursively.  Supported archives(such as
 -I shows detail information of loaded plugins
 -h shows help message
 -V shows version information
+-q disables plugin cache
+-N updates plugin cache
+-X specifies the threshold width of images to be displayed
+-Y specifies the threshold height of images to be displayed
 
 
 5. Usage
