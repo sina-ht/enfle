@@ -1,3 +1,21 @@
+2006-03-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.rc: Added tga.
+
+	* plugins/ui/normal/normal.c: Clean up pathname mess.
+
+	* lib/enfle/image.c, lib/enfle/image.h, lib/enfle/movie.h,
+	plugins/loader/bmp/bmp.c, plugins/loader/j2k/j2k.c,
+	plugins/loader/jasper/jasper.c, plugins/loader/jpeg/jpeg.c,
+	plugins/loader/pcx/pcx.c, plugins/loader/png/png.c,
+	plugins/loader/ungif/ungif.c, plugins/player/generic/generic.c,
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
+	plugins/player/mpglib/mpglib.c, plugins/player/ungif/ungif.c,
+	plugins/video/Xlib/Xlib.c, plugins/videodecoder/avcodec/avcodec.c:
+	Clean up image and movie interfaces.
+
+	* README, README.e: Updated.
+
 2006-03-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, plugins/loader/Makefile.am,
