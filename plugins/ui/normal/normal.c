@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Mar 12 17:17:39 2006.
- * $Id: normal.c,v 1.94 2006/03/12 08:25:11 sian Exp $
+ * Last Modified: Sat Mar 18 03:03:15 2006.
+ * $Id: normal.c,v 1.95 2006/03/17 18:04:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -299,8 +299,9 @@ set_caption_string(MainLoop *ml)
 	  free(fullpath);
 	} else {
 	  convert_path(cap, misc_basename(ml->a->path), ml->uidata->c);
-	  string_cat_ch(cap, '/');
-	  convert_path(cap, ml->path, ml->uidata->c); break;
+	  if (strcmp(ml->a->format, "NORMAL") == 0)
+	    string_cat_ch(cap, '/');
+	  convert_path(cap, ml->path, ml->uidata->c);
 	}
 	break;
       case 'P':
