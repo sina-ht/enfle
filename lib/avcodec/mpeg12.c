@@ -2789,7 +2789,7 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
         dprintf("intra matrix present\n");
         for(i=0;i<64;i++)
             dprintf(" %d", s->intra_matrix[s->dsp.idct_permutation[i]]);
-        printf("\n");
+        dprintf("\n");
 #endif
     } else {
         for(i=0;i<64;i++) {
@@ -2814,7 +2814,7 @@ static int mpeg1_decode_sequence(AVCodecContext *avctx,
         dprintf("non intra matrix present\n");
         for(i=0;i<64;i++)
             dprintf(" %d", s->inter_matrix[s->dsp.idct_permutation[i]]);
-        printf("\n");
+        dprintf("\n");
 #endif
     } else {
         for(i=0;i<64;i++) {
@@ -3114,7 +3114,7 @@ static int mpeg_decode_frame(AVCodecContext *avctx,
                         /* skip b frames if we dont have reference frames */
                             if(s2->pict_type==B_TYPE) break;
                         /* skip P frames if we dont have reference frame no valid header */
-                            if(s2->pict_type==P_TYPE && !s2->first_slice) break;
+//                            if(s2->pict_type==P_TYPE && s2->first_field && !s2->first_slice) break;
                         }
                         /* skip b frames if we are in a hurry */
                         if(avctx->hurry_up && s2->pict_type==B_TYPE) break;

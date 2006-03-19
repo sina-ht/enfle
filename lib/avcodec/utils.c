@@ -29,6 +29,7 @@
 #include "mpegvideo.h"
 #include "integer.h"
 #include "opt.h"
+#include "crc.h"
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
@@ -844,9 +845,6 @@ int avcodec_open(AVCodecContext *avctx, AVCodec *codec)
     if(avctx->codec)
         goto end;
 
-    avctx->codec = codec;
-    avctx->codec_id = codec->id;
-    avctx->frame_number = 0;
     if (codec->priv_data_size > 0) {
         avctx->priv_data = av_mallocz(codec->priv_data_size);
         if (!avctx->priv_data)
@@ -865,9 +863,13 @@ int avcodec_open(AVCodecContext *avctx, AVCodec *codec)
         goto end;
     }
 
+    avctx->codec = codec;
+    avctx->codec_id = codec->id;
+    avctx->frame_number = 0;
     ret = avctx->codec->init(avctx);
     if (ret < 0) {
         av_freep(&avctx->priv_data);
+        avctx->codec= NULL;
         goto end;
     }
     ret=0;
@@ -1217,6 +1219,15 @@ unsigned avcodec_build( void )
   return LIBAVCODEC_BUILD;
 }
 
+static void init_crcs(void){
+    av_crc04C11DB7= av_mallocz_static(sizeof(AVCRC) * 257);
+    av_crc8005    = av_mallocz_static(sizeof(AVCRC) * 257);
+    av_crc07      = av_mallocz_static(sizeof(AVCRC) * 257);
+    av_crc_init(av_crc04C11DB7, 0, 32, 0x04c11db7, sizeof(AVCRC)*257);
+    av_crc_init(av_crc8005    , 0, 16, 0x8005    , sizeof(AVCRC)*257);
+    av_crc_init(av_crc07      , 0,  8, 0x07      , sizeof(AVCRC)*257);
+}
+
 /* must be called before any other functions */
 void avcodec_init(void)
 {
@@ -1227,6 +1238,7 @@ void avcodec_init(void)
     inited = 1;
 
     dsputil_static_init();
+    init_crcs();
 }
 
 /**

@@ -343,7 +343,7 @@ static int read_old_huffman_tables(HYuvContext *s){
 
     return 0;
 #else
-    fprintf(stderr, "v1 huffyuv is not supported \n");
+    av_log(s->avctx, AV_LOG_DEBUG, "v1 huffyuv is not supported \n");
     return -1;
 #endif
 }
@@ -807,6 +807,9 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8
         if(table_size < 0)
             return -1;
     }
+
+    if((unsigned)(buf_size-table_size) >= INT_MAX/8)
+        return -1;
 
     init_get_bits(&s->gb, s->bitstream_buffer+table_size, (buf_size-table_size)*8);
 
