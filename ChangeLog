@@ -1,3 +1,31 @@
+2006-03-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avutil/Makefile.am: Added crc.[ch].
+
+	* lib/avcodec/ac3enc.c, lib/avcodec/ac3tab.h, lib/avcodec/adpcm.c,
+	lib/avcodec/asv1.c, lib/avcodec/avcodec.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c, lib/avcodec/dvdata.h,
+	lib/avcodec/faad.c, lib/avcodec/fft.c, lib/avcodec/flac.c,
+	lib/avcodec/h261.c, lib/avcodec/h263.c, lib/avcodec/h263data.h,
+	lib/avcodec/h263dec.c, lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/fft_sse.c,
+	lib/avcodec/i386/h264dsp_mmx.c, lib/avcodec/i386/mmx.h,
+	lib/avcodec/imgconvert.c, lib/avcodec/motion_est.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegaudiodec.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/msmpeg4.c, lib/avcodec/png.c,
+	lib/avcodec/ppc/dsputil_h264_template_altivec.c,
+	lib/avcodec/qdm2.c, lib/avcodec/rangecoder.c,
+	lib/avcodec/ratecontrol.c, lib/avcodec/raw.c, lib/avcodec/rv10.c,
+	lib/avcodec/snow.c, lib/avcodec/snow.h, lib/avcodec/svq1_cb.h,
+	lib/avcodec/tta.c, lib/avcodec/utils.c, lib/avcodec/vc9.c,
+	lib/avcodec/vmdav.c, lib/avcodec/vorbis.c, lib/avcodec/vp3.c,
+	lib/avcodec/wmadec.c, lib/avutil/common.h, lib/avutil/crc.c,
+	lib/avutil/crc.h: Updated.
+
+2006-03-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Fixed pathname mess.
+
 2006-03-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/enfle.rc: Added tga.
