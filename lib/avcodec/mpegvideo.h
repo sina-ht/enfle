@@ -123,6 +123,7 @@ typedef struct RateControlContext{
 
     void *non_lavc_opaque;        ///< context for non lavc rc code (for example xvid)
     float dry_run_qscale;         ///< for xvid rc
+    int last_picture_number;      ///< for xvid rc
 }RateControlContext;
 
 /**
@@ -429,6 +430,7 @@ typedef struct MpegEncContext {
     int field_select[2][2];
     int last_mv[2][2][2];             ///< last MV, used for MV prediction in MPEG1 & B-frame MPEG4
     uint8_t *fcode_tab;               ///< smallest fcode needed for each MV
+    int16_t direct_scale_mv[2][64];   ///< precomputed to avoid divisions in ff_mpeg4_set_direct_mv
 
     MotionEstContext me;
 

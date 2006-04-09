@@ -34,6 +34,10 @@ void avcodec_register_all(void)
 {
     static int inited = 0;
 
+#ifdef CONFIG_WIN32
+    av_log(NULL, AV_LOG_INFO, "Use a real OS!\n");
+#endif
+
     if (inited != 0)
         return;
     inited = 1;
@@ -267,6 +271,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_CSCD_DECODER
     register_avcodec(&cscd_decoder);
 #endif //CONFIG_CSCD_DECODER
+#ifdef CONFIG_NUV_DECODER
+    register_avcodec(&nuv_decoder);
+#endif //CONFIG_NUV_DECODER
 #ifdef CONFIG_ULTI_DECODER
     register_avcodec(&ulti_decoder);
 #endif //CONFIG_ULTI_DECODER
@@ -282,6 +289,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_LOCO_DECODER
     register_avcodec(&loco_decoder);
 #endif //CONFIG_LOCO_DECODER
+#ifdef CONFIG_KMVC_DECODER
+    register_avcodec(&kmvc_decoder);
+#endif //CONFIG_KMVC_DECODER
 #ifdef CONFIG_WNV1_DECODER
     register_avcodec(&wnv1_decoder);
 #endif //CONFIG_WNV1_DECODER
@@ -447,6 +457,12 @@ void avcodec_register_all(void)
 #ifdef CONFIG_ZMBV_DECODER
     register_avcodec(&zmbv_decoder);
 #endif //CONFIG_ZMBV_DECODER
+#ifdef CONFIG_SMACKER_DECODER
+    register_avcodec(&smacker_decoder);
+#endif //CONFIG_SMACKER_DECODER
+#ifdef CONFIG_SMACKAUD_DECODER
+    register_avcodec(&smackaud_decoder);
+#endif //CONFIG_SMACKAUD_DECODER
 #ifdef CONFIG_SONIC_DECODER
     register_avcodec(&sonic_decoder);
 #endif //CONFIG_SONIC_DECODER

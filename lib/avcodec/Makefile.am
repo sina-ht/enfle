@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Feb 23 22:33:10 2006.
-# $Id: Makefile.am,v 1.38 2006/02/23 13:34:20 sian Exp $
+# Last Modified: Sun Apr  9 12:13:35 2006.
+# $Id: Makefile.am,v 1.39 2006/04/09 03:15:40 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -9,7 +9,7 @@ if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/lib/avutil -I$(top_srcdir)/lib/avcodec -I$(top_srcdir) -I$(top_builddir)
+AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/lib/avutil -I$(top_srcdir)/lib/avcodec -I$(top_srcdir) -I$(top_builddir) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
 EXTRA_DIST = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c i386/mpegvideo_mmx_template.c \
@@ -31,7 +31,8 @@ MMX_SRCS = \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c \
 	i386/idct_mmx.c i386/idct_mmx_xvid.c i386/motion_est_mmx.c \
 	i386/simple_idct_mmx.c i386/fft_sse.c \
-	i386/vp3dsp_mmx.c i386/vp3dsp_sse2.c
+	i386/vp3dsp_mmx.c i386/vp3dsp_sse2.c \
+	i386/snowdsp_mmx.c
 else
 CFLAGS_POST = -Wno-unused
 MMX_SRCS =
@@ -44,8 +45,11 @@ endif
 
 # # armv4l specific stuff
 # ifeq ($(TARGET_ARCH_ARMV4L),yes)
-# ASM_OBJS += armv4l/jrevdct_arm.o armv4l/simple_idct_arm.o
+# ASM_OBJS += armv4l/jrevdct_arm.o armv4l/simple_idct_arm.o armv4l/dsputil_arm_s.o
 # OBJS += armv4l/dsputil_arm.o armv4l/mpegvideo_arm.o
+# ifeq ($(TARGET_IWMMXT),yes)
+# OBJS += armv4l/dsputil_iwmmxt.o armv4l/mpegvideo_iwmmxt.o
+# endif
 # endif
 
 # # sun mediaLib specific stuff
@@ -55,12 +59,18 @@ endif
 # CFLAGS += $(MLIB_INC)
 # endif
 
+# # Intel IPP specific stuff
+# # currently only works when libavcodec is used in mplayer
+# ifeq ($(HAVE_IPP),yes)
+# CFLAGS += $(IPP_INC)
+# endif
+
 # # alpha specific stuff
 # ifeq ($(TARGET_ARCH_ALPHA),yes)
 # OBJS += alpha/dsputil_alpha.o alpha/mpegvideo_alpha.o \
-#         alpha/simple_idct_alpha.o alpha/motion_est_alpha.o
+# 	alpha/simple_idct_alpha.o alpha/motion_est_alpha.o
 # ASM_OBJS += alpha/dsputil_alpha_asm.o alpha/motion_est_mvi_asm.o
-# CFLAGS += -fforce-addr -freduce-all-givs
+# CFLAGS += -fforce-addr
 # endif
 
 # ifeq ($(TARGET_ARCH_POWERPC),yes)
@@ -73,11 +83,18 @@ endif
 
 # ifeq ($(TARGET_ALTIVEC),yes)
 # OBJS += ppc/dsputil_altivec.o ppc/mpegvideo_altivec.o ppc/idct_altivec.o \
-#         ppc/fft_altivec.o ppc/gmc_altivec.o ppc/fdct_altivec.o
+#         ppc/fft_altivec.o ppc/gmc_altivec.o ppc/fdct_altivec.o \
+#         ppc/dsputil_h264_altivec.o ppc/dsputil_snow_altivec.o
 # endif
 
 # ifeq ($(TARGET_ARCH_SH4),yes)
 # OBJS+= sh4/idct_sh4.o sh4/dsputil_sh4.o sh4/dsputil_align.o
+# endif
+
+# ifeq ($(TARGET_ARCH_SPARC),yes)
+# OBJS+=sparc/dsputil_vis.o
+# sparc/%.o: sparc/%.c
+# 	$(CC) -mcpu=ultrasparc -mtune=ultrasparc $(CFLAGS) -c -o $@ $<
 # endif
 
 noinst_HEADERS = \
@@ -98,6 +115,7 @@ noinst_HEADERS = \
 	imgconvert_template.h \
 	indeo2data.h \
 	indeo3data.h \
+	internal.h \
 	lzo.h \
 	mpeg12data.h \
 	mpeg4data.h \
@@ -111,10 +129,12 @@ noinst_HEADERS = \
 	ra144.h \
 	ra288.h \
 	rangecoder.h \
+	rtjpeg.h \
 	simple_idct.h \
 	sp5x.h \
 	svq1_cb.h \
 	svq1_vlc.h \
+	swscale.h \
 	truemotion1data.h \
 	truespeech_data.h \
 	ulti_cb.h \
@@ -184,6 +204,7 @@ libavcodec_la_SOURCES = \
 	jfdctfst.c \
 	jfdctint.c \
 	jrevdct.c \
+	kmvc.c \
 	lcl.c \
 	loco.c \
 	lzo.c \
@@ -200,6 +221,7 @@ libavcodec_la_SOURCES = \
 	msmpeg4.c \
 	msrle.c \
 	msvideo1.c \
+	nuv.c \
 	oggtheora.c \
 	oggvorbis.c \
 	opt.c \
@@ -221,9 +243,11 @@ libavcodec_la_SOURCES = \
 	resample2.c \
 	roqvideo.c \
 	rpza.c \
+	rtjpeg.c \
 	rv10.c \
 	shorten.c \
 	simple_idct.c \
+	smacker.c \
 	smc.c \
 	snow.c \
 	sonic.c \
