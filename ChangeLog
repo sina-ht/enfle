@@ -1,3 +1,23 @@
+2006-04-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avutil/avutil.h, lib/avutil/common.h,
+	lib/avcodec/Makefile.am, lib/avcodec/ac3enc.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream.h, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/h263.c, lib/avcodec/h264.c,
+	lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_h264_template_mmx.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/h264dsp_mmx.c,
+	lib/avcodec/i386/snowdsp_mmx.c, lib/avcodec/imgconvert.c,
+	lib/avcodec/imgresample.c, lib/avcodec/internal.h,
+	lib/avcodec/kmvc.c, lib/avcodec/mjpeg.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/nuv.c,
+	lib/avcodec/ppc/dsputil_altivec.c, lib/avcodec/ppc/dsputil_ppc.c,
+	lib/avcodec/ppc/gcc_fixes.h, lib/avcodec/rtjpeg.c,
+	lib/avcodec/rtjpeg.h, lib/avcodec/smacker.c, lib/avcodec/snow.c,
+	lib/avcodec/snow.h, lib/avcodec/swscale.h, lib/avcodec/utils.c,
+	lib/avcodec/wmadec.c: Updated.
+
 2006-03-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avutil/Makefile.am: Added crc.[ch].
