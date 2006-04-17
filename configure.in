@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2006 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Mar 12 16:56:10 2006.
-dnl $Id: configure.in,v 1.181 2006/03/12 08:26:12 sian Exp $
+dnl Last Modified: Mon Apr 17 23:36:20 2006.
+dnl $Id: configure.in,v 1.182 2006/04/17 14:36:29 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.59)
-AC_INIT([enfle],[20060312],[sian@big.or.jp])
+AC_INIT([enfle],[20060417],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
