@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar 18 03:03:15 2006.
- * $Id: normal.c,v 1.95 2006/03/17 18:04:11 sian Exp $
+ * Last Modified: Sun Apr  9 12:39:53 2006.
+ * $Id: normal.c,v 1.96 2006/04/17 14:35:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -869,11 +869,22 @@ process_file(UIData *uidata, char *path, Archive *a, Stream *s, Movie *m, void *
     }
     break;
   case IDENTIFY_FILE_NOTREG:
+    err_message("Not regular file.\n");
+    return MAIN_LOOP_DELETE_FROM_LIST;
   case IDENTIFY_FILE_SOPEN_FAILED:
+    err_message("streamer_open() failed.\n");
+    return MAIN_LOOP_DELETE_FROM_LIST;
   case IDENTIFY_FILE_AOPEN_FAILED:
-  case IDENTIFY_FILE_STAT_FAILED:
+    err_message("archive_open() failed.\n");
+    return MAIN_LOOP_DELETE_FROM_LIST;
   case IDENTIFY_FILE_ZERO_SIZE:
+    err_message("file size is zero.\n");
+    return MAIN_LOOP_DELETE_FROM_LIST;
+  case IDENTIFY_FILE_STAT_FAILED:
+    err_message("stat() failed.\n");
+    return MAIN_LOOP_DELETE_FROM_LIST;
   default:
+    err_message("identify_file() returned unknown error code.\n");
     return MAIN_LOOP_DELETE_FROM_LIST;
   }
 
