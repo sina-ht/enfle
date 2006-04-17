@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Apr  9 12:13:35 2006.
-# $Id: Makefile.am,v 1.39 2006/04/09 03:15:40 sian Exp $
+# Last Modified: Mon Apr 17 23:33:44 2006.
+# $Id: Makefile.am,v 1.40 2006/04/17 14:34:26 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -17,7 +17,8 @@ EXTRA_DIST = \
 	i386/simple_idct_mmx.c i386/fft_sse.c \
 	i386/dsputil_mmx_avg.h i386/dsputil_mmx_rnd.h i386/mmx.h \
 	i386/h264dsp_mmx.c i386/dsputil_h264_template_mmx.c \
-	svq3.c mdec.c motion_est_template.c wmv2.c jpeg_ls.c
+	svq3.c mdec.c motion_est_template.c wmv2.c jpeg_ls.c \
+	gcc_fixes.h
 
 DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H
 
