@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:22:54 2006.
- * $Id: bmp.c,v 1.15 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Mon Apr 24 23:06:03 2006.
+ * $Id: bmp.c,v 1.16 2006/04/24 14:06:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,7 +40,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
   .name = "BMP",
-  .description = "BMP Loader plugin version 0.2",
+  .description = "BMP Loader plugin version 0.2.1",
   .author = "Hiroshi Takekawa",
   .image_private = NULL,
 
@@ -67,10 +67,11 @@ ENFLE_PLUGIN_EXIT(loader_bmp, p)
 /* for internal use */
 
 #define WIN_BMP_HEADER_SIZE 40
+#define BUFSIZE 1024
 static int
 load_image(Image *p, Stream *st)
 {
-  unsigned char buf[1024], *pp, *d;
+  unsigned char buf[BUFSIZE], *pp, *d;
   unsigned int file_size, header_size, image_size, offset_to_image;
   unsigned short int biPlanes;
   unsigned int bytes_per_pal;
@@ -110,10 +111,14 @@ load_image(Image *p, Stream *st)
   case 1:
     p->type = _BITMAP_MSBFirst; /* XXX: check order */
     p->depth = p->bits_per_pixel;
+    break;
   case 4:
+    p->type = _INDEX44;
+    p->depth = 4;
+    break;
   case 8:
     p->type = _INDEX;
-    p->depth = p->bits_per_pixel;
+    p->depth = 8;
     break;
   case 16:
     p->type = _RGB555;
@@ -142,6 +147,10 @@ load_image(Image *p, Stream *st)
   if (p->depth <= 8) {
     p->ncolors = 1 << p->depth;
     bytes_per_pal = (header_size >= WIN_BMP_HEADER_SIZE) ? 4 : 3;
+    if (p->ncolors * bytes_per_pal > BUFSIZE) {
+      err_message_fnc("BUFSIZE is too small.  It must be greater than %d.\n", p->ncolors * bytes_per_pal);
+      return 0;
+    }
     if (stream_read(st, buf, p->ncolors * bytes_per_pal) != (int)(p->ncolors * bytes_per_pal))
       return 0;
     for (i = 0; i < (int)p->ncolors; i++) {
@@ -167,6 +176,8 @@ load_image(Image *p, Stream *st)
 
   image_bpl(p) = (image_width(p) * p->bits_per_pixel) >> 3;
   image_bpl(p) += (4 - (image_bpl(p) % 4)) % 4;
+
+  debug_message_fnc("(%d, %d): bpp %d depth %d compress %d\n", image_width(p), image_height(p), p->bits_per_pixel, p->depth, compress_method);
 
   if ((d = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL)
     return 0;
