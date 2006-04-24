@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:40:21 2006.
- * $Id: image.c,v 1.19 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Wed Apr 19 00:37:54 2006.
+ * $Id: image.c,v 1.20 2006/04/24 14:05:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,6 +33,7 @@ static const char *image_type_to_string_array[] = {
   "_BITMAP_MSBFirst",
   "_GRAY",
   "_GRAY_ALPHA",
+  "_INDEX44",
   "_INDEX",
   "_RGB555",
   "_BGR555",

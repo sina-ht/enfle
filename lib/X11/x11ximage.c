@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Oct  2 03:07:58 2005.
- * $Id: x11ximage.c,v 1.54 2005/10/01 18:11:08 sian Exp $
+ * Last Modified: Wed Apr 19 00:36:48 2006.
+ * $Id: x11ximage.c,v 1.55 2006/04/24 14:05:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -495,6 +495,32 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	    }
 	  }
 	  break;
+	case _INDEX44:
+	  {
+	    unsigned char *pal;
+
+	    for (j = 0; j < h; j++) {
+	      d = dest + j * ximage->bytes_per_line;
+	      for (i = 0; i < (w + 1) >> 1; i++) {
+		pal = p->colormap[(s[i] >> 4) & 0xf];
+		pix =
+		  ((pal[0] & 0xf8) << 8) |
+		  ((pal[1] & 0xfc) << 3) |
+		  ((pal[2] & 0xf8) >> 3);
+		*d++ = pix & 0xff;
+		*d++ = pix >> 8;
+		pal = p->colormap[s[i] & 0xf];
+		pix =
+		  ((pal[0] & 0xf8) << 8) |
+		  ((pal[1] & 0xfc) << 3) |
+		  ((pal[2] & 0xf8) >> 3);
+		*d++ = pix & 0xff;
+		*d++ = pix >> 8;
+	      }
+	      s += bytes_per_line_s;
+	    }
+	  }
+	  break;
 	default:
 	  show_message_fnc("Cannot render image [type %s] so far. (bpp: %d)\n", image_type_to_string(p->type), ximage->bits_per_pixel);
 	  break;
@@ -529,6 +555,20 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	      *d++ = p->colormap[s[i]][2];
 	      *d++ = p->colormap[s[i]][1];
 	      *d++ = p->colormap[s[i]][0];
+	    }
+	    s += bytes_per_line_s;
+	  }
+	  break;
+	case _INDEX44:
+	  for (j = 0; j < h; j++) {
+	    d = dest + j * ximage->bytes_per_line;
+	    for (i = 0; i < (w + 1) >> 1; i++) {
+	      *d++ = p->colormap[(s[i] >> 4) & 0xf][2];
+	      *d++ = p->colormap[(s[i] >> 4) & 0xf][1];
+	      *d++ = p->colormap[(s[i] >> 4) & 0xf][0];
+	      *d++ = p->colormap[ s[i]       & 0xf][2];
+	      *d++ = p->colormap[ s[i]       & 0xf][1];
+	      *d++ = p->colormap[ s[i]       & 0xf][0];
 	    }
 	    s += bytes_per_line_s;
 	  }
@@ -658,6 +698,28 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	      *d++ = p->colormap[s[i]][2];
 	      *d++ = p->colormap[s[i]][1];
 	      *d++ = p->colormap[s[i]][0];
+	      d++;
+	    }
+	    s += bytes_per_line_s;
+	  }
+	  break;
+	case _INDEX44:
+	  if (memory_alloc(dst_img, ximage->bytes_per_line * h) == NULL)
+	    fatal("%s: No enough memory(alloc)\n", __FUNCTION__);
+
+	  dest = memory_ptr(dst_img);
+	  s = memory_ptr(src_img);
+	  ximage->byte_order = LSBFirst;
+	  for (j = 0; j < h; j++) {
+	    d = dest + j * ximage->bytes_per_line;
+	    for (i = 0; i < w; i++) {
+	      *d++ = p->colormap[(s[i] >> 4) & 0xf][2];
+	      *d++ = p->colormap[(s[i] >> 4) & 0xf][1];
+	      *d++ = p->colormap[(s[i] >> 4) & 0xf][0];
+	      d++;
+	      *d++ = p->colormap[ s[i]       & 0xf][2];
+	      *d++ = p->colormap[ s[i]       & 0xf][1];
+	      *d++ = p->colormap[ s[i]       & 0xf][0];
 	      d++;
 	    }
 	    s += bytes_per_line_s;

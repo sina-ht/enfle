@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 02:08:30 2006.
- * $Id: image.h,v 1.24 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Wed Apr 19 00:32:37 2006.
+ * $Id: image.h,v 1.25 2006/04/24 14:05:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,6 +30,7 @@ typedef enum _image_type {
   _BITMAP_MSBFirst,
   _GRAY,
   _GRAY_ALPHA,
+  _INDEX44,
   _INDEX,
   _RGB555,
   _BGR555,
@@ -52,21 +53,22 @@ typedef enum _image_type {
 #define IMAGE_BITMAP_MSBFirst  (1 <<  1)
 #define IMAGE_GRAY             (1 <<  2)
 #define IMAGE_GRAY_ALPHA       (1 <<  3)
-#define IMAGE_INDEX            (1 <<  4)
-#define IMAGE_RGB555           (1 <<  5)
-#define IMAGE_BGR555           (1 <<  6)
-#define IMAGE_RGB565           (1 <<  7)
-#define IMAGE_BGR565           (1 <<  8)
-#define IMAGE_RGB24            (1 <<  9)
-#define IMAGE_BGR24            (1 << 10)
-#define IMAGE_RGBA32           (1 << 11)
-#define IMAGE_ABGR32           (1 << 12)
-#define IMAGE_ARGB32           (1 << 13)
-#define IMAGE_BGRA32           (1 << 14)
-#define IMAGE_YUY2             (1 << 15)
-#define IMAGE_YV12             (1 << 16)
-#define IMAGE_I420             (1 << 17)
-#define IMAGE_UYVY             (1 << 18)
+#define IMAGE_INDEX44          (1 <<  4)
+#define IMAGE_INDEX            (1 <<  5)
+#define IMAGE_RGB555           (1 <<  6)
+#define IMAGE_BGR555           (1 <<  7)
+#define IMAGE_RGB565           (1 <<  8)
+#define IMAGE_BGR565           (1 <<  9)
+#define IMAGE_RGB24            (1 << 10)
+#define IMAGE_BGR24            (1 << 11)
+#define IMAGE_RGBA32           (1 << 12)
+#define IMAGE_ABGR32           (1 << 13)
+#define IMAGE_ARGB32           (1 << 14)
+#define IMAGE_BGRA32           (1 << 15)
+#define IMAGE_YUY2             (1 << 16)
+#define IMAGE_YV12             (1 << 17)
+#define IMAGE_I420             (1 << 18)
+#define IMAGE_UYVY             (1 << 19)
 
 typedef enum {
   _NOINTERPOLATE,
