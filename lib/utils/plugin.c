@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 15 18:30:27 2004.
- * $Id: plugin.c,v 1.15 2004/08/16 11:07:25 sian Exp $
+ * Last Modified: Sun Apr  9 12:18:53 2006.
+ * $Id: plugin.c,v 1.16 2006/04/24 14:07:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -111,7 +111,7 @@ plugin_get(Plugin *p)
   if (p->substance)
     return p->substance;
   if (p->filepath) {
-    debug_message_fnc("autoloading %s\n", p->filepath);
+    //debug_message_fnc("autoloading %s\n", p->filepath);
     if (plugin_load(p, p->filepath, "plugin_entry", "plugin_exit"))
       return p->substance;
   }
@@ -128,7 +128,6 @@ plugin_unload(Plugin *p)
   }
 
   if (p->handle) {
-    /* XXX: This might cause segfault... older glibc's bug? */
     dlclose(p->handle);
     p->handle = NULL;
   }
