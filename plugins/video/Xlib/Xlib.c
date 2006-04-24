@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:34:56 2006.
- * $Id: Xlib.c,v 1.62 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Wed Apr 19 00:08:40 2006.
+ * $Id: Xlib.c,v 1.63 2006/04/24 14:06:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -1047,13 +1047,18 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
     if (y + h > vw->full_height)
       y = vw->full_height - h;
 
-    //debug_message("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
+    //debug_message_fnc("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
 
     x11_lock(x11);
-    if (x != vw->x || y != vw->y)
+    if (x != vw->x || y != vw->y) {
+      x11window_unmap(xw);
       x11window_moveresize(xw, x, y, w, h);
-    else
+      x11window_map(xw);
+    } else {
+      x11window_unmap(xw);
       x11window_resize(xw, w, h);
+      x11window_map(xw);
+    }
     x11_unlock(x11);
   } else {
     if (w == vw->width && h == vw->height)
