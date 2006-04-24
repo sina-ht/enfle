@@ -1,3 +1,14 @@
+2006-04-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/plugin.c: Uncommented autoload debug output.
+
+	* plugins/video/Xlib/Xlib.c: Fixed resize bug.
+
+	* plugins/loader/bmp/bmp.c: Added depth 4 support.
+
+	* lib/X11/x11ximage.c, lib/enfle/image.c, lib/enfle/image.h: Added
+	INDEX44 support.
+
 2006-04-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Output informative error messages.
