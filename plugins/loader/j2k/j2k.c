@@ -1,10 +1,10 @@
 /*
  * j2k.c -- j2k loader plugin
- * (C)Copyright 2004 by Hiroshi Takekawa
+ * (C)Copyright 2004-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:23:56 2006.
- * $Id: j2k.c,v 1.4 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Mon May  1 00:52:29 2006.
+ * $Id: j2k.c,v 1.5 2006/04/30 15:52:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,8 @@
 #include "common.h"
 
 #include "enfle/loader-plugin.h"
+#define UTILS_NEED_GET_BIG_UINT32
+#include "enfle/utils.h"
 #include "utils/libstring.h"
 #include "j2k/j2k.h"
 
@@ -35,7 +37,7 @@ static const unsigned int types = IMAGE_RGB24;
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_J2K_PLUGIN_DESCRIPTION "J2K Loader plugin version 0.1"
+#define LOADER_J2K_PLUGIN_DESCRIPTION "J2K Loader plugin version 0.1.1"
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
@@ -105,7 +107,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   j2k_image_t *ji;
   j2k_cp_t *cp;
-  unsigned char *d, *buf = NULL;
+  unsigned char *d, *buf = NULL, *ptr;
   int i, size;
 
   //debug_message("J2K: load() called\n");
@@ -141,10 +143,11 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       bufsize += 65536;
     }
   }
+  ptr = buf;
 
   /* loading... */
-  if (buf[0] == 0) {
-    /* JP2, so skip to SOC marker */
+  if (ptr[0] == 0) {
+    debug_message_fnc("JP2, so skip to SOC marker\n");
     int len;
     int offset = 0;
     static unsigned char jp2c[] = { 'j', 'p', '2', 'c' };
@@ -153,18 +156,19 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 	free(buf);
 	return LOAD_ERROR;
       }
-      len = (buf[offset] << 24) + (buf[offset + 1] << 16) + (buf[offset + 2] << 8) + buf[offset + 3];
-      if (memcmp(buf + offset + 4, jp2c, 4) == 0)
+      len = utils_get_big_uint32(ptr + offset);
+      if (memcmp(ptr + offset + 4, jp2c, 4) == 0)
 	break;
       offset += len;
     }
-    buf += offset + 8;
-    if (buf[0] != 0xff || buf[1] != 0x4f) {
+    ptr += offset + 8;
+    if (ptr[0] != 0xff || ptr[1] != 0x4f) {
       err_message_fnc("J2K: hmm, where is SOC...?\n");
       return LOAD_ERROR;
     }
   }
-  if (!j2k_decode(buf, size, &ji, &cp)) {
+  debug_message_fnc("call j2k_decode()\n");
+  if (!j2k_decode(ptr, size, &ji, &cp)) {
     err_message_fnc("j2k_decode() failed.\n");
     goto error_clear;
   }
