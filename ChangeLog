@@ -1,3 +1,15 @@
+2006-04-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/j2k/j2k.c: Fixed a silly bug.
+
+2006-04-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/allcodecs.c, lib/avcodec/dsputil.h,
+	lib/avcodec/i386/cputest.c, lib/avcodec/i386/snowdsp_mmx.c,
+	lib/avcodec/imgconvert.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/ppc/dsputil_snow_altivec.c, lib/avcodec/vorbis.c,
+	lib/avutil/mathematics.c: Updated.
+
 2006-04-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/utils/plugin.c: Uncommented autoload debug output.
