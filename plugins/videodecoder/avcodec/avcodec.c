@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 02:09:30 2006.
- * $Id: avcodec.c,v 1.17 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Sat May 20 00:34:19 2006.
+ * $Id: avcodec.c,v 1.18 2006/05/19 15:38:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,7 +40,7 @@
 
 DECLARE_VIDEODECODER_PLUGIN_METHODS;
 
-#define VIDEODECODER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Video Decoder plugin version 0.2"
+#define VIDEODECODER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Video Decoder plugin version 0.2.1"
 
 static VideoDecoderPlugin plugin = {
   .type = ENFLE_PLUGIN_VIDEODECODER,
@@ -469,81 +469,7 @@ init(unsigned int fourcc, void *priv)
   VideoDecoder *vdec;
   struct videodecoder_avcodec *vdm;
 
-  switch (fourcc) {
-  case 0:
-  case FCC_H263: // h263
-  case FCC_I263: // h263i
-  case FCC_U263: // h263p
-  case FCC_viv1:
-  case FCC_DIVX: // mpeg4
-  case FCC_divx:
-  case FCC_DX50:
-  case FCC_XVID:
-  case FCC_xvid:
-  case FCC_MP4S:
-  case FCC_M4S2:
-  case FCC_0x04000000:
-  case FCC_DIV1:
-  case FCC_BLZ0:
-  case FCC_mp4v:
-  case FCC_UMP4:
-  case FCC_FMP4:
-  case FCC_DIV3: // msmpeg4
-  case FCC_div3:
-  case FCC_DIV4:
-  case FCC_DIV5:
-  case FCC_DIV6:
-  case FCC_MP43:
-  case FCC_MPG3:
-  case FCC_AP41:
-  case FCC_COL1:
-  case FCC_COL0:
-  case FCC_MP42: // msmpeg4v2
-  case FCC_mp42:
-  case FCC_DIV2:
-  case FCC_MP41: // msmpeg4v1
-  case FCC_MPG4:
-  case FCC_mpg4:
-  case FCC_WMV1: // wmv1
-  case FCC_WMV2: // wmv2
-  case FCC_dvsd: // dvvideo
-  case FCC_dvhd:
-  case FCC_dvsl:
-  case FCC_dv25:
-  case FCC_mpg1: // mpeg1video
-  case FCC_mpg2:
-  case FCC_PIM1:
-  case FCC_VCR2:
-  case FCC_mjpg: // mjpeg
-  case FCC_MJPG:
-  case FCC_JPGL: // ljpeg
-  case FCC_LJPG:
-  case FCC_HFYU: // huffyuv
-  case FCC_CYUV: // cyuv
-  case FCC_Y422: // rawvideo
-  case FCC_I420:
-  case FCC_IV31: // indeo3
-  case FCC_IV32:
-  case FCC_VP31: // vp3
-  case FCC_ASV1: // asv1
-  case FCC_ASV2: // asv2
-  case FCC_VCR1: // vcr1
-  case FCC_FFV1: // ffv1
-  case FCC_Xxan: // xan_wc4
-  case FCC_mrle: // msrle
-  case FCC_0x01000000:
-    break;
-  case FCC_cvid: // cinepak
-    debug_message_fnc("Cinepak detected.  Disabled so far.\n");
-    return NULL;
-  case FCC_MSVC: // msvideo1
-  case FCC_msvc:
-  case FCC_CRAM:
-  case FCC_cram:
-  case FCC_WHAM:
-  case FCC_wham:
-    break;
-  default:
+  if (!query(fourcc, priv)) {
     debug_message_fnc("Video [%c%c%c%c](%08X) was not identified as any avcodec supported format.\n",
 		       fourcc        & 0xff,
 		      (fourcc >>  8) & 0xff,

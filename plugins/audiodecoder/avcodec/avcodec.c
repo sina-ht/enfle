@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Nov 27 00:12:11 2005.
- * $Id: avcodec.c,v 1.7 2005/12/27 14:42:25 sian Exp $
+ * Last Modified: Sat May 20 00:34:25 2006.
+ * $Id: avcodec.c,v 1.8 2006/05/19 15:38:10 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,7 +40,7 @@
 
 DECLARE_AUDIODECODER_PLUGIN_METHODS;
 
-#define AUDIODECODER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Audio Decoder plugin version 0.2"
+#define AUDIODECODER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Audio Decoder plugin version 0.2.1"
 
 static AudioDecoderPlugin plugin = {
   .type = ENFLE_PLUGIN_AUDIODECODER,
@@ -201,7 +201,6 @@ query(unsigned int fourcc, void *priv)
   case WAVEFORMAT_TAG_MS_GSM_6_10:
   case WAVEFORMAT_TAG_MSN_Audio:
   case WAVEFORMAT_TAG_MP2:
-  case WAVEFORMAT_TAG_MP3_01:
   case WAVEFORMAT_TAG_MP3:
   case WAVEFORMAT_TAG_Voxware:
   case WAVEFORMAT_TAG_Acelp:
@@ -211,6 +210,8 @@ query(unsigned int fourcc, void *priv)
   case WAVEFORMAT_TAG_AC3:
   case WAVEFORMAT_TAG_VORBIS:
     return 1;
+  case WAVEFORMAT_TAG_UNKNOWN:
+  case WAVEFORMAT_TAG_NONE:
   default:
     break;
   }
@@ -223,24 +224,7 @@ init(unsigned int fourcc, void *priv)
   AudioDecoder *adec;
   struct audiodecoder_avcodec *adm;
 
-  switch (fourcc) {
-  case WAVEFORMAT_TAG_PCM:
-  case WAVEFORMAT_TAG_MS_ADPCM:
-  case WAVEFORMAT_TAG_IMA_ADPCM:
-  case WAVEFORMAT_TAG_MS_GSM_6_10:
-  case WAVEFORMAT_TAG_MSN_Audio:
-  case WAVEFORMAT_TAG_MP2:
-  case WAVEFORMAT_TAG_MP3_01:
-  case WAVEFORMAT_TAG_MP3:
-  case WAVEFORMAT_TAG_Voxware:
-  case WAVEFORMAT_TAG_Acelp:
-  case WAVEFORMAT_TAG_DivX_WMAv1:
-  case WAVEFORMAT_TAG_DivX_WMAv2:
-  case WAVEFORMAT_TAG_IMC:
-  case WAVEFORMAT_TAG_AC3:
-  case WAVEFORMAT_TAG_VORBIS:
-    break;
-  default:
+  if (!query(fourcc, priv)) {
     debug_message_fnc("Audio (%08X) was not identified as any avcodec supported format.\n", fourcc);
     return NULL;
   }
