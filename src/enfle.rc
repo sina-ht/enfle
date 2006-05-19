@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Sat Mar  4 01:43:20 2006.
-; $Id: enfle.rc,v 1.50 2006/03/12 08:25:18 sian Exp $
+; Last Modified: Sat May 20 00:39:00 2006.
+; $Id: enfle.rc,v 1.51 2006/05/19 15:39:09 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -128,6 +128,7 @@ enfle {
         msmpeg4 := DivX:avcodec:.
         msmpeg4v2 := DivX:avcodec:.
         raw := raw:.
+	cinepak := avcodec:.
       }
     }
     audiodecoder {
