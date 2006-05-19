@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 27 17:51:32 2006.
- * $Id: fourcc.h,v 1.15 2006/02/05 14:36:51 sian Exp $
+ * Last Modified: Sat May 20 00:29:01 2006.
+ * $Id: fourcc.h,v 1.16 2006/05/19 15:37:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,7 @@
 #define FCC_Y422 FCC('Y', '4', '2', '2')
 #define FCC_RGB2 FCC('R', 'G', 'B', '2')
 #define FCC_DIB  FCC('D', 'I', 'B', ' ')
+#define FCC_HM12 FCC('H', 'M', '1', '2')
 
 #define FCC_CYUV FCC('C', 'Y', 'U', 'V')
 #define FCC_HFYU FCC('H', 'F', 'Y', 'U')
@@ -149,13 +150,12 @@
  */
 
 /* Dunno correct values... */
-#define WAVEFORMAT_TAG_PCM         0x00
-#define WAVEFORMAT_TAG_MP3_01      0x01
+#define WAVEFORMAT_TAG_UNKNOWN     0x00
+#define WAVEFORMAT_TAG_PCM         0x01
 #define WAVEFORMAT_TAG_MS_ADPCM    0x02
 #define WAVEFORMAT_TAG_IMA_ADPCM   0x11
 #define WAVEFORMAT_TAG_MS_GSM_6_10 0x31
 #define WAVEFORMAT_TAG_MSN_Audio   0x32
-#define WAVEFORMAT_TAG_MP1         0x50
 #define WAVEFORMAT_TAG_MP2         0x50
 #define WAVEFORMAT_TAG_MP3         0x55
 #define WAVEFORMAT_TAG_Voxware     0x75

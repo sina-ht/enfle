@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Dec  1 00:56:50 2005.
- * $Id: audiodecoder.c,v 1.7 2005/12/27 14:40:19 sian Exp $
+ * Last Modified: Sat May 20 00:30:18 2006.
+ * $Id: audiodecoder.c,v 1.8 2006/05/19 15:40:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -61,7 +61,6 @@ audiodecoder_codec_name(unsigned int fourcc)
     return "MSN_Audio";
   case WAVEFORMAT_TAG_MP2:
     return "mp2";
-  case WAVEFORMAT_TAG_MP3_01:
   case WAVEFORMAT_TAG_MP3:
     return "mp3";
   case WAVEFORMAT_TAG_Voxware:
@@ -78,6 +77,8 @@ audiodecoder_codec_name(unsigned int fourcc)
     return "ac3";
   case WAVEFORMAT_TAG_VORBIS:
     return "vorbis";
+  case WAVEFORMAT_TAG_UNKNOWN:
+  case WAVEFORMAT_TAG_NONE:
   default:
     break;
   }
