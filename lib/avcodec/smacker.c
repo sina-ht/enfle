@@ -177,6 +177,11 @@ static int smacker_decode_header_tree(SmackVContext *smk, GetBitContext *gb, int
     int escapes[3];
     DBCtx ctx;
 
+    if(size >= UINT_MAX>>4){ // (((size + 3) >> 2) + 3) << 2 must not overflow
+        av_log(smk->avctx, AV_LOG_ERROR, "size too large\n");
+        return -1;
+    }
+
     tmp1.length = 256;
     tmp1.maxlength = 0;
     tmp1.current = 0;
@@ -420,7 +425,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8
             break;
         case SMK_BLK_FULL:
             mode = 0;
-            if(avctx->codec_tag != 0) { // In case of Smacker v4 we have three modes
+            if(avctx->codec_tag == MKTAG('S', 'M', 'K', '4')) { // In case of Smacker v4 we have three modes
                 if(get_bits1(&gb)) mode = 1;
                 else if(get_bits1(&gb)) mode = 2;
             }

@@ -20,6 +20,8 @@
  */
 
 #undef V_DEBUG
+//#define V_DEBUG
+//#define AV_DEBUG(...) av_log(NULL, AV_LOG_INFO, __VA_ARGS__)
 
 #include <math.h>
 
@@ -473,7 +475,7 @@ static int vorbis_parse_setup_hdr_floors(vorbis_context *vc) {
                 }
 
                 for(k=0;k<(1<<floor_setup->data.t1.class_subclasses[j]);++k) {
-                    floor_setup->data.t1.subclass_books[j][k]=get_bits(gb, 8)-1;
+                    floor_setup->data.t1.subclass_books[j][k]=(int16_t)get_bits(gb, 8)-1;
 
                     AV_DEBUG("    book %d. : %d \n", k, floor_setup->data.t1.subclass_books[j][k]);
                 }
@@ -1357,7 +1359,9 @@ static int vorbis_residue_decode(vorbis_context *vc, vorbis_residue *vr, uint_fa
                             uint_fast32_t temp2;
 
                             temp2=(((uint_fast64_t)temp) * inverse[vr->classifications])>>32;
-                            classifs[j_times_ptns_to_read+partition_count+c_p_c-1-i]=temp-temp2*vr->classifications;
+                            if (partition_count+c_p_c-1-i < ptns_to_read) {
+                                classifs[j_times_ptns_to_read+partition_count+c_p_c-1-i]=temp-temp2*vr->classifications;
+                            }
                             temp=temp2;
                         }
                     }
