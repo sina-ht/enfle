@@ -1,3 +1,29 @@
+2006-05-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/audiodecoder.c: Fixed fourccs.
+
+	* plugins/video/Xlib/Xlib.c: Cleaned up.
+
+	* src/enfle.rc: Added cinepak.
+
+	* plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/avcodec/avcodec.c: Use query().
+
+	* plugins/player/generic/generic.c: Print more audio information.
+
+	* lib/enfle/fourcc.h: Fixed fourccs.
+
+	* lib/avcodec/4xm.c, lib/avcodec/alac.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream.h, lib/avcodec/cabac.h, lib/avcodec/cook.c,
+	lib/avcodec/ffv1.c, lib/avcodec/h263.c, lib/avcodec/h264.c,
+	lib/avcodec/i386/mpegvideo_mmx.c,
+	lib/avcodec/motion_est_template.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/ppc/dsputil_snow_altivec.c, lib/avcodec/raw.c,
+	lib/avcodec/shorten.c, lib/avcodec/smacker.c, lib/avcodec/snow.c,
+	lib/avcodec/tta.c, lib/avcodec/utils.c, lib/avcodec/vorbis.c,
+	lib/avutil/common.h, lib/avutil/mathematics.c: Updated.
+
 2006-04-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/loader/j2k/j2k.c: Fixed a silly bug.
