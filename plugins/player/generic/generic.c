@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 01:51:14 2006.
- * $Id: generic.c,v 1.26 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Fri May 19 00:36:09 2006.
+ * $Id: generic.c,v 1.27 2006/05/19 15:37:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -128,8 +128,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       info->nastream = m->demux->astreams[0];
       demultiplexer_set_audio(m->demux, info->nastream);
 
-      show_message("audio(%d streams)\n", info->nastreams);
-
       if (m->ap->bytes_written == NULL)
 	warning("audio sync may be incorrect.\n");
 
@@ -137,6 +135,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 	show_message("No audiodecoder for %X\n", m->a_fourcc);
 	warning("Audio will not be played.\n");
       } else {
+	show_message("audio[%c%c%c%c(%08X):codec %s](%d streams)\n",
+		     m->a_fourcc        & 0xff,
+		     (m->a_fourcc >>  8) & 0xff,
+		     (m->a_fourcc >> 16) & 0xff,
+		     (m->a_fourcc >> 24) & 0xff,
+		     m->a_fourcc,
+		     m->a_codec_name,
+		     info->nastreams);
 	m->has_audio = 1;
       }
     }
