@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 19 00:08:40 2006.
- * $Id: Xlib.c,v 1.63 2006/04/24 14:06:55 sian Exp $
+ * Last Modified: Tue May 16 00:18:12 2006.
+ * $Id: Xlib.c,v 1.64 2006/05/19 15:39:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -977,12 +977,12 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
 
   x11_lock(x11);
   x11window_unmap(xw);
-  set_offset(vw, 0, 0);
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
     
     resize(vw, vw->render_width, vw->render_height);
+    set_offset(vw, 0, 0);
     if (!xwi->xi->use_xv)
       x11ximage_put(xwi->xi, xwi->normal.pix, xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
     draw_caption(vw);
@@ -1006,6 +1006,7 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     }
     recreate_pixmap_if_resized(vw, &xwi->full);
     resize(vw, vw->render_width, vw->render_height);
+    set_offset(vw, 0, 0);
     if (!xwi->xi->use_xv)
       x11ximage_put(xwi->xi, xwi->full.pix, xwi->full.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
     x11window_map_raised(xwi->full.xw);
@@ -1048,17 +1049,13 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
       y = vw->full_height - h;
 
     //debug_message_fnc("(%d, %d) -> (%d, %d) w: %d h: %d\n", vw->x, vw->y, x, y, w, h);
+    debug_message_fnc("w: %d h: %d\n", w, h);
 
     x11_lock(x11);
-    if (x != vw->x || y != vw->y) {
-      x11window_unmap(xw);
-      x11window_moveresize(xw, x, y, w, h);
-      x11window_map(xw);
-    } else {
-      x11window_unmap(xw);
-      x11window_resize(xw, w, h);
-      x11window_map(xw);
-    }
+    //x11window_unmap(xw);
+    x11window_moveresize(xw, x, y, w, h);
+    //x11window_map(xw);
+    //x11window_wait_mapped(xw);
     x11_unlock(x11);
   } else {
     if (w == vw->width && h == vw->height)
