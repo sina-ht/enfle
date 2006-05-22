@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Dec 24 21:14:47 2005.
- * $Id: alsa.c,v 1.16 2005/12/27 14:41:41 sian Exp $
+ * Last Modified: Mon May 22 21:17:46 2006.
+ * $Id: alsa.c,v 1.17 2006/05/22 12:19:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -292,8 +292,11 @@ write_device(AudioDevice *ad, unsigned char *data, int size)
 
   while (count > 0) {
     if ((r = snd_pcm_writei(alsa->fd, data, count)) == -EAGAIN) {
+      //debug_message_fnc(" EAGAIN\n");
       snd_pcm_wait(alsa->fd, 1000);
     } else if (r > 0) {
+      //debug_message_fnc(" wrote %d bytes\n", (int)(r * unit));
+      ad->bytes_written += r * unit;
       count -= r;
       data += r * unit;
     } else if (r == -EPIPE) {
@@ -310,7 +313,6 @@ write_device(AudioDevice *ad, unsigned char *data, int size)
       warning_fnc(" r = %d < 0...\n", (int)r);
     }
   }
-  ad->bytes_written += size;
 
   return 1;
 }
@@ -319,7 +321,6 @@ static int
 bytes_written(AudioDevice *ad)
 {
   ALSA_data *alsa = (ALSA_data *)ad->private_data;
-  snd_pcm_status_t *pcm_stat;
   snd_pcm_sframes_t delay;
   snd_pcm_state_t state;
 
@@ -330,9 +331,8 @@ bytes_written(AudioDevice *ad)
   if (state == SND_PCM_STATE_OPEN || state == SND_PCM_STATE_SETUP)
     return -1;
 
-  snd_pcm_status_alloca(&pcm_stat);
-  snd_pcm_status(alsa->fd, pcm_stat);
-  delay = snd_pcm_status_get_delay(pcm_stat);
+  if (snd_pcm_delay(alsa->fd, &delay) < 0)
+    warning_fnc("snd_pcm_delay() failed.\n");
 
   return ad->bytes_written - snd_pcm_samples_to_bytes(alsa->fd, delay) * ad->channels;
 }
