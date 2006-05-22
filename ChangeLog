@@ -1,3 +1,10 @@
+2006-05-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audio/alsa/alsa.c: Fixed write_device() to update
+	bytes_written immediately after (partial) writing.
+
+	* plugins/player/generic/generic.c: More information output.
+
 2006-05-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/audiodecoder.c: Fixed fourccs.
