@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri May 19 00:36:09 2006.
- * $Id: generic.c,v 1.27 2006/05/19 15:37:55 sian Exp $
+ * Last Modified: Mon May 22 20:06:22 2006.
+ * $Id: generic.c,v 1.28 2006/05/22 12:17:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -135,14 +135,16 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 	show_message("No audiodecoder for %X\n", m->a_fourcc);
 	warning("Audio will not be played.\n");
       } else {
-	show_message("audio[%c%c%c%c(%08X):codec %s](%d streams)\n",
+	show_message("audio[%c%c%c%c(%08X):codec %s](%d streams): %d ch / %dHz\n",
 		     m->a_fourcc        & 0xff,
 		     (m->a_fourcc >>  8) & 0xff,
 		     (m->a_fourcc >> 16) & 0xff,
 		     (m->a_fourcc >> 24) & 0xff,
 		     m->a_fourcc,
 		     m->a_codec_name,
-		     info->nastreams);
+		     info->nastreams,
+		     m->channels,
+		     m->samplerate);
 	m->has_audio = 1;
       }
     }
@@ -638,7 +640,7 @@ play_main(Movie *m, VideoWindow *vw)
   pthread_mutex_lock(&m->vdec->update_mutex);
 
   rate = rational_to_double(m->framerate);
-  //debug_message_fnc("frame %d, pts %ld prev_pts %ld\n", m->current_frame, m->vdec->pts, m->vdec->prev_pts);
+  //debug_message_fnc("frame %d, rate %f, pts %ld, prev_pts %ld, ts_base %ld\n", m->current_frame, rate, m->vdec->pts, m->vdec->prev_pts, m->vdec->ts_base);
   if (m->vdec->ts_base == 0 || m->vdec->pts == -1) {
     /* videodecoder didn't provide pts */
     video_time = m->current_frame * 1000 / rate;
@@ -651,7 +653,7 @@ play_main(Movie *m, VideoWindow *vw)
   }
 
   if (m->has_audio == 1 && info->ad) {
-    //debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, get_audio_time(m, info->ad));
+    debug_message("%d (v: %d a: %d)\n", m->current_frame, video_time, get_audio_time(m, info->ad));
     if ((diff_time = video_time - get_audio_time(m, info->ad)) >= 0) {
       /* if too fast to display, wait before render */
 #if 1
