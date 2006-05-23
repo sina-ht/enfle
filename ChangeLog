@@ -1,3 +1,7 @@
+2006-05-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/image_magnify.c: Implemented bilinear reduction.
+
 2006-05-22  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/audio/alsa/alsa.c: Fixed write_device() to update
