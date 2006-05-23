@@ -1,10 +1,10 @@
 /*
  * image_magnify.c -- image magnification
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan  6 04:31:57 2006.
- * $Id: image_magnify.c,v 1.11 2006/01/05 19:32:12 sian Exp $
+ * Last Modified: Wed May 24 00:00:13 2006.
+ * $Id: image_magnify.c,v 1.12 2006/05/23 15:04:59 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -115,118 +115,175 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 {
   int i, x, y, t, t2, t3, t4;
 
-  if (dw >= w)
-    if (dh >= h) {
-      if (method == _BILINEAR) {
+  if (method == _NOINTERPOLATE ||
+      (method == _BILINEAR && ((dw >= w && dh < h) || (dw < w && dh >= h)))) {
+    for (y = 0; y < dh; y++) {
+      t = y * h / dh * w;
+      for (x = 0; x < dw; x++) {
+	t3 = x * w / dw + t;
+	for (i = 0; i < 3; i++)
+	  *d++ = s[t3 * 3 + i];
+      }
+    }
+    return;
+  }
+
+  /* method == _BILINEAR */
+  if (dw >= w /* && dh >= h */) {
 #ifndef INTEGER_ARITHMETIC
-	unsigned char *dd = d;
-	double dx, dy;
-	int yt;
+    double dx, dy;
+    int yt;
 
-	yt = (h - 1) * w;
-	for (y = 0; y < dh; y++) {
-	  dy = (double)y * (double)h / (double)dh;
-	  t = (int)dy;
-	  dy -= t;
-	  t = y * h / dh * w;
-	  for (x = 0; x < dw; x++) {
-	    dx = (double)x * (double)w / (double)dw;
-	    t3 = (int)dx;
-	    dx -= t3;
+    yt = (h - 1) * w;
+    for (y = 0; y < dh; y++) {
+      dy = (double)y * (double)h / (double)dh;
+      t = (int)dy;
+      dy -= t;
+      t = y * h / dh * w;
+      for (x = 0; x < dw; x++) {
+	dx = (double)x * (double)w / (double)dw;
+	t3 = (int)dx;
+	dx -= t3;
 
-	    if (t < yt) {
-	      /* bilinear interpolation */
-	      for (i = 0; i < 3; i++) 
-		*dd++ =
-		  s[(t     +  t3     ) * 3 + i] * (1.0 - dx) * (1.0 - dy) +
-		  s[(t     + (t3 + 1)) * 3 + i] *        dx  * (1.0 - dy) +
-		  s[(t + w +  t3     ) * 3 + i] * (1.0 - dx) *        dy  +
-		  s[(t + w + (t3 + 1)) * 3 + i] *        dx  *        dy;
-	    } else {
-	      for (i = 0; i < 3; i++) 
-		*dd++ =
-		  s[(t     +  t3     ) * 3 + i] * (1.0 - dx) +
-		  s[(t     + (t3 + 1)) * 3 + i] *        dx;
-	    }
-	  }
+	if (t < yt) {
+	  /* bilinear interpolation */
+	  for (i = 0; i < 3; i++) 
+	    *d++ =
+	      s[(t     +  t3     ) * 3 + i] * (1.0 - dx) * (1.0 - dy) +
+	      s[(t     + (t3 + 1)) * 3 + i] *        dx  * (1.0 - dy) +
+	      s[(t + w +  t3     ) * 3 + i] * (1.0 - dx) *        dy  +
+	      s[(t + w + (t3 + 1)) * 3 + i] *        dx  *        dy;
+	} else {
+	  for (i = 0; i < 3; i++) 
+	    *d++ =
+	      s[(t     +  t3     ) * 3 + i] * (1.0 - dx) +
+	      s[(t     + (t3 + 1)) * 3 + i] *        dx;
 	}
+      }
+    }
 #else
-	unsigned char *dd = d;
-	unsigned int dx, dy;
-	int yt;
+    unsigned int dx, dy;
+    int yt;
 
-	yt = (h - 1) * w;
-	for (y = 0; y < dh; y++) {
-	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
-	  t = y * h / dh * w;
+    yt = (h - 1) * w;
+    for (y = 0; y < dh; y++) {
+      dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
+      t = y * h / dh * w;
 
-	  if (t < yt) {
-	    for (x = 0; x < dw; x++) {
-	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
-	      t3 = x * w / dw;
-
-	      /* bilinear interpolation */
-	      for (i = 0; i < 3; i++) 
-		*dd++ = (
-		  s[(t +      t3     ) * 3 + i] * (MIN_INT - dx) * (MIN_INT - dy) +
-		  s[(t +     (t3 + 1)) * 3 + i] *            dx  * (MIN_INT - dy) +
-		  s[(t + w +  t3     ) * 3 + i] * (MIN_INT - dx) *            dy  +
-		  s[(t + w + (t3 + 1)) * 3 + i] *            dx  *            dy ) >> PRECISION2;
-	    }
-	  } else {
-	    for (x = 0; x < dw; x++) {
-	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
-	      t3 = x * w / dw;
-
-	      for (i = 0; i < 3; i++) 
-		*dd++ = (
-		  s[(t     +  t3     ) * 3 + i] * (MIN_INT - dx) +
-		  s[(t     + (t3 + 1)) * 3 + i] *            dx ) >> PRECISION;
-	    }
-	  }
-	}
-#endif
-      } else {
-	unsigned char *dd = d;
-	for (y = 0; y < dh; y++) {
-	  t = y * h / dh * w;
-	  for (x = 0; x < dw; x++) {
-	    t3 = x * w / dw + t;
-	    for (i = 0; i < 3; i++)
-	      *dd++ = s[t3 * 3 + i];
-	  }
-	}
-      }
-    } else
-      for (y = 0; y < h; y++) {
-	t = y * dh / h * dw;
-	t2 = y * w;
+      if (t < yt) {
 	for (x = 0; x < dw; x++) {
-	  t4 = x * w / dw + t2;
-	  for (i = 0; i < 3; i++)
-	    d[(x + t) * 3 + i] = s[t4 * 3 + i];
+	  dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	  t3 = x * w / dw;
+
+	  /* bilinear interpolation */
+	  for (i = 0; i < 3; i++) 
+	    *d++ = (
+		     s[(t +      t3     ) * 3 + i] * (MIN_INT - dx) * (MIN_INT - dy) +
+		     s[(t +     (t3 + 1)) * 3 + i] *            dx  * (MIN_INT - dy) +
+		     s[(t + w +  t3     ) * 3 + i] * (MIN_INT - dx) *            dy  +
+		     s[(t + w + (t3 + 1)) * 3 + i] *            dx  *            dy ) >> PRECISION2;
+	}
+      } else {
+	for (x = 0; x < dw; x++) {
+	  dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	  t3 = x * w / dw;
+
+	  for (i = 0; i < 3; i++) 
+	    *d++ = (
+		     s[(t     +  t3     ) * 3 + i] * (MIN_INT - dx) +
+		     s[(t     + (t3 + 1)) * 3 + i] *            dx ) >> PRECISION;
 	}
       }
-  else
-    if (dh >= h)
-      for (y = 0; y < dh; y++) {
-	t = y * dw;
-	t2 = y * h / dh * w;
-	for (x = 0; x < w; x++) {
-	  t3 = x * dw / w + t;
-	  for (i = 0; i < 3; i++)
-	    d[t3 * 3 + i] = s[(x + t2) * 3 + i];
+    }
+#endif
+  } else {
+    /* dw < w && dh < h, bilinear */
+    double sx, sy, sx2, sy2;
+    double dxl, dyu, dxr, dyd;
+    double num[3], den;
+    int xl, xr, yu, yd, j, k;
+
+    sy = 0;
+    sx = 0;
+    for (y = 0; y < dh; y++) {
+      sy2 = (double)(y + 1) * (double)h / (double)dh;
+      t = (int)sy;
+      dyu = t + 1 - sy;
+      yu =  (dyu > 0) ? (sy + 1) : sy;
+      yd = (int)sy2;
+      dyd = sy2 - yd;
+
+      for (x = 0; x < dw; x++) {
+	sx2 = (double)(x + 1) * (double)w / (double)dw;
+	t3 = (int)sx;
+	dxl = t3 + 1 - sx;
+	xl = (dxl > 0) ? (sx + 1) : sx;
+	xr = (int)sx2;
+	dxr = sx2 - xr;
+
+	num[0] = num[1] = num[2] = den = 0;
+	/* upper margin */
+	if (dyu > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xl - 1) * 3) + i] * dxl * dyu;
+	    den += dxl * dyu;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + j) * 3) + i] * dyu;
+	    den += dyu;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xr) * 3) + i] * dxr * dyu;
+	    den += dxr * dyu;
+	  }
 	}
-      }
-    else
-      for (y = 0; y < h; y++) {
-	t = y * dh / h * dw;
-	for (x = 0; x < w; x++) {
-	  t3 = x * dw / w + t;
-	  for (i = 0; i < 3; i++)
-	    d[t3 * 3 + i] = *s++;
+
+	for (k = yu; k < yd; k++) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xl - 1) * 3) + i] * dxl;
+	    den += dxl;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + j) * 3) + i];
+	    den++;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xr) * 3) + i] * dxr;
+	    den += dxr;
+	  }
 	}
+
+	/* lower margin */
+	if (dyd > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xl - 1) * 3) + i] * dxl * dyd;
+	    den += dxl * dyd;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + j) * 3) + i] * dyd;
+	    den += dyd;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xr) * 3) + i] * dxr * dyd;
+	    den += dxr * dyd;
+	  }
+	}
+	for (i = 0; i < 3; i++) 
+	  *d++ = num[i] / den;
+	sx = sx2;
       }
+      sy = sy2;
+    }
+  }
 }
 
 static void
@@ -235,124 +292,182 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 {
   int i, x, y, t, t2, t3, t4;
 
-  if (dw >= w)
-    if (dh >= h) {
-      if (method == _BILINEAR) {
+  if (method == _NOINTERPOLATE ||
+      (method == _BILINEAR && ((dw >= w && dh < h) || (dw < w && dh >= h)))) {
+    for (y = 0; y < dh; y++) {
+      t = y * h / dh * w;
+      for (x = 0; x < dw; x++) {
+	t3 = x * w / dw + t;
+	for (i = 0; i < 3; i++)
+	  *d++ = s[(t3 << 2) + i];
+	d++;
+      }
+    }
+    return;
+  }
+
+  /* method == _BILINEAR */
+  if (dw >= w /* && dh >= h */) {
+    /* dw >= w && dh >= h, bilinear */
 #ifndef INTEGER_ARITHMETIC
-	unsigned char *dd = d;
-	double dx, dy;
-	int yt;
+    double dx, dy;
+    int yt;
 
-	yt = (h - 1) * w;
-	for (y = 0; y < dh; y++) {
-	  dy = (double)y * (double)h / (double)dh;
-	  t = (int)dy;
-	  dy -= t;
-	  t = y * h / dh * w;
-	  for (x = 0; x < dw; x++) {
-	    dx = (double)x * (double)w / (double)dw;
-	    t3 = (int)dx;
-	    dx -= t3;
+    yt = (h - 1) * w;
+    for (y = 0; y < dh; y++) {
+      dy = (double)y * (double)h / (double)dh;
+      t = (int)dy;
+      dy -= t;
+      t = y * h / dh * w;
+      for (x = 0; x < dw; x++) {
+	dx = (double)x * (double)w / (double)dw;
+	t3 = (int)dx;
+	dx -= t3;
 
-	    if (t < yt) {
-	      /* bilinear interpolation */
-	      for (i = 0; i < 3; i++) 
-		*dd++ =
-		  s[((t +      t3     ) << 2) + i] * (1.0 - dx) * (1.0 - dy) +
-		  s[((t +     (t3 + 1)) << 2) + i] *        dx  * (1.0 - dy) +
-		  s[((t + w +  t3     ) << 2) + i] * (1.0 - dx) *        dy  +
-		  s[((t + w + (t3 + 1)) << 2) + i] *        dx  *        dy;
-	      dd++;
-	    } else {
-	      for (i = 0; i < 3; i++) 
-		*dd++ =
-		  s[((t     +  t3     ) << 2) + i] * (1.0 - dx) +
-		  s[((t     + (t3 + 1)) << 2) + i] *        dx;
-	      dd++;
-	    }
-	  }
+	if (t < yt) {
+	  /* bilinear interpolation */
+	  for (i = 0; i < 3; i++) 
+	    *d++ =
+	      s[((t +      t3     ) << 2) + i] * (1.0 - dx) * (1.0 - dy) +
+	      s[((t +     (t3 + 1)) << 2) + i] *        dx  * (1.0 - dy) +
+	      s[((t + w +  t3     ) << 2) + i] * (1.0 - dx) *        dy  +
+	      s[((t + w + (t3 + 1)) << 2) + i] *        dx  *        dy;
+	  d++;
+	} else {
+	  for (i = 0; i < 3; i++) 
+	    *d++ =
+	      s[((t     +  t3     ) << 2) + i] * (1.0 - dx) +
+	      s[((t     + (t3 + 1)) << 2) + i] *        dx;
+	  d++;
 	}
+      }
+    }
 #else
-	unsigned char *dd = d;
-	unsigned int dx, dy;
-	int yt;
+    unsigned int dx, dy;
+    int yt;
 
-	yt = (h - 1) * w;
-	for (y = 0; y < dh; y++) {
-	  dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
-	  t = y * h / dh * w;
+    yt = (h - 1) * w;
+    for (y = 0; y < dh; y++) {
+      dy = ((y << PRECISION) * h / dh) & DECIMAL_MASK;
+      t = y * h / dh * w;
 
-	  if (t < yt) {
-	    for (x = 0; x < dw; x++) {
-	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
-	      t3 = x * w / dw;
-
-	      /* bilinear interpolation */
-	      for (i = 0; i < 3; i++) 
-		*dd++ = (
-		  s[((t +      t3     ) << 2) + i] * (MIN_INT - dx) * (MIN_INT - dy) +
-		  s[((t +     (t3 + 1)) << 2) + i] *            dx  * (MIN_INT - dy) +
-		  s[((t + w +  t3     ) << 2) + i] * (MIN_INT - dx) *            dy  +
-		  s[((t + w + (t3 + 1)) << 2) + i] *            dx  *            dy ) >> PRECISION2;
-	      dd++;
-	    }
-	  } else {
-	    for (x = 0; x < dw; x++) {
-	      dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
-	      t3 = x * w / dw;
-
-	      for (i = 0; i < 3; i++) 
-		*dd++ = (
-		  s[((t     +  t3     ) << 2) + i] * (MIN_INT - dx) +
-		  s[((t     + (t3 + 1)) << 2) + i] *            dx ) >> PRECISION;
-	      dd++;
-	    }
-	  }
-	}
-#endif
-      } else {
-	unsigned char *dd = d;
-	for (y = 0; y < dh; y++) {
-	  t = y * h / dh * w;
-	  for (x = 0; x < dw; x++) {
-	    t3 = x * w / dw + t;
-	    for (i = 0; i < 3; i++)
-	      *dd++ = s[(t3 << 2) + i];
-	    dd++;
-	  }
-	}
-      }
-    } else
-      for (y = 0; y < h; y++) {
-	t = y * dh / h * dw;
-	t2 = y * w;
+      if (t < yt) {
 	for (x = 0; x < dw; x++) {
-	  t4 = x * w / dw + t2;
-	  for (i = 0; i < 3; i++)
-	    d[((x + t) << 2) + i] = s[(t4 << 2) + i];
+	  dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	  t3 = x * w / dw;
+
+	  /* bilinear interpolation */
+	  for (i = 0; i < 3; i++) 
+	    *d++ = (
+		     s[((t +      t3     ) << 2) + i] * (MIN_INT - dx) * (MIN_INT - dy) +
+		     s[((t +     (t3 + 1)) << 2) + i] *            dx  * (MIN_INT - dy) +
+		     s[((t + w +  t3     ) << 2) + i] * (MIN_INT - dx) *            dy  +
+		     s[((t + w + (t3 + 1)) << 2) + i] *            dx  *            dy ) >> PRECISION2;
+	  d++;
+	}
+      } else {
+	for (x = 0; x < dw; x++) {
+	  dx = ((x << PRECISION) * w / dw) & DECIMAL_MASK;
+	  t3 = x * w / dw;
+
+	  for (i = 0; i < 3; i++) 
+	    *d++ = (
+		     s[((t     +  t3     ) << 2) + i] * (MIN_INT - dx) +
+		     s[((t     + (t3 + 1)) << 2) + i] *            dx ) >> PRECISION;
+	  d++;
 	}
       }
-  else
-    if (dh >= h)
-      for (y = 0; y < dh; y++) {
-	t = y * dw;
-	t2 = y * h / dh * w;
-	for (x = 0; x < w; x++) {
-	  t3 = x * dw / w + t;
-	  for (i = 0; i < 3; i++)
-	    d[(t3 << 2) + i] = s[((x + t2) << 2) + i];
+    }
+#endif
+  } else {
+    /* dw < w && dh < h, bilinear */
+    double sx, sy, sx2, sy2;
+    double dxl, dyu, dxr, dyd;
+    double num[3], den;
+    int xl, xr, yu, yd, j, k;
+
+    sy = 0;
+    sx = 0;
+    for (y = 0; y < dh; y++) {
+      sy2 = (double)(y + 1) * (double)h / (double)dh;
+      t = (int)sy;
+      dyu = t + 1 - sy;
+      yu =  (dyu > 0) ? (sy + 1) : sy;
+      yd = (int)sy2;
+      dyd = sy2 - yd;
+
+      for (x = 0; x < dw; x++) {
+	sx2 = (double)(x + 1) * (double)w / (double)dw;
+	t3 = (int)sx;
+	dxl = t3 + 1 - sx;
+	xl = (dxl > 0) ? (sx + 1) : sx;
+	xr = (int)sx2;
+	dxr = sx2 - xr;
+
+	num[0] = num[1] = num[2] = den = 0;
+	/* upper margin */
+	if (dyu > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xl - 1) << 2) + i] * dxl * dyu;
+	    den += dxl * dyu;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + j) << 2) + i] * dyu;
+	    den += dyu;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xr) << 2) + i] * dxr * dyu;
+	    den += dxr * dyu;
+	  }
 	}
-      }
-    else
-      for (y = 0; y < h; y++) {
-	t = y * dh / h * dw;
-	for (x = 0; x < w; x++) {
-	  t3 = x * dw / w + t;
-	  for (i = 0; i < 3; i++)
-	    d[(t3 << 2) + i] = *s++;
-	  s++;
+
+	for (k = yu; k < yd; k++) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xl - 1) << 2) + i] * dxl;
+	    den += dxl;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + j) << 2) + i];
+	    den++;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xr) << 2) + i] * dxr;
+	    den += dxr;
+	  }
 	}
+
+	/* lower margin */
+	if (dyd > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xl - 1) << 2) + i] * dxl * dyd;
+	    den += dxl * dyd;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + j) << 2) + i] * dyd;
+	    den += dyd;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xr) << 2) + i] * dxr * dyd;
+	    den += dxr * dyd;
+	  }
+	}
+	for (i = 0; i < 3; i++) 
+	  *d++ = num[i] / den;
+	d++;
+	sx = sx2;
       }
+      sy = sy2;
+    }
+  }
 }
 
 static void
@@ -375,6 +490,15 @@ canonicalize(Image *p, int src, unsigned int shrinked_bpl)
 int
 image_magnify(Image *p, int src, int dst, int dw, int dh, ImageInterpolateMethod method)
 {
+  switch (method) {
+  case _NOINTERPOLATE:
+  case _BILINEAR:
+    break;
+  default:
+    warning("Unsupported magnify method\n");
+    return 0;
+  }
+
   switch (p->type) {
   case _GRAY:
   case _INDEX:
