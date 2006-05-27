@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May 24 00:00:13 2006.
- * $Id: image_magnify.c,v 1.12 2006/05/23 15:04:59 sian Exp $
+ * Last Modified: Sat May 27 17:38:30 2006.
+ * $Id: image_magnify.c,v 1.13 2006/05/27 08:41:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -113,7 +113,7 @@ static void
 magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 		  int dw, int dh, ImageInterpolateMethod method)
 {
-  int i, x, y, t, t2, t3, t4;
+  int i, x, y, t, t3;
 
   if (method == _NOINTERPOLATE ||
       (method == _BILINEAR && ((dw >= w && dh < h) || (dw < w && dh >= h)))) {
@@ -130,7 +130,7 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 
   /* method == _BILINEAR */
   if (dw >= w /* && dh >= h */) {
-#ifndef INTEGER_ARITHMETIC
+#if !defined(INTEGER_ARITHMETIC)
     double dx, dy;
     int yt;
 
@@ -198,26 +198,27 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
 #endif
   } else {
     /* dw < w && dh < h, bilinear */
+#if !defined(INTEGER_ARITHMETIC)
     double sx, sy, sx2, sy2;
     double dxl, dyu, dxr, dyd;
     double num[3], den;
     int xl, xr, yu, yd, j, k;
 
     sy = 0;
-    sx = 0;
     for (y = 0; y < dh; y++) {
       sy2 = (double)(y + 1) * (double)h / (double)dh;
       t = (int)sy;
-      dyu = t + 1 - sy;
-      yu =  (dyu > 0) ? (sy + 1) : sy;
+      dyu = (sy > t) ? t + 1 - sy : 0;
+      yu = (dyu > 0) ? sy + 1 : sy;
       yd = (int)sy2;
       dyd = sy2 - yd;
 
+      sx = 0;
       for (x = 0; x < dw; x++) {
 	sx2 = (double)(x + 1) * (double)w / (double)dw;
 	t3 = (int)sx;
-	dxl = t3 + 1 - sx;
-	xl = (dxl > 0) ? (sx + 1) : sx;
+	dxl = (sx > t3) ? t3 + 1 - sx : 0;
+	xl = (dxl > 0) ? sx + 1 : sx;
 	xr = (int)sx2;
 	dxr = sx2 - xr;
 
@@ -283,6 +284,93 @@ magnify_generic24(unsigned char *d, unsigned char *s, int w, int h,
       }
       sy = sy2;
     }
+#else
+    unsigned int sx, sy, sx2, sy2;
+    unsigned int dxl, dyu, dxr, dyd;
+    unsigned int num[3], den;
+    int xl, xr, yu, yd, j, k;
+
+    sy = 0;
+    for (y = 0; y < dh; y++) {
+      sy2 = ((y + 1) << PRECISION) * h / dh;
+      t = sy & DECIMAL_MASK;
+      dyu = (t > 0) ? MIN_INT - t : 0;
+      yu = ((dyu > 0) ? sy + MIN_INT : sy) >> PRECISION;
+      yd = sy2 >> PRECISION;
+      dyd = sy2 & DECIMAL_MASK;
+
+      sx = 0;
+      for (x = 0; x < dw; x++) {
+	sx2 = ((x + 1) << PRECISION) * w / dw;
+	t3 = sx & DECIMAL_MASK;
+	dxl = (t3 > 0) ? MIN_INT - t3 : 0;
+	xl = ((dxl > 0) ? sx + MIN_INT : sx) >> PRECISION;
+	xr = sx2 >> PRECISION;
+	dxr = sx2 & DECIMAL_MASK;
+
+	num[0] = num[1] = num[2] = den = 0;
+	/* upper margin */
+	if (dyu > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xl - 1) * 3) + i] * dxl * dyu;
+	    den += dxl * dyu;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + j) * 3) + i] * (dyu << 8);
+	    den += (dyu << 8);
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xr) * 3) + i] * dxr * dyu;
+	    den += dxr * dyu;
+	  }
+	}
+
+	for (k = yu; k < yd; k++) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xl - 1) * 3) + i] * (dxl << 8);
+	    den += (dxl << 8);
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + j) * 3) + i] << 16;
+	    den += 256 * 256;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xr) * 3) + i] * (dxr << 8);
+	    den += (dxr << 8);
+	  }
+	}
+
+	/* lower margin */
+	if (dyd > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xl - 1) * 3) + i] * dxl * dyd;
+	    den += dxl * dyd;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + j) * 3) + i] * (dyd << 8);
+	    den += (dyd << 8);
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xr) * 3) + i] * dxr * dyd;
+	    den += dxr * dyd;
+	  }
+	}
+	for (i = 0; i < 3; i++) 
+	  *d++ = num[i] / den;
+	sx = sx2;
+      }
+      sy = sy2;
+    }
+#endif
   }
 }
 
@@ -290,7 +378,7 @@ static void
 magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 		  int dw, int dh, ImageInterpolateMethod method)
 {
-  int i, x, y, t, t2, t3, t4;
+  int i, x, y, t, t3;
 
   if (method == _NOINTERPOLATE ||
       (method == _BILINEAR && ((dw >= w && dh < h) || (dw < w && dh >= h)))) {
@@ -309,7 +397,7 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
   /* method == _BILINEAR */
   if (dw >= w /* && dh >= h */) {
     /* dw >= w && dh >= h, bilinear */
-#ifndef INTEGER_ARITHMETIC
+#if !defined(INTEGER_ARITHMETIC)
     double dx, dy;
     int yt;
 
@@ -381,26 +469,27 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
 #endif
   } else {
     /* dw < w && dh < h, bilinear */
+#if !defined(INTEGER_ARITHMETIC)
     double sx, sy, sx2, sy2;
     double dxl, dyu, dxr, dyd;
     double num[3], den;
     int xl, xr, yu, yd, j, k;
 
     sy = 0;
-    sx = 0;
     for (y = 0; y < dh; y++) {
       sy2 = (double)(y + 1) * (double)h / (double)dh;
       t = (int)sy;
-      dyu = t + 1 - sy;
-      yu =  (dyu > 0) ? (sy + 1) : sy;
+      dyu = (sy > t) ? t + 1 - sy : 0;
+      yu = (dyu > 0) ? sy + 1 : sy;
       yd = (int)sy2;
       dyd = sy2 - yd;
 
+      sx = 0;
       for (x = 0; x < dw; x++) {
 	sx2 = (double)(x + 1) * (double)w / (double)dw;
 	t3 = (int)sx;
-	dxl = t3 + 1 - sx;
-	xl = (dxl > 0) ? (sx + 1) : sx;
+	dxl = (sx > t3) ? t3 + 1 - sx : 0;
+	xl = (dxl > 0) ? sx + 1 : sx;
 	xr = (int)sx2;
 	dxr = sx2 - xr;
 
@@ -467,6 +556,94 @@ magnify_generic32(unsigned char *d, unsigned char *s, int w, int h,
       }
       sy = sy2;
     }
+#else
+    unsigned int sx, sy, sx2, sy2;
+    unsigned int dxl, dyu, dxr, dyd;
+    unsigned int num[3], den;
+    int xl, xr, yu, yd, j, k;
+
+    sy = 0;
+    for (y = 0; y < dh; y++) {
+      sy2 = ((y + 1) << PRECISION) * h / dh;
+      t = sy & DECIMAL_MASK;
+      dyu = (t > 0) ? MIN_INT - t : 0;
+      yu = ((dyu > 0) ? sy + MIN_INT : sy) >> PRECISION;
+      yd = sy2 >> PRECISION;
+      dyd = sy2 & DECIMAL_MASK;
+
+      sx = 0;
+      for (x = 0; x < dw; x++) {
+	sx2 = ((x + 1) << PRECISION) * w / dw;
+	t3 = sx & DECIMAL_MASK;
+	dxl = (t3 > 0) ? MIN_INT - t3 : 0;
+	xl = ((dxl > 0) ? sx + MIN_INT : sx) >> PRECISION;
+	xr = sx2 >> PRECISION;
+	dxr = sx2 & DECIMAL_MASK;
+
+	num[0] = num[1] = num[2] = den = 0;
+	/* upper margin */
+	if (dyu > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xl - 1) << 2) + i] * dxl * dyu;
+	    den += dxl * dyu;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + j) << 2) + i] * (dyu << 8);
+	    den += (dyu << 8);
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[(((yu - 1) * w + xr) << 2) + i] * dxr * dyu;
+	    den += dxr * dyu;
+	  }
+	}
+
+	for (k = yu; k < yd; k++) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xl - 1) << 2) + i] * (dxl << 8);
+	    den += (dxl << 8);
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + j) << 2) + i] << 16;
+	    den += 256 * 256;
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((k * w + xr) << 2) + i] * (dxr << 8);
+	    den += (dxr << 8);
+	  }
+	}
+
+	/* lower margin */
+	if (dyd > 0) {
+	  if (dxl > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xl - 1) << 2) + i] * dxl * dyd;
+	    den += dxl * dyd;
+	  }
+	  for (j = xl; j < xr; j++) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + j) << 2) + i] * (dyd << 8);
+	    den += (dyd << 8);
+	  }
+	  if (dxr > 0) {
+	    for (i = 0; i < 3; i++)
+	      num[i] += s[((yd * w + xr) << 2) + i] * dxr * dyd;
+	    den += dxr * dyd;
+	  }
+	}
+	for (i = 0; i < 3; i++) 
+	  *d++ = num[i] / den;
+	d++;
+	sx = sx2;
+      }
+      sy = sy2;
+    }
+#endif
   }
 }
 
