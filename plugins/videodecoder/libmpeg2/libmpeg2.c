@@ -3,8 +3,8 @@
  * (C)Copyright 2004-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 28 02:14:08 2005.
- * $Id: libmpeg2.c,v 1.14 2005/12/27 17:14:20 sian Exp $
+ * Last Modified: Mon Jun  5 22:50:48 2006.
+ * $Id: libmpeg2.c,v 1.15 2006/06/05 13:56:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -127,9 +127,9 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 	vdec->ts_base = 0;
 	if (mpeg2_pic) {
 	  vdec->ts_base = dp->ts_base;
+	  vdec->pts = dp->pts;
 	  if (mpeg2_pic->tag) {
-	    vdec->prev_pts = vdec->pts;
-	    vdec->pts = mpeg2_pic->tag;
+	    vdec->pts = mpeg2_pic->tag; // override demultiplexer value
 #if defined(DEBUG) && 0
 	    debug_message_fnc("pts %d, dts %d, type ", mpeg2_pic->tag, mpeg2_pic->tag2);
 	    switch (mpeg2_pic->flags & PIC_MASK_CODING_TYPE) {
@@ -140,11 +140,6 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 	    default: debug_message("?\n"); break;
 	    }
 #endif
-	  } else if (vdec->pts != -1 ){
-	    int next_pts = vdec->pts + (vdec->pts - vdec->prev_pts);
-
-	    vdec->prev_pts = vdec->pts;
-	    vdec->pts = next_pts;
 	  }
 	}
       }

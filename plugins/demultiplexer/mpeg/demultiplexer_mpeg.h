@@ -3,8 +3,8 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 12 23:39:34 2004.
- * $Id: demultiplexer_mpeg.h,v 1.1 2004/02/14 05:22:15 sian Exp $
+ * Last Modified: Mon Jun  5 22:24:42 2006.
+ * $Id: demultiplexer_mpeg.h,v 1.2 2006/06/05 13:56:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,8 @@
 
 typedef struct _mpeg_info {
   int ver;
+  int has_valid_pts;
+  unsigned long prev_pts;
 } MpegInfo;
 
 Demultiplexer *demultiplexer_mpeg_create(void);

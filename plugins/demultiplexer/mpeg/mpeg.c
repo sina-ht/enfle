@@ -3,8 +3,8 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 26 01:13:03 2005.
- * $Id: mpeg.c,v 1.12 2005/12/27 14:44:07 sian Exp $
+ * Last Modified: Mon Jun  5 22:49:22 2006.
+ * $Id: mpeg.c,v 1.13 2006/06/05 13:56:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -103,6 +103,7 @@ create(void)
     _demultiplexer_destroy(demux);
     return NULL;
   }
+  info->has_valid_pts = 1;
 
   demux->private_data = (void *)info;
 
@@ -491,7 +492,7 @@ demux_main(void *arg)
       if ((v_or_a == 1 && nvstream == demux->nvstream) ||
 	  (v_or_a == 2 && nastream == demux->nastream)) {
 	unsigned char *p;
-	unsigned int pts = 0, dts = 0;
+	unsigned long pts = 0, dts = 0;
 
 	/* stuffing */
 	for (p = buf + 6; *p == 0xff && p < buf + skip; p++) ;
@@ -548,6 +549,18 @@ demux_main(void *arg)
 	  }
 	  break;
 	}
+
+	/* weird pts? */
+	if (v_or_a == 1 && pts > 0) {
+	  if (!info->has_valid_pts) {
+	    pts = dts = -1;
+	  } else if (pts < 1500) {
+	    info->has_valid_pts = 0;
+	    pts = dts = -1;
+	  }
+	  info->prev_pts = pts;
+	}
+
 	if (p < buf + skip) {
 	  dp = malloc(sizeof(DemuxedPacket));
 	  dp->ts_base = TS_BASE;
