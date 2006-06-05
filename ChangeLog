@@ -1,3 +1,14 @@
+2006-06-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/player/generic/generic.c: Cleaned up.
+
+	* lib/enfle/videodecoder.h,
+	plugins/demultiplexer/mpeg/demultiplexer_mpeg.h,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: Fixed prev_pts use.
+
+	* plugins/videodecoder/avcodec/avcodec.c: Fixed pts calculation.
+
 2006-05-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/image_magnify.c: Interger arithmetic for image
