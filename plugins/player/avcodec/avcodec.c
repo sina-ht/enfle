@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Dec 28 02:18:22 2005.
- * $Id: avcodec.c,v 1.19 2005/12/27 17:31:43 sian Exp $
+ * Last Modified: Sat Jul  1 11:34:51 2006.
+ * $Id: avcodec.c,v 1.20 2006/07/01 03:15:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -621,8 +621,8 @@ play_main(Movie *m, VideoWindow *vw)
   case _PLAY:
     break;
   case _RESIZING:
-    video_window_resize(vw, m->rendering_width, m->rendering_height);
     video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &m->rendering_width, &m->rendering_height);
+    video_window_resize(vw, m->rendering_width, m->rendering_height);
 
     if (info->use_xv) {
       image_rendered_width(p) = m->width;

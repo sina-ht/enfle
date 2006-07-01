@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun  5 22:58:05 2006.
- * $Id: generic.c,v 1.29 2006/06/05 13:58:57 sian Exp $
+ * Last Modified: Sat Jul  1 11:36:56 2006.
+ * $Id: generic.c,v 1.30 2006/07/01 03:15:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -582,8 +582,9 @@ play_main(Movie *m, VideoWindow *vw)
   case _PLAY:
     break;
   case _RESIZING:
-    video_window_resize(vw, m->rendering_width, m->rendering_height);
     video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &m->rendering_width, &m->rendering_height);
+    debug_message_fnc("mag(%d, %d)\n", m->rendering_width, m->rendering_height);
+    video_window_resize(vw, m->rendering_width, m->rendering_height);
 
     if (info->use_xv) {
       image_rendered_width(p) = m->width;
@@ -638,13 +639,8 @@ play_main(Movie *m, VideoWindow *vw)
     video_window_calc_magnified_size(vw, info->use_xv, m->width, m->height, &dw, &dh);
     m->initialize_screen(vw, m, dw, dh);
 
-    if (info->use_xv) {
-      m->rendering_width  = m->width;
-      m->rendering_height = m->height;
-    } else {
-      m->rendering_width  = dw;
-      m->rendering_height = dh;
-    }
+    m->rendering_width  = dw;
+    m->rendering_height = dh;
     info->if_initialized++;
   }
 
