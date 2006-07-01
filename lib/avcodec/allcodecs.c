@@ -72,6 +72,9 @@ void avcodec_register_all(void)
     register_avcodec(&faac_encoder);
 #endif //CONFIG_FAAC_ENCODER
 #endif
+#ifdef CONFIG_FLAC_ENCODER
+    register_avcodec(&flac_encoder);
+#endif
 #ifdef CONFIG_XVID
 #ifdef CONFIG_XVID_ENCODER
     register_avcodec(&xvid_encoder);
@@ -223,9 +226,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_WMV2_DECODER
     register_avcodec(&wmv2_decoder);
 #endif //CONFIG_WMV2_DECODER
-#ifdef CONFIG_VC9_DECODER
-    register_avcodec(&vc9_decoder);
-#endif //CONFIG_VC9_DECODER
+#ifdef CONFIG_VC1_DECODER
+    register_avcodec(&vc1_decoder);
+#endif //CONFIG_VC1_DECODER
 /* Reenable when it stops crashing on every file, causing bug report spam.
 #ifdef CONFIG_WMV3_DECODER
     register_avcodec(&wmv3_decoder);
@@ -529,6 +532,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_RAWVIDEO_DECODER
     register_avcodec(&rawvideo_decoder);
 #endif //CONFIG_RAWVIDEO_DECODER
+#ifdef CONFIG_FLASHSV_DECODER
+    register_avcodec(&flashsv_decoder);
+#endif //CONFIG_FLASHSV_DECODER
 #endif /* CONFIG_DECODERS */
 
 #if defined(AMR_NB) || defined(AMR_NB_FIXED)

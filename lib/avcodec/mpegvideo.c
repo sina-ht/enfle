@@ -487,8 +487,8 @@ static int init_duplicate_context(MpegEncContext *s, MpegEncContext *base){
     int i;
 
     // edge emu needs blocksize + filter length - 1 (=17x17 for halfpel / 21x21 for h264)
-    CHECKED_ALLOCZ(s->allocated_edge_emu_buffer, (s->width+64)*2*17*2); //(width + edge + align)*interlaced*MBsize*tolerance
-    s->edge_emu_buffer= s->allocated_edge_emu_buffer + (s->width+64)*2*17;
+    CHECKED_ALLOCZ(s->allocated_edge_emu_buffer, (s->width+64)*2*21*2); //(width + edge + align)*interlaced*MBsize*tolerance
+    s->edge_emu_buffer= s->allocated_edge_emu_buffer + (s->width+64)*2*21;
 
      //FIXME should be linesize instead of s->width*2 but that isnt known before get_buffer()
     CHECKED_ALLOCZ(s->me.scratchpad,  (s->width+64)*4*16*2*sizeof(uint8_t))
@@ -1123,8 +1123,8 @@ int MPV_encode_init(AVCodecContext *avctx)
     }
 
     if(avctx->b_frame_strategy && (avctx->flags&CODEC_FLAG_PASS2)){
-        av_log(avctx, AV_LOG_ERROR, "b_frame_strategy must be 0 on the second pass\n");
-        return -1;
+        av_log(avctx, AV_LOG_INFO, "notice: b_frame_strategy only affects the first pass\n");
+        avctx->b_frame_strategy = 0;
     }
 
     i= ff_gcd(avctx->time_base.den, avctx->time_base.num);
@@ -2375,7 +2375,7 @@ static void select_input_picture(MpegEncContext *s){
                     }
                 }
                 for(i=0; i<s->max_b_frames+1; i++){
-                    if(s->input_picture[i]==NULL || s->input_picture[i]->b_frame_score - 1 > s->mb_num/40) break;
+                    if(s->input_picture[i]==NULL || s->input_picture[i]->b_frame_score - 1 > s->mb_num/s->avctx->b_sensitivity) break;
                 }
 
                 b_frames= FFMAX(0, i-1);

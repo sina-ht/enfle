@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon Apr 17 23:33:44 2006.
-# $Id: Makefile.am,v 1.40 2006/04/17 14:34:26 sian Exp $
+# Last Modified: Sat Jul  1 12:11:21 2006.
+# $Id: Makefile.am,v 1.41 2006/07/01 03:12:18 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -139,7 +139,8 @@ noinst_HEADERS = \
 	truemotion1data.h \
 	truespeech_data.h \
 	ulti_cb.h \
-	vc9data.h \
+	vc1acdata.h \
+	vc1data.h \
 	vorbis.h \
 	vp3data.h \
 	wmadata.h
@@ -154,6 +155,7 @@ noinst_HEADERS = \
 # w32thread.c
 # wmv2.c
 # x264.c xvidff.c
+# vc9.c
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -186,6 +188,7 @@ libavcodec_la_SOURCES = \
 	fft.c \
 	ffv1.c \
 	flac.c \
+	flashsv.c \
 	flicvideo.c \
 	fraps.c \
 	g726.c \
@@ -260,7 +263,7 @@ libavcodec_la_SOURCES = \
 	tta.c \
 	ulti.c \
 	utils.c \
-	vc9.c \
+	vc1.c \
 	vcr1.c \
 	vmdav.c \
 	vorbis.c \
