@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Jun  5 22:39:31 2006.
- * $Id: avcodec.c,v 1.19 2006/06/05 13:55:59 sian Exp $
+ * Last Modified: Sat Jul  1 11:42:29 2006.
+ * $Id: avcodec.c,v 1.20 2006/07/01 03:14:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -52,9 +52,9 @@ static VideoDecoderPlugin plugin = {
   .init = init
 };
 
-#if defined(DEBUG)
-//#define USE_DR1
-#endif
+//#if defined(DEBUG)
+#define USE_DR1
+//#endif
 
 #if defined(USE_DR1)
 struct pic_buf {
