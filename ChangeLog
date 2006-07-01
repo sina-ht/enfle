@@ -1,3 +1,37 @@
+2006-07-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Updated autoconf.  Version up.
+
+	* lib/avutil/bswap.h, lib/avutil/common.h,
+	lib/avutil/intfloat_readwrite.c, lib/avutil/intfloat_readwrite.h,
+	lib/avutil/mathematics.c: Updated.
+
+	* plugins/player/avcodec/avcodec.c,
+	plugins/player/generic/generic.c: Fixed.
+
+	* plugins/videodecoder/avcodec/avcodec.c: Enable DR1.
+
+	* src/enfle.rc: Added CP932.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/adpcm.c, lib/avcodec/adx.c,
+	lib/avcodec/alac.c, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.h,
+	lib/avcodec/dsputil.c, lib/avcodec/flac.c, lib/avcodec/flashsv.c,
+	lib/avcodec/golomb.h, lib/avcodec/h261.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/h264data.h,
+	lib/avcodec/i386/idct_mmx_xvid.c, lib/avcodec/kmvc.c,
+	lib/avcodec/mem.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/msmpeg4.c,
+	lib/avcodec/parser.c, lib/avcodec/png.c,
+	lib/avcodec/ppc/dsputil_altivec.c,
+	lib/avcodec/ppc/dsputil_h264_altivec.c,
+	lib/avcodec/ppc/dsputil_h264_template_altivec.c,
+	lib/avcodec/ppc/gcc_fixes.h, lib/avcodec/qdm2.c,
+	lib/avcodec/ratecontrol.c, lib/avcodec/resample2.c,
+	lib/avcodec/snow.c, lib/avcodec/snow.h, lib/avcodec/truespeech.c,
+	lib/avcodec/utils.c, lib/avcodec/vc1.c, lib/avcodec/vc1acdata.h,
+	lib/avcodec/vc1data.h, lib/avcodec/wmadec.c: Updated.
+
 2006-06-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/generic/generic.c: Cleaned up.
