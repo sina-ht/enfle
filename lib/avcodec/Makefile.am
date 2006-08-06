@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Jul  1 12:11:21 2006.
-# $Id: Makefile.am,v 1.41 2006/07/01 03:12:18 sian Exp $
+# Last Modified: Sun Aug  6 16:36:52 2006.
+# $Id: Makefile.am,v 1.42 2006/08/06 07:48:57 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -27,6 +27,8 @@ DEFS += -DHAVE_MMX -Dasm=__asm -Dvolatile=__volatile
 # We want many registers... so you must omit frame pointer.
 CFLAGS_POST = -Wno-error -Wno-unused -O3 -ffast-math $(CFLAGS_POST_SSE)
 #CFLAGS_POST = -Wno-error -Wno-unused -O -fomit-frame-pointer $(CFLAGS_POST_SSE)
+
+# i386/cavsdsp_mmx.c
 MMX_SRCS = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c \
@@ -98,6 +100,7 @@ endif
 # 	$(CC) -mcpu=ultrasparc -mtune=ultrasparc $(CFLAGS) -c -o $@ $<
 # endif
 
+# cavsdata.h
 noinst_HEADERS = \
 	ac3.h \
 	ac3tab.h \
@@ -147,6 +150,7 @@ noinst_HEADERS = \
 
 # a52dec.c ac3dec.c ac3enc.c amr.c apiexample.c
 # beosthread.c
+# cavs.c cavsdsp.c
 # dct-test.c dtsdec.c
 # faac.c faad.c fft-test.c
 # libgsm.c
@@ -167,6 +171,7 @@ libavcodec_la_SOURCES = \
 	asv1.c \
 	avs.c \
 	bitstream.c \
+	bitstream_filter.c \
 	bmp.c \
 	cabac.c \
 	cinepak.c \
@@ -214,7 +219,6 @@ libavcodec_la_SOURCES = \
 	lzo.c \
 	mace.c \
 	mdct.c \
-	mem.c \
 	mjpeg.c \
 	mmvideo.c \
 	motion_est.c \
@@ -226,7 +230,6 @@ libavcodec_la_SOURCES = \
 	msrle.c \
 	msvideo1.c \
 	nuv.c \
-	oggtheora.c \
 	oggvorbis.c \
 	opt.c \
 	parser.c \
@@ -264,6 +267,7 @@ libavcodec_la_SOURCES = \
 	ulti.c \
 	utils.c \
 	vc1.c \
+	vc1dsp.c \
 	vcr1.c \
 	vmdav.c \
 	vorbis.c \

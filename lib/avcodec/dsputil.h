@@ -274,6 +274,15 @@ typedef struct DSPContext {
     h264_weight_func weight_h264_pixels_tab[10];
     h264_biweight_func biweight_h264_pixels_tab[10];
 
+    /* AVS specific */
+    qpel_mc_func put_cavs_qpel_pixels_tab[2][16];
+    qpel_mc_func avg_cavs_qpel_pixels_tab[2][16];
+    void (*cavs_filter_lv)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_filter_lh)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_filter_cv)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_filter_ch)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_idct8_add)(uint8_t *dst, DCTELEM *block, int stride);
+
     me_cmp_func pix_abs[2][4];
 
     /* huffyuv specific */
@@ -297,6 +306,8 @@ typedef struct DSPContext {
     void (*h263_h_loop_filter)(uint8_t *src, int stride, int qscale);
 
     void (*h261_loop_filter)(uint8_t *src, int stride);
+
+    void (*vorbis_inverse_coupling)(float *mag, float *ang, int blocksize);
 
     /* (I)DCT */
     void (*fdct)(DCTELEM *block/* align 16*/);
@@ -356,6 +367,18 @@ typedef struct DSPContext {
     void (*prefetch)(void *mem, int stride, int h);
 
     void (*shrink[4])(uint8_t *dst, int dst_wrap, const uint8_t *src, int src_wrap, int width, int height);
+
+    /* vc1 functions */
+    void (*vc1_inv_trans_8x8)(DCTELEM *b);
+    void (*vc1_inv_trans_8x4)(DCTELEM *b, int n);
+    void (*vc1_inv_trans_4x8)(DCTELEM *b, int n);
+    void (*vc1_inv_trans_4x4)(DCTELEM *b, int n);
+    void (*vc1_v_overlap)(uint8_t* src, int stride, int rnd);
+    void (*vc1_h_overlap)(uint8_t* src, int stride, int rnd);
+    /* put 8x8 block with bicubic interpolation and quarterpel precision
+     * last argument is actually round value instead of height
+     */
+    op_pixels_func put_vc1_mspel_pixels_tab[16];
 } DSPContext;
 
 void dsputil_static_init(void);

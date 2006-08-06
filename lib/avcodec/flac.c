@@ -85,52 +85,11 @@ static int blocksize_table[] = {
 256<<0, 256<<1, 256<<2, 256<<3, 256<<4, 256<<5, 256<<6, 256<<7
 };
 
-static int64_t get_utf8(GetBitContext *gb)
-{
-    uint64_t val;
-    int ones=0, bytes;
-
-    while(get_bits1(gb))
-        ones++;
-
-    if     (ones==0) bytes=0;
-    else if(ones==1) return -1;
-    else             bytes= ones - 1;
-
-    val= get_bits(gb, 7-ones);
-    while(bytes--){
-        const int tmp = get_bits(gb, 8);
-
-        if((tmp>>6) != 2)
-            return -1;
-        val<<=6;
-        val|= tmp&0x3F;
-    }
+static int64_t get_utf8(GetBitContext *gb){
+    int64_t val;
+    GET_UTF8(val, get_bits(gb, 8), return -1;)
     return val;
 }
-
-#if 0
-static int skip_utf8(GetBitContext *gb)
-{
-    int ones=0, bytes;
-
-    while(get_bits1(gb))
-        ones++;
-
-    if     (ones==0) bytes=0;
-    else if(ones==1) return -1;
-    else             bytes= ones - 1;
-
-    skip_bits(gb, 7-ones);
-    while(bytes--){
-        const int tmp = get_bits(gb, 8);
-
-        if((tmp>>6) != 2)
-            return -1;
-    }
-    return 0;
-}
-#endif
 
 static void metadata_streaminfo(FLACContext *s);
 static void dump_headers(FLACContext *s);
@@ -697,6 +656,17 @@ static int flac_decode_frame(AVCodecContext *avctx,
     }
     }
 #else
+#define DECORRELATE(left, right)\
+            assert(s->channels == 2);\
+            for (i = 0; i < s->blocksize; i++)\
+            {\
+                int a= s->decoded[0][i];\
+                int b= s->decoded[1][i];\
+                *(samples++) = (left ) >> (16 - s->bps);\
+                *(samples++) = (right) >> (16 - s->bps);\
+            }\
+            break;
+
     switch(s->decorrelation)
     {
         case INDEPENDENT:
@@ -707,45 +677,11 @@ static int flac_decode_frame(AVCodecContext *avctx,
             }
             break;
         case LEFT_SIDE:
-            assert(s->channels == 2);
-            for (i = 0; i < s->blocksize; i++)
-            {
-                *(samples++) = shift_to_16_bits(s->decoded[0][i], s->bps);
-                *(samples++) = shift_to_16_bits(s->decoded[0][i]
-                                              - s->decoded[1][i], s->bps);
-            }
-            break;
+            DECORRELATE(a,a-b)
         case RIGHT_SIDE:
-            assert(s->channels == 2);
-            for (i = 0; i < s->blocksize; i++)
-            {
-                *(samples++) = shift_to_16_bits(s->decoded[0][i]
-                                              + s->decoded[1][i], s->bps);
-                *(samples++) = shift_to_16_bits(s->decoded[1][i], s->bps);
-            }
-            break;
+            DECORRELATE(a+b,b)
         case MID_SIDE:
-            assert(s->channels == 2);
-            for (i = 0; i < s->blocksize; i++)
-            {
-                int mid, side;
-                mid = s->decoded[0][i];
-                side = s->decoded[1][i];
-
-#if 1 //needs to be checked but IMHO it should be binary identical
-                mid -= side>>1;
-                *(samples++) = shift_to_16_bits(mid + side, s->bps);
-                *(samples++) = shift_to_16_bits(mid, s->bps);
-#else
-
-                mid <<= 1;
-                if (side & 1)
-                    mid++;
-                *(samples++) = (mid + side) >> 1;
-                *(samples++) = (mid - side) >> 1;
-#endif
-            }
-            break;
+            DECORRELATE( (a-=b>>1) + b, a)
     }
 #endif
 

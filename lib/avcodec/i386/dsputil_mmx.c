@@ -23,6 +23,7 @@
 #include "../dsputil.h"
 #include "../simple_idct.h"
 #include "../mpegvideo.h"
+#include "x86_cpu.h"
 #include "mmx.h"
 
 //#undef NDEBUG
@@ -185,6 +186,11 @@ static const uint64_t ff_pb_FC attribute_used __attribute__ ((aligned(8))) = 0xF
 
 #undef DEF
 #undef PAVGB
+
+#define SBUTTERFLY(a,b,t,n)\
+    "movq " #a ", " #t "              \n\t" /* abcd */\
+    "punpckl" #n " " #b ", " #a "     \n\t" /* aebf */\
+    "punpckh" #n " " #b ", " #t "     \n\t" /* cgdh */\
 
 /***********************************/
 /* standard MMX */
@@ -1522,11 +1528,6 @@ static void sub_hfyu_median_prediction_mmx2(uint8_t *dst, uint8_t *src1, uint8_t
     "pmaxsw " #z ", " #a "            \n\t"\
     "paddusw " #a ", " #sum "         \n\t"
 
-#define SBUTTERFLY(a,b,t,n)\
-    "movq " #a ", " #t "              \n\t" /* abcd */\
-    "punpckl" #n " " #b ", " #a "     \n\t" /* aebf */\
-    "punpckh" #n " " #b ", " #t "     \n\t" /* cgdh */\
-
 #define TRANSPOSE4(a,b,c,d,t)\
     SBUTTERFLY(a,b,t,wd) /* a=aebf t=cgdh */\
     SBUTTERFLY(c,d,b,wd) /* c=imjn b=kolp */\
@@ -2621,6 +2622,22 @@ PREFETCH(prefetch_3dnow, prefetch)
 
 #include "h264dsp_mmx.c"
 
+/* AVS specific */
+void ff_cavsdsp_init_mmx2(DSPContext* c, AVCodecContext *avctx);
+
+void ff_put_cavs_qpel8_mc00_mmx2(uint8_t *dst, uint8_t *src, int stride) {
+    put_pixels8_mmx(dst, src, stride, 8);
+}
+void ff_avg_cavs_qpel8_mc00_mmx2(uint8_t *dst, uint8_t *src, int stride) {
+    avg_pixels8_mmx(dst, src, stride, 8);
+}
+void ff_put_cavs_qpel16_mc00_mmx2(uint8_t *dst, uint8_t *src, int stride) {
+    put_pixels16_mmx(dst, src, stride, 16);
+}
+void ff_avg_cavs_qpel16_mc00_mmx2(uint8_t *dst, uint8_t *src, int stride) {
+    avg_pixels16_mmx(dst, src, stride, 16);
+}
+
 /* external functions, from idct_mmx.c */
 void ff_mmx_idct(DCTELEM *block);
 void ff_mmxext_idct(DCTELEM *block);
@@ -2694,6 +2711,59 @@ static void ff_idct_xvid_mmx2_add(uint8_t *dest, int line_size, DCTELEM *block)
 }
 #endif
 
+static void vorbis_inverse_coupling_3dnow(float *mag, float *ang, int blocksize)
+{
+    int i;
+    asm volatile("pxor %%mm7, %%mm7":);
+    for(i=0; i<blocksize; i+=2) {
+        asm volatile(
+            "movq    %0,    %%mm0 \n\t"
+            "movq    %1,    %%mm1 \n\t"
+            "movq    %%mm0, %%mm2 \n\t"
+            "movq    %%mm1, %%mm3 \n\t"
+            "pfcmpge %%mm7, %%mm2 \n\t" // m <= 0.0
+            "pfcmpge %%mm7, %%mm3 \n\t" // a <= 0.0
+            "pslld   $31,   %%mm2 \n\t" // keep only the sign bit
+            "pxor    %%mm2, %%mm1 \n\t"
+            "movq    %%mm3, %%mm4 \n\t"
+            "pand    %%mm1, %%mm3 \n\t"
+            "pandn   %%mm1, %%mm4 \n\t"
+            "pfadd   %%mm0, %%mm3 \n\t" // a = m + ((a<0) & (a ^ sign(m)))
+            "pfsub   %%mm4, %%mm0 \n\t" // m = m + ((a>0) & (a ^ sign(m)))
+            "movq    %%mm3, %1    \n\t"
+            "movq    %%mm0, %0    \n\t"
+            :"+m"(mag[i]), "+m"(ang[i])
+            ::"memory"
+        );
+    }
+    asm volatile("emms");
+}
+static void vorbis_inverse_coupling_sse2(float *mag, float *ang, int blocksize)
+{
+    int i;
+    for(i=0; i<blocksize; i+=4) {
+        asm volatile(
+            "movaps  %0,     %%xmm0 \n\t"
+            "movaps  %1,     %%xmm1 \n\t"
+            "pxor    %%xmm2, %%xmm2 \n\t"
+            "pxor    %%xmm3, %%xmm3 \n\t"
+            "cmpleps %%xmm0, %%xmm2 \n\t" // m <= 0.0
+            "cmpleps %%xmm1, %%xmm3 \n\t" // a <= 0.0
+            "pslld   $31,    %%xmm2 \n\t" // keep only the sign bit
+            "pxor    %%xmm2, %%xmm1 \n\t"
+            "movaps  %%xmm3, %%xmm4 \n\t"
+            "pand    %%xmm1, %%xmm3 \n\t"
+            "pandn   %%xmm1, %%xmm4 \n\t"
+            "addps   %%xmm0, %%xmm3 \n\t" // a = m + ((a<0) & (a ^ sign(m)))
+            "subps   %%xmm4, %%xmm0 \n\t" // m = m + ((a>0) & (a ^ sign(m)))
+            "movaps  %%xmm3, %1     \n\t"
+            "movaps  %%xmm0, %0     \n\t"
+            :"+m"(mag[i]), "+m"(ang[i])
+            ::"memory"
+        );
+    }
+}
+
 #ifdef CONFIG_SNOW_ENCODER
 extern void ff_snow_horizontal_compose97i_sse2(DWTELEM *b, int width);
 extern void ff_snow_horizontal_compose97i_mmx(DWTELEM *b, int width);
@@ -2763,6 +2833,7 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
                     c->idct    = ff_mmx_idct;
                 }
                 c->idct_permutation_type= FF_LIBMPEG2_IDCT_PERM;
+#if 0
             }else if(idct_algo==FF_IDCT_VP3){
                 if(mm_flags & MM_SSE2){
                     c->idct_put= ff_vp3_idct_put_sse2;
@@ -2776,6 +2847,9 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
                     c->idct    = ff_vp3_idct_mmx;
                     c->idct_permutation_type= FF_PARTTRANS_IDCT_PERM;
                 }
+#endif
+            }else if(idct_algo==FF_IDCT_CAVS){
+                    c->idct_permutation_type= FF_TRANSPOSE_IDCT_PERM;
 #ifdef CONFIG_GPL
             }else if(idct_algo==FF_IDCT_XVIDMMX){
                 if(mm_flags & MM_MMXEXT){
@@ -3009,6 +3083,10 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
             c->biweight_h264_pixels_tab[6]= ff_h264_biweight_4x4_mmx2;
             c->biweight_h264_pixels_tab[7]= ff_h264_biweight_4x2_mmx2;
 
+#ifdef CONFIG_CAVS_DECODER
+            ff_cavsdsp_init_mmx2(c, avctx);
+#endif
+
 #ifdef CONFIG_ENCODERS
             c->sub_hfyu_median_prediction= sub_hfyu_median_prediction_mmx2;
 #endif //CONFIG_ENCODERS
@@ -3112,6 +3190,11 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
             c->inner_add_yblock = ff_snow_inner_add_yblock_mmx;
         }
 #endif
+
+        if(mm_flags & MM_SSE2)
+            c->vorbis_inverse_coupling = vorbis_inverse_coupling_sse2;
+        else if(mm_flags & MM_3DNOW)
+            c->vorbis_inverse_coupling = vorbis_inverse_coupling_3dnow;
     }
 
 #ifdef CONFIG_ENCODERS

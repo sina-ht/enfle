@@ -17,8 +17,8 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(9<<8)+0)
-#define LIBAVCODEC_VERSION      51.9.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(11<<8)+0)
+#define LIBAVCODEC_VERSION      51.11.0
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
@@ -118,6 +118,7 @@ enum CodecID {
     CODEC_ID_NUV,
     CODEC_ID_KMVC,
     CODEC_ID_FLASHSV,
+    CODEC_ID_CAVS,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -199,8 +200,6 @@ enum CodecID {
     CODEC_ID_TRUESPEECH,
     CODEC_ID_TTA,
     CODEC_ID_SMACKAUDIO,
-
-    CODEC_ID_OGGTHEORA= 0x16000,
 
     /* subtitle codecs */
     CODEC_ID_DVD_SUBTITLE= 0x17000,
@@ -658,19 +657,6 @@ typedef struct AVFrame {
 } AVFrame;
 
 #define DEFAULT_FRAME_RATE_BASE 1001000
-
-/**
- * Used by av_log
- */
-typedef struct AVCLASS AVClass;
-struct AVCLASS {
-    const char* class_name;
-    const char* (*item_name)(void*); /* actually passing a pointer to an AVCodecContext
-                                        or AVFormatContext, which begin with an AVClass.
-                                        Needed because av_log is in libavcodec and has no visibility
-                                        of AVIn/OutputFormat */
-    struct AVOption *option;
-};
 
 /**
  * main external api structure.
@@ -1206,6 +1192,7 @@ typedef struct AVCodecContext {
 #define FF_IDCT_VP3          12
 #define FF_IDCT_IPP          13
 #define FF_IDCT_XVIDMMX      14
+#define FF_IDCT_CAVS         15
 
     /**
      * slice count.
@@ -1983,6 +1970,58 @@ typedef struct AVCodecContext {
      * - decoding: unused
      */
     int b_sensitivity;
+
+    /**
+     * - encoding: set by user.
+     * - decoding: unused
+     */
+    int compression_level;
+#define FF_COMPRESSION_DEFAULT -1
+
+    /**
+     * sets whether to use LPC mode - used by FLAC encoder
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int use_lpc;
+
+    /**
+     * LPC coefficient precision - used by FLAC encoder
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int lpc_coeff_precision;
+
+    /**
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int min_prediction_order;
+
+    /**
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int max_prediction_order;
+
+    /**
+     * search method for selecting prediction order
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int prediction_order_method;
+
+    /**
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int min_partition_order;
+
+    /**
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int max_partition_order;
 } AVCodecContext;
 
 /**
@@ -2061,7 +2100,6 @@ extern AVCodec ac3_encoder;
 extern AVCodec mp2_encoder;
 extern AVCodec mp3lame_encoder;
 extern AVCodec oggvorbis_encoder;
-extern AVCodec oggtheora_encoder;
 extern AVCodec faac_encoder;
 extern AVCodec flac_encoder;
 extern AVCodec xvid_encoder;
@@ -2146,7 +2184,6 @@ extern AVCodec mace6_decoder;
 extern AVCodec huffyuv_decoder;
 extern AVCodec ffvhuff_decoder;
 extern AVCodec oggvorbis_decoder;
-extern AVCodec oggtheora_decoder;
 extern AVCodec cyuv_decoder;
 extern AVCodec h264_decoder;
 extern AVCodec indeo3_decoder;
@@ -2219,6 +2256,7 @@ extern AVCodec smacker_decoder;
 extern AVCodec smackaud_decoder;
 extern AVCodec kmvc_decoder;
 extern AVCodec flashsv_decoder;
+extern AVCodec cavs_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -2445,6 +2483,10 @@ void avcodec_default_free_buffers(AVCodecContext *s);
  */
 char av_get_pict_type_char(int pict_type);
 
+/**
+ * returns codec bits per sample
+ */
+int av_get_bits_per_sample(enum CodecID codec_id);
 
 /* frame parsing */
 typedef struct AVCodecParserContext {
@@ -2505,6 +2547,7 @@ void av_parser_close(AVCodecParserContext *s);
 
 extern AVCodecParser mpegvideo_parser;
 extern AVCodecParser mpeg4video_parser;
+extern AVCodecParser cavsvideo_parser;
 extern AVCodecParser h261_parser;
 extern AVCodecParser h263_parser;
 extern AVCodecParser h264_parser;
@@ -2516,11 +2559,42 @@ extern AVCodecParser dvdsub_parser;
 extern AVCodecParser dvbsub_parser;
 extern AVCodecParser aac_parser;
 
+
+typedef struct AVBitStreamFilterContext {
+    void *priv_data;
+    struct AVBitStreamFilter *filter;
+    AVCodecParserContext *parser;
+    struct AVBitStreamFilterContext *next;
+} AVBitStreamFilterContext;
+
+
+typedef struct AVBitStreamFilter {
+    const char *name;
+    int priv_data_size;
+    int (*filter)(AVBitStreamFilterContext *bsfc,
+                  AVCodecContext *avctx, const char *args,
+                  uint8_t **poutbuf, int *poutbuf_size,
+                  const uint8_t *buf, int buf_size, int keyframe);
+    struct AVBitStreamFilter *next;
+} AVBitStreamFilter;
+
+extern AVBitStreamFilter *av_first_bitstream_filter;
+
+void av_register_bitstream_filter(AVBitStreamFilter *bsf);
+AVBitStreamFilterContext *av_bitstream_filter_init(const char *name);
+int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
+                               AVCodecContext *avctx, const char *args,
+                               uint8_t **poutbuf, int *poutbuf_size,
+                               const uint8_t *buf, int buf_size, int keyframe);
+void av_bitstream_filter_close(AVBitStreamFilterContext *bsf);
+
+extern AVBitStreamFilter dump_extradata_bsf;
+extern AVBitStreamFilter remove_extradata_bsf;
+extern AVBitStreamFilter noise_bsf;
+
+
 /* memory */
-void *av_malloc(unsigned int size);
 void *av_mallocz(unsigned int size);
-void *av_realloc(void *ptr, unsigned int size);
-void av_free(void *ptr);
 char *av_strdup(const char *s);
 void av_freep(void *ptr);
 void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size);
@@ -2538,26 +2612,6 @@ int img_crop(AVPicture *dst, const AVPicture *src,
 
 int img_pad(AVPicture *dst, const AVPicture *src, int height, int width, int pix_fmt,
             int padtop, int padbottom, int padleft, int padright, int *color);
-
-/* av_log API */
-
-#include <stdarg.h>
-
-#define AV_LOG_QUIET -1
-#define AV_LOG_ERROR 0
-#define AV_LOG_INFO 1
-#define AV_LOG_DEBUG 2
-
-#ifdef __GNUC__
-extern void av_log(void*, int level, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
-#else
-extern void av_log(void*, int level, const char *fmt, ...);
-#endif
-
-extern void av_vlog(void*, int level, const char *fmt, va_list);
-extern int av_log_get_level(void);
-extern void av_log_set_level(int);
-extern void av_log_set_callback(void (*)(void*, int, const char*, va_list));
 
 /* endian macros */
 #if !defined(BE_16) || !defined(BE_32) || !defined(LE_16) || !defined(LE_32)

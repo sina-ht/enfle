@@ -35,6 +35,9 @@
 /* snow.c */
 void ff_spatial_dwt(int *buffer, int width, int height, int stride, int type, int decomposition_count);
 
+/* vorbis.c */
+void vorbis_inverse_coupling(float *mag, float *ang, int blocksize);
+
 uint8_t cropTbl[256 + 2 * MAX_NEG_CROP] = {0, };
 uint32_t squareTbl[512] = {0, };
 
@@ -2570,6 +2573,33 @@ static void wmv2_mspel8_h_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int
     }
 }
 
+#ifdef CONFIG_CAVS_DECODER
+/* AVS specific */
+void ff_cavsdsp_init(DSPContext* c, AVCodecContext *avctx);
+
+void ff_put_cavs_qpel8_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    put_pixels8_c(dst, src, stride, 8);
+}
+void ff_avg_cavs_qpel8_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    avg_pixels8_c(dst, src, stride, 8);
+}
+void ff_put_cavs_qpel16_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    put_pixels16_c(dst, src, stride, 16);
+}
+void ff_avg_cavs_qpel16_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    avg_pixels16_c(dst, src, stride, 16);
+}
+#endif /* CONFIG_CAVS_DECODER */
+
+#if defined(CONFIG_VC1_DECODER) || defined(CONFIG_WMV3_DECODER)
+/* VC-1 specific */
+void ff_vc1dsp_init(DSPContext* c, AVCodecContext *avctx);
+
+void ff_put_vc1_mspel_mc00_c(uint8_t *dst, uint8_t *src, int stride, int rnd) {
+    put_pixels8_c(dst, src, stride, 8);
+}
+#endif /* CONFIG_VC1_DECODER||CONFIG_WMV3_DECODER */
+
 static void wmv2_mspel8_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int w){
     uint8_t *cm = cropTbl + MAX_NEG_CROP;
     int i;
@@ -3989,6 +4019,13 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->biweight_h264_pixels_tab[8]= biweight_h264_pixels2x4_c;
     c->biweight_h264_pixels_tab[9]= biweight_h264_pixels2x2_c;
 
+#ifdef CONFIG_CAVS_DECODER
+    ff_cavsdsp_init(c,avctx);
+#endif
+#if defined(CONFIG_VC1_DECODER) || defined(CONFIG_WMV3_DECODER)
+    ff_vc1dsp_init(c,avctx);
+#endif
+
     c->put_mspel_pixels_tab[0]= put_mspel8_mc00_c;
     c->put_mspel_pixels_tab[1]= put_mspel8_mc10_c;
     c->put_mspel_pixels_tab[2]= put_mspel8_mc20_c;
@@ -4054,6 +4091,10 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->vertical_compose97i = ff_snow_vertical_compose97i;
     c->horizontal_compose97i = ff_snow_horizontal_compose97i;
     c->inner_add_yblock = ff_snow_inner_add_yblock;
+#endif
+
+#ifdef CONFIG_VORBIS_DECODER
+    c->vorbis_inverse_coupling = vorbis_inverse_coupling;
 #endif
 
     c->shrink[0]= ff_img_copy_plane;

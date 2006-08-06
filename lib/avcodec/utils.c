@@ -1,7 +1,6 @@
 /*
  * utils for libavcodec
  * Copyright (c) 2001 Fabrice Bellard.
- * Copyright (c) 2003 Michel Bardiaux for the av_log API
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
  * This library is free software; you can redistribute it and/or
@@ -33,7 +32,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
-#ifdef CONFIG_WIN32
+#ifdef __MINGW32__
 #include <fcntl.h>
 #endif
 
@@ -450,7 +449,7 @@ static const char* context_to_name(void* ptr) {
 #define E AV_OPT_FLAG_ENCODING_PARAM
 #define D AV_OPT_FLAG_DECODING_PARAM
 
-static AVOption options[]={
+static const AVOption options[]={
 {"bit_rate", NULL, OFFSET(bit_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|A|E},
 {"bit_rate_tolerance", NULL, OFFSET(bit_rate_tolerance), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
 {"flags", NULL, OFFSET(flags), FF_OPT_TYPE_FLAGS, DEFAULT, INT_MIN, INT_MAX, V|A|E|D, "flags"},
@@ -499,7 +498,7 @@ static AVOption options[]={
 {"sample_rate", NULL, OFFSET(sample_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"channels", NULL, OFFSET(channels), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"cutoff", "set cutoff bandwidth", OFFSET(cutoff), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, A|E},
-{"frame_size", NULL, OFFSET(frame_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+{"frame_size", NULL, OFFSET(frame_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, A|E},
 {"frame_number", NULL, OFFSET(frame_number), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"real_pict_num", NULL, OFFSET(real_pict_num), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"delay", NULL, OFFSET(delay), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
@@ -744,6 +743,14 @@ static AVOption options[]={
 {"mv0_threshold", NULL, OFFSET(mv0_threshold), FF_OPT_TYPE_INT, 256, 0, INT_MAX, V|E},
 {"ivlc", "intra vlc table", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_INTRA_VLC, INT_MIN, INT_MAX, V|E, "flags2"},
 {"b_sensitivity", NULL, OFFSET(b_sensitivity), FF_OPT_TYPE_INT, 40, 1, INT_MAX, V|E},
+{"compression_level", NULL, OFFSET(compression_level), FF_OPT_TYPE_INT, FF_COMPRESSION_DEFAULT, INT_MIN, INT_MAX, V|A|E},
+{"use_lpc", NULL, OFFSET(use_lpc), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
+{"lpc_coeff_precision", NULL, OFFSET(lpc_coeff_precision), FF_OPT_TYPE_INT, DEFAULT, 0, INT_MAX, A|E},
+{"min_prediction_order", NULL, OFFSET(min_prediction_order), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
+{"max_prediction_order", NULL, OFFSET(max_prediction_order), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
+{"prediction_order_method", NULL, OFFSET(prediction_order_method), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
+{"min_partition_order", NULL, OFFSET(min_partition_order), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
+{"max_partition_order", NULL, OFFSET(max_partition_order), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
 {NULL},
 };
 
@@ -800,6 +807,13 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->sample_fmt= SAMPLE_FMT_S16; // FIXME: set to NONE
     s->mv0_threshold= 256;
     s->b_sensitivity= 40;
+    s->compression_level = FF_COMPRESSION_DEFAULT;
+    s->use_lpc = -1;
+    s->min_prediction_order = -1;
+    s->max_prediction_order = -1;
+    s->prediction_order_method = -1;
+    s->min_partition_order = -1;
+    s->max_partition_order = -1;
 
     s->intra_quant_bias= FF_DEFAULT_QUANT_BIAS;
     s->inter_quant_bias= FF_DEFAULT_QUANT_BIAS;
@@ -1289,55 +1303,39 @@ char av_get_pict_type_char(int pict_type){
     }
 }
 
-/* av_log API */
-
-static int av_log_level = AV_LOG_INFO;
-
-static void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl)
-{
-    static int print_prefix=1;
-    AVClass* avc= ptr ? *(AVClass**)ptr : NULL;
-    if(level>av_log_level)
-        return;
-#undef fprintf
-    if(print_prefix && avc) {
-            fprintf(stderr, "[%s @ %p]", avc->item_name(ptr), avc);
+int av_get_bits_per_sample(enum CodecID codec_id){
+    switch(codec_id){
+    case CODEC_ID_ADPCM_SBPRO_2:
+        return 2;
+    case CODEC_ID_ADPCM_SBPRO_3:
+        return 3;
+    case CODEC_ID_ADPCM_SBPRO_4:
+    case CODEC_ID_ADPCM_CT:
+        return 4;
+    case CODEC_ID_PCM_ALAW:
+    case CODEC_ID_PCM_MULAW:
+    case CODEC_ID_PCM_S8:
+    case CODEC_ID_PCM_U8:
+        return 8;
+    case CODEC_ID_PCM_S16BE:
+    case CODEC_ID_PCM_S16LE:
+    case CODEC_ID_PCM_U16BE:
+    case CODEC_ID_PCM_U16LE:
+        return 16;
+    case CODEC_ID_PCM_S24DAUD:
+    case CODEC_ID_PCM_S24BE:
+    case CODEC_ID_PCM_S24LE:
+    case CODEC_ID_PCM_U24BE:
+    case CODEC_ID_PCM_U24LE:
+        return 24;
+    case CODEC_ID_PCM_S32BE:
+    case CODEC_ID_PCM_S32LE:
+    case CODEC_ID_PCM_U32BE:
+    case CODEC_ID_PCM_U32LE:
+        return 32;
+    default:
+        return 0;
     }
-#define fprintf please_use_av_log
-
-    print_prefix= strstr(fmt, "\n") != NULL;
-
-    vfprintf(stderr, fmt, vl);
-}
-
-static void (*av_log_callback)(void*, int, const char*, va_list) = av_log_default_callback;
-
-void av_log(void* avcl, int level, const char *fmt, ...)
-{
-    va_list vl;
-    va_start(vl, fmt);
-    av_vlog(avcl, level, fmt, vl);
-    va_end(vl);
-}
-
-void av_vlog(void* avcl, int level, const char *fmt, va_list vl)
-{
-    av_log_callback(avcl, level, fmt, vl);
-}
-
-int av_log_get_level(void)
-{
-    return av_log_level;
-}
-
-void av_log_set_level(int level)
-{
-    av_log_level = level;
-}
-
-void av_log_set_callback(void (*callback)(void*, int, const char*, va_list))
-{
-    av_log_callback = callback;
 }
 
 #if !defined(HAVE_THREADS)
@@ -1367,7 +1365,7 @@ unsigned int av_xiphlacing(unsigned char *s, unsigned int v)
  * and opened file name in **filename. */
 int av_tempfile(char *prefix, char **filename) {
     int fd=-1;
-#ifdef CONFIG_WIN32
+#ifdef __MINGW32__
     *filename = tempnam(".", prefix);
 #else
     size_t len = strlen(prefix) + 12; /* room for "/tmp/" and "XXXXXX\0" */
@@ -1378,7 +1376,7 @@ int av_tempfile(char *prefix, char **filename) {
         av_log(NULL, AV_LOG_ERROR, "ff_tempfile: Cannot allocate file name\n");
         return -1;
     }
-#ifdef CONFIG_WIN32
+#ifdef __MINGW32__
     fd = open(*filename, _O_RDWR | _O_BINARY | _O_CREAT, 0444);
 #else
     snprintf(*filename, len, "/tmp/%sXXXXXX", prefix);

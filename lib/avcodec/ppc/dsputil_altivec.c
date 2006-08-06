@@ -700,13 +700,13 @@ POWERPC_PERF_START_COUNT(altivec_put_pixels16_num, 1);
 #else
     for(i=0; i<h; i+=4) {
       pixelsv1 = vec_ld(0, (unsigned char*)pixels);
-      pixelsv2 = vec_ld(16, (unsigned char*)pixels);
+      pixelsv2 = vec_ld(15, (unsigned char*)pixels);
       pixelsv1B = vec_ld(line_size, (unsigned char*)pixels);
-      pixelsv2B = vec_ld(16 + line_size, (unsigned char*)pixels);
+      pixelsv2B = vec_ld(15 + line_size, (unsigned char*)pixels);
       pixelsv1C = vec_ld(line_size_2, (unsigned char*)pixels);
-      pixelsv2C = vec_ld(16 + line_size_2, (unsigned char*)pixels);
+      pixelsv2C = vec_ld(15 + line_size_2, (unsigned char*)pixels);
       pixelsv1D = vec_ld(line_size_3, (unsigned char*)pixels);
-      pixelsv2D = vec_ld(16 + line_size_3, (unsigned char*)pixels);
+      pixelsv2D = vec_ld(15 + line_size_3, (unsigned char*)pixels);
       vec_st(vec_perm(pixelsv1, pixelsv2, perm),
              0, (unsigned char*)block);
       vec_st(vec_perm(pixelsv1B, pixelsv2B, perm),
@@ -1698,6 +1698,29 @@ int has_altivec(void)
 #endif /* __AMIGAOS4__ */
 }
 
+static void vorbis_inverse_coupling_altivec(float *mag, float *ang,
+                                            int blocksize)
+{
+    int i;
+    vector float m, a;
+    vector bool int t0, t1;
+    const vector unsigned int v_31 = //XXX
+        vec_add(vec_add(vec_splat_u32(15),vec_splat_u32(15)),vec_splat_u32(1));
+    for(i=0; i<blocksize; i+=4) {
+        m = vec_ld(0, mag+i);
+        a = vec_ld(0, ang+i);
+        t0 = vec_cmple(m, (vector float)vec_splat_u32(0));
+        t1 = vec_cmple(a, (vector float)vec_splat_u32(0));
+        a = vec_xor(a, (vector float) vec_sl((vector unsigned int)t0, v_31));
+        t0 = (vector bool int)vec_and(a, t1);
+        t1 = (vector bool int)vec_andc(a, t1);
+        a = vec_sub(m, (vector float)t1);
+        m = vec_add(m, (vector float)t0);
+        vec_stl(a, 0, ang+i);
+        vec_stl(m, 0, mag+i);
+    }
+}
+
 /* next one assumes that ((line_size % 8) == 0) */
 void avg_pixels8_xy2_altivec(uint8_t *block, const uint8_t *pixels, int line_size, int h)
 {
@@ -1806,4 +1829,39 @@ POWERPC_PERF_START_COUNT(altivec_avg_pixels8_xy2_num, 1);
 
 POWERPC_PERF_STOP_COUNT(altivec_avg_pixels8_xy2_num, 1);
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
+}
+
+void dsputil_init_altivec(DSPContext* c, AVCodecContext *avctx)
+{
+    c->pix_abs[0][1] = sad16_x2_altivec;
+    c->pix_abs[0][2] = sad16_y2_altivec;
+    c->pix_abs[0][3] = sad16_xy2_altivec;
+    c->pix_abs[0][0] = sad16_altivec;
+    c->pix_abs[1][0] = sad8_altivec;
+    c->sad[0]= sad16_altivec;
+    c->sad[1]= sad8_altivec;
+    c->pix_norm1 = pix_norm1_altivec;
+    c->sse[1]= sse8_altivec;
+    c->sse[0]= sse16_altivec;
+    c->pix_sum = pix_sum_altivec;
+    c->diff_pixels = diff_pixels_altivec;
+    c->get_pixels = get_pixels_altivec;
+// next one disabled as it's untested.
+#if 0
+    c->add_bytes= add_bytes_altivec;
+#endif /* 0 */
+    c->put_pixels_tab[0][0] = put_pixels16_altivec;
+    /* the two functions do the same thing, so use the same code */
+    c->put_no_rnd_pixels_tab[0][0] = put_pixels16_altivec;
+    c->avg_pixels_tab[0][0] = avg_pixels16_altivec;
+    c->avg_pixels_tab[1][0] = avg_pixels8_altivec;
+    c->avg_pixels_tab[1][3] = avg_pixels8_xy2_altivec;
+    c->put_pixels_tab[1][3] = put_pixels8_xy2_altivec;
+    c->put_no_rnd_pixels_tab[1][3] = put_no_rnd_pixels8_xy2_altivec;
+    c->put_pixels_tab[0][3] = put_pixels16_xy2_altivec;
+    c->put_no_rnd_pixels_tab[0][3] = put_no_rnd_pixels16_xy2_altivec;
+
+    c->hadamard8_diff[0] = hadamard8_diff16_altivec;
+    c->hadamard8_diff[1] = hadamard8_diff8x8_altivec;
+    c->vorbis_inverse_coupling = vorbis_inverse_coupling_altivec;
 }

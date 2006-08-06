@@ -929,6 +929,7 @@ static int vorbis_decode_init(AVCodecContext *avccontext) {
     int i, j, hdr_type;
 
     vc->avccontext = avccontext;
+    dsputil_init(&vc->dsp, avccontext);
 
     if (!headers_len) {
         av_log(avccontext, AV_LOG_ERROR, "Extradata corrupt.\n");
@@ -1192,7 +1193,7 @@ static uint_fast8_t vorbis_floor1_decode(vorbis_context *vc, vorbis_floor_data *
         adx=vf->x_list[high_neigh_offs]-vf->x_list[low_neigh_offs];
         ady= ABS(dy);
         err=ady*(vf->x_list[i]-vf->x_list[low_neigh_offs]);
-        off=err/adx;
+        off=(int16_t)err/(int16_t)adx;
         if (dy<0) {
             predicted=floor1_Y_final[low_neigh_offs]-off;
         } else {
@@ -1252,7 +1253,7 @@ static uint_fast8_t vorbis_floor1_decode(vorbis_context *vc, vorbis_floor_data *
             dy=hy-ly;
             adx=hx-lx;
             ady= (dy<0) ? -dy:dy;//ABS(dy);
-            base=dy/adx;
+            base=(int16_t)dy/(int16_t)adx;
 
             AV_DEBUG(" dy %d  adx %d base %d = %d \n", dy, adx, base, dy/adx);
 
@@ -1378,7 +1379,9 @@ static int vorbis_residue_decode(vorbis_context *vc, vorbis_residue *vr, uint_fa
 
                         if (vqbook>=0) {
                             uint_fast16_t coffs;
-                            uint_fast16_t step=vr->partition_size/vc->codebooks[vqbook].dimensions;
+                            uint_fast8_t dim= vc->codebooks[vqbook].dimensions;
+                            uint_fast16_t step= dim==1 ? vr->partition_size
+                                              : FASTDIV(vr->partition_size, dim);
                             vorbis_codebook codebook= vc->codebooks[vqbook];
 
                             if (vr->type==0) {
@@ -1441,6 +1444,31 @@ static int vorbis_residue_decode(vorbis_context *vc, vorbis_residue *vr, uint_fa
         }
     }
     return 0;
+}
+
+void vorbis_inverse_coupling(float *mag, float *ang, int blocksize)
+{
+    int i;
+    for(i=0; i<blocksize; i++)
+    {
+        if (mag[i]>0.0) {
+            if (ang[i]>0.0) {
+                ang[i]=mag[i]-ang[i];
+            } else {
+                float temp=ang[i];
+                ang[i]=mag[i];
+                mag[i]+=temp;
+            }
+        } else {
+            if (ang[i]>0.0) {
+                ang[i]+=mag[i];
+            } else {
+                float temp=ang[i];
+                ang[i]=mag[i];
+                mag[i]-=temp;
+            }
+        }
+    }
 }
 
 // Decode the audio packet using the functions above
@@ -1541,26 +1569,7 @@ static int vorbis_parse_audio_packet(vorbis_context *vc) {
 
         mag=vc->channel_residues+res_chan[mapping->magnitude[i]]*blocksize/2;
         ang=vc->channel_residues+res_chan[mapping->angle[i]]*blocksize/2;
-        for(j=0;j<blocksize/2;++j) {
-            float temp;
-            if (mag[j]>0.0) {
-                if (ang[j]>0.0) {
-                    ang[j]=mag[j]-ang[j];
-                } else {
-                    temp=ang[j];
-                    ang[j]=mag[j];
-                    mag[j]+=temp;
-                }
-            } else {
-                if (ang[j]>0.0) {
-                    ang[j]+=mag[j];
-                } else {
-                    temp=ang[j];
-                    ang[j]=mag[j];
-                    mag[j]-=temp;
-                }
-            }
-        }
+        vc->dsp.vorbis_inverse_coupling(mag, ang, blocksize/2);
     }
 
 // Dotproduct
