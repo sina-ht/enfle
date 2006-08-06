@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 13:37:01 2005.
- * $Id: rgbparse.c,v 1.5 2005/07/03 13:02:30 sian Exp $
+ * Last Modified: Sun Aug  6 16:45:04 2006.
+ * $Id: rgbparse.c,v 1.6 2006/08/06 07:50:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -141,8 +141,10 @@ rgbparse(char *path)
   Hash *h;
   char s[256];
 
-  if ((fp = fopen(path, "r")) == NULL)
+  if ((fp = fopen(path, "r")) == NULL) {
+    debug_message_fnc("Cannot open %s\n", path);
     return NULL;
+  }
 
   if ((h = hash_create(COLOR_MAX)) == NULL) {
     fclose(fp);
