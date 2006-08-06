@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul  3 13:45:05 2005.
- * $Id: xpm.c,v 1.5 2005/07/03 13:02:30 sian Exp $
+ * Last Modified: Sun Aug  6 16:46:41 2006.
+ * $Id: xpm.c,v 1.6 2006/08/06 07:51:13 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,14 +34,15 @@
 #include "enfle/loader-plugin.h"
 
 #define TRANSPARENT_COLOR "None"
-#define RGBFILE "/usr/X11R6/lib/X11/rgb.txt"
+#define OLD_RGBFILE "/usr/X11R6/lib/X11/rgb.txt"
+#define RGBFILE "/usr/X11R6/share/X11/rgb.txt"
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
   .name = "XPM",
-  .description = "XPM Loader plugin version 0.1.1",
+  .description = "XPM Loader plugin version 0.1.2",
   .author = "Hiroshi Takekawa",
   .image_private = NULL,
 
@@ -61,8 +62,10 @@ ENFLE_PLUGIN_ENTRY(loader_xpm)
 
   /* parse rgb.txt */
   if ((rgbhash = rgbparse((char *)RGBFILE)) == NULL) {
-    show_message("xpm: rgbparse error\n");
-    return NULL;
+    if ((rgbhash = rgbparse((char *)OLD_RGBFILE)) == NULL) {
+      show_message("xpm: rgbparse error\n");
+      return NULL;
+    }
   }
 
   return (void *)lp;
