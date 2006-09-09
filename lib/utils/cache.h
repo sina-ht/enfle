@@ -3,8 +3,8 @@
  * (C)Copyright 2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Jul 28 21:55:32 2005.
- * $Id: cache.h,v 1.2 2005/09/27 13:45:58 sian Exp $
+ * Last Modified: Thu Sep  7 22:47:17 2006.
+ * $Id: cache.h,v 1.3 2006/09/09 12:55:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,18 +34,21 @@ typedef struct _cached_object {
   void *key;
   unsigned int keylen;
   CachableObjectType cot;
+  int memsize;
   void *p;
 } CachedObject;
 
 typedef struct _cache {
   int size;
+  int memsize;
+  int memsize_max;
   Dlist *dl;
   Hash *hash;
 } Cache;
 
 typedef void (*CachedObjectDestructor)(void *obj);
 
-Cache *cache_create(int size);
+Cache *cache_create(int size, int memsize_max);
 void cache_destroy(Cache *c);
 CachedObject *cached_object_create(void *p, CachableObjectType cot, void *key, unsigned int keylen);
 void cached_object_destroy(CachedObject *co);

@@ -3,8 +3,8 @@
  * (C)Copyright 2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar  3 01:44:17 2006.
- * $Id: cache.c,v 1.3 2006/03/03 16:46:31 sian Exp $
+ * Last Modified: Thu Sep  7 23:11:59 2006.
+ * $Id: cache.c,v 1.4 2006/09/09 12:55:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,7 +27,7 @@
 #include "cache.h"
 
 Cache *
-cache_create(int size)
+cache_create(int size, int memsize_max)
 {
   Cache *c;
   int hash_size;
@@ -56,6 +56,8 @@ cache_create(int size)
     goto out2;
 
   c->size = size;
+  c->memsize = 0;
+  c->memsize_max = memsize_max;
 
   return c;
  out2:
@@ -129,8 +131,9 @@ purge_cache(Cache *c)
     fatal("dlist_head(c->dl) is NULL!\n");
   co = dlist_data(dd);
 
-  debug_message_fnc("Purging cache, removing cached object %*s\n", co->keylen, (char *)co->key);
+  debug_message_fnc("Purging cache(%d/%d), removing cached object %*s\n", c->memsize, c->memsize_max, co->keylen, (char *)co->key);
 
+  c->memsize -= co->memsize;
   hash_delete(c->hash, co->key, co->keylen);
   dlist_delete(c->dl, dd);
 }
@@ -139,6 +142,13 @@ int
 cache_add(Cache *c, CachedObject *co, CachedObjectDestructor cod)
 {
   Dlist_data *dd;
+
+  if (c->memsize_max > 0) {
+    if (c->memsize_max < co->memsize)
+      return 0;
+    while (c->memsize_max <= c->memsize + co->memsize)
+      purge_cache(c);
+  }
 
   if (dlist_size(c->dl) >= c->size)
     purge_cache(c);
@@ -152,7 +162,7 @@ cache_add(Cache *c, CachedObject *co, CachedObjectDestructor cod)
     return 0;
   }
   dlist_move_to_top(c->dl, dd);
-
+  c->memsize += co->memsize;
   //debug_message_fnc("Cache: %d objects\n", dlist_size(c->dl));
 
   return 1;

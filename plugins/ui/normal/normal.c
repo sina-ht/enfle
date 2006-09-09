@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr  9 12:39:53 2006.
- * $Id: normal.c,v 1.96 2006/04/17 14:35:59 sian Exp $
+ * Last Modified: Thu Sep  7 22:50:12 2006.
+ * $Id: normal.c,v 1.97 2006/09/09 12:55:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,7 +56,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   .type = ENFLE_PLUGIN_UI,
   .name = "Normal",
-  .description = "Normal UI plugin version 0.6.2",
+  .description = "Normal UI plugin version 0.7",
   .author = "Hiroshi Takekawa",
 
   .ui_main = ui_main,
@@ -1178,12 +1178,16 @@ ui_main(UIData *uidata)
 
   uidata->cache = NULL;
   if (!config_get_boolean(c, "/enfle/plugins/ui/normal/disable_image_cache", &r)) {
-    int cache_max;
+    int cache_max, cache_memsize_max;
     cache_max = config_get_int(c, "/enfle/plugins/ui/normal/image_cache_max", &r);
     if (!r || cache_max == 0)
       cache_max = 4;
+    cache_memsize_max = config_get_int(c, "/enfle/plugins/ui/normal/image_cache_memsize_max", &r);
+    if (!r || cache_memsize_max == 0)
+      cache_memsize_max = 4096;
+    cache_memsize_max <<= 10;
 
-    uidata->cache = cache_create(cache_max);
+    uidata->cache = cache_create(cache_max, cache_memsize_max);
   }
 
 #ifdef ENABLE_GUI_GTK

@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Wed Jun 14 00:20:31 2006.
-; $Id: enfle.rc,v 1.52 2006/07/01 03:14:40 sian Exp $
+; Last Modified: Thu Sep  7 23:12:22 2006.
+; $Id: enfle.rc,v 1.53 2006/09/09 12:55:55 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -44,7 +44,9 @@ enfle {
 	; disable image cache
 	;disable_image_cache = yes
 	; image cache max
-	image_cache_max = 4
+	image_cache_max = 64
+	; image cache memory max (Kbytes)
+	image_cache_memsize_max = 4096
       }
       wallpaper {
 	; render = {normal|double|short|long}
@@ -100,6 +102,7 @@ enfle {
 	png := PNG:.
 	pbm := PNM:.
 	ppm := PNM:.
+	pnm := PNM:.
 	tga := TGA:.
 	xpm := XPM:.
 	xbm := XBM:.
