@@ -57,8 +57,6 @@ const uint8_t ff_reverse[256]={
 
 static int volatile entangled_thread_counter=0;
 
-void avcodec_default_free_buffers(AVCodecContext *s);
-
 void *av_mallocz(unsigned int size)
 {
     void *ptr;
@@ -756,6 +754,10 @@ static const AVOption options[]={
 
 #undef A
 #undef V
+#undef S
+#undef E
+#undef D
+#undef DEFAULT
 
 static AVClass av_codec_context_class = { "AVCodecContext", context_to_name, options };
 

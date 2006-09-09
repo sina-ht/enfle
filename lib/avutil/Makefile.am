@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Aug  6 16:30:05 2006.
-# $Id: Makefile.am,v 1.3 2006/08/06 07:48:56 sian Exp $
+# Last Modified: Sat Sep  9 21:22:11 2006.
+# $Id: Makefile.am,v 1.4 2006/09/09 12:52:29 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavutil.la
@@ -24,6 +24,7 @@ noinst_HEADERS = \
 	mathematics.h \
 	md5.h \
 	rational.h \
+	softfloat.h \
 	x86_cpu.h
 
 libavutil_la_SOURCES = \
@@ -36,4 +37,5 @@ libavutil_la_SOURCES = \
 	mathematics.c \
 	md5.c \
 	mem.c \
-	rational.c
+	rational.c \
+	softfloat.c

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Aug  6 16:36:52 2006.
-# $Id: Makefile.am,v 1.42 2006/08/06 07:48:57 sian Exp $
+# Last Modified: Sat Sep  9 21:50:21 2006.
+# $Id: Makefile.am,v 1.43 2006/09/09 12:51:49 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -35,7 +35,8 @@ MMX_SRCS = \
 	i386/idct_mmx.c i386/idct_mmx_xvid.c i386/motion_est_mmx.c \
 	i386/simple_idct_mmx.c i386/fft_sse.c \
 	i386/vp3dsp_mmx.c i386/vp3dsp_sse2.c \
-	i386/snowdsp_mmx.c
+	i386/snowdsp_mmx.c \
+	i386/fft_3dn.c i386/fft_3dn2.c
 else
 CFLAGS_POST = -Wno-unused
 MMX_SRCS =
@@ -169,6 +170,7 @@ libavcodec_la_SOURCES = \
 	alac.c \
 	allcodecs.c \
 	asv1.c \
+	audioconvert.c \
 	avs.c \
 	bitstream.c \
 	bitstream_filter.c \
@@ -270,6 +272,7 @@ libavcodec_la_SOURCES = \
 	vc1dsp.c \
 	vcr1.c \
 	vmdav.c \
+	vmnc.c \
 	vorbis.c \
 	vp3.c \
 	vp3dsp.c \

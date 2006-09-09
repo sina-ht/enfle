@@ -29,7 +29,6 @@
 //#undef NDEBUG
 //#include <assert.h>
 
-extern const uint8_t ff_h263_loop_filter_strength[32];
 extern void ff_idct_xvid_mmx(short *block);
 extern void ff_idct_xvid_mmx2(short *block);
 
@@ -39,6 +38,9 @@ int mm_flags; /* multimedia extension flags */
 static const uint64_t mm_bone attribute_used __attribute__ ((aligned(8))) = 0x0101010101010101ULL;
 static const uint64_t mm_wone attribute_used __attribute__ ((aligned(8))) = 0x0001000100010001ULL;
 static const uint64_t mm_wtwo attribute_used __attribute__ ((aligned(8))) = 0x0002000200020002ULL;
+
+static const uint64_t ff_pdw_80000000[2] attribute_used __attribute__ ((aligned(16))) =
+{0x8000000080000000ULL, 0x8000000080000000ULL};
 
 static const uint64_t ff_pw_20 attribute_used __attribute__ ((aligned(8))) = 0x0014001400140014ULL;
 static const uint64_t ff_pw_3  attribute_used __attribute__ ((aligned(8))) = 0x0003000300030003ULL;
@@ -50,10 +52,13 @@ static const uint64_t ff_pw_32 attribute_used __attribute__ ((aligned(8))) = 0x0
 static const uint64_t ff_pw_64 attribute_used __attribute__ ((aligned(8))) = 0x0040004000400040ULL;
 static const uint64_t ff_pw_15 attribute_used __attribute__ ((aligned(8))) = 0x000F000F000F000FULL;
 
+static const uint64_t ff_pb_1  attribute_used __attribute__ ((aligned(8))) = 0x0101010101010101ULL;
+static const uint64_t ff_pb_3  attribute_used __attribute__ ((aligned(8))) = 0x0303030303030303ULL;
+static const uint64_t ff_pb_7  attribute_used __attribute__ ((aligned(8))) = 0x0707070707070707ULL;
 static const uint64_t ff_pb_3F attribute_used __attribute__ ((aligned(8))) = 0x3F3F3F3F3F3F3F3FULL;
 static const uint64_t ff_pb_FC attribute_used __attribute__ ((aligned(8))) = 0xFCFCFCFCFCFCFCFCULL;
 
-#define JUMPALIGN() __asm __volatile (".balign 8"::)
+#define JUMPALIGN() __asm __volatile (ASMALIGN(3)::)
 #define MOVQ_ZERO(regd)  __asm __volatile ("pxor %%" #regd ", %%" #regd ::)
 
 #define MOVQ_WONE(regd) \
@@ -201,7 +206,7 @@ static void get_pixels_mmx(DCTELEM *block, const uint8_t *pixels, int line_size)
     asm volatile(
         "mov $-128, %%"REG_a"           \n\t"
         "pxor %%mm7, %%mm7              \n\t"
-        ".balign 16                     \n\t"
+        ASMALIGN(4)
         "1:                             \n\t"
         "movq (%0), %%mm0               \n\t"
         "movq (%0, %2), %%mm2           \n\t"
@@ -229,7 +234,7 @@ static inline void diff_pixels_mmx(DCTELEM *block, const uint8_t *s1, const uint
     asm volatile(
         "pxor %%mm7, %%mm7              \n\t"
         "mov $-128, %%"REG_a"           \n\t"
-        ".balign 16                     \n\t"
+        ASMALIGN(4)
         "1:                             \n\t"
         "movq (%0), %%mm0               \n\t"
         "movq (%1), %%mm2               \n\t"
@@ -372,7 +377,7 @@ static void put_pixels4_mmx(uint8_t *block, const uint8_t *pixels, int line_size
 {
     __asm __volatile(
          "lea (%3, %3), %%"REG_a"       \n\t"
-         ".balign 8                     \n\t"
+         ASMALIGN(3)
          "1:                            \n\t"
          "movd (%1), %%mm0              \n\t"
          "movd (%1, %3), %%mm1          \n\t"
@@ -398,7 +403,7 @@ static void put_pixels8_mmx(uint8_t *block, const uint8_t *pixels, int line_size
 {
     __asm __volatile(
          "lea (%3, %3), %%"REG_a"       \n\t"
-         ".balign 8                     \n\t"
+         ASMALIGN(3)
          "1:                            \n\t"
          "movq (%1), %%mm0              \n\t"
          "movq (%1, %3), %%mm1          \n\t"
@@ -424,7 +429,7 @@ static void put_pixels16_mmx(uint8_t *block, const uint8_t *pixels, int line_siz
 {
     __asm __volatile(
          "lea (%3, %3), %%"REG_a"       \n\t"
-         ".balign 8                     \n\t"
+         ASMALIGN(3)
          "1:                            \n\t"
          "movq (%1), %%mm0              \n\t"
          "movq 8(%1), %%mm4             \n\t"
@@ -2736,24 +2741,29 @@ static void vorbis_inverse_coupling_3dnow(float *mag, float *ang, int blocksize)
             ::"memory"
         );
     }
-    asm volatile("emms");
+    asm volatile("femms");
 }
-static void vorbis_inverse_coupling_sse2(float *mag, float *ang, int blocksize)
+static void vorbis_inverse_coupling_sse(float *mag, float *ang, int blocksize)
 {
     int i;
+
+    asm volatile(
+            "movaps  %0,     %%xmm5 \n\t"
+        ::"m"(ff_pdw_80000000[0])
+    );
     for(i=0; i<blocksize; i+=4) {
         asm volatile(
             "movaps  %0,     %%xmm0 \n\t"
             "movaps  %1,     %%xmm1 \n\t"
-            "pxor    %%xmm2, %%xmm2 \n\t"
-            "pxor    %%xmm3, %%xmm3 \n\t"
+            "xorps   %%xmm2, %%xmm2 \n\t"
+            "xorps   %%xmm3, %%xmm3 \n\t"
             "cmpleps %%xmm0, %%xmm2 \n\t" // m <= 0.0
             "cmpleps %%xmm1, %%xmm3 \n\t" // a <= 0.0
-            "pslld   $31,    %%xmm2 \n\t" // keep only the sign bit
-            "pxor    %%xmm2, %%xmm1 \n\t"
+            "andps   %%xmm5, %%xmm2 \n\t" // keep only the sign bit
+            "xorps   %%xmm2, %%xmm1 \n\t"
             "movaps  %%xmm3, %%xmm4 \n\t"
-            "pand    %%xmm1, %%xmm3 \n\t"
-            "pandn   %%xmm1, %%xmm4 \n\t"
+            "andps   %%xmm1, %%xmm3 \n\t"
+            "andnps  %%xmm1, %%xmm4 \n\t"
             "addps   %%xmm0, %%xmm3 \n\t" // a = m + ((a<0) & (a ^ sign(m)))
             "subps   %%xmm4, %%xmm0 \n\t" // m = m + ((a>0) & (a ^ sign(m)))
             "movaps  %%xmm3, %1     \n\t"
@@ -2762,6 +2772,216 @@ static void vorbis_inverse_coupling_sse2(float *mag, float *ang, int blocksize)
             ::"memory"
         );
     }
+}
+
+static void vector_fmul_3dnow(float *dst, const float *src, int len){
+    long i = (len-4)*4;
+    asm volatile(
+        "1: \n\t"
+        "movq    (%1,%0), %%mm0 \n\t"
+        "movq   8(%1,%0), %%mm1 \n\t"
+        "pfmul   (%2,%0), %%mm0 \n\t"
+        "pfmul  8(%2,%0), %%mm1 \n\t"
+        "movq   %%mm0,  (%1,%0) \n\t"
+        "movq   %%mm1, 8(%1,%0) \n\t"
+        "sub  $16, %0 \n\t"
+        "jge 1b \n\t"
+        "femms  \n\t"
+        :"+r"(i)
+        :"r"(dst), "r"(src)
+        :"memory"
+    );
+}
+static void vector_fmul_sse(float *dst, const float *src, int len){
+    long i = (len-8)*4;
+    asm volatile(
+        "1: \n\t"
+        "movaps    (%1,%0), %%xmm0 \n\t"
+        "movaps  16(%1,%0), %%xmm1 \n\t"
+        "mulps     (%2,%0), %%xmm0 \n\t"
+        "mulps   16(%2,%0), %%xmm1 \n\t"
+        "movaps  %%xmm0,   (%1,%0) \n\t"
+        "movaps  %%xmm1, 16(%1,%0) \n\t"
+        "sub  $32, %0 \n\t"
+        "jge 1b \n\t"
+        :"+r"(i)
+        :"r"(dst), "r"(src)
+        :"memory"
+    );
+}
+
+static void vector_fmul_reverse_3dnow2(float *dst, const float *src0, const float *src1, int len){
+    long i = len*4-16;
+    asm volatile(
+        "1: \n\t"
+        "pswapd   8(%1), %%mm0 \n\t"
+        "pswapd    (%1), %%mm1 \n\t"
+        "pfmul  (%3,%0), %%mm0 \n\t"
+        "pfmul 8(%3,%0), %%mm1 \n\t"
+        "movq  %%mm0,  (%2,%0) \n\t"
+        "movq  %%mm1, 8(%2,%0) \n\t"
+        "add   $16, %1 \n\t"
+        "sub   $16, %0 \n\t"
+        "jge   1b \n\t"
+        :"+r"(i), "+r"(src1)
+        :"r"(dst), "r"(src0)
+    );
+    asm volatile("femms");
+}
+static void vector_fmul_reverse_sse(float *dst, const float *src0, const float *src1, int len){
+    long i = len*4-32;
+    asm volatile(
+        "1: \n\t"
+        "movaps        16(%1), %%xmm0 \n\t"
+        "movaps          (%1), %%xmm1 \n\t"
+        "shufps $0x1b, %%xmm0, %%xmm0 \n\t"
+        "shufps $0x1b, %%xmm1, %%xmm1 \n\t"
+        "mulps        (%3,%0), %%xmm0 \n\t"
+        "mulps      16(%3,%0), %%xmm1 \n\t"
+        "movaps     %%xmm0,   (%2,%0) \n\t"
+        "movaps     %%xmm1, 16(%2,%0) \n\t"
+        "add    $32, %1 \n\t"
+        "sub    $32, %0 \n\t"
+        "jge    1b \n\t"
+        :"+r"(i), "+r"(src1)
+        :"r"(dst), "r"(src0)
+    );
+}
+
+static void vector_fmul_add_add_3dnow(float *dst, const float *src0, const float *src1,
+                                      const float *src2, int src3, int len, int step){
+    long i = (len-4)*4;
+    if(step == 2 && src3 == 0){
+        dst += (len-4)*2;
+        asm volatile(
+            "1: \n\t"
+            "movq   (%2,%0),  %%mm0 \n\t"
+            "movq  8(%2,%0),  %%mm1 \n\t"
+            "pfmul  (%3,%0),  %%mm0 \n\t"
+            "pfmul 8(%3,%0),  %%mm1 \n\t"
+            "pfadd  (%4,%0),  %%mm0 \n\t"
+            "pfadd 8(%4,%0),  %%mm1 \n\t"
+            "movd     %%mm0,   (%1) \n\t"
+            "movd     %%mm1, 16(%1) \n\t"
+            "psrlq      $32,  %%mm0 \n\t"
+            "psrlq      $32,  %%mm1 \n\t"
+            "movd     %%mm0,  8(%1) \n\t"
+            "movd     %%mm1, 24(%1) \n\t"
+            "sub  $32, %1 \n\t"
+            "sub  $16, %0 \n\t"
+            "jge  1b \n\t"
+            :"+r"(i), "+r"(dst)
+            :"r"(src0), "r"(src1), "r"(src2)
+            :"memory"
+        );
+    }
+    else if(step == 1 && src3 == 0){
+        asm volatile(
+            "1: \n\t"
+            "movq    (%2,%0), %%mm0 \n\t"
+            "movq   8(%2,%0), %%mm1 \n\t"
+            "pfmul   (%3,%0), %%mm0 \n\t"
+            "pfmul  8(%3,%0), %%mm1 \n\t"
+            "pfadd   (%4,%0), %%mm0 \n\t"
+            "pfadd  8(%4,%0), %%mm1 \n\t"
+            "movq  %%mm0,   (%1,%0) \n\t"
+            "movq  %%mm1,  8(%1,%0) \n\t"
+            "sub  $16, %0 \n\t"
+            "jge  1b \n\t"
+            :"+r"(i)
+            :"r"(dst), "r"(src0), "r"(src1), "r"(src2)
+            :"memory"
+        );
+    }
+    else
+        ff_vector_fmul_add_add_c(dst, src0, src1, src2, src3, len, step);
+    asm volatile("femms");
+}
+static void vector_fmul_add_add_sse(float *dst, const float *src0, const float *src1,
+                                    const float *src2, int src3, int len, int step){
+    long i = (len-8)*4;
+    if(step == 2 && src3 == 0){
+        dst += (len-8)*2;
+        asm volatile(
+            "1: \n\t"
+            "movaps   (%2,%0), %%xmm0 \n\t"
+            "movaps 16(%2,%0), %%xmm1 \n\t"
+            "mulps    (%3,%0), %%xmm0 \n\t"
+            "mulps  16(%3,%0), %%xmm1 \n\t"
+            "addps    (%4,%0), %%xmm0 \n\t"
+            "addps  16(%4,%0), %%xmm1 \n\t"
+            "movss     %%xmm0,   (%1) \n\t"
+            "movss     %%xmm1, 32(%1) \n\t"
+            "movhlps   %%xmm0, %%xmm2 \n\t"
+            "movhlps   %%xmm1, %%xmm3 \n\t"
+            "movss     %%xmm2, 16(%1) \n\t"
+            "movss     %%xmm3, 48(%1) \n\t"
+            "shufps $0xb1, %%xmm0, %%xmm0 \n\t"
+            "shufps $0xb1, %%xmm1, %%xmm1 \n\t"
+            "movss     %%xmm0,  8(%1) \n\t"
+            "movss     %%xmm1, 40(%1) \n\t"
+            "movhlps   %%xmm0, %%xmm2 \n\t"
+            "movhlps   %%xmm1, %%xmm3 \n\t"
+            "movss     %%xmm2, 24(%1) \n\t"
+            "movss     %%xmm3, 56(%1) \n\t"
+            "sub  $64, %1 \n\t"
+            "sub  $32, %0 \n\t"
+            "jge  1b \n\t"
+            :"+r"(i), "+r"(dst)
+            :"r"(src0), "r"(src1), "r"(src2)
+            :"memory"
+        );
+    }
+    else if(step == 1 && src3 == 0){
+        asm volatile(
+            "1: \n\t"
+            "movaps   (%2,%0), %%xmm0 \n\t"
+            "movaps 16(%2,%0), %%xmm1 \n\t"
+            "mulps    (%3,%0), %%xmm0 \n\t"
+            "mulps  16(%3,%0), %%xmm1 \n\t"
+            "addps    (%4,%0), %%xmm0 \n\t"
+            "addps  16(%4,%0), %%xmm1 \n\t"
+            "movaps %%xmm0,   (%1,%0) \n\t"
+            "movaps %%xmm1, 16(%1,%0) \n\t"
+            "sub  $32, %0 \n\t"
+            "jge  1b \n\t"
+            :"+r"(i)
+            :"r"(dst), "r"(src0), "r"(src1), "r"(src2)
+            :"memory"
+        );
+    }
+    else
+        ff_vector_fmul_add_add_c(dst, src0, src1, src2, src3, len, step);
+}
+
+void float_to_int16_3dnow(int16_t *dst, const float *src, int len){
+    // not bit-exact: pf2id uses different rounding than C and SSE
+    int i;
+    for(i=0; i<len; i+=4) {
+        asm volatile(
+            "pf2id       %1, %%mm0 \n\t"
+            "pf2id       %2, %%mm1 \n\t"
+            "packssdw %%mm1, %%mm0 \n\t"
+            "movq     %%mm0, %0    \n\t"
+            :"=m"(dst[i])
+            :"m"(src[i]), "m"(src[i+2])
+        );
+    }
+    asm volatile("femms");
+}
+void float_to_int16_sse(int16_t *dst, const float *src, int len){
+    int i;
+    for(i=0; i<len; i+=4) {
+        asm volatile(
+            "cvtps2pi    %1, %%mm0 \n\t"
+            "cvtps2pi    %2, %%mm1 \n\t"
+            "packssdw %%mm1, %%mm0 \n\t"
+            "movq     %%mm0, %0    \n\t"
+            :"=m"(dst[i])
+            :"m"(src[i]), "m"(src[i+2])
+        );
+    }
+    asm volatile("emms");
 }
 
 #ifdef CONFIG_SNOW_ENCODER
@@ -3064,6 +3284,7 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
             c->h264_h_loop_filter_chroma= h264_h_loop_filter_chroma_mmx2;
             c->h264_v_loop_filter_chroma_intra= h264_v_loop_filter_chroma_intra_mmx2;
             c->h264_h_loop_filter_chroma_intra= h264_h_loop_filter_chroma_intra_mmx2;
+            c->h264_loop_filter_strength= h264_loop_filter_strength_mmx2;
 
             c->weight_h264_pixels_tab[0]= ff_h264_weight_16x16_mmx2;
             c->weight_h264_pixels_tab[1]= ff_h264_weight_16x8_mmx2;
@@ -3191,10 +3412,23 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
         }
 #endif
 
-        if(mm_flags & MM_SSE2)
-            c->vorbis_inverse_coupling = vorbis_inverse_coupling_sse2;
-        else if(mm_flags & MM_3DNOW)
+        if(mm_flags & MM_3DNOW){
             c->vorbis_inverse_coupling = vorbis_inverse_coupling_3dnow;
+            c->vector_fmul = vector_fmul_3dnow;
+            if(!(avctx->flags & CODEC_FLAG_BITEXACT))
+                c->float_to_int16 = float_to_int16_3dnow;
+        }
+        if(mm_flags & MM_3DNOWEXT)
+            c->vector_fmul_reverse = vector_fmul_reverse_3dnow2;
+        if(mm_flags & MM_SSE){
+            c->vorbis_inverse_coupling = vorbis_inverse_coupling_sse;
+            c->vector_fmul = vector_fmul_sse;
+            c->float_to_int16 = float_to_int16_sse;
+            c->vector_fmul_reverse = vector_fmul_reverse_sse;
+            c->vector_fmul_add_add = vector_fmul_add_add_sse;
+        }
+        if(mm_flags & MM_3DNOW)
+            c->vector_fmul_add_add = vector_fmul_add_add_3dnow; // faster than sse
     }
 
 #ifdef CONFIG_ENCODERS

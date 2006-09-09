@@ -17,6 +17,12 @@
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
 #include "enfle-config.h"
+#if defined(ASMALIGN_POT)
+#define ASMALIGN(ZEROBITS) ".align" #ZEROBITS "\n\t"
+#else
+#define ASMALIGN(ZEROBITS) ".align 1<<" #ZEROBITS "\n\t"
+#endif
+
 #undef DEBUG
 //#    include "config.h"
 
