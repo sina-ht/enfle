@@ -1,3 +1,23 @@
+/*
+ * copyright (c) 2001 Fabrice Bellard
+ *
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #ifndef AVCODEC_H
 #define AVCODEC_H
 
@@ -17,8 +37,8 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(13<<8)+0)
-#define LIBAVCODEC_VERSION      51.13.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(20<<8)+0)
+#define LIBAVCODEC_VERSION      51.20.0
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
@@ -121,6 +141,13 @@ enum CodecID {
     CODEC_ID_CAVS,
     CODEC_ID_JPEG2000,
     CODEC_ID_VMNC,
+    CODEC_ID_VP5,
+    CODEC_ID_VP6,
+    CODEC_ID_VP6F,
+    CODEC_ID_TARGA,
+    CODEC_ID_DSICINVIDEO,
+    CODEC_ID_TIERTEXSEQVIDEO,
+    CODEC_ID_TIFF,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -203,6 +230,8 @@ enum CodecID {
     CODEC_ID_TTA,
     CODEC_ID_SMACKAUDIO,
     CODEC_ID_QCELP,
+    CODEC_ID_WAVPACK,
+    CODEC_ID_DSICINAUDIO,
 
     /* subtitle codecs */
     CODEC_ID_DVD_SUBTITLE= 0x17000,
@@ -719,7 +748,7 @@ typedef struct AVCodecContext {
      * - encoding: set/allocated/freed by lavc.
      * - decoding: set/allocated/freed by user.
      */
-    void *extradata;
+    uint8_t *extradata;
     int extradata_size;
 
     /**
@@ -1196,6 +1225,7 @@ typedef struct AVCodecContext {
 #define FF_IDCT_IPP          13
 #define FF_IDCT_XVIDMMX      14
 #define FF_IDCT_CAVS         15
+#define FF_IDCT_SIMPLEARMV5TE 16
 
     /**
      * slice count.
@@ -2063,6 +2093,7 @@ typedef struct AVPicture {
  * AVPaletteControl
  * This structure defines a method for communicating palette changes
  * between and demuxer and a decoder.
+ * this is totally broken, palette changes should be sent as AVPackets
  */
 #define AVPALETTE_SIZE 1024
 #define AVPALETTE_COUNT 256
@@ -2078,7 +2109,7 @@ typedef struct AVPaletteControl {
      * data is probably 6 bits in size and needs to be scaled */
     unsigned int palette[AVPALETTE_COUNT];
 
-} AVPaletteControl;
+} AVPaletteControl attribute_deprecated;
 
 typedef struct AVSubtitleRect {
     uint16_t x;
@@ -2138,6 +2169,7 @@ extern AVCodec asv2_encoder;
 extern AVCodec vcr1_encoder;
 extern AVCodec ffv1_encoder;
 extern AVCodec snow_encoder;
+extern AVCodec vorbis_encoder;
 extern AVCodec mdec_encoder;
 extern AVCodec zlib_encoder;
 extern AVCodec sonic_encoder;
@@ -2192,6 +2224,9 @@ extern AVCodec h264_decoder;
 extern AVCodec indeo3_decoder;
 extern AVCodec vp3_decoder;
 extern AVCodec theora_decoder;
+extern AVCodec vp5_decoder;
+extern AVCodec vp6_decoder;
+extern AVCodec vp6f_decoder;
 extern AVCodec amr_nb_decoder;
 extern AVCodec amr_nb_encoder;
 extern AVCodec amr_wb_encoder;
@@ -2261,6 +2296,12 @@ extern AVCodec kmvc_decoder;
 extern AVCodec flashsv_decoder;
 extern AVCodec cavs_decoder;
 extern AVCodec vmnc_decoder;
+extern AVCodec wavpack_decoder;
+extern AVCodec targa_decoder;
+extern AVCodec dsicinvideo_decoder;
+extern AVCodec dsicinaudio_decoder;
+extern AVCodec tiertexseqvideo_decoder;
+extern AVCodec tiff_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -2609,9 +2650,6 @@ extern AVBitStreamFilter noise_bsf;
 
 
 /* memory */
-void *av_mallocz(unsigned int size);
-char *av_strdup(const char *s);
-void av_freep(void *ptr);
 void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size);
 /* for static data only */
 /* call av_free_static to release all staticaly allocated tables */

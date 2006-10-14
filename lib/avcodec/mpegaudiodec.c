@@ -2,18 +2,20 @@
  * MPEG Audio decoder
  * Copyright (c) 2001, 2002 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -41,39 +43,10 @@
 
 #include "mpegaudio.h"
 
+#include "mathops.h"
+
 #define FRAC_ONE    (1 << FRAC_BITS)
 
-#ifdef ARCH_X86
-#   define MULL(ra, rb) \
-        ({ int rt, dummy; asm (\
-            "imull %3               \n\t"\
-            "shrdl %4, %%edx, %%eax \n\t"\
-            : "=a"(rt), "=d"(dummy)\
-            : "a" (ra), "rm" (rb), "i"(FRAC_BITS));\
-         rt; })
-#   define MUL64(ra, rb) \
-        ({ int64_t rt; asm ("imull %2\n\t" : "=A"(rt) : "a" (ra), "g" (rb)); rt; })
-#   define MULH(ra, rb) \
-        ({ int rt, dummy; asm ("imull %3\n\t" : "=d"(rt), "=a"(dummy): "a" (ra), "rm" (rb)); rt; })
-#elif defined(ARCH_ARMV4L)
-#   define MULL(a, b) \
-        ({  int lo, hi;\
-            asm("smull %0, %1, %2, %3     \n\t"\
-                "mov   %0, %0,     lsr %4\n\t"\
-                "add   %1, %0, %1, lsl %5\n\t"\
-            : "=&r"(lo), "=&r"(hi)\
-            : "r"(b), "r"(a), "i"(FRAC_BITS), "i"(32-FRAC_BITS));\
-         hi; })
-#   define MUL64(a,b) ((int64_t)(a) * (int64_t)(b))
-#   define MULH(a, b) ({ int lo, hi; asm ("smull %0, %1, %2, %3" : "=&r"(lo), "=&r"(hi) : "r"(b), "r"(a)); hi; })
-#else
-#   define MULL(a,b) (((int64_t)(a) * (int64_t)(b)) >> FRAC_BITS)
-#   define MUL64(a,b) ((int64_t)(a) * (int64_t)(b))
-//#define MULH(a,b) (((int64_t)(a) * (int64_t)(b))>>32) //gcc 3.4 creates an incredibly bloated mess out of this
-static always_inline int MULH(int a, int b){
-    return ((int64_t)(a) * (int64_t)(b))>>32;
-}
-#endif
 #define FIX(a)   ((int)((a) * FRAC_ONE))
 /* WARNING: only correct for posititive numbers */
 #define FIXR(a)   ((int)((a) * FRAC_ONE + 0.5))
@@ -93,8 +66,6 @@ typedef struct MPADecodeContext {
     DECLARE_ALIGNED_8(uint8_t, last_buf[2*BACKSTEP_SIZE + EXTRABYTES]);
     int last_buf_size;
     int frame_size;
-    int free_format_frame_size; /* frame size in case of free format
-                                   (zero if currently unknown) */
     /* next header (used in free format parsing) */
     uint32_t free_format_next_header;
     int error_protection;
@@ -117,7 +88,7 @@ typedef struct MPADecodeContext {
 #endif
     void (*compute_antialias)(struct MPADecodeContext *s, struct GranuleDef *g);
     int adu_mode; ///< 0 for standard mp3, 1 for adu formatted mp3
-    unsigned int dither_state;
+    int dither_state;
 } MPADecodeContext;
 
 /**
@@ -432,9 +403,9 @@ static int decode_init(AVCodecContext * avctx)
         for(i=0; i<512*16; i++){
             int exponent= (i>>4);
             double f= pow(i&15, 4.0 / 3.0) * pow(2, (exponent-400)*0.25 + FRAC_BITS + 5);
-            expval_table[exponent][i&15]= lrintf(f);
+            expval_table[exponent][i&15]= llrint(f);
             if((i&15)==1)
-                exp_table[exponent]= lrintf(f);
+                exp_table[exponent]= llrint(f);
         }
 
         for(i=0;i<7;i++) {
@@ -783,21 +754,12 @@ static inline int round_sample(int *sum)
     return sum1;
 }
 
-#   if defined(ARCH_POWERPC_405)
-        /* signed 16x16 -> 32 multiply add accumulate */
-#       define MACS(rt, ra, rb) \
-            asm ("maclhw %0, %2, %3" : "=r" (rt) : "0" (rt), "r" (ra), "r" (rb));
+/* signed 16x16 -> 32 multiply add accumulate */
+#define MACS(rt, ra, rb) MAC16(rt, ra, rb)
 
-        /* signed 16x16 -> 32 multiply */
-#       define MULS(ra, rb) \
-            ({ int __rt; asm ("mullhw %0, %1, %2" : "=r" (__rt) : "r" (ra), "r" (rb)); __rt; })
-#   else
-        /* signed 16x16 -> 32 multiply add accumulate */
-#       define MACS(rt, ra, rb) rt += (ra) * (rb)
+/* signed 16x16 -> 32 multiply */
+#define MULS(ra, rb) MUL16(ra, rb)
 
-        /* signed 16x16 -> 32 multiply */
-#       define MULS(ra, rb) ((ra) * (rb))
-#   endif
 #else
 
 static inline int round_sample(int64_t *sum)
@@ -1204,26 +1166,7 @@ static int decode_header(MPADecodeContext *s, uint32_t header)
         s->frame_size = frame_size;
     } else {
         /* if no frame size computed, signal it */
-        if (!s->free_format_frame_size)
-            return 1;
-        /* free format: compute bitrate and real frame size from the
-           frame size we extracted by reading the bitstream */
-        s->frame_size = s->free_format_frame_size;
-        switch(s->layer) {
-        case 1:
-            s->frame_size += padding  * 4;
-            s->bit_rate = (s->frame_size * sample_rate) / 48000;
-            break;
-        case 2:
-            s->frame_size += padding;
-            s->bit_rate = (s->frame_size * sample_rate) / 144000;
-            break;
-        default:
-        case 3:
-            s->frame_size += padding;
-            s->bit_rate = (s->frame_size * (sample_rate << s->lsf)) / 144000;
-            break;
-        }
+        return 1;
     }
 
 #if defined(DEBUG)
@@ -2593,7 +2536,7 @@ retry:
     if(ff_mpa_check_header(header) < 0){
         buf++;
 //        buf_size--;
-        av_log(avctx, AV_LOG_ERROR, "header missing skiping one byte\n");
+        av_log(avctx, AV_LOG_ERROR, "Header missing skipping one byte.\n");
         goto retry;
     }
 
@@ -2633,12 +2576,12 @@ retry:
     if(out_size>=0)
         *data_size = out_size;
     else
-        av_log(avctx, AV_LOG_DEBUG, "Error while decoding mpeg audio frame\n"); //FIXME return -1 / but also return the number of bytes consumed
+        av_log(avctx, AV_LOG_DEBUG, "Error while decoding MPEG audio frame.\n"); //FIXME return -1 / but also return the number of bytes consumed
     s->frame_size = 0;
     return buf_size;
 }
 
-
+#ifdef CONFIG_MP3ADU_DECODER
 static int decode_frame_adu(AVCodecContext * avctx,
                         void *data, int *data_size,
                         uint8_t * buf, int buf_size)
@@ -2686,8 +2629,9 @@ static int decode_frame_adu(AVCodecContext * avctx,
     *data_size = out_size;
     return buf_size;
 }
+#endif /* CONFIG_MP3ADU_DECODER */
 
-
+#ifdef CONFIG_MP3ON4_DECODER
 /* Next 3 arrays are indexed by channel config number (passed via codecdata) */
 static int mp3Frames[16] = {0,1,1,2,3,3,4,5,2};   /* number of mp3 decoder instances */
 static int mp3Channels[16] = {0,1,2,3,4,5,6,8,4}; /* total output channels */
@@ -2844,8 +2788,9 @@ static int decode_frame_mp3on4(AVCodecContext * avctx,
     *data_size = out_size;
     return buf_size;
 }
+#endif /* CONFIG_MP3ON4_DECODER */
 
-
+#ifdef CONFIG_MP2_DECODER
 AVCodec mp2_decoder =
 {
     "mp2",
@@ -2858,7 +2803,8 @@ AVCodec mp2_decoder =
     decode_frame,
     CODEC_CAP_PARSE_ONLY,
 };
-
+#endif
+#ifdef CONFIG_MP3_DECODER
 AVCodec mp3_decoder =
 {
     "mp3",
@@ -2871,7 +2817,8 @@ AVCodec mp3_decoder =
     decode_frame,
     CODEC_CAP_PARSE_ONLY,
 };
-
+#endif
+#ifdef CONFIG_MP3ADU_DECODER
 AVCodec mp3adu_decoder =
 {
     "mp3adu",
@@ -2884,7 +2831,8 @@ AVCodec mp3adu_decoder =
     decode_frame_adu,
     CODEC_CAP_PARSE_ONLY,
 };
-
+#endif
+#ifdef CONFIG_MP3ON4_DECODER
 AVCodec mp3on4_decoder =
 {
     "mp3on4",
@@ -2897,3 +2845,4 @@ AVCodec mp3on4_decoder =
     decode_frame_mp3on4,
     0
 };
+#endif

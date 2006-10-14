@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Sep  9 21:22:11 2006.
-# $Id: Makefile.am,v 1.4 2006/09/09 12:52:29 sian Exp $
+# Last Modified: Sat Oct 14 11:27:58 2006.
+# $Id: Makefile.am,v 1.5 2006/10/14 05:27:47 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavutil.la
@@ -16,6 +16,7 @@ noinst_HEADERS = \
 	bswap.h \
 	common.h \
 	crc.h \
+	fifo.h \
 	integer.h \
 	internal.h \
 	intfloat_readwrite.h \
@@ -30,6 +31,7 @@ noinst_HEADERS = \
 libavutil_la_SOURCES = \
 	adler32.c \
 	crc.c \
+	fifo.c \
 	integer.c \
 	intfloat_readwrite.c \
 	lls.c \

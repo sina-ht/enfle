@@ -2,18 +2,20 @@
  * Motion estimation
  * Copyright (c) 2002-2004 Michael Niedermayer
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
@@ -231,7 +233,7 @@ static int no_sub_motion_search(MpegEncContext * s,
     return dmin;
 }
 
-int inline ff_get_mb_score(MpegEncContext * s, int mx, int my, int src_index,
+inline int ff_get_mb_score(MpegEncContext * s, int mx, int my, int src_index,
                                int ref_index, int size, int h, int add_rate)
 {
 //    const int check_luma= s->dsp.me_sub_cmp != s->dsp.mb_cmp;
@@ -637,8 +639,8 @@ static int funny_diamond_search(MpegEncContext * s, int *best, int dmin,
 {
 int dx, dy, i;
 static int stats[8*8];
-dx= ABS(x-best[0]);
-dy= ABS(y-best[1]);
+dx= FFABS(x-best[0]);
+dy= FFABS(y-best[1]);
 if(dy>dx){
     dx^=dy; dy^=dx; dx^=dy;
 }
@@ -693,7 +695,7 @@ static int sab_diamond_search(MpegEncContext * s, int *best, int dmin,
     MotionEstContext * const c= &s->me;
     me_cmp_func cmpf, chroma_cmpf;
     Minima minima[MAX_SAB_SIZE];
-    const int minima_count= ABS(c->dia_size);
+    const int minima_count= FFABS(c->dia_size);
     int i, j;
     LOAD_COMMON
     LOAD_COMMON2
@@ -827,8 +829,8 @@ static int var_diamond_search(MpegEncContext * s, int *best, int dmin,
 {
 int dx, dy, i;
 static int stats[8*8];
-dx= ABS(x-best[0]);
-dy= ABS(y-best[1]);
+dx= FFABS(x-best[0]);
+dy= FFABS(y-best[1]);
 stats[dy*8 + dx] ++;
 if(256*256*256*64 % (stats[0]+1)==0){
     for(i=0; i<64; i++){

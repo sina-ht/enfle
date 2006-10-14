@@ -3,18 +3,20 @@
  * Copyright (c) 2002 Dieter Shirley
  * Copyright (c) 2003-2004 Romain Dolbeau <romain@dolbeau.org>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -173,7 +175,7 @@ POWERPC_PERF_STOP_COUNT(powerpc_clear_blocks_dcbz32, 1);
 
 /* same as above, when dcbzl clear a whole 128B cache line
    i.e. the PPC970 aka G5 */
-#ifndef NO_DCBZL
+#ifdef HAVE_DCBZL
 void clear_blocks_dcbz128_ppc(DCTELEM *blocks)
 {
 POWERPC_PERF_DECLARE(powerpc_clear_blocks_dcbz128, 1);
@@ -203,7 +205,7 @@ void clear_blocks_dcbz128_ppc(DCTELEM *blocks)
 }
 #endif
 
-#ifndef NO_DCBZL
+#ifdef HAVE_DCBZL
 /* check dcbz report how many bytes are set to 0 by dcbz */
 /* update 24/06/2003 : replace dcbz by dcbzl to get
    the intended effect (Apple "fixed" dcbz)
@@ -247,10 +249,19 @@ long check_dcbzl_effect(void)
 }
 #endif
 
+static void prefetch_ppc(void *mem, int stride, int h)
+{
+    register const uint8_t *p = mem;
+    do {
+        asm volatile ("dcbt 0,%0" : : "r" (p));
+        p+= stride;
+    } while(--h);
+}
+
 void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx)
 {
     // Common optimizations whether Altivec is available or not
-
+    c->prefetch = prefetch_ppc;
     switch (check_dcbzl_effect()) {
         case 32:
             c->clear_blocks = clear_blocks_dcbz32_ppc;
@@ -289,11 +300,7 @@ void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx)
         {
             c->idct_put = idct_put_altivec;
             c->idct_add = idct_add_altivec;
-        #ifndef ALTIVEC_USE_REFERENCE_C_CODE
             c->idct_permutation_type = FF_TRANSPOSE_IDCT_PERM;
-        #else /* ALTIVEC_USE_REFERENCE_C_CODE */
-            c->idct_permutation_type = FF_NO_IDCT_PERM;
-        #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
         }
         }
 
@@ -312,11 +319,6 @@ void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx)
           }
         }
 #endif /* POWERPC_PERFORMANCE_REPORT */
-    } else
-#endif /* HAVE_ALTIVEC */
-    {
-        // Non-AltiVec PPC optimisations
-
-        // ... pending ...
     }
+#endif /* HAVE_ALTIVEC */
 }

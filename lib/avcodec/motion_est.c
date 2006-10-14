@@ -4,18 +4,20 @@
  * Copyright (c) 2002-2004 Michael Niedermayer
  *
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  * new Motion Estimation (X1/EPZS) by Michael Niedermayer <michaelni@gmx.at>
@@ -294,14 +296,14 @@ static int pix_dev(uint8_t * pix, int line_size, int mean)
     s = 0;
     for (i = 0; i < 16; i++) {
         for (j = 0; j < 16; j += 8) {
-            s += ABS(pix[0]-mean);
-            s += ABS(pix[1]-mean);
-            s += ABS(pix[2]-mean);
-            s += ABS(pix[3]-mean);
-            s += ABS(pix[4]-mean);
-            s += ABS(pix[5]-mean);
-            s += ABS(pix[6]-mean);
-            s += ABS(pix[7]-mean);
+            s += FFABS(pix[0]-mean);
+            s += FFABS(pix[1]-mean);
+            s += FFABS(pix[2]-mean);
+            s += FFABS(pix[3]-mean);
+            s += FFABS(pix[4]-mean);
+            s += FFABS(pix[5]-mean);
+            s += FFABS(pix[6]-mean);
+            s += FFABS(pix[7]-mean);
             pix += 8;
         }
         pix += line_size - 16;

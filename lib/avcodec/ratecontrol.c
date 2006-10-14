@@ -3,18 +3,20 @@
  *
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -25,7 +27,9 @@
 
 #include "avcodec.h"
 #include "dsputil.h"
+#include "ratecontrol.h"
 #include "mpegvideo.h"
+#include "eval.h"
 
 #undef NDEBUG // allways check asserts, the speed effect is far too small to disable them
 #include <assert.h>
@@ -259,6 +263,7 @@ static double get_qscale(MpegEncContext *s, RateControlEntry *rce, double rate_f
     const int pict_type= rce->new_pict_type;
     const double mb_num= s->mb_num;
     int i;
+    char *error = NULL;
 
     double const_values[]={
         M_PI,
@@ -325,7 +330,11 @@ static double get_qscale(MpegEncContext *s, RateControlEntry *rce, double rate_f
         NULL
     };
 
-    bits= ff_eval(s->avctx->rc_eq, const_values, const_names, func1, func1_names, NULL, NULL, rce);
+    bits= ff_eval2(s->avctx->rc_eq, const_values, const_names, func1, func1_names, NULL, NULL, rce, &error);
+    if (isnan(bits)) {
+        av_log(s->avctx, AV_LOG_ERROR, "Error evaluating rc_eq \"%s\": %s\n", s->avctx->rc_eq, error? error : "");
+        return -1;
+    }
 
     rcc->pass1_rc_eq_output_sum+= bits;
     bits*=rate_factor;
@@ -363,7 +372,7 @@ static double get_diff_limited_q(MpegEncContext *s, RateControlEntry *rce, doubl
     const double last_non_b_q= rcc->last_qscale_for[rcc->last_non_b_pict_type];
 
     if     (pict_type==I_TYPE && (a->i_quant_factor>0.0 || rcc->last_non_b_pict_type==P_TYPE))
-        q= last_p_q    *ABS(a->i_quant_factor) + a->i_quant_offset;
+        q= last_p_q    *FFABS(a->i_quant_factor) + a->i_quant_offset;
     else if(pict_type==B_TYPE && a->b_quant_factor>0.0)
         q= last_non_b_q*    a->b_quant_factor  + a->b_quant_offset;
 
@@ -394,11 +403,11 @@ static void get_qminmax(int *qmin_ret, int *qmax_ret, MpegEncContext *s, int pic
     assert(qmin <= qmax);
 
     if(pict_type==B_TYPE){
-        qmin= (int)(qmin*ABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
-        qmax= (int)(qmax*ABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
+        qmin= (int)(qmin*FFABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
+        qmax= (int)(qmax*FFABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
     }else if(pict_type==I_TYPE){
-        qmin= (int)(qmin*ABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
-        qmax= (int)(qmax*ABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
+        qmin= (int)(qmin*FFABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
+        qmax= (int)(qmax*FFABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
     }
 
     qmin= clip(qmin, 1, FF_LAMBDA_MAX);
@@ -726,6 +735,8 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
         rate_factor= rcc->pass1_wanted_bits/rcc->pass1_rc_eq_output_sum * br_compensation;
 
         q= get_qscale(s, rce, rate_factor, picture_number);
+        if (q < 0)
+            return -1;
 
         assert(q>0.0);
 //printf("%f ", q);

@@ -3,18 +3,20 @@
  * Copyright (c) 2006 Konstantin Shishkov
  * Partly based on vc9.c (c) 2005 Anonymous, Alex Beregszaszi, Michael Niedermayer
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
@@ -332,6 +334,7 @@ typedef struct VC1Context{
     int dmb_is_raw;               ///< direct mb plane is raw
     int skip_is_raw;              ///< skip mb plane is not coded
     uint8_t luty[256], lutuv[256]; // lookup tables used for intensity compensation
+    int use_ic;                   ///< use intensity compensation in B-frames
     int rnd;                      ///< rounding control
 
     /** Frame decoding info for S/M profiles only */
@@ -1427,6 +1430,8 @@ static int vc1_parse_frame_header(VC1Context *v, GetBitContext* gb)
 //av_log(v->s.avctx, AV_LOG_INFO, "%c Frame: QP=[%i]%i (+%i/2) %i\n",
 //        (v->s.pict_type == P_TYPE) ? 'P' : ((v->s.pict_type == I_TYPE) ? 'I' : 'B'), pqindex, v->pq, v->halfpq, v->rangeredfrm);
 
+    if(v->s.pict_type == I_TYPE || v->s.pict_type == P_TYPE) v->use_ic = 0;
+
     switch(v->s.pict_type) {
     case P_TYPE:
         if (v->pq < 5) v->tt_index = 0;
@@ -1441,6 +1446,7 @@ static int vc1_parse_frame_header(VC1Context *v, GetBitContext* gb)
             v->mv_mode2 = mv_pmode_table2[lowquant][get_prefix(gb, 1, 3)];
             v->lumscale = get_bits(gb, 6);
             v->lumshift = get_bits(gb, 6);
+            v->use_ic = 1;
             /* fill lookup tables for intensity compensation */
             if(!v->lumscale) {
                 scale = -64;
@@ -1944,9 +1950,9 @@ static inline void vc1_pred_mv(MpegEncContext *s, int n, int dmv_x, int dmv_y, i
     /* Calculate hybrid prediction as specified in 8.3.5.3.5 */
     if((!s->first_slice_line || (n==2 || n==3)) && (s->mb_x || (n==1 || n==3))) {
         if(is_intra[xy - wrap])
-            sum = ABS(px) + ABS(py);
+            sum = FFABS(px) + FFABS(py);
         else
-            sum = ABS(px - A[0]) + ABS(py - A[1]);
+            sum = FFABS(px - A[0]) + FFABS(py - A[1]);
         if(sum > 32) {
             if(get_bits1(&s->gb)) {
                 px = A[0];
@@ -1957,9 +1963,9 @@ static inline void vc1_pred_mv(MpegEncContext *s, int n, int dmv_x, int dmv_y, i
             }
         } else {
             if(is_intra[xy - 1])
-                sum = ABS(px) + ABS(py);
+                sum = FFABS(px) + FFABS(py);
             else
-                sum = ABS(px - C[0]) + ABS(py - C[1]);
+                sum = FFABS(px - C[0]) + FFABS(py - C[1]);
             if(sum > 32) {
                 if(get_bits1(&s->gb)) {
                     px = A[0];
@@ -2028,7 +2034,8 @@ static void vc1_interp_mc(VC1Context *v)
        || (unsigned)src_y > s->v_edge_pos - (my&3) - 16){
         uint8_t *uvbuf= s->edge_emu_buffer + 19 * s->linesize;
 
-        ff_emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 17, 17,
+        srcY -= s->mspel * (1 + s->linesize);
+        ff_emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 17+s->mspel*2, 17+s->mspel*2,
                             src_x - s->mspel, src_y - s->mspel, s->h_edge_pos, s->v_edge_pos);
         srcY = s->edge_emu_buffer;
         ff_emulated_edge_mc(uvbuf     , srcU, s->uvlinesize, 8+1, 8+1,
@@ -2043,8 +2050,8 @@ static void vc1_interp_mc(VC1Context *v)
             uint8_t *src, *src2;
 
             src = srcY;
-            for(j = 0; j < 17; j++) {
-                for(i = 0; i < 17; i++) src[i] = ((src[i] - 128) >> 1) + 128;
+            for(j = 0; j < 17 + s->mspel*2; j++) {
+                for(i = 0; i < 17 + s->mspel*2; i++) src[i] = ((src[i] - 128) >> 1) + 128;
                 src += s->linesize;
             }
             src = srcU; src2 = srcV;
@@ -2057,6 +2064,7 @@ static void vc1_interp_mc(VC1Context *v)
                 src2 += s->uvlinesize;
             }
         }
+        srcY += s->mspel * (1 + s->linesize);
     }
 
     if(v->fastuvmc) {
@@ -2073,8 +2081,10 @@ static void vc1_interp_mc(VC1Context *v)
     if(s->flags & CODEC_FLAG_GRAY) return;
     /* Chroma MC always uses qpel blilinear */
     uvdxy = ((uvmy & 3) << 2) | (uvmx & 3);
-    dsp->avg_qpel_pixels_tab[1][uvdxy](s->dest[1], srcU, s->uvlinesize);
-    dsp->avg_qpel_pixels_tab[1][uvdxy](s->dest[2], srcV, s->uvlinesize);
+    uvmx = (uvmx&3)<<1;
+    uvmy = (uvmy&3)<<1;
+    dsp->avg_h264_chroma_pixels_tab[0](s->dest[1], srcU, s->uvlinesize, 8, uvmx, uvmy);
+    dsp->avg_h264_chroma_pixels_tab[0](s->dest[2], srcV, s->uvlinesize, 8, uvmx, uvmy);
 }
 
 static always_inline int scale_mv(int value, int bfrac, int inv, int qs)
@@ -2100,18 +2110,26 @@ static always_inline int scale_mv(int value, int bfrac, int inv, int qs)
  */
 static inline void vc1_b_mc(VC1Context *v, int dmv_x[2], int dmv_y[2], int direct, int mode)
 {
+    if(v->use_ic) {
+        v->mv_mode2 = v->mv_mode;
+        v->mv_mode = MV_PMODE_INTENSITY_COMP;
+    }
     if(direct) {
         vc1_mc_1mv(v, 0);
         vc1_interp_mc(v);
+        if(v->use_ic) v->mv_mode = v->mv_mode2;
         return;
     }
     if(mode == BMV_TYPE_INTERPOLATED) {
         vc1_mc_1mv(v, 0);
         vc1_interp_mc(v);
+        if(v->use_ic) v->mv_mode = v->mv_mode2;
         return;
     }
 
-    vc1_mc_1mv(v, (mode == BMV_TYPE_FORWARD));
+    if(v->use_ic && (mode == BMV_TYPE_BACKWARD)) v->mv_mode = v->mv_mode2;
+    vc1_mc_1mv(v, (mode == BMV_TYPE_BACKWARD));
+    if(v->use_ic) v->mv_mode = v->mv_mode2;
 }
 
 static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int direct, int mvtype)
@@ -2142,10 +2160,10 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
         s->current_picture.motion_val[1][xy][1] = 0;
         return;
     }
-    s->mv[0][0][0] = scale_mv(s->next_picture.motion_val[1][xy][0], v->bfraction, 1, s->quarter_sample);
-    s->mv[0][0][1] = scale_mv(s->next_picture.motion_val[1][xy][1], v->bfraction, 1, s->quarter_sample);
-    s->mv[1][0][0] = scale_mv(s->next_picture.motion_val[1][xy][0], v->bfraction, 0, s->quarter_sample);
-    s->mv[1][0][1] = scale_mv(s->next_picture.motion_val[1][xy][1], v->bfraction, 0, s->quarter_sample);
+    s->mv[0][0][0] = scale_mv(s->next_picture.motion_val[1][xy][0], v->bfraction, 0, s->quarter_sample);
+    s->mv[0][0][1] = scale_mv(s->next_picture.motion_val[1][xy][1], v->bfraction, 0, s->quarter_sample);
+    s->mv[1][0][0] = scale_mv(s->next_picture.motion_val[1][xy][0], v->bfraction, 1, s->quarter_sample);
+    s->mv[1][0][1] = scale_mv(s->next_picture.motion_val[1][xy][1], v->bfraction, 1, s->quarter_sample);
     if(direct) {
         s->current_picture.motion_val[0][xy][0] = s->mv[0][0][0];
         s->current_picture.motion_val[0][xy][1] = s->mv[0][0][1];
@@ -2154,7 +2172,7 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
         return;
     }
 
-    if((mvtype == BMV_TYPE_BACKWARD) || (mvtype == BMV_TYPE_INTERPOLATED)) {
+    if((mvtype == BMV_TYPE_FORWARD) || (mvtype == BMV_TYPE_INTERPOLATED)) {
         C = s->current_picture.motion_val[0][xy - 2];
         A = s->current_picture.motion_val[0][xy - wrap*2];
         off = (s->mb_x == (s->mb_width - 1)) ? -2 : 2;
@@ -2200,9 +2218,9 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
         /* Calculate hybrid prediction as specified in 8.3.5.3.5 */
         if(0 && !s->first_slice_line && s->mb_x) {
             if(is_intra[xy - wrap])
-                sum = ABS(px) + ABS(py);
+                sum = FFABS(px) + FFABS(py);
             else
-                sum = ABS(px - A[0]) + ABS(py - A[1]);
+                sum = FFABS(px - A[0]) + FFABS(py - A[1]);
             if(sum > 32) {
                 if(get_bits1(&s->gb)) {
                     px = A[0];
@@ -2213,9 +2231,9 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
                 }
             } else {
                 if(is_intra[xy - 2])
-                    sum = ABS(px) + ABS(py);
+                    sum = FFABS(px) + FFABS(py);
                 else
-                    sum = ABS(px - C[0]) + ABS(py - C[1]);
+                    sum = FFABS(px - C[0]) + FFABS(py - C[1]);
                 if(sum > 32) {
                     if(get_bits1(&s->gb)) {
                         px = A[0];
@@ -2231,7 +2249,7 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
         s->mv[0][0][0] = ((px + dmv_x[0] + r_x) & ((r_x << 1) - 1)) - r_x;
         s->mv[0][0][1] = ((py + dmv_y[0] + r_y) & ((r_y << 1) - 1)) - r_y;
     }
-    if((mvtype == BMV_TYPE_FORWARD) || (mvtype == BMV_TYPE_INTERPOLATED)) {
+    if((mvtype == BMV_TYPE_BACKWARD) || (mvtype == BMV_TYPE_INTERPOLATED)) {
         C = s->current_picture.motion_val[1][xy - 2];
         A = s->current_picture.motion_val[1][xy - wrap*2];
         off = (s->mb_x == (s->mb_width - 1)) ? -2 : 2;
@@ -2277,9 +2295,9 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
         /* Calculate hybrid prediction as specified in 8.3.5.3.5 */
         if(0 && !s->first_slice_line && s->mb_x) {
             if(is_intra[xy - wrap])
-                sum = ABS(px) + ABS(py);
+                sum = FFABS(px) + FFABS(py);
             else
-                sum = ABS(px - A[0]) + ABS(py - A[1]);
+                sum = FFABS(px - A[0]) + FFABS(py - A[1]);
             if(sum > 32) {
                 if(get_bits1(&s->gb)) {
                     px = A[0];
@@ -2290,9 +2308,9 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
                 }
             } else {
                 if(is_intra[xy - 2])
-                    sum = ABS(px) + ABS(py);
+                    sum = FFABS(px) + FFABS(py);
                 else
-                    sum = ABS(px - C[0]) + ABS(py - C[1]);
+                    sum = FFABS(px - C[0]) + FFABS(py - C[1]);
                 if(sum > 32) {
                     if(get_bits1(&s->gb)) {
                         px = A[0];
@@ -3523,7 +3541,7 @@ static void vc1_decode_b_mb(VC1Context *v)
                 break;
             case 2:
                 bmvtype = BMV_TYPE_INTERPOLATED;
-                dmv_x[1] = dmv_y[1] = 0;
+                dmv_x[0] = dmv_y[0] = 0;
             }
         }
     }
@@ -3562,7 +3580,7 @@ static void vc1_decode_b_mb(VC1Context *v)
             vc1_pred_b_mv(v, dmv_x, dmv_y, direct, bmvtype);
         } else {
             if(bmvtype == BMV_TYPE_INTERPOLATED) {
-                GET_MVDATA(dmv_x[1], dmv_y[1]);
+                GET_MVDATA(dmv_x[0], dmv_y[0]);
                 if(!mb_has_coeffs) {
                     /* interpolated skipped block */
                     vc1_pred_b_mv(v, dmv_x, dmv_y, direct, bmvtype);
@@ -3667,6 +3685,8 @@ static void vc1_decode_i_blocks(VC1Context *v)
             mb_pos = s->mb_x + s->mb_y * s->mb_width;
             s->current_picture.mb_type[mb_pos] = MB_TYPE_INTRA;
             s->current_picture.qscale_table[mb_pos] = v->pq;
+            s->current_picture.motion_val[1][s->block_index[0]][0] = 0;
+            s->current_picture.motion_val[1][s->block_index[0]][1] = 0;
 
             // do actual MB decoding and displaying
             cbp = get_vlc2(&v->s.gb, ff_msmp4_mb_i_vlc.table, MB_INTRA_VLC_BITS, 2);
@@ -3779,6 +3799,8 @@ static void vc1_decode_i_blocks_adv(VC1Context *v)
             s->dsp.clear_blocks(s->block[0]);
             mb_pos = s->mb_x + s->mb_y * s->mb_stride;
             s->current_picture.mb_type[mb_pos] = MB_TYPE_INTRA;
+            s->current_picture.motion_val[1][s->block_index[0]][0] = 0;
+            s->current_picture.motion_val[1][s->block_index[0]][1] = 0;
 
             // do actual MB decoding and displaying
             cbp = get_vlc2(&v->s.gb, ff_msmp4_mb_i_vlc.table, MB_INTRA_VLC_BITS, 2);
@@ -4085,6 +4107,7 @@ static int vc1_decode_init(AVCodecContext *avctx)
           return -1;
     }
     avctx->has_b_frames= !!(avctx->max_b_frames);
+    s->low_delay = !avctx->has_b_frames;
 
     s->mb_width = (avctx->coded_width+15)>>4;
     s->mb_height = (avctx->coded_height+15)>>4;
@@ -4144,8 +4167,6 @@ static int vc1_decode_frame(AVCodecContext *avctx,
         int i= ff_find_unused_picture(s, 0);
         s->current_picture_ptr= &s->picture[i];
     }
-
-    avctx->has_b_frames= !s->low_delay;
 
     //for advanced profile we need to unescape buffer
     if (avctx->codec_id == CODEC_ID_VC1) {

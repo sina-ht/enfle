@@ -3,18 +3,20 @@
  * Copyright (c) 2001 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -691,6 +693,17 @@ retry:
             return get_consumed_bytes(s, buf_size);
         else
             s->next_p_frame_damaged=0;
+    }
+
+    if((s->avctx->flags2 & CODEC_FLAG2_FAST) && s->pict_type==B_TYPE){
+        s->me.qpel_put= s->dsp.put_2tap_qpel_pixels_tab;
+        s->me.qpel_avg= s->dsp.avg_2tap_qpel_pixels_tab;
+    }else if((!s->no_rounding) || s->pict_type==B_TYPE){
+        s->me.qpel_put= s->dsp.put_qpel_pixels_tab;
+        s->me.qpel_avg= s->dsp.avg_qpel_pixels_tab;
+    }else{
+        s->me.qpel_put= s->dsp.put_no_rnd_qpel_pixels_tab;
+        s->me.qpel_avg= s->dsp.avg_qpel_pixels_tab;
     }
 
     if(MPV_frame_start(s, avctx) < 0)

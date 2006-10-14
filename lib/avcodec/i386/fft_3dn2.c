@@ -3,18 +3,20 @@
  * Copyright (c) 2006 Zuxy MENG Jie, Loren Merritt
  * Based on fft_sse.c copyright (c) 2002 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "../dsputil.h"
@@ -177,32 +179,32 @@ void ff_imdct_calc_3dn2(MDCTContext *s, FFTSample *output,
         );
     }
 
-    z += n8;
+    k = n-8;
     asm volatile("movd %0, %%mm7" ::"r"(1<<31));
-    for(k = 0; k < n8; k++) {
-        asm volatile(
-            "movq         %0, %%mm0 \n\t"
-            "pswapd       %1, %%mm1 \n\t"
-            ::"m"(z[k]), "m"(z[-1-k])
-        );
-        asm volatile(
-            "movq      %%mm0, %%mm2 \n\t"
-            "pxor      %%mm7, %%mm2 \n\t"
-            "punpckldq %%mm1, %%mm2 \n\t"
-            "pswapd    %%mm2, %%mm3 \n\t"
-            "punpckhdq %%mm1, %%mm0 \n\t"
-            "pswapd    %%mm0, %%mm4 \n\t"
-            "pxor      %%mm7, %%mm0 \n\t"
-            "pxor      %%mm7, %%mm4 \n\t"
-            "movq      %%mm0, %0    \n\t" // { -z[n8+k].im, z[n8-1-k].re }
-            "movq      %%mm4, %1    \n\t" // { -z[n8-1-k].re, z[n8+k].im }
-            "movq      %%mm2, %2    \n\t" // { -z[n8+k].re, z[n8-1-k].im }
-            "movq      %%mm3, %3    \n\t" // { z[n8-1-k].im, -z[n8+k].re }
-            :"=m"(output[2*k]), "=m"(output[n2-2-2*k]),
-             "=m"(output[n2+2*k]), "=m"(output[n-2-2*k])
-            ::"memory"
-        );
-    }
+    asm volatile(
+        "1: \n\t"
+        "movq    (%4,%0), %%mm0 \n\t" // z[n8+k]
+        "neg %0 \n\t"
+        "pswapd -8(%4,%0), %%mm1 \n\t" // z[n8-1-k]
+        "movq      %%mm0, %%mm2 \n\t"
+        "pxor      %%mm7, %%mm2 \n\t"
+        "punpckldq %%mm1, %%mm2 \n\t"
+        "pswapd    %%mm2, %%mm3 \n\t"
+        "punpckhdq %%mm1, %%mm0 \n\t"
+        "pswapd    %%mm0, %%mm4 \n\t"
+        "pxor      %%mm7, %%mm0 \n\t"
+        "pxor      %%mm7, %%mm4 \n\t"
+        "movq      %%mm3, -8(%3,%0) \n\t" // output[n-2-2*k] = { z[n8-1-k].im, -z[n8+k].re }
+        "movq      %%mm4, -8(%2,%0) \n\t" // output[n2-2-2*k]= { -z[n8-1-k].re, z[n8+k].im }
+        "neg %0 \n\t"
+        "movq      %%mm0, (%1,%0) \n\t"   // output[2*k]     = { -z[n8+k].im, z[n8-1-k].re }
+        "movq      %%mm2, (%2,%0) \n\t"   // output[n2+2*k]  = { -z[n8+k].re, z[n8-1-k].im }
+        "sub $8, %0 \n\t"
+        "jge 1b \n\t"
+        :"+r"(k)
+        :"r"(output), "r"(output+n2), "r"(output+n), "r"(z+n8)
+        :"memory"
+    );
     asm volatile("femms");
 }
 

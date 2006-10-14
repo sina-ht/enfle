@@ -3,18 +3,20 @@
  * Copyright (c) 2000, 2001, 2002 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -276,6 +278,9 @@ typedef struct DSPContext {
 
     qpel_mc_func put_h264_qpel_pixels_tab[4][16];
     qpel_mc_func avg_h264_qpel_pixels_tab[4][16];
+
+    qpel_mc_func put_2tap_qpel_pixels_tab[4][16];
+    qpel_mc_func avg_2tap_qpel_pixels_tab[4][16];
 
     h264_weight_func weight_h264_pixels_tab[10];
     h264_biweight_func biweight_h264_pixels_tab[10];
@@ -571,6 +576,13 @@ void dsputil_init_mmi(DSPContext* c, AVCodecContext *avctx);
 
 void dsputil_init_sh4(DSPContext* c, AVCodecContext *avctx);
 
+#elif defined(ARCH_BFIN)
+
+#define DECLARE_ALIGNED_8(t,v)    t v __attribute__ ((aligned (8)))
+#define STRIDE_ALIGN 8
+
+void dsputil_init_bfin(DSPContext* c, AVCodecContext *avctx);
+
 #else
 
 #define DECLARE_ALIGNED_8(t,v)    t v __attribute__ ((aligned (8)))
@@ -660,6 +672,8 @@ void ff_imdct_calc(MDCTContext *s, FFTSample *output,
                 const FFTSample *input, FFTSample *tmp);
 void ff_imdct_calc_3dn2(MDCTContext *s, FFTSample *output,
                         const FFTSample *input, FFTSample *tmp);
+void ff_imdct_calc_sse(MDCTContext *s, FFTSample *output,
+                       const FFTSample *input, FFTSample *tmp);
 void ff_mdct_calc(MDCTContext *s, FFTSample *out,
                const FFTSample *input, FFTSample *tmp);
 void ff_mdct_end(MDCTContext *s);

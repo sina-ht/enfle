@@ -2,18 +2,20 @@
  * WMA compatible decoder
  * Copyright (c) 2002 The FFmpeg Project.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -716,12 +718,7 @@ static int wma_decode_block(WMADecodeContext *s)
     int n, v, a, ch, code, bsize;
     int coef_nb_bits, total_gain, parse_exponents;
     DECLARE_ALIGNED_16(float, window[BLOCK_MAX_SIZE * 2]);
-// XXX: FIXME!! there's a bug somewhere which makes this mandatory under altivec
-#ifdef HAVE_ALTIVEC
-    volatile int nb_coefs[MAX_CHANNELS] __attribute__((aligned(16)));
-#else
     int nb_coefs[MAX_CHANNELS];
-#endif
     float mdct_norm;
 
 #ifdef TRACE
@@ -876,7 +873,7 @@ static int wma_decode_block(WMADecodeContext *s)
             VLC *coef_vlc;
             int level, run, sign, tindex;
             int16_t *ptr, *eptr;
-            const int16_t *level_table, *run_table;
+            const uint16_t *level_table, *run_table;
 
             /* special VLC tables are used for ms stereo because
                there is potentially less energy there */

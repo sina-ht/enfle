@@ -2,18 +2,20 @@
  * Utils for libavcodec
  * Copyright (c) 2002 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -39,7 +41,6 @@ void avcodec_register_all(void)
     inited = 1;
 
     /* encoders */
-#ifdef CONFIG_ENCODERS
 #ifdef CONFIG_AC3_ENCODER
     register_avcodec(&ac3_encoder);
 #endif //CONFIG_AC3_ENCODER
@@ -52,7 +53,7 @@ void avcodec_register_all(void)
 #endif //CONFIG_MP3LAME_ENCODER
 #endif
 #ifdef CONFIG_LIBVORBIS
-#ifdef CONFIG_OGGVORBIS_ENCODER
+#if (defined CONFIG_OGGVORBIS_ENCODER && !defined CONFIG_VORBIS_ENCODER)
     register_avcodec(&oggvorbis_encoder);
 #endif //CONFIG_OGGVORBIS_ENCODER
 #if (defined CONFIG_OGGVORBIS_DECODER && !defined CONFIG_VORBIS_DECODER)
@@ -190,10 +191,8 @@ void avcodec_register_all(void)
 #ifdef CONFIG_RAWVIDEO_ENCODER
     register_avcodec(&rawvideo_encoder);
 #endif //CONFIG_RAWVIDEO_ENCODER
-#endif /* CONFIG_ENCODERS */
 
     /* decoders */
-#ifdef CONFIG_DECODERS
 #ifdef CONFIG_H263_DECODER
     register_avcodec(&h263_decoder);
 #endif //CONFIG_H263_DECODER
@@ -371,6 +370,15 @@ void avcodec_register_all(void)
 #ifdef CONFIG_THEORA_DECODER
     register_avcodec(&theora_decoder);
 #endif //CONFIG_THEORA_DECODER
+#ifdef CONFIG_VP5_DECODER
+    register_avcodec(&vp5_decoder);
+#endif //CONFIG_VP5_DECODER
+#ifdef CONFIG_VP6_DECODER
+    register_avcodec(&vp6_decoder);
+#endif //CONFIG_VP6_DECODER
+#ifdef CONFIG_VP6F_DECODER
+    register_avcodec(&vp6f_decoder);
+#endif //CONFIG_VP6F_DECODER
 #ifdef CONFIG_ASV1_DECODER
     register_avcodec(&asv1_decoder);
 #endif //CONFIG_ASV1_DECODER
@@ -501,6 +509,9 @@ void avcodec_register_all(void)
 #ifdef CONFIG_VORBIS_DECODER
     register_avcodec(&vorbis_decoder);
 #endif
+#ifdef CONFIG_VORBIS_ENCODER
+    register_avcodec(&vorbis_encoder);
+#endif
 #ifdef CONFIG_LIBGSM
     register_avcodec(&libgsm_decoder);
 #endif //CONFIG_LIBGSM
@@ -531,28 +542,41 @@ void avcodec_register_all(void)
 #ifdef CONFIG_VMNC_DECODER
     register_avcodec(&vmnc_decoder);
 #endif //CONFIG_VMNC_DECODER
-#endif /* CONFIG_DECODERS */
+#ifdef CONFIG_WAVPACK_DECODER
+    register_avcodec(&wavpack_decoder);
+#endif //CONFIG_WAVPACK_DECODER
+#ifdef CONFIG_TARGA_DECODER
+    register_avcodec(&targa_decoder);
+#endif //CONFIG_TARGA_DECODER
+#ifdef CONFIG_DSICINVIDEO_DECODER
+    register_avcodec(&dsicinvideo_decoder);
+#endif //CONFIG_DSICINVIDEO_DECODER
+#ifdef CONFIG_DSICINAUDIO_DECODER
+    register_avcodec(&dsicinaudio_decoder);
+#endif //CONFIG_DSICINAUDIO_DECODER
+#ifdef CONFIG_TIERTEXSEQVIDEO_DECODER
+    register_avcodec(&tiertexseqvideo_decoder);
+#endif //CONFIG_TIERTEXSEQVIDEO_DECODER
+#ifdef CONFIG_TIFF_DECODER
+    register_avcodec(&tiff_decoder);
+#endif //CONFIG_TIFF_DECODER
 
 #if defined(CONFIG_AMR_NB) || defined(CONFIG_AMR_NB_FIXED)
 #ifdef CONFIG_AMR_NB_DECODER
     register_avcodec(&amr_nb_decoder);
 #endif //CONFIG_AMR_NB_DECODER
-#ifdef CONFIG_ENCODERS
 #ifdef CONFIG_AMR_NB_ENCODER
     register_avcodec(&amr_nb_encoder);
 #endif //CONFIG_AMR_NB_ENCODER
-#endif //CONFIG_ENCODERS
 #endif /* CONFIG_AMR_NB || CONFIG_AMR_NB_FIXED */
 
 #ifdef CONFIG_AMR_WB
 #ifdef CONFIG_AMR_WB_DECODER
     register_avcodec(&amr_wb_decoder);
 #endif //CONFIG_AMR_WB_DECODER
-#ifdef CONFIG_ENCODERS
 #ifdef CONFIG_AMR_WB_ENCODER
     register_avcodec(&amr_wb_encoder);
 #endif //CONFIG_AMR_WB_ENCODER
-#endif //CONFIG_ENCODERS
 #endif /* CONFIG_AMR_WB */
 
 #ifdef CONFIG_BMP_DECODER

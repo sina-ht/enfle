@@ -4,18 +4,20 @@
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2003-2004 Michael Niedermayer
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  * Support for external huffman table, various fixes (AVID workaround),
@@ -613,7 +615,7 @@ static void encode_block(MpegEncContext *s, DCTELEM *block, int n)
     uint16_t *huff_code_ac;
 
     /* DC coef */
-    component = (n <= 3 ? 0 : n - 4 + 1);
+    component = (n <= 3 ? 0 : (n&1) + 1);
     dc = block[0]; /* overflow is impossible */
     val = dc - s->last_dc[component];
     if (n < 4) {
@@ -666,8 +668,15 @@ void mjpeg_encode_mb(MpegEncContext *s,
                      DCTELEM block[6][64])
 {
     int i;
-    for(i=0;i<6;i++) {
+    for(i=0;i<5;i++) {
         encode_block(s, block[i], i);
+    }
+    if (s->chroma_format == CHROMA_420) {
+        encode_block(s, block[5], 5);
+    } else {
+        encode_block(s, block[6], 6);
+        encode_block(s, block[5], 5);
+        encode_block(s, block[7], 7);
     }
 }
 
@@ -1103,7 +1112,7 @@ static int mjpeg_decode_dht(MJpegDecodeContext *s)
 
 static int mjpeg_decode_sof(MJpegDecodeContext *s)
 {
-    int len, nb_components, i, width, height;
+    int len, nb_components, i, width, height, pix_fmt_id;
 
     /* XXX: verify len field validity */
     len = get_bits(&s->gb, 16);
@@ -1188,8 +1197,13 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
         return 0;
 
     /* XXX: not complete test ! */
-    switch((s->h_count[0] << 4) | s->v_count[0]) {
-    case 0x11:
+    pix_fmt_id = (s->h_count[0] << 20) | (s->v_count[0] << 16) |
+                 (s->h_count[1] << 12) | (s->v_count[1] <<  8) |
+                 (s->h_count[2] <<  4) |  s->v_count[2];
+    dprintf("pix fmt id %x\n", pix_fmt_id);
+    switch(pix_fmt_id){
+    case 0x222222:
+    case 0x111111:
         if(s->rgb){
             s->avctx->pix_fmt = PIX_FMT_RGBA32;
         }else if(s->nb_components==3)
@@ -1197,11 +1211,12 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
         else
             s->avctx->pix_fmt = PIX_FMT_GRAY8;
         break;
-    case 0x21:
+    case 0x211111:
+    case 0x221212:
         s->avctx->pix_fmt = s->cs_itu601 ? PIX_FMT_YUV422P : PIX_FMT_YUVJ422P;
         break;
     default:
-    case 0x22:
+    case 0x221111:
         s->avctx->pix_fmt = s->cs_itu601 ? PIX_FMT_YUV420P : PIX_FMT_YUVJ420P;
         break;
     }
@@ -1801,7 +1816,7 @@ static int mjpeg_decode_com(MJpegDecodeContext *s)
 {
     int len = get_bits(&s->gb, 16);
     if (len >= 2 && 8*len - 16 + get_bits_count(&s->gb) <= s->gb.size_in_bits) {
-        uint8_t *cbuf = av_malloc(len - 1);
+        char *cbuf = av_malloc(len - 1);
         if (cbuf) {
             int i;
             for (i = 0; i < len - 2; i++)
@@ -2039,6 +2054,7 @@ static int mjpeg_decode_frame(AVCodecContext *avctx,
                         return -1;
                     break;
                 case EOI:
+                    s->cur_scan = 0;
                     if ((s->buggy_avid && !s->interlaced) || s->restart_interval)
                         break;
 eoi_parser:

@@ -1,3 +1,23 @@
+/*
+ * copyright (c) 2004 Michael Niedermayer <michaelni@gmx.at>
+ *
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 /**
  * @file bitstream.h
  * bitstream api header.
@@ -440,13 +460,16 @@ static inline int unaligned32_le(const void *v)
 # ifdef ALT_BITSTREAM_READER_LE
 #   define SHOW_UBITS(name, gb, num)\
         ((name##_cache) & (NEG_USR32(0xffffffff,num)))
+
+#   define SHOW_SBITS(name, gb, num)\
+        NEG_SSR32((name##_cache)<<(32-(num)), num)
 # else
 #   define SHOW_UBITS(name, gb, num)\
         NEG_USR32(name##_cache, num)
-# endif
 
 #   define SHOW_SBITS(name, gb, num)\
         NEG_SSR32(name##_cache, num)
+# endif
 
 #   define GET_CACHE(name, gb)\
         ((uint32_t)name##_cache)
@@ -707,8 +730,13 @@ static inline void skip_bits1(GetBitContext *s){
 static inline unsigned int get_bits_long(GetBitContext *s, int n){
     if(n<=17) return get_bits(s, n);
     else{
+#ifdef ALT_BITSTREAM_READER_LE
+        int ret= get_bits(s, 16);
+        return ret | (get_bits(s, n-16) << 16);
+#else
         int ret= get_bits(s, 16) << (n-16);
         return ret | get_bits(s, n-16);
+#endif
     }
 }
 

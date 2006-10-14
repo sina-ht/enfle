@@ -5,18 +5,20 @@
  * Copyright (c) 2001 Juan J. Sierralta P.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  * ac prediction encoding, b-frame support, error resilience, optimizations,
@@ -60,6 +62,8 @@ static void h263p_encode_umotion(MpegEncContext * s, int val);
 static inline void mpeg4_encode_block(MpegEncContext * s, DCTELEM * block,
                                int n, int dc, uint8_t *scan_table,
                                PutBitContext *dc_pb, PutBitContext *ac_pb);
+static int mpeg4_get_block_length(MpegEncContext * s, DCTELEM * block, int n, int intra_dc,
+                                  uint8_t *scan_table);
 #endif
 
 static int h263_decode_motion(MpegEncContext * s, int pred, int fcode);
@@ -69,10 +73,8 @@ static int h263_decode_block(MpegEncContext * s, DCTELEM * block,
 static inline int mpeg4_decode_dc(MpegEncContext * s, int n, int *dir_ptr);
 static inline int mpeg4_decode_block(MpegEncContext * s, DCTELEM * block,
                               int n, int coded, int intra, int rvlc);
-static int mpeg4_get_block_length(MpegEncContext * s, DCTELEM * block, int n, int intra_dc,
-                               uint8_t *scan_table);
-static int h263_pred_dc(MpegEncContext * s, int n, uint16_t **dc_val_ptr);
 #ifdef CONFIG_ENCODERS
+static int h263_pred_dc(MpegEncContext * s, int n, int16_t **dc_val_ptr);
 static void mpeg4_encode_visual_object_header(MpegEncContext * s);
 static void mpeg4_encode_vol_header(MpegEncContext * s, int vo_number, int vol_number);
 #endif //CONFIG_ENCODERS
@@ -210,7 +212,7 @@ void h263_encode_picture_header(MpegEncContext * s, int picture_number)
             int div, error;
             div= (s->avctx->time_base.num*1800000LL + 500LL*s->avctx->time_base.den) / ((1000LL+i)*s->avctx->time_base.den);
             div= clip(1, div, 127);
-            error= ABS(s->avctx->time_base.num*1800000LL - (1000LL+i)*s->avctx->time_base.den*div);
+            error= FFABS(s->avctx->time_base.num*1800000LL - (1000LL+i)*s->avctx->time_base.den*div);
             if(error < best_error){
                 best_error= error;
                 best_divisor= div;
@@ -556,7 +558,7 @@ void ff_clean_mpeg4_qscales(MpegEncContext *s){
 #define tab_size ((signed)(sizeof(s->direct_scale_mv[0])/sizeof(int16_t)))
 #define tab_bias (tab_size/2)
 
-static void ff_mpeg4_init_direct_mv(MpegEncContext *s){
+void ff_mpeg4_init_direct_mv(MpegEncContext *s){
     int i;
     for(i=0; i<tab_size; i++){
         s->direct_scale_mv[0][i] = (i-tab_bias)*s->pb_time/s->pp_time;
@@ -1231,7 +1233,7 @@ void h263_encode_mb(MpegEncContext * s,
     int cbpc, cbpy, i, cbp, pred_x, pred_y;
     int16_t pred_dc;
     int16_t rec_intradc[6];
-    uint16_t *dc_ptr[6];
+    int16_t *dc_ptr[6];
     const int interleaved_stats= (s->flags&CODEC_FLAG_PASS1);
     const int dquant_code[5]= {1,0,9,2,3};
 
@@ -1515,7 +1517,8 @@ void ff_h263_loop_filter(MpegEncContext * s){
     }
 }
 
-static int h263_pred_dc(MpegEncContext * s, int n, uint16_t **dc_val_ptr)
+#ifdef CONFIG_ENCODERS
+static int h263_pred_dc(MpegEncContext * s, int n, int16_t **dc_val_ptr)
 {
     int x, y, wrap, a, c, pred_dc, scale;
     int16_t *dc_val;
@@ -1559,6 +1562,7 @@ static int h263_pred_dc(MpegEncContext * s, int n, uint16_t **dc_val_ptr)
     *dc_val_ptr = &dc_val[x + y * wrap];
     return pred_dc;
 }
+#endif /* CONFIG_ENCODERS */
 
 static void h263_pred_acdc(MpegEncContext * s, DCTELEM *block, int n)
 {
@@ -2527,7 +2531,7 @@ void ff_set_qscale(MpegEncContext * s, int qscale)
 static inline int ff_mpeg4_pred_dc(MpegEncContext * s, int n, int level, int *dir_ptr, int encoding)
 {
     int a, b, c, wrap, pred, scale, ret;
-    uint16_t *dc_val;
+    int16_t *dc_val;
 
     /* find prediction */
     if (n < 4) {
@@ -4929,7 +4933,7 @@ static inline int mpeg4_decode_block(MpegEncContext * s, DCTELEM * block,
 
 #if 0
                     if(s->error_resilience >= FF_ER_COMPLIANT){
-                        const int abs_level= ABS(level);
+                        const int abs_level= FFABS(level);
                         if(abs_level<=MAX_LEVEL && run<=MAX_RUN){
                             const int run1= run - rl->max_run[last][abs_level] - 1;
                             if(abs_level <= rl->max_level[last][run]){

@@ -1,3 +1,23 @@
+/*
+ * copyright (c) 2006 Michael Niedermayer <michaelni@gmx.at>
+ *
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 /**
  * @file common.h
  * common internal and external api header.
@@ -12,7 +32,13 @@
 
 #ifdef HAVE_AV_CONFIG_H
 /* only include the following when compiling package */
-#    include "config.h"
+#include "enfle-config.h"
+#if defined(ASMALIGN_POT)
+#define ASMALIGN(ZEROBITS) ".align" #ZEROBITS "\n\t"
+#else
+#define ASMALIGN(ZEROBITS) ".align 1<<" #ZEROBITS "\n\t"
+#endif
+//#    include "config.h"
 
 #    include <stdlib.h>
 #    include <stdio.h>
@@ -172,7 +198,8 @@ typedef uint64_t      uint_fast64_t;
 #define RSHIFT(a,b) ((a) > 0 ? ((a) + ((1<<(b))>>1))>>(b) : ((a) + ((1<<(b))>>1)-1)>>(b))
 /* assume b>0 */
 #define ROUNDED_DIV(a,b) (((a)>0 ? (a) + ((b)>>1) : (a) - ((b)>>1))/(b))
-#define ABS(a) ((a) >= 0 ? (a) : (-(a)))
+#define FFABS(a) ((a) >= 0 ? (a) : (-(a)))
+#define FFSIGN(a) ((a) > 0 ? 1 : -1)
 
 #define FFMAX(a,b) ((a) > (b) ? (a) : (b))
 #define FFMIN(a,b) ((a) > (b) ? (b) : (a))
@@ -217,7 +244,21 @@ static inline int av_log2_16bit(unsigned int v)
 /* median of 3 */
 static inline int mid_pred(int a, int b, int c)
 {
-#if 0
+#if (defined(ARCH_X86) && __CPU__ >= 686 || defined(ARCH_X86_64)) && !defined(RUNTIME_CPUDETECT)
+    int i=b;
+    asm volatile(
+        "cmp    %2, %1 \n\t"
+        "cmovg  %1, %0 \n\t"
+        "cmovg  %2, %1 \n\t"
+        "cmp    %3, %1 \n\t"
+        "cmovl  %3, %1 \n\t"
+        "cmp    %1, %0 \n\t"
+        "cmovg  %1, %0 \n\t"
+        :"+&r"(i), "+&r"(a)
+        :"r"(b), "r"(c)
+    );
+    return i;
+#elif 0
     int t= (a-b)&((a-b)>>31);
     a-=t;
     b+=t;
@@ -354,7 +395,7 @@ tend= read_time();\
       tcount++;\
   }else\
       tskip_count++;\
-  if(256*256*256*64%(tcount+tskip_count)==0){\
+  if(((tcount+tskip_count)&(tcount+tskip_count-1))==0){\
       av_log(NULL, AV_LOG_DEBUG, "%"PRIu64" dezicycles in %s, %d runs, %d skips\n", tsum*10/tcount, id, tcount, tskip_count);\
   }\
 }
@@ -371,8 +412,13 @@ tend= read_time();\
   #define DECLARE_ALIGNED(n,t,v)      __declspec(align(n)) t v
 #endif
 
+/* memory */
 void *av_malloc(unsigned int size);
 void *av_realloc(void *ptr, unsigned int size);
 void av_free(void *ptr);
+
+void *av_mallocz(unsigned int size);
+char *av_strdup(const char *s);
+void av_freep(void *ptr);
 
 #endif /* COMMON_H */

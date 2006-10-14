@@ -3,18 +3,20 @@
  * Copyright (c) 2003 Fabrice Bellard.
  * Copyright (c) 2003 Michael Niedermayer.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avcodec.h"
@@ -69,8 +71,29 @@ AVCodecParserContext *av_parser_init(int codec_id)
     return s;
 }
 
-/* NOTE: buf_size == 0 is used to signal EOF so that the last frame
-   can be returned if necessary */
+/**
+ *
+ * @param buf           input
+ * @param buf_size      input length, to signal EOF, this should be 0 (so that the last frame can be output)
+ * @param pts           input presentation timestamp
+ * @param dts           input decoding timestamp
+ * @param poutbuf       will contain a pointer to the first byte of the output frame
+ * @param poutbuf_size  will contain the length of the output frame
+ * @return the number of bytes of the input bitstream used
+ *
+ * Example:
+ * @code
+ *   while(in_len){
+ *       len = av_parser_parse(myparser, AVCodecContext, &data, &size,
+ *                                       in_data, in_len,
+ *                                       pts, dts);
+ *       in_data += len;
+ *       in_len  -= len;
+ *
+ *       decode_frame(data, size);
+ *   }
+ * @endcode
+ */
 int av_parser_parse(AVCodecParserContext *s,
                     AVCodecContext *avctx,
                     uint8_t **poutbuf, int *poutbuf_size,
@@ -306,7 +329,7 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
 {
     ParseContext1 *pc = s->priv_data;
     const uint8_t *buf_end;
-    int32_t start_code;
+    uint32_t start_code;
     int frame_rate_index, ext_type, bytes_left;
     int frame_rate_ext_n, frame_rate_ext_d;
     int picture_structure, top_field_first, repeat_first_field, progressive_frame;

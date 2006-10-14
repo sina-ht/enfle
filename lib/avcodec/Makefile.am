@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Sep  9 21:50:21 2006.
-# $Id: Makefile.am,v 1.43 2006/09/09 12:51:49 sian Exp $
+# Last Modified: Sat Oct 14 12:15:34 2006.
+# $Id: Makefile.am,v 1.44 2006/10/14 05:27:49 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -9,14 +9,14 @@ if USE_AVCODEC
 noinst_LTLIBRARIES = libavcodec.la
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/lib/avutil -I$(top_srcdir)/lib/avcodec -I$(top_srcdir) -I$(top_builddir) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
+AM_CPPFLAGS = -I$(top_srcdir)/lib/avcodec -I$(top_srcdir)/lib/avutil -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
 EXTRA_DIST = \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c i386/mpegvideo_mmx_template.c \
 	i386/idct_mmx.c i386/motion_est_mmx.c \
 	i386/simple_idct_mmx.c i386/fft_sse.c \
 	i386/dsputil_mmx_avg.h i386/dsputil_mmx_rnd.h i386/mmx.h \
-	i386/h264dsp_mmx.c i386/dsputil_h264_template_mmx.c \
+	i386/h264dsp_mmx.c i386/dsputil_h264_template_mmx.c i386/mathops.h \
 	svq3.c mdec.c motion_est_template.c wmv2.c jpeg_ls.c \
 	gcc_fixes.h
 
@@ -25,7 +25,7 @@ DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H
 if USE_MMX
 DEFS += -DHAVE_MMX -Dasm=__asm -Dvolatile=__volatile
 # We want many registers... so you must omit frame pointer.
-CFLAGS_POST = -Wno-error -Wno-unused -O3 -ffast-math $(CFLAGS_POST_SSE)
+CFLAGS_POST = -Wno-error -Wno-unused -O3 -ffast-math -fomit-frame-pointer $(CFLAGS_POST_SSE)
 #CFLAGS_POST = -Wno-error -Wno-unused -O -fomit-frame-pointer $(CFLAGS_POST_SSE)
 
 # i386/cavsdsp_mmx.c
@@ -46,6 +46,8 @@ if USE_SSE
 CFLAGS_POST_SSE = -msse
 DEFS += -DHAVE_BUILTIN_VECTOR
 endif
+
+CFLAGS += $(CFLAGS_POST)
 
 # # armv4l specific stuff
 # ifeq ($(TARGET_ARCH_ARMV4L),yes)
@@ -112,6 +114,7 @@ noinst_HEADERS = \
 	cookdata.h \
 	dsputil.h \
 	dvdata.h \
+	eval.h \
 	faandct.h \
 	golomb.h \
 	h261data.h \
@@ -120,8 +123,8 @@ noinst_HEADERS = \
 	imgconvert_template.h \
 	indeo2data.h \
 	indeo3data.h \
-	internal.h \
 	lzo.h \
+	mathops.h \
 	mpeg12data.h \
 	mpeg4data.h \
 	mpegaudio.h \
@@ -134,6 +137,7 @@ noinst_HEADERS = \
 	ra144.h \
 	ra288.h \
 	rangecoder.h \
+	ratecontrol.h \
 	rtjpeg.h \
 	simple_idct.h \
 	sp5x.h \
@@ -146,7 +150,13 @@ noinst_HEADERS = \
 	vc1acdata.h \
 	vc1data.h \
 	vorbis.h \
+	vorbis_enc_data.h \
 	vp3data.h \
+	vp5data.h \
+	vp56.h \
+	vp56data.h \
+	vp6data.h \
+	xvid_internal.h \
 	wmadata.h
 
 # a52dec.c ac3dec.c ac3enc.c amr.c apiexample.c
@@ -182,6 +192,7 @@ libavcodec_la_SOURCES = \
 	cook.c \
 	cyuv.c \
 	dpcm.c \
+	dsicinav.c \
 	dsputil.c \
 	dv.c \
 	dvbsub.c \
@@ -261,6 +272,9 @@ libavcodec_la_SOURCES = \
 	snow.c \
 	sonic.c \
 	svq1.c \
+	targa.c \
+	tiertexseqv.c \
+	tiff.c \
 	truemotion1.c \
 	truemotion2.c \
 	truespeech.c \
@@ -274,9 +288,16 @@ libavcodec_la_SOURCES = \
 	vmdav.c \
 	vmnc.c \
 	vorbis.c \
+	vorbis_data.c \
+	vorbis_enc.c \
 	vp3.c \
 	vp3dsp.c \
+	vp5.c \
+	vp56.c \
+	vp56data.c \
+	vp6.c \
 	vqavideo.c \
+	wavpack.c \
 	wmadec.c \
 	wnv1.c \
 	ws-snd1.c \

@@ -3,18 +3,20 @@
  * Copyright (c) 2000,2001 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -157,7 +159,7 @@ static void init_uni_ac_vlc(RLTable *rl, uint8_t *uni_ac_vlc_len){
         for(run=0; run<64; run++){
             int len, bits, code;
 
-            int alevel= ABS(level);
+            int alevel= FFABS(level);
             int sign= (level>>31)&1;
 
             if (alevel > rl->max_level[0][run])
@@ -204,7 +206,7 @@ static int find_frame_rate_index(MpegEncContext *s){
         int64_t n1= 1001LL*s->avctx->time_base.den;
         if(s->avctx->strict_std_compliance > FF_COMPLIANCE_INOFFICIAL && i>=9) break;
 
-        d = ABS(n0 - n1);
+        d = FFABS(n0 - n1);
         if(d < dmin){
             dmin=d;
             s->frame_rate_index= i;
@@ -277,7 +279,7 @@ static void mpeg1_encode_sequence_header(MpegEncContext *s)
                 else
                     error-= av_q2d(mpeg2_aspect[i])*s->height/s->width;
 
-                error= ABS(error);
+                error= FFABS(error);
 
                 if(error < best_aspect_error){
                     best_aspect_error= error;
@@ -804,7 +806,7 @@ void ff_mpeg1_encode_init(MpegEncContext *s)
                 int bits, code;
                 int diff=i;
 
-                adiff = ABS(diff);
+                adiff = FFABS(diff);
                 if(diff<0) diff--;
                 index = av_log2(2*adiff);
 
@@ -2695,7 +2697,8 @@ static int slice_decode_thread(AVCodecContext *c, void *arg){
     s->error_count= 3*(s->end_mb_y - s->start_mb_y)*s->mb_width;
 
     for(;;){
-        int start_code, ret;
+        uint32_t start_code;
+        int ret;
 
         ret= mpeg_decode_slice((Mpeg1Context*)s, mb_y, &buf, s->gb.buffer_end - buf);
         emms_c();
@@ -3033,7 +3036,8 @@ static int mpeg_decode_frame(AVCodecContext *avctx,
     Mpeg1Context *s = avctx->priv_data;
     const uint8_t *buf_end;
     const uint8_t *buf_ptr;
-    int ret, start_code, input_size;
+    uint32_t start_code;
+    int ret, input_size;
     AVFrame *picture = data;
     MpegEncContext *s2 = &s->mpeg_enc_ctx;
     dprintf("fill_buffer\n");
@@ -3080,7 +3084,7 @@ static int mpeg_decode_frame(AVCodecContext *avctx,
         /* find start next code */
         start_code = -1;
         buf_ptr = ff_find_start_code(buf_ptr,buf_end, &start_code);
-        if (start_code < 0){
+        if (start_code > 0x1ff){
             if(s2->pict_type != B_TYPE || avctx->skip_frame <= AVDISCARD_DEFAULT){
                 if(avctx->thread_count > 1){
                     int i;

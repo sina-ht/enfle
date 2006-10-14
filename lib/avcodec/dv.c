@@ -12,18 +12,20 @@
  * Many thanks to Dan Dennedy <dan@dennedy.org> for providing wealth
  * of DV technical info.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -703,7 +705,7 @@ static always_inline void dv_set_class_number(DCTELEM* blk, EncBlockInfo* bi,
               /* weigh it and and shift down into range, adding for rounding */
               /* the extra division by a factor of 2^4 reverses the 8x expansion of the DCT
                  AND the 2x doubling of the weights */
-              level = (ABS(level) * weight[i] + (1<<(dv_weight_bits+3))) >> (dv_weight_bits+4);
+              level = (FFABS(level) * weight[i] + (1<<(dv_weight_bits+3))) >> (dv_weight_bits+4);
               bi->mb[i] = level;
               if(level>max) max= level;
               bi->bit_size[area] += dv_rl2vlc_size(i - prev  - 1, level);
@@ -1010,6 +1012,7 @@ static int dv_decode_mt(AVCodecContext *avctx, void* sl)
     return 0;
 }
 
+#ifdef CONFIG_ENCODERS
 static int dv_encode_mt(AVCodecContext *avctx, void* sl)
 {
     DVVideoContext *s = avctx->priv_data;
@@ -1028,7 +1031,9 @@ static int dv_encode_mt(AVCodecContext *avctx, void* sl)
                             &s->sys->video_place[slice*5]);
     return 0;
 }
+#endif
 
+#ifdef CONFIG_DECODERS
 /* NOTE: exactly one frame must be given (120000 bytes for NTSC,
    144000 bytes for PAL - or twice those for 50Mbps) */
 static int dvvideo_decode_frame(AVCodecContext *avctx,
@@ -1068,6 +1073,7 @@ static int dvvideo_decode_frame(AVCodecContext *avctx,
 
     return s->sys->frame_size;
 }
+#endif
 
 
 static inline int dv_write_pack(enum dv_pack_type pack_id, DVVideoContext *c, uint8_t* buf)
@@ -1192,7 +1198,7 @@ static void dv_format_frame(DVVideoContext* c, uint8_t* buf)
 }
 
 
-
+#ifdef CONFIG_ENCODERS
 static int dvvideo_encode_frame(AVCodecContext *c, uint8_t *buf, int buf_size,
                                 void *data)
 {
@@ -1219,6 +1225,7 @@ static int dvvideo_encode_frame(AVCodecContext *c, uint8_t *buf, int buf_size,
 
     return s->sys->frame_size;
 }
+#endif
 
 static int dvvideo_close(AVCodecContext *c)
 {
@@ -1242,6 +1249,7 @@ AVCodec dvvideo_encoder = {
 };
 #endif // CONFIG_DVVIDEO_ENCODER
 
+#ifdef CONFIG_DVVIDEO_DECODER
 AVCodec dvvideo_decoder = {
     "dvvideo",
     CODEC_TYPE_VIDEO,
@@ -1254,3 +1262,4 @@ AVCodec dvvideo_decoder = {
     CODEC_CAP_DR1,
     NULL
 };
+#endif

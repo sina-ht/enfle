@@ -2,18 +2,20 @@
  * VMware Screen Codec (VMnc) decoder
  * Copyright (c) 2006 Konstantin Shishkov
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
@@ -115,7 +117,7 @@ static void load_cursor(VmncContext *c, uint8_t *src)
 
 static void put_cursor(uint8_t *dst, int stride, VmncContext *c, int dx, int dy)
 {
-    int i, j, t;
+    int i, j;
     int w, h, x, y;
     w = c->cur_w;
     if(c->width < c->cur_x + c->cur_w) w = c->width - c->cur_x;
@@ -467,7 +469,7 @@ static int decode_init(AVCodecContext *avctx)
     c->width = avctx->width;
     c->height = avctx->height;
 
-    if (avcodec_check_dimensions(avctx, avctx->height, avctx->width) < 0) {
+    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
         return 1;
     }
     c->bpp = avctx->bits_per_sample;
