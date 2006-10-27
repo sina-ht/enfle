@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep  7 22:50:12 2006.
- * $Id: normal.c,v 1.97 2006/09/09 12:55:55 sian Exp $
+ * Last Modified: Sat Oct 28 00:59:55 2006.
+ * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -56,7 +56,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   .type = ENFLE_PLUGIN_UI,
   .name = "Normal",
-  .description = "Normal UI plugin version 0.7",
+  .description = "Normal UI plugin version 0.7.1",
   .author = "Hiroshi Takekawa",
 
   .ui_main = ui_main,
@@ -917,10 +917,16 @@ process_file(UIData *uidata, char *path, Archive *a, Stream *s, Movie *m, void *
     ret = main_loop(uidata, vw, NULL, p, s, a, path, gui);
     if (uidata->cache) {
       char *fullpath = archive_getpathname(a, path);
-      cache_add_image(uidata->cache, p, fullpath);
-      free(fullpath);
+
+      if (fullpath) {
+	int res = cache_add_image(uidata->cache, p, fullpath);
+
+	free(fullpath);
+	if (res)
+	  goto cached_exit;
+      }
     }
-    goto cached_exit;
+    break;
   case IDENTIFY_STREAM_MOVIE:
     ret = main_loop(uidata, vw, m, NULL, s, a, path, gui);
     movie_unload(m);
