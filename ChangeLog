@@ -1,3 +1,43 @@
+2006-11-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Updated.  Version up.
+
+	* lib/avcodec/Makefile.am, lib/avutil/Makefile.am,
+	lib/avutil/avutil.h, lib/avutil/bswap.h, lib/avutil/common.h,
+	lib/avutil/internal.h, lib/avutil/mathematics.c, lib/avutil/md5.c:
+	Updated.
+
+	* lib/avcodec/vc9data.h, lib/avcodec/vc9.c, lib/avcodec/dvdsub.c,
+	lib/avcodec/swscale.h: Removed.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/allcodecs.c,
+	lib/avcodec/amr.c, lib/avcodec/avcodec.h, lib/avcodec/bitstream.h,
+	lib/avcodec/bmp.c, lib/avcodec/bytestream.h, lib/avcodec/cabac.c,
+	lib/avcodec/cabac.h, lib/avcodec/dsicinav.c,
+	lib/avcodec/dvbsubdec.c, lib/avcodec/dvdsubdec.c,
+	lib/avcodec/dvdsubenc.c, lib/avcodec/eval.c, lib/avcodec/eval.h,
+	lib/avcodec/flicvideo.c, lib/avcodec/g726.c, lib/avcodec/gifdec.c,
+	lib/avcodec/golomb.h, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/h264data.h,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/imc.c,
+	lib/avcodec/imcdata.h, lib/avcodec/imgconvert.c,
+	lib/avcodec/imgresample.c, lib/avcodec/jpeg_ls.c,
+	lib/avcodec/lzw.c, lib/avcodec/lzw.h, lib/avcodec/mathops.h,
+	lib/avcodec/mjpeg.c, lib/avcodec/motion_est.c,
+	lib/avcodec/mp3lameaudio.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudio.h, lib/avcodec/mpegaudiodec.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/msmpeg4.c, lib/avcodec/oggvorbis.c,
+	lib/avcodec/parser.c, lib/avcodec/png.c, lib/avcodec/pnm.c,
+	lib/avcodec/ppc/dsputil_ppc.c, lib/avcodec/ratecontrol.c,
+	lib/avcodec/ratecontrol.h, lib/avcodec/raw.c, lib/avcodec/snow.c,
+	lib/avcodec/tiff.c, lib/avcodec/utils.c, lib/avcodec/vp5.c,
+	lib/avcodec/vp56.c, lib/avcodec/vp56.h, lib/avcodec/vp56data.c,
+	lib/avcodec/vp56data.h, lib/avcodec/vp5data.h, lib/avcodec/vp6.c,
+	lib/avcodec/vp6data.h, lib/avcodec/wavpack.c,
+	lib/avcodec/ws-snd1.c, lib/avcodec/x264.c, lib/avcodec/xvidff.c:
+	Updated.
+
 2006-10-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: If enfle fails to cache a image, it
