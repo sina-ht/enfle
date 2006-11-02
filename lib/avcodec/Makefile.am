@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Nov  2 21:21:52 2006.
-# $Id: Makefile.am,v 1.45 2006/11/02 12:22:12 sian Exp $
+# Last Modified: Thu Nov  2 22:54:35 2006.
+# $Id: Makefile.am,v 1.46 2006/11/02 13:55:41 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -28,8 +28,8 @@ DEFS += -DHAVE_MMX -Dasm=__asm -Dvolatile=__volatile
 CFLAGS_POST = -Wno-error -Wno-unused -O3 -ffast-math -fomit-frame-pointer $(CFLAGS_POST_SSE)
 #CFLAGS_POST = -Wno-error -Wno-unused -O -fomit-frame-pointer $(CFLAGS_POST_SSE)
 
-# i386/cavsdsp_mmx.c
 MMX_SRCS = \
+	i386/cavsdsp_mmx.c \
 	i386/fdct_mmx.c i386/cputest.c \
 	i386/dsputil_mmx.c i386/mpegvideo_mmx.c \
 	i386/idct_mmx.c i386/idct_mmx_xvid.c i386/motion_est_mmx.c \
@@ -103,7 +103,6 @@ CFLAGS += $(CFLAGS_POST)
 # 	$(CC) -mcpu=ultrasparc -mtune=ultrasparc $(CFLAGS) -c -o $@ $<
 # endif
 
-# cavsdata.h
 noinst_HEADERS = \
 	ac3.h \
 	ac3tab.h \
@@ -111,6 +110,7 @@ noinst_HEADERS = \
 	bitstream.h \
 	bytestream.h \
 	cabac.h \
+	cavsdata.h \
 	config.h \
 	cookdata.h \
 	dsputil.h \
@@ -146,7 +146,6 @@ noinst_HEADERS = \
 	sp5x.h \
 	svq1_cb.h \
 	svq1_vlc.h \
-	swscale.h \
 	truemotion1data.h \
 	truespeech_data.h \
 	ulti_cb.h \
@@ -163,17 +162,13 @@ noinst_HEADERS = \
 	wmadata.h
 
 # a52dec.c ac3dec.c ac3enc.c amr.c apiexample.c
-# beosthread.c
-# cavs.c cavsdsp.c
 # dct-test.c dtsdec.c
-# faac.c faad.c fft-test.c
-# libgsm.c
-# mdec.c motion_est_template.c motion_test.c mp3lameaudio.c
-# svq3.c
-# w32thread.c
-# wmv2.c
-# x264.c xvidff.c
-# vc9.c
+# faac.c faad.c fft-test.c libgsm.c
+# mdec.c motion_est_template.c motion_test.c svq3.c wmv2.c
+# mp3lameaudio.c
+# beosthread.c w32thread.c
+# imgresample.c needs libswscale
+# x264.c and xvidff.c are encoders
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -189,6 +184,8 @@ libavcodec_la_SOURCES = \
 	bitstream_filter.c \
 	bmp.c \
 	cabac.c \
+	cavs.c \
+	cavsdsp.c \
 	cinepak.c \
 	cljr.c \
 	cscd.c \
@@ -224,7 +221,6 @@ libavcodec_la_SOURCES = \
 	idcinvideo.c \
 	imc.c \
 	imgconvert.c \
-	imgresample.c \
 	indeo2.c \
 	indeo3.c \
 	interplayvideo.c \

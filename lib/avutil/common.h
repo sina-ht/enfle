@@ -115,6 +115,10 @@
 #define PRIx64 "llx"
 #endif
 
+#ifndef PRIX64
+#define PRIX64 "llX"
+#endif
+
 #ifndef PRId32
 #define PRId32 "d"
 #endif
@@ -204,7 +208,7 @@ typedef uint64_t      uint_fast64_t;
 #define FFMAX(a,b) ((a) > (b) ? (a) : (b))
 #define FFMIN(a,b) ((a) > (b) ? (b) : (a))
 
-#define SWAP(type,a,b) do{type SWAP_tmp= b; b= a; a= SWAP_tmp;}while(0)
+#define FFSWAP(type,a,b) do{type SWAP_tmp= b; b= a; a= SWAP_tmp;}while(0)
 
 /* misc math functions */
 extern FF_IMPORT_ATTR const uint8_t ff_log2_tab[256];
@@ -244,7 +248,7 @@ static inline int av_log2_16bit(unsigned int v)
 /* median of 3 */
 static inline int mid_pred(int a, int b, int c)
 {
-#if (defined(ARCH_X86) && __CPU__ >= 686 || defined(ARCH_X86_64)) && !defined(RUNTIME_CPUDETECT)
+#if HAVE_CMOV
     int i=b;
     asm volatile(
         "cmp    %2, %1 \n\t"
@@ -340,7 +344,7 @@ static inline int ff_get_fourcc(const char *s){
         }\
     }
 
-#if defined(ARCH_X86) || defined(ARCH_X86_64) || defined(ARCH_POWERPC)
+#if defined(ARCH_X86) || defined(ARCH_POWERPC)
 #if defined(ARCH_X86_64)
 static inline uint64_t read_time(void)
 {
@@ -350,7 +354,7 @@ static inline uint64_t read_time(void)
         );
         return (d << 32) | (a & 0xffffffff);
 }
-#elif defined(ARCH_X86)
+#elif defined(ARCH_X86_32)
 static inline long long read_time(void)
 {
         long long l;

@@ -105,7 +105,7 @@
 
 extern const uint32_t inverse[256];
 
-#if defined(ARCH_X86) || defined(ARCH_X86_64)
+#if defined(ARCH_X86)
 #    define FASTDIV(a,b) \
     ({\
         int ret,dmy;\
@@ -154,7 +154,7 @@ static inline int ff_sqrt(int a)
     return ret;
 }
 
-#if defined(ARCH_X86) || defined(ARCH_X86_64)
+#if defined(ARCH_X86)
 #define MASK_ABS(mask, level)\
             asm volatile(\
                 "cdq                    \n\t"\
@@ -168,7 +168,7 @@ static inline int ff_sqrt(int a)
             level= (level^mask)-mask;
 #endif
 
-#if __CPU__ >= 686 && !defined(RUNTIME_CPUDETECT)
+#ifdef HAVE_CMOV
 #define COPY3_IF_LT(x,y,a,b,c,d)\
 asm volatile (\
     "cmpl %0, %3        \n\t"\
@@ -217,7 +217,7 @@ if((y)<(x)){\
 static always_inline long int lrintf(float x)
 {
 #ifdef __MINGW32__
-#  ifdef ARCH_X86
+#  ifdef ARCH_X86_32
     int32_t i;
     asm volatile(
         "fistpl %0\n\t"
@@ -227,7 +227,7 @@ static always_inline long int lrintf(float x)
 #  else
     /* XXX: incorrect, but make it compile */
     return (int)(x + (x < 0 ? -0.5 : 0.5));
-#  endif /* ARCH_X86 */
+#  endif /* ARCH_X86_32 */
 #else
     return (int)(rint(x));
 #endif /* __MINGW32__ */
