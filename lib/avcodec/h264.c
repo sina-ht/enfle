@@ -6003,8 +6003,7 @@ static int decode_cabac_mb_mvd( H264Context *h, int list, int n, int l ) {
                 mvd += 1 << k;
         }
     }
-    if( get_cabac_bypass( &h->cabac ) )  return -mvd;
-    else                                 return  mvd;
+    return get_cabac_bypass_sign( &h->cabac, -mvd );
 }
 
 static int inline get_cabac_cbf_ctx( H264Context *h, int cat, int idx ) {
@@ -6035,6 +6034,13 @@ static int inline get_cabac_cbf_ctx( H264Context *h, int cat, int idx ) {
     return ctx + 4 * cat;
 }
 
+static const __attribute((used)) uint8_t last_coeff_flag_offset_8x8[63] = {
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
+    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8
+};
+
 static int decode_cabac_residual( H264Context *h, DCTELEM *block, int cat, int n, const uint8_t *scantable, const uint32_t *qmul, int max_coeff) {
     const int mb_xy  = h->s.mb_x + h->s.mb_y*h->s.mb_stride;
     static const int significant_coeff_flag_offset[2][6] = {
@@ -6058,16 +6064,10 @@ static int decode_cabac_residual( H264Context *h, DCTELEM *block, int cat, int n
         9, 9,10,10, 8,11,12,11, 9, 9,10,10, 8,13,13, 9,
         9,10,10, 8,13,13, 9, 9,10,10,14,14,14,14,14 }
     };
-    static const uint8_t last_coeff_flag_offset_8x8[63] = {
-        0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
-        5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8
-    };
 
     int index[64];
 
-    int i, last;
+    int last;
     int coeff_count = 0;
 
     int abslevel1 = 1;
@@ -6076,6 +6076,20 @@ static int decode_cabac_residual( H264Context *h, DCTELEM *block, int cat, int n
     uint8_t *significant_coeff_ctx_base;
     uint8_t *last_coeff_ctx_base;
     uint8_t *abs_level_m1_ctx_base;
+
+#ifndef ARCH_X86
+#define CABAC_ON_STACK
+#endif
+#ifdef CABAC_ON_STACK
+#define CC &cc
+    CABACContext cc;
+    cc.range     = h->cabac.range;
+    cc.low       = h->cabac.low;
+    cc.bytestream= h->cabac.bytestream;
+#else
+#define CC &h->cabac
+#endif
+
 
     /* cat: 0-> DC 16x16  n = 0
      *      1-> AC 16x16  n = luma4x4idx
@@ -6087,12 +6101,16 @@ static int decode_cabac_residual( H264Context *h, DCTELEM *block, int cat, int n
 
     /* read coded block flag */
     if( cat != 5 ) {
-        if( get_cabac( &h->cabac, &h->cabac_state[85 + get_cabac_cbf_ctx( h, cat, n ) ] ) == 0 ) {
+        if( get_cabac( CC, &h->cabac_state[85 + get_cabac_cbf_ctx( h, cat, n ) ] ) == 0 ) {
             if( cat == 1 || cat == 2 )
                 h->non_zero_count_cache[scan8[n]] = 0;
             else if( cat == 4 )
                 h->non_zero_count_cache[scan8[16+n]] = 0;
-
+#ifdef CABAC_ON_STACK
+            h->cabac.range     = cc.range     ;
+            h->cabac.low       = cc.low       ;
+            h->cabac.bytestream= cc.bytestream;
+#endif
             return 0;
         }
     }
@@ -6108,22 +6126,28 @@ static int decode_cabac_residual( H264Context *h, DCTELEM *block, int cat, int n
 #define DECODE_SIGNIFICANCE( coefs, sig_off, last_off ) \
         for(last= 0; last < coefs; last++) { \
             uint8_t *sig_ctx = significant_coeff_ctx_base + sig_off; \
-            if( get_cabac( &h->cabac, sig_ctx )) { \
+            if( get_cabac( CC, sig_ctx )) { \
                 uint8_t *last_ctx = last_coeff_ctx_base + last_off; \
                 index[coeff_count++] = last; \
-                if( get_cabac( &h->cabac, last_ctx ) ) { \
+                if( get_cabac( CC, last_ctx ) ) { \
                     last= max_coeff; \
                     break; \
                 } \
             } \
+        }\
+        if( last == max_coeff -1 ) {\
+            index[coeff_count++] = last;\
         }
         const uint8_t *sig_off = significant_coeff_flag_offset_8x8[MB_FIELD];
+#if defined(ARCH_X86) && !(defined(PIC) && defined(__GNUC__))
+        coeff_count= decode_significance_8x8_x86(CC, significant_coeff_ctx_base, index, sig_off);
+    } else {
+        coeff_count= decode_significance_x86(CC, max_coeff, significant_coeff_ctx_base, index);
+#else
         DECODE_SIGNIFICANCE( 63, sig_off[last], last_coeff_flag_offset_8x8[last] );
     } else {
         DECODE_SIGNIFICANCE( max_coeff - 1, last, last );
-    }
-    if( last == max_coeff -1 ) {
-        index[coeff_count++] = last;
+#endif
     }
     assert(coeff_count > 0);
 
@@ -6140,51 +6164,54 @@ static int decode_cabac_residual( H264Context *h, DCTELEM *block, int cat, int n
         fill_rectangle(&h->non_zero_count_cache[scan8[n]], 2, 2, 8, coeff_count, 1);
     }
 
-    for( i = coeff_count - 1; i >= 0; i-- ) {
+    for( coeff_count--; coeff_count >= 0; coeff_count-- ) {
         uint8_t *ctx = (abslevelgt1 != 0 ? 0 : FFMIN( 4, abslevel1 )) + abs_level_m1_ctx_base;
-        int j= scantable[index[i]];
+        int j= scantable[index[coeff_count]];
 
-        if( get_cabac( &h->cabac, ctx ) == 0 ) {
+        if( get_cabac( CC, ctx ) == 0 ) {
             if( !qmul ) {
-                if( get_cabac_bypass( &h->cabac ) ) block[j] = -1;
-                else                                block[j] =  1;
+                block[j] = get_cabac_bypass_sign( CC, -1);
             }else{
-                if( get_cabac_bypass( &h->cabac ) ) block[j] = (-qmul[j] + 32) >> 6;
-                else                                block[j] = ( qmul[j] + 32) >> 6;
+                block[j] = (get_cabac_bypass_sign( CC, -qmul[j]) + 32) >> 6;;
             }
 
             abslevel1++;
         } else {
             int coeff_abs = 2;
             ctx = 5 + FFMIN( 4, abslevelgt1 ) + abs_level_m1_ctx_base;
-            while( coeff_abs < 15 && get_cabac( &h->cabac, ctx ) ) {
+            while( coeff_abs < 15 && get_cabac( CC, ctx ) ) {
                 coeff_abs++;
             }
 
             if( coeff_abs >= 15 ) {
                 int j = 0;
-                while( get_cabac_bypass( &h->cabac ) ) {
+                while( get_cabac_bypass( CC ) ) {
                     j++;
                 }
 
                 coeff_abs=1;
                 while( j-- ) {
-                    coeff_abs += coeff_abs + get_cabac_bypass( &h->cabac );
+                    coeff_abs += coeff_abs + get_cabac_bypass( CC );
                 }
                 coeff_abs+= 14;
             }
 
             if( !qmul ) {
-                if( get_cabac_bypass( &h->cabac ) ) block[j] = -coeff_abs;
+                if( get_cabac_bypass( CC ) ) block[j] = -coeff_abs;
                 else                                block[j] =  coeff_abs;
             }else{
-                if( get_cabac_bypass( &h->cabac ) ) block[j] = (-coeff_abs * qmul[j] + 32) >> 6;
+                if( get_cabac_bypass( CC ) ) block[j] = (-coeff_abs * qmul[j] + 32) >> 6;
                 else                                block[j] = ( coeff_abs * qmul[j] + 32) >> 6;
             }
 
             abslevelgt1++;
         }
     }
+#ifdef CABAC_ON_STACK
+            h->cabac.range     = cc.range     ;
+            h->cabac.low       = cc.low       ;
+            h->cabac.bytestream= cc.bytestream;
+#endif
     return 0;
 }
 
@@ -6712,14 +6739,14 @@ decode_intra_mb:
 
 static void filter_mb_edgev( H264Context *h, uint8_t *pix, int stride, int16_t bS[4], int qp ) {
     int i, d;
-    const int index_a = clip( qp + h->slice_alpha_c0_offset, 0, 51 );
-    const int alpha = alpha_table[index_a];
-    const int beta  = beta_table[clip( qp + h->slice_beta_offset, 0, 51 )];
+    const int index_a = qp + h->slice_alpha_c0_offset;
+    const int alpha = (alpha_table+52)[index_a];
+    const int beta  = (beta_table+52)[qp + h->slice_beta_offset];
 
     if( bS[0] < 4 ) {
         int8_t tc[4];
         for(i=0; i<4; i++)
-            tc[i] = bS[i] ? tc0_table[index_a][bS[i] - 1] : -1;
+            tc[i] = bS[i] ? (tc0_table+52)[index_a][bS[i] - 1] : -1;
         h->s.dsp.h264_h_loop_filter_luma(pix, stride, alpha, beta, tc);
     } else {
         /* 16px edge length, because bS=4 is triggered by being at
@@ -6773,14 +6800,14 @@ static void filter_mb_edgev( H264Context *h, uint8_t *pix, int stride, int16_t b
 }
 static void filter_mb_edgecv( H264Context *h, uint8_t *pix, int stride, int16_t bS[4], int qp ) {
     int i;
-    const int index_a = clip( qp + h->slice_alpha_c0_offset, 0, 51 );
-    const int alpha = alpha_table[index_a];
-    const int beta  = beta_table[clip( qp + h->slice_beta_offset, 0, 51 )];
+    const int index_a = qp + h->slice_alpha_c0_offset;
+    const int alpha = (alpha_table+52)[index_a];
+    const int beta  = (beta_table+52)[qp + h->slice_beta_offset];
 
     if( bS[0] < 4 ) {
         int8_t tc[4];
         for(i=0; i<4; i++)
-            tc[i] = bS[i] ? tc0_table[index_a][bS[i] - 1] + 1 : 0;
+            tc[i] = bS[i] ? (tc0_table+52)[index_a][bS[i] - 1] + 1 : 0;
         h->s.dsp.h264_h_loop_filter_chroma(pix, stride, alpha, beta, tc);
     } else {
         h->s.dsp.h264_h_loop_filter_chroma_intra(pix, stride, alpha, beta);
@@ -6806,12 +6833,12 @@ static void filter_mb_mbaff_edgev( H264Context *h, uint8_t *pix, int stride, int
         }
 
         qp_index = MB_FIELD ? (i >> 3) : (i & 1);
-        index_a = clip( qp[qp_index] + h->slice_alpha_c0_offset, 0, 51 );
-        alpha = alpha_table[index_a];
-        beta  = beta_table[clip( qp[qp_index] + h->slice_beta_offset, 0, 51 )];
+        index_a = qp[qp_index] + h->slice_alpha_c0_offset;
+        alpha = (alpha_table+52)[index_a];
+        beta  = (beta_table+52)[qp[qp_index] + h->slice_beta_offset];
 
         if( bS[bS_index] < 4 ) {
-            const int tc0 = tc0_table[index_a][bS[bS_index] - 1];
+            const int tc0 = (tc0_table+52)[index_a][bS[bS_index] - 1];
             const int p0 = pix[-1];
             const int p1 = pix[-2];
             const int p2 = pix[-3];
@@ -6900,12 +6927,12 @@ static void filter_mb_mbaff_edgecv( H264Context *h, uint8_t *pix, int stride, in
         }
 
         qp_index = MB_FIELD ? (i >> 2) : (i & 1);
-        index_a = clip( qp[qp_index] + h->slice_alpha_c0_offset, 0, 51 );
-        alpha = alpha_table[index_a];
-        beta  = beta_table[clip( qp[qp_index] + h->slice_beta_offset, 0, 51 )];
+        index_a = qp[qp_index] + h->slice_alpha_c0_offset;
+        alpha = (alpha_table+52)[index_a];
+        beta  = (beta_table+52)[qp[qp_index] + h->slice_beta_offset];
 
         if( bS[bS_index] < 4 ) {
-            const int tc = tc0_table[index_a][bS[bS_index] - 1] + 1;
+            const int tc = (tc0_table+52)[index_a][bS[bS_index] - 1] + 1;
             const int p0 = pix[-1];
             const int p1 = pix[-2];
             const int q0 = pix[0];
@@ -6940,15 +6967,15 @@ static void filter_mb_mbaff_edgecv( H264Context *h, uint8_t *pix, int stride, in
 
 static void filter_mb_edgeh( H264Context *h, uint8_t *pix, int stride, int16_t bS[4], int qp ) {
     int i, d;
-    const int index_a = clip( qp + h->slice_alpha_c0_offset, 0, 51 );
-    const int alpha = alpha_table[index_a];
-    const int beta  = beta_table[clip( qp + h->slice_beta_offset, 0, 51 )];
+    const int index_a = qp + h->slice_alpha_c0_offset;
+    const int alpha = (alpha_table+52)[index_a];
+    const int beta  = (beta_table+52)[qp + h->slice_beta_offset];
     const int pix_next  = stride;
 
     if( bS[0] < 4 ) {
         int8_t tc[4];
         for(i=0; i<4; i++)
-            tc[i] = bS[i] ? tc0_table[index_a][bS[i] - 1] : -1;
+            tc[i] = bS[i] ? (tc0_table+52)[index_a][bS[i] - 1] : -1;
         h->s.dsp.h264_v_loop_filter_luma(pix, stride, alpha, beta, tc);
     } else {
         /* 16px edge length, see filter_mb_edgev */
@@ -7000,14 +7027,14 @@ static void filter_mb_edgeh( H264Context *h, uint8_t *pix, int stride, int16_t b
 
 static void filter_mb_edgech( H264Context *h, uint8_t *pix, int stride, int16_t bS[4], int qp ) {
     int i;
-    const int index_a = clip( qp + h->slice_alpha_c0_offset, 0, 51 );
-    const int alpha = alpha_table[index_a];
-    const int beta  = beta_table[clip( qp + h->slice_beta_offset, 0, 51 )];
+    const int index_a = qp + h->slice_alpha_c0_offset;
+    const int alpha = (alpha_table+52)[index_a];
+    const int beta  = (beta_table+52)[qp + h->slice_beta_offset];
 
     if( bS[0] < 4 ) {
         int8_t tc[4];
         for(i=0; i<4; i++)
-            tc[i] = bS[i] ? tc0_table[index_a][bS[i] - 1] + 1 : 0;
+            tc[i] = bS[i] ? (tc0_table+52)[index_a][bS[i] - 1] + 1 : 0;
         h->s.dsp.h264_v_loop_filter_chroma(pix, stride, alpha, beta, tc);
     } else {
         h->s.dsp.h264_v_loop_filter_chroma_intra(pix, stride, alpha, beta);

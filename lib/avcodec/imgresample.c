@@ -47,6 +47,11 @@
 
 #define LINE_BUF_HEIGHT (NB_TAPS * 4)
 
+struct SwsContext {
+    struct ImgReSampleContext *resampling_ctx;
+    enum PixelFormat src_pix_fmt, dst_pix_fmt;
+};
+
 struct ImgReSampleContext {
     int iwidth, iheight, owidth, oheight;
     int topBand, bottomBand, leftBand, rightBand;
@@ -166,7 +171,7 @@ static void v_resample(uint8_t *dst, int dst_width, const uint8_t *src,
         src_pos += src_incr;\
 }
 
-#define DUMP(reg) movq_r2m(reg, tmp); printf(#reg "=%016Lx\n", tmp.uq);
+#define DUMP(reg) movq_r2m(reg, tmp); printf(#reg "=%016"PRIx64"\n", tmp.uq);
 
 /* XXX: do four pixels at a time */
 static void h_resample_fast4_mmx(uint8_t *dst, int dst_width,
@@ -676,6 +681,42 @@ void sws_freeContext(struct SwsContext *ctx)
     av_free(ctx);
 }
 
+
+/**
+ * Checks if context is valid or reallocs a new one instead.
+ * If context is NULL, just calls sws_getContext() to get a new one.
+ * Otherwise, checks if the parameters are the same already saved in context.
+ * If that is the case, returns the current context.
+ * Otherwise, frees context and gets a new one.
+ *
+ * Be warned that srcFilter, dstFilter are not checked, they are
+ * asumed to remain valid.
+ */
+struct SwsContext *sws_getCachedContext(struct SwsContext *ctx,
+                        int srcW, int srcH, int srcFormat,
+                        int dstW, int dstH, int dstFormat, int flags,
+                        SwsFilter *srcFilter, SwsFilter *dstFilter, double *param)
+{
+    if (ctx != NULL) {
+        if ((ctx->resampling_ctx->iwidth != srcW) ||
+                        (ctx->resampling_ctx->iheight != srcH) ||
+                        (ctx->src_pix_fmt != srcFormat) ||
+                        (ctx->resampling_ctx->owidth != dstW) ||
+                        (ctx->resampling_ctx->oheight != dstH) ||
+                        (ctx->dst_pix_fmt != dstFormat))
+        {
+            sws_freeContext(ctx);
+            ctx = NULL;
+        }
+    }
+    if (ctx == NULL) {
+        return sws_getContext(srcW, srcH, srcFormat,
+                        dstW, dstH, dstFormat, flags,
+                        srcFilter, dstFilter, param);
+    }
+    return ctx;
+}
+
 int sws_scale(struct SwsContext *ctx, uint8_t* src[], int srcStride[],
               int srcSliceY, int srcSliceH, uint8_t* dst[], int dstStride[])
 {
@@ -686,7 +727,7 @@ int sws_scale(struct SwsContext *ctx, uint8_t* src[], int srcStride[],
     uint8_t *buf1 = NULL, *buf2 = NULL;
     enum PixelFormat current_pix_fmt;
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < 4; i++) {
         src_pict.data[i] = src[i];
         src_pict.linesize[i] = srcStride[i];
         dst_pict.data[i] = dst[i];

@@ -1190,7 +1190,7 @@ static int decode_header(MPADecodeContext *s, uint32_t header)
 
 /* useful helper to get mpeg audio stream infos. Return -1 if error in
    header, otherwise the coded frame size in bytes */
-int mpa_decode_header(AVCodecContext *avctx, uint32_t head)
+int mpa_decode_header(AVCodecContext *avctx, uint32_t head, int *sample_rate)
 {
     MPADecodeContext s1, *s = &s1;
 
@@ -1217,7 +1217,7 @@ int mpa_decode_header(AVCodecContext *avctx, uint32_t head)
         break;
     }
 
-    avctx->sample_rate = s->sample_rate;
+    *sample_rate = s->sample_rate;
     avctx->channels = s->nb_channels;
     avctx->bit_rate = s->bit_rate;
     avctx->sub_id = s->layer;
@@ -2269,7 +2269,8 @@ static int mp_decode_layer3(MPADecodeContext *s)
 //av_log(NULL, AV_LOG_ERROR, "backstep:%d, lastbuf:%d\n", main_data_begin, s->last_buf_size);
     if(main_data_begin > s->last_buf_size){
         av_log(NULL, AV_LOG_ERROR, "backstep:%d, lastbuf:%d\n", main_data_begin, s->last_buf_size);
-        s->last_buf_size= main_data_begin;
+//        s->last_buf_size= main_data_begin;
+        return -1;
       }
 
     memcpy(s->last_buf + s->last_buf_size, ptr, EXTRABYTES);
@@ -2546,7 +2547,6 @@ retry:
         return -1;
     }
     /* update codec info */
-    avctx->sample_rate = s->sample_rate;
     avctx->channels = s->nb_channels;
     avctx->bit_rate = s->bit_rate;
     avctx->sub_id = s->layer;
@@ -2573,9 +2573,11 @@ retry:
     }
 
     out_size = mp_decode_frame(s, out_samples, buf, buf_size);
-    if(out_size>=0)
+    if(out_size>=0){
         *data_size = out_size;
-    else
+        avctx->sample_rate = s->sample_rate;
+        //FIXME maybe move the other codec info stuff from above here too
+    }else
         av_log(avctx, AV_LOG_DEBUG, "Error while decoding MPEG audio frame.\n"); //FIXME return -1 / but also return the number of bytes consumed
     s->frame_size = 0;
     return buf_size;

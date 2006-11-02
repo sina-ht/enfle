@@ -78,15 +78,18 @@ X264_frame(AVCodecContext *ctx, uint8_t *buf, int bufsize, void *data)
     x4->pic.img.i_csp = X264_CSP_I420;
     x4->pic.img.i_plane = 3;
 
-    for(i = 0; i < 3; i++){
-        x4->pic.img.plane[i] = frame->data[i];
-        x4->pic.img.i_stride[i] = frame->linesize[i];
+    if (frame) {
+        for(i = 0; i < 3; i++){
+            x4->pic.img.plane[i] = frame->data[i];
+            x4->pic.img.i_stride[i] = frame->linesize[i];
+        }
+
+        x4->pic.i_pts = frame->pts;
+        x4->pic.i_type = X264_TYPE_AUTO;
     }
 
-    x4->pic.i_pts = frame->pts;
-    x4->pic.i_type = X264_TYPE_AUTO;
-
-    if(x264_encoder_encode(x4->enc, &nal, &nnal, &x4->pic, &pic_out))
+    if(x264_encoder_encode(x4->enc, &nal, &nnal, frame? &x4->pic: NULL,
+                           &pic_out))
         return -1;
 
     bufsize = encode_nals(buf, bufsize, nal, nnal);
@@ -146,7 +149,7 @@ X264_init(AVCodecContext *avctx)
     else{
         if(avctx->crf){
             x4->params.rc.i_rc_method = X264_RC_CRF;
-            x4->params.rc.i_rf_constant = avctx->crf;
+            x4->params.rc.f_rf_constant = avctx->crf;
         }else if(avctx->cqp > -1){
             x4->params.rc.i_rc_method = X264_RC_CQP;
             x4->params.rc.i_qp_constant = avctx->cqp;
@@ -291,5 +294,6 @@ AVCodec x264_encoder = {
     .init = X264_init,
     .encode = X264_frame,
     .close = X264_close,
+    .capabilities = CODEC_CAP_DELAY,
     .pix_fmts = (enum PixelFormat[]) { PIX_FMT_YUV420P, -1 }
 };

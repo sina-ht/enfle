@@ -37,8 +37,8 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(20<<8)+0)
-#define LIBAVCODEC_VERSION      51.20.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(23<<8)+0)
+#define LIBAVCODEC_VERSION      51.23.0
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
@@ -148,6 +148,7 @@ enum CodecID {
     CODEC_ID_DSICINVIDEO,
     CODEC_ID_TIERTEXSEQVIDEO,
     CODEC_ID_TIFF,
+    CODEC_ID_GIF,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -232,6 +233,7 @@ enum CodecID {
     CODEC_ID_QCELP,
     CODEC_ID_WAVPACK,
     CODEC_ID_DSICINAUDIO,
+    CODEC_ID_IMC,
 
     /* subtitle codecs */
     CODEC_ID_DVD_SUBTITLE= 0x17000,
@@ -1889,7 +1891,7 @@ typedef struct AVCodecContext {
      * - encoding: set by user.
      * - decoding: unused
      */
-    int crf;
+    float crf;
 
     /**
      * constant quantization parameter rate control method
@@ -2177,6 +2179,7 @@ extern AVCodec sonic_ls_encoder;
 extern AVCodec svq1_encoder;
 extern AVCodec x264_encoder;
 
+extern AVCodec gif_decoder;
 extern AVCodec h263_decoder;
 extern AVCodec h261_decoder;
 extern AVCodec mpeg4_decoder;
@@ -2302,6 +2305,7 @@ extern AVCodec dsicinvideo_decoder;
 extern AVCodec dsicinaudio_decoder;
 extern AVCodec tiertexseqvideo_decoder;
 extern AVCodec tiff_decoder;
+extern AVCodec imc_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \

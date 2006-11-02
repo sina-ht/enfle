@@ -19,10 +19,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ *
+ * The VP6F decoder accept an optional 1 byte extradata. It is composed of:
+ *  - upper 4bits: difference between encoded width and visible width
+ *  - lower 4bits: difference between encoded height and visible height
  */
 
 #include <stdlib.h>
-#include <inttypes.h>
 
 #include "avcodec.h"
 #include "dsputil.h"
@@ -64,6 +68,10 @@ static int vp6_parse_header(vp56_context_t *s, uint8_t *buf, int buf_size,
         if (16*cols != s->avctx->coded_width ||
             16*rows != s->avctx->coded_height) {
             avcodec_set_dimensions(s->avctx, 16*cols, 16*rows);
+            if (s->avctx->extradata_size == 1) {
+                s->avctx->width  -= s->avctx->extradata[0] >> 4;
+                s->avctx->height -= s->avctx->extradata[0] & 0x0F;
+            }
             res = 2;
         }
 

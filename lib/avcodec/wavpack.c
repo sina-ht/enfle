@@ -388,6 +388,12 @@ static int wavpack_decode_frame(AVCodecContext *avctx,
     memset(s->decorr, 0, MAX_TERMS * sizeof(Decorr));
 
     s->samples = LE_32(buf); buf += 4;
+    if(!s->samples) return buf_size;
+    /* should not happen but who knows */
+    if(s->samples * 2 * avctx->channels > AVCODEC_MAX_AUDIO_FRAME_SIZE){
+        av_log(avctx, AV_LOG_ERROR, "Packet size is too big to be handled in lavc!\n");
+        return -1;
+    }
     s->joint = LE_32(buf) & WV_JOINT; buf += 4;
     s->CRC = LE_32(buf); buf += 4;
     // parse metadata blocks

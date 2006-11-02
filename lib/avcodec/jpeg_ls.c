@@ -77,9 +77,7 @@ static void ls_init_state(JLSState *state){
         state->limit = (4 * state->bpp) - state->qbpp;
 
     for(i = 0; i < 367; i++) {
-        state->A[i] = (state->range + 32) >> 6;
-        if(state->A[i] < 2)
-            state->A[i] = 2;
+        state->A[i] = FFMAX((state->range + 32) >> 6, 2);
         state->N[i] = 1;
     }
 
@@ -189,6 +187,34 @@ static int decode_lse(MJpegDecodeContext *s)
     return 0;
 }
 
+static void inline downscale_state(JLSState *state, int Q){
+    if(state->N[Q] == state->reset){
+        state->A[Q] >>=1;
+        state->B[Q] >>=1;
+        state->N[Q] >>=1;
+    }
+    state->N[Q]++;
+}
+
+static inline int update_state_regular(JLSState *state, int Q, int err){
+    state->A[Q] += FFABS(err);
+    err *= state->twonear;
+    state->B[Q] += err;
+
+    downscale_state(state, Q);
+
+    if(state->B[Q] <= -state->N[Q]) {
+        state->B[Q]= FFMAX(state->B[Q] + state->N[Q], 1-state->N[Q]);
+        if(state->C[Q] > -128)
+            state->C[Q]--;
+    }else if(state->B[Q] > 0){
+        state->B[Q]= FFMIN(state->B[Q] - state->N[Q], 0);
+        if(state->C[Q] < 127)
+            state->C[Q]++;
+    }
+
+    return err;
+}
 
 /**
  * Get context-dependent Golomb code, decode it and update context
@@ -213,30 +239,7 @@ static inline int ls_get_code_regular(GetBitContext *gb, JLSState *state, int Q)
     if(!state->near && !k && (2 * state->B[Q] <= -state->N[Q]))
         ret = -(ret + 1);
 
-    state->A[Q] += FFABS(ret);
-    ret *= state->twonear;
-    state->B[Q] += ret;
-
-    if(state->N[Q] == state->reset) {
-        state->A[Q] >>= 1;
-        state->B[Q] >>= 1;
-        state->N[Q] >>= 1;
-    }
-    state->N[Q]++;
-
-    if(state->B[Q] <= -state->N[Q]) {
-        state->B[Q] += state->N[Q];
-        if(state->C[Q] > -128)
-            state->C[Q]--;
-        if(state->B[Q] <= -state->N[Q])
-            state->B[Q] = -state->N[Q] + 1;
-    }else if(state->B[Q] > 0){
-        state->B[Q] -= state->N[Q];
-        if(state->C[Q] < 127)
-            state->C[Q]++;
-        if(state->B[Q] > 0)
-            state->B[Q] = 0;
-    }
+    ret= update_state_regular(state, Q, ret);
 
     return ret;
 }
@@ -248,10 +251,9 @@ static inline int ls_get_code_runterm(GetBitContext *gb, JLSState *state, int RI
     int k, ret, temp, map;
     int Q = 365 + RItype;
 
-    if(!RItype)
-        temp = state->A[Q];
-    else
-        temp = state->A[Q] + (state->N[Q] >> 1);
+    temp=  state->A[Q];
+    if(RItype)
+        temp += state->N[Q] >> 1;
 
     for(k = 0; (state->N[Q] << k) < temp; k++);
 
@@ -276,20 +278,17 @@ static inline int ls_get_code_runterm(GetBitContext *gb, JLSState *state, int RI
     /* update state */
     state->A[Q] += FFABS(ret) - RItype;
     ret *= state->twonear;
-    if(state->N[Q] == state->reset){
-        state->A[Q] >>=1;
-        state->B[Q] >>=1;
-        state->N[Q] >>=1;
-    }
-    state->N[Q]++;
+    downscale_state(state, Q);
 
     return ret;
 }
 
+#define R(a, i   ) (bits == 8 ?  ((uint8_t*)(a))[i]    :  ((uint16_t*)(a))[i]  )
+#define W(a, i, v) (bits == 8 ? (((uint8_t*)(a))[i]=v) : (((uint16_t*)(a))[i]=v))
 /**
  * Decode one line of image
  */
-static inline void ls_decode_line(JLSState *state, MJpegDecodeContext *s, uint8_t *last, uint8_t *dst, int last2, int w, int stride, int comp){
+static inline void ls_decode_line(JLSState *state, MJpegDecodeContext *s, void *last, void *dst, int last2, int w, int stride, int comp, int bits){
     int i, x = 0;
     int Ra, Rb, Rc, Rd;
     int D0, D1, D2;
@@ -298,10 +297,10 @@ static inline void ls_decode_line(JLSState *state, MJpegDecodeContext *s, uint8_
         int err, pred;
 
         /* compute gradients */
-        Ra = x ? dst[x - stride] : last[x];
-        Rb = last[x];
-        Rc = x ? last[x - stride] : last2;
-        Rd = (x >= w - stride) ? last[x] : last[x + stride];
+        Ra = x ? R(dst, x - stride) : R(last, x);
+        Rb = R(last, x);
+        Rc = x ? R(last, x - stride) : last2;
+        Rd = (x >= w - stride) ? R(last, x) : R(last, x + stride);
         D0 = Rd - Rb;
         D1 = Rb - Rc;
         D2 = Rc - Ra;
@@ -318,7 +317,7 @@ static inline void ls_decode_line(JLSState *state, MJpegDecodeContext *s, uint8_
                     r = (w - x) / stride;
                 }
                 for(i = 0; i < r; i++) {
-                    dst[x] = Ra;
+                    W(dst, x, Ra);
                     x += stride;
                 }
                 /* if EOL reached, we stop decoding */
@@ -334,12 +333,12 @@ static inline void ls_decode_line(JLSState *state, MJpegDecodeContext *s, uint8_
             if(r)
                 r = get_bits_long(&s->gb, r);
             for(i = 0; i < r; i++) {
-                dst[x] = Ra;
+                W(dst, x, Ra);
                 x += stride;
             }
 
             /* decode run termination value */
-            Rb = last[x];
+            Rb = R(last, x);
             RItype = (FFABS(Ra - Rb) <= state->near) ? 1 : 0;
             err = ls_get_code_runterm(&s->gb, state, RItype, log2_run[state->run_index[comp]]);
             if(state->run_index[comp])
@@ -353,17 +352,6 @@ static inline void ls_decode_line(JLSState *state, MJpegDecodeContext *s, uint8_
                 else
                     pred = Rb + err;
             }
-
-            if(state->near){
-                if(pred < -state->near)
-                    pred += state->range * state->twonear;
-                else if(pred > state->maxval + state->near)
-                    pred -= state->range * state->twonear;
-                pred = clip(pred, 0, state->maxval);
-            }
-
-            dst[x] = pred;
-            x += stride;
         } else { /* regular mode */
             int context, sign;
 
@@ -387,17 +375,17 @@ static inline void ls_decode_line(JLSState *state, MJpegDecodeContext *s, uint8_
 
             /* we have to do something more for near-lossless coding */
             pred += err;
-            if(state->near) {
-                if(pred < -state->near)
-                    pred += state->range * state->twonear;
-                else if(pred > state->maxval + state->near)
-                    pred -= state->range * state->twonear;
-                pred = clip(pred, 0, state->maxval);
-            }
-
-            dst[x] = pred;
-            x += stride;
         }
+        if(state->near){
+            if(pred < -state->near)
+                pred += state->range * state->twonear;
+            else if(pred > state->maxval + state->near)
+                pred -= state->range * state->twonear;
+            pred = clip(pred, 0, state->maxval);
+        }
+
+        W(dst, x, pred);
+        x += stride;
     }
 }
 
@@ -405,7 +393,7 @@ static int ls_decode_picture(MJpegDecodeContext *s, int near, int point_transfor
     int i, t = 0;
     uint8_t *zero, *last, *cur;
     JLSState *state;
-    int off, stride, width;
+    int off = 0, stride = 1, width, shift;
 
     zero = av_mallocz(s->picture.linesize[0]);
     last = zero;
@@ -423,6 +411,11 @@ static int ls_decode_picture(MJpegDecodeContext *s, int near, int point_transfor
     reset_ls_coding_parameters(state, 0);
     ls_init_state(state);
 
+    if(s->bits <= 8)
+        shift = point_transform + (8 - s->bits);
+    else
+        shift = point_transform + (16 - s->bits);
+
 //    av_log(s->avctx, AV_LOG_DEBUG, "JPEG-LS params: %ix%i NEAR=%i MV=%i T(%i,%i,%i) RESET=%i, LIMIT=%i, qbpp=%i, RANGE=%i\n",s->width,s->height,state->near,state->maxval,state->T1,state->T2,state->T3,state->reset,state->limit,state->qbpp, state->range);
 //    av_log(s->avctx, AV_LOG_DEBUG, "JPEG params: ILV=%i Pt=%i BPP=%i, scan = %i\n", ilv, point_transform, s->bits, s->cur_scan);
     if(ilv == 0) { /* separate planes */
@@ -431,8 +424,13 @@ static int ls_decode_picture(MJpegDecodeContext *s, int near, int point_transfor
         width = s->width * stride;
         cur += off;
         for(i = 0; i < s->height; i++) {
-            ls_decode_line(state, s, last, cur, t, width, stride, off);
-            t = last[0];
+            if(s->bits <= 8){
+                ls_decode_line(state, s, last, cur, t, width, stride, off,  8);
+                t = last[0];
+            }else{
+                ls_decode_line(state, s, last, cur, t, width, stride, off, 16);
+                t = *((uint16_t*)last);
+            }
             last = cur;
             cur += s->picture.linesize[0];
 
@@ -448,7 +446,7 @@ static int ls_decode_picture(MJpegDecodeContext *s, int near, int point_transfor
         width = s->width * 3;
         for(i = 0; i < s->height; i++) {
             for(j = 0; j < 3; j++) {
-                ls_decode_line(state, s, last + j, cur + j, Rc[j], width, 3, j);
+                ls_decode_line(state, s, last + j, cur + j, Rc[j], width, 3, j, 8);
                 Rc[j] = last[j];
 
                 if (s->restart_interval && !--s->restart_count) {
@@ -466,6 +464,31 @@ static int ls_decode_picture(MJpegDecodeContext *s, int near, int point_transfor
         return -1;
     }
 
+    if(shift){ /* we need to do point transform or normalize samples */
+        int x, w;
+
+        w = s->width * s->nb_components;
+
+        if(s->bits <= 8){
+            uint8_t *src = s->picture.data[0];
+
+            for(i = 0; i < s->height; i++){
+                for(x = off; x < w; x+= stride){
+                    src[x] <<= shift;
+                }
+                src += s->picture.linesize[0];
+            }
+        }else{
+            uint16_t *src = s->picture.data[0];
+
+            for(i = 0; i < s->height; i++){
+                for(x = 0; x < w; x++){
+                    src[x] <<= shift;
+                }
+                src += s->picture.linesize[0]/2;
+            }
+        }
+    }
     av_free(state);
     av_free(zero);
 
@@ -497,29 +520,7 @@ static inline void ls_encode_regular(JLSState *state, PutBitContext *pb, int Q, 
 
     set_ur_golomb_jpegls(pb, val, k, state->limit, state->qbpp);
 
-    state->A[Q] += FFABS(err);
-    state->B[Q] += err * state->twonear;
-
-    if(state->N[Q] == state->reset) {
-        state->A[Q] >>= 1;
-        state->B[Q] >>= 1;
-        state->N[Q] >>= 1;
-    }
-    state->N[Q]++;
-
-    if(state->B[Q] <= -state->N[Q]) {
-        state->B[Q] += state->N[Q];
-        if(state->C[Q] > -128)
-            state->C[Q]--;
-        if(state->B[Q] <= -state->N[Q])
-            state->B[Q] = -state->N[Q] + 1;
-    }else if(state->B[Q] > 0){
-        state->B[Q] -= state->N[Q];
-        if(state->C[Q] < 127)
-            state->C[Q]++;
-        if(state->B[Q] > 0)
-            state->B[Q] = 0;
-    }
+    update_state_regular(state, Q, err);
 }
 
 /**
@@ -549,12 +550,7 @@ static inline void ls_encode_runterm(JLSState *state, PutBitContext *pb, int RIt
         state->B[Q]++;
     state->A[Q] += (val + 1 - RItype) >> 1;
 
-    if(state->N[Q] == state->reset) {
-        state->A[Q] >>= 1;
-        state->B[Q] >>= 1;
-        state->N[Q] >>= 1;
-    }
-    state->N[Q]++;
+    downscale_state(state, Q);
 }
 
 /**
@@ -580,7 +576,7 @@ static inline void ls_encode_run(JLSState *state, PutBitContext *pb, int run, in
 /**
  * Encode one line of image
  */
-static inline void ls_encode_line(JLSState *state, PutBitContext *pb, uint8_t *last, uint8_t *cur, int last2, int w, int stride, int comp){
+static inline void ls_encode_line(JLSState *state, PutBitContext *pb, void *last, void *cur, int last2, int w, int stride, int comp, int bits){
     int x = 0;
     int Ra, Rb, Rc, Rd;
     int D0, D1, D2;
@@ -589,10 +585,10 @@ static inline void ls_encode_line(JLSState *state, PutBitContext *pb, uint8_t *l
         int err, pred, sign;
 
         /* compute gradients */
-        Ra = x ? cur[x - stride] : last[x];
-        Rb = last[x];
-        Rc = x ? last[x - stride] : last2;
-        Rd = (x >= w - stride) ? last[x] : last[x + stride];
+        Ra = x ? R(cur, x - stride) : R(last, x);
+        Rb = R(last, x);
+        Rc = x ? R(last, x - stride) : last2;
+        Rd = (x >= w - stride) ? R(last, x) : R(last, x + stride);
         D0 = Rd - Rb;
         D1 = Rb - Rc;
         D2 = Rc - Ra;
@@ -603,18 +599,18 @@ static inline void ls_encode_line(JLSState *state, PutBitContext *pb, uint8_t *l
 
             run = 0;
             RUNval = Ra;
-            while(x < w && (FFABS(cur[x] - RUNval) <= state->near)){
+            while(x < w && (FFABS(R(cur, x) - RUNval) <= state->near)){
                 run++;
-                cur[x] = Ra;
+                W(cur, x, Ra);
                 x += stride;
             }
             ls_encode_run(state, pb, run, comp, x < w);
             if(x >= w)
                 return;
-            Rb = last[x];
+            Rb = R(last, x);
             RItype = (FFABS(Ra - Rb) <= state->near);
             pred = RItype ? Ra : Rb;
-            err = cur[x] - pred;
+            err = R(cur, x) - pred;
 
             if(!RItype && Ra > Rb)
                 err = -err;
@@ -629,7 +625,7 @@ static inline void ls_encode_line(JLSState *state, PutBitContext *pb, uint8_t *l
                     Ra = clip(pred + err * state->twonear, 0, state->maxval);
                 else
                     Ra = clip(pred - err * state->twonear, 0, state->maxval);
-                cur[x] = Ra;
+                W(cur, x, Ra);
             }
             if(err < 0)
                 err += state->range;
@@ -640,7 +636,6 @@ static inline void ls_encode_line(JLSState *state, PutBitContext *pb, uint8_t *l
 
             if(state->run_index[comp] > 0)
                 state->run_index[comp]--;
-            x += stride;
         } else { /* regular mode */
             int context;
 
@@ -651,11 +646,11 @@ static inline void ls_encode_line(JLSState *state, PutBitContext *pb, uint8_t *l
                 context = -context;
                 sign = 1;
                 pred = clip(pred - state->C[context], 0, state->maxval);
-                err = pred - cur[x];
+                err = pred - R(cur, x);
             }else{
                 sign = 0;
                 pred = clip(pred + state->C[context], 0, state->maxval);
-                err = cur[x] - pred;
+                err = R(cur, x) - pred;
             }
 
             if(state->near){
@@ -667,12 +662,12 @@ static inline void ls_encode_line(JLSState *state, PutBitContext *pb, uint8_t *l
                     Ra = clip(pred + err * state->twonear, 0, state->maxval);
                 else
                     Ra = clip(pred - err * state->twonear, 0, state->maxval);
-                cur[x] = Ra;
+                W(cur, x, Ra);
             }
 
             ls_encode_regular(state, pb, context, err);
-            x += stride;
         }
+        x += stride;
     }
 }
 
@@ -680,7 +675,7 @@ static void ls_store_lse(JLSState *state, PutBitContext *pb){
     /* Test if we have default params and don't need to store LSE */
     JLSState state2;
     memset(&state2, 0, sizeof(JLSState));
-    state2.bpp = 8;
+    state2.bpp = state->bpp;
     state2.near = state->near;
     reset_ls_coding_parameters(&state2, 1);
     if(state->T1 == state2.T1 && state->T2 == state2.T2 && state->T3 == state2.T3 && state->reset == state2.reset)
@@ -717,13 +712,16 @@ static int encode_picture_ls(AVCodecContext *avctx, unsigned char *buf, int buf_
     p->pict_type= FF_I_TYPE;
     p->key_frame= 1;
 
-    comps = (avctx->pix_fmt == PIX_FMT_GRAY8) ? 1 : 3;
+    if(avctx->pix_fmt == PIX_FMT_GRAY8 || avctx->pix_fmt == PIX_FMT_GRAY16)
+        comps = 1;
+    else
+        comps = 3;
 
     /* write our own JPEG header, can't use mjpeg_picture_header */
     put_marker(&pb, SOI);
     put_marker(&pb, SOF48);
     put_bits(&pb, 16, 8 + comps * 3); // header size depends on components
-    put_bits(&pb,  8, 8);             // bpp
+    put_bits(&pb,  8, (avctx->pix_fmt == PIX_FMT_GRAY16) ? 16 : 8); // bpp
     put_bits(&pb, 16, avctx->height);
     put_bits(&pb, 16, avctx->width);
     put_bits(&pb,  8, comps);         // components
@@ -747,7 +745,7 @@ static int encode_picture_ls(AVCodecContext *avctx, unsigned char *buf, int buf_
     state = av_mallocz(sizeof(JLSState));
     /* initialize JPEG-LS state from JPEG parameters */
     state->near = near;
-    state->bpp = 8;
+    state->bpp = (avctx->pix_fmt == PIX_FMT_GRAY16) ? 16 : 8;
     reset_ls_coding_parameters(state, 0);
     ls_init_state(state);
 
@@ -760,8 +758,17 @@ static int encode_picture_ls(AVCodecContext *avctx, unsigned char *buf, int buf_
         int t = 0;
 
         for(i = 0; i < avctx->height; i++) {
-            ls_encode_line(state, &pb2, last, cur, t, avctx->width, 1, 0);
+            ls_encode_line(state, &pb2, last, cur, t, avctx->width, 1, 0,  8);
             t = last[0];
+            last = cur;
+            cur += p->linesize[0];
+        }
+    }else if(avctx->pix_fmt == PIX_FMT_GRAY16){
+        int t = 0;
+
+        for(i = 0; i < avctx->height; i++) {
+            ls_encode_line(state, &pb2, last, cur, t, avctx->width, 1, 0, 16);
+            t = *((uint16_t*)last);
             last = cur;
             cur += p->linesize[0];
         }
@@ -772,7 +779,7 @@ static int encode_picture_ls(AVCodecContext *avctx, unsigned char *buf, int buf_
         width = avctx->width * 3;
         for(i = 0; i < avctx->height; i++) {
             for(j = 0; j < 3; j++) {
-                ls_encode_line(state, &pb2, last + j, cur + j, Rc[j], width, 3, j);
+                ls_encode_line(state, &pb2, last + j, cur + j, Rc[j], width, 3, j, 8);
                 Rc[j] = last[j];
             }
             last = cur;
@@ -785,7 +792,7 @@ static int encode_picture_ls(AVCodecContext *avctx, unsigned char *buf, int buf_
         width = avctx->width * 3;
         for(i = 0; i < avctx->height; i++) {
             for(j = 2; j >= 0; j--) {
-                ls_encode_line(state, &pb2, last + j, cur + j, Rc[j], width, 3, j);
+                ls_encode_line(state, &pb2, last + j, cur + j, Rc[j], width, 3, j, 8);
                 Rc[j] = last[j];
             }
             last = cur;
@@ -827,7 +834,7 @@ static int encode_init_ls(AVCodecContext *ctx) {
     c->avctx = ctx;
     ctx->coded_frame = &c->picture;
 
-    if(ctx->pix_fmt != PIX_FMT_GRAY8 && ctx->pix_fmt != PIX_FMT_RGB24 && ctx->pix_fmt != PIX_FMT_BGR24){
+    if(ctx->pix_fmt != PIX_FMT_GRAY8 && ctx->pix_fmt != PIX_FMT_GRAY16 && ctx->pix_fmt != PIX_FMT_RGB24 && ctx->pix_fmt != PIX_FMT_BGR24){
         av_log(ctx, AV_LOG_ERROR, "Only grayscale and RGB24/BGR24 images are supported\n");
         return -1;
     }
@@ -842,6 +849,6 @@ AVCodec jpegls_encoder = { //FIXME avoid MPV_* lossless jpeg shouldnt need them
     encode_init_ls,
     encode_picture_ls,
     NULL,
-    .pix_fmts= (enum PixelFormat[]){PIX_FMT_BGR24, PIX_FMT_RGB24, PIX_FMT_GRAY8, -1},
+    .pix_fmts= (enum PixelFormat[]){PIX_FMT_BGR24, PIX_FMT_RGB24, PIX_FMT_GRAY8, PIX_FMT_GRAY16, -1},
 };
 #endif

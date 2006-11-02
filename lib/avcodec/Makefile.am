@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Oct 14 12:15:34 2006.
-# $Id: Makefile.am,v 1.44 2006/10/14 05:27:49 sian Exp $
+# Last Modified: Thu Nov  2 21:21:52 2006.
+# $Id: Makefile.am,v 1.45 2006/11/02 12:22:12 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -109,6 +109,7 @@ noinst_HEADERS = \
 	ac3tab.h \
 	avcodec.h \
 	bitstream.h \
+	bytestream.h \
 	cabac.h \
 	config.h \
 	cookdata.h \
@@ -120,10 +121,12 @@ noinst_HEADERS = \
 	h261data.h \
 	h263data.h \
 	h264data.h \
+	imcdata.h \
 	imgconvert_template.h \
 	indeo2data.h \
 	indeo3data.h \
 	lzo.h \
+	lzw.h \
 	mathops.h \
 	mpeg12data.h \
 	mpeg4data.h \
@@ -197,7 +200,7 @@ libavcodec_la_SOURCES = \
 	dv.c \
 	dvbsub.c \
 	dvbsubdec.c \
-	dvdsub.c \
+	dvdsubdec.c \
 	dvdsubenc.c \
 	error_resilience.c \
 	eval.c \
@@ -210,6 +213,7 @@ libavcodec_la_SOURCES = \
 	flicvideo.c \
 	fraps.c \
 	g726.c \
+	gifdec.c \
 	golomb.c \
 	h261.c \
 	h263.c \
@@ -218,6 +222,7 @@ libavcodec_la_SOURCES = \
 	h264idct.c \
 	huffyuv.c \
 	idcinvideo.c \
+	imc.c \
 	imgconvert.c \
 	imgresample.c \
 	indeo2.c \
@@ -230,6 +235,7 @@ libavcodec_la_SOURCES = \
 	lcl.c \
 	loco.c \
 	lzo.c \
+	lzw.c \
 	mace.c \
 	mdct.c \
 	mjpeg.c \

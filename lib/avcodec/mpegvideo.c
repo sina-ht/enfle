@@ -1322,7 +1322,7 @@ int MPV_encode_init(AVCodecContext *avctx)
     if(s->modified_quant)
         s->chroma_qscale_table= ff_h263_chroma_qscale_table;
     s->progressive_frame=
-    s->progressive_sequence= !(avctx->flags & (CODEC_FLAG_INTERLACED_DCT|CODEC_FLAG_INTERLACED_ME));
+    s->progressive_sequence= !(avctx->flags & (CODEC_FLAG_INTERLACED_DCT|CODEC_FLAG_INTERLACED_ME|CODEC_FLAG_ALT_SCAN));
     s->quant_precision=5;
 
     ff_set_cmp(&s->dsp, s->dsp.ildct_cmp, s->avctx->ildct_cmp);
@@ -1705,8 +1705,8 @@ static void draw_line(uint8_t *buf, int sx, int sy, int ex, int ey, int w, int h
 
     if(FFABS(ex - sx) > FFABS(ey - sy)){
         if(sx > ex){
-            SWAP(int, sx, ex);
-            SWAP(int, sy, ey);
+            FFSWAP(int, sx, ex);
+            FFSWAP(int, sy, ey);
         }
         buf+= sx + sy*stride;
         ex-= sx;
@@ -1719,8 +1719,8 @@ static void draw_line(uint8_t *buf, int sx, int sy, int ex, int ey, int w, int h
         }
     }else{
         if(sy > ey){
-            SWAP(int, sx, ex);
-            SWAP(int, sy, ey);
+            FFSWAP(int, sx, ex);
+            FFSWAP(int, sy, ey);
         }
         buf+= sx + sy*stride;
         ey-= sy;
@@ -2333,7 +2333,7 @@ static void select_input_picture(MpegEncContext *s){
             if(s->avctx->frame_skip_threshold || s->avctx->frame_skip_factor){
                 if(s->picture_in_gop_number < s->gop_size && skip_check(s, s->input_picture[0], s->next_picture_ptr)){
                 //FIXME check that te gop check above is +-1 correct
-//av_log(NULL, AV_LOG_DEBUG, "skip %p %Ld\n", s->input_picture[0]->data[0], s->input_picture[0]->pts);
+//av_log(NULL, AV_LOG_DEBUG, "skip %p %"PRId64"\n", s->input_picture[0]->data[0], s->input_picture[0]->pts);
 
                     if(s->input_picture[0]->type == FF_BUFFER_TYPE_SHARED){
                         for(i=0; i<4; i++)
@@ -2535,12 +2535,16 @@ vbv_retry:
             RateControlContext *rcc= &s->rc_context;
             int max_size= rcc->buffer_index/3;
 
-            if(put_bits_count(&s->pb) > max_size && s->qscale < s->avctx->qmax){
-                s->next_lambda= s->lambda*(s->qscale+1) / s->qscale;
+            if(put_bits_count(&s->pb) > max_size && s->lambda < s->avctx->lmax){
+                s->next_lambda= FFMAX(s->lambda+1, s->lambda*(s->qscale+1) / s->qscale);
                 s->mb_skipped = 0;        //done in MPV_frame_start()
                 if(s->pict_type==P_TYPE){ //done in encode_picture() so we must undo it
                     if(s->flipflop_rounding || s->codec_id == CODEC_ID_H263P || s->codec_id == CODEC_ID_MPEG4)
                         s->no_rounding ^= 1;
+                }
+                if(s->pict_type!=B_TYPE){
+                    s->time_base= s->last_time_base;
+                    s->last_non_b_time= s->time - s->pp_time;
                 }
 //                av_log(NULL, AV_LOG_ERROR, "R:%d ", s->next_lambda);
                 for(i=0; i<avctx->thread_count; i++){
@@ -5579,7 +5583,7 @@ static int encode_picture(MpegEncContext *s, int picture_number)
     /* Estimate motion for every MB */
     if(s->pict_type != I_TYPE){
         s->lambda = (s->lambda * s->avctx->me_penalty_compensation + 128)>>8;
-        s->lambda2= (s->lambda2* s->avctx->me_penalty_compensation + 128)>>8;
+        s->lambda2= (s->lambda2* (int64_t)s->avctx->me_penalty_compensation + 128)>>8;
         if(s->pict_type != B_TYPE && s->avctx->me_threshold==0){
             if((s->avctx->pre_me && s->last_non_b_pict_type==I_TYPE) || s->avctx->pre_me==2){
                 s->avctx->execute(s->avctx, pre_estimate_motion_thread, (void**)&(s->thread_context[0]), NULL, s->avctx->thread_count);
