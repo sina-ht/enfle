@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Nov  2 22:54:35 2006.
-# $Id: Makefile.am,v 1.46 2006/11/02 13:55:41 sian Exp $
+# Last Modified: Sun Nov 12 01:50:56 2006.
+# $Id: Makefile.am,v 1.47 2006/11/18 03:23:44 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -136,6 +136,7 @@ noinst_HEADERS = \
 	mpegvideo.h \
 	msmpeg4data.h \
 	opt.h \
+	parser.h \
 	qdm2data.h \
 	ra144.h \
 	ra288.h \
@@ -210,6 +211,7 @@ libavcodec_la_SOURCES = \
 	flicvideo.c \
 	fraps.c \
 	g726.c \
+	gif.c \
 	gifdec.c \
 	golomb.c \
 	h261.c \

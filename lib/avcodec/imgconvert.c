@@ -185,7 +185,7 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
     },
     [PIX_FMT_RGB555] = {
         .name = "rgb555",
-        .nb_channels = 4, .is_alpha = 1,
+        .nb_channels = 3,
         .color_type = FF_COLOR_RGB,
         .pixel_type = FF_PIXEL_PACKED,
         .depth = 5,
@@ -269,7 +269,7 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
     },
     [PIX_FMT_BGR555] = {
         .name = "bgr555",
-        .nb_channels = 4, .is_alpha = 1,
+        .nb_channels = 3,
         .color_type = FF_COLOR_RGB,
         .pixel_type = FF_PIXEL_PACKED,
         .depth = 5,
@@ -1241,7 +1241,7 @@ static uint8_t c_jpeg_to_ccir[256];
 static void img_convert_init(void)
 {
     int i;
-    uint8_t *cm = cropTbl + MAX_NEG_CROP;
+    uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
 
     for(i = 0;i < 256; i++) {
         y_ccir_to_jpeg[i] = Y_CCIR_TO_JPEG(i);
@@ -1629,19 +1629,10 @@ static inline unsigned int bitcopy_n(unsigned int a, int n)
     b = bitcopy_n(v << 3, 3);\
 }
 
-#define RGBA_IN(r, g, b, a, s)\
-{\
-    unsigned int v = ((const uint16_t *)(s))[0];\
-    r = bitcopy_n(v >> (10 - 3), 3);\
-    g = bitcopy_n(v >> (5 - 3), 3);\
-    b = bitcopy_n(v << 3, 3);\
-    a = (-(v >> 15)) & 0xff;\
-}
 
-#define RGBA_OUT(d, r, g, b, a)\
+#define RGB_OUT(d, r, g, b)\
 {\
-    ((uint16_t *)(d))[0] = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3) | \
-                           ((a << 8) & 0x8000);\
+    ((uint16_t *)(d))[0] = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);\
 }
 
 #define BPP 2
@@ -2060,6 +2051,12 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_RGB24] = {
             .convert = rgba32_to_rgb24
         },
+        [PIX_FMT_BGR24] = {
+            .convert = rgba32_to_bgr24
+        },
+        [PIX_FMT_RGB565] = {
+            .convert = rgba32_to_rgb565
+        },
         [PIX_FMT_RGB555] = {
             .convert = rgba32_to_rgb555
         },
@@ -2074,6 +2071,9 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         },
     },
     [PIX_FMT_BGR24] = {
+        [PIX_FMT_RGBA32] = {
+            .convert = bgr24_to_rgba32
+        },
         [PIX_FMT_RGB24] = {
             .convert = bgr24_to_rgb24
         },
@@ -2099,6 +2099,9 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         },
     },
     [PIX_FMT_RGB565] = {
+        [PIX_FMT_RGBA32] = {
+            .convert = rgb565_to_rgba32
+        },
         [PIX_FMT_RGB24] = {
             .convert = rgb565_to_rgb24
         },
@@ -2584,9 +2587,6 @@ int img_get_alpha_info(const AVPicture *src,
     case PIX_FMT_RGBA32:
         ret = get_alpha_info_rgba32(src, width, height);
         break;
-    case PIX_FMT_RGB555:
-        ret = get_alpha_info_rgb555(src, width, height);
-        break;
     case PIX_FMT_PAL8:
         ret = get_alpha_info_pal8(src, width, height);
         break;
@@ -2653,7 +2653,7 @@ static void deinterlace_line(uint8_t *dst,
                              int size)
 {
 #ifndef HAVE_MMX
-    uint8_t *cm = cropTbl + MAX_NEG_CROP;
+    uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
     int sum;
 
     for(;size > 0;size--) {
@@ -2696,7 +2696,7 @@ static void deinterlace_line_inplace(uint8_t *lum_m4, uint8_t *lum_m3, uint8_t *
                              int size)
 {
 #ifndef HAVE_MMX
-    uint8_t *cm = cropTbl + MAX_NEG_CROP;
+    uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
     int sum;
 
     for(;size > 0;size--) {

@@ -37,8 +37,8 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(23<<8)+0)
-#define LIBAVCODEC_VERSION      51.23.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(25<<8)+0)
+#define LIBAVCODEC_VERSION      51.25.0
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
@@ -206,7 +206,9 @@ enum CodecID {
     CODEC_ID_MP2= 0x15000,
     CODEC_ID_MP3, /* prefered ID for MPEG Audio layer 1, 2 or3 decoding */
     CODEC_ID_AAC,
+#if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
     CODEC_ID_MPEG4AAC,
+#endif
     CODEC_ID_AC3,
     CODEC_ID_DTS,
     CODEC_ID_VORBIS,
@@ -370,6 +372,7 @@ typedef struct RcOverride{
 #define CODEC_FLAG2_BRDO          0x00000400 ///< b-frame rate-distortion optimization
 #define CODEC_FLAG2_INTRA_VLC     0x00000800 ///< use MPEG-2 intra VLC table
 #define CODEC_FLAG2_MEMC_ONLY     0x00001000 ///< only do ME/MC (I frames -> ref, P frame -> ME+MC)
+#define CODEC_FLAG2_DROP_FRAME_TIMECODE 0x00002000 ///< timecode is in drop frame format
 
 /* Unsupported options :
  *              Syntax Arithmetic coding (SAC)
@@ -2057,6 +2060,13 @@ typedef struct AVCodecContext {
      * - decoding: unused.
      */
     int max_partition_order;
+
+    /**
+     * GOP timecode frame start number, in non drop frame format
+     * - encoding: set by user.
+     * - decoding: unused.
+     */
+    int64_t timecode_frame_start;
 } AVCodecContext;
 
 /**
@@ -2138,6 +2148,7 @@ extern AVCodec mp3lame_encoder;
 extern AVCodec oggvorbis_encoder;
 extern AVCodec faac_encoder;
 extern AVCodec flac_encoder;
+extern AVCodec gif_encoder;
 extern AVCodec xvid_encoder;
 extern AVCodec mpeg1video_encoder;
 extern AVCodec mpeg2video_encoder;
@@ -2651,6 +2662,8 @@ void av_bitstream_filter_close(AVBitStreamFilterContext *bsf);
 extern AVBitStreamFilter dump_extradata_bsf;
 extern AVBitStreamFilter remove_extradata_bsf;
 extern AVBitStreamFilter noise_bsf;
+extern AVBitStreamFilter mp3_header_compress_bsf;
+extern AVBitStreamFilter mp3_header_decompress_bsf;
 
 
 /* memory */

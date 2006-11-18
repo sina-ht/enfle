@@ -113,7 +113,7 @@ max run: 29/41
 #endif
 
 #if 0 //3IV1 is quite rare and it slows things down a tiny bit
-#define IS_3IV1 s->avctx->codec_tag == ff_get_fourcc("3IV1")
+#define IS_3IV1 s->codec_tag == ff_get_fourcc("3IV1")
 #else
 #define IS_3IV1 0
 #endif
@@ -3188,20 +3188,29 @@ void ff_mpeg4_encode_video_packet_header(MpegEncContext *s)
  * @return 0 if not
  */
 static inline int mpeg4_is_resync(MpegEncContext *s){
-    const int bits_count= get_bits_count(&s->gb);
+    int bits_count= get_bits_count(&s->gb);
+    int v= show_bits(&s->gb, 16);
 
     if(s->workaround_bugs&FF_BUG_NO_PADDING){
         return 0;
     }
 
+    while(v<=0xFF){
+        if(s->pict_type==B_TYPE || (v>>(8-s->pict_type)!=1) || s->partitioned_frame)
+            break;
+        skip_bits(&s->gb, 8+s->pict_type);
+        bits_count+= 8+s->pict_type;
+        v= show_bits(&s->gb, 16);
+    }
+
     if(bits_count + 8 >= s->gb.size_in_bits){
-        int v= show_bits(&s->gb, 8);
+        v>>=8;
         v|= 0x7F >> (7-(bits_count&7));
 
         if(v==0x7F)
             return 1;
     }else{
-        if(show_bits(&s->gb, 16) == ff_mpeg4_resync_prefix[bits_count&7]){
+        if(v == ff_mpeg4_resync_prefix[bits_count&7]){
             int len;
             GetBitContext gb= s->gb;
 
@@ -4520,12 +4529,6 @@ end:
 
         /* per-MB end of slice check */
     if(s->codec_id==CODEC_ID_MPEG4){
-#if 0 //http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_IEC_14496-4_2004_Conformance_Testing/video_conformance/version_1/simple/ERROR.ZIP/mit025.m4v needs this but its unclear if the mpeg4 standard allows this at all (MN)
-        if(s->pict_type != B_TYPE){
-            while(show_bits(&s->gb, 9 + (s->pict_type == P_TYPE)) == 1)
-                skip_bits(&s->gb, 9 + (s->pict_type == P_TYPE));
-        }
-#endif
         if(mpeg4_is_resync(s)){
             const int delta= s->mb_x + 1 == s->mb_width ? 2 : 1;
             if(s->pict_type==B_TYPE && s->next_picture.mbskip_table[xy + delta])
@@ -5294,7 +5297,7 @@ int h263_decode_picture_header(MpegEncContext *s)
          );
      }
 #if 1
-    if (s->pict_type == I_TYPE && s->avctx->codec_tag == ff_get_fourcc("ZYGO")){
+    if (s->pict_type == I_TYPE && s->codec_tag == ff_get_fourcc("ZYGO")){
         int i,j;
         for(i=0; i<85; i++) av_log(s->avctx, AV_LOG_DEBUG, "%d", get_bits1(&s->gb));
         av_log(s->avctx, AV_LOG_DEBUG, "\n");
@@ -5619,7 +5622,7 @@ static int decode_vol_header(MpegEncContext *s, GetBitContext *gb){
             skip_bits1(gb);   /* marker */
             height = get_bits(gb, 13);
             skip_bits1(gb);   /* marker */
-            if(width && height && !(s->width && s->avctx->codec_tag == ff_get_fourcc("MP4S"))){ /* they should be non zero but who knows ... */
+            if(width && height && !(s->width && s->codec_tag == ff_get_fourcc("MP4S"))){ /* they should be non zero but who knows ... */
                 s->width = width;
                 s->height = height;
 //                printf("width/height: %d %d\n", width, height);
@@ -6063,7 +6066,7 @@ int ff_mpeg4_decode_picture_header(MpegEncContext * s, GetBitContext *gb)
     /* search next start code */
     align_get_bits(gb);
 
-    if(s->avctx->codec_tag == ff_get_fourcc("WV1F") && show_bits(gb, 24) == 0x575630){
+    if(s->codec_tag == ff_get_fourcc("WV1F") && show_bits(gb, 24) == 0x575630){
         skip_bits(gb, 24);
         if(get_bits(gb, 8) == 0xF0)
             return decode_vop_header(s, gb);

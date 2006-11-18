@@ -441,7 +441,7 @@ static const AVOption options[]={
 {"truncated", NULL, 0, FF_OPT_TYPE_CONST, CODEC_FLAG_TRUNCATED, INT_MIN, INT_MAX, 0, "flags"},
 {"naq", "normalize adaptive quantization", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_NORMALIZE_AQP, INT_MIN, INT_MAX, V|E, "flags"},
 {"ildct", "use interlaced dct", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_INTERLACED_DCT, INT_MIN, INT_MAX, V|E, "flags"},
-{"low_delay", "force low delay", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_LOW_DELAY, INT_MIN, INT_MAX, V|D, "flags"},
+{"low_delay", "force low delay", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_LOW_DELAY, INT_MIN, INT_MAX, V|D|E, "flags"},
 {"alt", "enable alternate scantable (mpeg2/mpeg4)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_ALT_SCAN, INT_MIN, INT_MAX, V|E, "flags"},
 {"trell", "use trellis quantization", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_TRELLIS_QUANT, INT_MIN, INT_MAX, V|E, "flags"},
 {"global_header", "place global headers in extradata instead of every keyframe", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_GLOBAL_HEADER, INT_MIN, INT_MAX, 0, "flags"},
@@ -681,8 +681,8 @@ static const AVOption options[]={
 {"skip_exp", "frame skip exponent", OFFSET(frame_skip_exp), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
 {"skipcmp", "frame skip compare function", OFFSET(frame_skip_cmp), FF_OPT_TYPE_INT, FF_CMP_DCTMAX, INT_MIN, INT_MAX, V|E, "cmp_func"},
 {"border_mask", NULL, OFFSET(border_masking), FF_OPT_TYPE_FLOAT, DEFAULT, -FLT_MAX, FLT_MAX, V|E},
-{"mblmin", "min macroblock quantizer scale (VBR)", OFFSET(mb_lmin), FF_OPT_TYPE_INT, FF_QP2LAMBDA * 2, 1, FF_LAMBDA_MAX, V|E},
-{"mblmax", "max macroblock quantizer scale (VBR)", OFFSET(mb_lmax), FF_OPT_TYPE_INT, FF_QP2LAMBDA * 31, 1, FF_LAMBDA_MAX, V|E},
+{"mblmin", "min macroblock lagrange factor (VBR)", OFFSET(mb_lmin), FF_OPT_TYPE_INT, FF_QP2LAMBDA * 2, 1, FF_LAMBDA_MAX, V|E},
+{"mblmax", "max macroblock lagrange factor (VBR)", OFFSET(mb_lmax), FF_OPT_TYPE_INT, FF_QP2LAMBDA * 31, 1, FF_LAMBDA_MAX, V|E},
 {"mepc", "motion estimation bitrate penalty compensation (1.0 = 256)", OFFSET(me_penalty_compensation), FF_OPT_TYPE_INT, 256, INT_MIN, INT_MAX, V|E},
 {"bidir_refine", NULL, OFFSET(bidir_refine), FF_OPT_TYPE_INT, DEFAULT, 0, 4, V|E},
 {"brd_scale", NULL, OFFSET(brd_scale), FF_OPT_TYPE_INT, DEFAULT, 0, 10, V|E},
@@ -722,6 +722,8 @@ static const AVOption options[]={
 {"prediction_order_method", NULL, OFFSET(prediction_order_method), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
 {"min_partition_order", NULL, OFFSET(min_partition_order), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
 {"max_partition_order", NULL, OFFSET(max_partition_order), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
+{"timecode_frame_start", NULL, OFFSET(timecode_frame_start), FF_OPT_TYPE_INT, 0, 0, INT_MAX, V|E},
+{"drop_frame_timecode", NULL, 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_DROP_FRAME_TIMECODE, INT_MIN, INT_MAX, V|E, "flags2"},
 {NULL},
 };
 

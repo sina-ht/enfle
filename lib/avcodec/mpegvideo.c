@@ -698,12 +698,12 @@ int MPV_common_init(MpegEncContext *s)
     yc_size = y_size + 2 * c_size;
 
     /* convert fourcc to upper case */
-    s->avctx->codec_tag=   toupper( s->avctx->codec_tag     &0xFF)
+    s->codec_tag=          toupper( s->avctx->codec_tag     &0xFF)
                         + (toupper((s->avctx->codec_tag>>8 )&0xFF)<<8 )
                         + (toupper((s->avctx->codec_tag>>16)&0xFF)<<16)
                         + (toupper((s->avctx->codec_tag>>24)&0xFF)<<24);
 
-    s->avctx->stream_codec_tag=   toupper( s->avctx->stream_codec_tag     &0xFF)
+    s->stream_codec_tag=          toupper( s->avctx->stream_codec_tag     &0xFF)
                                + (toupper((s->avctx->stream_codec_tag>>8 )&0xFF)<<8 )
                                + (toupper((s->avctx->stream_codec_tag>>16)&0xFF)<<16)
                                + (toupper((s->avctx->stream_codec_tag>>24)&0xFF)<<24);
@@ -1104,6 +1104,17 @@ int MPV_encode_init(AVCodecContext *avctx)
         return -1;
     }
 
+    if(s->flags & CODEC_FLAG_LOW_DELAY){
+        if (s->codec_id != CODEC_ID_MPEG2VIDEO && s->codec_id != CODEC_ID_MPEG1VIDEO){
+            av_log(avctx, AV_LOG_ERROR, "low delay forcing is only available for mpeg1/2\n");
+            return -1;
+        }
+        if (s->max_b_frames != 0){
+            av_log(avctx, AV_LOG_ERROR, "b frames cannot be used with low delay\n");
+            return -1;
+        }
+    }
+
     if(s->avctx->thread_count > 1 && s->codec_id != CODEC_ID_MPEG4
        && s->codec_id != CODEC_ID_MPEG1VIDEO && s->codec_id != CODEC_ID_MPEG2VIDEO
        && (s->codec_id != CODEC_ID_H263P || !(s->flags & CODEC_FLAG_H263P_SLICE_STRUCT))){
@@ -1169,12 +1180,12 @@ int MPV_encode_init(AVCodecContext *avctx)
     switch(avctx->codec->id) {
     case CODEC_ID_MPEG1VIDEO:
         s->out_format = FMT_MPEG1;
-        s->low_delay= 0; //s->max_b_frames ? 0 : 1;
+        s->low_delay= !!(s->flags & CODEC_FLAG_LOW_DELAY);
         avctx->delay= s->low_delay ? 0 : (s->max_b_frames + 1);
         break;
     case CODEC_ID_MPEG2VIDEO:
         s->out_format = FMT_MPEG1;
-        s->low_delay= 0; //s->max_b_frames ? 0 : 1;
+        s->low_delay= !!(s->flags & CODEC_FLAG_LOW_DELAY);
         avctx->delay= s->low_delay ? 0 : (s->max_b_frames + 1);
         s->rtp_mode= 1;
         break;
@@ -1197,6 +1208,10 @@ int MPV_encode_init(AVCodecContext *avctx)
         s->low_delay=1;
         break;
     case CODEC_ID_H261:
+        if (ff_h261_get_picture_format(s->width, s->height) < 0) {
+            av_log(avctx, AV_LOG_ERROR, "The specified picture size of %dx%d is not valid for the H.261 codec.\nValid sizes are 176x144, 352x288\n", s->width, s->height);
+            return -1;
+        }
         s->out_format = FMT_H261;
         avctx->delay=0;
         s->low_delay=1;
@@ -4751,7 +4766,7 @@ static inline void encode_mb_hq(MpegEncContext *s, MpegEncContext *backup, MpegE
 }
 
 static int sse(MpegEncContext *s, uint8_t *src1, uint8_t *src2, int w, int h, int stride){
-    uint32_t *sq = squareTbl + 256;
+    uint32_t *sq = ff_squareTbl + 256;
     int acc=0;
     int x,y;
 

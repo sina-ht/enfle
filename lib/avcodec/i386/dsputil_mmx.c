@@ -58,6 +58,8 @@ static const uint64_t ff_pb_1  attribute_used __attribute__ ((aligned(8))) = 0x0
 static const uint64_t ff_pb_3  attribute_used __attribute__ ((aligned(8))) = 0x0303030303030303ULL;
 static const uint64_t ff_pb_7  attribute_used __attribute__ ((aligned(8))) = 0x0707070707070707ULL;
 static const uint64_t ff_pb_3F attribute_used __attribute__ ((aligned(8))) = 0x3F3F3F3F3F3F3F3FULL;
+static const uint64_t ff_pb_A1 attribute_used __attribute__ ((aligned(8))) = 0xA1A1A1A1A1A1A1A1ULL;
+static const uint64_t ff_pb_5F attribute_used __attribute__ ((aligned(8))) = 0x5F5F5F5F5F5F5F5FULL;
 static const uint64_t ff_pb_FC attribute_used __attribute__ ((aligned(8))) = 0xFCFCFCFCFCFCFCFCULL;
 
 #define JUMPALIGN() __asm __volatile (ASMALIGN(3)::)
@@ -2665,7 +2667,7 @@ static void add_8x8basis_mmx(int16_t rem[64], int16_t basis[64], int scale){
 #endif /* CONFIG_ENCODERS */
 
 #define PREFETCH(name, op) \
-void name(void *mem, int stride, int h){\
+static void name(void *mem, int stride, int h){\
     const uint8_t *p= mem;\
     do{\
         asm volatile(#op" %0" :: "m"(*p));\
@@ -3005,7 +3007,7 @@ static void vector_fmul_add_add_sse(float *dst, const float *src0, const float *
         ff_vector_fmul_add_add_c(dst, src0, src1, src2, src3, len, step);
 }
 
-void float_to_int16_3dnow(int16_t *dst, const float *src, int len){
+static void float_to_int16_3dnow(int16_t *dst, const float *src, int len){
     // not bit-exact: pf2id uses different rounding than C and SSE
     int i;
     for(i=0; i<len; i+=4) {
@@ -3020,7 +3022,7 @@ void float_to_int16_3dnow(int16_t *dst, const float *src, int len){
     }
     asm volatile("femms");
 }
-void float_to_int16_sse(int16_t *dst, const float *src, int len){
+static void float_to_int16_sse(int16_t *dst, const float *src, int len){
     int i;
     for(i=0; i<len; i+=4) {
         asm volatile(

@@ -1,6 +1,5 @@
 /*
- * RTJpeg decoding functions
- * copyright (c) 2006 Reimar Doeffinger
+ * copyright (c) 2006 Michael Niedermayer <michaelni@gmx.at>
  *
  * This file is part of FFmpeg.
  *
@@ -19,21 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef RTJPEG_H
-#define RTJPEG_H
+#ifndef TREE_H
+#define TREE_H
 
-typedef struct {
-    int w, h;
-    DSPContext *dsp;
-    uint8_t scan[64];
-    uint32_t lquant[64];
-    uint32_t cquant[64];
-} RTJpegContext;
+struct AVTreeNode;
+void *av_tree_find(const struct AVTreeNode *t, void *key, int (*cmp)(void *key, const void *b), void *next[2]);
+void *av_tree_insert(struct AVTreeNode **tp, void *key, int (*cmp)(void *key, const void *b));
+void av_tree_destroy(struct AVTreeNode *t);
 
-void rtjpeg_decode_init(RTJpegContext *c, DSPContext *dsp,
-                        int width, int height,
-                        uint32_t *lquant, uint32_t *cquant);
-
-int rtjpeg_decode_frame_yuv420(RTJpegContext *c, AVFrame *f,
-                               uint8_t *buf, int buf_size);
-#endif
+#endif /* TREE_H */

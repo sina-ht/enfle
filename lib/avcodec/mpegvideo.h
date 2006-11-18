@@ -31,6 +31,7 @@
 #include "dsputil.h"
 #include "bitstream.h"
 #include "ratecontrol.h"
+#include "parser.h"
 
 #define FRAME_SKIPPED 100 ///< return value for header parsers if frame is not coded
 
@@ -142,17 +143,6 @@ typedef struct Picture{
     int b_frame_score;          /* */
 } Picture;
 
-typedef struct ParseContext{
-    uint8_t *buffer;
-    int index;
-    int last_index;
-    unsigned int buffer_size;
-    uint32_t state;             ///< contains the last few bytes in MSB order
-    int frame_start_found;
-    int overread;               ///< the number of bytes which where irreversibly read from the next frame
-    int overread_index;         ///< the index into ParseContext.buffer of the overreaded bytes
-} ParseContext;
-
 struct MpegEncContext;
 
 /**
@@ -235,6 +225,8 @@ typedef struct MpegEncContext {
     int chroma_elim_threshold;
     int strict_std_compliance; ///< strictly follow the std (MPEG4, ...)
     int workaround_bugs;       ///< workaround bugs in encoders which cannot be detected automatically
+    int codec_tag;             ///< internal codec_tag upper case converted from avctx codec_tag
+    int stream_codec_tag;      ///< internal stream_codec_tag upper case converted from avctx stream_codec_tag
     /* the following fields are managed internally by the encoder */
 
     /** bit output */
@@ -717,9 +709,6 @@ void ff_init_scantable(uint8_t *, ScanTable *st, const uint8_t *src_scantable);
 void ff_draw_horiz_band(MpegEncContext *s, int y, int h);
 void ff_emulated_edge_mc(uint8_t *buf, uint8_t *src, int linesize, int block_w, int block_h,
                                     int src_x, int src_y, int w, int h);
-#define END_NOT_FOUND -100
-int ff_combine_frame(ParseContext *pc, int next, uint8_t **buf, int *buf_size);
-void ff_parse_close(AVCodecParserContext *s);
 void ff_mpeg_flush(AVCodecContext *avctx);
 void ff_print_debug_info(MpegEncContext *s, AVFrame *pict);
 void ff_write_quant_matrix(PutBitContext *pb, uint16_t *matrix);
@@ -789,7 +778,6 @@ void mpeg1_encode_mb(MpegEncContext *s,
 void ff_mpeg1_encode_init(MpegEncContext *s);
 void ff_mpeg1_encode_slice_header(MpegEncContext *s);
 void ff_mpeg1_clean_buffers(MpegEncContext *s);
-int ff_mpeg1_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size);
 
 
 /** RLTable. */
@@ -836,6 +824,7 @@ void ff_h261_encode_mb(MpegEncContext *s,
                     int motion_x, int motion_y);
 void ff_h261_encode_picture_header(MpegEncContext * s, int picture_number);
 void ff_h261_encode_init(MpegEncContext *s);
+int ff_h261_get_picture_format(int width, int height);
 
 
 /* h263.c, h263dec.c */
@@ -896,7 +885,6 @@ void ff_mpeg4_init_direct_mv(MpegEncContext *s);
 int ff_mpeg4_set_direct_mv(MpegEncContext *s, int mx, int my);
 int ff_h263_round_chroma(int x);
 void ff_h263_encode_motion(MpegEncContext * s, int val, int f_code);
-int ff_mpeg4_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size);
 
 
 /* rv10.c */
@@ -935,9 +923,6 @@ void mjpeg_encode_mb(MpegEncContext *s,
 void mjpeg_picture_header(MpegEncContext *s);
 void mjpeg_picture_trailer(MpegEncContext *s);
 void ff_mjpeg_stuffing(PutBitContext * pbc);
-
-/* cavs.c */
-int ff_cavs_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size);
 
 #endif /* AVCODEC_MPEGVIDEO_H */
 
