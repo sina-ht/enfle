@@ -246,9 +246,15 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
             while (compressed_lines > 0) {
                 line_packets = LE_16(&buf[stream_ptr]);
                 stream_ptr += 2;
-                if (line_packets < 0) {
+                if ((line_packets & 0xC000) == 0xC000) {
+                    // line skip opcode
                     line_packets = -line_packets;
                     y_ptr += line_packets * s->frame.linesize[0];
+                } else if ((line_packets & 0xC000) == 0x4000) {
+                    av_log(avctx, AV_LOG_ERROR, "Undefined opcode (%x) in DELTA_FLI\n", line_packets);
+                } else if ((line_packets & 0xC000) == 0x8000) {
+                    // "last byte" opcode
+                    pixels[y_ptr + s->frame.linesize[0] - 1] = line_packets & 0xff;
                 } else {
                     compressed_lines--;
                     pixel_ptr = y_ptr;
@@ -308,7 +314,7 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
                                 palette_idx1 = buf[stream_ptr++];
                                 pixels[pixel_ptr++] = palette_idx1;
                             }
-                        } else {
+                        } else if (byte_run < 0) {
                             byte_run = -byte_run;
                             palette_idx1 = buf[stream_ptr++];
                             CHECK_PIXEL_PTR(byte_run);
@@ -536,7 +542,7 @@ static int flic_decode_frame_15_16BPP(AVCodecContext *avctx,
         case FLI_BLACK:
             /* set the whole frame to 0x0000 which is balck in both 15Bpp and 16Bpp modes. */
             memset(pixels, 0x0000,
-                   s->frame.linesize[0] * s->avctx->height * 2);
+                   s->frame.linesize[0] * s->avctx->height);
             break;
 
         case FLI_BRUN:

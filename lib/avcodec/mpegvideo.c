@@ -1207,6 +1207,7 @@ int MPV_encode_init(AVCodecContext *avctx)
         avctx->delay=0;
         s->low_delay=1;
         break;
+#ifdef CONFIG_H261_ENCODER
     case CODEC_ID_H261:
         if (ff_h261_get_picture_format(s->width, s->height) < 0) {
             av_log(avctx, AV_LOG_ERROR, "The specified picture size of %dx%d is not valid for the H.261 codec.\nValid sizes are 176x144, 352x288\n", s->width, s->height);
@@ -1216,6 +1217,7 @@ int MPV_encode_init(AVCodecContext *avctx)
         avctx->delay=0;
         s->low_delay=1;
         break;
+#endif
     case CODEC_ID_H263:
         if (h263_get_picture_format(s->width, s->height) == 7) {
             av_log(avctx, AV_LOG_INFO, "The specified picture size of %dx%d is not valid for the H.263 codec.\nValid sizes are 128x96, 176x144, 352x288, 704x576, and 1408x1152. Try H.263+.\n", s->width, s->height);
@@ -2552,6 +2554,11 @@ vbv_retry:
 
             if(put_bits_count(&s->pb) > max_size && s->lambda < s->avctx->lmax){
                 s->next_lambda= FFMAX(s->lambda+1, s->lambda*(s->qscale+1) / s->qscale);
+                if(s->adaptive_quant){
+                    int i;
+                    for(i=0; i<s->mb_height*s->mb_stride; i++)
+                        s->lambda_table[i]= FFMAX(s->lambda_table[i]+1, s->lambda_table[i]*(s->qscale+1) / s->qscale);
+                }
                 s->mb_skipped = 0;        //done in MPV_frame_start()
                 if(s->pict_type==P_TYPE){ //done in encode_picture() so we must undo it
                     if(s->flipflop_rounding || s->codec_id == CODEC_ID_H263P || s->codec_id == CODEC_ID_MPEG4)
@@ -3927,7 +3934,7 @@ static always_inline void MPV_decode_mb_internal(MpegEncContext *s, DCTELEM bloc
     else if (s->h263_pred || s->h263_aic)
         s->mbintra_table[mb_xy]=1;
 
-    if ((s->flags&CODEC_FLAG_PSNR) || !(s->encoding && (s->intra_only || s->pict_type==B_TYPE))) { //FIXME precalc
+    if ((s->flags&CODEC_FLAG_PSNR) || !(s->encoding && (s->intra_only || s->pict_type==B_TYPE) && s->avctx->mb_decision != FF_MB_DECISION_RD)) { //FIXME precalc
         uint8_t *dest_y, *dest_cb, *dest_cr;
         int dct_linesize, dct_offset;
         op_pixels_func (*op_pix)[4];
@@ -5226,9 +5233,10 @@ static int encode_thread(AVCodecContext *c, void *arg){
                 if(s->flags & CODEC_FLAG_QP_RD){
                     if(best_s.mv_type==MV_TYPE_16X16 && !(best_s.mv_dir&MV_DIRECT)){
                         const int last_qp= backup_s.qscale;
-                        int dquant, dir, qp, dc[6];
+                        int qpi, qp, dc[6];
                         DCTELEM ac[6][16];
                         const int mvdir= (best_s.mv_dir&MV_DIR_BACKWARD) ? 1 : 0;
+                        static const int dquant_tab[4]={-1,1,-2,2};
 
                         assert(backup_s.dquant == 0);
 
@@ -5241,12 +5249,12 @@ static int encode_thread(AVCodecContext *c, void *arg){
                         s->mv[1][0][0] = best_s.mv[1][0][0];
                         s->mv[1][0][1] = best_s.mv[1][0][1];
 
-                        dir= s->pict_type == B_TYPE ? 2 : 1;
-                        if(last_qp + dir > s->avctx->qmax) dir= -dir;
-                        for(dquant= dir; dquant<=2 && dquant>=-2; dquant += dir){
+                        qpi = s->pict_type == B_TYPE ? 2 : 0;
+                        for(; qpi<4; qpi++){
+                            int dquant= dquant_tab[qpi];
                             qp= last_qp + dquant;
                             if(qp < s->avctx->qmin || qp > s->avctx->qmax)
-                                break;
+                                continue;
                             backup_s.dquant= dquant;
                             if(s->mb_intra && s->dc_val[0]){
                                 for(i=0; i<6; i++){
@@ -5264,11 +5272,6 @@ static int encode_thread(AVCodecContext *c, void *arg){
                                         memcpy(s->ac_val[0][s->block_index[i]], ac[i], sizeof(DCTELEM)*16);
                                     }
                                 }
-                                if(dir > 0 && dquant==dir){
-                                    dquant= 0;
-                                    dir= -dir;
-                                }else
-                                    break;
                             }
                         }
                         qp= best_s.qscale;

@@ -905,7 +905,7 @@ static void svq1_write_header(SVQ1Context *s, int frame_type)
         /* no embedded string either */
 
         /* output 5 unknown bits (2 + 2 + 1) */
-        put_bits(&s->pb, 5, 0);
+        put_bits(&s->pb, 5, 2); /* 2 needed by quicktime decoder */
 
         for (i = 0; i < 7; i++)
         {
@@ -1355,7 +1355,7 @@ static int svq1_encode_frame(AVCodecContext *avctx, unsigned char *buf,
     init_put_bits(&s->pb, buf, buf_size);
 
     *p = *pict;
-    p->pict_type = avctx->frame_number % avctx->gop_size ? P_TYPE : I_TYPE;
+    p->pict_type = avctx->gop_size && avctx->frame_number % avctx->gop_size ? P_TYPE : I_TYPE;
     p->key_frame = p->pict_type == I_TYPE;
 
     svq1_write_header(s, p->pict_type);
