@@ -1,10 +1,10 @@
 /*
  * x11ximage.c -- X11 XImage related functions
- * (C)Copyright 2000, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Wed Apr 19 00:36:48 2006.
- * $Id: x11ximage.c,v 1.55 2006/04/24 14:05:47 sian Exp $
+ * Last Modified: Fri Nov 24 23:16:11 2006.
+ * $Id: x11ximage.c,v 1.56 2006/11/24 14:18:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -169,14 +169,12 @@ is_hw_scalable(X11XImage *xi, Image *p, int *t_return)
   case _UYVY:
     t = XV_UYVY;
     break;
-#if 0
   case _RGB24:
     t = XV_RV24;
     break;
   case _RGBA32:
     t = XV_RV32;
     break;
-#endif
   default:
     t = XV_OTHER;
     break;
@@ -208,7 +206,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
   Memory *src_img, *dst_img;
   unsigned int w, h;
   unsigned int red_mask, green_mask, blue_mask;
-  unsigned int red_shift, green_shift, blue_shift;
+  unsigned int red_shift, green_shift, blue_shift, green_left_shift;
 
   src_img = image_image_by_index(p, src);
   w = image_width_by_index(p, src);
@@ -611,27 +609,27 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	  ximage->byte_order = MSBFirst;
 	  if (p->type == _BGR555) {
 	    red_mask = 0x1f; red_shift = 0;
-	    green_mask = 0x1f << 5; green_shift = 5;
+	    green_mask = 0x1f << 5; green_shift = 5; green_left_shift = 3;
 	    blue_mask = 0x1f << 10; blue_shift = 10;
 	  } else if (p->type == _RGB555) {
 	    red_mask = 0x1f << 10; red_shift = 10;
-	    green_mask = 0x1f << 5; green_shift = 5;
+	    green_mask = 0x1f << 5; green_shift = 5; green_left_shift = 2;
 	    blue_mask = 0x1f; blue_shift = 0;
 	  } else if (p->type == _BGR565) {
 	    red_mask = 0x1f; red_shift = 0;
-	    green_mask = 0x3f << 5; green_shift = 5;
+	    green_mask = 0x3f << 5; green_shift = 5; green_left_shift = 3;
 	    blue_mask = 0x1f << 11; blue_shift = 11;
 	  } else {
 	    red_mask = 0x1f << 11; red_shift = 11;
-	    green_mask = 0x3f << 5; green_shift = 5;
+	    green_mask = 0x3f << 5; green_shift = 5; green_left_shift = 2;
 	    blue_mask = 0x1f; blue_shift = 0;
 	  }
 	  for (j = 0; j < h; j++) {
 	    d = dest + j * ximage->bytes_per_line;
 	    for (i = 0; i < w * 2; i += 2) {
-	      unsigned short pp = (s[i] << 8) | s[i + 1];
+	      unsigned short pp = (s[i + 1] << 8) | s[i];
 	      *d++ = ((pp & red_mask) >> red_shift) << 3;
-	      *d++ = ((pp & green_mask) >> green_shift) << 3;
+	      *d++ = ((pp & green_mask) >> green_shift) << green_left_shift;
 	      *d++ = ((pp & blue_mask) >> blue_shift) << 3;
 	    }
 	    s += bytes_per_line_s;
@@ -737,19 +735,19 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	  ximage->byte_order = MSBFirst;
 	  if (p->type == _BGR555) {
 	    red_mask = 0x1f; red_shift = 0;
-	    green_mask = 0x1f << 5; green_shift = 5;
+	    green_mask = 0x1f << 5; green_shift = 5; green_left_shift = 3;
 	    blue_mask = 0x1f << 10; blue_shift = 10;
 	  } else if (p->type == _RGB555) {
 	    red_mask = 0x1f << 10; red_shift = 10;
-	    green_mask = 0x1f << 5; green_shift = 5;
+	    green_mask = 0x1f << 5; green_shift = 5; green_left_shift = 2;
 	    blue_mask = 0x1f; blue_shift = 0;
 	  } else if (p->type == _BGR565) {
 	    red_mask = 0x1f; red_shift = 0;
-	    green_mask = 0x3f << 5; green_shift = 5;
+	    green_mask = 0x3f << 5; green_shift = 5; green_left_shift = 3;
 	    blue_mask = 0x1f << 11; blue_shift = 11;
 	  } else {
 	    red_mask = 0x1f << 11; red_shift = 11;
-	    green_mask = 0x3f << 5; green_shift = 5;
+	    green_mask = 0x3f << 5; green_shift = 5; green_left_shift = 2;
 	    blue_mask = 0x1f; blue_shift = 0;
 	  }
 	  for (j = 0; j < h; j++) {
@@ -758,7 +756,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	      unsigned int pp = (s[i + 1] << 8) | s[i];
 	      d++;
 	      *d++ = ((pp & red_mask) >> red_shift) << 3;
-	      *d++ = ((pp & green_mask) >> green_shift) << 3;
+	      *d++ = ((pp & green_mask) >> green_shift) << green_left_shift;
 	      *d++ = ((pp & blue_mask) >> blue_shift) << 3;
 	    }
 	    s += bytes_per_line_s;
