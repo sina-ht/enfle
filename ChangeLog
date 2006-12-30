@@ -1,3 +1,80 @@
+2006-12-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Adapted for avcodec change.  Version up.
+
+	* lib/avcodec/Makefile.am, lib/avcodec/allcodecs.c,
+	lib/avcodec/amr.c, lib/avcodec/avcodec.h, lib/avcodec/bitstream.h,
+	lib/avcodec/bytestream.h, lib/avcodec/cabac.h,
+	lib/avcodec/cinepak.c, lib/avcodec/cook.c, lib/avcodec/cscd.c,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h, lib/avcodec/dv.c,
+	lib/avcodec/faandct.c, lib/avcodec/ffv1.c,
+	lib/avcodec/flicvideo.c, lib/avcodec/h263.c, lib/avcodec/h264.c,
+	lib/avcodec/h264data.h, lib/avcodec/h264dsp.c,
+	lib/avcodec/h264enc.c, lib/avcodec/h264idct.c,
+	lib/avcodec/i386/cputest.c, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/jfdctfst.c, lib/avcodec/jfdctint.c,
+	lib/avcodec/jpeg_ls.c, lib/avcodec/mathops.h, lib/avcodec/mjpeg.c,
+	lib/avcodec/motion_est.c, lib/avcodec/motion_est_template.c,
+	lib/avcodec/mpc.c, lib/avcodec/mpcdata.h, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/parser.c,
+	lib/avcodec/ppc/h264_altivec.c, lib/avcodec/pthread.c,
+	lib/avcodec/sh4/qpel.c, lib/avcodec/smacker.c, lib/avcodec/snow.c,
+	lib/avcodec/snow.h, lib/avcodec/utils.c, lib/avcodec/vc1.c,
+	lib/avcodec/vc1dsp.c, lib/avcodec/vmnc.c, lib/avcodec/vp3dsp.c,
+	lib/avcodec/vp56.h, lib/avcodec/vp6.c, lib/avcodec/vp6data.h,
+	lib/avcodec/vqavideo.c, lib/avcodec/wavpack.c,
+	lib/avcodec/wmadec.c, lib/avutil/Makefile.am, lib/avutil/bswap.h,
+	lib/avutil/common.h, lib/avutil/internal.h,
+	lib/avutil/intreadwrite.h, lib/avutil/rational.c,
+	lib/avutil/tree.h: Updated.
+
+2006-11-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11ximage.c: Fixed depth16-rendering bug.
+
+	* lib/avcodec/ac3enc.c, lib/avcodec/alac.c, lib/avcodec/amr.c,
+	lib/avcodec/flac.c, lib/avcodec/flicvideo.c, lib/avcodec/mjpeg.c,
+	lib/avcodec/mpegvideo.c, lib/avcodec/ppc/dsputil_ppc.c,
+	lib/avcodec/ppc/types_altivec.h, lib/avcodec/shorten.c,
+	lib/avcodec/svq1.c, lib/avcodec/vmdav.c, lib/avutil/common.h:
+	Updated.
+
+2006-11-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/8bps.c, lib/avcodec/Makefile.am,
+	lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream_filter.c, lib/avcodec/bytestream.h,
+	lib/avcodec/cavs.c, lib/avcodec/cavsdata.h, lib/avcodec/cavsdsp.c,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h,
+	lib/avcodec/dvbsubdec.c, lib/avcodec/error_resilience.c,
+	lib/avcodec/eval.h, lib/avcodec/faac.c, lib/avcodec/faad.c,
+	lib/avcodec/flicvideo.c, lib/avcodec/fraps.c, lib/avcodec/gif.c,
+	lib/avcodec/gifdec.c, lib/avcodec/h261.c, lib/avcodec/h261data.h,
+	lib/avcodec/h263.c, lib/avcodec/h263data.h, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/h264idct.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/i386/h264dsp_mmx.c, lib/avcodec/i386/mpegvideo_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx_template.c, lib/avcodec/imc.c,
+	lib/avcodec/imgconvert.c, lib/avcodec/imgconvert_template.h,
+	lib/avcodec/jpeg_ls.c, lib/avcodec/mlib/dsputil_mlib.c,
+	lib/avcodec/motion_est.c, lib/avcodec/mp3lameaudio.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpeg12data.h,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegaudiodectab.h,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/msmpeg4.c, lib/avcodec/parser.c, lib/avcodec/parser.h,
+	lib/avcodec/pnm.c, lib/avcodec/ppc/fft_altivec.c,
+	lib/avcodec/raw.c, lib/avcodec/rtjpeg.c, lib/avcodec/rtjpeg.h,
+	lib/avcodec/sh4/dsputil_sh4.c, lib/avcodec/sh4/qpel.c,
+	lib/avcodec/simple_idct.c, lib/avcodec/snow.c, lib/avcodec/svq3.c,
+	lib/avcodec/targa.c, lib/avcodec/tiff.c, lib/avcodec/utils.c,
+	lib/avcodec/vc1.c, lib/avcodec/vc1data.h, lib/avcodec/vc1dsp.c,
+	lib/avcodec/vmdav.c, lib/avcodec/vorbis.c, lib/avcodec/vp3dsp.c,
+	lib/avcodec/vp6data.h, lib/avcodec/x264.c, lib/avcodec/xl.c,
+	lib/avutil/Makefile.am, lib/avutil/avutil.h, lib/avutil/common.h,
+	lib/avutil/integer.c, lib/avutil/internal.h, lib/avutil/log.h,
+	lib/avutil/mem.c, lib/avutil/tree.c, lib/avutil/tree.h: Updated.
+
 2006-11-02  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Updated.  Version up.
