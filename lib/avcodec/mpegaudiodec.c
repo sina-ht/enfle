@@ -327,7 +327,7 @@ static int decode_init(AVCodecContext * avctx)
         for(i=0;i<15;i++) {
             int n, norm;
             n = i + 2;
-            norm = ((int64_t_C(1) << n) * FRAC_ONE) / ((1 << n) - 1);
+            norm = ((INT64_C(1) << n) * FRAC_ONE) / ((1 << n) - 1);
             scale_factor_mult[i][0] = MULL(FIXR(1.0 * 2.0), norm);
             scale_factor_mult[i][1] = MULL(FIXR(0.7937005259 * 2.0), norm);
             scale_factor_mult[i][2] = MULL(FIXR(0.6299605249 * 2.0), norm);
@@ -1749,7 +1749,7 @@ static int huffman_decode(MPADecodeContext *s, GranuleDef *g,
     /* skip extension bits */
     bits_left = end_pos - get_bits_count(&s->gb);
 //av_log(NULL, AV_LOG_ERROR, "left:%d buf:%p\n", bits_left, s->in_gb.buffer);
-    if (bits_left < 0 || bits_left > 16) {
+    if (bits_left < 0 || bits_left > 500) {
         av_log(NULL, AV_LOG_ERROR, "bits_left=%d\n", bits_left);
         s_index=0;
     }else if(bits_left > 0 && s->error_resilience >= FF_ER_AGGRESSIVE){

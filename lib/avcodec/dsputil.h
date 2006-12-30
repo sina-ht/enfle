@@ -378,10 +378,12 @@ typedef struct DSPContext {
 #define BASIS_SHIFT 16
 #define RECON_SHIFT 6
 
+    /* h264 functions */
     void (*h264_idct_add)(uint8_t *dst, DCTELEM *block, int stride);
     void (*h264_idct8_add)(uint8_t *dst, DCTELEM *block, int stride);
     void (*h264_idct_dc_add)(uint8_t *dst, DCTELEM *block, int stride);
     void (*h264_idct8_dc_add)(uint8_t *dst, DCTELEM *block, int stride);
+    void (*h264_dct)(DCTELEM block[4][4]);
 
     /* snow wavelet */
     void (*vertical_compose97i)(DWTELEM *b0, DWTELEM *b1, DWTELEM *b2, DWTELEM *b3, DWTELEM *b4, DWTELEM *b5, int width);
@@ -397,8 +399,8 @@ typedef struct DSPContext {
     void (*vc1_inv_trans_8x4)(DCTELEM *b, int n);
     void (*vc1_inv_trans_4x8)(DCTELEM *b, int n);
     void (*vc1_inv_trans_4x4)(DCTELEM *b, int n);
-    void (*vc1_v_overlap)(uint8_t* src, int stride, int rnd);
-    void (*vc1_h_overlap)(uint8_t* src, int stride, int rnd);
+    void (*vc1_v_overlap)(uint8_t* src, int stride);
+    void (*vc1_h_overlap)(uint8_t* src, int stride);
     /* put 8x8 block with bicubic interpolation and quarterpel precision
      * last argument is actually round value instead of height
      */
@@ -407,6 +409,8 @@ typedef struct DSPContext {
 
 void dsputil_static_init(void);
 void dsputil_init(DSPContext* p, AVCodecContext *avctx);
+
+int ff_check_alignment(void);
 
 /**
  * permute block according to permuatation.
@@ -480,6 +484,7 @@ int mm_support(void);
 #define MM_SSE2   0x0010 /* PIV SSE2 functions */
 #define MM_3DNOWEXT  0x0020 /* AMD 3DNowExt */
 #define MM_SSE3   0x0040 /* Prescott SSE3 functions */
+#define MM_SSSE3  0x0080 /* Conroe SSSE3 functions */
 
 extern int mm_flags;
 
@@ -590,30 +595,6 @@ void dsputil_init_bfin(DSPContext* c, AVCodecContext *avctx);
 
 #endif
 
-#ifdef __GNUC__
-
-struct unaligned_64 { uint64_t l; } __attribute__((packed));
-struct unaligned_32 { uint32_t l; } __attribute__((packed));
-struct unaligned_16 { uint16_t l; } __attribute__((packed));
-
-#define LD16(a) (((const struct unaligned_16 *) (a))->l)
-#define LD32(a) (((const struct unaligned_32 *) (a))->l)
-#define LD64(a) (((const struct unaligned_64 *) (a))->l)
-
-#define ST16(a, b) (((struct unaligned_16 *) (a))->l) = (b)
-#define ST32(a, b) (((struct unaligned_32 *) (a))->l) = (b)
-
-#else /* __GNUC__ */
-
-#define LD16(a) (*((uint16_t*)(a)))
-#define LD32(a) (*((uint32_t*)(a)))
-#define LD64(a) (*((uint64_t*)(a)))
-
-#define ST16(a, b) *((uint16_t*)(a)) = (b)
-#define ST32(a, b) *((uint32_t*)(a)) = (b)
-
-#endif /* !__GNUC__ */
-
 /* PSNR */
 void get_psnr(uint8_t *orig_image[3], uint8_t *coded_image[3],
               int orig_linesize[3], int coded_linesize,
@@ -696,6 +677,83 @@ static int name16(void /*MpegEncContext*/ *s, uint8_t *dst, uint8_t *src, int st
         score +=name8(s, dst+8         , src+8         , stride, 8);\
     }\
     return score;\
+}
+
+
+static inline void copy_block2(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
+{
+    int i;
+    for(i=0; i<h; i++)
+    {
+        ST16(dst   , LD16(src   ));
+        dst+=dstStride;
+        src+=srcStride;
+    }
+}
+
+static inline void copy_block4(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
+{
+    int i;
+    for(i=0; i<h; i++)
+    {
+        ST32(dst   , LD32(src   ));
+        dst+=dstStride;
+        src+=srcStride;
+    }
+}
+
+static inline void copy_block8(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
+{
+    int i;
+    for(i=0; i<h; i++)
+    {
+        ST32(dst   , LD32(src   ));
+        ST32(dst+4 , LD32(src+4 ));
+        dst+=dstStride;
+        src+=srcStride;
+    }
+}
+
+static inline void copy_block9(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
+{
+    int i;
+    for(i=0; i<h; i++)
+    {
+        ST32(dst   , LD32(src   ));
+        ST32(dst+4 , LD32(src+4 ));
+        dst[8]= src[8];
+        dst+=dstStride;
+        src+=srcStride;
+    }
+}
+
+static inline void copy_block16(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
+{
+    int i;
+    for(i=0; i<h; i++)
+    {
+        ST32(dst   , LD32(src   ));
+        ST32(dst+4 , LD32(src+4 ));
+        ST32(dst+8 , LD32(src+8 ));
+        ST32(dst+12, LD32(src+12));
+        dst+=dstStride;
+        src+=srcStride;
+    }
+}
+
+static inline void copy_block17(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
+{
+    int i;
+    for(i=0; i<h; i++)
+    {
+        ST32(dst   , LD32(src   ));
+        ST32(dst+4 , LD32(src+4 ));
+        ST32(dst+8 , LD32(src+8 ));
+        ST32(dst+12, LD32(src+12));
+        dst[16]= src[16];
+        dst+=dstStride;
+        src+=srcStride;
+    }
 }
 
 #endif

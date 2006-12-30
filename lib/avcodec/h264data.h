@@ -53,6 +53,24 @@
 
 #define EXTENDED_SAR          255
 
+/* NAL unit types */
+enum {
+NAL_SLICE=1,
+NAL_DPA,
+NAL_DPB,
+NAL_DPC,
+NAL_IDR_SLICE,
+NAL_SEI,
+NAL_SPS,
+NAL_PPS,
+NAL_AUD,
+NAL_END_SEQUENCE,
+NAL_END_STREAM,
+NAL_FILLER_DATA,
+NAL_SPS_EXT,
+NAL_AUXILIARY_SLICE=19
+};
+
 static const AVRational pixel_aspect[14]={
  {0, 1},
  {1, 1},
@@ -486,15 +504,6 @@ static const PMbInfo b_sub_mb_type_info[13]={
 {MB_TYPE_8x8  |MB_TYPE_P0L0             |MB_TYPE_P1L0             , 4, },
 {MB_TYPE_8x8               |MB_TYPE_P0L1             |MB_TYPE_P1L1, 4, },
 {MB_TYPE_8x8  |MB_TYPE_P0L0|MB_TYPE_P0L1|MB_TYPE_P1L0|MB_TYPE_P1L1, 4, },
-};
-
-
-static const uint8_t rem6[52]={
-0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3,
-};
-
-static const uint8_t div6[52]={
-0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8,
 };
 
 static const uint8_t default_scaling4[2][16]={

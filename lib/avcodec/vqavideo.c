@@ -23,8 +23,8 @@
 /**
  * @file vqavideo.c
  * VQA Video Decoder by Mike Melanson (melanson@pcisys.net)
- * For more information about the RPZA format, visit:
- *   http://www.pcisys.net/~melanson/codecs/
+ * For more information about the VQA format, visit:
+ *   http://wiki.multimedia.cx/index.php?title=VQA
  *
  * The VQA video decoder outputs PAL8 or RGB555 colorspace data, depending
  * on the type of data in the file.
@@ -471,7 +471,22 @@ static void vqa_decode_chunk(VqaContext *s)
             case 1:
 /* still need sample media for this case (only one game, "Legend of
  * Kyrandia III : Malcolm's Revenge", is known to use this version) */
-                lines = 0;
+                lobyte = s->decode_buffer[lobytes * 2];
+                hibyte = s->decode_buffer[(lobytes * 2) + 1];
+                vector_index = ((hibyte << 8) | lobyte) >> 3;
+                vector_index <<= index_shift;
+                lines = s->vector_height;
+                /* uniform color fill - a quick hack */
+                if (hibyte == 0xFF) {
+                    while (lines--) {
+                        s->frame.data[0][pixel_ptr + 0] = 255 - lobyte;
+                        s->frame.data[0][pixel_ptr + 1] = 255 - lobyte;
+                        s->frame.data[0][pixel_ptr + 2] = 255 - lobyte;
+                        s->frame.data[0][pixel_ptr + 3] = 255 - lobyte;
+                        pixel_ptr += s->frame.linesize[0];
+                    }
+                    lines=0;
+                }
                 break;
 
             case 2:

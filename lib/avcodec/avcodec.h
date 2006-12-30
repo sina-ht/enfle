@@ -37,13 +37,13 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(25<<8)+0)
-#define LIBAVCODEC_VERSION      51.25.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(28<<8)+0)
+#define LIBAVCODEC_VERSION      51.28.0
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
 
-#define AV_NOPTS_VALUE          int64_t_C(0x8000000000000000)
+#define AV_NOPTS_VALUE          INT64_C(0x8000000000000000)
 #define AV_TIME_BASE            1000000
 #define AV_TIME_BASE_Q          (AVRational){1, AV_TIME_BASE}
 
@@ -149,6 +149,7 @@ enum CodecID {
     CODEC_ID_TIERTEXSEQVIDEO,
     CODEC_ID_TIFF,
     CODEC_ID_GIF,
+    CODEC_ID_FFH264,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -236,6 +237,7 @@ enum CodecID {
     CODEC_ID_WAVPACK,
     CODEC_ID_DSICINAUDIO,
     CODEC_ID_IMC,
+    CODEC_ID_MUSEPACK7,
 
     /* subtitle codecs */
     CODEC_ID_DVD_SUBTITLE= 0x17000,
@@ -365,7 +367,7 @@ typedef struct RcOverride{
 #define CODEC_FLAG2_LOCAL_HEADER  0x00000008 ///< place global headers at every keyframe instead of in extradata
 #define CODEC_FLAG2_BPYRAMID      0x00000010 ///< H.264 allow b-frames to be used as references
 #define CODEC_FLAG2_WPRED         0x00000020 ///< H.264 weighted biprediction for b-frames
-#define CODEC_FLAG2_MIXED_REFS    0x00000040 ///< H.264 multiple references per partition
+#define CODEC_FLAG2_MIXED_REFS    0x00000040 ///< H.264 one reference per partition, as opposed to one reference per macroblock
 #define CODEC_FLAG2_8X8DCT        0x00000080 ///< H.264 high profile 8x8 transform
 #define CODEC_FLAG2_FASTPSKIP     0x00000100 ///< H.264 fast pskip
 #define CODEC_FLAG2_AUD           0x00000200 ///< H.264 access unit delimiters
@@ -373,6 +375,7 @@ typedef struct RcOverride{
 #define CODEC_FLAG2_INTRA_VLC     0x00000800 ///< use MPEG-2 intra VLC table
 #define CODEC_FLAG2_MEMC_ONLY     0x00001000 ///< only do ME/MC (I frames -> ref, P frame -> ME+MC)
 #define CODEC_FLAG2_DROP_FRAME_TIMECODE 0x00002000 ///< timecode is in drop frame format
+#define CODEC_FLAG2_SKIP_RD       0x00004000 ///< RD optimal MB level residual skiping
 
 /* Unsupported options :
  *              Syntax Arithmetic coding (SAC)
@@ -2083,9 +2086,6 @@ typedef struct AVCodec {
     int (*decode)(AVCodecContext *, void *outdata, int *outdata_size,
                   uint8_t *buf, int buf_size);
     int capabilities;
-#if LIBAVCODEC_VERSION_INT < ((50<<16)+(0<<8)+0)
-    void *dummy; // FIXME remove next time we break binary compatibility
-#endif
     struct AVCodec *next;
     void (*flush)(AVCodecContext *);
     const AVRational *supported_framerates; ///array of supported framerates, or NULL if any, array is terminated by {0,0}
@@ -2303,6 +2303,7 @@ extern AVCodec libgsm_decoder;
 extern AVCodec bmp_decoder;
 extern AVCodec mmvideo_decoder;
 extern AVCodec zmbv_decoder;
+extern AVCodec zmbv_encoder;
 extern AVCodec avs_decoder;
 extern AVCodec smacker_decoder;
 extern AVCodec smackaud_decoder;
@@ -2317,6 +2318,7 @@ extern AVCodec dsicinaudio_decoder;
 extern AVCodec tiertexseqvideo_decoder;
 extern AVCodec tiff_decoder;
 extern AVCodec imc_decoder;
+extern AVCodec mpc7_decoder;
 
 /* pcm codecs */
 #define PCM_CODEC(id, name) \
@@ -2664,6 +2666,7 @@ extern AVBitStreamFilter remove_extradata_bsf;
 extern AVBitStreamFilter noise_bsf;
 extern AVBitStreamFilter mp3_header_compress_bsf;
 extern AVBitStreamFilter mp3_header_decompress_bsf;
+extern AVBitStreamFilter mjpega_dump_header_bsf;
 
 
 /* memory */
@@ -2682,20 +2685,6 @@ int img_crop(AVPicture *dst, const AVPicture *src,
 
 int img_pad(AVPicture *dst, const AVPicture *src, int height, int width, int pix_fmt,
             int padtop, int padbottom, int padleft, int padright, int *color);
-
-/* endian macros */
-#if !defined(BE_16) || !defined(BE_32) || !defined(LE_16) || !defined(LE_32)
-#define BE_16(x)  ((((uint8_t*)(x))[0] << 8) | ((uint8_t*)(x))[1])
-#define BE_32(x)  ((((uint8_t*)(x))[0] << 24) | \
-                   (((uint8_t*)(x))[1] << 16) | \
-                   (((uint8_t*)(x))[2] << 8) | \
-                    ((uint8_t*)(x))[3])
-#define LE_16(x)  ((((uint8_t*)(x))[1] << 8) | ((uint8_t*)(x))[0])
-#define LE_32(x)  ((((uint8_t*)(x))[3] << 24) | \
-                   (((uint8_t*)(x))[2] << 16) | \
-                   (((uint8_t*)(x))[1] << 8) | \
-                    ((uint8_t*)(x))[0])
-#endif
 
 extern unsigned int av_xiphlacing(unsigned char *s, unsigned int v);
 

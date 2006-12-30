@@ -220,12 +220,12 @@ static int decode_init(AVCodecContext *avctx) {
     }
     avctx->has_b_frames = 0;
     switch (avctx->bits_per_sample) {
-        case 16: avctx->pix_fmt = PIX_FMT_RGB565; break;
+        case 16: avctx->pix_fmt = PIX_FMT_RGB555; break;
         case 24: avctx->pix_fmt = PIX_FMT_BGR24; break;
         case 32: avctx->pix_fmt = PIX_FMT_RGBA32; break;
         default:
             av_log(avctx, AV_LOG_ERROR,
-                   "CamStudio codec error: unvalid depth %i bpp\n",
+                   "CamStudio codec error: invalid depth %i bpp\n",
                    avctx->bits_per_sample);
              return 1;
     }

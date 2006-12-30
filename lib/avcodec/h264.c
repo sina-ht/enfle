@@ -165,20 +165,6 @@ typedef struct H264Context{
     MpegEncContext s;
     int nal_ref_idc;
     int nal_unit_type;
-#define NAL_SLICE                1
-#define NAL_DPA                  2
-#define NAL_DPB                  3
-#define NAL_DPC                  4
-#define NAL_IDR_SLICE            5
-#define NAL_SEI                  6
-#define NAL_SPS                  7
-#define NAL_PPS                  8
-#define NAL_AUD                  9
-#define NAL_END_SEQUENCE        10
-#define NAL_END_STREAM          11
-#define NAL_FILLER_DATA         12
-#define NAL_SPS_EXT             13
-#define NAL_AUXILIARY_SLICE     19
     uint8_t *rbsp_buffer;
     unsigned int rbsp_buffer_size;
 
@@ -414,7 +400,7 @@ static void svq3_add_idct_c(uint8_t *dst, DCTELEM *block, int stride, int qp, in
 static void filter_mb( H264Context *h, int mb_x, int mb_y, uint8_t *img_y, uint8_t *img_cb, uint8_t *img_cr, unsigned int linesize, unsigned int uvlinesize);
 static void filter_mb_fast( H264Context *h, int mb_x, int mb_y, uint8_t *img_y, uint8_t *img_cb, uint8_t *img_cr, unsigned int linesize, unsigned int uvlinesize);
 
-static always_inline uint32_t pack16to32(int a, int b){
+static av_always_inline uint32_t pack16to32(int a, int b){
 #ifdef WORDS_BIGENDIAN
    return (b&0xFFFF) + (a<<16);
 #else
@@ -422,13 +408,22 @@ static always_inline uint32_t pack16to32(int a, int b){
 #endif
 }
 
+const uint8_t ff_rem6[52]={
+0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3,
+};
+
+const uint8_t ff_div6[52]={
+0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8,
+};
+
+
 /**
  * fill a rectangle.
  * @param h height of the rectangle, should be a constant
  * @param w width of the rectangle, should be a constant
  * @param size the size of val (1 or 4), should be a constant
  */
-static always_inline void fill_rectangle(void *vp, int w, int h, int stride, uint32_t val, int size){
+static av_always_inline void fill_rectangle(void *vp, int w, int h, int stride, uint32_t val, int size){
     uint8_t *p= (uint8_t*)vp;
     assert(size==1 || size==4);
     assert(w<=4);
@@ -1808,81 +1803,6 @@ static uint8_t *decode_nal(H264Context *h, uint8_t *src, int *dst_length, int *c
     return dst;
 }
 
-#if 0
-/**
- * @param src the data which should be escaped
- * @param dst the target buffer, dst+1 == src is allowed as a special case
- * @param length the length of the src data
- * @param dst_length the length of the dst array
- * @returns length of escaped data in bytes or -1 if an error occured
- */
-static int encode_nal(H264Context *h, uint8_t *dst, uint8_t *src, int length, int dst_length){
-    int i, escape_count, si, di;
-    uint8_t *temp;
-
-    assert(length>=0);
-    assert(dst_length>0);
-
-    dst[0]= (h->nal_ref_idc<<5) + h->nal_unit_type;
-
-    if(length==0) return 1;
-
-    escape_count= 0;
-    for(i=0; i<length; i+=2){
-        if(src[i]) continue;
-        if(i>0 && src[i-1]==0)
-            i--;
-        if(i+2<length && src[i+1]==0 && src[i+2]<=3){
-            escape_count++;
-            i+=2;
-        }
-    }
-
-    if(escape_count==0){
-        if(dst+1 != src)
-            memcpy(dst+1, src, length);
-        return length + 1;
-    }
-
-    if(length + escape_count + 1> dst_length)
-        return -1;
-
-    //this should be damn rare (hopefully)
-
-    h->rbsp_buffer= av_fast_realloc(h->rbsp_buffer, &h->rbsp_buffer_size, length + escape_count);
-    temp= h->rbsp_buffer;
-//printf("encoding esc\n");
-
-    si= 0;
-    di= 0;
-    while(si < length){
-        if(si+2<length && src[si]==0 && src[si+1]==0 && src[si+2]<=3){
-            temp[di++]= 0; si++;
-            temp[di++]= 0; si++;
-            temp[di++]= 3;
-            temp[di++]= src[si++];
-        }
-        else
-            temp[di++]= src[si++];
-    }
-    memcpy(dst+1, temp, length+escape_count);
-
-    assert(di == length+escape_count);
-
-    return di + 1;
-}
-
-/**
- * write 1,10,100,1000,... for alignment, yes its exactly inverse to mpeg4
- */
-static void encode_rbsp_trailing(PutBitContext *pb){
-    int length;
-    put_bits(pb, 1, 1);
-    length= (-put_bits_count(pb))&7;
-    if(length) put_bits(pb, length, 0);
-}
-#endif
-
 /**
  * identifies the exact end of the bitstream
  * @return the length of the trailing, or 0 if damaged
@@ -2034,42 +1954,6 @@ static inline int get_chroma_qp(int chroma_qp_index_offset, int qscale){
 
     return chroma_qp[clip(qscale + chroma_qp_index_offset, 0, 51)];
 }
-
-
-#if 0
-static void h264_diff_dct_c(DCTELEM *block, uint8_t *src1, uint8_t *src2, int stride){
-    int i;
-    //FIXME try int temp instead of block
-
-    for(i=0; i<4; i++){
-        const int d0= src1[0 + i*stride] - src2[0 + i*stride];
-        const int d1= src1[1 + i*stride] - src2[1 + i*stride];
-        const int d2= src1[2 + i*stride] - src2[2 + i*stride];
-        const int d3= src1[3 + i*stride] - src2[3 + i*stride];
-        const int z0= d0 + d3;
-        const int z3= d0 - d3;
-        const int z1= d1 + d2;
-        const int z2= d1 - d2;
-
-        block[0 + 4*i]=   z0 +   z1;
-        block[1 + 4*i]= 2*z3 +   z2;
-        block[2 + 4*i]=   z0 -   z1;
-        block[3 + 4*i]=   z3 - 2*z2;
-    }
-
-    for(i=0; i<4; i++){
-        const int z0= block[0*4 + i] + block[3*4 + i];
-        const int z3= block[0*4 + i] - block[3*4 + i];
-        const int z1= block[1*4 + i] + block[2*4 + i];
-        const int z2= block[1*4 + i] - block[2*4 + i];
-
-        block[0*4 + i]=   z0 +   z1;
-        block[1*4 + i]= 2*z3 +   z2;
-        block[2*4 + i]=   z0 -   z1;
-        block[3*4 + i]=   z3 - 2*z2;
-    }
-}
-#endif
 
 //FIXME need to check that this doesnt overflow signed 32 bit for low qp, i am not sure, it's very close
 //FIXME check that gcc inlines this (and optimizes intra & seperate_dc stuff away)
@@ -2357,7 +2241,7 @@ static void pred4x4_horizontal_down_c(uint8_t *src, uint8_t *topright, int strid
     src[1+3*stride]=(l1 + 2*l2 + l3 + 2)>>2;
 }
 
-static void pred16x16_vertical_c(uint8_t *src, int stride){
+void ff_pred16x16_vertical_c(uint8_t *src, int stride){
     int i;
     const uint32_t a= ((uint32_t*)(src-stride))[0];
     const uint32_t b= ((uint32_t*)(src-stride))[1];
@@ -2372,7 +2256,7 @@ static void pred16x16_vertical_c(uint8_t *src, int stride){
     }
 }
 
-static void pred16x16_horizontal_c(uint8_t *src, int stride){
+void ff_pred16x16_horizontal_c(uint8_t *src, int stride){
     int i;
 
     for(i=0; i<16; i++){
@@ -2383,7 +2267,7 @@ static void pred16x16_horizontal_c(uint8_t *src, int stride){
     }
 }
 
-static void pred16x16_dc_c(uint8_t *src, int stride){
+void ff_pred16x16_dc_c(uint8_t *src, int stride){
     int i, dc=0;
 
     for(i=0;i<16; i++){
@@ -2437,7 +2321,7 @@ static void pred16x16_top_dc_c(uint8_t *src, int stride){
     }
 }
 
-static void pred16x16_128_dc_c(uint8_t *src, int stride){
+void ff_pred16x16_128_dc_c(uint8_t *src, int stride){
     int i;
 
     for(i=0; i<16; i++){
@@ -2488,11 +2372,11 @@ static inline void pred16x16_plane_compat_c(uint8_t *src, int stride, const int 
   }
 }
 
-static void pred16x16_plane_c(uint8_t *src, int stride){
+void ff_pred16x16_plane_c(uint8_t *src, int stride){
     pred16x16_plane_compat_c(src, stride, 0);
 }
 
-static void pred8x8_vertical_c(uint8_t *src, int stride){
+void ff_pred8x8_vertical_c(uint8_t *src, int stride){
     int i;
     const uint32_t a= ((uint32_t*)(src-stride))[0];
     const uint32_t b= ((uint32_t*)(src-stride))[1];
@@ -2503,7 +2387,7 @@ static void pred8x8_vertical_c(uint8_t *src, int stride){
     }
 }
 
-static void pred8x8_horizontal_c(uint8_t *src, int stride){
+void ff_pred8x8_horizontal_c(uint8_t *src, int stride){
     int i;
 
     for(i=0; i<8; i++){
@@ -2512,7 +2396,7 @@ static void pred8x8_horizontal_c(uint8_t *src, int stride){
     }
 }
 
-static void pred8x8_128_dc_c(uint8_t *src, int stride){
+void ff_pred8x8_128_dc_c(uint8_t *src, int stride){
     int i;
 
     for(i=0; i<8; i++){
@@ -2566,7 +2450,7 @@ static void pred8x8_top_dc_c(uint8_t *src, int stride){
 }
 
 
-static void pred8x8_dc_c(uint8_t *src, int stride){
+void ff_pred8x8_dc_c(uint8_t *src, int stride){
     int i;
     int dc0, dc1, dc2, dc3;
 
@@ -2591,7 +2475,7 @@ static void pred8x8_dc_c(uint8_t *src, int stride){
     }
 }
 
-static void pred8x8_plane_c(uint8_t *src, int stride){
+void ff_pred8x8_plane_c(uint8_t *src, int stride){
   int j, k;
   int a;
   uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
@@ -3220,21 +3104,21 @@ static void init_pred_ptrs(H264Context *h){
     h->pred8x8l[TOP_DC_PRED         ]= pred8x8l_top_dc_c;
     h->pred8x8l[DC_128_PRED         ]= pred8x8l_128_dc_c;
 
-    h->pred8x8[DC_PRED8x8     ]= pred8x8_dc_c;
-    h->pred8x8[VERT_PRED8x8   ]= pred8x8_vertical_c;
-    h->pred8x8[HOR_PRED8x8    ]= pred8x8_horizontal_c;
-    h->pred8x8[PLANE_PRED8x8  ]= pred8x8_plane_c;
+    h->pred8x8[DC_PRED8x8     ]= ff_pred8x8_dc_c;
+    h->pred8x8[VERT_PRED8x8   ]= ff_pred8x8_vertical_c;
+    h->pred8x8[HOR_PRED8x8    ]= ff_pred8x8_horizontal_c;
+    h->pred8x8[PLANE_PRED8x8  ]= ff_pred8x8_plane_c;
     h->pred8x8[LEFT_DC_PRED8x8]= pred8x8_left_dc_c;
     h->pred8x8[TOP_DC_PRED8x8 ]= pred8x8_top_dc_c;
-    h->pred8x8[DC_128_PRED8x8 ]= pred8x8_128_dc_c;
+    h->pred8x8[DC_128_PRED8x8 ]= ff_pred8x8_128_dc_c;
 
-    h->pred16x16[DC_PRED8x8     ]= pred16x16_dc_c;
-    h->pred16x16[VERT_PRED8x8   ]= pred16x16_vertical_c;
-    h->pred16x16[HOR_PRED8x8    ]= pred16x16_horizontal_c;
-    h->pred16x16[PLANE_PRED8x8  ]= pred16x16_plane_c;
+    h->pred16x16[DC_PRED8x8     ]= ff_pred16x16_dc_c;
+    h->pred16x16[VERT_PRED8x8   ]= ff_pred16x16_vertical_c;
+    h->pred16x16[HOR_PRED8x8    ]= ff_pred16x16_horizontal_c;
+    h->pred16x16[PLANE_PRED8x8  ]= ff_pred16x16_plane_c;
     h->pred16x16[LEFT_DC_PRED8x8]= pred16x16_left_dc_c;
     h->pred16x16[TOP_DC_PRED8x8 ]= pred16x16_top_dc_c;
-    h->pred16x16[DC_128_PRED8x8 ]= pred16x16_128_dc_c;
+    h->pred16x16[DC_128_PRED8x8 ]= ff_pred16x16_128_dc_c;
 }
 
 static void free_tables(H264Context *h){
@@ -3269,8 +3153,8 @@ static void init_dequant8_coeff_table(H264Context *h){
         }
 
         for(q=0; q<52; q++){
-            int shift = div6[q];
-            int idx = rem6[q];
+            int shift = ff_div6[q];
+            int idx = ff_rem6[q];
             for(x=0; x<64; x++)
                 h->dequant8_coeff[i][q][transpose ? (x>>3)|((x&7)<<3) : x] =
                     ((uint32_t)dequant8_coeff_init[idx][ dequant8_coeff_init_scan[((x>>1)&12) | (x&3)] ] *
@@ -3294,8 +3178,8 @@ static void init_dequant4_coeff_table(H264Context *h){
             continue;
 
         for(q=0; q<52; q++){
-            int shift = div6[q] + 2;
-            int idx = rem6[q];
+            int shift = ff_div6[q] + 2;
+            int idx = ff_rem6[q];
             for(x=0; x<16; x++)
                 h->dequant4_coeff[i][q][transpose ? (x>>2)|((x<<2)&0xF) : x] =
                     ((uint32_t)dequant4_coeff_init[idx][(x&1) + ((x>>2)&1)] *
@@ -4972,6 +4856,10 @@ static int decode_residual(H264Context *h, GetBitContext *gb, DCTELEM *block, in
 
     if(total_coeff==0)
         return 0;
+    if(total_coeff<0) {
+        av_log(h->s.avctx, AV_LOG_ERROR, "corrupted macroblock %d %d (total_coeff<0)\n", s->mb_x, s->mb_y);
+        return -1;
+    }
 
     trailing_ones= coeff_token&3;
     tprintf("trailing:%d, total:%d\n", trailing_ones, total_coeff);

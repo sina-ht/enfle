@@ -324,6 +324,7 @@ typedef struct MpegEncContext {
     int dropable;
     int frame_rate_index;
     int last_lambda_for[5];     ///< last lambda for a specific pict type
+    int skipdct;                ///< skip dct and code zero residual
 
     /* motion compensation */
     int unrestricted_mv;        ///< mv can point outside of the coded picture
@@ -401,6 +402,8 @@ typedef struct MpegEncContext {
 #define CANDIDATE_MB_TYPE_FORWARD_I  0x200
 #define CANDIDATE_MB_TYPE_BACKWARD_I 0x400
 #define CANDIDATE_MB_TYPE_BIDIR_I    0x800
+
+#define CANDIDATE_MB_TYPE_DIRECT0    0x1000
 
     int block_index[6]; ///< index to current MB in block based arrays with edges
     int block_wrap[6];

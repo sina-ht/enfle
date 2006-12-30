@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Nov 12 01:50:56 2006.
-# $Id: Makefile.am,v 1.47 2006/11/18 03:23:44 sian Exp $
+# Last Modified: Sat Dec 30 13:49:14 2006.
+# $Id: Makefile.am,v 1.48 2006/12/30 05:00:48 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -128,6 +128,7 @@ noinst_HEADERS = \
 	lzo.h \
 	lzw.h \
 	mathops.h \
+	mpcdata.h \
 	mpeg12data.h \
 	mpeg4data.h \
 	mpegaudio.h \
@@ -169,7 +170,7 @@ noinst_HEADERS = \
 # mp3lameaudio.c
 # beosthread.c w32thread.c
 # imgresample.c needs libswscale
-# x264.c and xvidff.c are encoders
+# x264.c and xvidff.c zmbvenc.c are encoders
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -218,6 +219,8 @@ libavcodec_la_SOURCES = \
 	h263.c \
 	h263dec.c \
 	h264.c \
+	h264dsp.c \
+	h264enc.c \
 	h264idct.c \
 	huffyuv.c \
 	idcinvideo.c \
@@ -239,6 +242,7 @@ libavcodec_la_SOURCES = \
 	mjpeg.c \
 	mmvideo.c \
 	motion_est.c \
+	mpc.c \
 	mpeg12.c \
 	mpegaudio.c \
 	mpegaudiodec.c \

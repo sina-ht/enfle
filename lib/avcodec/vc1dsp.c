@@ -31,11 +31,12 @@
 
 /** Apply overlap transform to horizontal edge
 */
-static void vc1_v_overlap_c(uint8_t* src, int stride, int rnd)
+static void vc1_v_overlap_c(uint8_t* src, int stride)
 {
     int i;
     int a, b, c, d;
     int d1, d2;
+    int rnd = 1;
     for(i = 0; i < 8; i++) {
         a = src[-2*stride];
         b = src[-stride];
@@ -49,16 +50,18 @@ static void vc1_v_overlap_c(uint8_t* src, int stride, int rnd)
         src[0] = c + d2;
         src[stride] = d + d1;
         src++;
+        rnd = !rnd;
     }
 }
 
 /** Apply overlap transform to vertical edge
 */
-static void vc1_h_overlap_c(uint8_t* src, int stride, int rnd)
+static void vc1_h_overlap_c(uint8_t* src, int stride)
 {
     int i;
     int a, b, c, d;
     int d1, d2;
+    int rnd = 1;
     for(i = 0; i < 8; i++) {
         a = src[-2];
         b = src[-1];
@@ -72,6 +75,7 @@ static void vc1_h_overlap_c(uint8_t* src, int stride, int rnd)
         src[0] = c + d2;
         src[1] = d + d1;
         src += stride;
+        rnd = !rnd;
     }
 }
 
@@ -322,7 +326,7 @@ static void vc1_inv_trans_4x4_c(DCTELEM block[64], int n)
 
 /** Filter used to interpolate fractional pel values
  */
-static always_inline int vc1_mspel_filter(const uint8_t *src, int stride, int mode, int r)
+static av_always_inline int vc1_mspel_filter(const uint8_t *src, int stride, int mode, int r)
 {
     switch(mode){
     case 0: //no shift

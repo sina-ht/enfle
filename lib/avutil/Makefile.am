@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Nov 18 12:08:55 2006.
-# $Id: Makefile.am,v 1.7 2006/11/18 03:23:44 sian Exp $
+# Last Modified: Sun Dec 10 21:17:06 2006.
+# $Id: Makefile.am,v 1.8 2006/12/30 05:00:48 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavutil.la
@@ -20,6 +20,7 @@ noinst_HEADERS = \
 	integer.h \
 	internal.h \
 	intfloat_readwrite.h \
+	intreadwrite.h \
 	lls.h \
 	log.h \
 	mathematics.h \

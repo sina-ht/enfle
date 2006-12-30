@@ -187,12 +187,12 @@ static inline uint##x##_t unaligned##x(const void *v) { \
 }
 #    elif defined(__DECC)
 #    define unaligned(x)                                        \
-static inline uint##x##_t unaligned##x##(const void *v) {       \
+static inline uint##x##_t unaligned##x(const void *v) {         \
     return *(const __unaligned uint##x##_t *) v;                \
 }
 #    else
 #    define unaligned(x)                                        \
-static inline uint##x##_t unaligned##x##(const void *v) {       \
+static inline uint##x##_t unaligned##x(const void *v) {         \
     return *(const uint##x##_t *) v;                            \
 }
 #    endif
@@ -877,7 +877,7 @@ void free_vlc(VLC *vlc);
  *                  read the longest vlc code
  *                  = (max_vlc_length + bits - 1) / bits
  */
-static always_inline int get_vlc2(GetBitContext *s, VLC_TYPE (*table)[2],
+static av_always_inline int get_vlc2(GetBitContext *s, VLC_TYPE (*table)[2],
                                   int bits, int max_depth)
 {
     int code;
