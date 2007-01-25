@@ -1,3 +1,38 @@
+2007-01-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/a52dec.c,
+	lib/avcodec/adpcm.c, lib/avcodec/alac.c, lib/avcodec/allcodecs.c,
+	lib/avcodec/avcodec.h, lib/avcodec/avs.c,
+	lib/avcodec/bitstream_filter.c, lib/avcodec/bmp.c,
+	lib/avcodec/bytestream.h, lib/avcodec/cabac.h,
+	lib/avcodec/cinepak.c, lib/avcodec/dpcm.c, lib/avcodec/dsicinav.c,
+	lib/avcodec/dv.c, lib/avcodec/dvbsubdec.c, lib/avcodec/dvdata.h,
+	lib/avcodec/eval.c, lib/avcodec/faad.c, lib/avcodec/flac.c,
+	lib/avcodec/flashsv.c, lib/avcodec/flicvideo.c,
+	lib/avcodec/fraps.c, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/imgconvert.c,
+	lib/avcodec/imgresample.c, lib/avcodec/kmvc.c, lib/avcodec/loco.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/mmvideo.c, lib/avcodec/mpc.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/msvideo1.c, lib/avcodec/nuv.c, lib/avcodec/opt.c,
+	lib/avcodec/opt.h, lib/avcodec/parser.c, lib/avcodec/pcm.c,
+	lib/avcodec/png.c, lib/avcodec/qdm2.c, lib/avcodec/qdrw.c,
+	lib/avcodec/qtrle.c, lib/avcodec/rpza.c, lib/avcodec/rv10.c,
+	lib/avcodec/smacker.c, lib/avcodec/smc.c, lib/avcodec/snow.c,
+	lib/avcodec/svq3.c, lib/avcodec/targa.c, lib/avcodec/tiff.c,
+	lib/avcodec/truemotion1.c, lib/avcodec/truemotion2.c,
+	lib/avcodec/truespeech.c, lib/avcodec/tscc.c, lib/avcodec/utils.c,
+	lib/avcodec/vc1.c, lib/avcodec/vmdav.c, lib/avcodec/vmnc.c,
+	lib/avcodec/vp3.c, lib/avcodec/vp56.h, lib/avcodec/vp6.c,
+	lib/avcodec/vqavideo.c, lib/avcodec/wavpack.c, lib/avcodec/wmv2.c,
+	lib/avcodec/ws-snd1.c, lib/avcodec/x264.c, lib/avcodec/xan.c,
+	lib/avcodec/xl.c, lib/avcodec/zmbv.c, lib/avutil/Makefile.am,
+	lib/avutil/aes.c, lib/avutil/aes.h, lib/avutil/aes128.c,
+	lib/avutil/aes128.h, lib/avutil/avutil.h, lib/avutil/common.h,
+	lib/avutil/fifo.c, lib/avutil/integer.c, lib/avutil/internal.h,
+	lib/avutil/intreadwrite.h, lib/avutil/log.c, lib/avutil/log.h,
+	lib/avutil/rational.c: Updated.
+
 2006-12-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Adapted for avcodec change.  Version up.
