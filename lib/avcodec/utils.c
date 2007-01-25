@@ -512,14 +512,14 @@ static const AVOption options[]={
 {"ms", "workaround various bugs in microsofts broken decoders", 0, FF_OPT_TYPE_CONST, FF_BUG_MS, INT_MIN, INT_MAX, V|D, "bug"},
 {"lelim", "single coefficient elimination threshold for luminance (negative values also consider dc coefficient)", OFFSET(luma_elim_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
 {"celim", "single coefficient elimination threshold for chrominance (negative values also consider dc coefficient)", OFFSET(chroma_elim_threshold), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
-{"strict", "how strictly to follow the standards", OFFSET(strict_std_compliance), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E, "strict"},
+{"strict", "how strictly to follow the standards", OFFSET(strict_std_compliance), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, A|V|D, "strict"},
 {"very", "strictly conform to a older more strict version of the spec or reference software", 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_VERY_STRICT, INT_MIN, INT_MAX, V|E, "strict"},
 {"strict", "strictly conform to all the things in the spec no matter what consequences", 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_STRICT, INT_MIN, INT_MAX, V|E, "strict"},
 {"normal", NULL, 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_NORMAL, INT_MIN, INT_MAX, V|E, "strict"},
 {"inofficial", "allow inofficial extensions", 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_INOFFICIAL, INT_MIN, INT_MAX, V|E, "strict"},
 {"experimental", "allow non standarized experimental things", 0, FF_OPT_TYPE_CONST, FF_COMPLIANCE_EXPERIMENTAL, INT_MIN, INT_MAX, V|E, "strict"},
 {"b_qoffset", "qp offset between p and b frames", OFFSET(b_quant_offset), FF_OPT_TYPE_FLOAT, 1.25, FLT_MIN, FLT_MAX, V|E},
-{"er", "set error resilience strategy", OFFSET(error_resilience), FF_OPT_TYPE_INT, FF_ER_CAREFUL, INT_MIN, INT_MAX, V|D, "er"},
+{"er", "set error resilience strategy", OFFSET(error_resilience), FF_OPT_TYPE_INT, FF_ER_CAREFUL, INT_MIN, INT_MAX, A|V|D, "er"},
 {"careful", NULL, 0, FF_OPT_TYPE_CONST, FF_ER_CAREFUL, INT_MIN, INT_MAX, V|D, "er"},
 {"compliant", NULL, 0, FF_OPT_TYPE_CONST, FF_ER_COMPLIANT, INT_MIN, INT_MAX, V|D, "er"},
 {"aggressive", NULL, 0, FF_OPT_TYPE_CONST, FF_ER_AGGRESSIVE, INT_MIN, INT_MAX, V|D, "er"},
@@ -918,21 +918,43 @@ int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,
    *number of bytes used. If no frame could be decompressed,
    *frame_size_ptr is zero. Otherwise, it is the decompressed frame
    *size in BYTES. */
-int avcodec_decode_audio(AVCodecContext *avctx, int16_t *samples,
+int avcodec_decode_audio2(AVCodecContext *avctx, int16_t *samples,
                          int *frame_size_ptr,
                          uint8_t *buf, int buf_size)
 {
     int ret;
 
-    *frame_size_ptr= 0;
+    //FIXME remove the check below _after_ ensuring that all audio check that the available space is enough
+    if(*frame_size_ptr < AVCODEC_MAX_AUDIO_FRAME_SIZE){
+        av_log(avctx, AV_LOG_ERROR, "buffer smaller then AVCODEC_MAX_AUDIO_FRAME_SIZE\n");
+        return -1;
+    }
+    if(*frame_size_ptr < FF_MIN_BUFFER_SIZE ||
+       *frame_size_ptr < avctx->channels * avctx->frame_size * sizeof(int16_t) ||
+       *frame_size_ptr < buf_size){
+        av_log(avctx, AV_LOG_ERROR, "buffer too small\n");
+        return -1;
+    }
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || buf_size){
         ret = avctx->codec->decode(avctx, samples, frame_size_ptr,
                                 buf, buf_size);
         avctx->frame_number++;
-    }else
+    }else{
         ret= 0;
+        *frame_size_ptr=0;
+    }
     return ret;
 }
+
+#if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
+int avcodec_decode_audio(AVCodecContext *avctx, int16_t *samples,
+                         int *frame_size_ptr,
+                         uint8_t *buf, int buf_size){
+    *frame_size_ptr= AVCODEC_MAX_AUDIO_FRAME_SIZE;
+    return avcodec_decode_audio2(avctx, samples, frame_size_ptr, buf, buf_size);
+}
+#endif
+
 
 /* decode a subtitle message. return -1 if error, otherwise return the
    *number of bytes used. If no subtitle could be decompressed,

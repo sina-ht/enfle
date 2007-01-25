@@ -439,6 +439,7 @@ typedef struct SnowContext{
     int always_reset;
     int version;
     int spatial_decomposition_type;
+    int last_spatial_decomposition_type;
     int temporal_decomposition_type;
     int spatial_decomposition_count;
     int temporal_decomposition_count;
@@ -452,15 +453,19 @@ typedef struct SnowContext{
     int chroma_v_shift;
     int spatial_scalability;
     int qlog;
+    int last_qlog;
     int lambda;
     int lambda2;
     int pass1_rc;
     int mv_scale;
+    int last_mv_scale;
     int qbias;
+    int last_qbias;
 #define QBIAS_SHIFT 3
     int b_width;
     int b_height;
     int block_max_depth;
+    int last_block_max_depth;
     Plane plane[MAX_PLANES];
     BlockNode *block;
 #define ME_CACHE_SIZE 1024
@@ -1849,7 +1854,7 @@ static inline void decode_subband_slice_buffered(SnowContext *s, SubBand *b, sli
     return;
 }
 
-static void reset_contexts(SnowContext *s){
+static void reset_contexts(SnowContext *s){ //FIXME better initial contexts
     int plane_index, level, orientation;
 
     for(plane_index=0; plane_index<3; plane_index++){
@@ -1954,18 +1959,18 @@ static inline void init_ref(MotionEstContext *c, uint8_t *src[3], uint8_t *ref[3
 }
 
 static inline void pred_mv(SnowContext *s, int *mx, int *my, int ref,
-                           BlockNode *left, BlockNode *top, BlockNode *tr){
+                           const BlockNode *left, const BlockNode *top, const BlockNode *tr){
     if(s->ref_frames == 1){
         *mx = mid_pred(left->mx, top->mx, tr->mx);
         *my = mid_pred(left->my, top->my, tr->my);
     }else{
         const int *scale = scale_mv_ref[ref];
-        *mx = mid_pred(left->mx * scale[left->ref] + 128 >>8,
-                       top ->mx * scale[top ->ref] + 128 >>8,
-                       tr  ->mx * scale[tr  ->ref] + 128 >>8);
-        *my = mid_pred(left->my * scale[left->ref] + 128 >>8,
-                       top ->my * scale[top ->ref] + 128 >>8,
-                       tr  ->my * scale[tr  ->ref] + 128 >>8);
+        *mx = mid_pred((left->mx * scale[left->ref] + 128) >>8,
+                       (top ->mx * scale[top ->ref] + 128) >>8,
+                       (tr  ->mx * scale[tr  ->ref] + 128) >>8);
+        *my = mid_pred((left->my * scale[left->ref] + 128) >>8,
+                       (top ->my * scale[top ->ref] + 128) >>8,
+                       (tr  ->my * scale[tr  ->ref] + 128) >>8);
     }
 }
 
@@ -1993,12 +1998,12 @@ static int encode_q_branch(SnowContext *s, int level, int x, int y){
     const int block_w= 1<<(LOG2_MB_SIZE - level);
     int trx= (x+1)<<rem_depth;
     int try= (y+1)<<rem_depth;
-    BlockNode *left  = x ? &s->block[index-1] : &null_block;
-    BlockNode *top   = y ? &s->block[index-w] : &null_block;
-    BlockNode *right = trx<w ? &s->block[index+1] : &null_block;
-    BlockNode *bottom= try<h ? &s->block[index+w] : &null_block;
-    BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
-    BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
+    const BlockNode *left  = x ? &s->block[index-1] : &null_block;
+    const BlockNode *top   = y ? &s->block[index-w] : &null_block;
+    const BlockNode *right = trx<w ? &s->block[index+1] : &null_block;
+    const BlockNode *bottom= try<h ? &s->block[index+w] : &null_block;
+    const BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
+    const BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
     int pl = left->color[0];
     int pcb= left->color[1];
     int pcr= left->color[2];
@@ -2046,10 +2051,10 @@ static int encode_q_branch(SnowContext *s, int level, int x, int y){
     s->m.mb_stride=2;
     s->m.mb_x=
     s->m.mb_y= 0;
-    s->m.me.skip= 0;
+    c->skip= 0;
 
-    assert(s->m.me.  stride ==   stride);
-    assert(s->m.me.uvstride == uvstride);
+    assert(c->  stride ==   stride);
+    assert(c->uvstride == uvstride);
 
     c->penalty_factor    = get_penalty_factor(s->lambda, s->lambda2, c->avctx->me_cmp);
     c->sub_penalty_factor= get_penalty_factor(s->lambda, s->lambda2, c->avctx->me_sub_cmp);
@@ -2093,7 +2098,7 @@ static int encode_q_branch(SnowContext *s, int level, int x, int y){
         assert(ref_my >= c->ymin);
         assert(ref_my <= c->ymax);
 
-        ref_score= s->m.me.sub_motion_search(&s->m, &ref_mx, &ref_my, ref_score, 0, 0, level-LOG2_MB_SIZE+4, block_w);
+        ref_score= c->sub_motion_search(&s->m, &ref_mx, &ref_my, ref_score, 0, 0, level-LOG2_MB_SIZE+4, block_w);
         ref_score= ff_get_mb_score(&s->m, ref_mx, ref_my, 0, 0, level-LOG2_MB_SIZE+4, block_w, 0);
         ref_score+= 2*av_log2(2*ref)*c->penalty_factor;
         if(s->ref_mvs[ref]){
@@ -2220,10 +2225,10 @@ static void encode_q_branch2(SnowContext *s, int level, int x, int y){
     const int index= (x + y*w) << rem_depth;
     int trx= (x+1)<<rem_depth;
     BlockNode *b= &s->block[index];
-    BlockNode *left  = x ? &s->block[index-1] : &null_block;
-    BlockNode *top   = y ? &s->block[index-w] : &null_block;
-    BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
-    BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
+    const BlockNode *left  = x ? &s->block[index-1] : &null_block;
+    const BlockNode *top   = y ? &s->block[index-w] : &null_block;
+    const BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
+    const BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
     int pl = left->color[0];
     int pcb= left->color[1];
     int pcr= left->color[2];
@@ -2273,10 +2278,10 @@ static void decode_q_branch(SnowContext *s, int level, int x, int y){
     const int rem_depth= s->block_max_depth - level;
     const int index= (x + y*w) << rem_depth;
     int trx= (x+1)<<rem_depth;
-    BlockNode *left  = x ? &s->block[index-1] : &null_block;
-    BlockNode *top   = y ? &s->block[index-w] : &null_block;
-    BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
-    BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
+    const BlockNode *left  = x ? &s->block[index-1] : &null_block;
+    const BlockNode *top   = y ? &s->block[index-w] : &null_block;
+    const BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
+    const BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
     int s_context= 2*left->level + 2*top->level + tl->level + tr->level;
 
     if(s->keyframe){
@@ -2285,12 +2290,10 @@ static void decode_q_branch(SnowContext *s, int level, int x, int y){
     }
 
     if(level==s->block_max_depth || get_rac(&s->c, &s->block_state[4 + s_context])){
-        int type;
+        int type, mx, my;
         int l = left->color[0];
         int cb= left->color[1];
         int cr= left->color[2];
-        int mx= mid_pred(left->mx, top->mx, tr->mx);
-        int my= mid_pred(left->my, top->my, tr->my);
         int ref = 0;
         int ref_context= av_log2(2*left->ref) + av_log2(2*top->ref);
         int mx_context= av_log2(2*FFABS(left->mx - top->mx)) + 0*av_log2(2*FFABS(tr->mx - top->mx));
@@ -2902,11 +2905,11 @@ static inline int get_block_bits(SnowContext *s, int x, int y, int w){
     const int b_stride = s->b_width << s->block_max_depth;
     const int b_height = s->b_height<< s->block_max_depth;
     int index= x + y*b_stride;
-    BlockNode *b     = &s->block[index];
-    BlockNode *left  = x ? &s->block[index-1] : &null_block;
-    BlockNode *top   = y ? &s->block[index-b_stride] : &null_block;
-    BlockNode *tl    = y && x ? &s->block[index-b_stride-1] : left;
-    BlockNode *tr    = y && x+w<b_stride ? &s->block[index-b_stride+w] : tl;
+    const BlockNode *b     = &s->block[index];
+    const BlockNode *left  = x ? &s->block[index-1] : &null_block;
+    const BlockNode *top   = y ? &s->block[index-b_stride] : &null_block;
+    const BlockNode *tl    = y && x ? &s->block[index-b_stride-1] : left;
+    const BlockNode *tr    = y && x+w<b_stride ? &s->block[index-b_stride+w] : tl;
     int dmx, dmy;
 //  int mx_context= av_log2(2*FFABS(left->mx - top->mx));
 //  int my_context= av_log2(2*FFABS(left->my - top->my));
@@ -3603,8 +3606,14 @@ static void encode_header(SnowContext *s){
     memset(kstate, MID_STATE, sizeof(kstate));
 
     put_rac(&s->c, kstate, s->keyframe);
-    if(s->keyframe || s->always_reset)
+    if(s->keyframe || s->always_reset){
         reset_contexts(s);
+        s->last_spatial_decomposition_type=
+        s->last_qlog=
+        s->last_qbias=
+        s->last_mv_scale=
+        s->last_block_max_depth= 0;
+    }
     if(s->keyframe){
         put_symbol(&s->c, s->header_state, s->version, 0);
         put_rac(&s->c, s->header_state, s->always_reset);
@@ -3627,11 +3636,17 @@ static void encode_header(SnowContext *s){
             }
         }
     }
-    put_symbol(&s->c, s->header_state, s->spatial_decomposition_type, 0);
-    put_symbol(&s->c, s->header_state, s->qlog, 1);
-    put_symbol(&s->c, s->header_state, s->mv_scale, 0);
-    put_symbol(&s->c, s->header_state, s->qbias, 1);
-    put_symbol(&s->c, s->header_state, s->block_max_depth, 0);
+    put_symbol(&s->c, s->header_state, s->spatial_decomposition_type - s->last_spatial_decomposition_type, 1);
+    put_symbol(&s->c, s->header_state, s->qlog            - s->last_qlog    , 1);
+    put_symbol(&s->c, s->header_state, s->mv_scale        - s->last_mv_scale, 1);
+    put_symbol(&s->c, s->header_state, s->qbias           - s->last_qbias   , 1);
+    put_symbol(&s->c, s->header_state, s->block_max_depth - s->last_block_max_depth, 1);
+
+    s->last_spatial_decomposition_type= s->spatial_decomposition_type;
+    s->last_qlog                      = s->qlog;
+    s->last_qbias                     = s->qbias;
+    s->last_mv_scale                  = s->mv_scale;
+    s->last_block_max_depth           = s->block_max_depth;
 }
 
 static int decode_header(SnowContext *s){
@@ -3641,8 +3656,14 @@ static int decode_header(SnowContext *s){
     memset(kstate, MID_STATE, sizeof(kstate));
 
     s->keyframe= get_rac(&s->c, kstate);
-    if(s->keyframe || s->always_reset)
+    if(s->keyframe || s->always_reset){
         reset_contexts(s);
+        s->spatial_decomposition_type=
+        s->qlog=
+        s->qbias=
+        s->mv_scale=
+        s->block_max_depth= 0;
+    }
     if(s->keyframe){
         s->version= get_symbol(&s->c, s->header_state, 0);
         if(s->version>0){
@@ -3673,16 +3694,16 @@ static int decode_header(SnowContext *s){
         }
     }
 
-    s->spatial_decomposition_type= get_symbol(&s->c, s->header_state, 0);
+    s->spatial_decomposition_type+= get_symbol(&s->c, s->header_state, 1);
     if(s->spatial_decomposition_type > 2){
         av_log(s->avctx, AV_LOG_ERROR, "spatial_decomposition_type %d not supported", s->spatial_decomposition_type);
         return -1;
     }
 
-    s->qlog= get_symbol(&s->c, s->header_state, 1);
-    s->mv_scale= get_symbol(&s->c, s->header_state, 0);
-    s->qbias= get_symbol(&s->c, s->header_state, 1);
-    s->block_max_depth= get_symbol(&s->c, s->header_state, 0);
+    s->qlog           += get_symbol(&s->c, s->header_state, 1);
+    s->mv_scale       += get_symbol(&s->c, s->header_state, 1);
+    s->qbias          += get_symbol(&s->c, s->header_state, 1);
+    s->block_max_depth+= get_symbol(&s->c, s->header_state, 1);
     if(s->block_max_depth > 1 || s->block_max_depth < 0){
         av_log(s->avctx, AV_LOG_ERROR, "block_max_depth= %d is too large", s->block_max_depth);
         s->block_max_depth= 0;
@@ -4170,7 +4191,6 @@ redo_frame:
             pict->pict_type= FF_I_TYPE;
             s->keyframe=1;
             s->current_picture.key_frame=1;
-            reset_contexts(s);
             goto redo_frame;
         }
 

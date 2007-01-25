@@ -87,13 +87,13 @@ typedef struct TiffContext {
 } TiffContext;
 
 static int tget_short(uint8_t **p, int le){
-    int v = le ? LE_16(*p) : BE_16(*p);
+    int v = le ? AV_RL16(*p) : AV_RB16(*p);
     *p += 2;
     return v;
 }
 
 static int tget_long(uint8_t **p, int le){
-    int v = le ? LE_32(*p) : BE_32(*p);
+    int v = le ? AV_RL32(*p) : AV_RB32(*p);
     *p += 4;
     return v;
 }
@@ -332,6 +332,7 @@ static int tiff_decode_tag(TiffContext *s, uint8_t *start, uint8_t *buf, uint8_t
         }else
             s->stripdata = start + off;
         s->strips = count;
+        if(s->strips == 1) s->rps = s->height;
         s->sot = type;
         if(s->stripdata > end_buf){
             av_log(s->avctx, AV_LOG_ERROR, "Tag referencing position outside the image\n");
@@ -447,7 +448,7 @@ static int decode_frame(AVCodecContext *avctx,
     int i, entries;
 
     //parse image header
-    id = LE_16(buf); buf += 2;
+    id = AV_RL16(buf); buf += 2;
     if(id == 0x4949) le = 1;
     else if(id == 0x4D4D) le = 0;
     else{

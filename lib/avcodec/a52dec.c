@@ -27,7 +27,7 @@
 #include "avcodec.h"
 #include "liba52/a52.h"
 
-#ifdef CONFIG_A52BIN
+#ifdef CONFIG_LIBA52BIN
 #include <dlfcn.h>
 static const char* liba52name = "liba52.so.0";
 #endif
@@ -70,7 +70,7 @@ typedef struct AC3DecodeState {
 
 } AC3DecodeState;
 
-#ifdef CONFIG_A52BIN
+#ifdef CONFIG_LIBA52BIN
 static void* dlsymm(void* handle, const char* symbol)
 {
     void* f = dlsym(handle, symbol);
@@ -84,7 +84,7 @@ static int a52_decode_init(AVCodecContext *avctx)
 {
     AC3DecodeState *s = avctx->priv_data;
 
-#ifdef CONFIG_A52BIN
+#ifdef CONFIG_LIBA52BIN
     s->handle = dlopen(liba52name, RTLD_LAZY);
     if (!s->handle)
     {
@@ -162,6 +162,8 @@ static int a52_decode_frame(AVCodecContext *avctx,
         2, 1, 2, 3, 3, 4, 4, 5
     };
 
+    *data_size= 0;
+
     buf_ptr = buf;
     while (buf_size > 0) {
         len = s->inbuf_ptr - s->inbuf;
@@ -217,6 +219,7 @@ static int a52_decode_frame(AVCodecContext *avctx,
             level = 1;
             if (s->a52_frame(s->state, s->inbuf, &flags, &level, 384)) {
             fail:
+                av_log(avctx, AV_LOG_ERROR, "Error decoding frame\n");
                 s->inbuf_ptr = s->inbuf;
                 s->frame_size = 0;
                 continue;
@@ -239,7 +242,7 @@ static int a52_decode_end(AVCodecContext *avctx)
 {
     AC3DecodeState *s = avctx->priv_data;
     s->a52_free(s->state);
-#ifdef CONFIG_A52BIN
+#ifdef CONFIG_LIBA52BIN
     dlclose(s->handle);
 #endif
     return 0;

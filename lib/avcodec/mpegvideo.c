@@ -1095,7 +1095,7 @@ int MPV_encode_init(AVCodecContext *avctx)
     }
 
     if(s->avctx->scenechange_threshold < 1000000000 && (s->flags & CODEC_FLAG_CLOSED_GOP)){
-        av_log(avctx, AV_LOG_ERROR, "closed gop with scene change detection arent supported yet\n");
+        av_log(avctx, AV_LOG_ERROR, "closed gop with scene change detection arent supported yet, set threshold to 1000000000\n");
         return -1;
     }
 
@@ -1538,6 +1538,7 @@ int MPV_frame_start(MpegEncContext *s, AVCodecContext *avctx)
 
     /* mark&release old frames */
     if (s->pict_type != B_TYPE && s->last_picture_ptr && s->last_picture_ptr != s->next_picture_ptr && s->last_picture_ptr->data[0]) {
+      if(s->out_format != FMT_H264 || s->codec_id == CODEC_ID_SVQ3){
         avctx->release_buffer(avctx, (AVFrame*)s->last_picture_ptr);
 
         /* release forgotten pictures */
@@ -1550,6 +1551,7 @@ int MPV_frame_start(MpegEncContext *s, AVCodecContext *avctx)
                 }
             }
         }
+      }
     }
 alloc:
     if(!s->encoding){
@@ -1587,7 +1589,6 @@ alloc:
 
     copy_picture(&s->current_picture, s->current_picture_ptr);
 
-  if(s->out_format != FMT_H264 || s->codec_id == CODEC_ID_SVQ3){
     if (s->pict_type != B_TYPE) {
         s->last_picture_ptr= s->next_picture_ptr;
         if(!s->dropable)
@@ -1621,7 +1622,6 @@ alloc:
             s->next_picture.linesize[i] *=2;
         }
     }
-  }
 
     s->hurry_up= s->avctx->hurry_up;
     s->error_resilience= avctx->error_resilience;
@@ -4630,6 +4630,7 @@ void ff_mpeg_flush(AVCodecContext *avctx){
     s->parse_context.index= 0;
     s->parse_context.last_index= 0;
     s->bitstream_buffer_size=0;
+    s->pp_time=0;
 }
 
 #ifdef CONFIG_ENCODERS

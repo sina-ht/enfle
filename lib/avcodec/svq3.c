@@ -826,11 +826,11 @@ static int svq3_decode_frame (AVCodecContext *avctx,
     }
 
     /* if a match was found, parse the extra data */
-    if (!memcmp (extradata, "SEQH", 4)) {
+    if (extradata && !memcmp (extradata, "SEQH", 4)) {
 
       GetBitContext gb;
 
-      size = BE_32(&extradata[4]);
+      size = AV_RB32(&extradata[4]);
       init_get_bits (&gb, extradata + 8, size*8);
 
       /* 'frame size code' and optional 'width, height' */
@@ -910,7 +910,8 @@ static int svq3_decode_frame (AVCodecContext *avctx,
       s->next_p_frame_damaged = 0;
   }
 
-  frame_start (h);
+  if (frame_start (h) < 0)
+    return -1;
 
   if (s->pict_type == B_TYPE) {
     h->frame_num_offset = (h->slice_num - h->prev_frame_num);

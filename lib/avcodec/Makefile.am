@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Dec 30 13:49:14 2006.
-# $Id: Makefile.am,v 1.48 2006/12/30 05:00:48 sian Exp $
+# Last Modified: Fri Jan 26 01:20:43 2007.
+# $Id: Makefile.am,v 1.49 2007/01/25 16:21:55 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -56,6 +56,7 @@ CFLAGS += $(CFLAGS_POST)
 # ifeq ($(TARGET_IWMMXT),yes)
 # OBJS += armv4l/dsputil_iwmmxt.o armv4l/mpegvideo_iwmmxt.o
 # endif
+## OBJS += libavcodec/armv4l/mpegvideo_armv5te.c
 # endif
 
 # # sun mediaLib specific stuff
@@ -170,7 +171,7 @@ noinst_HEADERS = \
 # mp3lameaudio.c
 # beosthread.c w32thread.c
 # imgresample.c needs libswscale
-# x264.c and xvidff.c zmbvenc.c are encoders
+# x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c are encoders
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
