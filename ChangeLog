@@ -1,3 +1,47 @@
+2007-02-21  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/4xm.c, lib/avcodec/8bps.c, lib/avcodec/Makefile.am,
+	lib/avcodec/a52dec.c, lib/avcodec/adpcm.c,
+	lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
+	lib/avcodec/apiexample.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream.h, lib/avcodec/bmp.c, lib/avcodec/bmp.h,
+	lib/avcodec/bmpenc.c, lib/avcodec/bytestream.h,
+	lib/avcodec/cabac.h, lib/avcodec/cook.c, lib/avcodec/cscd.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c, lib/avcodec/dvdsubdec.c,
+	lib/avcodec/error_resilience.c, lib/avcodec/ffv1.c,
+	lib/avcodec/flicvideo.c, lib/avcodec/g726.c, lib/avcodec/gifdec.c,
+	lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_h264_template_mmx.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/h264dsp_mmx.c,
+	lib/avcodec/i386/idct_mmx.c, lib/avcodec/i386/idct_mmx_xvid.c,
+	lib/avcodec/i386/snowdsp_mmx.c, lib/avcodec/imgconvert.c,
+	lib/avcodec/imgconvert_template.h, lib/avcodec/jpeg_ls.c,
+	lib/avcodec/loco.c, lib/avcodec/mjpeg.c, lib/avcodec/mpc.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegaudio.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/oggvorbis.c, lib/avcodec/parser.c, lib/avcodec/pcm.c,
+	lib/avcodec/png.c, lib/avcodec/pnm.c,
+	lib/avcodec/ppc/dsputil_altivec.c, lib/avcodec/ppc/dsputil_ppc.h,
+	lib/avcodec/ppc/float_altivec.c, lib/avcodec/ppc/idct_altivec.c,
+	lib/avcodec/ppc/mathops.h, lib/avcodec/ppc/dsputil_ppc.c,
+	lib/avcodec/qtrle.c, lib/avcodec/rangecoder.c, lib/avcodec/raw.c,
+	lib/avcodec/snow.c, lib/avcodec/snow.h, lib/avcodec/sonic.c,
+	lib/avcodec/targa.c, lib/avcodec/truemotion1.c,
+	lib/avcodec/tscc.c, lib/avcodec/utils.c, lib/avcodec/vc1.c,
+	lib/avcodec/vc1data.h, lib/avcodec/vorbis_enc.c,
+	lib/avcodec/vp56.c, lib/avcodec/wavpack.c, lib/avcodec/wma.c,
+	lib/avcodec/wma.h, lib/avcodec/wmadata.h, lib/avcodec/wmadec.c,
+	lib/avcodec/xvmc_render.h, lib/avutil/Makefile.am,
+	lib/avutil/aes.c, lib/avutil/aes.h, lib/avutil/avutil.h,
+	lib/avutil/common.h, lib/avutil/internal.h,
+	lib/avutil/intreadwrite.h, lib/avutil/log.c: Updated.
+
+	* lib/avutil/base64.c, lib/avutil/base64.h, lib/avutil/lzo.c,
+	lib/avutil/lzo.h, lib/avutil/random.c, lib/avutil/random.h: Added.
+
+	* lib/avutil/aes128.c, lib/avutil/aes128.h, lib/avcodec/ac3dec.c,
+	lib/avcodec/lzo.c, lib/avcodec/lzo.h: Removed.
+
 2007-01-25  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/Makefile.am, lib/avcodec/a52dec.c,
