@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2007 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Fri Jan 26 01:18:47 2007.
-dnl $Id: configure.in,v 1.194 2007/01/25 16:24:04 sian Exp $
+dnl Last Modified: Thu Feb 22 01:53:36 2007.
+dnl $Id: configure.in,v 1.195 2007/02/21 17:07:34 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.60)
-AC_INIT([enfle],[20070126],[sian@big.or.jp])
+AC_INIT([enfle],[20070222],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -809,6 +809,8 @@ AC_DEFINE(CONFIG_ADPCM_SBPRO_2_DECODER, 1, [Define if you need this for avcodec.
 AC_DEFINE(CONFIG_DVDSUB_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_DVBSUB_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_MPC7_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_LIBA52_DECODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_LIBGSM_MS_DECODER, 0, [Define if you need this for avcodec.])
 
 AC_DEFINE(ENABLE_AAC_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_MPEG4AAC_DECODER, 0, [Define if you need this for avcodec.])
@@ -973,6 +975,8 @@ AC_DEFINE(ENABLE_ADPCM_SBPRO_2_DECODER, 1, [Define if you need this for avcodec.
 AC_DEFINE(ENABLE_DVDSUB_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_DVBSUB_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_MPC7_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBA52_DECODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBGSM_MS_DECODER, 0, [Define if you need this for avcodec.])
 
 dnl disable encoders
 dnl AC_DEFINE(CONFIG_ENCODERS, 1, [Define if you need this for avcodec.])
@@ -1063,6 +1067,10 @@ dnl AC_DEFINE(CONFIG_DVDSUB_ENCODER, 1, [Define if you need this for avcodec.])
 dnl AC_DEFINE(CONFIG_DVBSUB_ENCODER, 1, [Define if you need this for avcodec.])
 dnl AC_DEFINE(CONFIG_FLASHSV_ENCODER, 1, [Define if you need this for avcodec.])
 dnl AC_DEFINE(CONFIG_LIBTHEORA_ENCODER, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_BMP_ENCODER, 1, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_LIBGSM_MS_ENCODER, 0, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_WMAV1_ENCODER, 0, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_WMAV2_ENCODER, 0, [Define if you need this for avcodec.])
 
 AC_DEFINE(ENABLE_AC3_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_MP2_ENCODER, 0, [Define if you need this for avcodec.])
@@ -1153,6 +1161,10 @@ AC_DEFINE(ENABLE_GIF_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_ZMBV_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_FLASHSV_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBTHEORA_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_BMP_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBGSM_MS_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_WMAV1_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_WMAV2_ENCODER, 0, [Define if you need this for avcodec.])
 
 dnl disable parsers
 dnl AC_DEFINE(CONFIG_AAC_PARSER, 0, [Define if you need this for avcodec.])
@@ -1168,6 +1180,7 @@ dnl AC_DEFINE(CONFIG_MPEG4VIDEO_PARSER, 0, [Define if you need this for avcodec.
 dnl AC_DEFINE(CONFIG_MPEGAUDIO_PARSER, 0, [Define if you need this for avcodec.])
 dnl AC_DEFINE(CONFIG_MPEGVIDEO_PARSER, 0, [Define if you need this for avcodec.])
 dnl AC_DEFINE(CONFIG_PNM_PARSER, 0, [Define if you need this for avcodec.])
+dnl AC_DEFINE(CONFIG_VC1_PARSER, 0, [Define if you need this for avcodec.])
 
 AC_DEFINE(ENABLE_AAC_PARSER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_AC3_PARSER, 0, [Define if you need this for avcodec.])
@@ -1182,6 +1195,7 @@ AC_DEFINE(ENABLE_MPEG4VIDEO_PARSER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_MPEGAUDIO_PARSER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_MPEGVIDEO_PARSER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_PNM_PARSER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_VC1_PARSER, 0, [Define if you need this for avcodec.])
 
 else
   enable_avcodec=no
