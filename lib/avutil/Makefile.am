@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Wed Jan 24 22:53:28 2007.
-# $Id: Makefile.am,v 1.9 2007/01/25 16:21:55 sian Exp $
+# Last Modified: Thu Feb 22 01:29:30 2007.
+# $Id: Makefile.am,v 1.10 2007/02/21 17:07:19 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavutil.la
@@ -12,9 +12,9 @@ DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H -Dasm=__asm -Dvolatile=__volatile
 
 noinst_HEADERS = \
 	aes.h \
-	aes128.h \
 	adler32.h \
 	avutil.h \
+	base64.h \
 	bswap.h \
 	common.h \
 	crc.h \
@@ -25,8 +25,10 @@ noinst_HEADERS = \
 	intreadwrite.h \
 	lls.h \
 	log.h \
+	lzo.h \
 	mathematics.h \
 	md5.h \
+	random.h \
 	rational.h \
 	softfloat.h \
 	tree.h \
@@ -35,16 +37,18 @@ noinst_HEADERS = \
 # softfloat.c
 libavutil_la_SOURCES = \
 	aes.c \
-	aes128.c \
 	adler32.c \
+	base64.c \
 	crc.c \
 	fifo.c \
 	integer.c \
 	intfloat_readwrite.c \
 	lls.c \
 	log.c \
+	lzo.c \
 	mathematics.c \
 	md5.c \
 	mem.c \
+	random.c \
 	rational.c \
 	tree.c

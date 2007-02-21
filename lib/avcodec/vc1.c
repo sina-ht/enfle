@@ -46,6 +46,18 @@ extern const uint16_t ff_msmp4_mb_i_table[64][2];
 #define AC_VLC_BITS 9
 static const uint16_t table_mb_intra[64][2];
 
+/** Markers used if VC-1 AP frame data */
+//@{
+enum VC1Code{
+    VC1_CODE_RES0       = 0x00000100,
+    VC1_CODE_ENDOFSEQ   = 0x0000010A,
+    VC1_CODE_SLICE,
+    VC1_CODE_FIELD,
+    VC1_CODE_FRAME,
+    VC1_CODE_ENTRYPOINT,
+    VC1_CODE_SEQHDR,
+};
+//@}
 
 /** Available Profiles */
 //@{
@@ -1266,12 +1278,10 @@ static int decode_sequence_header_adv(VC1Context *v, GetBitContext *gb)
 
     v->s.avctx->coded_width = (get_bits(gb, 12) + 1) << 1;
     v->s.avctx->coded_height = (get_bits(gb, 12) + 1) << 1;
+    v->s.avctx->width = v->s.avctx->coded_width;
+    v->s.avctx->height = v->s.avctx->coded_height;
     v->broadcast = get_bits1(gb);
     v->interlace = get_bits1(gb);
-    if(v->interlace){
-        av_log(v->s.avctx, AV_LOG_ERROR, "Interlaced mode not supported (yet)\n");
-        return -1;
-    }
     v->tfcntrflag = get_bits1(gb);
     v->finterpflag = get_bits1(gb);
     get_bits1(gb); // reserved
@@ -1290,26 +1300,35 @@ static int decode_sequence_header_adv(VC1Context *v, GetBitContext *gb)
         av_log(v->s.avctx, AV_LOG_ERROR, "Progressive Segmented Frame mode: not supported (yet)\n");
         return -1;
     }
+    v->s.max_b_frames = v->s.avctx->max_b_frames = 7;
     if(get_bits1(gb)) { //Display Info - decoding is not affected by it
         int w, h, ar = 0;
-        av_log(v->s.avctx, AV_LOG_INFO, "Display extended info:\n");
-        w = get_bits(gb, 14) + 1;
-        h = get_bits(gb, 14) + 1;
-        av_log(v->s.avctx, AV_LOG_INFO, "Display dimensions: %ix%i\n", w, h);
-        //TODO: store aspect ratio in AVCodecContext
+        av_log(v->s.avctx, AV_LOG_DEBUG, "Display extended info:\n");
+        v->s.avctx->width  = v->s.width  = w = get_bits(gb, 14) + 1;
+        v->s.avctx->height = v->s.height = h = get_bits(gb, 14) + 1;
+        av_log(v->s.avctx, AV_LOG_DEBUG, "Display dimensions: %ix%i\n", w, h);
         if(get_bits1(gb))
             ar = get_bits(gb, 4);
-        if(ar == 15) {
+        if(ar && ar < 14){
+            v->s.avctx->sample_aspect_ratio = vc1_pixel_aspect[ar];
+        }else if(ar == 15){
             w = get_bits(gb, 8);
             h = get_bits(gb, 8);
+            v->s.avctx->sample_aspect_ratio = (AVRational){w, h};
         }
 
         if(get_bits1(gb)){ //framerate stuff
             if(get_bits1(gb)) {
-                get_bits(gb, 16);
+                v->s.avctx->time_base.num = 32;
+                v->s.avctx->time_base.den = get_bits(gb, 16) + 1;
             } else {
-                get_bits(gb, 8);
-                get_bits(gb, 4);
+                int nr, dr;
+                nr = get_bits(gb, 8);
+                dr = get_bits(gb, 4);
+                if(nr && nr < 8 && dr && dr < 3){
+                    v->s.avctx->time_base.num = fps_dr[dr - 1];
+                    v->s.avctx->time_base.den = fps_nr[nr - 1] * 1000;
+                }
             }
         }
 
@@ -1337,11 +1356,11 @@ static int decode_sequence_header_adv(VC1Context *v, GetBitContext *gb)
 static int decode_entry_point(AVCodecContext *avctx, GetBitContext *gb)
 {
     VC1Context *v = avctx->priv_data;
-    int i, blink, refdist;
+    int i, blink, clentry, refdist;
 
     av_log(avctx, AV_LOG_DEBUG, "Entry point: %08X\n", show_bits_long(gb, 32));
     blink = get_bits1(gb); // broken link
-    avctx->max_b_frames = 1 - get_bits1(gb); // 'closed entry' also signalize possible B-frames
+    clentry = get_bits1(gb); // closed entry
     v->panscanflag = get_bits1(gb);
     refdist = get_bits1(gb); // refdist flag
     v->s.loop_filter = get_bits1(gb);
@@ -1377,7 +1396,7 @@ static int decode_entry_point(AVCodecContext *avctx, GetBitContext *gb)
         "BrokenLink=%i, ClosedEntry=%i, PanscanFlag=%i\n"
         "RefDist=%i, Postproc=%i, FastUVMC=%i, ExtMV=%i\n"
         "DQuant=%i, VSTransform=%i, Overlap=%i, Qmode=%i\n",
-        blink, 1 - avctx->max_b_frames, v->panscanflag, refdist, v->s.loop_filter,
+        blink, clentry, v->panscanflag, refdist, v->s.loop_filter,
         v->fastuvmc, v->extended_mv, v->dquant, v->vstransform, v->overlap, v->quantizer_mode);
 
     return 0;
@@ -1596,14 +1615,15 @@ static int vc1_parse_frame_header(VC1Context *v, GetBitContext* gb)
 
 static int vc1_parse_frame_header_adv(VC1Context *v, GetBitContext* gb)
 {
-    int fcm;
     int pqindex, lowquant;
     int status;
 
     v->p_frame_skipped = 0;
 
-    if(v->interlace)
-        fcm = decode012(gb);
+    if(v->interlace){
+        v->fcm = decode012(gb);
+        if(v->fcm) return -1; // interlaced frames/fields are not implemented
+    }
     switch(get_prefix(gb, 0, 4)) {
     case 0:
         v->s.pict_type = P_TYPE;
@@ -1625,11 +1645,11 @@ static int vc1_parse_frame_header_adv(VC1Context *v, GetBitContext* gb)
     if(v->tfcntrflag)
         get_bits(gb, 8);
     if(v->broadcast) {
-        if(!v->interlace || v->panscanflag) {
-            get_bits(gb, 2);
+        if(!v->interlace || v->psf) {
+            v->rptfrm = get_bits(gb, 2);
         } else {
-            get_bits1(gb);
-            get_bits1(gb);
+            v->tff = get_bits1(gb);
+            v->rptfrm = get_bits1(gb);
         }
     }
     if(v->panscanflag) {
@@ -1663,6 +1683,8 @@ static int vc1_parse_frame_header_adv(VC1Context *v, GetBitContext* gb)
     else v->halfpq = 0;
     if (v->quantizer_mode == QUANT_FRAME_EXPLICIT)
         v->pquantizer = get_bits(gb, 1);
+
+    if(v->s.pict_type == I_TYPE || v->s.pict_type == P_TYPE) v->use_ic = 0;
 
     switch(v->s.pict_type) {
     case I_TYPE:
@@ -1721,6 +1743,7 @@ static int vc1_parse_frame_header_adv(VC1Context *v, GetBitContext* gb)
                 v->luty[i] = clip_uint8((scale * i + shift + 32) >> 6);
                 v->lutuv[i] = clip_uint8((scale * (i - 128) + 128*64 + 32) >> 6);
             }
+            v->use_ic = 1;
         }
         if(v->mv_mode == MV_PMODE_1MV_HPEL || v->mv_mode == MV_PMODE_1MV_HPEL_BILIN)
             v->s.quarter_sample = 0;
@@ -1832,7 +1855,7 @@ static int vc1_parse_frame_header_adv(VC1Context *v, GetBitContext* gb)
     }
     /* DC Syntax */
     v->s.dc_table_index = get_bits(gb, 1);
-    if (v->s.pict_type == I_TYPE && v->dquant) {
+    if ((v->s.pict_type == I_TYPE || v->s.pict_type == BI_TYPE) && v->dquant) {
         av_log(v->s.avctx, AV_LOG_DEBUG, "VOP DQuant info\n");
         vop_dquant_decoding(v);
     }
@@ -2888,8 +2911,8 @@ static int vc1_decode_i_block_adv(VC1Context *v, DCTELEM block[64], int n, int c
         ac_val -= 16 * s->block_wrap[n];
 
     q1 = s->current_picture.qscale_table[mb_pos];
-    if(dc_pred_dir && c_avail) q2 = s->current_picture.qscale_table[mb_pos - 1];
-    if(!dc_pred_dir && a_avail) q2 = s->current_picture.qscale_table[mb_pos - s->mb_stride];
+    if(dc_pred_dir && c_avail && mb_pos) q2 = s->current_picture.qscale_table[mb_pos - 1];
+    if(!dc_pred_dir && a_avail && mb_pos >= s->mb_stride) q2 = s->current_picture.qscale_table[mb_pos - s->mb_stride];
     if(n && n<4) q2 = q1;
 
     if(coded) {
@@ -4081,14 +4104,53 @@ static void vc1_decode_blocks(VC1Context *v)
             vc1_decode_p_blocks(v);
         break;
     case B_TYPE:
-        if(v->bi_type)
-            vc1_decode_i_blocks(v);
-        else
+        if(v->bi_type){
+            if(v->profile == PROFILE_ADVANCED)
+                vc1_decode_i_blocks_adv(v);
+            else
+                vc1_decode_i_blocks(v);
+        }else
             vc1_decode_b_blocks(v);
         break;
     }
 }
 
+#define IS_MARKER(x) (((x) & ~0xFF) == VC1_CODE_RES0)
+
+/** Find VC-1 marker in buffer
+ * @return position where next marker starts or end of buffer if no marker found
+ */
+static av_always_inline uint8_t* find_next_marker(uint8_t *src, uint8_t *end)
+{
+    uint32_t mrk = 0xFFFFFFFF;
+
+    if(end-src < 4) return end;
+    while(src < end){
+        mrk = (mrk << 8) | *src++;
+        if(IS_MARKER(mrk))
+            return src-4;
+    }
+    return end;
+}
+
+static av_always_inline int vc1_unescape_buffer(uint8_t *src, int size, uint8_t *dst)
+{
+    int dsize = 0, i;
+
+    if(size < 4){
+        for(dsize = 0; dsize < size; dsize++) *dst++ = *src++;
+        return size;
+    }
+    for(i = 0; i < size; i++, src++) {
+        if(src[0] == 3 && i >= 2 && !src[-1] && !src[-2] && i < size-1 && src[1] < 4) {
+            dst[dsize++] = src[1];
+            src++;
+            i++;
+        } else
+            dst[dsize++] = *src;
+    }
+    return dsize;
+}
 
 /** Initialize a VC1/WMV3 decoder
  * @todo TODO: Handle VC-1 IDUs (Transport level?)
@@ -4140,44 +4202,47 @@ static int vc1_decode_init(AVCodecContext *avctx)
             av_log(avctx, AV_LOG_INFO, "Read %i bits in overflow\n", -count);
         }
     } else { // VC1/WVC1
-        int edata_size = avctx->extradata_size;
-        uint8_t *edata = avctx->extradata;
+        uint8_t *start = avctx->extradata, *end = avctx->extradata + avctx->extradata_size;
+        uint8_t *next; int size, buf2_size;
+        uint8_t *buf2 = NULL;
+        int seq_inited = 0, ep_inited = 0;
 
         if(avctx->extradata_size < 16) {
-            av_log(avctx, AV_LOG_ERROR, "Extradata size too small: %i\n", edata_size);
+            av_log(avctx, AV_LOG_ERROR, "Extradata size too small: %i\n", avctx->extradata_size);
             return -1;
         }
-        while(edata_size > 8) {
-            // test if we've found header
-            if(AV_RB32(edata) == 0x0000010F) {
-                edata += 4;
-                edata_size -= 4;
+
+        buf2 = av_mallocz(avctx->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
+        if(start[0]) start++; // in WVC1 extradata first byte is its size
+        next = start;
+        for(; next < end; start = next){
+            next = find_next_marker(start + 4, end);
+            size = next - start - 4;
+            if(size <= 0) continue;
+            buf2_size = vc1_unescape_buffer(start + 4, size, buf2);
+            init_get_bits(&gb, buf2, buf2_size * 8);
+            switch(AV_RB32(start)){
+            case VC1_CODE_SEQHDR:
+                if(decode_sequence_header(avctx, &gb) < 0){
+                    av_free(buf2);
+                    return -1;
+                }
+                seq_inited = 1;
+                break;
+            case VC1_CODE_ENTRYPOINT:
+                if(decode_entry_point(avctx, &gb) < 0){
+                    av_free(buf2);
+                    return -1;
+                }
+                ep_inited = 1;
                 break;
             }
-            edata_size--;
-            edata++;
         }
-
-        init_get_bits(&gb, edata, edata_size*8);
-
-        if (decode_sequence_header(avctx, &gb) < 0)
-          return -1;
-
-        while(edata_size > 8) {
-            // test if we've found entry point
-            if(AV_RB32(edata) == 0x0000010E) {
-                edata += 4;
-                edata_size -= 4;
-                break;
-            }
-            edata_size--;
-            edata++;
+        av_free(buf2);
+        if(!seq_inited || !ep_inited){
+            av_log(avctx, AV_LOG_ERROR, "Incomplete extradata\n");
+            return -1;
         }
-
-        init_get_bits(&gb, edata, edata_size*8);
-
-        if (decode_entry_point(avctx, &gb) < 0)
-          return -1;
     }
     avctx->has_b_frames= !!(avctx->max_b_frames);
     s->low_delay = !avctx->has_b_frames;
@@ -4241,17 +4306,49 @@ static int vc1_decode_frame(AVCodecContext *avctx,
         s->current_picture_ptr= &s->picture[i];
     }
 
-    //for advanced profile we need to unescape buffer
+    //for advanced profile we may need to parse and unescape data
     if (avctx->codec_id == CODEC_ID_VC1) {
-        int i, buf_size2;
-        buf2 = av_malloc(buf_size + FF_INPUT_BUFFER_PADDING_SIZE);
-        buf_size2 = 0;
-        for(i = 0; i < buf_size; i++) {
-            if(buf[i] == 3 && i >= 2 && !buf[i-1] && !buf[i-2] && i < buf_size-1 && buf[i+1] < 4) {
-                buf2[buf_size2++] = buf[i+1];
-                i++;
-            } else
-                buf2[buf_size2++] = buf[i];
+        int buf_size2 = 0;
+        buf2 = av_mallocz(buf_size + FF_INPUT_BUFFER_PADDING_SIZE);
+
+        if(IS_MARKER(AV_RB32(buf))){ /* frame starts with marker and needs to be parsed */
+            uint8_t *dst = buf2, *start, *end, *next;
+            int size;
+
+            next = buf;
+            for(start = buf, end = buf + buf_size; next < end; start = next){
+                next = find_next_marker(start + 4, end);
+                size = next - start - 4;
+                if(size <= 0) continue;
+                switch(AV_RB32(start)){
+                case VC1_CODE_FRAME:
+                    buf_size2 = vc1_unescape_buffer(start + 4, size, buf2);
+                    break;
+                case VC1_CODE_ENTRYPOINT: /* it should be before frame data */
+                    buf_size2 = vc1_unescape_buffer(start + 4, size, buf2);
+                    init_get_bits(&s->gb, buf2, buf_size2*8);
+                    decode_entry_point(avctx, &s->gb);
+                    break;
+                case VC1_CODE_SLICE:
+                    av_log(avctx, AV_LOG_ERROR, "Sliced decoding is not implemented (yet)\n");
+                    av_free(buf2);
+                    return -1;
+                }
+            }
+        }else if(v->interlace && ((buf[0] & 0xC0) == 0xC0)){ /* WVC1 interlaced stores both fields divided by marker */
+            uint8_t *divider;
+
+            divider = find_next_marker(buf, buf + buf_size);
+            if((divider == (buf + buf_size)) || AV_RB32(divider) != VC1_CODE_FIELD){
+                av_log(avctx, AV_LOG_ERROR, "Error in WVC1 interlaced frame\n");
+                return -1;
+            }
+
+            buf_size2 = vc1_unescape_buffer(buf, divider - buf, buf2);
+            // TODO
+            av_free(buf2);return -1;
+        }else{
+            buf_size2 = vc1_unescape_buffer(buf, buf_size, buf2);
         }
         init_get_bits(&s->gb, buf2, buf_size2*8);
     } else
@@ -4386,3 +4483,94 @@ AVCodec wmv3_decoder = {
     CODEC_CAP_DELAY,
     NULL
 };
+
+#ifdef CONFIG_VC1_PARSER
+/**
+ * finds the end of the current frame in the bitstream.
+ * @return the position of the first byte of the next frame, or -1
+ */
+static int vc1_find_frame_end(ParseContext *pc, const uint8_t *buf,
+                               int buf_size) {
+    int pic_found, i;
+    uint32_t state;
+
+    pic_found= pc->frame_start_found;
+    state= pc->state;
+
+    i=0;
+    if(!pic_found){
+        for(i=0; i<buf_size; i++){
+            state= (state<<8) | buf[i];
+            if(state == VC1_CODE_FRAME || state == VC1_CODE_FIELD){
+                i++;
+                pic_found=1;
+                break;
+            }
+        }
+    }
+
+    if(pic_found){
+        /* EOF considered as end of frame */
+        if (buf_size == 0)
+            return 0;
+        for(; i<buf_size; i++){
+            state= (state<<8) | buf[i];
+            if(IS_MARKER(state) && state != VC1_CODE_FIELD && state != VC1_CODE_SLICE){
+                pc->frame_start_found=0;
+                pc->state=-1;
+                return i-3;
+            }
+        }
+    }
+    pc->frame_start_found= pic_found;
+    pc->state= state;
+    return END_NOT_FOUND;
+}
+
+static int vc1_parse(AVCodecParserContext *s,
+                           AVCodecContext *avctx,
+                           uint8_t **poutbuf, int *poutbuf_size,
+                           const uint8_t *buf, int buf_size)
+{
+    ParseContext *pc = s->priv_data;
+    int next;
+
+    if(s->flags & PARSER_FLAG_COMPLETE_FRAMES){
+        next= buf_size;
+    }else{
+        next= vc1_find_frame_end(pc, buf, buf_size);
+
+        if (ff_combine_frame(pc, next, (uint8_t **)&buf, &buf_size) < 0) {
+            *poutbuf = NULL;
+            *poutbuf_size = 0;
+            return buf_size;
+        }
+    }
+    *poutbuf = (uint8_t *)buf;
+    *poutbuf_size = buf_size;
+    return next;
+}
+
+int vc1_split(AVCodecContext *avctx,
+                           const uint8_t *buf, int buf_size)
+{
+    int i;
+    uint32_t state= -1;
+
+    for(i=0; i<buf_size; i++){
+        state= (state<<8) | buf[i];
+        if(IS_MARKER(state) && state != VC1_CODE_SEQHDR && state != VC1_CODE_ENTRYPOINT)
+            return i-3;
+    }
+    return 0;
+}
+
+AVCodecParser vc1_parser = {
+    { CODEC_ID_VC1 },
+    sizeof(ParseContext1),
+    NULL,
+    vc1_parse,
+    ff_parse1_close,
+    vc1_split,
+};
+#endif /* CONFIG_VC1_PARSER */

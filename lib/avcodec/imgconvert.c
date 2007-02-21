@@ -44,24 +44,24 @@
 #define xglue(x, y) x ## y
 #define glue(x, y) xglue(x, y)
 
-#define FF_COLOR_RGB      0 /* RGB color space */
-#define FF_COLOR_GRAY     1 /* gray color space */
-#define FF_COLOR_YUV      2 /* YUV color space. 16 <= Y <= 235, 16 <= U, V <= 240 */
-#define FF_COLOR_YUV_JPEG 3 /* YUV color space. 0 <= Y <= 255, 0 <= U, V <= 255 */
+#define FF_COLOR_RGB      0 /**< RGB color space */
+#define FF_COLOR_GRAY     1 /**< gray color space */
+#define FF_COLOR_YUV      2 /**< YUV color space. 16 <= Y <= 235, 16 <= U, V <= 240 */
+#define FF_COLOR_YUV_JPEG 3 /**< YUV color space. 0 <= Y <= 255, 0 <= U, V <= 255 */
 
-#define FF_PIXEL_PLANAR   0 /* each channel has one component in AVPicture */
-#define FF_PIXEL_PACKED   1 /* only one components containing all the channels */
-#define FF_PIXEL_PALETTE  2  /* one components containing indexes for a palette */
+#define FF_PIXEL_PLANAR   0 /**< each channel has one component in AVPicture */
+#define FF_PIXEL_PACKED   1 /**< only one components containing all the channels */
+#define FF_PIXEL_PALETTE  2  /**< one components containing indexes for a palette */
 
 typedef struct PixFmtInfo {
     const char *name;
-    uint8_t nb_channels;     /* number of channels (including alpha) */
-    uint8_t color_type;      /* color type (see FF_COLOR_xxx constants) */
-    uint8_t pixel_type;      /* pixel storage type (see FF_PIXEL_xxx constants) */
-    uint8_t is_alpha : 1;    /* true if alpha can be specified */
-    uint8_t x_chroma_shift;  /* X chroma subsampling factor is 2 ^ shift */
-    uint8_t y_chroma_shift;  /* Y chroma subsampling factor is 2 ^ shift */
-    uint8_t depth;           /* bit depth of the color components */
+    uint8_t nb_channels;     /**< number of channels (including alpha) */
+    uint8_t color_type;      /**< color type (see FF_COLOR_xxx constants) */
+    uint8_t pixel_type;      /**< pixel storage type (see FF_PIXEL_xxx constants) */
+    uint8_t is_alpha : 1;    /**< true if alpha can be specified */
+    uint8_t x_chroma_shift;  /**< X chroma subsampling factor is 2 ^ shift */
+    uint8_t y_chroma_shift;  /**< Y chroma subsampling factor is 2 ^ shift */
+    uint8_t depth;           /**< bit depth of the color components */
 } PixFmtInfo;
 
 /* this table gives more information about formats */
@@ -91,8 +91,8 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         .depth = 8,
         .x_chroma_shift = 0, .y_chroma_shift = 0,
     },
-    [PIX_FMT_YUV422] = {
-        .name = "yuv422",
+    [PIX_FMT_YUYV422] = {
+        .name = "yuyv422",
         .nb_channels = 1,
         .color_type = FF_COLOR_YUV,
         .pixel_type = FF_PIXEL_PACKED,
@@ -167,8 +167,8 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         .depth = 8,
         .x_chroma_shift = 0, .y_chroma_shift = 0,
     },
-    [PIX_FMT_RGBA32] = {
-        .name = "rgba32",
+    [PIX_FMT_RGB32] = {
+        .name = "rgb32",
         .nb_channels = 4, .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
         .pixel_type = FF_PIXEL_PACKED,
@@ -243,8 +243,8 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
     [PIX_FMT_XVMC_MPEG2_IDCT] = {
         .name = "xvmcidct",
     },
-    [PIX_FMT_UYVY411] = {
-        .name = "uyvy411",
+    [PIX_FMT_UYYVYY411] = {
+        .name = "uyyvyy411",
         .nb_channels = 1,
         .color_type = FF_COLOR_YUV,
         .pixel_type = FF_PIXEL_PACKED,
@@ -382,7 +382,22 @@ enum PixelFormat avcodec_get_pix_fmt(const char* name)
     return i;
 }
 
-/* Picture field are filled with 'ptr' addresses. Also return size */
+/**
+ * Fill in AVPicture's fields.
+ * The fields of the given AVPicture are filled in by using the 'ptr' address
+ * which points to the image data buffer. Depending on the specified picture
+ * format, one or multiple image data pointers and line sizes will be set.
+ * If a planar format is specified, several pointers will be set pointing to
+ * the different picture planes and the line sizes of the different planes
+ * will be stored in the lines_sizes array.
+ *
+ * @param picture AVPicture who's fields are to be filled in
+ * @param ptr Buffer which will contain or contains the actual image data
+ * @param pix_fmt The format in which the picture data is stored
+ * @param width The width of the image in pixels
+ * @param height The height of the image in pixels
+ * @return Size of the image data in bytes.
+ */
 int avpicture_fill(AVPicture *picture, uint8_t *ptr,
                    int pix_fmt, int width, int height)
 {
@@ -432,7 +447,7 @@ int avpicture_fill(AVPicture *picture, uint8_t *ptr,
         picture->data[2] = NULL;
         picture->linesize[0] = width * 3;
         return size * 3;
-    case PIX_FMT_RGBA32:
+    case PIX_FMT_RGB32:
     case PIX_FMT_BGR32:
     case PIX_FMT_RGB32_1:
     case PIX_FMT_BGR32_1:
@@ -447,7 +462,7 @@ int avpicture_fill(AVPicture *picture, uint8_t *ptr,
     case PIX_FMT_BGR565:
     case PIX_FMT_RGB555:
     case PIX_FMT_RGB565:
-    case PIX_FMT_YUV422:
+    case PIX_FMT_YUYV422:
         picture->data[0] = ptr;
         picture->data[1] = NULL;
         picture->data[2] = NULL;
@@ -459,7 +474,7 @@ int avpicture_fill(AVPicture *picture, uint8_t *ptr,
         picture->data[2] = NULL;
         picture->linesize[0] = width * 2;
         return size * 2;
-    case PIX_FMT_UYVY411:
+    case PIX_FMT_UYYVYY411:
         picture->data[0] = ptr;
         picture->data[1] = NULL;
         picture->data[2] = NULL;
@@ -519,14 +534,14 @@ int avpicture_layout(const AVPicture* src, int pix_fmt, int width, int height,
         return -1;
 
     if (pf->pixel_type == FF_PIXEL_PACKED || pf->pixel_type == FF_PIXEL_PALETTE) {
-        if (pix_fmt == PIX_FMT_YUV422 ||
+        if (pix_fmt == PIX_FMT_YUYV422 ||
             pix_fmt == PIX_FMT_UYVY422 ||
             pix_fmt == PIX_FMT_BGR565 ||
             pix_fmt == PIX_FMT_BGR555 ||
             pix_fmt == PIX_FMT_RGB565 ||
             pix_fmt == PIX_FMT_RGB555)
             w = width * 2;
-        else if (pix_fmt == PIX_FMT_UYVY411)
+        else if (pix_fmt == PIX_FMT_UYYVYY411)
           w = width + width/2;
         else if (pix_fmt == PIX_FMT_PAL8)
           w = width;
@@ -560,6 +575,15 @@ int avpicture_layout(const AVPicture* src, int pix_fmt, int width, int height,
     return size;
 }
 
+/**
+ * Calculate the size in bytes that a picture of the given width and height
+ * would occupy if stored in the given picture format.
+ *
+ * @param pix_fmt The given picture format
+ * @param width The width of the image
+ * @param height The height of the image
+ * @return Image data size in bytes
+ */
 int avpicture_get_size(int pix_fmt, int width, int height)
 {
     AVPicture dummy_pict;
@@ -633,7 +657,7 @@ static int avg_bits_per_pixel(int pix_fmt)
     switch(pf->pixel_type) {
     case FF_PIXEL_PACKED:
         switch(pix_fmt) {
-        case PIX_FMT_YUV422:
+        case PIX_FMT_YUYV422:
         case PIX_FMT_UYVY422:
         case PIX_FMT_RGB565:
         case PIX_FMT_RGB555:
@@ -641,7 +665,7 @@ static int avg_bits_per_pixel(int pix_fmt)
         case PIX_FMT_BGR555:
             bits = 16;
             break;
-        case PIX_FMT_UYVY411:
+        case PIX_FMT_UYYVYY411:
             bits = 12;
             break;
         default:
@@ -753,7 +777,7 @@ void img_copy(AVPicture *dst, const AVPicture *src,
     switch(pf->pixel_type) {
     case FF_PIXEL_PACKED:
         switch(pix_fmt) {
-        case PIX_FMT_YUV422:
+        case PIX_FMT_YUYV422:
         case PIX_FMT_UYVY422:
         case PIX_FMT_RGB565:
         case PIX_FMT_RGB555:
@@ -761,7 +785,7 @@ void img_copy(AVPicture *dst, const AVPicture *src,
         case PIX_FMT_BGR555:
             bits = 16;
             break;
-        case PIX_FMT_UYVY411:
+        case PIX_FMT_UYYVYY411:
             bits = 12;
             break;
         default:
@@ -802,7 +826,7 @@ void img_copy(AVPicture *dst, const AVPicture *src,
 
 /* XXX: totally non optimized */
 
-static void yuv422_to_yuv420p(AVPicture *dst, const AVPicture *src,
+static void yuyv422_to_yuv420p(AVPicture *dst, const AVPicture *src,
                               int width, int height)
 {
     const uint8_t *p, *p1;
@@ -950,7 +974,7 @@ static void uyvy422_to_yuv422p(AVPicture *dst, const AVPicture *src,
 }
 
 
-static void yuv422_to_yuv422p(AVPicture *dst, const AVPicture *src,
+static void yuyv422_to_yuv422p(AVPicture *dst, const AVPicture *src,
                               int width, int height)
 {
     const uint8_t *p, *p1;
@@ -983,7 +1007,7 @@ static void yuv422_to_yuv422p(AVPicture *dst, const AVPicture *src,
     }
 }
 
-static void yuv422p_to_yuv422(AVPicture *dst, const AVPicture *src,
+static void yuv422p_to_yuyv422(AVPicture *dst, const AVPicture *src,
                               int width, int height)
 {
     uint8_t *p, *p1;
@@ -1049,7 +1073,7 @@ static void yuv422p_to_uyvy422(AVPicture *dst, const AVPicture *src,
     }
 }
 
-static void uyvy411_to_yuv411p(AVPicture *dst, const AVPicture *src,
+static void uyyvyy411_to_yuv411p(AVPicture *dst, const AVPicture *src,
                               int width, int height)
 {
     const uint8_t *p, *p1;
@@ -1085,7 +1109,7 @@ static void uyvy411_to_yuv411p(AVPicture *dst, const AVPicture *src,
 }
 
 
-static void yuv420p_to_yuv422(AVPicture *dst, const AVPicture *src,
+static void yuv420p_to_yuyv422(AVPicture *dst, const AVPicture *src,
                               int width, int height)
 {
     int w, h;
@@ -1709,10 +1733,10 @@ static inline unsigned int bitcopy_n(unsigned int a, int n)
 
 #include "imgconvert_template.h"
 
-/* rgba32 handling */
+/* rgb32 handling */
 
-#define RGB_NAME rgba32
-#define FMT_RGBA32
+#define RGB_NAME rgb32
+#define FMT_RGB32
 
 #define RGB_IN(r, g, b, s)\
 {\
@@ -1931,7 +1955,7 @@ typedef struct ConvertEntry {
 
    - all FF_COLOR_GRAY formats must convert to and from PIX_FMT_GRAY8
 
-   - all FF_COLOR_RGB formats with alpha must convert to and from PIX_FMT_RGBA32
+   - all FF_COLOR_RGB formats with alpha must convert to and from PIX_FMT_RGB32
 
    - PIX_FMT_YUV444P and PIX_FMT_YUVJ444P must convert to and from
      PIX_FMT_RGB24.
@@ -1942,8 +1966,8 @@ typedef struct ConvertEntry {
 */
 static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
     [PIX_FMT_YUV420P] = {
-        [PIX_FMT_YUV422] = {
-            .convert = yuv420p_to_yuv422,
+        [PIX_FMT_YUYV422] = {
+            .convert = yuv420p_to_yuyv422,
         },
         [PIX_FMT_RGB555] = {
             .convert = yuv420p_to_rgb555
@@ -1957,16 +1981,16 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_RGB24] = {
             .convert = yuv420p_to_rgb24
         },
-        [PIX_FMT_RGBA32] = {
-            .convert = yuv420p_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = yuv420p_to_rgb32
         },
         [PIX_FMT_UYVY422] = {
             .convert = yuv420p_to_uyvy422,
         },
     },
     [PIX_FMT_YUV422P] = {
-        [PIX_FMT_YUV422] = {
-            .convert = yuv422p_to_yuv422,
+        [PIX_FMT_YUYV422] = {
+            .convert = yuv422p_to_yuyv422,
         },
         [PIX_FMT_UYVY422] = {
             .convert = yuv422p_to_uyvy422,
@@ -1990,8 +2014,8 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_RGB24] = {
             .convert = yuvj420p_to_rgb24
         },
-        [PIX_FMT_RGBA32] = {
-            .convert = yuvj420p_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = yuvj420p_to_rgb32
         },
     },
     [PIX_FMT_YUVJ444P] = {
@@ -1999,12 +2023,12 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
             .convert = yuvj444p_to_rgb24
         },
     },
-    [PIX_FMT_YUV422] = {
+    [PIX_FMT_YUYV422] = {
         [PIX_FMT_YUV420P] = {
-            .convert = yuv422_to_yuv420p,
+            .convert = yuyv422_to_yuv420p,
         },
         [PIX_FMT_YUV422P] = {
-            .convert = yuv422_to_yuv422p,
+            .convert = yuyv422_to_yuv422p,
         },
     },
     [PIX_FMT_UYVY422] = {
@@ -2025,8 +2049,8 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_RGB555] = {
             .convert = rgb24_to_rgb555
         },
-        [PIX_FMT_RGBA32] = {
-            .convert = rgb24_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = rgb24_to_rgb32
         },
         [PIX_FMT_BGR24] = {
             .convert = rgb24_to_bgr24
@@ -2047,32 +2071,32 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
             .convert = rgb24_to_yuvj444p
         },
     },
-    [PIX_FMT_RGBA32] = {
+    [PIX_FMT_RGB32] = {
         [PIX_FMT_RGB24] = {
-            .convert = rgba32_to_rgb24
+            .convert = rgb32_to_rgb24
         },
         [PIX_FMT_BGR24] = {
-            .convert = rgba32_to_bgr24
+            .convert = rgb32_to_bgr24
         },
         [PIX_FMT_RGB565] = {
-            .convert = rgba32_to_rgb565
+            .convert = rgb32_to_rgb565
         },
         [PIX_FMT_RGB555] = {
-            .convert = rgba32_to_rgb555
+            .convert = rgb32_to_rgb555
         },
         [PIX_FMT_PAL8] = {
-            .convert = rgba32_to_pal8
+            .convert = rgb32_to_pal8
         },
         [PIX_FMT_YUV420P] = {
-            .convert = rgba32_to_yuv420p
+            .convert = rgb32_to_yuv420p
         },
         [PIX_FMT_GRAY8] = {
-            .convert = rgba32_to_gray
+            .convert = rgb32_to_gray
         },
     },
     [PIX_FMT_BGR24] = {
-        [PIX_FMT_RGBA32] = {
-            .convert = bgr24_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = bgr24_to_rgb32
         },
         [PIX_FMT_RGB24] = {
             .convert = bgr24_to_rgb24
@@ -2088,8 +2112,8 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_RGB24] = {
             .convert = rgb555_to_rgb24
         },
-        [PIX_FMT_RGBA32] = {
-            .convert = rgb555_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = rgb555_to_rgb32
         },
         [PIX_FMT_YUV420P] = {
             .convert = rgb555_to_yuv420p
@@ -2099,8 +2123,8 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         },
     },
     [PIX_FMT_RGB565] = {
-        [PIX_FMT_RGBA32] = {
-            .convert = rgb565_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = rgb565_to_rgb32
         },
         [PIX_FMT_RGB24] = {
             .convert = rgb565_to_rgb24
@@ -2141,8 +2165,8 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_BGR24] = {
             .convert = gray_to_bgr24
         },
-        [PIX_FMT_RGBA32] = {
-            .convert = gray_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = gray_to_rgb32
         },
         [PIX_FMT_MONOWHITE] = {
             .convert = gray_to_monowhite
@@ -2180,13 +2204,13 @@ static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_RGB24] = {
             .convert = pal8_to_rgb24
         },
-        [PIX_FMT_RGBA32] = {
-            .convert = pal8_to_rgba32
+        [PIX_FMT_RGB32] = {
+            .convert = pal8_to_rgb32
         },
     },
-    [PIX_FMT_UYVY411] = {
+    [PIX_FMT_UYYVYY411] = {
         [PIX_FMT_YUV411P] = {
-            .convert = uyvy411_to_yuv411p,
+            .convert = uyyvyy411_to_yuv411p,
         },
     },
 
@@ -2499,16 +2523,16 @@ int img_convert(AVPicture *dst, int dst_pix_fmt,
  no_chroma_filter:
 
     /* try to use an intermediate format */
-    if (src_pix_fmt == PIX_FMT_YUV422 ||
-        dst_pix_fmt == PIX_FMT_YUV422) {
+    if (src_pix_fmt == PIX_FMT_YUYV422 ||
+        dst_pix_fmt == PIX_FMT_YUYV422) {
         /* specific case: convert to YUV422P first */
         int_pix_fmt = PIX_FMT_YUV422P;
     } else if (src_pix_fmt == PIX_FMT_UYVY422 ||
         dst_pix_fmt == PIX_FMT_UYVY422) {
         /* specific case: convert to YUV422P first */
         int_pix_fmt = PIX_FMT_YUV422P;
-    } else if (src_pix_fmt == PIX_FMT_UYVY411 ||
-        dst_pix_fmt == PIX_FMT_UYVY411) {
+    } else if (src_pix_fmt == PIX_FMT_UYYVYY411 ||
+        dst_pix_fmt == PIX_FMT_UYYVYY411) {
         /* specific case: convert to YUV411P first */
         int_pix_fmt = PIX_FMT_YUV411P;
     } else if ((src_pix->color_type == FF_COLOR_GRAY &&
@@ -2536,7 +2560,7 @@ int img_convert(AVPicture *dst, int dst_pix_fmt,
     } else {
         /* the two formats are rgb or gray8 or yuv[j]444p */
         if (src_pix->is_alpha && dst_pix->is_alpha)
-            int_pix_fmt = PIX_FMT_RGBA32;
+            int_pix_fmt = PIX_FMT_RGB32;
         else
             int_pix_fmt = PIX_FMT_RGB24;
     }
@@ -2597,8 +2621,8 @@ int img_get_alpha_info(const AVPicture *src,
     if (!pf->is_alpha)
         return 0;
     switch(pix_fmt) {
-    case PIX_FMT_RGBA32:
-        ret = get_alpha_info_rgba32(src, width, height);
+    case PIX_FMT_RGB32:
+        ret = get_alpha_info_rgb32(src, width, height);
         break;
     case PIX_FMT_PAL8:
         ret = get_alpha_info_pal8(src, width, height);

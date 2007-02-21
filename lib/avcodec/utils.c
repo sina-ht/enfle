@@ -172,7 +172,7 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
 
     switch(s->pix_fmt){
     case PIX_FMT_YUV420P:
-    case PIX_FMT_YUV422:
+    case PIX_FMT_YUYV422:
     case PIX_FMT_UYVY422:
     case PIX_FMT_YUV422P:
     case PIX_FMT_YUV444P:
@@ -186,7 +186,7 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
         h_align= 16;
         break;
     case PIX_FMT_YUV411P:
-    case PIX_FMT_UYVY411:
+    case PIX_FMT_UYYVYY411:
         w_align=32;
         h_align=8;
         break;
@@ -237,8 +237,14 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
     InternalBuffer *buf;
     int *picture_number;
 
-    assert(pic->data[0]==NULL);
-    assert(INTERNAL_BUFFER_SIZE > s->internal_buffer_count);
+    if(pic->data[0]!=NULL) {
+        av_log(s, AV_LOG_ERROR, "pic->data[0]!=NULL in avcodec_default_get_buffer\n");
+        return -1;
+    }
+    if(s->internal_buffer_count >= INTERNAL_BUFFER_SIZE) {
+        av_log(s, AV_LOG_ERROR, "internal_buffer_count overflow (missing release_buffer?)\n");
+        return -1;
+    }
 
     if(avcodec_check_dimensions(s,w,h))
         return -1;
@@ -737,6 +743,11 @@ static const AVOption options[]={
 
 static AVClass av_codec_context_class = { "AVCodecContext", context_to_name, options };
 
+/**
+ * Sets the fields of the given AVCodecContext to default values.
+ *
+ * @param s The AVCodecContext of which the fields should be set to default values.
+ */
 void avcodec_get_context_defaults(AVCodecContext *s){
     memset(s, 0, sizeof(AVCodecContext));
 
@@ -759,8 +770,11 @@ void avcodec_get_context_defaults(AVCodecContext *s){
 }
 
 /**
- * allocates a AVCodecContext and set it to defaults.
- * this can be deallocated by simply calling free()
+ * Allocates an AVCodecContext and sets its fields to default values.  The
+ * resulting struct can be deallocated by simply calling av_free().
+ *
+ * @return An AVCodecContext filled with default values or NULL on failure.
+ * @see avcodec_get_context_defaults
  */
 AVCodecContext *avcodec_alloc_context(void){
     AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext));
@@ -772,6 +786,11 @@ AVCodecContext *avcodec_alloc_context(void){
     return avctx;
 }
 
+/**
+ * Sets its fields of the given AVFrame to default values.
+ *
+ * @param pic The AVFrame of which the fields should be set to default values.
+ */
 void avcodec_get_frame_defaults(AVFrame *pic){
     memset(pic, 0, sizeof(AVFrame));
 
@@ -780,8 +799,11 @@ void avcodec_get_frame_defaults(AVFrame *pic){
 }
 
 /**
- * allocates a AVPFrame and set it to defaults.
- * this can be deallocated by simply calling free()
+ * Allocates an AVFrame and sets its fields to default values.  The resulting
+ * struct can be deallocated by simply calling av_free().
+ *
+ * @return An AVFrame filled with default values or NULL on failure.
+ * @see avcodec_get_frame_defaults
  */
 AVFrame *avcodec_alloc_frame(void){
     AVFrame *pic= av_malloc(sizeof(AVFrame));
@@ -843,7 +865,7 @@ int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
                          const short *samples)
 {
     if(buf_size < FF_MIN_BUFFER_SIZE && 0){
-        av_log(avctx, AV_LOG_ERROR, "buffer smaller then minimum size\n");
+        av_log(avctx, AV_LOG_ERROR, "buffer smaller than minimum size\n");
         return -1;
     }
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || samples){
@@ -854,11 +876,18 @@ int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
         return 0;
 }
 
+/**
+ * encode a frame.
+ * @param buf buffer for the bitstream of encoded frame
+ * @param buf_size the size of the buffer in bytes
+ * @param pict the input picture to encode, in avctx.pix_fmt
+ * @return -1 if error
+ */
 int avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size,
                          const AVFrame *pict)
 {
     if(buf_size < FF_MIN_BUFFER_SIZE){
-        av_log(avctx, AV_LOG_ERROR, "buffer smaller then minimum size\n");
+        av_log(avctx, AV_LOG_ERROR, "buffer smaller than minimum size\n");
         return -1;
     }
     if(avcodec_check_dimensions(avctx,avctx->width,avctx->height))
@@ -926,13 +955,13 @@ int avcodec_decode_audio2(AVCodecContext *avctx, int16_t *samples,
 
     //FIXME remove the check below _after_ ensuring that all audio check that the available space is enough
     if(*frame_size_ptr < AVCODEC_MAX_AUDIO_FRAME_SIZE){
-        av_log(avctx, AV_LOG_ERROR, "buffer smaller then AVCODEC_MAX_AUDIO_FRAME_SIZE\n");
+        av_log(avctx, AV_LOG_ERROR, "buffer smaller than AVCODEC_MAX_AUDIO_FRAME_SIZE\n");
         return -1;
     }
     if(*frame_size_ptr < FF_MIN_BUFFER_SIZE ||
        *frame_size_ptr < avctx->channels * avctx->frame_size * sizeof(int16_t) ||
        *frame_size_ptr < buf_size){
-        av_log(avctx, AV_LOG_ERROR, "buffer too small\n");
+        av_log(avctx, AV_LOG_ERROR, "buffer %d too small\n", *frame_size_ptr);
         return -1;
     }
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || buf_size){
@@ -991,6 +1020,12 @@ int avcodec_close(AVCodecContext *avctx)
     return 0;
 }
 
+/**
+ * Find an encoder with a matching codec ID.
+ *
+ * @param id CodecID of the requested encoder.
+ * @return An encoder if one was found, NULL otherwise.
+ */
 AVCodec *avcodec_find_encoder(enum CodecID id)
 {
     AVCodec *p;
@@ -1003,6 +1038,12 @@ AVCodec *avcodec_find_encoder(enum CodecID id)
     return NULL;
 }
 
+/**
+ * Find an encoder with the specified name.
+ *
+ * @param name Name of the requested encoder.
+ * @return An encoder if one was found, NULL otherwise.
+ */
 AVCodec *avcodec_find_encoder_by_name(const char *name)
 {
     AVCodec *p;
@@ -1015,6 +1056,12 @@ AVCodec *avcodec_find_encoder_by_name(const char *name)
     return NULL;
 }
 
+/**
+ * Find a decoder with a matching codec ID.
+ *
+ * @param id CodecID of the requested decoder.
+ * @return An decoder if one was found, NULL otherwise.
+ */
 AVCodec *avcodec_find_decoder(enum CodecID id)
 {
     AVCodec *p;
@@ -1027,6 +1074,12 @@ AVCodec *avcodec_find_decoder(enum CodecID id)
     return NULL;
 }
 
+/**
+ * Find an decoder with the specified name.
+ *
+ * @param name Name of the requested decoder.
+ * @return An decoder if one was found, NULL otherwise.
+ */
 AVCodec *avcodec_find_decoder_by_name(const char *name)
 {
     AVCodec *p;
@@ -1096,7 +1149,7 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
             snprintf(buf + strlen(buf), buf_size - strlen(buf),
                      ", %dx%d",
                      enc->width, enc->height);
-            if(av_log_get_level() >= AV_LOG_DEBUG){
+            if(av_log_level >= AV_LOG_DEBUG){
                 int g= ff_gcd(enc->time_base.num, enc->time_base.den);
                 snprintf(buf + strlen(buf), buf_size - strlen(buf),
                      ", %d/%d",

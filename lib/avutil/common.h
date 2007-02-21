@@ -44,19 +44,17 @@
 #    include <string.h>
 #    include <ctype.h>
 #    include <limits.h>
-#    ifndef __BEOS__
-#        include <errno.h>
-#    else
-#        include "berrno.h"
-#    endif
+#    include <errno.h>
 #    include <math.h>
 #endif /* HAVE_AV_CONFIG_H */
 
 #ifndef av_always_inline
 #if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
 #    define av_always_inline __attribute__((always_inline)) inline
+#    define av_noinline __attribute__((noinline))
 #else
 #    define av_always_inline inline
+#    define av_noinline
 #endif
 #endif
 
@@ -321,7 +319,7 @@ tend= read_time();\
   static uint64_t tsum=0;\
   static int tcount=0;\
   static int tskip_count=0;\
-  if(tcount<2 || tend - tstart < 8*tsum/tcount){\
+  if(tcount<2 || tend - tstart < FFMAX(8*tsum/tcount, 2000)){\
       tsum+= tend - tstart;\
       tcount++;\
   }else\

@@ -21,7 +21,7 @@
 // * along with FFmpeg; if not, write to the Free Software Foundation,
 // * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 // *
-// * $Id: idct_mmx_xvid.c,v 1.5 2006/10/14 05:27:48 sian Exp $
+// * $Id: idct_mmx_xvid.c,v 1.6 2007/02/21 17:07:19 sian Exp $
 // *
 // ***************************************************************************/
 

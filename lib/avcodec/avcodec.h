@@ -37,8 +37,8 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(29<<8)+0)
-#define LIBAVCODEC_VERSION      51.29.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(34<<8)+0)
+#define LIBAVCODEC_VERSION      51.34.0
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
@@ -227,7 +227,7 @@ enum CodecID {
     CODEC_ID_SHORTEN,
     CODEC_ID_ALAC,
     CODEC_ID_WESTWOOD_SND1,
-    CODEC_ID_GSM,
+    CODEC_ID_GSM, /* As in Berlin toast format */
     CODEC_ID_QDM2,
     CODEC_ID_COOK,
     CODEC_ID_TRUESPEECH,
@@ -238,6 +238,8 @@ enum CodecID {
     CODEC_ID_DSICINAUDIO,
     CODEC_ID_IMC,
     CODEC_ID_MUSEPACK7,
+    CODEC_ID_MLP,
+    CODEC_ID_GSM_MS, /* As found in WAV */
 
     /* subtitle codecs */
     CODEC_ID_DVD_SUBTITLE= 0x17000,
@@ -865,7 +867,7 @@ typedef struct AVCodecContext {
     int qmax;
 
     /**
-     * maximum quantizer difference etween frames.
+     * maximum quantizer difference between frames.
      * - encoding: set by user.
      * - decoding: unused
      */
@@ -1234,6 +1236,7 @@ typedef struct AVCodecContext {
 #define FF_IDCT_XVIDMMX      14
 #define FF_IDCT_CAVS         15
 #define FF_IDCT_SIMPLEARMV5TE 16
+#define FF_IDCT_SIMPLEARMV6  17
 
     /**
      * slice count.
@@ -2147,6 +2150,7 @@ extern AVCodec amr_nb_encoder;
 extern AVCodec amr_wb_encoder;
 extern AVCodec asv1_encoder;
 extern AVCodec asv2_encoder;
+extern AVCodec bmp_encoder;
 extern AVCodec dvvideo_encoder;
 extern AVCodec faac_encoder;
 extern AVCodec ffv1_encoder;
@@ -2162,6 +2166,7 @@ extern AVCodec h264_encoder;
 extern AVCodec huffyuv_encoder;
 extern AVCodec jpegls_encoder;
 extern AVCodec libgsm_encoder;
+extern AVCodec libgsm_ms_encoder;
 extern AVCodec libtheora_encoder;
 extern AVCodec ljpeg_encoder;
 extern AVCodec mdec_encoder;
@@ -2189,6 +2194,8 @@ extern AVCodec sonic_ls_encoder;
 extern AVCodec svq1_encoder;
 extern AVCodec vcr1_encoder;
 extern AVCodec vorbis_encoder;
+extern AVCodec wmav1_encoder;
+extern AVCodec wmav2_encoder;
 extern AVCodec wmv1_encoder;
 extern AVCodec wmv2_encoder;
 extern AVCodec x264_encoder;
@@ -2237,6 +2244,7 @@ extern AVCodec interplay_dpcm_decoder;
 extern AVCodec interplay_video_decoder;
 extern AVCodec kmvc_decoder;
 extern AVCodec libgsm_decoder;
+extern AVCodec libgsm_ms_decoder;
 extern AVCodec loco_decoder;
 extern AVCodec mace3_decoder;
 extern AVCodec mace6_decoder;
@@ -2373,8 +2381,8 @@ extern AVCodec rawvideo_decoder;
 extern AVCodec rawvideo_encoder;
 
 /* the following codecs use external GPL libs */
-extern AVCodec ac3_decoder;
 extern AVCodec dts_decoder;
+extern AVCodec liba52_decoder;
 
 /* subtitles */
 extern AVCodec dvbsub_decoder;
@@ -2399,16 +2407,17 @@ int av_resample(struct AVResampleContext *c, short *dst, short *src, int *consum
 void av_resample_compensate(struct AVResampleContext *c, int sample_delta, int compensation_distance);
 void av_resample_close(struct AVResampleContext *c);
 
+#if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
 /* YUV420 format is assumed ! */
 
-struct ImgReSampleContext;
+struct ImgReSampleContext attribute_deprecated;
 
-typedef struct ImgReSampleContext ImgReSampleContext;
+typedef struct ImgReSampleContext ImgReSampleContext attribute_deprecated;
 
-ImgReSampleContext *img_resample_init(int output_width, int output_height,
+attribute_deprecated ImgReSampleContext *img_resample_init(int output_width, int output_height,
                                       int input_width, int input_height);
 
-ImgReSampleContext *img_resample_full_init(int owidth, int oheight,
+attribute_deprecated ImgReSampleContext *img_resample_full_init(int owidth, int oheight,
                                       int iwidth, int iheight,
                                       int topBand, int bottomBand,
                                       int leftBand, int rightBand,
@@ -2416,10 +2425,12 @@ ImgReSampleContext *img_resample_full_init(int owidth, int oheight,
                                       int padleft, int padright);
 
 
-void img_resample(ImgReSampleContext *s,
+attribute_deprecated void img_resample(ImgReSampleContext *s,
                   AVPicture *output, const AVPicture *input);
 
-void img_resample_close(ImgReSampleContext *s);
+attribute_deprecated void img_resample_close(ImgReSampleContext *s);
+
+#endif
 
 /**
  * Allocate memory for a picture.  Call avpicture_free to free it.
@@ -2463,10 +2474,12 @@ int avcodec_find_best_pix_fmt(int pix_fmt_mask, int src_pix_fmt,
 int img_get_alpha_info(const AVPicture *src,
                        int pix_fmt, int width, int height);
 
+#if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
 /* convert among pixel formats */
-int img_convert(AVPicture *dst, int dst_pix_fmt,
+attribute_deprecated int img_convert(AVPicture *dst, int dst_pix_fmt,
                 const AVPicture *src, int pix_fmt,
                 int width, int height);
+#endif
 
 /* deinterlace a picture */
 int avpicture_deinterlace(AVPicture *dst, const AVPicture *src,
@@ -2636,6 +2649,7 @@ extern AVCodecParser mpeg4video_parser;
 extern AVCodecParser mpegaudio_parser;
 extern AVCodecParser mpegvideo_parser;
 extern AVCodecParser pnm_parser;
+extern AVCodecParser vc1_parser;
 
 
 typedef struct AVBitStreamFilterContext {
@@ -2692,6 +2706,23 @@ int img_pad(AVPicture *dst, const AVPicture *src, int height, int width, int pix
             int padtop, int padbottom, int padleft, int padright, int *color);
 
 extern unsigned int av_xiphlacing(unsigned char *s, unsigned int v);
+
+/* error handling */
+#if EINVAL > 0
+#define AVERROR(e) (-(e)) /**< returns a negative error code from a POSIX error code, to return from library functions. */
+#define AVUNERROR(e) (-(e)) /**< returns a POSIX error code from a library function error return value. */
+#else
+/* some platforms have E* and errno already negated. */
+#define AVERROR(e) (e)
+#define AVUNERROR(e) (e)
+#endif
+#define AVERROR_UNKNOWN     AVERROR(EINVAL)  /**< unknown error */
+#define AVERROR_IO          AVERROR(EIO)     /**< i/o error */
+#define AVERROR_NUMEXPECTED AVERROR(EDOM)    /**< number syntax expected in filename */
+#define AVERROR_INVALIDDATA AVERROR(EINVAL)  /**< invalid data found */
+#define AVERROR_NOMEM       AVERROR(ENOMEM)  /**< not enough memory */
+#define AVERROR_NOFMT       AVERROR(EILSEQ)  /**< unknown format */
+#define AVERROR_NOTSUPP     AVERROR(ENOSYS)  /**< operation not supported */
 
 #ifdef __cplusplus
 }

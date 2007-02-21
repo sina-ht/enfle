@@ -25,7 +25,7 @@
  */
 
 #include "avcodec.h"
-#include "liba52/a52.h"
+#include <a52dec/a52.h>
 
 #ifdef CONFIG_LIBA52BIN
 #include <dlfcn.h>
@@ -70,7 +70,6 @@ typedef struct AC3DecodeState {
 
 } AC3DecodeState;
 
-#ifdef CONFIG_LIBA52BIN
 static void* dlsymm(void* handle, const char* symbol)
 {
     void* f = dlsym(handle, symbol);
@@ -78,7 +77,6 @@ static void* dlsymm(void* handle, const char* symbol)
         av_log( NULL, AV_LOG_ERROR, "A52 Decoder - function '%s' can't be resolved\n", symbol);
     return f;
 }
-#endif
 
 static int a52_decode_init(AVCodecContext *avctx)
 {
@@ -104,7 +102,6 @@ static int a52_decode_init(AVCodecContext *avctx)
         return -1;
     }
 #else
-    /* static linked version */
     s->handle = 0;
     s->a52_init = a52_init;
     s->a52_samples = a52_samples;
@@ -248,7 +245,7 @@ static int a52_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ac3_decoder = {
+AVCodec liba52_decoder = {
     "ac3",
     CODEC_TYPE_AUDIO,
     CODEC_ID_AC3,

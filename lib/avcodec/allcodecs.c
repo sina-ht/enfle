@@ -1,5 +1,5 @@
 /*
- * Utils for libavcodec
+ * Provides registration of all codecs, parsers and bitstream filters for libavcodec.
  * Copyright (c) 2002 Fabrice Bellard.
  *
  * This file is part of FFmpeg.
@@ -21,7 +21,7 @@
 
 /**
  * @file allcodecs.c
- * Utils for libavcodec.
+ * Provides registration of all codecs, parsers and bitstream filters for libavcodec.
  */
 
 #include "avcodec.h"
@@ -35,11 +35,15 @@
 #define REGISTER_PARSER(X,x) \
           if(ENABLE_##X##_PARSER)  av_register_codec_parser(&x##_parser)
 
-/* If you do not call this function, then you can select exactly which
-   formats you want to support */
-
 /**
- * simple call to register all the codecs.
+ * Register all the codecs, parsers and bitstream filters which were enabled at
+ * configuration time. If you do not call this function you can select exactly
+ * which formats you want to support, by using the individual registration
+ * functions.
+ *
+ * @see register_avcodec
+ * @see av_register_codec_parser
+ * @see av_register_bitstream_filter
  */
 void avcodec_register_all(void)
 {
@@ -54,7 +58,7 @@ void avcodec_register_all(void)
     REGISTER_ENCDEC (ASV1, asv1);
     REGISTER_ENCDEC (ASV2, asv2);
     REGISTER_DECODER(AVS, avs);
-    REGISTER_DECODER(BMP, bmp);
+    REGISTER_ENCDEC (BMP, bmp);
     REGISTER_DECODER(CAVS, cavs);
     REGISTER_DECODER(CINEPAK, cinepak);
     REGISTER_DECODER(CLJR, cljr);
@@ -152,7 +156,6 @@ void avcodec_register_all(void)
     /* audio codecs */
     REGISTER_DECODER(AAC, aac);
     REGISTER_DECODER(MPEG4AAC, mpeg4aac);
-    REGISTER_DECODER(AC3, ac3);
     REGISTER_ENCODER(AC3, ac3);
     REGISTER_DECODER(ALAC, alac);
     REGISTER_ENCDEC (AMR_NB, amr_nb);
@@ -163,7 +166,9 @@ void avcodec_register_all(void)
     REGISTER_ENCODER(FAAC, faac);
     REGISTER_ENCDEC (FLAC, flac);
     REGISTER_DECODER(IMC, imc);
+    REGISTER_DECODER(LIBA52, liba52);
     REGISTER_ENCDEC (LIBGSM, libgsm);
+    REGISTER_ENCDEC (LIBGSM_MS, libgsm_ms);
     REGISTER_ENCODER(LIBTHEORA, libtheora);
     REGISTER_DECODER(MACE3, mace3);
     REGISTER_DECODER(MACE6, mace6);
@@ -187,8 +192,8 @@ void avcodec_register_all(void)
     REGISTER_DECODER(VMDAUDIO, vmdaudio);
     REGISTER_ENCDEC (VORBIS, vorbis);
     REGISTER_DECODER(WAVPACK, wavpack);
-    REGISTER_DECODER(WMAV1, wmav1);
-    REGISTER_DECODER(WMAV2, wmav2);
+    REGISTER_ENCDEC(WMAV1, wmav1);
+    REGISTER_ENCDEC(WMAV2, wmav2);
     REGISTER_DECODER(WS_SND1, ws_snd1);
 
     /* pcm codecs */
@@ -254,6 +259,7 @@ void avcodec_register_all(void)
     REGISTER_PARSER (MPEGAUDIO, mpegaudio);
     REGISTER_PARSER (MPEGVIDEO, mpegvideo);
     REGISTER_PARSER (PNM, pnm);
+    REGISTER_PARSER (VC1, vc1);
 
     av_register_bitstream_filter(&dump_extradata_bsf);
     av_register_bitstream_filter(&remove_extradata_bsf);

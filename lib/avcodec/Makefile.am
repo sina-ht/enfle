@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Jan 26 01:20:43 2007.
-# $Id: Makefile.am,v 1.49 2007/01/25 16:21:55 sian Exp $
+# Last Modified: Thu Feb 22 02:05:14 2007.
+# $Id: Makefile.am,v 1.50 2007/02/21 17:07:20 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -51,7 +51,7 @@ CFLAGS += $(CFLAGS_POST)
 
 # # armv4l specific stuff
 # ifeq ($(TARGET_ARCH_ARMV4L),yes)
-# ASM_OBJS += armv4l/jrevdct_arm.o armv4l/simple_idct_arm.o armv4l/dsputil_arm_s.o
+# ASM_OBJS += armv4l/jrevdct_arm.o armv4l/simple_idct_arm.o armv4l/dsputil_arm_s.o armv4l/simple_idct_armv6.S
 # OBJS += armv4l/dsputil_arm.o armv4l/mpegvideo_arm.o
 # ifeq ($(TARGET_IWMMXT),yes)
 # OBJS += armv4l/dsputil_iwmmxt.o armv4l/mpegvideo_iwmmxt.o
@@ -109,6 +109,7 @@ noinst_HEADERS = \
 	ac3tab.h \
 	avcodec.h \
 	bitstream.h \
+	bmp.h \
 	bytestream.h \
 	cabac.h \
 	cavsdata.h \
@@ -126,7 +127,6 @@ noinst_HEADERS = \
 	imgconvert_template.h \
 	indeo2data.h \
 	indeo3data.h \
-	lzo.h \
 	lzw.h \
 	mathops.h \
 	mpcdata.h \
@@ -162,16 +162,18 @@ noinst_HEADERS = \
 	vp56data.h \
 	vp6data.h \
 	xvid_internal.h \
+	xvmc_render.h \
+	wma.h \
 	wmadata.h
 
-# a52dec.c ac3dec.c ac3enc.c amr.c apiexample.c
+# a52dec.c ac3enc.c amr.c apiexample.c
 # dct-test.c dtsdec.c
 # faac.c faad.c fft-test.c libgsm.c
 # mdec.c motion_est_template.c motion_test.c svq3.c wmv2.c
 # mp3lameaudio.c
 # beosthread.c w32thread.c
 # imgresample.c needs libswscale
-# x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c are encoders
+# bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c are encoders
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -236,7 +238,6 @@ libavcodec_la_SOURCES = \
 	kmvc.c \
 	lcl.c \
 	loco.c \
-	lzo.c \
 	lzw.c \
 	mace.c \
 	mdct.c \
@@ -307,6 +308,7 @@ libavcodec_la_SOURCES = \
 	vp6.c \
 	vqavideo.c \
 	wavpack.c \
+	wma.c \
 	wmadec.c \
 	wnv1.c \
 	ws-snd1.c \
