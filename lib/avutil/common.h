@@ -70,11 +70,6 @@
 #endif
 #endif
 
-#ifndef INT64_C
-#define INT64_C(c)     (c ## LL)
-#define UINT64_C(c)    (c ## ULL)
-#endif
-
 //rounded divison & shift
 #define RSHIFT(a,b) ((a) > 0 ? ((a) + ((1<<(b))>>1))>>(b) : ((a) + ((1<<(b))>>1)-1)>>(b))
 /* assume b>0 */
@@ -170,7 +165,7 @@ static inline int mid_pred(int a, int b, int c)
  * @param amax maximum value of the clip range
  * @return clipped value
  */
-static inline int clip(int a, int amin, int amax)
+static inline int av_clip(int a, int amin, int amax)
 {
     if (a < amin)      return amin;
     else if (a > amax) return amax;
@@ -182,7 +177,7 @@ static inline int clip(int a, int amin, int amax)
  * @param a value to clip
  * @return clipped value
  */
-static inline uint8_t clip_uint8(int a)
+static inline uint8_t av_clip_uint8(int a)
 {
     if (a&(~255)) return (-a)>>31;
     else          return a;

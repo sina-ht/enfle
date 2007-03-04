@@ -901,7 +901,7 @@ typedef struct MJpegDecodeContext {
     int cur_scan; /* current scan, used by JPEG-LS */
 } MJpegDecodeContext;
 
-#include "jpeg_ls.c" //FIXME make jpeg-ls more independant
+#include "jpeg_ls.c" //FIXME make jpeg-ls more independent
 
 static int mjpeg_decode_dht(MJpegDecodeContext *s);
 
@@ -964,6 +964,13 @@ static int mjpeg_decode_init(AVCodecContext *avctx)
         init_get_bits(&s->gb, avctx->extradata, avctx->extradata_size*8);
         mjpeg_decode_dht(s);
         /* should check for error - but dunno */
+    }
+    if (avctx->extradata_size > 9 &&
+        AV_RL32(avctx->extradata + 4) == MKTAG('f','i','e','l')) {
+        if (avctx->extradata[9] == 6) { /* quicktime icefloe 019 */
+            s->interlace_polarity = 1; /* bottom field first */
+            av_log(avctx, AV_LOG_DEBUG, "mjpeg bottom field first\n");
+        }
     }
 
     return 0;
@@ -1185,8 +1192,9 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
             s->org_height != 0 &&
             s->height < ((s->org_height * 3) / 4)) {
             s->interlaced = 1;
-//            s->bottom_field = (s->interlace_polarity) ? 1 : 0;
-            s->bottom_field = 0;
+            s->bottom_field = s->interlace_polarity;
+            s->picture.interlaced_frame = 1;
+            s->picture.top_field_first = !s->interlace_polarity;
             height *= 2;
         }
 
@@ -1197,7 +1205,7 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
         s->first_picture = 0;
     }
 
-    if(s->interlaced && s->bottom_field)
+    if(s->interlaced && (s->bottom_field == !s->interlace_polarity))
         return 0;
 
     /* XXX: not complete test ! */
@@ -2128,18 +2136,21 @@ static int mjpeg_decode_frame(AVCodecContext *avctx,
                     break;
                 case SOF0:
                     s->lossless=0;
+                    s->ls=0;
                     s->progressive=0;
                     if (mjpeg_decode_sof(s) < 0)
                         return -1;
                     break;
                 case SOF2:
                     s->lossless=0;
+                    s->ls=0;
                     s->progressive=1;
                     if (mjpeg_decode_sof(s) < 0)
                         return -1;
                     break;
                 case SOF3:
                     s->lossless=1;
+                    s->ls=0;
                     s->progressive=0;
                     if (mjpeg_decode_sof(s) < 0)
                         return -1;
@@ -2164,7 +2175,7 @@ eoi_parser:
                         if (s->interlaced) {
                             s->bottom_field ^= 1;
                             /* if not bottom field, do not output image yet */
-                            if (s->bottom_field)
+                            if (s->bottom_field == !s->interlace_polarity)
                                 goto not_the_end;
                         }
                         *picture = s->picture;

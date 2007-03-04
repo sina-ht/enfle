@@ -59,9 +59,6 @@ const uint8_t ff_reverse[256]={
 
 static int volatile entangled_thread_counter=0;
 
-/**
- * realloc which does nothing if the block is large enough
- */
 void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size)
 {
     if(min_size < *size)
@@ -76,9 +73,6 @@ static unsigned int last_static = 0;
 static unsigned int allocated_static = 0;
 static void** array_static = NULL;
 
-/**
- * allocation of static arrays - do not use for normal allocation.
- */
 void *av_mallocz_static(unsigned int size)
 {
     void *ptr = av_mallocz(size);
@@ -93,11 +87,7 @@ void *av_mallocz_static(unsigned int size)
     return ptr;
 }
 
-/**
- * same as above, but does realloc
- */
-
-void *av_realloc_static(void *ptr, unsigned int size)
+void *ff_realloc_static(void *ptr, unsigned int size)
 {
     int i;
     if(!ptr)
@@ -113,9 +103,6 @@ void *av_realloc_static(void *ptr, unsigned int size)
 
 }
 
-/**
- * free all static arrays and reset pointers to 0.
- */
 void av_free_static(void)
 {
     while(last_static){
@@ -333,7 +320,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
 
 void avcodec_default_release_buffer(AVCodecContext *s, AVFrame *pic){
     int i;
-    InternalBuffer *buf, *last, temp;
+    InternalBuffer *buf, *last;
 
     assert(pic->type==FF_BUFFER_TYPE_INTERNAL);
     assert(s->internal_buffer_count);
@@ -348,9 +335,7 @@ void avcodec_default_release_buffer(AVCodecContext *s, AVFrame *pic){
     s->internal_buffer_count--;
     last = &((InternalBuffer*)s->internal_buffer)[s->internal_buffer_count];
 
-    temp= *buf;
-    *buf= *last;
-    *last= temp;
+    FFSWAP(InternalBuffer, *buf, *last);
 
     for(i=0; i<3; i++){
         pic->data[i]=NULL;
@@ -385,7 +370,7 @@ int avcodec_default_reget_buffer(AVCodecContext *s, AVFrame *pic){
     if (s->get_buffer(s, pic))
         return -1;
     /* Copy image data from old buffer to new buffer */
-    img_copy((AVPicture*)pic, (AVPicture*)&temp_pic, s->pix_fmt, s->width,
+    av_picture_copy((AVPicture*)pic, (AVPicture*)&temp_pic, s->pix_fmt, s->width,
              s->height);
     s->release_buffer(s, &temp_pic); // Release old frame
     return 0;
@@ -488,8 +473,10 @@ static const AVOption options[]={
 {"rc_strategy", "ratecontrol method", OFFSET(rc_strategy), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
 {"b_strategy", "strategy to choose between I/P/B-frames", OFFSET(b_frame_strategy), FF_OPT_TYPE_INT, 0, INT_MIN, INT_MAX, V|E},
 {"hurry_up", NULL, OFFSET(hurry_up), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|D},
+#if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
 {"rtp_mode", NULL, OFFSET(rtp_mode), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
-{"rtp_payload_size", NULL, OFFSET(rtp_payload_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
+#endif
+{"ps", "rtp payload size in bits", OFFSET(rtp_payload_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
 {"mv_bits", NULL, OFFSET(mv_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"header_bits", NULL, OFFSET(header_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"i_tex_bits", NULL, OFFSET(i_tex_bits), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
@@ -731,6 +718,7 @@ static const AVOption options[]={
 {"max_partition_order", NULL, OFFSET(max_partition_order), FF_OPT_TYPE_INT, -1, INT_MIN, INT_MAX, A|E},
 {"timecode_frame_start", "GOP timecode frame start number, in non drop frame format", OFFSET(timecode_frame_start), FF_OPT_TYPE_INT, 0, 0, INT_MAX, V|E},
 {"drop_frame_timecode", NULL, 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_DROP_FRAME_TIMECODE, INT_MIN, INT_MAX, V|E, "flags2"},
+{"non_linear_q", "use non linear quantizer", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_NON_LINEAR_QUANT, INT_MIN, INT_MAX, V|E, "flags2"},
 {NULL},
 };
 
@@ -743,11 +731,6 @@ static const AVOption options[]={
 
 static AVClass av_codec_context_class = { "AVCodecContext", context_to_name, options };
 
-/**
- * Sets the fields of the given AVCodecContext to default values.
- *
- * @param s The AVCodecContext of which the fields should be set to default values.
- */
 void avcodec_get_context_defaults(AVCodecContext *s){
     memset(s, 0, sizeof(AVCodecContext));
 
@@ -769,13 +752,6 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->reget_buffer= avcodec_default_reget_buffer;
 }
 
-/**
- * Allocates an AVCodecContext and sets its fields to default values.  The
- * resulting struct can be deallocated by simply calling av_free().
- *
- * @return An AVCodecContext filled with default values or NULL on failure.
- * @see avcodec_get_context_defaults
- */
 AVCodecContext *avcodec_alloc_context(void){
     AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext));
 
@@ -786,11 +762,6 @@ AVCodecContext *avcodec_alloc_context(void){
     return avctx;
 }
 
-/**
- * Sets its fields of the given AVFrame to default values.
- *
- * @param pic The AVFrame of which the fields should be set to default values.
- */
 void avcodec_get_frame_defaults(AVFrame *pic){
     memset(pic, 0, sizeof(AVFrame));
 
@@ -798,13 +769,6 @@ void avcodec_get_frame_defaults(AVFrame *pic){
     pic->key_frame= 1;
 }
 
-/**
- * Allocates an AVFrame and sets its fields to default values.  The resulting
- * struct can be deallocated by simply calling av_free().
- *
- * @return An AVFrame filled with default values or NULL on failure.
- * @see avcodec_get_frame_defaults
- */
 AVFrame *avcodec_alloc_frame(void){
     AVFrame *pic= av_malloc(sizeof(AVFrame));
 
@@ -876,13 +840,6 @@ int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
         return 0;
 }
 
-/**
- * encode a frame.
- * @param buf buffer for the bitstream of encoded frame
- * @param buf_size the size of the buffer in bytes
- * @param pict the input picture to encode, in avctx.pix_fmt
- * @return -1 if error
- */
 int avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size,
                          const AVFrame *pict)
 {
@@ -911,15 +868,6 @@ int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size,
     return ret;
 }
 
-/**
- * decode a frame.
- * @param buf bitstream buffer, must be FF_INPUT_BUFFER_PADDING_SIZE larger then the actual read bytes
- * because some optimized bitstream readers read 32 or 64 bit at once and could read over the end
- * @param buf_size the size of the buffer in bytes
- * @param got_picture_ptr zero if no frame could be decompressed, Otherwise, it is non zero
- * @return -1 if error, otherwise return the number of
- * bytes used.
- */
 int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,
                          int *got_picture_ptr,
                          uint8_t *buf, int buf_size)
@@ -943,28 +891,25 @@ int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,
     return ret;
 }
 
-/* decode an audio frame. return -1 if error, otherwise return the
-   *number of bytes used. If no frame could be decompressed,
-   *frame_size_ptr is zero. Otherwise, it is the decompressed frame
-   *size in BYTES. */
 int avcodec_decode_audio2(AVCodecContext *avctx, int16_t *samples,
                          int *frame_size_ptr,
                          uint8_t *buf, int buf_size)
 {
     int ret;
 
-    //FIXME remove the check below _after_ ensuring that all audio check that the available space is enough
-    if(*frame_size_ptr < AVCODEC_MAX_AUDIO_FRAME_SIZE){
-        av_log(avctx, AV_LOG_ERROR, "buffer smaller than AVCODEC_MAX_AUDIO_FRAME_SIZE\n");
-        return -1;
-    }
-    if(*frame_size_ptr < FF_MIN_BUFFER_SIZE ||
-       *frame_size_ptr < avctx->channels * avctx->frame_size * sizeof(int16_t) ||
-       *frame_size_ptr < buf_size){
-        av_log(avctx, AV_LOG_ERROR, "buffer %d too small\n", *frame_size_ptr);
-        return -1;
-    }
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || buf_size){
+        //FIXME remove the check below _after_ ensuring that all audio check that the available space is enough
+        if(*frame_size_ptr < AVCODEC_MAX_AUDIO_FRAME_SIZE){
+            av_log(avctx, AV_LOG_ERROR, "buffer smaller than AVCODEC_MAX_AUDIO_FRAME_SIZE\n");
+            return -1;
+        }
+        if(*frame_size_ptr < FF_MIN_BUFFER_SIZE ||
+        *frame_size_ptr < avctx->channels * avctx->frame_size * sizeof(int16_t) ||
+        *frame_size_ptr < buf_size){
+            av_log(avctx, AV_LOG_ERROR, "buffer %d too small\n", *frame_size_ptr);
+            return -1;
+        }
+
         ret = avctx->codec->decode(avctx, samples, frame_size_ptr,
                                 buf, buf_size);
         avctx->frame_number++;
@@ -984,10 +929,6 @@ int avcodec_decode_audio(AVCodecContext *avctx, int16_t *samples,
 }
 #endif
 
-
-/* decode a subtitle message. return -1 if error, otherwise return the
-   *number of bytes used. If no subtitle could be decompressed,
-   *got_sub_ptr is zero. Otherwise, the subtitle is stored in *sub. */
 int avcodec_decode_subtitle(AVCodecContext *avctx, AVSubtitle *sub,
                             int *got_sub_ptr,
                             const uint8_t *buf, int buf_size)
@@ -1020,12 +961,6 @@ int avcodec_close(AVCodecContext *avctx)
     return 0;
 }
 
-/**
- * Find an encoder with a matching codec ID.
- *
- * @param id CodecID of the requested encoder.
- * @return An encoder if one was found, NULL otherwise.
- */
 AVCodec *avcodec_find_encoder(enum CodecID id)
 {
     AVCodec *p;
@@ -1038,12 +973,6 @@ AVCodec *avcodec_find_encoder(enum CodecID id)
     return NULL;
 }
 
-/**
- * Find an encoder with the specified name.
- *
- * @param name Name of the requested encoder.
- * @return An encoder if one was found, NULL otherwise.
- */
 AVCodec *avcodec_find_encoder_by_name(const char *name)
 {
     AVCodec *p;
@@ -1056,12 +985,6 @@ AVCodec *avcodec_find_encoder_by_name(const char *name)
     return NULL;
 }
 
-/**
- * Find a decoder with a matching codec ID.
- *
- * @param id CodecID of the requested decoder.
- * @return An decoder if one was found, NULL otherwise.
- */
 AVCodec *avcodec_find_decoder(enum CodecID id)
 {
     AVCodec *p;
@@ -1074,12 +997,6 @@ AVCodec *avcodec_find_decoder(enum CodecID id)
     return NULL;
 }
 
-/**
- * Find an decoder with the specified name.
- *
- * @param name Name of the requested decoder.
- * @return An decoder if one was found, NULL otherwise.
- */
 AVCodec *avcodec_find_decoder_by_name(const char *name)
 {
     AVCodec *p;
@@ -1264,7 +1181,6 @@ static void init_crcs(void){
     av_crc_init(av_crc07      , 0,  8, 0x07      , sizeof(AVCRC)*257);
 }
 
-/* must be called before any other functions */
 void avcodec_init(void)
 {
     static int inited = 0;
@@ -1277,9 +1193,6 @@ void avcodec_init(void)
     init_crcs();
 }
 
-/**
- * Flush buffers, should be called when seeking or when swicthing to a different stream.
- */
 void avcodec_flush_buffers(AVCodecContext *avctx)
 {
     if(avctx->codec->flush)

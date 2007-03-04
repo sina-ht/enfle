@@ -31,6 +31,7 @@
 #include "mpegvideo.h"
 
 #include "mpeg12data.h"
+#include "bytestream.h"
 
 //#undef NDEBUG
 //#include <assert.h>
@@ -419,9 +420,19 @@ void ff_mpeg1_clean_buffers(MpegEncContext *s){
 
 #ifdef CONFIG_ENCODERS
 
+static av_always_inline void put_qscale(MpegEncContext *s)
+{
+    if(s->q_scale_type){
+        assert(s->qscale>=1 && s->qscale <=12);
+        put_bits(&s->pb, 5, inv_non_linear_qscale[s->qscale]);
+    }else{
+        put_bits(&s->pb, 5, s->qscale);
+    }
+}
+
 void ff_mpeg1_encode_slice_header(MpegEncContext *s){
     put_header(s, SLICE_MIN_START_CODE + s->mb_y);
-    put_bits(&s->pb, 5, s->qscale); /* quantizer scale */
+    put_qscale(s);
     put_bits(&s->pb, 1, 0); /* slice extra information */
 }
 
@@ -567,7 +578,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
         if (s->pict_type == I_TYPE) {
             if(s->dquant && cbp){
                 put_mb_modes(s, 2, 1, 0, 0); /* macroblock_type : macroblock_quant = 1 */
-                put_bits(&s->pb, 5, s->qscale);
+                put_qscale(s);
             }else{
                 put_mb_modes(s, 1, 1, 0, 0); /* macroblock_type : macroblock_quant = 0 */
                 s->qscale -= s->dquant;
@@ -577,7 +588,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
         } else if (s->mb_intra) {
             if(s->dquant && cbp){
                 put_mb_modes(s, 6, 0x01, 0, 0);
-                put_bits(&s->pb, 5, s->qscale);
+                put_qscale(s);
             }else{
                 put_mb_modes(s, 5, 0x03, 0, 0);
                 s->qscale -= s->dquant;
@@ -591,7 +602,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                     if ((motion_x|motion_y) == 0) {
                         if(s->dquant){
                             put_mb_modes(s, 5, 1, 0, 0); /* macroblock_pattern & quant */
-                            put_bits(&s->pb, 5, s->qscale);
+                            put_qscale(s);
                         }else{
                             put_mb_modes(s, 2, 1, 0, 0); /* macroblock_pattern only */
                         }
@@ -599,7 +610,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                     } else {
                         if(s->dquant){
                             put_mb_modes(s, 5, 2, 1, 0); /* motion + cbp */
-                            put_bits(&s->pb, 5, s->qscale);
+                            put_qscale(s);
                         }else{
                             put_mb_modes(s, 1, 1, 1, 0); /* motion + cbp */
                         }
@@ -626,7 +637,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                 if (cbp) {
                     if(s->dquant){
                         put_mb_modes(s, 5, 2, 1, 1); /* motion + cbp */
-                        put_bits(&s->pb, 5, s->qscale);
+                        put_qscale(s);
                     }else{
                         put_mb_modes(s, 1, 1, 1, 1); /* motion + cbp */
                     }
@@ -664,7 +675,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                             put_mb_modes(s, 6, 3, 1, 0);
                         else
                             put_mb_modes(s, mb_type_len[s->mv_dir]+3, 2, 1, 0);
-                        put_bits(&s->pb, 5, s->qscale);
+                        put_qscale(s);
                     } else {
                         put_mb_modes(s, mb_type_len[s->mv_dir], 3, 1, 0);
                     }
@@ -698,7 +709,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                             put_mb_modes(s, 6, 3, 1, 1);
                         else
                             put_mb_modes(s, mb_type_len[s->mv_dir]+3, 2, 1, 1);
-                        put_bits(&s->pb, 5, s->qscale);
+                        put_qscale(s);
                     } else {
                         put_mb_modes(s, mb_type_len[s->mv_dir], 3, 1, 1);
                     }
@@ -3314,7 +3325,7 @@ AVCodec mpeg2video_encoder = {
 };
 #endif
 
-//#ifdef HAVE_XVMC
+#if 1
 static int mpeg_mc_decode_init(AVCodecContext *avctx){
     Mpeg1Context *s;
 
@@ -3347,7 +3358,7 @@ AVCodec mpeg_xvmc_decoder = {
     .flush= ff_mpeg_flush,
 };
 
-//#endif
+#endif
 
 #ifdef CONFIG_MPEGVIDEO_PARSER
 static void mpegvideo_extract_headers(AVCodecParserContext *s,
@@ -3511,6 +3522,35 @@ AVCodecParser mpegvideo_parser = {
     mpegvideo_split,
 };
 #endif /* !CONFIG_MPEGVIDEO_PARSER */
+
+static int imx_dump_header(AVBitStreamFilterContext *bsfc, AVCodecContext *avctx, const char *args,
+                           uint8_t **poutbuf, int *poutbuf_size,
+                           const uint8_t *buf, int buf_size, int keyframe)
+{
+    /* MXF essence element key */
+    static const uint8_t imx_header[16] = { 0x06,0x0e,0x2b,0x34,0x01,0x02,0x01,0x01,0x0d,0x01,0x03,0x01,0x05,0x01,0x01,0x00 };
+    uint8_t *poutbufp;
+
+    if (avctx->codec_id != CODEC_ID_MPEG2VIDEO) {
+        av_log(avctx, AV_LOG_ERROR, "imx bitstream filter only applies to mpeg2video codec\n");
+        return 0;
+    }
+
+    *poutbuf = av_malloc(buf_size + 20 + FF_INPUT_BUFFER_PADDING_SIZE);
+    poutbufp = *poutbuf;
+    bytestream_put_buffer(&poutbufp, imx_header, 16);
+    bytestream_put_byte(&poutbufp, 0x83); /* KLV BER long form */
+    bytestream_put_be24(&poutbufp, buf_size);
+    bytestream_put_buffer(&poutbufp, buf, buf_size);
+    *poutbuf_size = poutbufp - *poutbuf;
+    return 1;
+}
+
+AVBitStreamFilter imx_dump_header_bsf = {
+    "imxdump",
+    0,
+    imx_dump_header,
+};
 
 /* this is ugly i know, but the alternative is too make
    hundreds of vars global and prefix them with ff_mpeg1_

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Feb 22 02:05:14 2007.
-# $Id: Makefile.am,v 1.50 2007/02/21 17:07:20 sian Exp $
+# Last Modified: Sun Mar  4 22:47:51 2007.
+# $Id: Makefile.am,v 1.51 2007/03/04 14:12:45 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -115,6 +115,8 @@ noinst_HEADERS = \
 	cavsdata.h \
 	config.h \
 	cookdata.h \
+	dcadata.h \
+	dcahuff.h \
 	dsputil.h \
 	dvdata.h \
 	eval.h \
@@ -196,6 +198,7 @@ libavcodec_la_SOURCES = \
 	cscd.c \
 	cook.c \
 	cyuv.c \
+	dca.c \
 	dpcm.c \
 	dsicinav.c \
 	dsputil.c \

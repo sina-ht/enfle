@@ -1,3 +1,21 @@
+/*
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 #ifndef INTREADWRITE_H
 #define INTREADWRITE_H
 
@@ -33,6 +51,14 @@ struct unaligned_16 { uint16_t l; } __attribute__((packed));
 #define AV_WB16(p, d) { \
                     ((uint8_t*)(p))[1] = (d); \
                     ((uint8_t*)(p))[0] = (d)>>8; }
+
+#define AV_RB24(x) ((((uint8_t*)(x))[0] << 16) | \
+                    (((uint8_t*)(x))[1] << 8) | \
+                     ((uint8_t*)(x))[2])
+#define AV_WB24(p, d) { \
+                    ((uint8_t*)(p))[2] = (d); \
+                    ((uint8_t*)(p))[1] = (d)>>8; \
+                    ((uint8_t*)(p))[0] = (d)>>16; }
 
 #define AV_RB32(x) ((((uint8_t*)(x))[0] << 24) | \
                    (((uint8_t*)(x))[1] << 16) | \
