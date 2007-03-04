@@ -1,3 +1,38 @@
+2007-03-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/a52dec.c,
+	lib/avcodec/adpcm.c, lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
+	lib/avcodec/apiexample.c, lib/avcodec/armv4l/dsputil_arm.c,
+	lib/avcodec/armv4l/mpegvideo_arm.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream.c, lib/avcodec/bitstream.h,
+	lib/avcodec/bytestream.h, lib/avcodec/cabac.h, lib/avcodec/cavs.c,
+	lib/avcodec/cavsdsp.c, lib/avcodec/cook.c, lib/avcodec/dca.c,
+	lib/avcodec/dcadata.h, lib/avcodec/dcahuff.h,
+	lib/avcodec/dsicinav.c, lib/avcodec/dsputil.c,
+	lib/avcodec/error_resilience.c, lib/avcodec/eval.c,
+	lib/avcodec/faac.c, lib/avcodec/g726.c, lib/avcodec/h263.c,
+	lib/avcodec/h264.c, lib/avcodec/i386/dsputil_h264_template_mmx.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/idct_mmx_xvid.c,
+	lib/avcodec/imc.c, lib/avcodec/imgconvert.c,
+	lib/avcodec/imgresample.c, lib/avcodec/indeo2.c,
+	lib/avcodec/indeo3.c, lib/avcodec/jpeg_ls.c, lib/avcodec/mjpeg.c,
+	lib/avcodec/motion_est.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpeg12data.h, lib/avcodec/mpegvideo.c,
+	lib/avcodec/nuv.c, lib/avcodec/ratecontrol.c, lib/avcodec/raw.c,
+	lib/avcodec/resample2.c, lib/avcodec/roqvideo.c,
+	lib/avcodec/simple_idct.c, lib/avcodec/snow.c, lib/avcodec/svq1.c,
+	lib/avcodec/svq3.c, lib/avcodec/truemotion1.c,
+	lib/avcodec/truemotion2.c, lib/avcodec/truespeech.c,
+	lib/avcodec/utils.c, lib/avcodec/vc1.c, lib/avcodec/vc1dsp.c,
+	lib/avcodec/vmdav.c, lib/avcodec/vp3.c, lib/avcodec/vp5.c,
+	lib/avcodec/vp56.c, lib/avcodec/vp56.h, lib/avcodec/vp56data.h,
+	lib/avcodec/vp6.c, lib/avcodec/wma.c, lib/avcodec/wma.h,
+	lib/avcodec/wmadec.c, lib/avcodec/wmv2.c, lib/avutil/common.h,
+	lib/avutil/fifo.h, lib/avutil/internal.h,
+	lib/avutil/intreadwrite.h, lib/avutil/mem.c,
+	lib/avutil/rational.c, lib/avutil/rational.h, lib/avutil/tree.h:
+	Updated.
+
 2007-02-21  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/4xm.c, lib/avcodec/8bps.c, lib/avcodec/Makefile.am,
