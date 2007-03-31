@@ -1,3 +1,40 @@
+2007-03-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h, configure.in, lib/avcodec/Makefile.am,
+	lib/avcodec/aasc.c, lib/avcodec/ac3.c, lib/avcodec/ac3.h,
+	lib/avcodec/ac3enc.c, lib/avcodec/ac3tab.h,
+	lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
+	lib/avcodec/armv4l/dsputil_iwmmxt.c,
+	lib/avcodec/armv4l/mpegvideo_arm.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream.c, lib/avcodec/bytestream.h,
+	lib/avcodec/cabac.h, lib/avcodec/cook.c, lib/avcodec/dnxhddata.h,
+	lib/avcodec/dnxhddec.c, lib/avcodec/dsputil.c,
+	lib/avcodec/dsputil.h, lib/avcodec/dv.c, lib/avcodec/dvbsubdec.c,
+	lib/avcodec/dxa.c, lib/avcodec/flicvideo.c, lib/avcodec/gifdec.c,
+	lib/avcodec/h261.c, lib/avcodec/h263.c, lib/avcodec/h263dec.c,
+	lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/i386/idct_mmx_xvid.c,
+	lib/avcodec/kmvc.c, lib/avcodec/lzw.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/msmpeg4.c, lib/avcodec/opt.c,
+	lib/avcodec/opt.h, lib/avcodec/parser.c, lib/avcodec/pcm.c,
+	lib/avcodec/qpeg.c, lib/avcodec/resample.c,
+	lib/avcodec/resample2.c, lib/avcodec/rl.h, lib/avcodec/rv10.c,
+	lib/avcodec/shorten.c, lib/avcodec/smacker.c, lib/avcodec/svq1.c,
+	lib/avcodec/truemotion2.c, lib/avcodec/tscc.c, lib/avcodec/ulti.c,
+	lib/avcodec/utils.c, lib/avcodec/vc1.c, lib/avcodec/vmnc.c,
+	lib/avcodec/vorbis.c, lib/avcodec/vp3.c, lib/avcodec/wavpack.c,
+	lib/avcodec/wma.c, lib/avcodec/wma.h, lib/avcodec/wmadec.c,
+	lib/avcodec/xiph.c, lib/avcodec/xiph.h, lib/avcodec/xvmc_render.h,
+	lib/avcodec/zmbv.c, lib/avutil/Makefile.am, lib/avutil/avutil.h,
+	lib/avutil/base64.c, lib/avutil/base64.h, lib/avutil/common.h,
+	lib/avutil/crc.c, lib/avutil/crc.h, lib/avutil/integer.c,
+	lib/avutil/integer.h, lib/avutil/internal.h,
+	lib/avutil/intreadwrite.h, lib/avutil/log.c, lib/avutil/log.h,
+	lib/avutil/md5.c, lib/avutil/mem.c, lib/avutil/mem.h,
+	lib/avutil/sha1.c, lib/avutil/sha1.h, lib/avutil/x86_cpu.h:
+	Updated.
+
 2007-03-04  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/Makefile.am, lib/avcodec/a52dec.c,
