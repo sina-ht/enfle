@@ -65,8 +65,10 @@ void avcodec_register_all(void)
     REGISTER_DECODER(CSCD, cscd);
     REGISTER_DECODER(CYUV, cyuv);
     REGISTER_DECODER(DCA, dca);
+    REGISTER_DECODER(DNXHD, dnxhd);
     REGISTER_DECODER(DSICINVIDEO, dsicinvideo);
     REGISTER_ENCDEC (DVVIDEO, dvvideo);
+    REGISTER_DECODER(DXA, dxa);
     REGISTER_DECODER(EIGHTBPS, eightbps);
     REGISTER_ENCDEC (FFV1, ffv1);
     REGISTER_ENCDEC (FFVHUFF, ffvhuff);
@@ -126,7 +128,7 @@ void avcodec_register_all(void)
     REGISTER_DECODER(SP5X, sp5x);
     REGISTER_ENCDEC (SVQ1, svq1);
     REGISTER_DECODER(SVQ3, svq3);
-    REGISTER_DECODER(TARGA, targa);
+    REGISTER_ENCDEC (TARGA, targa);
     REGISTER_DECODER(THEORA, theora);
     REGISTER_DECODER(TIERTEXSEQVIDEO, tiertexseqvideo);
     REGISTER_DECODER(TIFF, tiff);

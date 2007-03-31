@@ -52,6 +52,7 @@
 #include "dsputil.h"
 #include "common.h"
 #include "bytestream.h"
+#include "random.h"
 
 #include "cookdata.h"
 
@@ -65,10 +66,9 @@
 //#define COOKDEBUG
 
 typedef struct {
-    int     size;
-    int     loccode[8];
-    int     levcode[8];
-} COOKgain;
+    int *now;
+    int *previous;
+} cook_gains;
 
 typedef struct {
     GetBitContext       gb;
@@ -88,26 +88,20 @@ typedef struct {
     int                 bits_per_subpacket;
     int                 cookversion;
     /* states */
-    int                 random_state;
+    AVRandomState       random_state;
 
     /* transform data */
-    FFTContext          fft_ctx;
-    DECLARE_ALIGNED_16(FFTSample, mlt_tmp[1024]);  /* temporary storage for imlt */
+    MDCTContext         mdct_ctx;
+    DECLARE_ALIGNED_16(FFTSample, mdct_tmp[1024]);  /* temporary storage for imlt */
     float*              mlt_window;
-    float*              mlt_precos;
-    float*              mlt_presin;
-    float*              mlt_postcos;
-    int                 fft_size;
-    int                 fft_order;
-    int                 mlt_size;       //modulated lapped transform size
 
     /* gain buffers */
-    COOKgain            *gain_ptr1[2];
-    COOKgain            *gain_ptr2[2];
-    COOKgain            gain_1;
-    COOKgain            gain_2;
-    COOKgain            gain_3;
-    COOKgain            gain_4;
+    cook_gains          gains1;
+    cook_gains          gains2;
+    int                 gain_1[9];
+    int                 gain_2[9];
+    int                 gain_3[9];
+    int                 gain_4[9];
 
     /* VLC data */
     int                 js_vlc_bits;
@@ -226,34 +220,25 @@ static int init_cook_vlc_tables(COOKContext *q) {
 static int init_cook_mlt(COOKContext *q) {
     int j;
     float alpha;
+    int mlt_size = q->samples_per_channel;
 
-    /* Allocate the buffers, could be replaced with a static [512]
-       array if needed. */
-    q->mlt_size = q->samples_per_channel;
-    q->mlt_window = av_malloc(sizeof(float)*q->mlt_size);
-    q->mlt_precos = av_malloc(sizeof(float)*q->mlt_size/2);
-    q->mlt_presin = av_malloc(sizeof(float)*q->mlt_size/2);
-    q->mlt_postcos = av_malloc(sizeof(float)*q->mlt_size/2);
+    if ((q->mlt_window = av_malloc(sizeof(float)*mlt_size)) == 0)
+      return -1;
 
     /* Initialize the MLT window: simple sine window. */
-    alpha = M_PI / (2.0 * (float)q->mlt_size);
-    for(j=0 ; j<q->mlt_size ; j++) {
-        q->mlt_window[j] = sin((j + 512.0/(float)q->mlt_size) * alpha);
+    alpha = M_PI / (2.0 * (float)mlt_size);
+    for(j=0 ; j<mlt_size ; j++)
+        q->mlt_window[j] = sin((j + 0.5) * alpha) * sqrt(2.0 / q->samples_per_channel);
+
+    /* Initialize the MDCT. */
+    if (ff_mdct_init(&q->mdct_ctx, av_log2(mlt_size)+1, 1)) {
+      av_free(q->mlt_window);
+      return -1;
     }
+    av_log(NULL,AV_LOG_DEBUG,"MDCT initialized, order = %d.\n",
+           av_log2(mlt_size)+1);
 
-    /* pre/post twiddle factors */
-    for (j=0 ; j<q->mlt_size/2 ; j++){
-        q->mlt_precos[j] = cos( ((j+0.25)*M_PI)/q->mlt_size);
-        q->mlt_presin[j] = sin( ((j+0.25)*M_PI)/q->mlt_size);
-        q->mlt_postcos[j] = (float)sqrt(2.0/(float)q->mlt_size)*cos( ((float)j*M_PI) /q->mlt_size); //sqrt(2/MLT_size) = scalefactor
-    }
-
-    /* Initialize the FFT. */
-    ff_fft_init(&q->fft_ctx, av_log2(q->mlt_size)-1, 0);
-    av_log(NULL,AV_LOG_DEBUG,"FFT initialized, order = %d.\n",
-           av_log2(q->samples_per_channel)-1);
-
-    return (int)(q->mlt_window && q->mlt_precos && q->mlt_presin && q->mlt_postcos);
+    return 0;
 }
 
 /*************** init functions end ***********/
@@ -314,13 +299,10 @@ static int cook_decode_close(AVCodecContext *avctx)
 
     /* Free allocated memory buffers. */
     av_free(q->mlt_window);
-    av_free(q->mlt_precos);
-    av_free(q->mlt_presin);
-    av_free(q->mlt_postcos);
     av_free(q->decoded_bytes_buffer);
 
     /* Free the transform. */
-    ff_fft_end(&q->fft_ctx);
+    ff_mdct_end(&q->mdct_ctx);
 
     /* Free the VLC tables. */
     for (i=0 ; i<13 ; i++) {
@@ -339,29 +321,27 @@ static int cook_decode_close(AVCodecContext *avctx)
 }
 
 /**
- * Fill the COOKgain structure for the timedomain quantization.
+ * Fill the gain array for the timedomain quantization.
  *
  * @param q                 pointer to the COOKContext
- * @param gaininfo          pointer to the COOKgain
+ * @param gaininfo[9]       array of gain indices
  */
 
-static void decode_gain_info(GetBitContext *gb, COOKgain* gaininfo) {
-    int i;
+static void decode_gain_info(GetBitContext *gb, int *gaininfo)
+{
+    int i, n;
 
     while (get_bits1(gb)) {}
+    n = get_bits_count(gb) - 1;     //amount of elements*2 to update
 
-    gaininfo->size = get_bits_count(gb) - 1;     //amount of elements*2 to update
+    i = 0;
+    while (n--) {
+        int index = get_bits(gb, 3);
+        int gain = get_bits1(gb) ? get_bits(gb, 4) - 7 : -1;
 
-    if (get_bits_count(gb) - 1 <= 0) return;
-
-    for (i=0 ; i<gaininfo->size ; i++){
-        gaininfo->loccode[i] = get_bits(gb,3);
-        if (get_bits1(gb)) {
-            gaininfo->levcode[i] = get_bits(gb,4) - 7;  //convert to signed
-        } else {
-            gaininfo->levcode[i] = -1;
-        }
+        while (i <= index) gaininfo[i++] = gain;
     }
+    while (i <= 8) gaininfo[i++] = 0;
 }
 
 /**
@@ -391,22 +371,6 @@ static void decode_envelope(COOKContext *q, int* quant_index_table) {
         j = get_vlc2(&q->gb, q->envelope_quant_index[vlc_index-1].table,
                      q->envelope_quant_index[vlc_index-1].bits,2);
         quant_index_table[i] = quant_index_table[i-1] + j - 12;    //differential encoding
-    }
-}
-
-/**
- * Create the quant value table.
- *
- * @param q                 pointer to the COOKContext
- * @param quant_value_table pointer to the array
- */
-
-static void inline dequant_envelope(COOKContext *q, int* quant_index_table,
-                                    float* quant_value_table){
-
-    int i;
-    for(i=0 ; i < q->total_subbands ; i++){
-        quant_value_table[i] = q->rootpow2tab[quant_index_table[i]+63];
     }
 }
 
@@ -557,46 +521,41 @@ static void inline expand_category(COOKContext *q, int* category,
  *
  * @param q                     pointer to the COOKContext
  * @param index                 index
- * @param band                  current subband
- * @param quant_value_table     pointer to the array
+ * @param quant_index           quantisation index
  * @param subband_coef_index    array of indexes to quant_centroid_tab
- * @param subband_coef_noise    use random noise instead of predetermined value
- * @param mlt_buffer            pointer to the mlt buffer
+ * @param subband_coef_sign     signs of coefficients
+ * @param mlt_p                 pointer into the mlt buffer
  */
 
-
-static void scalar_dequant(COOKContext *q, int index, int band,
-                           float* quant_value_table, int* subband_coef_index,
-                           int* subband_coef_noise, float* mlt_buffer){
+static void scalar_dequant(COOKContext *q, int index, int quant_index,
+                           int* subband_coef_index, int* subband_coef_sign,
+                           float* mlt_p){
     int i;
     float f1;
 
     for(i=0 ; i<SUBBAND_SIZE ; i++) {
         if (subband_coef_index[i]) {
-            if (subband_coef_noise[i]) {
-                f1 = -quant_centroid_tab[index][subband_coef_index[i]];
-            } else {
-                f1 = quant_centroid_tab[index][subband_coef_index[i]];
-            }
+            f1 = quant_centroid_tab[index][subband_coef_index[i]];
+            if (subband_coef_sign[i]) f1 = -f1;
         } else {
-            /* noise coding if subband_coef_noise[i] == 0 */
-            q->random_state = q->random_state * 214013 + 2531011;    //typical RNG numbers
-            f1 = randsign[(q->random_state/0x1000000)&1] * dither_tab[index]; //>>31
+            /* noise coding if subband_coef_index[i] == 0 */
+            f1 = dither_tab[index];
+            if (av_random(&q->random_state) < 0x80000000) f1 = -f1;
         }
-        mlt_buffer[band*20+ i] = f1 * quant_value_table[band];
+        mlt_p[i] = f1 * q->rootpow2tab[quant_index+63];
     }
 }
 /**
- * Unpack the subband_coef_index and subband_coef_noise vectors.
+ * Unpack the subband_coef_index and subband_coef_sign vectors.
  *
  * @param q                     pointer to the COOKContext
  * @param category              pointer to the category array
  * @param subband_coef_index    array of indexes to quant_centroid_tab
- * @param subband_coef_noise    use random noise instead of predetermined value
+ * @param subband_coef_sign     signs of coefficients
  */
 
 static int unpack_SQVH(COOKContext *q, int category, int* subband_coef_index,
-                       int* subband_coef_noise) {
+                       int* subband_coef_sign) {
     int i,j;
     int vlc, vd ,tmp, result;
     int ub;
@@ -620,13 +579,13 @@ static int unpack_SQVH(COOKContext *q, int category, int* subband_coef_index,
         for(j=0 ; j<vd ; j++){
             if (subband_coef_index[i*vd + j]) {
                 if(get_bits_count(&q->gb) < q->bits_per_subpacket){
-                    subband_coef_noise[i*vd+j] = get_bits1(&q->gb);
+                    subband_coef_sign[i*vd+j] = get_bits1(&q->gb);
                 } else {
                     result=1;
-                    subband_coef_noise[i*vd+j]=0;
+                    subband_coef_sign[i*vd+j]=0;
                 }
             } else {
-                subband_coef_noise[i*vd+j]=0;
+                subband_coef_sign[i*vd+j]=0;
             }
         }
     }
@@ -639,41 +598,42 @@ static int unpack_SQVH(COOKContext *q, int category, int* subband_coef_index,
  *
  * @param q                 pointer to the COOKContext
  * @param category          pointer to the category array
- * @param quant_value_table pointer to the array
+ * @param quant_index_table pointer to the array
  * @param mlt_buffer        pointer to mlt coefficients
  */
 
 
 static void decode_vectors(COOKContext* q, int* category,
-                           float* quant_value_table, float* mlt_buffer){
+                           int *quant_index_table, float* mlt_buffer){
     /* A zero in this table means that the subband coefficient is
        random noise coded. */
-    int subband_coef_noise[SUBBAND_SIZE];
+    int subband_coef_index[SUBBAND_SIZE];
     /* A zero in this table means that the subband coefficient is a
        positive multiplicator. */
-    int subband_coef_index[SUBBAND_SIZE];
+    int subband_coef_sign[SUBBAND_SIZE];
     int band, j;
     int index=0;
 
     for(band=0 ; band<q->total_subbands ; band++){
         index = category[band];
         if(category[band] < 7){
-            if(unpack_SQVH(q, category[band], subband_coef_index, subband_coef_noise)){
+            if(unpack_SQVH(q, category[band], subband_coef_index, subband_coef_sign)){
                 index=7;
                 for(j=0 ; j<q->total_subbands ; j++) category[band+j]=7;
             }
         }
         if(index==7) {
             memset(subband_coef_index, 0, sizeof(subband_coef_index));
-            memset(subband_coef_noise, 0, sizeof(subband_coef_noise));
+            memset(subband_coef_sign, 0, sizeof(subband_coef_sign));
         }
-        scalar_dequant(q, index, band, quant_value_table, subband_coef_index,
-                       subband_coef_noise, mlt_buffer);
+        scalar_dequant(q, index, quant_index_table[band],
+                       subband_coef_index, subband_coef_sign,
+                       &mlt_buffer[band * 20]);
     }
 
     if(q->total_subbands*SUBBAND_SIZE >= q->samples_per_channel){
         return;
-    }
+    } /* FIXME: should this be removed, or moved into loop above? */
 }
 
 
@@ -688,69 +648,17 @@ static void decode_vectors(COOKContext* q, int* category,
 static void mono_decode(COOKContext *q, float* mlt_buffer) {
 
     int category_index[128];
-    float quant_value_table[102];
     int quant_index_table[102];
     int category[128];
 
     memset(&category, 0, 128*sizeof(int));
-    memset(&quant_value_table, 0, 102*sizeof(int));
     memset(&category_index, 0, 128*sizeof(int));
 
     decode_envelope(q, quant_index_table);
     q->num_vectors = get_bits(&q->gb,q->log2_numvector_size);
-    dequant_envelope(q, quant_index_table, quant_value_table);
     categorize(q, quant_index_table, category, category_index);
     expand_category(q, category, category_index);
-    decode_vectors(q, category, quant_value_table, mlt_buffer);
-}
-
-
-/**
- * The modulated lapped transform, this takes transform coefficients
- * and transforms them into timedomain samples. This is done through
- * an FFT-based algorithm with pre- and postrotation steps.
- * A window and reorder step is also included.
- *
- * @param q                 pointer to the COOKContext
- * @param inbuffer          pointer to the mltcoefficients
- * @param outbuffer         pointer to the timedomain buffer
- * @param mlt_tmp           pointer to temporary storage space
- */
-
-static void cook_imlt(COOKContext *q, float* inbuffer, float* outbuffer,
-                      float* mlt_tmp){
-    int i;
-
-    /* prerotation */
-    for(i=0 ; i<q->mlt_size ; i+=2){
-        outbuffer[i] = (q->mlt_presin[i/2] * inbuffer[q->mlt_size-1-i]) +
-                       (q->mlt_precos[i/2] * inbuffer[i]);
-        outbuffer[i+1] = (q->mlt_precos[i/2] * inbuffer[q->mlt_size-1-i]) -
-                         (q->mlt_presin[i/2] * inbuffer[i]);
-    }
-
-    /* FFT */
-    ff_fft_permute(&q->fft_ctx, (FFTComplex *) outbuffer);
-    ff_fft_calc (&q->fft_ctx, (FFTComplex *) outbuffer);
-
-    /* postrotation */
-    for(i=0 ; i<q->mlt_size ; i+=2){
-        mlt_tmp[i] =               (q->mlt_postcos[(q->mlt_size-1-i)/2] * outbuffer[i+1]) +
-                                   (q->mlt_postcos[i/2] * outbuffer[i]);
-        mlt_tmp[q->mlt_size-1-i] = (q->mlt_postcos[(q->mlt_size-1-i)/2] * outbuffer[i]) -
-                                   (q->mlt_postcos[i/2] * outbuffer[i+1]);
-    }
-
-    /* window and reorder */
-    for(i=0 ; i<q->mlt_size/2 ; i++){
-        outbuffer[i] = mlt_tmp[q->mlt_size/2-1-i] * q->mlt_window[i];
-        outbuffer[q->mlt_size-1-i]= mlt_tmp[q->mlt_size/2-1-i] *
-                                    q->mlt_window[q->mlt_size-1-i];
-        outbuffer[q->mlt_size+i]= mlt_tmp[q->mlt_size/2+i] *
-                                  q->mlt_window[q->mlt_size-1-i];
-        outbuffer[2*q->mlt_size-1-i]= -(mlt_tmp[q->mlt_size/2+i] *
-                                      q->mlt_window[i]);
-    }
+    decode_vectors(q, category, quant_index_table, mlt_buffer);
 }
 
 
@@ -784,81 +692,52 @@ static void interpolate(COOKContext *q, float* buffer,
     }
 }
 
-/**
- * timedomain requantization of the timedomain samples
- *
- * @param q                 pointer to the COOKContext
- * @param buffer            pointer to the timedomain buffer
- * @param gain_now          current gain structure
- * @param gain_previous     previous gain structure
- */
-
-static void gain_window(COOKContext *q, float* buffer, COOKgain* gain_now,
-                        COOKgain* gain_previous){
-    int i, index;
-    int gain_index[9];
-    int tmp_gain_index;
-
-    gain_index[8]=0;
-    index = gain_previous->size;
-    for (i=7 ; i>=0 ; i--) {
-        if(index && gain_previous->loccode[index-1]==i) {
-            gain_index[i] = gain_previous->levcode[index-1];
-            index--;
-        } else {
-            gain_index[i]=gain_index[i+1];
-        }
-    }
-    /* This is applied to the to be previous data buffer. */
-    for(i=0;i<8;i++){
-        interpolate(q, &buffer[q->samples_per_channel+q->gain_size_factor*i],
-                    gain_index[i], gain_index[i+1]);
-    }
-
-    tmp_gain_index = gain_index[0];
-    index = gain_now->size;
-    for (i=7 ; i>=0 ; i--) {
-        if(index && gain_now->loccode[index-1]==i) {
-            gain_index[i]= gain_now->levcode[index-1];
-            index--;
-        } else {
-            gain_index[i]=gain_index[i+1];
-        }
-    }
-
-    /* This is applied to the to be current block. */
-    for(i=0;i<8;i++){
-        interpolate(q, &buffer[i*q->gain_size_factor],
-                    tmp_gain_index+gain_index[i],
-                    tmp_gain_index+gain_index[i+1]);
-    }
-}
-
 
 /**
- * mlt overlapping and buffer management
+ * The modulated lapped transform, this takes transform coefficients
+ * and transforms them into timedomain samples.
+ * Apply transform window, overlap buffers, apply gain profile
+ * and buffer management.
  *
  * @param q                 pointer to the COOKContext
- * @param buffer            pointer to the timedomain buffer
- * @param gain_now          current gain structure
- * @param gain_previous     previous gain structure
+ * @param inbuffer          pointer to the mltcoefficients
+ * @param gains_ptr         current and previous gains
  * @param previous_buffer   pointer to the previous buffer to be used for overlapping
- *
  */
 
-static void gain_compensate(COOKContext *q, float* buffer, COOKgain* gain_now,
-                            COOKgain* gain_previous, float* previous_buffer) {
+static void imlt_gain(COOKContext *q, float *inbuffer,
+                      cook_gains *gains_ptr, float* previous_buffer)
+{
+    const float fc = q->pow2tab[gains_ptr->previous[0] + 63];
+    float *buffer0 = q->mono_mdct_output;
+    float *buffer1 = q->mono_mdct_output + q->samples_per_channel;
     int i;
-    if((gain_now->size  || gain_previous->size)) {
-        gain_window(q, buffer, gain_now, gain_previous);
+
+    /* Inverse modified discrete cosine transform */
+    q->mdct_ctx.fft.imdct_calc(&q->mdct_ctx, q->mono_mdct_output,
+                               inbuffer, q->mdct_tmp);
+
+    /* The weird thing here, is that the two halves of the time domain
+     * buffer are swapped. Also, the newest data, that we save away for
+     * next frame, has the wrong sign. Hence the subtraction below.
+     * Almost sounds like a complex conjugate/reverse data/FFT effect.
+     */
+
+    /* Apply window and overlap */
+    for(i = 0; i < q->samples_per_channel; i++){
+        buffer1[i] = buffer1[i] * fc * q->mlt_window[i] -
+          previous_buffer[i] * q->mlt_window[q->samples_per_channel - 1 - i];
     }
 
-    /* Overlap with the previous block. */
-    for(i=0 ; i<q->samples_per_channel ; i++) buffer[i]+=previous_buffer[i];
+    /* Apply gain profile */
+    for (i = 0; i < 8; i++) {
+        if (gains_ptr->now[i] || gains_ptr->now[i + 1])
+            interpolate(q, &buffer1[q->gain_size_factor * i],
+                        gains_ptr->now[i], gains_ptr->now[i + 1]);
+    }
 
     /* Save away the current to be previous block. */
-    memcpy(previous_buffer, buffer+q->samples_per_channel,
-           sizeof(float)*q->samples_per_channel);
+    memcpy(previous_buffer, buffer0, sizeof(float)*q->samples_per_channel);
 }
 
 
@@ -956,7 +835,7 @@ static void joint_decode(COOKContext *q, float* mlt_buffer1,
 
 static inline void
 decode_bytes_and_gain(COOKContext *q, uint8_t *inbuffer,
-                      COOKgain *gain_ptr[])
+                      cook_gains *gains_ptr)
 {
     int offset;
 
@@ -964,10 +843,10 @@ decode_bytes_and_gain(COOKContext *q, uint8_t *inbuffer,
                           q->bits_per_subpacket/8);
     init_get_bits(&q->gb, q->decoded_bytes_buffer + offset,
                   q->bits_per_subpacket);
-    decode_gain_info(&q->gb, gain_ptr[0]);
+    decode_gain_info(&q->gb, gains_ptr->now);
 
     /* Swap current and previous gains */
-    FFSWAP(COOKgain *, gain_ptr[0], gain_ptr[1]);
+    FFSWAP(int *, gains_ptr->now, gains_ptr->previous);
 }
 
 /**
@@ -985,20 +864,19 @@ decode_bytes_and_gain(COOKContext *q, uint8_t *inbuffer,
 
 static inline void
 mlt_compensate_output(COOKContext *q, float *decode_buffer,
-                      COOKgain *gain_ptr[], float *previous_buffer,
+                      cook_gains *gains, float *previous_buffer,
                       int16_t *out, int chan)
 {
+    float *output = q->mono_mdct_output + q->samples_per_channel;
     int j;
 
-    cook_imlt(q, decode_buffer, q->mono_mdct_output, q->mlt_tmp);
-    gain_compensate(q, q->mono_mdct_output, gain_ptr[0],
-                    gain_ptr[1], previous_buffer);
+    imlt_gain(q, decode_buffer, gains, previous_buffer);
 
     /* Clip and convert floats to 16 bits.
      */
     for (j = 0; j < q->samples_per_channel; j++) {
         out[chan + q->nb_channels * j] =
-          av_clip(lrintf(q->mono_mdct_output[j]), -32768, 32767);
+          av_clip(lrintf(output[j]), -32768, 32767);
     }
 }
 
@@ -1022,7 +900,7 @@ static int decode_subpacket(COOKContext *q, uint8_t *inbuffer,
 //    }
 //    av_log(NULL, AV_LOG_ERROR, "\n");
 
-    decode_bytes_and_gain(q, inbuffer, q->gain_ptr1);
+    decode_bytes_and_gain(q, inbuffer, &q->gains1);
 
     if (q->joint_stereo) {
         joint_decode(q, q->decode_buffer_1, q->decode_buffer_2);
@@ -1030,21 +908,20 @@ static int decode_subpacket(COOKContext *q, uint8_t *inbuffer,
         mono_decode(q, q->decode_buffer_1);
 
         if (q->nb_channels == 2) {
-            decode_bytes_and_gain(q, inbuffer + sub_packet_size/2,
-                                  q->gain_ptr2);
+            decode_bytes_and_gain(q, inbuffer + sub_packet_size/2, &q->gains2);
             mono_decode(q, q->decode_buffer_2);
         }
     }
 
-    mlt_compensate_output(q, q->decode_buffer_1, q->gain_ptr1,
+    mlt_compensate_output(q, q->decode_buffer_1, &q->gains1,
                           q->mono_previous_buffer1, outbuffer, 0);
 
     if (q->nb_channels == 2) {
         if (q->joint_stereo) {
-            mlt_compensate_output(q, q->decode_buffer_2, q->gain_ptr1,
+            mlt_compensate_output(q, q->decode_buffer_2, &q->gains1,
                                   q->mono_previous_buffer2, outbuffer, 1);
         } else {
-            mlt_compensate_output(q, q->decode_buffer_2, q->gain_ptr2,
+            mlt_compensate_output(q, q->decode_buffer_2, &q->gains2,
                                   q->mono_previous_buffer2, outbuffer, 1);
         }
     }
@@ -1068,6 +945,9 @@ static int cook_decode_frame(AVCodecContext *avctx,
 
     *data_size = decode_subpacket(q, buf, avctx->block_align, data);
 
+    /* Discard the first two frames: no valid audio. */
+    if (avctx->frame_number < 2) *data_size = 0;
+
     return avctx->block_align;
 }
 
@@ -1090,7 +970,6 @@ static void dump_cook_context(COOKContext *q)
     PRINT("samples_per_frame",q->samples_per_frame);
     PRINT("subbands",q->subbands);
     PRINT("random_state",q->random_state);
-    PRINT("mlt_size",q->mlt_size);
     PRINT("js_subband_start",q->js_subband_start);
     PRINT("log2_numvector_size",q->log2_numvector_size);
     PRINT("numvector_size",q->numvector_size);
@@ -1134,8 +1013,8 @@ static int cook_decode_init(AVCodecContext *avctx)
     q->nb_channels = avctx->channels;
     q->bit_rate = avctx->bit_rate;
 
-    /* Initialize state. */
-    q->random_state = 1;
+    /* Initialize RNG. */
+    av_init_random(1, &q->random_state);
 
     /* Initialize extradata related variables. */
     q->samples_per_channel = q->samples_per_frame / q->nb_channels;
@@ -1190,7 +1069,6 @@ static int cook_decode_init(AVCodecContext *avctx)
     }
 
     /* Initialize variable relations */
-    q->mlt_size = q->samples_per_channel;
     q->numvector_size = (1 << q->log2_numvector_size);
 
     /* Generate tables */
@@ -1222,13 +1100,13 @@ static int cook_decode_init(AVCodecContext *avctx)
     if (q->decoded_bytes_buffer == NULL)
         return -1;
 
-    q->gain_ptr1[0] = &q->gain_1;
-    q->gain_ptr1[1] = &q->gain_2;
-    q->gain_ptr2[0] = &q->gain_3;
-    q->gain_ptr2[1] = &q->gain_4;
+    q->gains1.now      = q->gain_1;
+    q->gains1.previous = q->gain_2;
+    q->gains2.now      = q->gain_3;
+    q->gains2.previous = q->gain_4;
 
     /* Initialize transform. */
-    if ( init_cook_mlt(q) == 0 )
+    if ( init_cook_mlt(q) != 0 )
         return -1;
 
     /* Try to catch some obviously faulty streams, othervise it might be exploitable */

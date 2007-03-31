@@ -107,7 +107,7 @@ static const uint8_t ff_default_chroma_qscale_table[32]={
 };
 
 #ifdef CONFIG_ENCODERS
-static uint8_t (*default_mv_penalty)[MAX_MV*2+1]=NULL;
+static uint8_t default_mv_penalty[MAX_FCODE+1][MAX_MV*2+1];
 static uint8_t default_fcode_tab[MAX_MV*2+1];
 
 enum PixelFormat ff_yuv420p_list[2]= {PIX_FMT_YUV420P, -1};
@@ -625,20 +625,11 @@ void MPV_decode_defaults(MpegEncContext *s){
 
 #ifdef CONFIG_ENCODERS
 static void MPV_encode_defaults(MpegEncContext *s){
-    static int done=0;
-
+    int i;
     MPV_common_defaults(s);
 
-    if(!done){
-        int i;
-        done=1;
-
-        default_mv_penalty= av_mallocz( sizeof(uint8_t)*(MAX_FCODE+1)*(2*MAX_MV+1) );
-        memset(default_fcode_tab , 0, sizeof(uint8_t)*(2*MAX_MV+1));
-
-        for(i=-16; i<16; i++){
-            default_fcode_tab[i + MAX_MV]= 1;
-        }
+    for(i=-16; i<16; i++){
+        default_fcode_tab[i + MAX_MV]= 1;
     }
     s->me.mv_penalty= default_mv_penalty;
     s->fcode_tab= default_fcode_tab;
@@ -1420,14 +1411,14 @@ int MPV_encode_end(AVCodecContext *avctx)
 
 #endif //CONFIG_ENCODERS
 
-void init_rl(RLTable *rl, int use_static)
+void init_rl(RLTable *rl, uint8_t static_store[2][2*MAX_RUN + MAX_LEVEL + 3])
 {
     int8_t max_level[MAX_RUN+1], max_run[MAX_LEVEL+1];
     uint8_t index_run[MAX_RUN+1];
     int last, run, level, start, end, i;
 
     /* If table is static, we can quit if rl->max_level[0] is not NULL */
-    if(use_static && rl->max_level[0])
+    if(static_store && rl->max_level[0])
         return;
 
     /* compute max_level[], max_run[] and index_run[] */
@@ -1453,18 +1444,18 @@ void init_rl(RLTable *rl, int use_static)
             if (run > max_run[level])
                 max_run[level] = run;
         }
-        if(use_static)
-            rl->max_level[last] = av_mallocz_static(MAX_RUN + 1);
+        if(static_store)
+            rl->max_level[last] = static_store[last];
         else
             rl->max_level[last] = av_malloc(MAX_RUN + 1);
         memcpy(rl->max_level[last], max_level, MAX_RUN + 1);
-        if(use_static)
-            rl->max_run[last] = av_mallocz_static(MAX_LEVEL + 1);
+        if(static_store)
+            rl->max_run[last] = static_store[last] + MAX_RUN + 1;
         else
             rl->max_run[last] = av_malloc(MAX_LEVEL + 1);
         memcpy(rl->max_run[last], max_run, MAX_LEVEL + 1);
-        if(use_static)
-            rl->index_run[last] = av_mallocz_static(MAX_RUN + 1);
+        if(static_store)
+            rl->index_run[last] = static_store[last] + MAX_RUN + MAX_LEVEL + 2;
         else
             rl->index_run[last] = av_malloc(MAX_RUN + 1);
         memcpy(rl->index_run[last], index_run, MAX_RUN + 1);

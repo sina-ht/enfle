@@ -37,8 +37,8 @@ extern "C" {
 #define AV_STRINGIFY(s)         AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
 
-#define LIBAVCODEC_VERSION_INT  ((51<<16)+(38<<8)+0)
-#define LIBAVCODEC_VERSION      51.38.0
+#define LIBAVCODEC_VERSION_INT  ((51<<16)+(40<<8)+2)
+#define LIBAVCODEC_VERSION      51.40.2
 #define LIBAVCODEC_BUILD        LIBAVCODEC_VERSION_INT
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
@@ -47,6 +47,12 @@ extern "C" {
 #define AV_TIME_BASE            1000000
 #define AV_TIME_BASE_Q          (AVRational){1, AV_TIME_BASE}
 
+/**
+ *
+ * if you add a codec id to this list add it so that
+ * 1. no value of a existing codec id changes (that would break ABI)
+ * 2. closest to similar codecs
+ */
 enum CodecID {
     CODEC_ID_NONE,
     CODEC_ID_MPEG1VIDEO,
@@ -150,6 +156,8 @@ enum CodecID {
     CODEC_ID_TIFF,
     CODEC_ID_GIF,
     CODEC_ID_FFH264,
+    CODEC_ID_DXA,
+    CODEC_ID_DNXHD,
 
     /* various pcm "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -741,7 +749,10 @@ typedef struct AVCodecContext {
 
     /**
      * some codecs needs additionnal format info. It is stored here
-     * - encoding: set by user.
+     * if any muxer uses this then ALL demuxers/parsers AND encoders for the specific codec MUST set it correctly
+     * too otherwise stream copy breaks
+     * in general use of this field by muxers is not recommanded
+     * - encoding: set by lavc.
      * - decoding: set by lavc. (FIXME is this ok?)
      */
     int sub_id;
@@ -966,6 +977,13 @@ typedef struct AVCodecContext {
     /**
      * fourcc (LSB first, so "ABCD" -> ('D'<<24) + ('C'<<16) + ('B'<<8) + 'A').
      * this is used to workaround some encoder bugs
+     * a demuxer should set this to what is stored in the field used to identify the codec
+     * if there are mutiple such fields in a container then the demuxer should choose the one
+     * which maximizes the information about the used codec
+     * if the codec tag field in a container is larger then 32bit then the demxuer should
+     * remap the longer id to 32bit with a table or other structure alternatively a new
+     * extra_codec_tag + size could be added but for this a clear advantage must be demonstrated
+     * first
      * - encoding: set by user, if not then the default based on codec_id will be used
      * - decoding: set by user, will be converted to upper case by lavc during init
      */
@@ -2202,6 +2220,7 @@ extern AVCodec snow_encoder;
 extern AVCodec sonic_encoder;
 extern AVCodec sonic_ls_encoder;
 extern AVCodec svq1_encoder;
+extern AVCodec targa_encoder;
 extern AVCodec vcr1_encoder;
 extern AVCodec vorbis_encoder;
 extern AVCodec wmav1_encoder;
@@ -2229,9 +2248,11 @@ extern AVCodec cook_decoder;
 extern AVCodec cscd_decoder;
 extern AVCodec cyuv_decoder;
 extern AVCodec dca_decoder;
+extern AVCodec dnxhd_decoder;
 extern AVCodec dsicinaudio_decoder;
 extern AVCodec dsicinvideo_decoder;
 extern AVCodec dvvideo_decoder;
+extern AVCodec dxa_decoder;
 extern AVCodec eightbps_decoder;
 extern AVCodec ffv1_decoder;
 extern AVCodec ffvhuff_decoder;
@@ -2631,6 +2652,10 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode);
  */
 void avcodec_get_context_defaults(AVCodecContext *s);
 
+/** THIS FUNCTION IS NOT YET PART OF THE PUBLIC API!
+ *  we WILL change its arguments and name a few times! */
+void avcodec_get_context_defaults2(AVCodecContext *s, enum CodecType);
+
 /**
  * Allocates an AVCodecContext and sets its fields to default values.  The
  * resulting struct can be deallocated by simply calling av_free().
@@ -2639,6 +2664,10 @@ void avcodec_get_context_defaults(AVCodecContext *s);
  * @see avcodec_get_context_defaults
  */
 AVCodecContext *avcodec_alloc_context(void);
+
+/** THIS FUNCTION IS NOT YET PART OF THE PUBLIC API!
+ *  we WILL change its arguments and name a few times! */
+AVCodecContext *avcodec_alloc_context2(enum CodecType);
 
 /**
  * Sets the fields of the given AVFrame to default values.
@@ -2993,7 +3022,7 @@ void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size);
  * Frees all static arrays and reset their pointers to 0.
  * Call this function to release all statically allocated tables.
  */
-void av_free_static(void);
+attribute_deprecated void av_free_static(void);
 
 /**
  * Allocation of static arrays.
@@ -3003,7 +3032,7 @@ void av_free_static(void);
  * @param[in] size The amount of memory you need in bytes.
  * @return Block of memory of the requested size.
  */
-void *av_mallocz_static(unsigned int size);
+attribute_deprecated void *av_mallocz_static(unsigned int size);
 
 /**
  * Copy image 'src' to 'dst'.

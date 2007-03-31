@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jan  4 16:47:24 2006.
- * $Id: common.h,v 1.35 2006/01/04 07:53:09 sian Exp $
+ * Last Modified: Sun Mar  4 22:43:31 2007.
+ * $Id: common.h,v 1.36 2007/03/31 02:02:51 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -104,4 +104,4 @@
 #  define debug_message_fn(format, args...)
 #  define debug_message_fnc(format, args...)
 #endif
-#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2006 by Hiroshi Takekawa"
+#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2007 by Hiroshi Takekawa"

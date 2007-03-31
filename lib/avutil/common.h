@@ -70,6 +70,8 @@
 #endif
 #endif
 
+#include "mem.h"
+
 //rounded divison & shift
 #define RSHIFT(a,b) ((a) > 0 ? ((a) + ((1<<(b))>>1))>>(b) : ((a) + ((1<<(b))>>1)-1)>>(b))
 /* assume b>0 */
@@ -327,22 +329,5 @@ tend= read_time();\
 #define START_TIMER
 #define STOP_TIMER(id) {}
 #endif
-
-/* memory */
-
-#ifdef __GNUC__
-  #define DECLARE_ALIGNED(n,t,v)       t v __attribute__ ((aligned (n)))
-#else
-  #define DECLARE_ALIGNED(n,t,v)      __declspec(align(n)) t v
-#endif
-
-/* memory */
-void *av_malloc(unsigned int size);
-void *av_realloc(void *ptr, unsigned int size);
-void av_free(void *ptr);
-
-void *av_mallocz(unsigned int size);
-char *av_strdup(const char *s);
-void av_freep(void *ptr);
 
 #endif /* COMMON_H */

@@ -411,7 +411,8 @@ static const char* context_to_name(void* ptr) {
 #define AV_CODEC_DEFAULT_BITRATE 200*1000
 
 static const AVOption options[]={
-{"b", "set video bitrate (in bits/s)", OFFSET(bit_rate), FF_OPT_TYPE_INT, AV_CODEC_DEFAULT_BITRATE, INT_MIN, INT_MAX, V|A|E},
+{"b", "set bitrate (in bits/s)", OFFSET(bit_rate), FF_OPT_TYPE_INT, AV_CODEC_DEFAULT_BITRATE, INT_MIN, INT_MAX, V|E},
+{"ab", "set bitrate (in bits/s)", OFFSET(bit_rate), FF_OPT_TYPE_INT, 64*1000, INT_MIN, INT_MAX, A|E},
 {"bt", "set video bitrate tolerance (in bits/s)", OFFSET(bit_rate_tolerance), FF_OPT_TYPE_INT, AV_CODEC_DEFAULT_BITRATE*20, 1, INT_MAX, V|E},
 {"flags", NULL, OFFSET(flags), FF_OPT_TYPE_FLAGS, DEFAULT, INT_MIN, INT_MAX, V|A|E|D, "flags"},
 {"mv4", "use four motion vector by macroblock (mpeg4)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG_4MV, INT_MIN, INT_MAX, V|E, "flags"},
@@ -690,7 +691,7 @@ static const AVOption options[]={
 {"bpyramid", "allows B-frames to be used as references for predicting", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_BPYRAMID, INT_MIN, INT_MAX, V|E, "flags2"},
 {"wpred", "weighted biprediction for b-frames (H.264)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_WPRED, INT_MIN, INT_MAX, V|E, "flags2"},
 {"mixed_refs", "one reference per partition, as opposed to one reference per macroblock", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_MIXED_REFS, INT_MIN, INT_MAX, V|E, "flags2"},
-{"8x8dct", "high profile 8x8 transform (H.264)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_8X8DCT, INT_MIN, INT_MAX, V|E, "flags2"},
+{"dct8x8", "high profile 8x8 transform (H.264)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_8X8DCT, INT_MIN, INT_MAX, V|E, "flags2"},
 {"fastpskip", "fast pskip (H.264)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_FASTPSKIP, INT_MIN, INT_MAX, V|E, "flags2"},
 {"aud", "access unit delimiters (H.264)", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_AUD, INT_MIN, INT_MAX, V|E, "flags2"},
 {"brdo", "b-frame rate-distortion optimization", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_BRDO, INT_MIN, INT_MAX, V|E, "flags2"},
@@ -731,12 +732,19 @@ static const AVOption options[]={
 
 static AVClass av_codec_context_class = { "AVCodecContext", context_to_name, options };
 
-void avcodec_get_context_defaults(AVCodecContext *s){
+void avcodec_get_context_defaults2(AVCodecContext *s, enum CodecType codec_type){
+    int flags=0;
     memset(s, 0, sizeof(AVCodecContext));
 
     s->av_class= &av_codec_context_class;
 
-    av_opt_set_defaults(s);
+    if(codec_type == CODEC_TYPE_AUDIO)
+        flags= AV_OPT_FLAG_AUDIO_PARAM;
+    else if(codec_type == CODEC_TYPE_VIDEO)
+        flags= AV_OPT_FLAG_VIDEO_PARAM;
+    else if(codec_type == CODEC_TYPE_SUBTITLE)
+        flags= AV_OPT_FLAG_SUBTITLE_PARAM;
+    av_opt_set_defaults2(s, flags, flags);
 
     s->rc_eq= "tex^qComp";
     s->time_base= (AVRational){0,1};
@@ -752,14 +760,22 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->reget_buffer= avcodec_default_reget_buffer;
 }
 
-AVCodecContext *avcodec_alloc_context(void){
+AVCodecContext *avcodec_alloc_context2(enum CodecType codec_type){
     AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext));
 
     if(avctx==NULL) return NULL;
 
-    avcodec_get_context_defaults(avctx);
+    avcodec_get_context_defaults2(avctx, codec_type);
 
     return avctx;
+}
+
+void avcodec_get_context_defaults(AVCodecContext *s){
+    avcodec_get_context_defaults2(s, CODEC_TYPE_UNKNOWN);
+}
+
+AVCodecContext *avcodec_alloc_context(void){
+    return avcodec_alloc_context2(CODEC_TYPE_UNKNOWN);
 }
 
 void avcodec_get_frame_defaults(AVFrame *pic){
@@ -1173,9 +1189,11 @@ unsigned avcodec_build( void )
 }
 
 static void init_crcs(void){
+#if LIBAVUTIL_VERSION_INT  < (50<<16)
     av_crc04C11DB7= av_mallocz_static(sizeof(AVCRC) * 257);
     av_crc8005    = av_mallocz_static(sizeof(AVCRC) * 257);
     av_crc07      = av_mallocz_static(sizeof(AVCRC) * 257);
+#endif
     av_crc_init(av_crc04C11DB7, 0, 32, 0x04c11db7, sizeof(AVCRC)*257);
     av_crc_init(av_crc8005    , 0, 16, 0x8005    , sizeof(AVCRC)*257);
     av_crc_init(av_crc07      , 0,  8, 0x07      , sizeof(AVCRC)*257);

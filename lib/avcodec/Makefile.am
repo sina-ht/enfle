@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Mar  4 22:47:51 2007.
-# $Id: Makefile.am,v 1.51 2007/03/04 14:12:45 sian Exp $
+# Last Modified: Sat Mar 31 10:20:11 2007.
+# $Id: Makefile.am,v 1.52 2007/03/31 02:01:08 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -117,6 +117,7 @@ noinst_HEADERS = \
 	cookdata.h \
 	dcadata.h \
 	dcahuff.h \
+	dnxhddata.h \
 	dsputil.h \
 	dvdata.h \
 	eval.h \
@@ -146,6 +147,7 @@ noinst_HEADERS = \
 	ra288.h \
 	rangecoder.h \
 	ratecontrol.h \
+	rl.h \
 	rtjpeg.h \
 	simple_idct.h \
 	sp5x.h \
@@ -163,6 +165,7 @@ noinst_HEADERS = \
 	vp56.h \
 	vp56data.h \
 	vp6data.h \
+	xiph.h \
 	xvid_internal.h \
 	xvmc_render.h \
 	wma.h \
@@ -175,11 +178,12 @@ noinst_HEADERS = \
 # mp3lameaudio.c
 # beosthread.c w32thread.c
 # imgresample.c needs libswscale
-# bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c are encoders
+# bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c are encoders
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
 	aasc.c \
+	ac3.c \
 	adpcm.c \
 	adx.c \
 	alac.c \
@@ -199,6 +203,7 @@ libavcodec_la_SOURCES = \
 	cook.c \
 	cyuv.c \
 	dca.c \
+	dnxhddec.c \
 	dpcm.c \
 	dsicinav.c \
 	dsputil.c \
@@ -207,6 +212,7 @@ libavcodec_la_SOURCES = \
 	dvbsubdec.c \
 	dvdsubdec.c \
 	dvdsubenc.c \
+	dxa.c \
 	error_resilience.c \
 	eval.c \
 	faandct.c \
@@ -316,6 +322,7 @@ libavcodec_la_SOURCES = \
 	wnv1.c \
 	ws-snd1.c \
 	xan.c \
+	xiph.c \
 	xl.c \
 	xvmcvideo.c \
 	zmbv.c \
