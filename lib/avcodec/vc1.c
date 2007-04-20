@@ -2304,6 +2304,12 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
     s->mv[0][0][1] = scale_mv(s->next_picture.motion_val[1][xy][1], v->bfraction, 0, s->quarter_sample);
     s->mv[1][0][0] = scale_mv(s->next_picture.motion_val[1][xy][0], v->bfraction, 1, s->quarter_sample);
     s->mv[1][0][1] = scale_mv(s->next_picture.motion_val[1][xy][1], v->bfraction, 1, s->quarter_sample);
+
+    /* Pullback predicted motion vectors as specified in 8.4.5.4 */
+    s->mv[0][0][0] = av_clip(s->mv[0][0][0], -60 - (s->mb_x << 6), (s->mb_width  << 6) - 4 - (s->mb_x << 6));
+    s->mv[0][0][1] = av_clip(s->mv[0][0][1], -60 - (s->mb_y << 6), (s->mb_height << 6) - 4 - (s->mb_y << 6));
+    s->mv[1][0][0] = av_clip(s->mv[1][0][0], -60 - (s->mb_x << 6), (s->mb_width  << 6) - 4 - (s->mb_x << 6));
+    s->mv[1][0][1] = av_clip(s->mv[1][0][1], -60 - (s->mb_y << 6), (s->mb_height << 6) - 4 - (s->mb_y << 6));
     if(direct) {
         s->current_picture.motion_val[0][xy][0] = s->mv[0][0][0];
         s->current_picture.motion_val[0][xy][1] = s->mv[0][0][1];
@@ -2318,6 +2324,7 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
         off = (s->mb_x == (s->mb_width - 1)) ? -2 : 2;
         B = s->current_picture.motion_val[0][xy - wrap*2 + off];
 
+        if(!s->mb_x) C[0] = C[1] = 0;
         if(!s->first_slice_line) { // predictor A is not out of bounds
             if(s->mb_width == 1) {
                 px = A[0];
@@ -2395,6 +2402,7 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2], int 
         off = (s->mb_x == (s->mb_width - 1)) ? -2 : 2;
         B = s->current_picture.motion_val[1][xy - wrap*2 + off];
 
+        if(!s->mb_x) C[0] = C[1] = 0;
         if(!s->first_slice_line) { // predictor A is not out of bounds
             if(s->mb_width == 1) {
                 px = A[0];
@@ -4601,7 +4609,7 @@ static int vc1_parse(AVCodecParserContext *s,
     return next;
 }
 
-int vc1_split(AVCodecContext *avctx,
+static int vc1_split(AVCodecContext *avctx,
                            const uint8_t *buf, int buf_size)
 {
     int i;

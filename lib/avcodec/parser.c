@@ -22,7 +22,6 @@
 #include "avcodec.h"
 #include "mpegvideo.h"
 #include "mpegaudio.h"
-#include "ac3.h"
 #include "parser.h"
 
 AVCodecParser *av_first_parser = NULL;
@@ -124,6 +123,7 @@ int av_parser_parse(AVCodecParserContext *s,
             s->fetch_timestamp=0;
             s->last_pts = pts;
             s->last_dts = dts;
+            s->last_offset = 0;
             s->cur_frame_pts[k] =
             s->cur_frame_dts[k] = AV_NOPTS_VALUE;
         }
@@ -138,6 +138,7 @@ int av_parser_parse(AVCodecParserContext *s,
         s->frame_offset = s->last_frame_offset;
         s->pts = s->last_pts;
         s->dts = s->last_dts;
+        s->offset = s->last_offset;
 
         /* offset of the next frame */
         s->last_frame_offset = s->cur_offset + index;
@@ -156,6 +157,7 @@ int av_parser_parse(AVCodecParserContext *s,
 
         s->last_pts = s->cur_frame_pts[k];
         s->last_dts = s->cur_frame_dts[k];
+        s->last_offset = s->last_frame_offset - s->cur_frame_offset[k];
 
         /* some parsers tell us the packet size even before seeing the first byte of the next packet,
            so the next pts/dts is in the next chunk */
@@ -230,7 +232,7 @@ int ff_combine_frame(ParseContext *pc, int next, uint8_t **buf, int *buf_size)
     }
 #endif
 
-    /* copy overreaded bytes from last frame into buffer */
+    /* Copy overread bytes from last frame into buffer. */
     for(; pc->overread>0; pc->overread--){
         pc->buffer[pc->index++]= pc->buffer[pc->overread_index++];
     }
@@ -602,6 +604,56 @@ static const int aac_channels[8] = {
 #endif
 
 #ifdef CONFIG_AC3_PARSER
+int ff_ac3_parse_header(const uint8_t buf[7], AC3HeaderInfo *hdr)
+{
+    GetBitContext gbc;
+
+    memset(hdr, 0, sizeof(*hdr));
+
+    init_get_bits(&gbc, buf, 54);
+
+    hdr->sync_word = get_bits(&gbc, 16);
+    if(hdr->sync_word != 0x0B77)
+        return -1;
+
+    /* read ahead to bsid to make sure this is AC-3, not E-AC-3 */
+    hdr->bsid = show_bits_long(&gbc, 29) & 0x1F;
+    if(hdr->bsid > 10)
+        return -2;
+
+    hdr->crc1 = get_bits(&gbc, 16);
+    hdr->fscod = get_bits(&gbc, 2);
+    if(hdr->fscod == 3)
+        return -3;
+
+    hdr->frmsizecod = get_bits(&gbc, 6);
+    if(hdr->frmsizecod > 37)
+        return -4;
+
+    skip_bits(&gbc, 5); // skip bsid, already got it
+
+    hdr->bsmod = get_bits(&gbc, 3);
+    hdr->acmod = get_bits(&gbc, 3);
+    if((hdr->acmod & 1) && hdr->acmod != 1) {
+        hdr->cmixlev = get_bits(&gbc, 2);
+    }
+    if(hdr->acmod & 4) {
+        hdr->surmixlev = get_bits(&gbc, 2);
+    }
+    if(hdr->acmod == 2) {
+        hdr->dsurmod = get_bits(&gbc, 2);
+    }
+    hdr->lfeon = get_bits1(&gbc);
+
+    hdr->halfratecod = FFMAX(hdr->bsid, 8) - 8;
+    hdr->sample_rate = ff_ac3_freqs[hdr->fscod] >> hdr->halfratecod;
+    hdr->bit_rate = (ff_ac3_bitratetab[hdr->frmsizecod>>1] * 1000) >> hdr->halfratecod;
+    hdr->channels = ff_ac3_channels[hdr->acmod] + hdr->lfeon;
+    hdr->frame_size = ff_ac3_frame_sizes[hdr->frmsizecod][hdr->fscod] * 2;
+
+    return 0;
+}
+
 static int ac3_sync(const uint8_t *buf, int *channels, int *sample_rate,
                     int *bit_rate, int *samples)
 {

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Mar 31 10:20:11 2007.
-# $Id: Makefile.am,v 1.52 2007/03/31 02:01:08 sian Exp $
+# Last Modified: Fri Apr 20 21:59:57 2007.
+# $Id: Makefile.am,v 1.53 2007/04/20 13:21:20 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -81,7 +81,7 @@ CFLAGS += $(CFLAGS_POST)
 # endif
 
 # ifeq ($(TARGET_ARCH_POWERPC),yes)
-# OBJS += ppc/dsputil_ppc.o ppc/mpegvideo_ppc.o
+# OBJS += ppc/dsputil_ppc.o ppc/mpegvideo_ppc.o ppc/int_altivec.o
 # endif
 
 # ifeq ($(TARGET_MMI),yes)
@@ -107,7 +107,9 @@ CFLAGS += $(CFLAGS_POST)
 noinst_HEADERS = \
 	ac3.h \
 	ac3tab.h \
+	atrac3data.h \
 	avcodec.h \
+	bethsoftvideo.h \
 	bitstream.h \
 	bmp.h \
 	bytestream.h \
@@ -148,11 +150,14 @@ noinst_HEADERS = \
 	rangecoder.h \
 	ratecontrol.h \
 	rl.h \
+	rle.h \
 	rtjpeg.h \
+	sgi.h \
 	simple_idct.h \
 	sp5x.h \
 	svq1_cb.h \
 	svq1_vlc.h \
+	tiff.h \
 	truemotion1data.h \
 	truespeech_data.h \
 	ulti_cb.h \
@@ -178,7 +183,7 @@ noinst_HEADERS = \
 # mp3lameaudio.c
 # beosthread.c w32thread.c
 # imgresample.c needs libswscale
-# bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c are encoders
+# bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c tiffenc.c are encoders
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
@@ -189,11 +194,14 @@ libavcodec_la_SOURCES = \
 	alac.c \
 	allcodecs.c \
 	asv1.c \
+	atrac3.c \
 	audioconvert.c \
 	avs.c \
+	bethsoftvideo.c \
 	bitstream.c \
 	bitstream_filter.c \
 	bmp.c \
+	c93.c \
 	cabac.c \
 	cavs.c \
 	cavsdsp.c \
@@ -280,10 +288,12 @@ libavcodec_la_SOURCES = \
 	raw.c \
 	resample.c \
 	resample2.c \
+	rle.c \
 	roqvideo.c \
 	rpza.c \
 	rtjpeg.c \
 	rv10.c \
+	sgidec.c \
 	shorten.c \
 	simple_idct.c \
 	smacker.c \

@@ -331,8 +331,6 @@ typedef struct Vp3DecodeContext {
     int bounding_values_array[256];
 } Vp3DecodeContext;
 
-static int theora_decode_tables(AVCodecContext *avctx, GetBitContext *gb);
-
 /************************************************************************
  * VP3 specific functions
  ************************************************************************/
@@ -1955,7 +1953,6 @@ static int vp3_decode_init(AVCodecContext *avctx)
     s->width = (avctx->width + 15) & 0xFFFFFFF0;
     s->height = (avctx->height + 15) & 0xFFFFFFF0;
     avctx->pix_fmt = PIX_FMT_YUV420P;
-    avctx->has_b_frames = 0;
     if(avctx->idct_algo==FF_IDCT_AUTO)
         avctx->idct_algo=FF_IDCT_VP3;
     dsputil_init(&s->dsp, avctx);
@@ -2142,28 +2139,8 @@ static int vp3_decode_frame(AVCodecContext *avctx,
 
     if (s->theora && get_bits1(&gb))
     {
-#if 1
         av_log(avctx, AV_LOG_ERROR, "Header packet passed to frame decoder, skipping\n");
         return -1;
-#else
-        int ptype = get_bits(&gb, 7);
-
-        skip_bits(&gb, 6*8); /* "theora" */
-
-        switch(ptype)
-        {
-            case 1:
-                theora_decode_comments(avctx, &gb);
-                break;
-            case 2:
-                theora_decode_tables(avctx, &gb);
-                    init_dequantizer(s);
-                break;
-            default:
-                av_log(avctx, AV_LOG_ERROR, "Unknown Theora config packet: %d\n", ptype);
-        }
-        return buf_size;
-#endif
     }
 
     s->keyframe = !get_bits1(&gb);
@@ -2390,6 +2367,7 @@ static int read_huffman_tree(AVCodecContext *avctx, GetBitContext *gb)
     return 0;
 }
 
+#ifdef CONFIG_THEORA_DECODER
 static int theora_decode_header(AVCodecContext *avctx, GetBitContext *gb)
 {
     Vp3DecodeContext *s = avctx->priv_data;
@@ -2634,25 +2612,26 @@ static int theora_decode_init(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec vp3_decoder = {
-    "vp3",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_VP3,
-    sizeof(Vp3DecodeContext),
-    vp3_decode_init,
-    NULL,
-    vp3_decode_end,
-    vp3_decode_frame,
-    0,
-    NULL
-};
-
 AVCodec theora_decoder = {
     "theora",
     CODEC_TYPE_VIDEO,
     CODEC_ID_THEORA,
     sizeof(Vp3DecodeContext),
     theora_decode_init,
+    NULL,
+    vp3_decode_end,
+    vp3_decode_frame,
+    0,
+    NULL
+};
+#endif
+
+AVCodec vp3_decoder = {
+    "vp3",
+    CODEC_TYPE_VIDEO,
+    CODEC_ID_VP3,
+    sizeof(Vp3DecodeContext),
+    vp3_decode_init,
     NULL,
     vp3_decode_end,
     vp3_decode_frame,

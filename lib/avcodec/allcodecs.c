@@ -58,7 +58,9 @@ void avcodec_register_all(void)
     REGISTER_ENCDEC (ASV1, asv1);
     REGISTER_ENCDEC (ASV2, asv2);
     REGISTER_DECODER(AVS, avs);
+    REGISTER_DECODER(BETHSOFTVID, bethsoftvid);
     REGISTER_ENCDEC (BMP, bmp);
+    REGISTER_DECODER(C93, c93);
     REGISTER_DECODER(CAVS, cavs);
     REGISTER_DECODER(CINEPAK, cinepak);
     REGISTER_DECODER(CLJR, cljr);
@@ -122,6 +124,7 @@ void avcodec_register_all(void)
     REGISTER_DECODER(RPZA, rpza);
     REGISTER_ENCDEC (RV10, rv10);
     REGISTER_ENCDEC (RV20, rv20);
+    REGISTER_ENCDEC (SGI, sgi);
     REGISTER_DECODER(SMACKER, smacker);
     REGISTER_DECODER(SMC, smc);
     REGISTER_ENCDEC (SNOW, snow);
@@ -130,8 +133,9 @@ void avcodec_register_all(void)
     REGISTER_DECODER(SVQ3, svq3);
     REGISTER_ENCDEC (TARGA, targa);
     REGISTER_DECODER(THEORA, theora);
+    REGISTER_DECODER(THP, thp);
     REGISTER_DECODER(TIERTEXSEQVIDEO, tiertexseqvideo);
-    REGISTER_DECODER(TIFF, tiff);
+    REGISTER_ENCDEC (TIFF, tiff);
     REGISTER_DECODER(TRUEMOTION1, truemotion1);
     REGISTER_DECODER(TRUEMOTION2, truemotion2);
     REGISTER_DECODER(TSCC, tscc);
@@ -163,6 +167,7 @@ void avcodec_register_all(void)
     REGISTER_DECODER(ALAC, alac);
     REGISTER_ENCDEC (AMR_NB, amr_nb);
     REGISTER_ENCDEC (AMR_WB, amr_wb);
+    REGISTER_DECODER(ATRAC3, atrac3);
     REGISTER_DECODER(COOK, cook);
     REGISTER_DECODER(DSICINAUDIO, dsicinaudio);
     REGISTER_DECODER(DTS, dts);
@@ -241,6 +246,7 @@ void avcodec_register_all(void)
     REGISTER_ENCDEC (ADPCM_SBPRO_3, adpcm_sbpro_3);
     REGISTER_ENCDEC (ADPCM_SBPRO_4, adpcm_sbpro_4);
     REGISTER_ENCDEC (ADPCM_SWF, adpcm_swf);
+    REGISTER_DECODER(ADPCM_THP, adpcm_thp);
     REGISTER_ENCDEC (ADPCM_XA, adpcm_xa);
     REGISTER_ENCDEC (ADPCM_YAMAHA, adpcm_yamaha);
 

@@ -839,7 +839,6 @@ static int encode_picture_lossless(AVCodecContext *avctx, unsigned char *buf, in
 typedef struct MJpegDecodeContext {
     AVCodecContext *avctx;
     GetBitContext gb;
-    int mpeg_enc_ctx_allocated; /* true if decoding context allocated */
 
     int start_code; /* current start code */
     int buffer_size;
@@ -886,8 +885,7 @@ typedef struct MJpegDecodeContext {
     int8_t *qscale_table;
     DECLARE_ALIGNED_8(DCTELEM, block[64]);
     ScanTable scantable;
-    void (*idct_put)(uint8_t *dest/*align 8*/, int line_size, DCTELEM *block/*align 16*/);
-    void (*idct_add)(uint8_t *dest/*align 8*/, int line_size, DCTELEM *block/*align 16*/);
+    DSPContext dsp;
 
     int restart_interval;
     int restart_count;
@@ -930,23 +928,10 @@ static int build_vlc(VLC *vlc, const uint8_t *bits_table, const uint8_t *val_tab
 static int mjpeg_decode_init(AVCodecContext *avctx)
 {
     MJpegDecodeContext *s = avctx->priv_data;
-    MpegEncContext s2;
-    memset(s, 0, sizeof(MJpegDecodeContext));
 
     s->avctx = avctx;
-
-    /* ugly way to get the idct & scantable FIXME */
-    memset(&s2, 0, sizeof(MpegEncContext));
-    s2.avctx= avctx;
-//    s2->out_format = FMT_MJPEG;
-    dsputil_init(&s2.dsp, avctx);
-    DCT_common_init(&s2);
-
-    s->scantable= s2.intra_scantable;
-    s->idct_put= s2.dsp.idct_put;
-    s->idct_add= s2.dsp.idct_add;
-
-    s->mpeg_enc_ctx_allocated = 0;
+    dsputil_init(&s->dsp, avctx);
+    ff_init_scantable(s->dsp.idct_permutation, &s->scantable, ff_zigzag_direct);
     s->buffer_size = 0;
     s->buffer = NULL;
     s->start_code = -1;
@@ -1140,6 +1125,10 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
     height = get_bits(&s->gb, 16);
     width = get_bits(&s->gb, 16);
 
+    //HACK for odd_height.mov
+    if(s->interlaced && s->width == width && s->height == height + 1)
+        height= s->height;
+
     av_log(s->avctx, AV_LOG_DEBUG, "sof0: picture: %dx%d\n", width, height);
     if(avcodec_check_dimensions(s->avctx, width, height))
         return -1;
@@ -1186,6 +1175,7 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
 
         s->width = width;
         s->height = height;
+        s->interlaced = 0;
 
         /* test interlaced mode */
         if (s->first_picture &&
@@ -1615,9 +1605,9 @@ static int mjpeg_decode_scan(MJpegDecodeContext *s, int nb_components, int ss, i
                         ptr += s->linesize[c] >> 1;
 //av_log(NULL, AV_LOG_DEBUG, "%d %d %d %d %d %d %d %d \n", mb_x, mb_y, x, y, c, s->bottom_field, (v * mb_y + y) * 8, (h * mb_x + x) * 8);
                     if(!s->progressive)
-                        s->idct_put(ptr, s->linesize[c], s->block);
+                        s->dsp.idct_put(ptr, s->linesize[c], s->block);
                     else
-                        s->idct_add(ptr, s->linesize[c], s->block);
+                        s->dsp.idct_add(ptr, s->linesize[c], s->block);
                     if (++x == h) {
                         x = 0;
                         y++;
@@ -1770,7 +1760,7 @@ static int mjpeg_decode_dri(MJpegDecodeContext *s)
 
 static int mjpeg_decode_app(MJpegDecodeContext *s)
 {
-    int len, id;
+    int len, id, i;
 
     len = get_bits(&s->gb, 16);
     if (len < 5)
@@ -1801,7 +1791,9 @@ static int mjpeg_decode_app(MJpegDecodeContext *s)
             s->buggy_avid = 1;
 //        if (s->first_picture)
 //            printf("mjpeg: workarounding buggy AVID\n");
-        s->interlace_polarity = get_bits(&s->gb, 8);
+        i = get_bits(&s->gb, 8);
+        if     (i==2) s->bottom_field= 1;
+        else if(i==1) s->bottom_field= 0;
 #if 0
         skip_bits(&s->gb, 8);
         skip_bits(&s->gb, 32);
@@ -2044,15 +2036,17 @@ static int mjpeg_decode_frame(AVCodecContext *avctx,
                         uint8_t x = *(src++);
 
                         *(dst++) = x;
-                        if (x == 0xff)
+                        if (avctx->codec_id != CODEC_ID_THP)
                         {
-                            while(src<buf_end && x == 0xff)
-                                x = *(src++);
+                            if (x == 0xff) {
+                                while (src < buf_end && x == 0xff)
+                                    x = *(src++);
 
-                            if (x >= 0xd0 && x <= 0xd7)
-                                *(dst++) = x;
-                            else if (x)
-                                break;
+                                if (x >= 0xd0 && x <= 0xd7)
+                                    *(dst++) = x;
+                                else if (x)
+                                    break;
+                            }
                         }
                     }
                     init_get_bits(&s->gb, s->buffer, (dst - s->buffer)*8);
@@ -2271,8 +2265,6 @@ read_header:
     skip_bits(&hgb, 32); /* padded field size */
     second_field_offs = get_bits_long(&hgb, 32);
     av_log(avctx, AV_LOG_DEBUG, "second field offs: 0x%x\n", second_field_offs);
-    if (second_field_offs)
-        s->interlaced = 1;
 
     dqt_offs = get_bits_long(&hgb, 32);
     av_log(avctx, AV_LOG_DEBUG, "dqt offs: 0x%x\n", dqt_offs);
@@ -2574,6 +2566,19 @@ AVCodec mjpeg_decoder = {
     "mjpeg",
     CODEC_TYPE_VIDEO,
     CODEC_ID_MJPEG,
+    sizeof(MJpegDecodeContext),
+    mjpeg_decode_init,
+    NULL,
+    mjpeg_decode_end,
+    mjpeg_decode_frame,
+    CODEC_CAP_DR1,
+    NULL
+};
+
+AVCodec thp_decoder = {
+    "thp",
+    CODEC_TYPE_VIDEO,
+    CODEC_ID_THP,
     sizeof(MJpegDecodeContext),
     mjpeg_decode_init,
     NULL,

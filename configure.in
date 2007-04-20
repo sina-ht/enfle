@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2007 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Mar 31 10:52:38 2007.
-dnl $Id: configure.in,v 1.197 2007/03/31 02:02:50 sian Exp $
+dnl Last Modified: Fri Apr 20 22:06:26 2007.
+dnl $Id: configure.in,v 1.198 2007/04/20 13:21:34 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.60)
-AC_INIT([enfle],[20070331],[sian@big.or.jp])
+AC_INIT([enfle],[20070420],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -815,6 +815,12 @@ AC_DEFINE(ENABLE_MPC7_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_DCA_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_DNXHD_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_DXA_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_BETHSOFTVID_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_C93_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_SGI_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_THP_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_ATRAC3_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_ADPCM_THP_DECODER, 1, [Define if you need this for avcodec.])
 
 AC_DEFINE(CONFIG_OGGVORBIS_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_GIF_DECODER, 1, [Define if you need this for avcodec.])
@@ -975,6 +981,12 @@ AC_DEFINE(CONFIG_MPC7_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_DCA_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_DNXHD_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_DXA_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_BETHSOFTVID_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_C93_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_SGI_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_THP_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_ATRAC3_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_ADPCM_THP_DECODER, 1, [Define if you need this for avcodec.])
 
 dnl all encoders are disabled
 AC_DEFINE(ENABLE_AC3_ENCODER, 0, [Define if you need this for avcodec.])
@@ -1071,6 +1083,8 @@ AC_DEFINE(ENABLE_LIBGSM_MS_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_WMAV1_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_WMAV2_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_TARGA_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_SGI_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_TIFF_ENCODER, 0, [Define if you need this for avcodec.])
 
 dnl all parsers are disabled
 AC_DEFINE(ENABLE_AAC_PARSER, 0, [Define if you need this for avcodec.])

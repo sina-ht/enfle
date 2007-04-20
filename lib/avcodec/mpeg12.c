@@ -1287,7 +1287,7 @@ static int mpeg_decode_mb(MpegEncContext *s,
         }else{
             assert(mb_type & MB_TYPE_L0L1);
 //FIXME decide if MBs in field pictures are MB_TYPE_INTERLACED
-            /* get additionnal motion vector type */
+            /* get additional motion vector type */
             if (s->frame_pred_frame_dct)
                 motion_type = MT_FRAME;
             else{
@@ -3324,7 +3324,7 @@ AVCodec mpeg2video_encoder = {
 };
 #endif
 
-//#ifdef HAVE_XVMC
+#if 1
 static int mpeg_mc_decode_init(AVCodecContext *avctx){
     Mpeg1Context *s;
 
@@ -3357,7 +3357,7 @@ AVCodec mpeg_xvmc_decoder = {
     .flush= ff_mpeg_flush,
 };
 
-//#endif
+#endif
 
 #ifdef CONFIG_MPEGVIDEO_PARSER
 static void mpegvideo_extract_headers(AVCodecParserContext *s,

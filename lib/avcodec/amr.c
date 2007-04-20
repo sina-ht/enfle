@@ -26,23 +26,20 @@
  * (AMR-WB) audio encoder/decoder through external reference code from
  * http://www.3gpp.org/. The license of the code from 3gpp is unclear so you
  * have to download the code separately. Two versions exists: One fixed-point
- * and one with floats. For some reason the float-encoder is significant faster
- * at least on a P4 1.5GHz (0.9s instead of 9.9s on a 30s audio clip at MR102).
- * Both float and fixed point are supported for AMR-NB, but only float for
- * AMR-WB.
+ * and one floating-point. For some reason the float encoder is significantly
+ * faster at least on a P4 1.5GHz (0.9s instead of 9.9s on a 30s audio clip
+ * at MR102). Both float and fixed point are supported for AMR-NB, but only
+ * float for AMR-WB.
  *
  * \section AMR-NB
  *
  * \subsection Float
  * The float version (default) can be downloaded from:
  * http://www.3gpp.org/ftp/Specs/archive/26_series/26.104/26104-610.zip
- * Extract the source into \c "ffmpeg/libavcodec/amr_float".
  *
  * \subsection Fixed-point
  * The fixed-point (TS26.073) can be downloaded from:
- * http://www.3gpp.org/ftp/Specs/archive/26_series/26.073/26073-510.zip.
- * Extract the source into \c "ffmpeg/libavcodec/amr".
- * To use the fixed version run \c "./configure" with \c "--enable-amr_nb-fixed".
+ * http://www.3gpp.org/ftp/Specs/archive/26_series/26.073/26073-600.zip
  *
  * \subsection Specification
  * The specification for AMR-NB can be found in TS 26.071
@@ -50,11 +47,10 @@
  * info at http://www.3gpp.org/ftp/Specs/html-info/26-series.htm.
  *
  * \section AMR-WB
+ *
  * \subsection Float
  * The reference code can be downloaded from:
  * http://www.3gpp.org/ftp/Specs/archive/26_series/26.204/26204-600.zip
- * It should be extracted to \c "ffmpeg/libavcodec/amrwb_float". Enable it with
- * \c "--enable-amr_wb".
  *
  * \subsection Fixed-point
  * If someone wants to use the fixed point version it can be downloaded from:
@@ -81,9 +77,14 @@
 #include "amr/e_homing.h"
 
 #else
-#include "amr_float/interf_dec.h"
-#include "amr_float/interf_enc.h"
+#include <amrnb/interf_dec.h>
+#include <amrnb/interf_enc.h>
 #endif
+
+static const char *nb_bitrate_unsupported =
+    "bitrate not supported: use one of 4.75k, 5.15k, 5.9k, 6.7k, 7.4k, 7.95k, 10.2k or 12.2k\n";
+static const char *wb_bitrate_unsupported =
+    "bitrate not supported: use one of 6.6k, 8.85k, 12.65k, 14.25k, 15.85k, 18.25k, 19.85k, 23.05k, or 23.85k\n";
 
 /* Common code for fixed and float version*/
 typedef struct AMR_bitrates
@@ -216,7 +217,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
 
     if((s->enc_bitrate=getBitrateMode(avctx->bit_rate))<0)
     {
-        av_log(avctx, AV_LOG_ERROR, "bitrate not supported\n");
+        av_log(avctx, AV_LOG_ERROR, nb_bitrate_unsupported);
         return -1;
     }
 
@@ -259,73 +260,69 @@ static int amr_nb_decode_frame(AVCodecContext * avctx,
 
     synth=data;
 
-//    while(offset<buf_size)
+    toc=amrData[offset];
+    /* read rest of the frame based on ToC byte */
+    q  = (toc >> 2) & 0x01;
+    ft = (toc >> 3) & 0x0F;
+
+    //printf("offset=%d, packet_size=%d amrData= 0x%X %X %X %X\n",offset,packed_size[ft],amrData[offset],amrData[offset+1],amrData[offset+2],amrData[offset+3]);
+
+    offset++;
+
+    packed_bits=amrData+offset;
+
+    offset+=packed_size[ft];
+
+    //Unsort and unpack bits
+    s->rx_type = UnpackBits(q, ft, packed_bits, &s->mode, &serial[1]);
+
+    //We have a new frame
+    s->frameCount++;
+
+    if (s->rx_type == RX_NO_DATA)
     {
-        toc=amrData[offset];
-        /* read rest of the frame based on ToC byte */
-        q  = (toc >> 2) & 0x01;
-        ft = (toc >> 3) & 0x0F;
-
-        //printf("offset=%d, packet_size=%d amrData= 0x%X %X %X %X\n",offset,packed_size[ft],amrData[offset],amrData[offset+1],amrData[offset+2],amrData[offset+3]);
-
-        offset++;
-
-        packed_bits=amrData+offset;
-
-        offset+=packed_size[ft];
-
-        //Unsort and unpack bits
-        s->rx_type = UnpackBits(q, ft, packed_bits, &s->mode, &serial[1]);
-
-        //We have a new frame
-        s->frameCount++;
-
-        if (s->rx_type == RX_NO_DATA)
-        {
-            s->mode = s->speech_decoder_state->prev_mode;
-        }
-        else {
-            s->speech_decoder_state->prev_mode = s->mode;
-        }
-
-        /* if homed: check if this frame is another homing frame */
-        if (s->reset_flag_old == 1)
-        {
-            /* only check until end of first subframe */
-            s->reset_flag = decoder_homing_frame_test_first(&serial[1], s->mode);
-        }
-        /* produce encoder homing frame if homed & input=decoder homing frame */
-        if ((s->reset_flag != 0) && (s->reset_flag_old != 0))
-        {
-            for (i = 0; i < L_FRAME; i++)
-            {
-                synth[i] = EHF_MASK;
-            }
-        }
-        else
-        {
-            /* decode frame */
-            Speech_Decode_Frame(s->speech_decoder_state, s->mode, &serial[1], s->rx_type, synth);
-        }
-
-        //Each AMR-frame results in 160 16-bit samples
-        *data_size+=160*2;
-        synth+=160;
-
-        /* if not homed: check whether current frame is a homing frame */
-        if (s->reset_flag_old == 0)
-        {
-            /* check whole frame */
-            s->reset_flag = decoder_homing_frame_test(&serial[1], s->mode);
-        }
-        /* reset decoder if current frame is a homing frame */
-        if (s->reset_flag != 0)
-        {
-            Speech_Decode_Frame_reset(s->speech_decoder_state);
-        }
-        s->reset_flag_old = s->reset_flag;
-
+        s->mode = s->speech_decoder_state->prev_mode;
     }
+    else {
+        s->speech_decoder_state->prev_mode = s->mode;
+    }
+
+    /* if homed: check if this frame is another homing frame */
+    if (s->reset_flag_old == 1)
+    {
+        /* only check until end of first subframe */
+        s->reset_flag = decoder_homing_frame_test_first(&serial[1], s->mode);
+    }
+    /* produce encoder homing frame if homed & input=decoder homing frame */
+    if ((s->reset_flag != 0) && (s->reset_flag_old != 0))
+    {
+        for (i = 0; i < L_FRAME; i++)
+        {
+            synth[i] = EHF_MASK;
+        }
+    }
+    else
+    {
+        /* decode frame */
+        Speech_Decode_Frame(s->speech_decoder_state, s->mode, &serial[1], s->rx_type, synth);
+    }
+
+    //Each AMR-frame results in 160 16-bit samples
+    *data_size=160*2;
+
+    /* if not homed: check whether current frame is a homing frame */
+    if (s->reset_flag_old == 0)
+    {
+        /* check whole frame */
+        s->reset_flag = decoder_homing_frame_test(&serial[1], s->mode);
+    }
+    /* reset decoder if current frame is a homing frame */
+    if (s->reset_flag != 0)
+    {
+        Speech_Decode_Frame_reset(s->speech_decoder_state);
+    }
+    s->reset_flag_old = s->reset_flag;
+
     return offset;
 }
 
@@ -417,7 +414,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
 
     if((s->enc_bitrate=getBitrateMode(avctx->bit_rate))<0)
     {
-        av_log(avctx, AV_LOG_ERROR, "bitrate not supported\n");
+        av_log(avctx, AV_LOG_ERROR, nb_bitrate_unsupported);
         return -1;
     }
 
@@ -478,7 +475,7 @@ static int amr_nb_encode_frame(AVCodecContext *avctx,
 
     if((s->enc_bitrate=getBitrateMode(avctx->bit_rate))<0)
     {
-        av_log(avctx, AV_LOG_ERROR, "bitrate not supported\n");
+        av_log(avctx, AV_LOG_ERROR, nb_bitrate_unsupported);
         return -1;
     }
 
@@ -530,8 +527,9 @@ AVCodec amr_nb_encoder =
 #define typedef_h
 #endif
 
-#include "amrwb_float/enc_if.h"
-#include "amrwb_float/dec_if.h"
+#include <amrwb/enc_if.h>
+#include <amrwb/dec_if.h>
+#include <amrwb/if_rom.h>
 
 /* Common code for fixed and float version*/
 typedef struct AMRWB_bitrates
@@ -594,7 +592,7 @@ static int amr_wb_encode_init(AVCodecContext * avctx)
 
     if((s->mode=getWBBitrateMode(avctx->bit_rate))<0)
     {
-        av_log(avctx, AV_LOG_ERROR, "bitrate not supported\n");
+        av_log(avctx, AV_LOG_ERROR, wb_bitrate_unsupported);
         return -1;
     }
 
@@ -625,7 +623,7 @@ static int amr_wb_encode_frame(AVCodecContext *avctx,
 
     if((s->mode=getWBBitrateMode(avctx->bit_rate))<0)
     {
-        av_log(avctx, AV_LOG_ERROR, "bitrate not supported\n");
+        av_log(avctx, AV_LOG_ERROR, wb_bitrate_unsupported);
         return -1;
     }
     size = E_IF_encode(s->state, s->mode, data, frame, s->allow_dtx);
@@ -649,8 +647,6 @@ static int amr_wb_decode_init(AVCodecContext * avctx)
 
     return 0;
 }
-
-extern const UWord8 block_size[];
 
 static int amr_wb_decode_frame(AVCodecContext * avctx,
             void *data, int *data_size,

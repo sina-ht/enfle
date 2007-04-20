@@ -80,12 +80,11 @@ typedef struct FlicDecodeContext {
 
 static int flic_decode_init(AVCodecContext *avctx)
 {
-    FlicDecodeContext *s = (FlicDecodeContext *)avctx->priv_data;
+    FlicDecodeContext *s = avctx->priv_data;
     unsigned char *fli_header = (unsigned char *)avctx->extradata;
     int depth;
 
     s->avctx = avctx;
-    avctx->has_b_frames = 0;
 
     s->fli_type = AV_RL16(&fli_header[4]); /* Might be overridden if a Magic Carpet FLC */
     depth       = AV_RL16(&fli_header[12]);
@@ -129,7 +128,7 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
                                   void *data, int *data_size,
                                   uint8_t *buf, int buf_size)
 {
-    FlicDecodeContext *s = (FlicDecodeContext *)avctx->priv_data;
+    FlicDecodeContext *s = avctx->priv_data;
 
     int stream_ptr = 0;
     int stream_ptr_after_color_chunk;
@@ -431,7 +430,7 @@ static int flic_decode_frame_15_16BPP(AVCodecContext *avctx,
 {
     /* Note, the only difference between the 15Bpp and 16Bpp */
     /* Format is the pixel format, the packets are processed the same. */
-    FlicDecodeContext *s = (FlicDecodeContext *)avctx->priv_data;
+    FlicDecodeContext *s = avctx->priv_data;
 
     int stream_ptr = 0;
     int pixel_ptr;
