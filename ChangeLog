@@ -1,3 +1,12 @@
+2007-04-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11.c, lib/X11/x11ximage.c, lib/X11/x11ximage.h,
+	lib/enfle/cache_image.c, lib/enfle/video.h,
+	plugins/loader/jpeg/jpeg.c, plugins/player/generic/generic.c,
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
+	plugins/player/mpglib/mpglib.c, plugins/player/ungif/ungif.c,
+	plugins/video/Xlib/Xlib.c: Enabled Xv for JPEG image.
+
 2007-04-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, lib/avcodec/8bps.c, lib/avcodec/Makefile.am,
