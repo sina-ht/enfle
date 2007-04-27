@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:33:04 2006.
- * $Id: mpglib.c,v 1.14 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Sun Dec 31 01:32:17 2006.
+ * $Id: mpglib.c,v 1.15 2007/04/27 05:55:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -118,11 +118,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
 
   ExitMP3(&info->mp);
 
-  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
-  if (!direct_renderable) {
-    show_message_fnc("Cannot render directly...\n");
-    return PLAY_ERROR;
-  }
+  m->requested_type = video_window_request_type(vw, 120, 80, types, &direct_renderable);
   debug_message("Mpglib: requested type: %s direct\n", image_type_to_string(m->requested_type));
 
   m->has_video = 0;

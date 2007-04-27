@@ -1,10 +1,10 @@
 /*
  * Xlib.c -- Xlib Video plugin
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May 16 00:18:12 2006.
- * $Id: Xlib.c,v 1.64 2006/05/19 15:39:54 sian Exp $
+ * Last Modified: Fri Apr 27 14:51:21 2007.
+ * $Id: Xlib.c,v 1.65 2007/04/27 05:55:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -83,7 +83,7 @@ static VideoWindow *get_root(void *);
 static VideoWindow *open_window(void *, VideoWindow *, unsigned int, unsigned int);
 static void set_wallpaper(void *, Image *);
 
-static ImageType request_type(VideoWindow *, unsigned int, int *);
+static ImageType request_type(VideoWindow *, unsigned int, unsigned int, unsigned int, int *);
 static int calc_magnified_size(VideoWindow *, int, unsigned int, unsigned int, int *, int *);
 static MemoryType preferred_memory_type(VideoWindow *);
 static int set_event_mask(VideoWindow *, int);
@@ -102,13 +102,14 @@ static void erase_rect(VideoWindow *);
 static void draw_rect(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
 static int render(VideoWindow *, Image *);
 static int render_scaled(VideoWindow *, Image *, int, unsigned int, unsigned int);
-static void update(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
+static void update(VideoWindow *, unsigned int, unsigned int);
 static void do_sync(VideoWindow *);
 static void discard_key_event(VideoWindow *);
 static void discard_button_event(VideoWindow *);
 static void destroy(void *);
 
 static void draw_rect_xor(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
+static void __update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, unsigned int h);
 
 /* internal */
 
@@ -252,8 +253,8 @@ clip(VideoWindow *vw, unsigned int *w_return, unsigned int *h_return)
   unsigned int h = *h_return;
 
   if (!vw->if_fullscreen) {
-    if (w > vw->full_width - WINDOW_CAPTION_WIDTH)
-      w = vw->full_width - WINDOW_CAPTION_WIDTH;
+    if (w > vw->full_width)
+      w = vw->full_width;
     if (h > vw->full_height - WINDOW_CAPTION_HEIGHT)
       h = vw->full_height - WINDOW_CAPTION_HEIGHT;
   } else {
@@ -479,7 +480,7 @@ preferred_memory_type(VideoWindow *vw)
 }
 
 static ImageType
-request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
+request_type(VideoWindow *vw, unsigned int w, unsigned int h, unsigned int types, int *direct_decode)
 {
 #ifdef USE_XV
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
@@ -538,22 +539,23 @@ request_type(VideoWindow *vw, unsigned int types, int *direct_decode)
       debug_message_fnc("Xv cannot display " #f " format image.\n"); \
     } \
   }
+  {
+    char *tmp = config_get(vw->c, "/enfle/plugins/video/Xlib/preferred_format");
 
- {
-   char *tmp = config_get(vw->c, "/enfle/plugins/video/Xlib/preferred_format");
-
-   if (strcasecmp(tmp, "planar") == 0) {
-     CHECK_AND_RETURN(YV12);
-     CHECK_AND_RETURN(I420);
-     CHECK_AND_RETURN(YUY2);
-     CHECK_AND_RETURN(UYVY);
-   } else {
-     CHECK_AND_RETURN(YUY2);
-     CHECK_AND_RETURN(UYVY);
-     CHECK_AND_RETURN(YV12);
-     CHECK_AND_RETURN(I420);
-   }
- }
+    if (xv->image_width >= w && xv->image_height >= h) {
+      if (strcasecmp(tmp, "planar") == 0) {
+	CHECK_AND_RETURN(YV12);
+	CHECK_AND_RETURN(I420);
+	CHECK_AND_RETURN(YUY2);
+	CHECK_AND_RETURN(UYVY);
+      } else {
+	CHECK_AND_RETURN(YUY2);
+	CHECK_AND_RETURN(UYVY);
+	CHECK_AND_RETURN(YV12);
+	CHECK_AND_RETURN(I420);
+      }
+    }
+  }
 #undef CHECK_AND_RETURN
 #endif
 
@@ -742,7 +744,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	XClipBox(region, &rect);
 	XSetRegion(x11_display(x11), gc, region);
 
-	update(vw, rect.x, rect.y, rect.width, rect.height);
+	__update(vw, rect.x, rect.y, rect.width, rect.height);
 
 	XSetClipMask(x11_display(x11), gc, None);
 	XDestroyRegion(region);
@@ -751,8 +753,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	if (xwi->is_rect_draw)
 	  draw_rect_xor(vw, xwi->lx, xwi->uy, xwi->rx, xwi->dy);
       } else {
-	if (!xwi->xi->use_xv)
-	  x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
+	update(vw, vw->render_width, vw->render_height);
       }
       if (vw->if_fullscreen)
 	draw_caption(vw);
@@ -861,6 +862,9 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	ev->type = ENFLE_Event_WindowConfigured;
 	ev->window.width = xcev->width;
 	ev->window.height = xcev->height;
+	debug_message_fnc("ConfigureNotify: (%d, %d) -> (%d, %d)\n", vw->width, vw->height, xcev->width, xcev->height);
+	vw->width = xcev->width;
+	vw->height = xcev->height;
       }
       ret = 1;
       break;
@@ -1072,8 +1076,9 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
     }
   }
 
-  vw->width = w;
-  vw->height = h;
+  x11_lock(x11);
+  x11window_get_geometry(xw, &vw->x, &vw->y, &vw->width, &vw->height);
+  x11_unlock(x11);
 
   return 1;
 }
@@ -1124,27 +1129,27 @@ commit_offset(VideoWindow *vw, int offset_x, int offset_y)
       vw->offset_y = 0;
     }
   } else {
-    if (vw->render_width > vw->width) {
+    if (vw->render_width > vw->full_width) {
       if (vw->offset_x < 0)
 	vw->offset_x = 0;
-      if (vw->offset_x > (int)vw->render_width - (int)vw->width)
-	vw->offset_x = vw->render_width - vw->width;
+      if (vw->offset_x > (int)vw->render_width - (int)vw->full_width)
+	vw->offset_x = vw->render_width - vw->full_width;
     } else {
       vw->offset_x = 0;
     }
 
-    if (vw->render_height > vw->height) {
+    if (vw->render_height > vw->full_height) {
       if (vw->offset_y < 0)
 	vw->offset_y = 0;
-      if (vw->offset_y > (int)vw->render_height - (int)vw->height)
-	vw->offset_y = vw->render_height - vw->height;
+      if (vw->offset_y > (int)vw->render_height - (int)vw->full_height)
+	vw->offset_y = vw->render_height - vw->full_height;
     } else {
       vw->offset_y = 0;
     }
   }
 
   if (vw->offset_x != old_offset_x || vw->offset_y != old_offset_y)
-    update(vw, 0, 0, vw->width, vw->height);
+    update(vw, vw->render_width, vw->render_height);
   if (xwi->is_rect_draw && (vw->offset_x != old_offset_x || vw->offset_y != old_offset_y))
     draw_rect_xor(vw, xwi->lx, xwi->uy, xwi->rx, xwi->dy);
 }
@@ -1208,11 +1213,14 @@ draw_rect_xor(VideoWindow *vw, unsigned int lx, unsigned int uy, unsigned int rx
 }
 
 static void
-update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, unsigned int h)
+__update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, unsigned int h)
 {
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
+
+  left += xwi->xi->left;
+  top += xwi->xi->top;
 
   //debug_message_fnc("(%d, %d) - (%d, %d) -> (%d, %d)\n", left + vw->offset_x, top + vw->offset_y, left + vw->offset_x + w, top + vw->offset_y + h, left, top);
 
@@ -1227,6 +1235,46 @@ update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, uns
 	      top  + ((vw->full_height - vw->height) >> 1));
   }
   x11_unlock(x11);
+}
+
+static void
+update(VideoWindow *vw, unsigned int w, unsigned int h)
+{
+  X11Window_info *xwi = (X11Window_info *)vw->private_data;
+  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
+
+  if (!vw->if_fullscreen) {
+    if (vw->if_direct) {
+      if (xwi->xi->use_xv) {
+#ifdef USE_XV
+	x11ximage_put_scaled(xwi->xi, x11window_win(xw), xwi->normal.gc, vw->offset_x, vw->offset_y, 0, 0, xwi->xi->xvimage->width, xwi->xi->xvimage->height, w, h);
+#endif
+      } else {
+	x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, vw->offset_x, vw->offset_y, 0, 0, w, h);
+      }
+    } else {
+      __update(vw, 0, 0, w, h);
+    }
+  } else {
+    if (vw->if_direct) {
+      int sx = (vw->full_width < w) ? 0 : (vw->full_width - w) / 2;
+      int sy = (vw->full_height < h) ? 0 : (vw->full_height - h) / 2;
+
+      if (xwi->xi->use_xv) {
+#ifdef USE_XV
+	x11ximage_put_scaled(xwi->xi, x11window_win(xw), xwi->full.gc, vw->offset_x, vw->offset_y,
+			     sx, sy,
+			     xwi->xi->xvimage->width, xwi->xi->xvimage->height, w, h);
+#endif
+      } else {
+	x11ximage_put(xwi->xi, x11window_win(xw), xwi->full.gc, vw->offset_x, vw->offset_y,
+		      sx, sy,
+		      w, h);
+      }
+    } else {
+      __update(vw, 0, 0, w, h);
+    }
+  }
 }
 
 static void
@@ -1344,6 +1392,7 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
 
   if (vw->render_method != _VIDEO_RENDER_NORMAL) {
     if (!use_hw_scale) {
+      debug_message_fnc("Magnifying..\n");
       image_magnify(p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK, dw, dh, vw->interpolate_method);
       image_data_swap(p, IMAGE_INDEX_WORK, IMAGE_INDEX_RENDERED);
     }
@@ -1360,38 +1409,14 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
-    if (vw->if_direct) {
-      if (xwi->xi->use_xv) {
-#ifdef USE_XV
-	x11ximage_put_scaled(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, sw, sh, dw, dh);
-#endif
-      } else {
-	x11ximage_put(xwi->xi, x11window_win(xw), xwi->normal.gc, 0, 0, 0, 0, dw, dh);
-      }
-    } else {
+    if (!vw->if_direct)
       x11ximage_put(xwi->xi, xwi->normal.pix, xwi->normal.gc, 0, 0, 0, 0, dw, dh);
-      update(vw, image_left(p), image_top(p), dw, dh);
-    }
+    update(vw, dw, dh);
   } else {
     recreate_pixmap_if_resized(vw, &xwi->full);
-    if (vw->if_direct) {
-      if (xwi->xi->use_xv) {
-#ifdef USE_XV
-	x11ximage_put_scaled(xwi->xi, x11window_win(xw), xwi->full.gc, 0, 0,
-			     (vw->full_width  - dw) >> 1,
-			     (vw->full_height - dh) >> 1,
-			     sw, sh, dw, dh);
-#endif
-      } else {
-	x11ximage_put(xwi->xi, x11window_win(xw), xwi->full.gc, 0, 0,
-		      (vw->full_width  - dw) >> 1,
-		      (vw->full_height - dh) >> 1,
-		      dw, dh);
-      }
-    } else {
+    if (!vw->if_direct)
       x11ximage_put(xwi->xi, xwi->full.pix, xwi->full.gc, 0, 0, 0, 0, dw, dh);
-      update(vw, image_left(p), image_top(p), dw, dh);
-    }
+    update(vw, dw, dh);
     draw_caption(vw);
   }
 

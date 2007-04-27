@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:41:10 2004.
- * $Id: x11.c,v 1.22 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Fri Apr 27 14:52:22 2007.
+ * $Id: x11.c,v 1.23 2007/04/27 05:55:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -223,7 +223,15 @@ get_xvinfo(X11 *x11)
 		  if (formats[l].format != XvPacked)
 		    continue;
 		  c = XV_RV32;
+		} else if (formats[l].type == XvRGB) {
+		  if (formats[l].bits_per_pixel == 24) {
+		    c = XV_RV24;
+		  } else if (formats[l].bits_per_pixel == 32) {
+		    c = XV_RV32;
+		  } else
+		    continue;
 		}
+
 		if (c != -1) {
 		  xv->capable_format |= (1 << c);
 		  xv->format_ids[c] =  formats[l].id;

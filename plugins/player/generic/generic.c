@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jul  1 11:36:56 2006.
- * $Id: generic.c,v 1.30 2006/07/01 03:15:06 sian Exp $
+ * Last Modified: Sun Dec 31 01:35:20 2006.
+ * $Id: generic.c,v 1.31 2007/04/27 05:55:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -198,7 +198,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
       IMAGE_ARGB32 | IMAGE_BGRA32;
   }
 
-  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
+  m->requested_type = video_window_request_type(vw, m->width, m->height, types, &direct_renderable);
   if (!direct_renderable)
     warning_fnc("Cannot render directly...\n");
   debug_message_fnc("requested type: %s\n", image_type_to_string(m->requested_type));
@@ -509,7 +509,7 @@ play_audio(void *arg)
     while ((m->status == _PLAY || m->status == _RESIZING) && ads == AD_OK)
       ads = audiodecoder_decode(m->adec, m, ad, NULL, 0, NULL);
     if (ads == AD_NEED_MORE_DATA) {
-      if (remain == 0) {
+      if (1/*remain == 0*/) {
 	if (!fifo_get(info->astream, &data, &destructor)) {
 	  debug_message_fnc("fifo_get() failed.\n");
 	  goto quit;
@@ -518,7 +518,7 @@ play_audio(void *arg)
 	  destructor(dp);
 	dp = (DemuxedPacket *)data;
 	p = dp->data;
-	remain = dp->size;
+	remain += dp->size;
       }
 
 #if 1
@@ -545,7 +545,10 @@ play_audio(void *arg)
       }
 #endif
 
+      used = 0;
       ads = audiodecoder_decode(m->adec, m, ad, p, remain, &used);
+      if (used == 0)
+	break;
       remain -= used;
       p += used;
     } else {

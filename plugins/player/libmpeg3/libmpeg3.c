@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:27:23 2006.
- * $Id: libmpeg3.c,v 1.49 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Sun Dec 31 01:28:12 2006.
+ * $Id: libmpeg3.c,v 1.50 2007/04/27 05:55:27 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream
@@ -123,19 +123,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   pthread_mutex_init(&info->update_mutex, NULL);
   pthread_cond_init(&info->update_cond, NULL);
 
-  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
-  if (!direct_renderable) {
-    show_message_fnc("Cannot render directly...\n");
-    return PLAY_ERROR;
-  }
-  debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
-
-  if (m->requested_type == _I420 || m->requested_type == _YV12) {
-    info->use_xv = 1;
-  } else {
-    info->use_xv = 0;
-  }
-
   /* XXX: can set how many CPUs you want to use. */
   /* mpeg3_set_cpus(info->file, 2); */
   mpeg3_set_mmx(info->file, 1);
@@ -166,6 +153,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
   p = info->p = image_create();
   p->direct_renderable = direct_renderable;
 
+  info->use_xv = 0;
   m->has_video = 1;
   if (!mpeg3_has_video(info->file)) {
     m->has_video = 0;
@@ -190,6 +178,16 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c)
     m->framerate.num = mpeg3_frame_rate(info->file, info->nvstream) * 1000;
     m->framerate.den = 1000;
     m->num_of_frames = mpeg3_video_frames(info->file, info->nvstream);
+
+    m->requested_type = video_window_request_type(vw, m->width, m->height, types, &direct_renderable);
+    if (!direct_renderable) {
+      show_message_fnc("Cannot render directly...\n");
+      return PLAY_ERROR;
+    }
+    debug_message("LibMPEG3: requested type: %s direct\n", image_type_to_string(m->requested_type));
+
+    if (m->requested_type == _I420 || m->requested_type == _YV12)
+      info->use_xv = 1;
 
     {
       int dw, dh;

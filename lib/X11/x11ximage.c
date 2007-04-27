@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Nov 24 23:16:11 2006.
- * $Id: x11ximage.c,v 1.56 2006/11/24 14:18:24 sian Exp $
+ * Last Modified: Sat Dec 30 15:54:22 2006.
+ * $Id: x11ximage.c,v 1.57 2007/04/27 05:55:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -304,6 +304,9 @@ convert(X11XImage *xi, Image *p, int src, int dst)
     debug_message("p type: %s p bpp: %d x bpp: %d bpl: %d\n", image_type_to_string(p->type), p->bits_per_pixel, ximage->bits_per_pixel, ximage->bytes_per_line);
 #endif
   }
+
+  xi->left = image_left(p);
+  xi->top = image_top(p);
 
   /* _GRAY -> _INDEX */
   if (p->type == _GRAY) {

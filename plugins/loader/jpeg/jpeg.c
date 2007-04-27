@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:22:23 2006.
- * $Id: jpeg.c,v 1.26 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Sun Dec 31 01:23:54 2006.
+ * $Id: jpeg.c,v 1.27 2007/04/27 05:55:27 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -95,7 +95,7 @@ typedef struct {
 } my_source_mgr;
 typedef my_source_mgr *my_src_ptr;
 
-#define INPUT_BUF_SIZE 8192
+#define INPUT_BUF_SIZE 65536
 
 METHODDEF(void)
 init_source(j_decompress_ptr cinfo)
@@ -236,7 +236,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-//#define ENABLE_YUV
+#define ENABLE_YUV
 
 DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
@@ -310,15 +310,17 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   debug_message("\n");
 #endif
 
+  jpeg_calc_output_dimensions(cinfo);
+
 #ifdef ENABLE_YUV
   if (vw) {
-    requested_type = video_window_request_type(vw, types, &direct_decode);
-    if (requested_type == _I420)
+    requested_type = video_window_request_type(vw, cinfo->output_width, cinfo->output_height, types, &direct_decode);
+    if (requested_type == _I420 && cinfo->out_color_space == JCS_RGB) {
       cinfo->out_color_space = JCS_YCbCr;
+      p->direct_renderable = 1;
+    }
   }
 #endif
-
-  jpeg_calc_output_dimensions(cinfo);
 
   image_width(p)  = cinfo->output_width;
   image_height(p) = cinfo->output_height;
@@ -390,7 +392,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       unsigned int w, h;
 
       w = ((image_width(p)  + 7) >> 3) << 3;
-      h = image_height(p);
+      h = ((image_height(p) + 1) >> 1) << 1;
 
       if (!image_rendered_image(p))
 	image_rendered_image(p) = memory_create();

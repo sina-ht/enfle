@@ -3,8 +3,8 @@
  * (C)Copyright 2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Sep  7 23:09:54 2006.
- * $Id: cache_image.c,v 1.3 2006/09/09 12:55:55 sian Exp $
+ * Last Modified: Sat Dec 30 14:46:42 2006.
+ * $Id: cache_image.c,v 1.4 2007/04/27 05:55:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,8 @@ cache_add_image(Cache *c, Image *p, char *path)
 {
   CachedObject *co;
 
+  if (image_image(p) == NULL)
+    return 0;
   if ((co = cached_object_create(p, _CACHED_IMAGE, path, strlen(path))) == NULL)
     return 0;
   image_clean(p);

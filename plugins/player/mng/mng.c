@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:31:10 2006.
- * $Id: mng.c,v 1.24 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Sun Dec 31 01:31:04 2006.
+ * $Id: mng.c,v 1.25 2007/04/27 05:55:27 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -132,13 +132,19 @@ static mng_bool
 processheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 {
   MNG_info *this = (MNG_info *)mng_get_userdata(mng);
+  VideoWindow *vw = this->vw;
   Movie *m = this->m;
   Image *p = this->p;
+  int direct_renderable;
 
   m->width  = width;
   m->height = height;
   m->rendering_width  = m->width;
   m->rendering_height = m->height;
+
+  m->requested_type = video_window_request_type(vw, width, height, types, &direct_renderable);
+  debug_message("MNG: requested type: %s %s\n", image_type_to_string(m->requested_type), direct_renderable ? "direct" : "not direct");
+  p->direct_renderable = direct_renderable;
 
   image_width(p)  = m->rendering_width;
   image_height(p) = m->rendering_height;
@@ -359,9 +365,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
-  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
-  debug_message("MNG: requested type: %s %s\n", image_type_to_string(m->requested_type), direct_renderable ? "direct" : "not direct");
-
   m->st = st;
   m->movie_private = (void *)this;
   m->status = _PLAY;
@@ -370,7 +373,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   this->vw = vw;
   this->m = m;
   this->p = image_create();
-  this->p->direct_renderable = direct_renderable;
 
   this->mng = mng_initialize((mng_ptr)this, memalloc, memfree, NULL);
   if (mng_setcb_openstream   (this->mng, openstream   )) err++;

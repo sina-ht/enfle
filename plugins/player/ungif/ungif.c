@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:32:34 2006.
- * $Id: ungif.c,v 1.34 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Sun Dec 31 01:26:22 2006.
+ * $Id: ungif.c,v 1.35 2007/04/27 05:55:27 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -105,14 +105,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
     return PLAY_ERROR;
   }
 
-  m->requested_type = video_window_request_type(vw, types, &direct_renderable);
-  debug_message("UNGIF: requested type: %s %s\n", image_type_to_string(m->requested_type), direct_renderable ? "direct" : "not direct");
-
   if ((info->gf = DGifOpen(st, ungif_input_func)) == NULL) {
     PrintGifError();
     free(info);
     return PLAY_ERROR;
   }
+
+  m->requested_type = video_window_request_type(vw, info->gf->SWidth, info->gf->SHeight, types, &direct_renderable);
+  debug_message("UNGIF: requested type: %s %s\n", image_type_to_string(m->requested_type), direct_renderable ? "direct" : "not direct");
 
   m->width = info->gf->SWidth;
   m->height = info->gf->SHeight;

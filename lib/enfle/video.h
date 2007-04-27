@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  1 16:56:52 2005.
- * $Id: video.h,v 1.22 2005/05/01 15:37:55 sian Exp $
+ * Last Modified: Sun Dec 31 01:23:37 2006.
+ * $Id: video.h,v 1.23 2007/04/27 05:55:27 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -145,7 +145,7 @@ struct _video_window {
   ImageInterpolateMethod interpolate_method;
 
   MemoryType (*preferred_memory_type)(VideoWindow *);
-  ImageType (*request_type)(VideoWindow *, unsigned int, int *);
+  ImageType (*request_type)(VideoWindow *, unsigned int, unsigned int, unsigned int, int *);
   int (*calc_magnified_size)(VideoWindow *, int, unsigned int, unsigned int, int *, int *);
   int (*set_event_mask)(VideoWindow *, int);
   int (*dispatch_event)(VideoWindow *, VideoEventData *);
@@ -162,7 +162,7 @@ struct _video_window {
   void (*draw_rect)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
   int (*render)(VideoWindow *, Image *);
   int (*render_scaled)(VideoWindow *, Image *, int, unsigned int, unsigned int);
-  void (*update)(VideoWindow *, unsigned int, unsigned int, unsigned int, unsigned int);
+  void (*update)(VideoWindow *, unsigned int, unsigned int);
   void (*do_sync)(VideoWindow *);
   void (*discard_key_event)(VideoWindow *);
   void (*discard_button_event)(VideoWindow *);
@@ -175,7 +175,7 @@ struct _video_window {
 #define video_window_set_yuv(vw) (vw)->displayable_colorspace |= VIDEO_COLORSPACE_YUV
 
 #define video_window_preferred_memory_type(vw) (vw)->preferred_memory_type((vw))
-#define video_window_request_type(vw, types, ddp) (vw)->request_type((vw), (types), (ddp))
+#define video_window_request_type(vw, w, h, types, ddp) (vw)->request_type((vw), (w), (h), (types), (ddp))
 #define video_window_calc_magnified_size(vw, uhs, sw, sh, dw, dh) (vw)->calc_magnified_size((vw), (uhs), (sw), (sh), (dw), (dh))
 #define video_window_set_event_mask(vw, m) (vw)->set_event_mask((vw), (m))
 #define video_window_dispatch_event(vw, ved) (vw)->dispatch_event((vw), (ved))
@@ -192,7 +192,7 @@ struct _video_window {
 #define video_window_draw_rect(vw, lx, uy, rx, dy) (vw)->draw_rect((vw), (lx), (uy), (rx), (dy))
 #define video_window_render(vw, p) (vw)->render((vw), (p))
 #define video_window_render_scaled(vw, p, ac, dw, dh) (vw)->render_scaled((vw), (p), (ac), (dw), (dh))
-#define video_window_update(vw, x, y, w, h) (vw)->update((vw), (x), (y), (w), (h))
+#define video_window_update(vw, w, h) (vw)->update((vw), (w), (h))
 #define video_window_sync(vw) (vw)->do_sync((vw))
 #define video_window_discard_key_event(vw) (vw)->discard_key_event((vw))
 #define video_window_discard_button_event(vw) (vw)->discard_button_event((vw))
