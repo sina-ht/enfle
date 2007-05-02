@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr 27 14:51:21 2007.
- * $Id: Xlib.c,v 1.65 2007/04/27 05:55:27 sian Exp $
+ * Last Modified: Wed May  2 23:51:18 2007.
+ * $Id: Xlib.c,v 1.66 2007/05/02 14:54:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -744,7 +744,10 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	XClipBox(region, &rect);
 	XSetRegion(x11_display(x11), gc, region);
 
-	__update(vw, rect.x, rect.y, rect.width, rect.height);
+	if (!vw->if_fullscreen)
+	  __update(vw, rect.x, rect.y, rect.width, rect.height);
+	else
+	  __update(vw, 0, 0, vw->render_width, vw->render_height);
 
 	XSetClipMask(x11_display(x11), gc, None);
 	XDestroyRegion(region);
@@ -1062,10 +1065,10 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
     //x11window_wait_mapped(xw);
     x11_unlock(x11);
   } else {
-    if (w == vw->width && h == vw->height)
+    if (w == vw->render_width && h == vw->render_height)
       return 1;
 
-    if (vw->width > w || vw->height > h) {
+    if (vw->render_width > w || vw->render_height > h) {
       x11_lock(x11);
       XSetForeground(x11_display(x11), xwi->full.gc, x11_black(x11));
       XFillRectangle(x11_display(x11), xwi->full.pix,  xwi->full.gc, 0, 0,
@@ -1231,8 +1234,8 @@ __update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, u
   } else {
     XCopyArea(x11_display(x11), xwi->full.pix, x11window_win(xw), xwi->full.gc,
 	      left + vw->offset_x, top + vw->offset_y, w, h,
-	      left + ((vw->full_width  - vw->width ) >> 1),
-	      top  + ((vw->full_height - vw->height) >> 1));
+	      left + ((vw->full_width  - w) >> 1),
+	      top  + ((vw->full_height - h) >> 1));
   }
   x11_unlock(x11);
 }
@@ -1401,9 +1404,9 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
   image_data_copy(p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK);
   x11ximage_convert(xwi->xi, p, IMAGE_INDEX_WORK, IMAGE_INDEX_RENDERED);
 
+  resize(vw, dw, dh);
   vw->render_width  = dw;
   vw->render_height = dh;
-  resize(vw, dw, dh);
 
   //debug_message_fnc("sw,sh (%d, %d)  dw,dh (%d, %d)  use_xv: %d, full: %d, direct: %d\n", sw, sh, dw, dh, xwi->xi->use_xv, vw->if_fullscreen, vw->if_direct);
 
