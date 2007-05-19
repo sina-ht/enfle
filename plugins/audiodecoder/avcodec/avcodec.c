@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep  9 21:48:10 2006.
- * $Id: avcodec.c,v 1.9 2006/09/09 12:54:50 sian Exp $
+ * Last Modified: Sat May 19 10:05:57 2007.
+ * $Id: avcodec.c,v 1.10 2007/05/19 01:56:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -110,11 +110,12 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     adm->size = len;
     if (used_r)
       *used_r = len;
-    //debug_message_fnc("avcodec audio: feed %d bytes\n", adm->size);
+    debug_message_fnc("avcodec audio: feed %d bytes\n", adm->size);
   }
 
-  l = avcodec_decode_audio(adm->acodec_ctx, adm->outbuf, &out_len,
-			   adm->buf + adm->offset, adm->size);
+  out_len =  AVCODEC_MAX_AUDIO_FRAME_SIZE;
+  l = avcodec_decode_audio2(adm->acodec_ctx, adm->outbuf, &out_len,
+			    adm->buf + adm->offset, adm->size);
   if (l < 0) {
     warning_fnc("avcodec: avcodec_decode_audio return %d\n", l);
     return AD_ERROR;
@@ -123,9 +124,9 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
   adm->size -= l;
   adm->offset += l;
   if (out_len == 0)
-    return AD_OK;
+    return AD_NEED_MORE_DATA;
 
-  //debug_message_fnc("avcodec audio: consume %d bytes, output %d bytes\n", l, out_len);
+  debug_message_fnc("avcodec audio: consume %d bytes, output %d bytes\n", l, out_len);
 
   if (adm->nframe == 0) {
     /* Set up audio device. */
