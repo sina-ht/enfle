@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Apr 24 23:06:03 2006.
- * $Id: bmp.c,v 1.16 2006/04/24 14:06:17 sian Exp $
+ * Last Modified: Sun May  6 02:34:44 2007.
+ * $Id: bmp.c,v 1.17 2007/05/19 01:58:09 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -105,6 +105,8 @@ load_image(Image *p, Stream *st)
   }
 
   if (biPlanes != 1)
+    return 0;
+  if (image_width(p) > 10000 || image_height(p) > 10000)
     return 0;
 
   switch (p->bits_per_pixel) {
