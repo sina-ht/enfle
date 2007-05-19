@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 31 01:31:04 2006.
- * $Id: mng.c,v 1.25 2007/04/27 05:55:27 sian Exp $
+ * Last Modified: Sat May 19 00:15:00 2007.
+ * $Id: mng.c,v 1.26 2007/05/19 01:58:27 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *
@@ -358,7 +358,7 @@ static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
   MNG_info *this;
-  int err = 0, direct_renderable;
+  int err = 0;
 
   if ((this = calloc(1, sizeof(MNG_info))) == NULL) {
     show_message("MNG: %s: No enough memory.\n", __FUNCTION__);

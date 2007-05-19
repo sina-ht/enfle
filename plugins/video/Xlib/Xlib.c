@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  2 23:51:18 2007.
- * $Id: Xlib.c,v 1.66 2007/05/02 14:54:25 sian Exp $
+ * Last Modified: Sat May 19 00:15:37 2007.
+ * $Id: Xlib.c,v 1.67 2007/05/19 01:58:35 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -1335,7 +1335,6 @@ static int
 render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsigned int _dh)
 {
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
-  X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   unsigned int sw, sh;
   int dw, dh;
   int use_hw_scale;
