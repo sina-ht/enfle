@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Apr 20 21:59:57 2007.
-# $Id: Makefile.am,v 1.53 2007/04/20 13:21:20 sian Exp $
+# Last Modified: Sat May 19 01:55:12 2007.
+# $Id: Makefile.am,v 1.54 2007/05/19 01:55:40 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -17,7 +17,10 @@ EXTRA_DIST = \
 	i386/simple_idct_mmx.c i386/fft_sse.c \
 	i386/dsputil_mmx_avg.h i386/dsputil_mmx_rnd.h i386/mmx.h \
 	i386/h264dsp_mmx.c i386/dsputil_h264_template_mmx.c i386/mathops.h \
-	svq3.c mdec.c motion_est_template.c wmv2.c jpeg_ls.c \
+	i386/vp3dsp_mmx.h \
+	i386/vp3dsp_sse2.h \
+	i386/dsputil_mmx_qns.h \
+	svq3.c mdec.c motion_est_template.c wmv2.c \
 	gcc_fixes.h
 
 DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H
@@ -105,7 +108,9 @@ CFLAGS += $(CFLAGS_POST)
 # endif
 
 noinst_HEADERS = \
+	aac_ac3_parser.h \
 	ac3.h \
+	ac3_parser.h \
 	ac3tab.h \
 	atrac3data.h \
 	avcodec.h \
@@ -114,9 +119,11 @@ noinst_HEADERS = \
 	bmp.h \
 	bytestream.h \
 	cabac.h \
+	cavs.h \
 	cavsdata.h \
 	config.h \
 	cookdata.h \
+	dca.h \
 	dcadata.h \
 	dcahuff.h \
 	dnxhddata.h \
@@ -126,24 +133,34 @@ noinst_HEADERS = \
 	faandct.h \
 	golomb.h \
 	h261data.h \
+	h263_parser.h \
 	h263data.h \
+	h264.h \
+	h264_parser.h \
 	h264data.h \
 	imcdata.h \
 	imgconvert_template.h \
 	indeo2data.h \
 	indeo3data.h \
+	jpegls.h \
+	jpeglsdec.h \
 	lzw.h \
 	mathops.h \
+	mjpeg.h \
 	mpcdata.h \
 	mpeg12data.h \
 	mpeg4data.h \
+	mpeg4video_parser.c \
 	mpegaudio.h \
 	mpegaudiodectab.h \
 	mpegaudiotab.h \
 	mpegvideo.h \
+	msmpeg4.h \
 	msmpeg4data.h \
+	msmpeg4tab.h \
 	opt.h \
 	parser.h \
+	pnm.h \
 	qdm2data.h \
 	ra144.h \
 	ra288.h \
@@ -152,6 +169,7 @@ noinst_HEADERS = \
 	rl.h \
 	rle.h \
 	rtjpeg.h \
+	s3tc.h \
 	sgi.h \
 	simple_idct.h \
 	sp5x.h \
@@ -161,6 +179,7 @@ noinst_HEADERS = \
 	truemotion1data.h \
 	truespeech_data.h \
 	ulti_cb.h \
+	vc1.h \
 	vc1acdata.h \
 	vc1data.h \
 	vorbis.h \
@@ -183,12 +202,16 @@ noinst_HEADERS = \
 # mp3lameaudio.c
 # beosthread.c w32thread.c
 # imgresample.c needs libswscale
-# bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c tiffenc.c are encoders
+# Encoders: bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c tiffenc.c roqaudioenc.c mjpegenc.c jpeglsenc.c pnmenc.c 
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
 	aasc.c \
+	aac_parser.c \
+	aac_ac3_parser.c \
 	ac3.c \
+	ac3_parser.c \
+	ac3tab.c \
 	adpcm.c \
 	adx.c \
 	alac.c \
@@ -204,6 +227,7 @@ libavcodec_la_SOURCES = \
 	c93.c \
 	cabac.c \
 	cavs.c \
+	cavs_parser.c \
 	cavsdsp.c \
 	cinepak.c \
 	cljr.c \
@@ -211,13 +235,16 @@ libavcodec_la_SOURCES = \
 	cook.c \
 	cyuv.c \
 	dca.c \
+	dca_parser.c \
 	dnxhddec.c \
 	dpcm.c \
 	dsicinav.c \
 	dsputil.c \
 	dv.c \
 	dvbsub.c \
+	dvbsub_parser.c \
 	dvbsubdec.c \
+	dvdsub_parser.c \
 	dvdsubdec.c \
 	dvdsubenc.c \
 	dxa.c \
@@ -236,9 +263,12 @@ libavcodec_la_SOURCES = \
 	gifdec.c \
 	golomb.c \
 	h261.c \
+	h261_parser.c \
 	h263.c \
+	h263_parser.c \
 	h263dec.c \
 	h264.c \
+	h264_parser.c \
 	h264dsp.c \
 	h264enc.c \
 	h264idct.c \
@@ -251,6 +281,8 @@ libavcodec_la_SOURCES = \
 	interplayvideo.c \
 	jfdctfst.c \
 	jfdctint.c \
+	jpegls.c \
+	jpeglsdec.c \
 	jrevdct.c \
 	kmvc.c \
 	lcl.c \
@@ -259,14 +291,20 @@ libavcodec_la_SOURCES = \
 	mace.c \
 	mdct.c \
 	mjpeg.c \
+	mjpegdec.c \
+	mjpeg_parser.c \
 	mmvideo.c \
 	motion_est.c \
 	mpc.c \
 	mpeg12.c \
+	mpeg4video_parser.c \
 	mpegaudio.c \
+	mpegaudio_parser.c \
 	mpegaudiodec.c \
 	mpegvideo.c \
+	mpegvideo_parser.c \
 	msmpeg4.c \
+	msmpeg4data.c \
 	msrle.c \
 	msvideo1.c \
 	nuv.c \
@@ -276,7 +314,9 @@ libavcodec_la_SOURCES = \
 	pcm.c \
 	png.c \
 	pnm.c \
+	pnm_parser.c \
 	pthread.c \
+	ptx.c \
 	qdm2.c \
 	qdrw.c \
 	qpeg.c \
@@ -293,6 +333,7 @@ libavcodec_la_SOURCES = \
 	rpza.c \
 	rtjpeg.c \
 	rv10.c \
+	s3tc.c \
 	sgidec.c \
 	shorten.c \
 	simple_idct.c \
@@ -309,15 +350,19 @@ libavcodec_la_SOURCES = \
 	truespeech.c \
 	tscc.c \
 	tta.c \
+	txd.c \
 	ulti.c \
 	utils.c \
 	vc1.c \
+	vc1_parser.c \
+	vc1data.c \
 	vc1dsp.c \
 	vcr1.c \
 	vmdav.c \
 	vmnc.c \
 	vorbis.c \
 	vorbis_data.c \
+	vorbis_dec.c \
 	vorbis_enc.c \
 	vp3.c \
 	vp3dsp.c \

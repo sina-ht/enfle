@@ -61,7 +61,7 @@ static void wmv2_common_init(Wmv2Context * w){
     ff_init_scantable(s->dsp.idct_permutation, &w->abt_scantable[1], wmv2_scantableB);
 }
 
-#ifdef CONFIG_ENCODERS
+#ifdef CONFIG_WMV2_ENCODER
 
 static int encode_ext_header(Wmv2Context *w){
     MpegEncContext * const s= &w->s;
@@ -263,7 +263,7 @@ void ff_wmv2_encode_mb(MpegEncContext * s,
         msmpeg4_encode_block(s, block[i], i);
     }
 }
-#endif //CONFIG_ENCODERS
+#endif //CONFIG_WMV2_ENCODER
 
 static void parse_mb_skip(Wmv2Context * w){
     int mb_x, mb_y;
@@ -835,6 +835,7 @@ static int wmv2_decode_init(AVCodecContext *avctx){
     return 0;
 }
 
+#ifdef CONFIG_WMV2_DECODER
 AVCodec wmv2_decoder = {
     "wmv2",
     CODEC_TYPE_VIDEO,
@@ -846,8 +847,9 @@ AVCodec wmv2_decoder = {
     ff_h263_decode_frame,
     CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1,
 };
+#endif
 
-#ifdef CONFIG_ENCODERS
+#ifdef CONFIG_WMV2_ENCODER
 AVCodec wmv2_encoder = {
     "wmv2",
     CODEC_TYPE_VIDEO,

@@ -38,6 +38,7 @@
 #define ASMALIGN(ZEROBITS) ".align 1<<" #ZEROBITS "\n\t"
 #endif
 //#    include "config.h"
+#    include "config.h"
 
 #    include <stdlib.h>
 #    include <stdio.h>

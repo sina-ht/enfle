@@ -183,8 +183,8 @@ static void svq3_add_idct_c (uint8_t *dst, DCTELEM *block, int stride, int qp, i
 static void pred4x4_down_left_svq3_c(uint8_t *src, uint8_t *topright, int stride){
     LOAD_TOP_EDGE
     LOAD_LEFT_EDGE
-    const __attribute__((unused)) int unu0= t0;
-    const __attribute__((unused)) int unu1= l0;
+    const attribute_unused int unu0= t0;
+    const attribute_unused int unu1= l0;
 
     src[0+0*stride]=(l1 + t1)>>1;
     src[1+0*stride]=
@@ -480,7 +480,6 @@ static int svq3_decode_mb (H264Context *h, unsigned int mb_type) {
         N??11111
         N??11111
         N??11111
-        N
     */
 
     for (m=0; m < 2; m++) {
@@ -939,7 +938,8 @@ static int svq3_decode_frame (AVCodecContext *avctx,
       int j;
       for(j=-1; j<4; j++)
         h->ref_cache[m][scan8[0] + 8*i + j]= 1;
-      h->ref_cache[m][scan8[0] + 8*i + j]= PART_NOT_AVAILABLE;
+      if(i<3)
+        h->ref_cache[m][scan8[0] + 8*i + j]= PART_NOT_AVAILABLE;
     }
   }
 

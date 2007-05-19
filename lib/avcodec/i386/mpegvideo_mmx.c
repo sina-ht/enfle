@@ -22,9 +22,9 @@
  * h263, mpeg1, mpeg2 dequantizer & draw_edges by Michael Niedermayer <michaelni@gmx.at>
  */
 
-#include "../dsputil.h"
-#include "../mpegvideo.h"
-#include "../avcodec.h"
+#include "dsputil.h"
+#include "mpegvideo.h"
+#include "avcodec.h"
 #include "x86_cpu.h"
 
 extern uint16_t inv_zigzag_direct16[64];
@@ -673,6 +673,12 @@ static void  denoise_dct_sse2(MpegEncContext *s, DCTELEM *block){
     );
 }
 
+#ifdef HAVE_SSSE3
+#define HAVE_SSSE3_BAK
+#endif
+#undef HAVE_SSSE3
+
+#undef HAVE_SSE2
 #undef HAVE_MMX2
 #define RENAME(a) a ## _MMX
 #define RENAMEl(a) a ## _mmx
@@ -685,11 +691,21 @@ static void  denoise_dct_sse2(MpegEncContext *s, DCTELEM *block){
 #define RENAMEl(a) a ## _mmx2
 #include "mpegvideo_mmx_template.c"
 
+#define HAVE_SSE2
 #undef RENAME
 #undef RENAMEl
 #define RENAME(a) a ## _SSE2
 #define RENAMEl(a) a ## _sse2
 #include "mpegvideo_mmx_template.c"
+
+#ifdef HAVE_SSSE3_BAK
+#define HAVE_SSSE3
+#undef RENAME
+#undef RENAMEl
+#define RENAME(a) a ## _SSSE3
+#define RENAMEl(a) a ## _sse2
+#include "mpegvideo_mmx_template.c"
+#endif
 
 void MPV_common_init_mmx(MpegEncContext *s)
 {
@@ -713,6 +729,11 @@ void MPV_common_init_mmx(MpegEncContext *s)
         }
 
         if(dct_algo==FF_DCT_AUTO || dct_algo==FF_DCT_MMX){
+#ifdef HAVE_SSSE3
+            if(mm_flags & MM_SSSE3){
+                s->dct_quantize= dct_quantize_SSSE3;
+            } else
+#endif
             if(mm_flags & MM_SSE2){
                 s->dct_quantize= dct_quantize_SSE2;
             } else if(mm_flags & MM_MMXEXT){

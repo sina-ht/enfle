@@ -30,6 +30,7 @@
 #include "avcodec.h"
 #include "dsputil.h"
 #include "mpegvideo.h"
+#include "msmpeg4.h"
 #include "faandct.h"
 #include <limits.h>
 
@@ -1193,25 +1194,22 @@ int MPV_encode_init(AVCodecContext *avctx)
         s->rtp_mode= 1;
         break;
     case CODEC_ID_LJPEG:
-    case CODEC_ID_JPEGLS:
     case CODEC_ID_MJPEG:
         s->out_format = FMT_MJPEG;
         s->intra_only = 1; /* force intra only for jpeg */
-        s->mjpeg_write_tables = avctx->codec->id != CODEC_ID_JPEGLS;
-        s->mjpeg_data_only_frames = 0; /* write all the needed headers */
         s->mjpeg_vsample[0] = 2;
         s->mjpeg_vsample[1] = 2>>chroma_v_shift;
         s->mjpeg_vsample[2] = 2>>chroma_v_shift;
         s->mjpeg_hsample[0] = 2;
         s->mjpeg_hsample[1] = 2>>chroma_h_shift;
         s->mjpeg_hsample[2] = 2>>chroma_h_shift;
-        if (mjpeg_init(s) < 0)
+        if (!(ENABLE_MJPEG_ENCODER || ENABLE_LJPEG_ENCODER) || mjpeg_init(s) < 0)
             return -1;
         avctx->delay=0;
         s->low_delay=1;
         break;
-#ifdef CONFIG_H261_ENCODER
     case CODEC_ID_H261:
+        if (!ENABLE_H261_ENCODER)  return -1;
         if (ff_h261_get_picture_format(s->width, s->height) < 0) {
             av_log(avctx, AV_LOG_ERROR, "The specified picture size of %dx%d is not valid for the H.261 codec.\nValid sizes are 176x144, 352x288\n", s->width, s->height);
             return -1;
@@ -1220,7 +1218,6 @@ int MPV_encode_init(AVCodecContext *avctx)
         avctx->delay=0;
         s->low_delay=1;
         break;
-#endif
     case CODEC_ID_H263:
         if (h263_get_picture_format(s->width, s->height) == 7) {
             av_log(avctx, AV_LOG_INFO, "The specified picture size of %dx%d is not valid for the H.263 codec.\nValid sizes are 128x96, 176x144, 352x288, 704x576, and 1408x1152. Try H.263+.\n", s->width, s->height);
@@ -1348,13 +1345,11 @@ int MPV_encode_init(AVCodecContext *avctx)
     ff_set_cmp(&s->dsp, s->dsp.ildct_cmp, s->avctx->ildct_cmp);
     ff_set_cmp(&s->dsp, s->dsp.frame_skip_cmp, s->avctx->frame_skip_cmp);
 
-#ifdef CONFIG_H261_ENCODER
-    if (s->out_format == FMT_H261)
+    if (ENABLE_H261_ENCODER && s->out_format == FMT_H261)
         ff_h261_encode_init(s);
-#endif
     if (s->out_format == FMT_H263)
         h263_encode_init(s);
-    if(s->msmpeg4_version)
+    if (ENABLE_MSMPEG4_ENCODER && s->msmpeg4_version)
         ff_msmpeg4_encode_init(s);
     if (s->out_format == FMT_MPEG1)
         ff_mpeg1_encode_init(s);
@@ -1401,7 +1396,7 @@ int MPV_encode_end(AVCodecContext *avctx)
     ff_rate_control_uninit(s);
 
     MPV_common_end(s);
-    if (s->out_format == FMT_MJPEG)
+    if ((ENABLE_MJPEG_ENCODER || ENABLE_LJPEG_ENCODER) && s->out_format == FMT_MJPEG)
         mjpeg_close(s);
 
     av_freep(&avctx->extradata);
@@ -2547,7 +2542,7 @@ vbv_retry:
 
         MPV_frame_end(s);
 
-        if (s->out_format == FMT_MJPEG)
+        if (ENABLE_MJPEG_ENCODER && s->out_format == FMT_MJPEG)
             mjpeg_picture_trailer(s);
 
         if(avctx->rc_buffer_size){
@@ -3057,11 +3052,9 @@ if(s->quarter_sample)
         pix_op[s->chroma_x_shift][uvdxy](dest_cb, ptr_cb, uvlinesize, h >> s->chroma_y_shift);
         pix_op[s->chroma_x_shift][uvdxy](dest_cr, ptr_cr, uvlinesize, h >> s->chroma_y_shift);
     }
-#if defined(CONFIG_H261_ENCODER) || defined(CONFIG_H261_DECODER)
-    if(s->out_format == FMT_H261){
+    if((ENABLE_H261_ENCODER || ENABLE_H261_DECODER) && s->out_format == FMT_H261){
         ff_h261_loop_filter(s);
     }
-#endif
 }
 
 /* apply one mpeg motion vector to the three components */
@@ -3552,7 +3545,7 @@ static inline void MPV_motion(MpegEncContext *s,
                         0, 0, 0,
                         ref_picture, pix_op, qpix_op,
                         s->mv[dir][0][0], s->mv[dir][0][1], 16);
-        }else if(s->mspel){
+        }else if(ENABLE_WMV2 && s->mspel){
             ff_mspel_motion(s, dest_y, dest_cb, dest_cr,
                         ref_picture, pix_op,
                         s->mv[dir][0][0], s->mv[dir][0][1], 16);
@@ -4076,7 +4069,7 @@ static av_always_inline void MPV_decode_mb_internal(MpegEncContext *s, DCTELEM b
                     }
                 }//fi gray
             }
-            else{
+            else if (ENABLE_WMV2) {
                 ff_wmv2_add_mb(s, block, dest_y, dest_cb, dest_cr);
             }
         } else {
@@ -4581,13 +4574,17 @@ static av_always_inline void encode_mb_internal(MpegEncContext *s, int motion_x,
     case CODEC_ID_MSMPEG4V2:
     case CODEC_ID_MSMPEG4V3:
     case CODEC_ID_WMV1:
-        msmpeg4_encode_mb(s, s->block, motion_x, motion_y); break;
+        if (ENABLE_MSMPEG4_ENCODER)
+            msmpeg4_encode_mb(s, s->block, motion_x, motion_y);
+        break;
     case CODEC_ID_WMV2:
-         ff_wmv2_encode_mb(s, s->block, motion_x, motion_y); break;
-#ifdef CONFIG_H261_ENCODER
+        if (ENABLE_WMV2_ENCODER)
+            ff_wmv2_encode_mb(s, s->block, motion_x, motion_y);
+        break;
     case CODEC_ID_H261:
-        ff_h261_encode_mb(s, s->block, motion_x, motion_y); break;
-#endif
+        if (ENABLE_H261_ENCODER)
+            ff_h261_encode_mb(s, s->block, motion_x, motion_y);
+        break;
     case CODEC_ID_H263:
     case CODEC_ID_H263P:
     case CODEC_ID_FLV1:
@@ -4595,7 +4592,9 @@ static av_always_inline void encode_mb_internal(MpegEncContext *s, int motion_x,
     case CODEC_ID_RV20:
         h263_encode_mb(s, s->block, motion_x, motion_y); break;
     case CODEC_ID_MJPEG:
-        mjpeg_encode_mb(s, s->block); break;
+        if (ENABLE_MJPEG_ENCODER)
+            mjpeg_encode_mb(s, s->block);
+        break;
     default:
         assert(0);
     }
@@ -4895,7 +4894,7 @@ static void write_slice_end(MpegEncContext *s){
         }
 
         ff_mpeg4_stuffing(&s->pb);
-    }else if(s->out_format == FMT_MJPEG){
+    }else if(ENABLE_MJPEG_ENCODER && s->out_format == FMT_MJPEG){
         ff_mjpeg_stuffing(&s->pb);
     }
 
@@ -4994,13 +4993,11 @@ static int encode_thread(AVCodecContext *c, void *arg){
             s->mb_y = mb_y;  // moved into loop, can get changed by H.261
             ff_update_block_index(s);
 
-#ifdef CONFIG_H261_ENCODER
-            if(s->codec_id == CODEC_ID_H261){
+            if(ENABLE_H261_ENCODER && s->codec_id == CODEC_ID_H261){
                 ff_h261_reorder_mb_index(s);
                 xy= s->mb_y*s->mb_stride + s->mb_x;
                 mb_type= s->mb_type[xy];
             }
-#endif
 
             /* write gob / video packet header  */
             if(s->rtp_mode){
@@ -5508,7 +5505,7 @@ static int encode_thread(AVCodecContext *c, void *arg){
     }
 
     //not beautiful here but we must write it before flushing so it has to be here
-    if (s->msmpeg4_version && s->msmpeg4_version<4 && s->pict_type == I_TYPE)
+    if (ENABLE_MSMPEG4_ENCODER && s->msmpeg4_version && s->msmpeg4_version<4 && s->pict_type == I_TYPE)
         msmpeg4_encode_ext_header(s);
 
     write_slice_end(s);
@@ -5764,28 +5761,24 @@ static int encode_picture(MpegEncContext *s, int picture_number)
     s->last_bits= put_bits_count(&s->pb);
     switch(s->out_format) {
     case FMT_MJPEG:
-        mjpeg_picture_header(s);
+        if (ENABLE_MJPEG_ENCODER)
+            mjpeg_picture_header(s);
         break;
-#ifdef CONFIG_H261_ENCODER
     case FMT_H261:
-        ff_h261_encode_picture_header(s, picture_number);
+        if (ENABLE_H261_ENCODER)
+            ff_h261_encode_picture_header(s, picture_number);
         break;
-#endif
     case FMT_H263:
-        if (s->codec_id == CODEC_ID_WMV2)
+        if (ENABLE_WMV2_ENCODER && s->codec_id == CODEC_ID_WMV2)
             ff_wmv2_encode_picture_header(s, picture_number);
-        else if (s->h263_msmpeg4)
+        else if (ENABLE_MSMPEG4_ENCODER && s->h263_msmpeg4)
             msmpeg4_encode_picture_header(s, picture_number);
         else if (s->h263_pred)
             mpeg4_encode_picture_header(s, picture_number);
-#ifdef CONFIG_RV10_ENCODER
-        else if (s->codec_id == CODEC_ID_RV10)
+        else if (ENABLE_RV10_ENCODER && s->codec_id == CODEC_ID_RV10)
             rv10_encode_picture_header(s, picture_number);
-#endif
-#ifdef CONFIG_RV20_ENCODER
-        else if (s->codec_id == CODEC_ID_RV20)
+        else if (ENABLE_RV20_ENCODER && s->codec_id == CODEC_ID_RV20)
             rv20_encode_picture_header(s, picture_number);
-#endif
         else if (s->codec_id == CODEC_ID_FLV1)
             ff_flv_encode_picture_header(s, picture_number);
         else
@@ -6935,6 +6928,7 @@ AVCodec wmv1_encoder = {
     .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUV420P, -1},
 };
 
+#ifdef CONFIG_MJPEG_ENCODER
 AVCodec mjpeg_encoder = {
     "mjpeg",
     CODEC_TYPE_VIDEO,
@@ -6945,5 +6939,6 @@ AVCodec mjpeg_encoder = {
     MPV_encode_end,
     .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUVJ420P, PIX_FMT_YUVJ422P, -1},
 };
+#endif
 
 #endif //CONFIG_ENCODERS

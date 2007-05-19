@@ -34,7 +34,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "common.h"
 #include "avcodec.h"
 
 typedef struct XanContext {
@@ -207,7 +206,7 @@ static void xan_unpack(unsigned char *dest, unsigned char *src, int dest_len)
     bytecopy(dest, src, size);  dest += size;  src += size;
 }
 
-static void inline xan_wc3_output_pixel_run(XanContext *s,
+static inline void xan_wc3_output_pixel_run(XanContext *s,
     unsigned char *pixel_buffer, int x, int y, int pixel_count)
 {
     int stride;
@@ -236,7 +235,7 @@ static void inline xan_wc3_output_pixel_run(XanContext *s,
     }
 }
 
-static void inline xan_wc3_copy_pixel_run(XanContext *s,
+static inline void xan_wc3_copy_pixel_run(XanContext *s,
     int x, int y, int pixel_count, int motion_x, int motion_y)
 {
     int stride;

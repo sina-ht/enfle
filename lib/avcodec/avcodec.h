@@ -27,10 +27,6 @@
  */
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "avutil.h"
 #include <sys/types.h> /* size_t */
 
@@ -162,6 +158,8 @@ enum CodecID {
     CODEC_ID_SGI,
     CODEC_ID_C93,
     CODEC_ID_BETHSOFTVID,
+    CODEC_ID_PTX,
+    CODEC_ID_TXD,
 
     /* various PCM "codecs" */
     CODEC_ID_PCM_S16LE= 0x10000,
@@ -1819,6 +1817,10 @@ typedef struct AVCodecContext {
      */
      int profile;
 #define FF_PROFILE_UNKNOWN -99
+#define FF_PROFILE_AAC_MAIN 0
+#define FF_PROFILE_AAC_LOW 1
+#define FF_PROFILE_AAC_SSR 2
+#define FF_PROFILE_AAC_LTP 3
 
     /**
      * level
@@ -2148,7 +2150,9 @@ typedef struct AVPicture {
  * AVPaletteControl
  * This structure defines a method for communicating palette changes
  * between and demuxer and a decoder.
- * This is totally broken, palette changes should be sent as AVPackets.
+ *
+ * @deprecated Use AVPacket to send palette changes instead.
+ * This is totally broken.
  */
 #define AVPALETTE_SIZE 1024
 #define AVPALETTE_COUNT 256
@@ -2186,13 +2190,10 @@ typedef struct AVSubtitle {
 } AVSubtitle;
 
 extern AVCodec ac3_encoder;
-extern AVCodec amr_nb_encoder;
-extern AVCodec amr_wb_encoder;
 extern AVCodec asv1_encoder;
 extern AVCodec asv2_encoder;
 extern AVCodec bmp_encoder;
 extern AVCodec dvvideo_encoder;
-extern AVCodec faac_encoder;
 extern AVCodec ffv1_encoder;
 extern AVCodec ffvhuff_encoder;
 extern AVCodec flac_encoder;
@@ -2205,27 +2206,23 @@ extern AVCodec h263p_encoder;
 extern AVCodec h264_encoder;
 extern AVCodec huffyuv_encoder;
 extern AVCodec jpegls_encoder;
-extern AVCodec libgsm_encoder;
-extern AVCodec libgsm_ms_encoder;
-extern AVCodec libtheora_encoder;
 extern AVCodec ljpeg_encoder;
 extern AVCodec mdec_encoder;
 extern AVCodec mjpeg_encoder;
 extern AVCodec mp2_encoder;
-extern AVCodec mp3lame_encoder;
 extern AVCodec mpeg1video_encoder;
 extern AVCodec mpeg2video_encoder;
 extern AVCodec mpeg4_encoder;
 extern AVCodec msmpeg4v1_encoder;
 extern AVCodec msmpeg4v2_encoder;
 extern AVCodec msmpeg4v3_encoder;
-extern AVCodec oggvorbis_encoder;
 extern AVCodec pam_encoder;
 extern AVCodec pbm_encoder;
 extern AVCodec pgm_encoder;
 extern AVCodec pgmyuv_encoder;
 extern AVCodec png_encoder;
 extern AVCodec ppm_encoder;
+extern AVCodec roq_dpcm_encoder;
 extern AVCodec rv10_encoder;
 extern AVCodec rv20_encoder;
 extern AVCodec sgi_encoder;
@@ -2241,16 +2238,10 @@ extern AVCodec wmav1_encoder;
 extern AVCodec wmav2_encoder;
 extern AVCodec wmv1_encoder;
 extern AVCodec wmv2_encoder;
-extern AVCodec x264_encoder;
-extern AVCodec xvid_encoder;
-extern AVCodec zlib_encoder;
 extern AVCodec zmbv_encoder;
 
-extern AVCodec aac_decoder;
 extern AVCodec aasc_decoder;
 extern AVCodec alac_decoder;
-extern AVCodec amr_nb_decoder;
-extern AVCodec amr_wb_decoder;
 extern AVCodec asv1_decoder;
 extern AVCodec asv2_decoder;
 extern AVCodec atrac3_decoder;
@@ -2292,8 +2283,6 @@ extern AVCodec indeo3_decoder;
 extern AVCodec interplay_dpcm_decoder;
 extern AVCodec interplay_video_decoder;
 extern AVCodec kmvc_decoder;
-extern AVCodec libgsm_decoder;
-extern AVCodec libgsm_ms_decoder;
 extern AVCodec loco_decoder;
 extern AVCodec mace3_decoder;
 extern AVCodec mace6_decoder;
@@ -2309,7 +2298,6 @@ extern AVCodec mpc7_decoder;
 extern AVCodec mpeg1video_decoder;
 extern AVCodec mpeg2video_decoder;
 extern AVCodec mpeg4_decoder;
-extern AVCodec mpeg4aac_decoder;
 extern AVCodec mpeg_xvmc_decoder;
 extern AVCodec mpegvideo_decoder;
 extern AVCodec msmpeg4v1_decoder;
@@ -2319,8 +2307,8 @@ extern AVCodec msrle_decoder;
 extern AVCodec msvideo1_decoder;
 extern AVCodec mszh_decoder;
 extern AVCodec nuv_decoder;
-extern AVCodec oggvorbis_decoder;
 extern AVCodec png_decoder;
+extern AVCodec ptx_decoder;
 extern AVCodec qdm2_decoder;
 extern AVCodec qdraw_decoder;
 extern AVCodec qpeg_decoder;
@@ -2355,6 +2343,7 @@ extern AVCodec truemotion2_decoder;
 extern AVCodec truespeech_decoder;
 extern AVCodec tscc_decoder;
 extern AVCodec tta_decoder;
+extern AVCodec txd_decoder;
 extern AVCodec ulti_decoder;
 extern AVCodec vc1_decoder;
 extern AVCodec vcr1_decoder;
@@ -2378,7 +2367,6 @@ extern AVCodec ws_snd1_decoder;
 extern AVCodec xan_dpcm_decoder;
 extern AVCodec xan_wc3_decoder;
 extern AVCodec xl_decoder;
-extern AVCodec zlib_decoder;
 extern AVCodec zmbv_decoder;
 
 /* PCM codecs */
@@ -2432,9 +2420,27 @@ PCM_CODEC(CODEC_ID_ADPCM_YAMAHA,  adpcm_yamaha);
 extern AVCodec rawvideo_decoder;
 extern AVCodec rawvideo_encoder;
 
-/* the following codecs use external GPL libs */
-extern AVCodec dts_decoder;
+/* the following codecs use external libs */
+extern AVCodec aac_decoder;
+extern AVCodec faac_encoder;
 extern AVCodec liba52_decoder;
+extern AVCodec libamr_nb_decoder;
+extern AVCodec libamr_nb_encoder;
+extern AVCodec libamr_wb_decoder;
+extern AVCodec libamr_wb_encoder;
+extern AVCodec libgsm_decoder;
+extern AVCodec libgsm_encoder;
+extern AVCodec libgsm_ms_decoder;
+extern AVCodec libgsm_ms_encoder;
+extern AVCodec libtheora_encoder;
+extern AVCodec libvorbis_decoder;
+extern AVCodec libvorbis_encoder;
+extern AVCodec mp3lame_encoder;
+extern AVCodec mpeg4aac_decoder;
+extern AVCodec x264_encoder;
+extern AVCodec xvid_encoder;
+extern AVCodec zlib_decoder;
+extern AVCodec zlib_encoder;
 
 /* subtitles */
 extern AVCodec dvbsub_decoder;
@@ -2462,13 +2468,25 @@ void av_resample_close(struct AVResampleContext *c);
 #if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
 /* YUV420 format is assumed ! */
 
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 struct ImgReSampleContext attribute_deprecated;
 
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 typedef struct ImgReSampleContext ImgReSampleContext attribute_deprecated;
 
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 attribute_deprecated ImgReSampleContext *img_resample_init(int output_width, int output_height,
                                       int input_width, int input_height);
 
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 attribute_deprecated ImgReSampleContext *img_resample_full_init(int owidth, int oheight,
                                       int iwidth, int iheight,
                                       int topBand, int bottomBand,
@@ -2476,11 +2494,16 @@ attribute_deprecated ImgReSampleContext *img_resample_full_init(int owidth, int 
                                       int padtop, int padbottom,
                                       int padleft, int padright);
 
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
+//attribute_deprecated void img_resample(ImgReSampleContext *s,
+//                  AVPicture *output, const AVPicture *input);
 
-attribute_deprecated void img_resample(ImgReSampleContext *s,
-                  AVPicture *output, const AVPicture *input);
-
-attribute_deprecated void img_resample_close(ImgReSampleContext *s);
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
+//attribute_deprecated void img_resample_close(ImgReSampleContext *s);
 
 #endif
 
@@ -2602,7 +2625,10 @@ int img_get_alpha_info(const AVPicture *src,
                        int pix_fmt, int width, int height);
 
 #if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
-/* convert among pixel formats */
+/**
+ * convert among pixel formats
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 attribute_deprecated int img_convert(AVPicture *dst, int dst_pix_fmt,
                 const AVPicture *src, int pix_fmt,
                 int width, int height);
@@ -2953,7 +2979,7 @@ typedef struct AVCodecParser {
     int (*parser_init)(AVCodecParserContext *s);
     int (*parser_parse)(AVCodecParserContext *s,
                         AVCodecContext *avctx,
-                        uint8_t **poutbuf, int *poutbuf_size,
+                        const uint8_t **poutbuf, int *poutbuf_size,
                         const uint8_t *buf, int buf_size);
     void (*parser_close)(AVCodecParserContext *s);
     int (*split)(AVCodecContext *avctx, const uint8_t *buf, int buf_size);
@@ -3044,6 +3070,10 @@ void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size);
 /**
  * Frees all static arrays and resets their pointers to 0.
  * Call this function to release all statically allocated tables.
+ *
+ * @deprecated. Code which uses av_free_static is broken/missdesigned
+ * and should correctly use static arrays
+ *
  */
 attribute_deprecated void av_free_static(void);
 
@@ -3054,6 +3084,8 @@ attribute_deprecated void av_free_static(void);
  *
  * @param[in] size The amount of memory you need in bytes.
  * @return block of memory of the requested size
+ * @deprecated. Code which uses av_mallocz_static is broken/missdesigned
+ * and should correctly use static arrays
  */
 attribute_deprecated void *av_mallocz_static(unsigned int size);
 
@@ -3076,12 +3108,21 @@ int av_picture_pad(AVPicture *dst, const AVPicture *src, int height, int width, 
             int padtop, int padbottom, int padleft, int padright, int *color);
 
 #if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 attribute_deprecated void img_copy(AVPicture *dst, const AVPicture *src,
               int pix_fmt, int width, int height);
 
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 attribute_deprecated int img_crop(AVPicture *dst, const AVPicture *src,
              int pix_fmt, int top_band, int left_band);
 
+/**
+ * @deprecated Use the software scaler (swscale) instead.
+ */
 attribute_deprecated int img_pad(AVPicture *dst, const AVPicture *src, int height, int width, int pix_fmt,
             int padtop, int padbottom, int padleft, int padright, int *color);
 #endif
@@ -3104,9 +3145,6 @@ extern unsigned int av_xiphlacing(unsigned char *s, unsigned int v);
 #define AVERROR_NOMEM       AVERROR(ENOMEM)  /**< not enough memory */
 #define AVERROR_NOFMT       AVERROR(EILSEQ)  /**< unknown format */
 #define AVERROR_NOTSUPP     AVERROR(ENOSYS)  /**< Operation not supported. */
-
-#ifdef __cplusplus
-}
-#endif
+#define AVERROR_NOENT       AVERROR(ENOENT)  /**< No such file or directory. */
 
 #endif /* AVCODEC_H */

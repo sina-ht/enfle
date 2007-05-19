@@ -74,7 +74,6 @@ static int mpc7_decode_init(AVCodecContext * avctx)
     MPCContext *c = avctx->priv_data;
     GetBitContext gb;
     uint8_t buf[16];
-    float f1=1.20050805774840750476 * 256;
     static int vlc_inited = 0;
 
     if(avctx->extradata_size < 16){
@@ -163,7 +162,7 @@ static void mpc_synth(MPCContext *c, int16_t *out)
 /**
  * Fill samples for given subband
  */
-static void inline idx_to_quant(MPCContext *c, GetBitContext *gb, int idx, int *dst)
+static inline void idx_to_quant(MPCContext *c, GetBitContext *gb, int idx, int *dst)
 {
     int i, i1, t;
     switch(idx){

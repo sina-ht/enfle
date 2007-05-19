@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2007 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Fri Apr 27 14:55:38 2007.
-dnl $Id: configure.in,v 1.199 2007/04/27 05:55:47 sian Exp $
+dnl Last Modified: Sat May 19 10:23:40 2007.
+dnl $Id: configure.in,v 1.200 2007/05/19 01:59:12 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.60)
-AC_INIT([enfle],[20070427],[sian@big.or.jp])
+AC_INIT([enfle],[20070519],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -655,6 +655,8 @@ AC_DEFINE(ENABLE_DTS_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBGSM_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBGSM_MS_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBA52_DECODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBAMR_NB_DECODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBAMR_WB_DECODER, 0, [Define if you need this for avcodec.])
 dnl enabled decoders
 AC_DEFINE(ENABLE_OGGVORBIS_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_GIF_DECODER, 1, [Define if you need this for avcodec.])
@@ -821,6 +823,9 @@ AC_DEFINE(ENABLE_SGI_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_THP_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_ATRAC3_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_ADPCM_THP_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_PTX_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_TXD_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBVORBIS_DECODER, 1, [Define if you need this for avcodec.])
 
 AC_DEFINE(CONFIG_OGGVORBIS_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_GIF_DECODER, 1, [Define if you need this for avcodec.])
@@ -987,6 +992,11 @@ AC_DEFINE(CONFIG_SGI_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_THP_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_ATRAC3_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_ADPCM_THP_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_PTX_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_TXD_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_LIBAMR_NB_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_LIBAMR_WB_DECODER, 1, [Define if you need this for avcodec.])
+AC_DEFINE(CONFIG_LIBVORBIS_DECODER, 1, [Define if you need this for avcodec.])
 
 dnl all encoders are disabled
 AC_DEFINE(ENABLE_AC3_ENCODER, 0, [Define if you need this for avcodec.])
@@ -1085,6 +1095,10 @@ AC_DEFINE(ENABLE_WMAV2_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_TARGA_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_SGI_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_TIFF_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBAMR_NB_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBAMR_WB_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBVORBIS_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_ROQ_DPCM_ENCODER, 0, [Define if you need this for avcodec.])
 
 dnl all parsers are disabled
 AC_DEFINE(ENABLE_AAC_PARSER, 0, [Define if you need this for avcodec.])
@@ -1102,6 +1116,14 @@ AC_DEFINE(ENABLE_MPEGVIDEO_PARSER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_PNM_PARSER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_VC1_PARSER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_DCA_PARSER, 0, [Define if you need this for avcodec.])
+
+AC_DEFINE(ENABLE_DUMP_EXTRADATA_BSF, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_REMOVE_EXTRADATA_BSF, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_NOISE_BSF, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_MP3_HEADER_COMPRESS_BSF, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_MP3_HEADER_DECOMPRESS_BSF, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_MJPEGA_DUMP_HEADER_BSF, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_IMX_DUMP_HEADER_BSF, 0, [Define if you need this for avcodec.])
 
 else
   enable_avcodec=no

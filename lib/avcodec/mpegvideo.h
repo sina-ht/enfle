@@ -76,6 +76,16 @@ enum OutputFormat {
 
 #define INPLACE_OFFSET 16
 
+/* Start codes. */
+#define SEQ_END_CODE            0x000001b7
+#define SEQ_START_CODE          0x000001b3
+#define GOP_START_CODE          0x000001b8
+#define PICTURE_START_CODE      0x00000100
+#define SLICE_MIN_START_CODE    0x00000101
+#define SLICE_MAX_START_CODE    0x000001af
+#define EXT_START_CODE          0x000001b5
+#define USER_START_CODE         0x000001b2
+
 /**
  * Scantable.
  */
@@ -579,8 +589,6 @@ typedef struct MpegEncContext {
     struct MJpegContext *mjpeg_ctx;
     int mjpeg_vsample[3];       ///< vertical sampling factors, default = {2, 1, 1}
     int mjpeg_hsample[3];       ///< horizontal sampling factors, default = {2, 1, 1}
-    int mjpeg_write_tables;     ///< do we want to have quantisation- and huffmantables in the jpeg file ?
-    int mjpeg_data_only_frames; ///< frames only with SOI, SOS and EOI markers
 
     /* MSMPEG4 specific */
     int mv_table_index;
@@ -777,6 +785,7 @@ inline int ff_get_mb_score(MpegEncContext * s, int mx, int my, int src_index,
 extern const uint16_t ff_mpeg1_default_intra_matrix[64];
 extern const uint16_t ff_mpeg1_default_non_intra_matrix[64];
 extern const uint8_t ff_mpeg1_dc_scale_table[128];
+extern const AVRational ff_frame_rate_tab[];
 
 void mpeg1_encode_picture_header(MpegEncContext *s, int picture_number);
 void mpeg1_encode_mb(MpegEncContext *s,
@@ -785,6 +794,7 @@ void mpeg1_encode_mb(MpegEncContext *s,
 void ff_mpeg1_encode_init(MpegEncContext *s);
 void ff_mpeg1_encode_slice_header(MpegEncContext *s);
 void ff_mpeg1_clean_buffers(MpegEncContext *s);
+int ff_mpeg1_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size);
 
 #include "rl.h"
 

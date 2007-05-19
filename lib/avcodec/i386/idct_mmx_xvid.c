@@ -21,7 +21,7 @@
 // * along with FFmpeg; if not, write to the Free Software Foundation,
 // * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 // *
-// * $Id: idct_mmx_xvid.c,v 1.9 2007/04/20 13:21:19 sian Exp $
+// * $Id: idct_mmx_xvid.c,v 1.10 2007/05/19 01:55:39 sian Exp $
 // *
 // ***************************************************************************/
 
@@ -50,7 +50,7 @@
 
 
 #include <inttypes.h>
-#include "../avcodec.h"
+#include "avcodec.h"
 
 //=============================================================================
 // Macros and other preprocessor constants

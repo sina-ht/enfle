@@ -106,11 +106,6 @@
 #    define snprintf _snprintf
 #    define vsnprintf _vsnprintf
 
-#    ifdef CONFIG_WINCE
-#        define perror(a)
-#        define abort()
-#    endif
-
 /* __MINGW32__ end */
 #elif defined (CONFIG_OS2)
 /* OS/2 EMX */
@@ -194,16 +189,16 @@ extern const uint8_t ff_sqrt_tab[128];
 static inline int ff_sqrt(int a)
 {
     int ret=0;
-    int s;
-    int ret_sq=0;
+    int s, b;
 
     if(a<128) return ff_sqrt_tab[a];
 
-    for(s=15; s>=0; s--){
-        int b= ret_sq + (1<<(s*2)) + (ret<<s)*2;
+    for(s=30; s>=0; s-=2){
+        ret+=ret;
+        b= (1+2*ret)<<s;
         if(b<=a){
-            ret_sq=b;
-            ret+= 1<<s;
+            a-=b;
+            ret++;
         }
     }
     return ret;
