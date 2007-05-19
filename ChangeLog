@@ -1,3 +1,124 @@
+2007-05-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Updated.
+
+	* plugins/videodecoder/avcodec/avcodec.c: Disable DR1 for the time
+	being.
+
+	* plugins/video/Xlib/Xlib.c, plugins/player/mng/mng.c: Eliminated
+	an unused variable.
+
+	* plugins/loader/bmp/bmp.c: Avoid memory exhaustion.
+
+	* plugins/audiodecoder/avcodec/avcodec.c: avcodec_decode_audio()
+	was deprecated.  Use avcodec_decode_audio2().
+
+	* lib/mad/synth.c: Fixed warnings.
+
+	* lib/avcodec/4xm.c, lib/avcodec/8bps.c, lib/avcodec/Makefile.am,
+	lib/avcodec/aac_ac3_parser.c, lib/avcodec/aac_ac3_parser.h,
+	lib/avcodec/aac_parser.c, lib/avcodec/aasc.c, lib/avcodec/ac3.c,
+	lib/avcodec/ac3.h, lib/avcodec/ac3_parser.c,
+	lib/avcodec/ac3_parser.h, lib/avcodec/ac3tab.c,
+	lib/avcodec/ac3tab.h, lib/avcodec/allcodecs.c, lib/avcodec/amr.c,
+	lib/avcodec/avcodec.h, lib/avcodec/bitstream.c,
+	lib/avcodec/bitstream.h, lib/avcodec/bitstream_filter.c,
+	lib/avcodec/cabac.h, lib/avcodec/cavs.c, lib/avcodec/cavs.h,
+	lib/avcodec/cavs_parser.c, lib/avcodec/cavsdata.h,
+	lib/avcodec/cinepak.c, lib/avcodec/cook.c, lib/avcodec/cscd.c,
+	lib/avcodec/cyuv.c, lib/avcodec/dca.c, lib/avcodec/dca.h,
+	lib/avcodec/dca_parser.c, lib/avcodec/dcadata.h,
+	lib/avcodec/dct-test.c, lib/avcodec/dsicinav.c,
+	lib/avcodec/dsputil.c, lib/avcodec/dsputil.h,
+	lib/avcodec/dvbsub_parser.c, lib/avcodec/dvbsubdec.c,
+	lib/avcodec/dvdata.h, lib/avcodec/dvdsub_parser.c,
+	lib/avcodec/dvdsubdec.c, lib/avcodec/dxa.c,
+	lib/avcodec/error_resilience.c, lib/avcodec/eval.h,
+	lib/avcodec/faac.c, lib/avcodec/ffv1.c, lib/avcodec/flashsv.c,
+	lib/avcodec/flicvideo.c, lib/avcodec/g726.c, lib/avcodec/gifdec.c,
+	lib/avcodec/h261.c, lib/avcodec/h261_parser.c, lib/avcodec/h263.c,
+	lib/avcodec/h263_parser.c, lib/avcodec/h263_parser.h,
+	lib/avcodec/h263dec.c, lib/avcodec/h264.c, lib/avcodec/h264.h,
+	lib/avcodec/h264_parser.c, lib/avcodec/h264_parser.h,
+	lib/avcodec/huffyuv.c, lib/avcodec/idcinvideo.c,
+	lib/avcodec/indeo3.c, lib/avcodec/interplayvideo.c,
+	lib/avcodec/jpeg_ls.c, lib/avcodec/jpegls.c, lib/avcodec/jpegls.h,
+	lib/avcodec/jpeglsdec.c, lib/avcodec/jpeglsdec.h,
+	lib/avcodec/kmvc.c, lib/avcodec/lcl.c, lib/avcodec/loco.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/mjpeg.h,
+	lib/avcodec/mjpeg_parser.c, lib/avcodec/mjpegdec.c,
+	lib/avcodec/mpc.c, lib/avcodec/mpeg12.c,
+	lib/avcodec/mpeg4video_parser.c, lib/avcodec/mpeg4video_parser.h,
+	lib/avcodec/mpegaudio.c, lib/avcodec/mpegaudio_parser.c,
+	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
+	lib/avcodec/mpegvideo.h, lib/avcodec/mpegvideo_parser.c,
+	lib/avcodec/msmpeg4.c, lib/avcodec/alpha/dsputil_alpha.c,
+	lib/avcodec/alpha/motion_est_alpha.c,
+	lib/avcodec/alpha/mpegvideo_alpha.c,
+	lib/avcodec/alpha/simple_idct_alpha.c,
+	lib/avcodec/armv4l/dsputil_arm.c,
+	lib/avcodec/armv4l/dsputil_iwmmxt.c, lib/avcodec/armv4l/mathops.h,
+	lib/avcodec/armv4l/mpegvideo_arm.c,
+	lib/avcodec/armv4l/mpegvideo_armv5te.c,
+	lib/avcodec/armv4l/mpegvideo_iwmmxt.c,
+	lib/avcodec/bfin/config_bfin.h, lib/avcodec/bfin/dsputil_bfin.c,
+	lib/avcodec/bfin/fdct_bfin.S, lib/avcodec/bfin/idct_bfin.S,
+	lib/avcodec/bfin/pixels_bfin.S, lib/avcodec/i386/cavsdsp_mmx.c,
+	lib/avcodec/i386/cputest.c, lib/avcodec/i386/dsputil_mmx.c,
+	lib/avcodec/i386/dsputil_mmx_qns.h,
+	lib/avcodec/i386/dsputil_mmx_rnd.h, lib/avcodec/i386/fdct_mmx.c,
+	lib/avcodec/i386/fft_3dn.c, lib/avcodec/i386/fft_3dn2.c,
+	lib/avcodec/i386/fft_sse.c, lib/avcodec/i386/h264dsp_mmx.c,
+	lib/avcodec/i386/idct_mmx.c, lib/avcodec/i386/idct_mmx_xvid.c,
+	lib/avcodec/i386/motion_est_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx.c,
+	lib/avcodec/i386/mpegvideo_mmx_template.c,
+	lib/avcodec/i386/simple_idct_mmx.c,
+	lib/avcodec/i386/snowdsp_mmx.c, lib/avcodec/i386/vp3dsp_mmx.c,
+	lib/avcodec/i386/vp3dsp_mmx.h, lib/avcodec/i386/vp3dsp_sse2.c,
+	lib/avcodec/i386/vp3dsp_sse2.h, lib/avcodec/mlib/dsputil_mlib.c,
+	lib/avcodec/msmpeg4.h, lib/avcodec/msmpeg4data.c,
+	lib/avcodec/msmpeg4data.h, lib/avcodec/msmpeg4tab.h,
+	lib/avcodec/msrle.c, lib/avcodec/msvideo1.c, lib/avcodec/nuv.c,
+	lib/avcodec/oggvorbis.c, lib/avcodec/parser.c,
+	lib/avcodec/parser.h, lib/avcodec/pcm.c, lib/avcodec/pnm.c,
+	lib/avcodec/pnm.h, lib/avcodec/pnm_parser.c,
+	lib/avcodec/ppc/dsputil_altivec.c, lib/avcodec/ppc/dsputil_ppc.c,
+	lib/avcodec/ppc/fdct_altivec.c, lib/avcodec/ppc/fft_altivec.c,
+	lib/avcodec/ppc/float_altivec.c, lib/avcodec/ppc/gmc_altivec.c,
+	lib/avcodec/ppc/h264_altivec.c,
+	lib/avcodec/ppc/h264_template_altivec.c,
+	lib/avcodec/ppc/idct_altivec.c, lib/avcodec/ppc/int_altivec.c,
+	lib/avcodec/ppc/mpegvideo_altivec.c,
+	lib/avcodec/ppc/mpegvideo_ppc.c, lib/avcodec/ppc/snow_altivec.c,
+	lib/avcodec/ppc/vc1dsp_altivec.c, lib/avcodec/ps2/dsputil_mmi.c,
+	lib/avcodec/ps2/idct_mmi.c, lib/avcodec/ps2/mpegvideo_mmi.c,
+	lib/avcodec/pthread.c, lib/avcodec/ptx.c, lib/avcodec/qdm2.c,
+	lib/avcodec/qtrle.c, lib/avcodec/rangecoder.c, lib/avcodec/raw.c,
+	lib/avcodec/resample2.c, lib/avcodec/roqvideo.c,
+	lib/avcodec/rpza.c, lib/avcodec/s3tc.c, lib/avcodec/s3tc.h,
+	lib/avcodec/sh4/dsputil_align.c, lib/avcodec/sh4/dsputil_sh4.c,
+	lib/avcodec/sh4/idct_sh4.c, lib/avcodec/shorten.c,
+	lib/avcodec/smacker.c, lib/avcodec/smc.c, lib/avcodec/snow.c,
+	lib/avcodec/svq1.c, lib/avcodec/svq3.c, lib/avcodec/tiertexseqv.c,
+	lib/avcodec/truemotion1.c, lib/avcodec/truemotion2.c,
+	lib/avcodec/tscc.c, lib/avcodec/txd.c, lib/avcodec/ulti.c,
+	lib/avcodec/utils.c, lib/avcodec/vc1.c, lib/avcodec/vc1.h,
+	lib/avcodec/vc1_parser.c, lib/avcodec/vc1data.c,
+	lib/avcodec/vc1data.h, lib/avcodec/vmdav.c, lib/avcodec/vmnc.c,
+	lib/avcodec/vorbis.c, lib/avcodec/vorbis_dec.c, lib/avcodec/vp3.c,
+	lib/avcodec/vp3dsp.c, lib/avcodec/vp5.c, lib/avcodec/vp6.c,
+	lib/avcodec/vqavideo.c, lib/avcodec/wmv2.c, lib/avcodec/wnv1.c,
+	lib/avcodec/xan.c, lib/avcodec/xvidff.c, lib/avcodec/zmbv.c,
+	lib/avutil/aes.c, lib/avutil/avutil.h, lib/avutil/bswap.h,
+	lib/avutil/common.h, lib/avutil/internal.h,
+	lib/avutil/intreadwrite.h, lib/avutil/sha1.c,
+	lib/avutil/x86_cpu.h: Updated.
+
+2007-05-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Bug fix.
+
 2007-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/X11/x11.c, lib/X11/x11ximage.c, lib/X11/x11ximage.h,
