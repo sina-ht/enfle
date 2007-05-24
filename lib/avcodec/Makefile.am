@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat May 19 01:55:12 2007.
-# $Id: Makefile.am,v 1.54 2007/05/19 01:55:40 sian Exp $
+# Last Modified: Fri May 25 00:37:54 2007.
+# $Id: Makefile.am,v 1.55 2007/05/24 15:39:51 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -202,7 +202,9 @@ noinst_HEADERS = \
 # mp3lameaudio.c
 # beosthread.c w32thread.c
 # imgresample.c needs libswscale
-# Encoders: bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c tiffenc.c roqaudioenc.c mjpegenc.c jpeglsenc.c pnmenc.c 
+# Encoders: bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c tiffenc.c roqaudioenc.c mjpegenc.c jpeglsenc.c pnmenc.c mpegaudioenc.c, ljpegenc.c, h261enc.c
+# BSFs: remove_extradata_bsf.c, dump_extradata_bsf.c, noise_bsf.c, mp3_header_compress_bsf.c, imx_dump_header_bsf.c, mjpega_dump_header_bsf.c, mp3_header_decompress_bsf.c
+
 libavcodec_la_SOURCES = \
 	4xm.c \
 	8bps.c \
