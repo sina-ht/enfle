@@ -1,3 +1,30 @@
+2007-05-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, lib/avcodec/mpegaudio.c, lib/avcodec/Makefile.am,
+	lib/avcodec/adx.c, lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
+	lib/avcodec/bitstream_filter.c, lib/avcodec/dca.c,
+	lib/avcodec/dsputil.c, lib/avcodec/dvbsub.c,
+	lib/avcodec/dvdsubenc.c, lib/avcodec/h261.c, lib/avcodec/h261.h,
+	lib/avcodec/h261_parser.c, lib/avcodec/h261dec.c,
+	lib/avcodec/h264.c, lib/avcodec/huffyuv.c,
+	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/imgresample.c,
+	lib/avcodec/jpeglsdec.c, lib/avcodec/mjpeg.h,
+	lib/avcodec/mjpegbdec.c, lib/avcodec/mjpegdec.c,
+	lib/avcodec/mjpegdec.h, lib/avcodec/motion-test.c,
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegaudio.h,
+	lib/avcodec/mpegaudio_parser.c, lib/avcodec/mpegaudiodata.c,
+	lib/avcodec/mpegaudiodata.h, lib/avcodec/mpegaudiodec.c,
+	lib/avcodec/mpegaudiodecheader.c,
+	lib/avcodec/mpegaudiodecheader.h, lib/avcodec/mpegaudiodectab.h,
+	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
+	lib/avcodec/oggvorbis.c, lib/avcodec/png.c,
+	lib/avcodec/roqvideo.c, lib/avcodec/sp5xdec.c: Updated.
+
+2007-05-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/avcodec/Makefile.am, lib/avcodec/mpegaudio.c,
+	lib/avcodec/motion_test.c: Deleted.
+
 2007-05-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Updated.
