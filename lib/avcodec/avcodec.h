@@ -2282,6 +2282,7 @@ extern AVCodec indeo2_decoder;
 extern AVCodec indeo3_decoder;
 extern AVCodec interplay_dpcm_decoder;
 extern AVCodec interplay_video_decoder;
+extern AVCodec jpegls_decoder;
 extern AVCodec kmvc_decoder;
 extern AVCodec loco_decoder;
 extern AVCodec mace3_decoder;
@@ -2497,13 +2498,13 @@ attribute_deprecated ImgReSampleContext *img_resample_full_init(int owidth, int 
 /**
  * @deprecated Use the software scaler (swscale) instead.
  */
-//attribute_deprecated void img_resample(ImgReSampleContext *s,
-//                  AVPicture *output, const AVPicture *input);
+attribute_deprecated void img_resample(ImgReSampleContext *s,
+                  AVPicture *output, const AVPicture *input);
 
 /**
  * @deprecated Use the software scaler (swscale) instead.
  */
-//attribute_deprecated void img_resample_close(ImgReSampleContext *s);
+attribute_deprecated void img_resample_close(ImgReSampleContext *s);
 
 #endif
 

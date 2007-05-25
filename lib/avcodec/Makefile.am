@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri May 25 00:37:54 2007.
-# $Id: Makefile.am,v 1.55 2007/05/24 15:39:51 sian Exp $
+# Last Modified: Fri May 25 00:43:51 2007.
+# $Id: Makefile.am,v 1.56 2007/05/25 02:07:18 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -132,6 +132,7 @@ noinst_HEADERS = \
 	eval.h \
 	faandct.h \
 	golomb.h \
+	h261.h \
 	h261data.h \
 	h263_parser.h \
 	h263data.h \
@@ -147,11 +148,14 @@ noinst_HEADERS = \
 	lzw.h \
 	mathops.h \
 	mjpeg.h \
+	mjpegdec.h \
 	mpcdata.h \
 	mpeg12data.h \
 	mpeg4data.h \
 	mpeg4video_parser.c \
 	mpegaudio.h \
+	mpegaudiodata.h \
+	mpegaudiodecheader.h \
 	mpegaudiodectab.h \
 	mpegaudiotab.h \
 	mpegvideo.h \
@@ -198,9 +202,9 @@ noinst_HEADERS = \
 # a52dec.c ac3enc.c amr.c apiexample.c
 # dct-test.c dtsdec.c
 # faac.c faad.c fft-test.c libgsm.c
-# mdec.c motion_est_template.c motion_test.c svq3.c wmv2.c
+# mdec.c motion_est_template.c svq3.c wmv2.c
 # mp3lameaudio.c
-# beosthread.c w32thread.c
+# beosthread.c w32thread.c, motion-test.c
 # imgresample.c needs libswscale
 # Encoders: bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c tiffenc.c roqaudioenc.c mjpegenc.c jpeglsenc.c pnmenc.c mpegaudioenc.c, ljpegenc.c, h261enc.c
 # BSFs: remove_extradata_bsf.c, dump_extradata_bsf.c, noise_bsf.c, mp3_header_compress_bsf.c, imx_dump_header_bsf.c, mjpega_dump_header_bsf.c, mp3_header_decompress_bsf.c
@@ -266,6 +270,7 @@ libavcodec_la_SOURCES = \
 	golomb.c \
 	h261.c \
 	h261_parser.c \
+	h261dec.c \
 	h263.c \
 	h263_parser.c \
 	h263dec.c \
@@ -293,6 +298,7 @@ libavcodec_la_SOURCES = \
 	mace.c \
 	mdct.c \
 	mjpeg.c \
+	mjpegbdec.c \
 	mjpegdec.c \
 	mjpeg_parser.c \
 	mmvideo.c \
@@ -302,7 +308,9 @@ libavcodec_la_SOURCES = \
 	mpeg4video_parser.c \
 	mpegaudio.c \
 	mpegaudio_parser.c \
+	mpegaudiodata.c \
 	mpegaudiodec.c \
+	mpegaudiodecheader.c \
 	mpegvideo.c \
 	mpegvideo_parser.c \
 	msmpeg4.c \
@@ -343,6 +351,7 @@ libavcodec_la_SOURCES = \
 	smc.c \
 	snow.c \
 	sonic.c \
+	sp5xdec.c \
 	svq1.c \
 	targa.c \
 	tiertexseqv.c \
