@@ -1,10 +1,10 @@
 /*
  * loader.c -- loader plugin interface
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Mar  9 22:53:33 2004.
- * $Id: loader.c,v 1.28 2004/03/09 13:59:24 sian Exp $
+ * Last Modified: Tue May 29 00:22:06 2007.
+ * $Id: loader.c,v 1.29 2007/05/28 15:27:18 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -55,7 +55,12 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
 	  return 0;
 	}
 	if ((p = pluginlist_get(pl, pluginname))) {
-	  lp = plugin_get(p);
+	  if ((lp = plugin_get(p)) == NULL) {
+	    show_message_fnc("loader plugin %s autoloading failed.\n", pluginname);
+	    pluginlist_delete(pl, pluginname);
+	    break;
+	  }
+
 	  stream_rewind(st);
 	  //debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
 	  ip->format_detail = NULL;
