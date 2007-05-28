@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri May 25 00:43:51 2007.
-# $Id: Makefile.am,v 1.56 2007/05/25 02:07:18 sian Exp $
+# Last Modified: Mon May 28 23:55:26 2007.
+# $Id: Makefile.am,v 1.57 2007/05/28 15:23:40 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -50,7 +50,7 @@ CFLAGS_POST_SSE = -msse
 DEFS += -DHAVE_BUILTIN_VECTOR
 endif
 
-CFLAGS += $(CFLAGS_POST)
+AM_CFLAGS = $(CFLAGS_POST)
 
 # # armv4l specific stuff
 # ifeq ($(TARGET_ARCH_ARMV4L),yes)
@@ -66,13 +66,13 @@ CFLAGS += $(CFLAGS_POST)
 # # currently only works when libavcodec is used in mplayer
 # ifeq ($(HAVE_MLIB),yes)
 # OBJS += mlib/dsputil_mlib.o
-# CFLAGS += $(MLIB_INC)
+# AM_CFLAGS = $(MLIB_INC)
 # endif
 
 # # Intel IPP specific stuff
 # # currently only works when libavcodec is used in mplayer
 # ifeq ($(HAVE_IPP),yes)
-# CFLAGS += $(IPP_INC)
+# AM_CFLAGS = $(IPP_INC)
 # endif
 
 # # alpha specific stuff
@@ -80,7 +80,7 @@ CFLAGS += $(CFLAGS_POST)
 # OBJS += alpha/dsputil_alpha.o alpha/mpegvideo_alpha.o \
 # 	alpha/simple_idct_alpha.o alpha/motion_est_alpha.o
 # ASM_OBJS += alpha/dsputil_alpha_asm.o alpha/motion_est_mvi_asm.o
-# CFLAGS += -fforce-addr
+# AM_CFLAGS = -fforce-addr
 # endif
 
 # ifeq ($(TARGET_ARCH_POWERPC),yes)
