@@ -1,3 +1,17 @@
+2007-05-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/loader.c: Avoid SIGSEGV in failure of autoloading a
+	loader plugin.
+
+	* plugins/loader/xpm/xpm.c: Make paths of rgb.txt easily
+	modifiable.
+
+	* plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/Makefile.am: Avoid failing in
+	compilation of debug build.
+
+	* lib/avcodec/Makefile.am: Use AM_CFLAGS instead of CFLAGS.
+
 2007-05-25  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in, lib/avcodec/mpegaudio.c, lib/avcodec/Makefile.am,
