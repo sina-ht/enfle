@@ -861,8 +861,6 @@
 
 2006-04-09  Hiroshi Takekawa  <sian@fennel.org>
 
-	* ChangeLog: Updated ChangeLog.
-
 	* lib/avutil/avutil.h, lib/avutil/common.h,
 	lib/avcodec/Makefile.am, lib/avcodec/ac3enc.c,
 	lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
