@@ -2,9 +2,9 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-           (C) Copyright 1998-2003 by Hiroshi Takekawa.
+           (C) Copyright 1998-2007 by Hiroshi Takekawa.
 
-             Last Modified: Sun Mar 12 17:00:14 2006.
+             Last Modified: Tue May 29 00:43:41 2007.
 
 ***************************************************************************
 
@@ -57,7 +57,7 @@ Integrated libraries by other authors
     libmpeg2 by Aaron Holtzman and others.  For this part, you can
     apply GPL2 or later version.
 
-  lib/avcodec: libavcodec from ffmpeg-cvs as of 20040220 for a/v decoding
+  lib/avcodec: libavcodec from ffmpeg-cvs as of 20070529 for a/v decoding
     libavcodec by Fabrice Bellard and others.  For this part, you can
     apply LGPL2 or any later version.  LGPL license is in
     lib/avcodec/COPYING.LIB.
@@ -87,7 +87,7 @@ This software aims to view many pictures just clicking.  You can view
 various formatted pictures and movies with several effects.
 
  Formats you can view:
-  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, JPEG2000
+  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, TGA, JPEG2000
   spi(highly unstable, any formats which (some of) susie plugins support)
   animated GIF
   mng
@@ -107,15 +107,15 @@ gz: zlib-1.2.2 or later (Note: versions prior to 1.2.1 include the security hole
 bz2: bzip2-1.0.0 or later (recommended: 1.0.3)
 ungif: libungif-3.1.0 or later may work..., but even 4.1.0 has bug.
        (recommended: cvs version or ask me the patch)
-mng: libmng-1.0.0 or later (plugin unmaintained)
-libmpeg3: libmpeg3-1.2.2 or later
-mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
-avifile: avifile-0.53.5 or avifile-0.6 in CVS
-divx: divx4linux-20030428 (old version will not work)
 alsa: require ALSA_PCM_NEW_HW_PARAMS_API.
 ogg: libogg-1.1
 vorbis: libvorbis-1.0.1
 theora: libtheora-1.0-alpha4
+divx: divx4linux-20030428 (old version will not work)
+mng: libmng-1.0.0 or later (plugin unmaintained)
+libmpeg3: libmpeg3-1.2.2 or later
+mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
+avifile: avifile-0.53.5 or avifile-0.6 in CVS
 
 
 2. Requirements

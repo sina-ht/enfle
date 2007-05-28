@@ -1,4 +1,17 @@
-NEWS  Last Modified: Sat Dec 31 12:23:42 2005.
+NEWS  Last Modified: Tue May 29 00:38:15 2007.
+
+20070529:
+ Implemented bilinear reduction as well as interger arithmetic image reduction.
+ Enabled Xv for JPEG image.
+ Added cache_memsize_max support.
+ Added new options: --minwidth(-X) and minheight(-Y).
+ New TGA loader	plugin.
+ BMP depth 4 support.
+ Fixed a memorystream_seek() bug.
+ Fixed depth16-rendering bug.
+ Avoid SIGSEGV in failure of autoloading a loader plugin.
+ depth 32 shrink fix.
+ Huge libavcodec update.
 
 20051231:
  Fixed a GIF loop count bug.
