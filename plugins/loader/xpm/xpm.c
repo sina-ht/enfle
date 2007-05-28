@@ -3,8 +3,8 @@
  * (C)Copyright 1999, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug  6 16:46:41 2006.
- * $Id: xpm.c,v 1.6 2006/08/06 07:51:13 sian Exp $
+ * Last Modified: Tue May 29 00:13:50 2007.
+ * $Id: xpm.c,v 1.7 2007/05/28 15:26:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,15 +34,20 @@
 #include "enfle/loader-plugin.h"
 
 #define TRANSPARENT_COLOR "None"
-#define OLD_RGBFILE "/usr/X11R6/lib/X11/rgb.txt"
-#define RGBFILE "/usr/X11R6/share/X11/rgb.txt"
+
+static const char *rgbfile_paths[] = {
+  "/usr/X11R6/share/X11/rgb.txt",
+  "/usr/X11R6/lib/X11/rgb.txt",
+  "/usr/share/X11/rgb.txt",
+  NULL
+};
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
   .name = "XPM",
-  .description = "XPM Loader plugin version 0.1.2",
+  .description = "XPM Loader plugin version 0.1.3",
   .author = "Hiroshi Takekawa",
   .image_private = NULL,
 
@@ -55,17 +60,22 @@ static Hash *rgbhash = NULL;
 ENFLE_PLUGIN_ENTRY(loader_xpm)
 {
   LoaderPlugin *lp;
+  int i;
 
   if ((lp = (LoaderPlugin *)calloc(1, sizeof(LoaderPlugin))) == NULL)
     return NULL;
   memcpy(lp, &plugin, sizeof(LoaderPlugin));
 
   /* parse rgb.txt */
-  if ((rgbhash = rgbparse((char *)RGBFILE)) == NULL) {
-    if ((rgbhash = rgbparse((char *)OLD_RGBFILE)) == NULL) {
-      show_message("xpm: rgbparse error\n");
-      return NULL;
-    }
+  for (i = 0; rgbfile_paths[i] != NULL; i++) {
+    debug_message_fnc("Searching for rgb.txt at %s\n", rgbfile_paths[i]);
+    if ((rgbhash = rgbparse((char *)rgbfile_paths[i])) != NULL)
+      break;
+    debug_message_fnc(" Not found or parse error.\n");
+  }
+  if (rgbfile_paths[i] == NULL) {
+    show_message("xpm: cannot load rgb.txt\n");
+    return NULL;
   }
 
   return (void *)lp;
