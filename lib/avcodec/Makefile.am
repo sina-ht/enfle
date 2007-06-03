@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Mon May 28 23:55:26 2007.
-# $Id: Makefile.am,v 1.57 2007/05/28 15:23:40 sian Exp $
+# Last Modified: Tue May 29 01:16:08 2007.
+# $Id: Makefile.am,v 1.58 2007/06/03 09:58:36 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -149,10 +149,11 @@ noinst_HEADERS = \
 	mathops.h \
 	mjpeg.h \
 	mjpegdec.h \
+	mjpegenc.h \
 	mpcdata.h \
 	mpeg12data.h \
 	mpeg4data.h \
-	mpeg4video_parser.c \
+	mpeg4video_parser.h \
 	mpegaudio.h \
 	mpegaudiodata.h \
 	mpegaudiodecheader.h \
@@ -176,6 +177,7 @@ noinst_HEADERS = \
 	s3tc.h \
 	sgi.h \
 	simple_idct.h \
+	snow.h \
 	sp5x.h \
 	svq1_cb.h \
 	svq1_vlc.h \
