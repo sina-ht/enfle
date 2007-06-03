@@ -1,8 +1,8 @@
-NEWS  Last Modified: Tue May 29 00:38:15 2007.
+NEWS  Last Modified: Tue May 29 02:23:33 2007.
 
 20070529:
  Implemented bilinear reduction as well as interger arithmetic image reduction.
- Enabled Xv for JPEG image.
+ Enabled Xv for JPEG image.  To enable this, set enable_yuv 'true'.
  Added cache_memsize_max support.
  Added new options: --minwidth(-X) and minheight(-Y).
  New TGA loader	plugin.
