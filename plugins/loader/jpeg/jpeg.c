@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 31 01:23:54 2006.
- * $Id: jpeg.c,v 1.27 2007/04/27 05:55:27 sian Exp $
+ * Last Modified: Tue May 29 02:22:10 2007.
+ * $Id: jpeg.c,v 1.28 2007/06/03 09:59:11 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -40,7 +40,7 @@
 #  error BITS_IN_JSAMPLE must be 8
 #endif
 
-static const unsigned int types = (IMAGE_I420 | IMAGE_RGB24);
+static const unsigned int types = IMAGE_RGB24;
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
@@ -314,7 +314,11 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 
 #ifdef ENABLE_YUV
   if (vw) {
-    requested_type = video_window_request_type(vw, cinfo->output_width, cinfo->output_height, types, &direct_decode);
+    unsigned int my_types = types;
+    int is_success;
+    if (config_get_boolean(c, "/enfle/plugins/loader/jpeg/enable_yuv", &is_success))
+      my_types |= IMAGE_I420;
+    requested_type = video_window_request_type(vw, cinfo->output_width, cinfo->output_height, my_types, &direct_decode);
     if (requested_type == _I420 && cinfo->out_color_space == JCS_RGB) {
       cinfo->out_color_space = JCS_YCbCr;
       p->direct_renderable = 1;

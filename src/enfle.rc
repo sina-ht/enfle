@@ -1,6 +1,6 @@
 ; enfle.rc
-; Last Modified: Thu Sep  7 23:12:22 2006.
-; $Id: enfle.rc,v 1.53 2006/09/09 12:55:55 sian Exp $
+; Last Modified: Tue May 29 02:13:00 2007.
+; $Id: enfle.rc,v 1.54 2007/06/03 09:59:11 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -89,6 +89,8 @@ enfle {
 	;  Normally, default = slow, fastest = fast.
 	;dct_method = fast
 	dct_method = slow
+	; If enable_yuv is true, enfle uses Xv for magnification of JPEG image.
+	enable_yuv = false
       }
       ; Associate an extension with an appropriate plugin name.
       ; . means no further try
