@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Dec 30 15:54:22 2006.
- * $Id: x11ximage.c,v 1.57 2007/04/27 05:55:27 sian Exp $
+ * Last Modified: Sun Jun  3 20:49:01 2007.
+ * $Id: x11ximage.c,v 1.58 2007/06/03 11:54:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -31,7 +31,7 @@
 #include "x11ximage.h"
 
 void bgra32to16_generic(unsigned char *, unsigned char *, unsigned int, unsigned int, unsigned int, unsigned int);
-#ifdef USE_MMX
+#ifdef USE_MMX_BGRA
 void bgra32to16_maybe_mmx(unsigned char *, unsigned char *, unsigned int, unsigned int, unsigned int, unsigned int);
 void bgra32to16_mmx(unsigned char *, unsigned char *, unsigned int, unsigned int);
 #endif
@@ -69,7 +69,7 @@ x11ximage_create(X11 *x11)
   }
 #endif
   cpucaps = cpucaps_get();
-#ifdef USE_MMX
+#ifdef USE_MMX_BGRA
   if (cpucaps_is_mmx(cpucaps)) {
     //debug_message_fnc("MMX is available.\n");
     xi->bgra32to16 = bgra32to16_maybe_mmx;
@@ -137,7 +137,7 @@ bgra32to16_generic(unsigned char *dest, unsigned char *s, unsigned int w, unsign
   }
 }
 
-#ifdef USE_MMX
+#ifdef USE_MMX_BGRA
 void
 bgra32to16_maybe_mmx(unsigned char *dest, unsigned char *s, unsigned int w, unsigned int h, unsigned int bpl, unsigned int bpl_s)
 {

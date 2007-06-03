@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Feb 15 03:51:38 2002.
-# $Id: Makefile.am,v 1.6 2002/02/14 19:20:25 sian Exp $
+# Last Modified: Sun Jun  3 20:48:46 2007.
+# $Id: Makefile.am,v 1.7 2007/06/03 11:54:54 sian Exp $
 
 noinst_LTLIBRARIES = libenfleX11.la
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
@@ -13,7 +13,7 @@ sources = \
 	x11ximage.c x11ximage.h \
 	rgbparse.c rgbparse.h
 
-if USE_MMX
+if USE_MMX_BGRA
 libenfleX11_la_SOURCES = $(sources) bgra32to16_mmx.s
 #libenfleX11_la_SOURCES = $(sources) bgra32to16_mmx.asm
 else
