@@ -1,3 +1,12 @@
+2007-06-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* NEWS: Updated.
+
+	* plugins/loader/jpeg/jpeg.c, src/enfle.rc: Added
+	'/enfle/plugins/loader/jpeg/enable_yuv'.
+
+	* lib/avcodec/Makefile.am: Added forgotten files.
+
 2007-05-28  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/enfle/loader.c: Avoid SIGSEGV in failure of autoloading a
