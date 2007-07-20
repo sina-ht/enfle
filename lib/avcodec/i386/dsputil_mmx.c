@@ -29,6 +29,7 @@
 #include "mmx.h"
 #include "vp3dsp_mmx.h"
 #include "vp3dsp_sse2.h"
+#include "h263.h"
 
 //#undef NDEBUG
 //#include <assert.h>
@@ -1871,7 +1872,7 @@ DCT_SAD_FUNC(ssse3)
 #undef HSUM
 #undef DCT_SAD
 
-static int ssd_int8_vs_int16_mmx(int8_t *pix1, int16_t *pix2, int size){
+static int ssd_int8_vs_int16_mmx(const int8_t *pix1, const int16_t *pix2, int size){
     int sum;
     long i=size;
     asm volatile(
@@ -3347,8 +3348,10 @@ void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx)
 
 #endif //CONFIG_ENCODERS
 
-        c->h263_v_loop_filter= h263_v_loop_filter_mmx;
-        c->h263_h_loop_filter= h263_h_loop_filter_mmx;
+        if (ENABLE_ANY_H263) {
+            c->h263_v_loop_filter= h263_v_loop_filter_mmx;
+            c->h263_h_loop_filter= h263_h_loop_filter_mmx;
+        }
         c->put_h264_chroma_pixels_tab[0]= put_h264_chroma_mc8_mmx;
         c->put_h264_chroma_pixels_tab[1]= put_h264_chroma_mc4_mmx;
 

@@ -34,7 +34,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
-#ifdef __MINGW32__
+#if !defined(HAVE_MKSTEMP)
 #include <fcntl.h>
 #endif
 
@@ -273,7 +273,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
         pixel_size= picture.linesize[0]*8 / w;
 //av_log(NULL, AV_LOG_ERROR, "%d %d %d %d\n", (int)picture.data[1], w, h, s->pix_fmt);
         assert(pixel_size>=1);
-            //FIXME next ensures that linesize= 2^x uvlinesize, thats needed because some MC code assumes it
+            //FIXME next ensures that linesize= 2^x uvlinesize, that is needed because some MC code assumes it
         if(pixel_size == 3*8)
             w= ALIGN(w, STRIDE_ALIGN<<h_chroma_shift);
         else
@@ -402,7 +402,7 @@ static const char* context_to_name(void* ptr) {
 }
 
 #define OFFSET(x) offsetof(AVCodecContext,x)
-#define DEFAULT 0 //should be NAN but it doesnt work as its not a constant in glibc as required by ANSI/ISO C
+#define DEFAULT 0 //should be NAN but it does not work as it is not a constant in glibc as required by ANSI/ISO C
 //these names are too long to be readable
 #define V AV_OPT_FLAG_VIDEO_PARAM
 #define A AV_OPT_FLAG_AUDIO_PARAM
@@ -455,6 +455,18 @@ static const AVOption options[]={
 {"local_header", "place global headers at every keyframe instead of in extradata", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_LOCAL_HEADER, INT_MIN, INT_MAX, V|E, "flags2"},
 {"sub_id", NULL, OFFSET(sub_id), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"me_method", "set motion estimation method", OFFSET(me_method), FF_OPT_TYPE_INT, ME_EPZS, INT_MIN, INT_MAX, V|E, "me_method"},
+#if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
+{"me", "set motion estimation method (deprecated, use me_method instead)", OFFSET(me_method), FF_OPT_TYPE_INT, ME_EPZS, INT_MIN, INT_MAX, V|E, "me_method"},
+#endif
+{"zero", "zero motion estimation (fastest)", 0, FF_OPT_TYPE_CONST, ME_ZERO, INT_MIN, INT_MAX, V|E, "me_method" },
+{"full", "full motion estimation (slowest)", 0, FF_OPT_TYPE_CONST, ME_FULL, INT_MIN, INT_MAX, V|E, "me_method" },
+{"epzs", "EPZS motion estimation (default)", 0, FF_OPT_TYPE_CONST, ME_EPZS, INT_MIN, INT_MAX, V|E, "me_method" },
+{"log", "log motion estimation", 0, FF_OPT_TYPE_CONST, ME_LOG, INT_MIN, INT_MAX, V|E, "me_method" },
+{"phods", "phods motion estimation", 0, FF_OPT_TYPE_CONST, ME_PHODS, INT_MIN, INT_MAX, V|E, "me_method" },
+{"x1", "X1 motion estimation", 0, FF_OPT_TYPE_CONST, ME_X1, INT_MIN, INT_MAX, V|E, "me_method" },
+{"hex", "hex motion estimation", 0, FF_OPT_TYPE_CONST, ME_HEX, INT_MIN, INT_MAX, V|E, "me_method" },
+{"umh", "umh motion estimation", 0, FF_OPT_TYPE_CONST, ME_UMH, INT_MIN, INT_MAX, V|E, "me_method" },
+{"iter", "iter motion estimation", 0, FF_OPT_TYPE_CONST, ME_ITER, INT_MIN, INT_MAX, V|E, "me_method" },
 {"extradata_size", NULL, OFFSET(extradata_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX},
 {"time_base", NULL, OFFSET(time_base), FF_OPT_TYPE_RATIONAL, DEFAULT, INT_MIN, INT_MAX},
 {"g", "set the group of picture size", OFFSET(gop_size), FF_OPT_TYPE_INT, 12, INT_MIN, INT_MAX, V|E},
@@ -747,6 +759,7 @@ void avcodec_get_context_defaults2(AVCodecContext *s, enum CodecType codec_type)
 
     s->av_class= &av_codec_context_class;
 
+    s->codec_type = codec_type;
     if(codec_type == CODEC_TYPE_AUDIO)
         flags= AV_OPT_FLAG_AUDIO_PARAM;
     else if(codec_type == CODEC_TYPE_VIDEO)
@@ -979,6 +992,8 @@ int avcodec_close(AVCodecContext *avctx)
         return -1;
     }
 
+    if (ENABLE_THREADS && avctx->thread_opaque)
+        avcodec_thread_free(avctx);
     if (avctx->codec->close)
         avctx->codec->close(avctx);
     avcodec_default_free_buffers(avctx);
@@ -1319,7 +1334,7 @@ unsigned int av_xiphlacing(unsigned char *s, unsigned int v)
  * and opened file name in **filename. */
 int av_tempfile(char *prefix, char **filename) {
     int fd=-1;
-#ifdef __MINGW32__
+#if !defined(HAVE_MKSTEMP)
     *filename = tempnam(".", prefix);
 #else
     size_t len = strlen(prefix) + 12; /* room for "/tmp/" and "XXXXXX\0" */
@@ -1330,8 +1345,8 @@ int av_tempfile(char *prefix, char **filename) {
         av_log(NULL, AV_LOG_ERROR, "ff_tempfile: Cannot allocate file name\n");
         return -1;
     }
-#ifdef __MINGW32__
-    fd = open(*filename, _O_RDWR | _O_BINARY | _O_CREAT, 0444);
+#if !defined(HAVE_MKSTEMP)
+    fd = open(*filename, O_RDWR | O_BINARY | O_CREAT, 0444);
 #else
     snprintf(*filename, len, "/tmp/%sXXXXXX", prefix);
     fd = mkstemp(*filename);
@@ -1346,4 +1361,130 @@ int av_tempfile(char *prefix, char **filename) {
         return -1;
     }
     return fd; /* success */
+}
+
+typedef struct {
+    const char *abbr;
+    int width, height;
+} VideoFrameSizeAbbr;
+
+typedef struct {
+    const char *abbr;
+    int rate_num, rate_den;
+} VideoFrameRateAbbr;
+
+static VideoFrameSizeAbbr video_frame_size_abbrs[] = {
+    { "ntsc",      720, 480 },
+    { "pal",       720, 576 },
+    { "qntsc",     352, 240 }, /* VCD compliant NTSC */
+    { "qpal",      352, 288 }, /* VCD compliant PAL */
+    { "sntsc",     640, 480 }, /* square pixel NTSC */
+    { "spal",      768, 576 }, /* square pixel PAL */
+    { "film",      352, 240 },
+    { "ntsc-film", 352, 240 },
+    { "sqcif",     128,  96 },
+    { "qcif",      176, 144 },
+    { "cif",       352, 288 },
+    { "4cif",      704, 576 },
+    { "qqvga",     160, 120 },
+    { "qvga",      320, 240 },
+    { "vga",       640, 480 },
+    { "svga",      800, 600 },
+    { "xga",      1024, 768 },
+    { "uxga",     1600,1200 },
+    { "qxga",     2048,1536 },
+    { "sxga",     1280,1024 },
+    { "qsxga",    2560,2048 },
+    { "hsxga",    5120,4096 },
+    { "wvga",      852, 480 },
+    { "wxga",     1366, 768 },
+    { "wsxga",    1600,1024 },
+    { "wuxga",    1920,1200 },
+    { "woxga",    2560,1600 },
+    { "wqsxga",   3200,2048 },
+    { "wquxga",   3840,2400 },
+    { "whsxga",   6400,4096 },
+    { "whuxga",   7680,4800 },
+    { "cga",       320, 200 },
+    { "ega",       640, 350 },
+    { "hd480",     852, 480 },
+    { "hd720",    1280, 720 },
+    { "hd1080",   1920,1080 },
+};
+
+static VideoFrameRateAbbr video_frame_rate_abbrs[]= {
+    { "ntsc",      30000, 1001 },
+    { "pal",          25,    1 },
+    { "qntsc",     30000, 1001 }, /* VCD compliant NTSC */
+    { "qpal",         25,    1 }, /* VCD compliant PAL */
+    { "sntsc",     30000, 1001 }, /* square pixel NTSC */
+    { "spal",         25,    1 }, /* square pixel PAL */
+    { "film",         24,    1 },
+    { "ntsc-film", 24000, 1001 },
+};
+
+int av_parse_video_frame_size(int *width_ptr, int *height_ptr, const char *str)
+{
+    int i;
+    int n = sizeof(video_frame_size_abbrs) / sizeof(VideoFrameSizeAbbr);
+    const char *p;
+    int frame_width = 0, frame_height = 0;
+
+    for(i=0;i<n;i++) {
+        if (!strcmp(video_frame_size_abbrs[i].abbr, str)) {
+            frame_width = video_frame_size_abbrs[i].width;
+            frame_height = video_frame_size_abbrs[i].height;
+            break;
+        }
+    }
+    if (i == n) {
+        p = str;
+        frame_width = strtol(p, (char **)&p, 10);
+        if (*p)
+            p++;
+        frame_height = strtol(p, (char **)&p, 10);
+    }
+    if (frame_width <= 0 || frame_height <= 0)
+        return -1;
+    *width_ptr = frame_width;
+    *height_ptr = frame_height;
+    return 0;
+}
+
+int av_parse_video_frame_rate(AVRational *frame_rate, const char *arg)
+{
+    int i;
+    int n = sizeof(video_frame_rate_abbrs) / sizeof(VideoFrameRateAbbr);
+    char* cp;
+
+    /* First, we check our abbreviation table */
+    for (i = 0; i < n; ++i)
+         if (!strcmp(video_frame_rate_abbrs[i].abbr, arg)) {
+             frame_rate->num = video_frame_rate_abbrs[i].rate_num;
+             frame_rate->den = video_frame_rate_abbrs[i].rate_den;
+             return 0;
+         }
+
+    /* Then, we try to parse it as fraction */
+    cp = strchr(arg, '/');
+    if (!cp)
+        cp = strchr(arg, ':');
+    if (cp) {
+        char* cpp;
+        frame_rate->num = strtol(arg, &cpp, 10);
+        if (cpp != arg || cpp == cp)
+            frame_rate->den = strtol(cp+1, &cpp, 10);
+        else
+           frame_rate->num = 0;
+    }
+    else {
+        /* Finally we give up and parse it as double */
+        AVRational time_base = av_d2q(strtod(arg, 0), DEFAULT_FRAME_RATE_BASE);
+        frame_rate->den = time_base.den;
+        frame_rate->num = time_base.num;
+    }
+    if (!frame_rate->num || !frame_rate->den)
+        return -1;
+    else
+        return 0;
 }

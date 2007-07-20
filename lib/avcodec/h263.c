@@ -5,6 +5,10 @@
  * Copyright (c) 2001 Juan J. Sierralta P.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
+ * ac prediction encoding, B-frame support, error resilience, optimizations,
+ * qpel decoding, gmc decoding, interlaced decoding
+ * by Michael Niedermayer <michaelni@gmx.at>
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -20,10 +24,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * ac prediction encoding, b-frame support, error resilience, optimizations,
- * qpel decoding, gmc decoding, interlaced decoding,
- * by Michael Niedermayer <michaelni@gmx.at>
  */
 
 /**
@@ -212,7 +212,7 @@ void h263_encode_picture_header(MpegEncContext * s, int picture_number)
         for(i=0; i<2; i++){
             int div, error;
             div= (s->avctx->time_base.num*1800000LL + 500LL*s->avctx->time_base.den) / ((1000LL+i)*s->avctx->time_base.den);
-            div= av_clip(1, div, 127);
+            div= av_clip(div, 1, 127);
             error= FFABS(s->avctx->time_base.num*1800000LL - (1000LL+i)*s->avctx->time_base.den*div);
             if(error < best_error){
                 best_error= error;
@@ -2259,25 +2259,12 @@ void ff_mpeg4_stuffing(PutBitContext * pbc)
 }
 
 /* must be called before writing the header */
-void ff_set_mpeg4_time(MpegEncContext * s, int picture_number){
-    int time_div, time_mod;
-
-    assert(s->current_picture_ptr->pts != AV_NOPTS_VALUE);
-    s->time= s->current_picture_ptr->pts*s->avctx->time_base.num;
-
-    time_div= s->time/s->avctx->time_base.den;
-    time_mod= s->time%s->avctx->time_base.den;
-
+void ff_set_mpeg4_time(MpegEncContext * s){
     if(s->pict_type==B_TYPE){
-        s->pb_time= s->pp_time - (s->last_non_b_time - s->time);
-        assert(s->pb_time > 0 && s->pb_time < s->pp_time);
         ff_mpeg4_init_direct_mv(s);
     }else{
         s->last_time_base= s->time_base;
-        s->time_base= time_div;
-        s->pp_time= s->time - s->last_non_b_time;
-        s->last_non_b_time= s->time;
-        assert(picture_number==0 || s->pp_time > 0);
+        s->time_base= s->time/s->avctx->time_base.den;
     }
 }
 
@@ -2359,6 +2346,8 @@ static void mpeg4_encode_visual_object_header(MpegEncContext * s){
 static void mpeg4_encode_vol_header(MpegEncContext * s, int vo_number, int vol_number)
 {
     int vo_ver_id;
+
+    if (!ENABLE_MPEG4_ENCODER)  return;
 
     if(s->max_b_frames || s->quarter_sample){
         vo_ver_id= 5;
@@ -2515,23 +2504,6 @@ void mpeg4_encode_picture_header(MpegEncContext * s, int picture_number)
 }
 
 #endif //CONFIG_ENCODERS
-
-/**
- * set qscale and update qscale dependent variables.
- */
-void ff_set_qscale(MpegEncContext * s, int qscale)
-{
-    if (qscale < 1)
-        qscale = 1;
-    else if (qscale > 31)
-        qscale = 31;
-
-    s->qscale = qscale;
-    s->chroma_qscale= s->chroma_qscale_table[qscale];
-
-    s->y_dc_scale= s->y_dc_scale_table[ qscale ];
-    s->c_dc_scale= s->c_dc_scale_table[ s->chroma_qscale ];
-}
 
 /**
  * predicts the dc.
@@ -2916,59 +2888,6 @@ static VLC sprite_trajectory;
 static VLC mb_type_b_vlc;
 static VLC h263_mbtype_b_vlc;
 static VLC cbpc_b_vlc;
-
-void init_vlc_rl(RLTable *rl, int use_static)
-{
-    int i, q;
-
-    /* Return if static table is already initialized */
-    if(use_static && rl->rl_vlc[0])
-        return;
-
-    init_vlc(&rl->vlc, 9, rl->n + 1,
-             &rl->table_vlc[0][1], 4, 2,
-             &rl->table_vlc[0][0], 4, 2, use_static);
-
-
-    for(q=0; q<32; q++){
-        int qmul= q*2;
-        int qadd= (q-1)|1;
-
-        if(q==0){
-            qmul=1;
-            qadd=0;
-        }
-        if(use_static)
-            rl->rl_vlc[q]= av_mallocz_static(rl->vlc.table_size*sizeof(RL_VLC_ELEM));
-        else
-            rl->rl_vlc[q]= av_malloc(rl->vlc.table_size*sizeof(RL_VLC_ELEM));
-        for(i=0; i<rl->vlc.table_size; i++){
-            int code= rl->vlc.table[i][0];
-            int len = rl->vlc.table[i][1];
-            int level, run;
-
-            if(len==0){ // illegal code
-                run= 66;
-                level= MAX_LEVEL;
-            }else if(len<0){ //more bits needed
-                run= 0;
-                level= code;
-            }else{
-                if(code==rl->n){ //esc
-                    run= 66;
-                    level= 0;
-                }else{
-                    run=   rl->table_run  [code] + 1;
-                    level= rl->table_level[code] * qmul + qadd;
-                    if(code >= rl->last) run+=192;
-                }
-            }
-            rl->rl_vlc[q][i].len= len;
-            rl->rl_vlc[q][i].level= level;
-            rl->rl_vlc[q][i].run= run;
-        }
-    }
-}
 
 /* init vlcs */
 
@@ -3386,7 +3305,7 @@ int ff_h263_resync(MpegEncContext *s){
         if(ret>=0)
             return 0;
     }
-    //ok, it's not where its supposed to be ...
+    //OK, it's not where it is supposed to be ...
     s->gb= s->last_resync_gb;
     align_get_bits(&s->gb);
     left= s->gb.size_in_bits - get_bits_count(&s->gb);
@@ -4720,7 +4639,7 @@ retry:
         i += run;
         if (i >= 64){
             if(s->alt_inter_vlc && rl == &rl_inter && !s->mb_intra){
-                //looks like a hack but no, it's the way its supposed to work ...
+                //Looks like a hack but no, it's the way it is supposed to work ...
                 rl = &rl_intra_aic;
                 i = 0;
                 s->gb= gb;

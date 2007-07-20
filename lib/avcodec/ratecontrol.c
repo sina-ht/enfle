@@ -160,7 +160,7 @@ int ff_rate_control_init(MpegEncContext *s)
 
             next= strchr(p, ';');
             if(next){
-                (*next)=0; //sscanf in unbelieavle slow on looong strings //FIXME copy / dont write
+                (*next)=0; //sscanf in unbelievably slow on looong strings //FIXME copy / do not write
                 next++;
             }
             e= sscanf(p, " in:%d ", &picture_number);
@@ -184,7 +184,7 @@ int ff_rate_control_init(MpegEncContext *s)
 
         //FIXME maybe move to end
         if((s->flags&CODEC_FLAG_PASS2) && s->avctx->rc_strategy == FF_RC_STRATEGY_XVID) {
-#ifdef CONFIG_XVID
+#ifdef CONFIG_LIBXVID
             return ff_xvid_rate_control_init(s);
 #else
             av_log(s->avctx, AV_LOG_ERROR, "XviD ratecontrol requires libavcodec compiled with XviD support\n");
@@ -201,6 +201,10 @@ int ff_rate_control_init(MpegEncContext *s)
         rcc->pass1_rc_eq_output_sum= 0.001;
         rcc->pass1_wanted_bits=0.001;
 
+        if(s->avctx->qblur > 1.0){
+            av_log(s->avctx, AV_LOG_ERROR, "qblur too large\n");
+            return -1;
+        }
         /* init stuff with the user specified complexity */
         if(s->avctx->rc_initial_cplx){
             for(i=0; i<60*30; i++){
@@ -256,7 +260,7 @@ void ff_rate_control_uninit(MpegEncContext *s)
     ff_eval_free(rcc->rc_eq_eval);
     av_freep(&rcc->entry);
 
-#ifdef CONFIG_XVID
+#ifdef CONFIG_LIBXVID
     if((s->flags&CODEC_FLAG_PASS2) && s->avctx->rc_strategy == FF_RC_STRATEGY_XVID)
         ff_xvid_rate_control_uninit(s);
 #endif
@@ -392,7 +396,7 @@ static double get_diff_limited_q(MpegEncContext *s, RateControlEntry *rce, doubl
         else if(q < last_q - maxdiff) q= last_q - maxdiff;
     }
 
-    rcc->last_qscale_for[pict_type]= q; //Note we cant do that after blurring
+    rcc->last_qscale_for[pict_type]= q; //Note we cannot do that after blurring
 
     if(pict_type!=B_TYPE)
         rcc->last_non_b_pict_type= pict_type;
@@ -601,7 +605,7 @@ static void adaptive_quantization(MpegEncContext *s, double q){
         bits_tab[i]= bits;
     }
 
-    /* handle qmin/qmax cliping */
+    /* handle qmin/qmax clipping */
     if(s->flags&CODEC_FLAG_NORMALIZE_AQP){
         float factor= bits_sum/cplx_sum;
         for(i=0; i<s->mb_num; i++){
@@ -672,7 +676,7 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
     Picture * const pic= &s->current_picture;
     emms_c();
 
-#ifdef CONFIG_XVID
+#ifdef CONFIG_LIBXVID
     if((s->flags&CODEC_FLAG_PASS2) && s->avctx->rc_strategy == FF_RC_STRATEGY_XVID)
         return ff_xvid_rate_estimate_qscale(s, dry_run);
 #endif

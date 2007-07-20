@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Tue May 29 01:16:08 2007.
-# $Id: Makefile.am,v 1.58 2007/06/03 09:58:36 sian Exp $
+# Last Modified: Fri Jul 20 21:28:32 2007.
+# $Id: Makefile.am,v 1.59 2007/07/20 12:45:34 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -107,11 +107,14 @@ AM_CFLAGS = $(CFLAGS_POST)
 # 	$(CC) -mcpu=ultrasparc -mtune=ultrasparc $(CFLAGS) -c -o $@ $<
 # endif
 
+# Encoders: svq1enc_cb.h
+
 noinst_HEADERS = \
 	aac_ac3_parser.h \
 	ac3.h \
 	ac3_parser.h \
 	ac3tab.h \
+	allcodecs.h \
 	atrac3data.h \
 	avcodec.h \
 	bethsoftvideo.h \
@@ -121,6 +124,7 @@ noinst_HEADERS = \
 	cabac.h \
 	cavs.h \
 	cavsdata.h \
+	colorspace.h \
 	config.h \
 	cookdata.h \
 	dca.h \
@@ -129,11 +133,13 @@ noinst_HEADERS = \
 	dnxhddata.h \
 	dsputil.h \
 	dvdata.h \
+	elbg.h \
 	eval.h \
 	faandct.h \
 	golomb.h \
 	h261.h \
 	h261data.h \
+	h263.h \
 	h263_parser.h \
 	h263data.h \
 	h264.h \
@@ -145,13 +151,16 @@ noinst_HEADERS = \
 	indeo3data.h \
 	jpegls.h \
 	jpeglsdec.h \
+	lcl.h \
 	lzw.h \
 	mathops.h \
 	mjpeg.h \
 	mjpegdec.h \
 	mjpegenc.h \
 	mpcdata.h \
+	mpeg12.h \
 	mpeg12data.h \
+	mpeg12decdata.h \
 	mpeg4data.h \
 	mpeg4video_parser.h \
 	mpegaudio.h \
@@ -160,25 +169,30 @@ noinst_HEADERS = \
 	mpegaudiodectab.h \
 	mpegaudiotab.h \
 	mpegvideo.h \
+	mpegvideo_common.h \
 	msmpeg4.h \
 	msmpeg4data.h \
 	msmpeg4tab.h \
 	opt.h \
 	parser.h \
+	png.h \
 	pnm.h \
 	qdm2data.h \
 	ra144.h \
 	ra288.h \
 	rangecoder.h \
 	ratecontrol.h \
+	raw.h \
 	rl.h \
 	rle.h \
+	roqvideo.h \
 	rtjpeg.h \
 	s3tc.h \
 	sgi.h \
 	simple_idct.h \
 	snow.h \
 	sp5x.h \
+	svq1.h \
 	svq1_cb.h \
 	svq1_vlc.h \
 	tiff.h \
@@ -196,20 +210,27 @@ noinst_HEADERS = \
 	vp56data.h \
 	vp6data.h \
 	xiph.h \
-	xvid_internal.h \
+	libxvid_internal.h \
 	xvmc_render.h \
 	wma.h \
 	wmadata.h
 
-# a52dec.c ac3enc.c amr.c apiexample.c
-# dct-test.c dtsdec.c
-# faac.c faad.c fft-test.c libgsm.c
-# mdec.c motion_est_template.c svq3.c wmv2.c
-# mp3lameaudio.c
-# beosthread.c w32thread.c, motion-test.c
+# Excludes: liba52.c ac3enc.c libamr.c apiexample.c dct-test.c dtsdec.c
+# libfaac.c libfaad.c fft-test.c libgsm.c mdec.c motion_est_template.c
+# svq3.c wmv2.c beosthread.c w32thread.c motion-test.c
+
 # imgresample.c needs libswscale
-# Encoders: bmpenc.c wmaenc.c x264.c and xvidff.c flacenc.c libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c tiffenc.c roqaudioenc.c mjpegenc.c jpeglsenc.c pnmenc.c mpegaudioenc.c, ljpegenc.c, h261enc.c
-# BSFs: remove_extradata_bsf.c, dump_extradata_bsf.c, noise_bsf.c, mp3_header_compress_bsf.c, imx_dump_header_bsf.c, mjpega_dump_header_bsf.c, mp3_header_decompress_bsf.c
+
+# Encoders: bmpenc.c wmaenc.c libx264.c libxvidff.c flacenc.c
+# libtheoraenc.c zmbvenc.c flashsvenc.c targaenc.c sgienc.c lzwenc.c
+# tiffenc.c roqaudioenc.c mjpegenc.c jpeglsenc.c pnmenc.c
+# mpegaudioenc.c ljpegenc.c h261enc.c libmp3lame.c libxvid_rc.c
+# lclenc.c pngenc.c rawenc.c mpegvideo_enc.c roqvideoenc.c qtrleenc.c
+# svq1enc.c mpeg12enc.c
+
+# BSFs: remove_extradata_bsf.c, dump_extradata_bsf.c, noise_bsf.c,
+# mp3_header_compress_bsf.c, imx_dump_header_bsf.c,
+# mjpega_dump_header_bsf.c, mp3_header_decompress_bsf.c
 
 libavcodec_la_SOURCES = \
 	4xm.c \
@@ -236,6 +257,7 @@ libavcodec_la_SOURCES = \
 	cabac.c \
 	cavs.c \
 	cavs_parser.c \
+	cavsdec.c \
 	cavsdsp.c \
 	cinepak.c \
 	cljr.c \
@@ -256,6 +278,7 @@ libavcodec_la_SOURCES = \
 	dvdsubdec.c \
 	dvdsubenc.c \
 	dxa.c \
+	elbg.c \
 	error_resilience.c \
 	eval.c \
 	faandct.c \
@@ -294,7 +317,8 @@ libavcodec_la_SOURCES = \
 	jpeglsdec.c \
 	jrevdct.c \
 	kmvc.c \
-	lcl.c \
+	lcldec.c \
+	libvorbis.c \
 	loco.c \
 	lzw.c \
 	mace.c \
@@ -307,6 +331,7 @@ libavcodec_la_SOURCES = \
 	motion_est.c \
 	mpc.c \
 	mpeg12.c \
+	mpeg12data.c \
 	mpeg4video_parser.c \
 	mpegaudio.c \
 	mpegaudio_parser.c \
@@ -320,11 +345,11 @@ libavcodec_la_SOURCES = \
 	msrle.c \
 	msvideo1.c \
 	nuv.c \
-	oggvorbis.c \
 	opt.c \
 	parser.c \
 	pcm.c \
 	png.c \
+	pngdec.c \
 	pnm.c \
 	pnm_parser.c \
 	pthread.c \
@@ -338,10 +363,12 @@ libavcodec_la_SOURCES = \
 	rangecoder.c \
 	ratecontrol.c \
 	raw.c \
+	rawdec.c \
 	resample.c \
 	resample2.c \
 	rle.c \
 	roqvideo.c \
+	roqvideodec.c \
 	rpza.c \
 	rtjpeg.c \
 	rv10.c \
@@ -355,6 +382,7 @@ libavcodec_la_SOURCES = \
 	sonic.c \
 	sp5xdec.c \
 	svq1.c \
+	svq1dec.c \
 	targa.c \
 	tiertexseqv.c \
 	tiff.c \

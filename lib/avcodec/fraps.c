@@ -18,7 +18,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -88,7 +87,8 @@ static int decode_init(AVCodecContext *avctx)
  * Comparator - our nodes should ascend by count
  * but with preserved symbol order
  */
-static int huff_cmp(const Node *a, const Node *b){
+static int huff_cmp(const void *va, const void *vb){
+    const Node *a = va, *b = vb;
     return (a->count - b->count)*256 + a->sym - b->sym;
 }
 

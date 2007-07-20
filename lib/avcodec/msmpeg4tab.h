@@ -3,6 +3,8 @@
  * copyright (c) 2001 Fabrice Bellard
  * copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
+ * msmpeg4v1 & v2 stuff by Michael Niedermayer <michaelni@gmx.at>
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -18,14 +20,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * msmpeg4v1 & v2 stuff by Michael Niedermayer <michaelni@gmx.at>
  */
 
 /**
  * @file msmpeg4tab.h
  * MSMPEG4 data tables.
  */
+
+#ifndef AVCODEC_MSMPEG4TAB_H
+#define AVCODEC_MSMPEG4TAB_H
+
+#include <stdint.h>
+#include "bitstream.h"
+#include "rl.h"
 
 /* non intra picture macro block coded block pattern + mb type */
 static const uint32_t table_mb_non_intra[128][2] = {
@@ -2012,3 +2019,5 @@ static const uint8_t wmv2_scantableB[64]={
 0x38, 0x29, 0x22, 0x03, 0x31, 0x39, 0x0B, 0x2A,
 0x13, 0x32, 0x1B, 0x3A, 0x23, 0x2B, 0x33, 0x3B,
 };
+
+#endif // AVCODEC_MSMPEG4TAB_H

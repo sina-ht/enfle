@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -539,7 +538,7 @@ static av_always_inline int get_cabac_inline(CABACContext *c, uint8_t * const st
 #else /* defined(ARCH_X86) && defined(CONFIG_7REGS) && defined(HAVE_EBX_AVAILABLE) && !defined(BROKEN_RELOCATIONS) */
     int s = *state;
     int RangeLPS= ff_h264_lps_range[2*(c->range&0xC0) + s];
-    int bit, lps_mask attribute_unused;
+    int bit, lps_mask av_unused;
 
     c->range -= RangeLPS;
 #ifndef BRANCHLESS_CABAC_DECODER
@@ -683,7 +682,7 @@ static av_always_inline int get_cabac_bypass_sign(CABACContext *c, int val){
 }
 
 //FIXME the x86 code from this file should be moved into i386/h264 or cabac something.c/h (note ill kill you if you move my code away from under my fingers before iam finished with it!)
-//FIXME use some macros to avoid duplicatin get_cabac (cant be done yet as that would make optimization work hard)
+//FIXME use some macros to avoid duplicatin get_cabac (cannot be done yet as that would make optimization work hard)
 #if defined(ARCH_X86) && defined(CONFIG_7REGS) && defined(HAVE_EBX_AVAILABLE) && !defined(BROKEN_RELOCATIONS)
 static int decode_significance_x86(CABACContext *c, int max_coeff, uint8_t *significant_coeff_ctx_base, int *index){
     void *end= significant_coeff_ctx_base + max_coeff - 1;

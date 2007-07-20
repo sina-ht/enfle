@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -177,8 +176,8 @@ void av_build_filter(FELEM *filter, double factor, int tap_count, int phase_coun
 }
 
 /**
- * initalizes a audio resampler.
- * note, if either rate is not a integer then simply scale both rates up so they are
+ * Initializes an audio resampler.
+ * Note, if either rate is not an integer then simply scale both rates up so they are.
  */
 AVResampleContext *av_resample_init(int out_rate, int in_rate, int filter_size, int phase_shift, int linear, double cutoff){
     AVResampleContext *c= av_mallocz(sizeof(AVResampleContext));

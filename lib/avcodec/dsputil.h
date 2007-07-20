@@ -144,7 +144,7 @@ static void a(uint8_t *block, const uint8_t *pixels, int line_size, int h){\
 
 /* motion estimation */
 // h is limited to {width/2, width, 2*width} but never larger than 16 and never smaller then 2
-// allthough currently h<4 is not used as functions with width <8 are not used and neither implemented
+// although currently h<4 is not used as functions with width <8 are neither used nor implemented
 typedef int (*me_cmp_func)(void /*MpegEncContext*/ *s, uint8_t *blk1/*align width (8 or 16)*/, uint8_t *blk2/*align 1*/, int line_size, int h)/* __attribute__ ((const))*/;
 
 
@@ -200,7 +200,8 @@ typedef struct DSPContext {
     me_cmp_func ildct_cmp[5]; //only width 16 used
     me_cmp_func frame_skip_cmp[5]; //only width 8 used
 
-    int (*ssd_int8_vs_int16)(int8_t *pix1, int16_t *pix2, int size);
+    int (*ssd_int8_vs_int16)(const int8_t *pix1, const int16_t *pix2,
+                             int size);
 
     /**
      * Halfpel motion compensation with rounding (a+b+1)>>1.
@@ -470,6 +471,16 @@ static inline int get_penalty_factor(int lambda, int lambda2, int type){
    one or more MultiMedia extension */
 int mm_support(void);
 
+void dsputil_init_alpha(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_armv4l(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_bfin(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_mlib(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_mmi(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_sh4(DSPContext* c, AVCodecContext *avctx);
+void dsputil_init_vis(DSPContext* c, AVCodecContext *avctx);
+
 #define DECLARE_ALIGNED_16(t, v) DECLARE_ALIGNED(16, t, v)
 
 #if defined(HAVE_MMX)
@@ -507,7 +518,6 @@ static inline void emms(void)
 
 #define STRIDE_ALIGN 8
 
-void dsputil_init_mmx(DSPContext* c, AVCodecContext *avctx);
 void dsputil_init_pix_mmx(DSPContext* c, AVCodecContext *avctx);
 
 #elif defined(ARCH_ARMV4L)
@@ -521,29 +531,22 @@ void dsputil_init_pix_mmx(DSPContext* c, AVCodecContext *avctx);
 
 extern int mm_flags;
 
-void dsputil_init_armv4l(DSPContext* c, AVCodecContext *avctx);
-
 #elif defined(HAVE_MLIB)
 
 /* SPARC/VIS IDCT needs 8-byte aligned DCT blocks */
 #define DECLARE_ALIGNED_8(t, v) DECLARE_ALIGNED(8, t, v)
 #define STRIDE_ALIGN 8
 
-void dsputil_init_mlib(DSPContext* c, AVCodecContext *avctx);
-
 #elif defined(ARCH_SPARC)
 
 /* SPARC/VIS IDCT needs 8-byte aligned DCT blocks */
 #define DECLARE_ALIGNED_8(t, v) DECLARE_ALIGNED(8, t, v)
 #define STRIDE_ALIGN 8
-void dsputil_init_vis(DSPContext* c, AVCodecContext *avctx);
 
 #elif defined(ARCH_ALPHA)
 
 #define DECLARE_ALIGNED_8(t, v) DECLARE_ALIGNED(8, t, v)
 #define STRIDE_ALIGN 8
-
-void dsputil_init_alpha(DSPContext* c, AVCodecContext *avctx);
 
 #elif defined(ARCH_POWERPC)
 
@@ -560,28 +563,20 @@ extern int mm_flags;
 #define DECLARE_ALIGNED_8(t, v) DECLARE_ALIGNED(16, t, v)
 #define STRIDE_ALIGN 16
 
-void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx);
-
 #elif defined(HAVE_MMI)
 
 #define DECLARE_ALIGNED_8(t, v) DECLARE_ALIGNED(16, t, v)
 #define STRIDE_ALIGN 16
-
-void dsputil_init_mmi(DSPContext* c, AVCodecContext *avctx);
 
 #elif defined(ARCH_SH4)
 
 #define DECLARE_ALIGNED_8(t, v) DECLARE_ALIGNED(8, t, v)
 #define STRIDE_ALIGN 8
 
-void dsputil_init_sh4(DSPContext* c, AVCodecContext *avctx);
-
 #elif defined(ARCH_BFIN)
 
 #define DECLARE_ALIGNED_8(t, v) DECLARE_ALIGNED(8, t, v)
 #define STRIDE_ALIGN 8
-
-void dsputil_init_bfin(DSPContext* c, AVCodecContext *avctx);
 
 #else
 

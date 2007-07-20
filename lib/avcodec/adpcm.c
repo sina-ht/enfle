@@ -183,7 +183,13 @@ static int adpcm_encode_init(AVCodecContext *avctx)
         avctx->block_align = BLKSIZE;
         break;
     case CODEC_ID_ADPCM_SWF:
-        avctx->frame_size = 4*BLKSIZE * avctx->channels;
+        if (avctx->sample_rate != 11025 &&
+            avctx->sample_rate != 22050 &&
+            avctx->sample_rate != 44100) {
+            av_log(avctx, AV_LOG_ERROR, "Sample rate must be 11025, 22050 or 44100\n");
+            return -1;
+        }
+        avctx->frame_size = 512 * (avctx->sample_rate / 11025);
         break;
     default:
         return -1;
@@ -451,16 +457,14 @@ static int adpcm_encode_frame(AVCodecContext *avctx,
         n = avctx->frame_size / 8;
             c->status[0].prev_sample = (signed short)samples[0]; /* XXX */
 /*            c->status[0].step_index = 0; *//* XXX: not sure how to init the state machine */
-            *dst++ = (c->status[0].prev_sample) & 0xFF; /* little endian */
-            *dst++ = (c->status[0].prev_sample >> 8) & 0xFF;
+            bytestream_put_le16(&dst, c->status[0].prev_sample);
             *dst++ = (unsigned char)c->status[0].step_index;
             *dst++ = 0; /* unknown */
             samples++;
             if (avctx->channels == 2) {
                 c->status[1].prev_sample = (signed short)samples[1];
 /*                c->status[1].step_index = 0; */
-                *dst++ = (c->status[1].prev_sample) & 0xFF;
-                *dst++ = (c->status[1].prev_sample >> 8) & 0xFF;
+                bytestream_put_le16(&dst, c->status[1].prev_sample);
                 *dst++ = (unsigned char)c->status[1].step_index;
                 *dst++ = 0;
                 samples++;
@@ -527,18 +531,19 @@ static int adpcm_encode_frame(AVCodecContext *avctx,
 
         //Init the encoder state
         for(i=0; i<avctx->channels; i++){
+            c->status[i].step_index = av_clip(c->status[i].step_index, 0, 63); // clip step so it fits 6 bits
             put_bits(&pb, 16, samples[i] & 0xFFFF);
-            put_bits(&pb, 6, c->status[i].step_index & 0x3F);
+            put_bits(&pb, 6, c->status[i].step_index);
             c->status[i].prev_sample = (signed short)samples[i];
         }
 
-        for (i=0 ; i<4096 ; i++) {
+        for (i=0; i<avctx->frame_size; i++) {
             put_bits(&pb, 4, adpcm_ima_compress_sample(&c->status[0], samples[avctx->channels*i]) & 0xF);
             if (avctx->channels == 2)
                 put_bits(&pb, 4, adpcm_ima_compress_sample(&c->status[1], samples[2*i+1]) & 0xF);
         }
-
-        dst += (3 + 2048) * avctx->channels;
+        flush_put_bits(&pb);
+        dst += put_bits_count(&pb)>>3;
         break;
     }
     case CODEC_ID_ADPCM_MS:
@@ -553,20 +558,17 @@ static int adpcm_encode_frame(AVCodecContext *avctx,
             if (c->status[i].idelta < 16)
                 c->status[i].idelta = 16;
 
-            *dst++ = c->status[i].idelta & 0xFF;
-            *dst++ = c->status[i].idelta >> 8;
+            bytestream_put_le16(&dst, c->status[i].idelta);
         }
         for(i=0; i<avctx->channels; i++){
             c->status[i].sample1= *samples++;
 
-            *dst++ = c->status[i].sample1 & 0xFF;
-            *dst++ = c->status[i].sample1 >> 8;
+            bytestream_put_le16(&dst, c->status[i].sample1);
         }
         for(i=0; i<avctx->channels; i++){
             c->status[i].sample2= *samples++;
 
-            *dst++ = c->status[i].sample2 & 0xFF;
-            *dst++ = c->status[i].sample2 >> 8;
+            bytestream_put_le16(&dst, c->status[i].sample2);
         }
 
         if(avctx->trellis > 0) {
@@ -1277,7 +1279,7 @@ static int adpcm_decode_frame(AVCodecContext *avctx,
 
         init_get_bits(&gb, buf, size);
 
-        //read bits & inital values
+        //read bits & initial values
         nb_bits = get_bits(&gb, 2)+2;
         //av_log(NULL,AV_LOG_INFO,"nb_bits: %d\n", nb_bits);
         table = swf_index_tables[nb_bits-2];

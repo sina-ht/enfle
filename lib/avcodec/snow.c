@@ -1989,7 +1989,7 @@ static int encode_q_branch(SnowContext *s, int level, int x, int y){
     RangeCoder pc, ic;
     uint8_t *pbbak= s->c.bytestream;
     uint8_t *pbbak_start= s->c.bytestream_start;
-    int score, score2, iscore, i_len, p_len, block_s, sum;
+    int score, score2, iscore, i_len, p_len, block_s, sum, base_bits;
     const int w= s->b_width  << s->block_max_depth;
     const int h= s->b_height << s->block_max_depth;
     const int rem_depth= s->block_max_depth - level;
@@ -2112,9 +2112,10 @@ static int encode_q_branch(SnowContext *s, int level, int x, int y){
             my= ref_my;
         }
     }
-    //FIXME if mb_cmp != SSE then intra cant be compared currently and mb_penalty vs. lambda2
+    //FIXME if mb_cmp != SSE then intra cannot be compared currently and mb_penalty vs. lambda2
 
   //  subpel search
+    base_bits= get_rac_count(&s->c) - 8*(s->c.bytestream - s->c.bytestream_start);
     pc= s->c;
     pc.bytestream_start=
     pc.bytestream= p_buffer; //FIXME end/start? and at the other stoo
@@ -2129,10 +2130,7 @@ static int encode_q_branch(SnowContext *s, int level, int x, int y){
     put_symbol(&pc, &p_state[128 + 32*(mx_context + 16*!!best_ref)], mx - pmx, 1);
     put_symbol(&pc, &p_state[128 + 32*(my_context + 16*!!best_ref)], my - pmy, 1);
     p_len= pc.bytestream - pc.bytestream_start;
-    score += (s->lambda2*(p_len*8
-              + (pc.outstanding_count - s->c.outstanding_count)*8
-              + (-av_log2(pc.range)    + av_log2(s->c.range))
-             ))>>FF_LAMBDA_SHIFT;
+    score += (s->lambda2*(get_rac_count(&pc)-base_bits))>>FF_LAMBDA_SHIFT;
 
     block_s= block_w*block_w;
     sum = pix_sum(current_data[0], stride, block_w);
@@ -2158,10 +2156,7 @@ static int encode_q_branch(SnowContext *s, int level, int x, int y){
     put_symbol(&ic, &i_state[64], cb-pcb, 1);
     put_symbol(&ic, &i_state[96], cr-pcr, 1);
     i_len= ic.bytestream - ic.bytestream_start;
-    iscore += (s->lambda2*(i_len*8
-              + (ic.outstanding_count - s->c.outstanding_count)*8
-              + (-av_log2(ic.range)    + av_log2(s->c.range))
-             ))>>FF_LAMBDA_SHIFT;
+    iscore += (s->lambda2*(get_rac_count(&ic)-base_bits))>>FF_LAMBDA_SHIFT;
 
 //    assert(score==256*256*256*64-1);
     assert(iscore < 255*255*256 + s->lambda2*10);
@@ -2355,7 +2350,7 @@ static void decode_blocks(SnowContext *s){
     }
 }
 
-static void mc_block(uint8_t *dst, uint8_t *src, uint8_t *tmp, int stride, int b_w, int b_h, int dx, int dy){
+static void mc_block(uint8_t *dst, const uint8_t *src, uint8_t *tmp, int stride, int b_w, int b_h, int dx, int dy){
     int x, y;
 START_TIMER
     for(y=0; y < b_h+5; y++){
@@ -2425,7 +2420,7 @@ STOP_TIMER("mc_block")
 }
 
 #define mca(dx,dy,b_w)\
-static void mc_block_hpel ## dx ## dy ## b_w(uint8_t *dst, uint8_t *src, int stride, int h){\
+static void mc_block_hpel ## dx ## dy ## b_w(uint8_t *dst, const uint8_t *src, int stride, int h){\
     uint8_t tmp[stride*(b_w+5)];\
     assert(h==b_w);\
     mc_block(dst, src-2-2*stride, tmp, stride, b_w, b_w, dx, dy);\
@@ -2897,7 +2892,7 @@ static int get_dc(SnowContext *s, int mb_x, int mb_y, int plane_index){
     }
     *b= backup;
 
-    return av_clip(((ab<<LOG2_OBMC_MAX) + aa/2)/aa, 0, 255); //FIXME we shouldnt need cliping
+    return av_clip(((ab<<LOG2_OBMC_MAX) + aa/2)/aa, 0, 255); //FIXME we should not need clipping
 }
 
 static inline int get_block_bits(SnowContext *s, int x, int y, int w){
@@ -3281,7 +3276,7 @@ static void iterative_me(SnowContext *s){
                 for(i=0; i<3; i++)
                     color[i]= get_dc(s, mb_x, mb_y, i);
 
-                // get previous score (cant be cached due to OBMC)
+                // get previous score (cannot be cached due to OBMC)
                 if(pass > 0 && (block->type&BLOCK_INTRA)){
                     int color0[3]= {block->color[0], block->color[1], block->color[2]};
                     check_block(s, mb_x, mb_y, color0, 1, *obmc_edged, &best_rd);
@@ -4540,7 +4535,7 @@ AVCodec snow_decoder = {
     NULL
 };
 
-#ifdef CONFIG_ENCODERS
+#ifdef CONFIG_SNOW_ENCODER
 AVCodec snow_encoder = {
     "snow",
     CODEC_TYPE_VIDEO,
@@ -4557,6 +4552,7 @@ AVCodec snow_encoder = {
 #undef malloc
 #undef free
 #undef printf
+#undef random
 
 int main(){
     int width=256;

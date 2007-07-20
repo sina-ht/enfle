@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -579,20 +578,18 @@ static int flic_decode_frame_15_16BPP(AVCodecContext *avctx,
                 }
 
                 /* Now FLX is strange, in that it is "byte" as opposed to "pixel" run length compressed.
-                 * This doesnt give us any good oportunity to perform word endian conversion
-                 * during decompression. So if its requried (ie, this isnt a LE target, we do
+                 * This does not give us any good oportunity to perform word endian conversion
+                 * during decompression. So if it is required (i.e., this is not a LE target, we do
                  * a second pass over the line here, swapping the bytes.
                  */
-                pixel = 0xFF00;
-                if (0xFF00 != AV_RL16(&pixel)) /* Check if its not an LE Target */
-                {
-                  pixel_ptr = y_ptr;
-                  pixel_countdown = s->avctx->width;
-                  while (pixel_countdown > 0) {
+#ifdef WORDS_BIGENDIAN
+                pixel_ptr = y_ptr;
+                pixel_countdown = s->avctx->width;
+                while (pixel_countdown > 0) {
                     *((signed short*)(&pixels[pixel_ptr])) = AV_RL16(&buf[pixel_ptr]);
                     pixel_ptr += 2;
-                  }
                 }
+#endif
                 y_ptr += s->frame.linesize[0];
             }
             break;
@@ -716,11 +713,11 @@ static int flic_decode_frame(AVCodecContext *avctx,
                                      buf, buf_size);
     }
 
-    /* Shouldnt get  here, ever as the pix_fmt is processed */
+    /* Should not get  here, ever as the pix_fmt is processed */
     /* in flic_decode_init and the above if should deal with */
     /* the finite set of possibilites allowable by here. */
-    /* but in case we do, just error out. */
-    av_log(avctx, AV_LOG_ERROR, "Unknown Format of FLC. My Science cant explain how this happened\n");
+    /* But in case we do, just error out. */
+    av_log(avctx, AV_LOG_ERROR, "Unknown FLC format, my science cannot explain how this happened.\n");
     return -1;
 }
 

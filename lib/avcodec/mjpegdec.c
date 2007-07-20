@@ -4,6 +4,10 @@
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2003-2004 Michael Niedermayer
  *
+ * Support for external huffman table, various fixes (AVID workaround),
+ * aspecting, new decode_frame mechanism and apple mjpeg-b support
+ *                                  by Alex Beregszaszi
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -19,10 +23,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * Support for external huffman table, various fixes (AVID workaround),
- * aspecting, new decode_frame mechanism and apple mjpeg-b support
- *                                  by Alex Beregszaszi
  */
 
 /**
@@ -297,6 +297,9 @@ int ff_mjpeg_decode_sof(MJpegDecodeContext *s)
             s->avctx->pix_fmt = s->cs_itu601 ? PIX_FMT_YUV444P : PIX_FMT_YUVJ444P;
         else
             s->avctx->pix_fmt = PIX_FMT_GRAY8;
+        break;
+    case 0x121111:
+        s->avctx->pix_fmt = s->cs_itu601 ? PIX_FMT_YUV440P : PIX_FMT_YUVJ440P;
         break;
     case 0x211111:
     case 0x221212:
@@ -1099,7 +1102,7 @@ int ff_mjpeg_decode_frame(AVCodecContext *avctx,
             if (start_code < 0) {
                 goto the_end;
             } else {
-                av_log(avctx, AV_LOG_DEBUG, "marker=%x avail_size_in_buf=%d\n", start_code, buf_end - buf_ptr);
+                av_log(avctx, AV_LOG_DEBUG, "marker=%x avail_size_in_buf=%td\n", start_code, buf_end - buf_ptr);
 
                 if ((buf_end - buf_ptr) > s->buffer_size)
                 {
@@ -1136,7 +1139,7 @@ int ff_mjpeg_decode_frame(AVCodecContext *avctx,
                     }
                     init_get_bits(&s->gb, s->buffer, (dst - s->buffer)*8);
 
-                    av_log(avctx, AV_LOG_DEBUG, "escaping removed %d bytes\n",
+                    av_log(avctx, AV_LOG_DEBUG, "escaping removed %td bytes\n",
                            (buf_end - buf_ptr) - (dst - s->buffer));
                 }
                 else if(start_code == SOS && s->ls){
@@ -1310,7 +1313,7 @@ not_the_end:
         }
     }
 the_end:
-    av_log(avctx, AV_LOG_DEBUG, "mjpeg decode frame unused %d bytes\n", buf_end - buf_ptr);
+    av_log(avctx, AV_LOG_DEBUG, "mjpeg decode frame unused %td bytes\n", buf_end - buf_ptr);
 //    return buf_end - buf_ptr;
     return buf_ptr - buf;
 }

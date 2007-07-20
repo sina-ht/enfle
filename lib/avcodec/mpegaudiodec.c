@@ -46,9 +46,6 @@
 
 #include "mathops.h"
 
-#define FRAC_ONE    (1 << FRAC_BITS)
-
-#define FIX(a)   ((int)((a) * FRAC_ONE))
 /* WARNING: only correct for posititive numbers */
 #define FIXR(a)   ((int)((a) * FRAC_ONE + 0.5))
 #define FRAC_RND(a) (((a) + (FRAC_ONE/2)) >> FRAC_BITS)
@@ -90,13 +87,6 @@ typedef struct GranuleDef {
 
 #define MODE_EXT_MS_STEREO 2
 #define MODE_EXT_I_STEREO  1
-
-/* layer 3 huffman tables */
-typedef struct HuffTable {
-    int xsize;
-    const uint8_t *bits;
-    const uint16_t *codes;
-} HuffTable;
 
 #include "mpegaudiodata.h"
 #include "mpegaudiodectab.h"
@@ -2380,7 +2370,7 @@ retry:
     if(buf_size < HEADER_SIZE)
         return -1;
 
-    header = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+    header = AV_RB32(buf);
     if(ff_mpa_check_header(header) < 0){
         buf++;
 //        buf_size--;
@@ -2417,6 +2407,7 @@ retry:
         return -1;
     }else if(s->frame_size < buf_size){
         av_log(avctx, AV_LOG_ERROR, "incorrect frame size\n");
+        buf_size= s->frame_size;
     }
 
     out_size = mp_decode_frame(s, out_samples, buf, buf_size);
@@ -2458,7 +2449,7 @@ static int decode_frame_adu(AVCodecContext * avctx,
         len = MPA_MAX_CODED_FRAME_SIZE;
 
     // Get header and restore sync word
-    header = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3] | 0xffe00000;
+    header = AV_RB32(buf) | 0xffe00000;
 
     if (ff_mpa_check_header(header) < 0) { // Bad header, discard frame
         *data_size = 0;
@@ -2603,7 +2594,7 @@ static int decode_frame_mp3on4(AVCodecContext * avctx,
         assert (m != NULL);
 
         // Get header
-        header = (start[0] << 24) | (start[1] << 16) | (start[2] << 8) | start[3] | 0xfff00000;
+        header = AV_RB32(start) | 0xfff00000;
 
         if (ff_mpa_check_header(header) < 0) { // Bad header, discard block
             *data_size = 0;

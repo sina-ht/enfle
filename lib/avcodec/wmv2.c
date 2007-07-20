@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -36,8 +35,6 @@ typedef struct Wmv2Context{
     MpegEncContext s;
     int j_type_bit;
     int j_type;
-    int flag3;
-    int flag63;
     int abt_flag;
     int abt_type;
     int abt_type_table[6];
@@ -74,7 +71,7 @@ static int encode_ext_header(Wmv2Context *w){
     put_bits(&pb, 11, FFMIN(s->bit_rate/1024, 2047));
 
     put_bits(&pb, 1, w->mspel_bit=1);
-    put_bits(&pb, 1, w->flag3=1);
+    put_bits(&pb, 1, s->loop_filter);
     put_bits(&pb, 1, w->abt_flag=1);
     put_bits(&pb, 1, w->j_type_bit=1);
     put_bits(&pb, 1, w->top_left_mv_flag=0);
@@ -144,8 +141,8 @@ int ff_wmv2_encode_picture_header(MpegEncContext * s, int picture_number)
         if(w->per_mb_rl_bit) put_bits(&s->pb, 1, s->per_mb_rl_table);
 
         if(!s->per_mb_rl_table){
-            code012(&s->pb, s->rl_chroma_table_index);
-            code012(&s->pb, s->rl_table_index);
+            ff_code012(&s->pb, s->rl_chroma_table_index);
+            ff_code012(&s->pb, s->rl_table_index);
         }
 
         put_bits(&s->pb, 1, s->dc_table_index);
@@ -156,7 +153,7 @@ int ff_wmv2_encode_picture_header(MpegEncContext * s, int picture_number)
 
         put_bits(&s->pb, 2, SKIP_TYPE_NONE);
 
-        code012(&s->pb, cbp_index=0);
+        ff_code012(&s->pb, cbp_index=0);
         if(s->qscale <= 10){
             int map[3]= {0,2,1};
             w->cbp_table_index= map[cbp_index];
@@ -173,14 +170,14 @@ int ff_wmv2_encode_picture_header(MpegEncContext * s, int picture_number)
         if(w->abt_flag){
             put_bits(&s->pb, 1, w->per_mb_abt^1);
             if(!w->per_mb_abt){
-                code012(&s->pb, w->abt_type);
+                ff_code012(&s->pb, w->abt_type);
             }
         }
 
         if(w->per_mb_rl_bit) put_bits(&s->pb, 1, s->per_mb_rl_table);
 
         if(!s->per_mb_rl_table){
-            code012(&s->pb, s->rl_table_index);
+            ff_code012(&s->pb, s->rl_table_index);
             s->rl_chroma_table_index = s->rl_table_index;
         }
         put_bits(&s->pb, 1, s->dc_table_index);
@@ -194,8 +191,9 @@ int ff_wmv2_encode_picture_header(MpegEncContext * s, int picture_number)
     return 0;
 }
 
-// nearly idential to wmv1 but thats just because we dont use the useless M$ crap features
-// its duplicated here in case someone wants to add support for these carp features
+/* Nearly identical to wmv1 but that is just because we do not use the
+ * useless M$ crap features. It is duplicated here in case someone wants
+ * to add support for these crap features. */
 void ff_wmv2_encode_mb(MpegEncContext * s,
                        DCTELEM block[6][64],
                        int motion_x, int motion_y)
@@ -260,7 +258,7 @@ void ff_wmv2_encode_mb(MpegEncContext * s,
     }
 
     for (i = 0; i < 6; i++) {
-        msmpeg4_encode_block(s, block[i], i);
+        ff_msmpeg4_encode_block(s, block[i], i);
     }
 }
 #endif //CONFIG_WMV2_ENCODER
@@ -328,7 +326,7 @@ static int decode_ext_header(Wmv2Context *w){
     fps                = get_bits(&gb, 5);
     s->bit_rate        = get_bits(&gb, 11)*1024;
     w->mspel_bit       = get_bits1(&gb);
-    w->flag3           = get_bits1(&gb);
+    s->loop_filter     = get_bits1(&gb);
     w->abt_flag        = get_bits1(&gb);
     w->j_type_bit      = get_bits1(&gb);
     w->top_left_mv_flag= get_bits1(&gb);
@@ -340,8 +338,8 @@ static int decode_ext_header(Wmv2Context *w){
     s->slice_height = s->mb_height / code;
 
     if(s->avctx->debug&FF_DEBUG_PICT_INFO){
-        av_log(s->avctx, AV_LOG_DEBUG, "fps:%d, br:%d, qpbit:%d, abt_flag:%d, j_type_bit:%d, tl_mv_flag:%d, mbrl_bit:%d, code:%d, flag3:%d, slices:%d\n",
-        fps, s->bit_rate, w->mspel_bit, w->abt_flag, w->j_type_bit, w->top_left_mv_flag, w->per_mb_rl_bit, code, w->flag3,
+        av_log(s->avctx, AV_LOG_DEBUG, "fps:%d, br:%d, qpbit:%d, abt_flag:%d, j_type_bit:%d, tl_mv_flag:%d, mbrl_bit:%d, code:%d, loop_filter:%d, slices:%d\n",
+        fps, s->bit_rate, w->mspel_bit, w->abt_flag, w->j_type_bit, w->top_left_mv_flag, w->per_mb_rl_bit, code, s->loop_filter,
         code);
     }
     return 0;

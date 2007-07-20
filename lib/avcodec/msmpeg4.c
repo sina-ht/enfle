@@ -3,6 +3,8 @@
  * Copyright (c) 2001 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
+ * msmpeg4v1 & v2 stuff by Michael Niedermayer <michaelni@gmx.at>
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -18,8 +20,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * msmpeg4v1 & v2 stuff by Michael Niedermayer <michaelni@gmx.at>
  */
 
 /**
@@ -61,7 +61,7 @@
 static uint32_t v2_dc_lum_table[512][2];
 static uint32_t v2_dc_chroma_table[512][2];
 
-static inline void msmpeg4_encode_block(MpegEncContext * s, DCTELEM * block, int n);
+void ff_msmpeg4_encode_block(MpegEncContext * s, DCTELEM * block, int n);
 static inline int msmpeg4_decode_block(MpegEncContext * s, DCTELEM * block,
                                        int n, int coded, const uint8_t *scantable);
 static int msmpeg4_decode_dc(MpegEncContext * s, int n, int *dir_ptr);
@@ -88,7 +88,7 @@ int frame_count = 0;
 #include "msmpeg4data.h"
 #include "msmpeg4tab.h"
 
-#ifdef CONFIG_ENCODERS //strangely gcc includes this even if its not references
+#ifdef CONFIG_ENCODERS //strangely gcc includes this even if it is not references
 static uint8_t rl_length[NB_RL_TABLES][MAX_LEVEL+1][MAX_RUN+1][2];
 #endif //CONFIG_ENCODERS
 
@@ -162,7 +162,7 @@ static void init_mv_table(MVTable *tab)
     }
 }
 
-static void code012(PutBitContext *pb, int n)
+void ff_code012(PutBitContext *pb, int n)
 {
     if (n == 0) {
         put_bits(pb, 1, 0);
@@ -247,7 +247,7 @@ static int get_size_of_code(MpegEncContext * s, RLTable *rl, int last, int run, 
     return size;
 }
 
-static void find_best_tables(MpegEncContext * s)
+void ff_find_best_tables(MpegEncContext * s)
 {
     int i;
     int best       =-1, best_size       =9999999;
@@ -317,7 +317,7 @@ static void find_best_tables(MpegEncContext * s)
 /* write MSMPEG4 compatible frame header */
 void msmpeg4_encode_picture_header(MpegEncContext * s, int picture_number)
 {
-    find_best_tables(s);
+    ff_find_best_tables(s);
 
     align_put_bits(&s->pb);
     put_bits(&s->pb, 2, s->pict_type - 1);
@@ -348,8 +348,8 @@ void msmpeg4_encode_picture_header(MpegEncContext * s, int picture_number)
 
         if(s->msmpeg4_version>2){
             if(!s->per_mb_rl_table){
-                code012(&s->pb, s->rl_chroma_table_index);
-                code012(&s->pb, s->rl_table_index);
+                ff_code012(&s->pb, s->rl_chroma_table_index);
+                ff_code012(&s->pb, s->rl_table_index);
             }
 
             put_bits(&s->pb, 1, s->dc_table_index);
@@ -362,7 +362,7 @@ void msmpeg4_encode_picture_header(MpegEncContext * s, int picture_number)
 
         if(s->msmpeg4_version>2){
             if(!s->per_mb_rl_table)
-                code012(&s->pb, s->rl_table_index);
+                ff_code012(&s->pb, s->rl_table_index);
 
             put_bits(&s->pb, 1, s->dc_table_index);
 
@@ -454,7 +454,7 @@ static void msmpeg4_encode_motion(MpegEncContext * s,
              mv->table_mv_bits[code],
              mv->table_mv_code[code]);
     if (code == mv->n) {
-        /* escape : code litterally */
+        /* escape : code literally */
         put_bits(&s->pb, 6, mx);
         put_bits(&s->pb, 6, my);
     }
@@ -534,7 +534,7 @@ void msmpeg4_encode_mb(MpegEncContext * s,
         s->mv_bits += get_bits_diff(s);
 
         for (i = 0; i < 6; i++) {
-            msmpeg4_encode_block(s, block[i], i);
+            ff_msmpeg4_encode_block(s, block[i], i);
         }
         s->p_tex_bits += get_bits_diff(s);
     } else {
@@ -593,7 +593,7 @@ void msmpeg4_encode_mb(MpegEncContext * s,
         s->misc_bits += get_bits_diff(s);
 
         for (i = 0; i < 6; i++) {
-            msmpeg4_encode_block(s, block[i], i);
+            ff_msmpeg4_encode_block(s, block[i], i);
         }
         s->i_tex_bits += get_bits_diff(s);
         s->i_count++;
@@ -783,7 +783,8 @@ static inline int msmpeg4_pred_dc(MpegEncContext * s, int n,
 static void msmpeg4_encode_dc(MpegEncContext * s, int level, int n, int *dir_ptr)
 {
     int sign, code;
-    int pred;
+    int pred, extquant;
+    int extrabits = 0;
 
     if(s->msmpeg4_version==1){
         int32_t *dc_val;
@@ -825,6 +826,15 @@ static void msmpeg4_encode_dc(MpegEncContext * s, int level, int n, int *dir_ptr
         code = level;
         if (code > DC_MAX)
             code = DC_MAX;
+        else if( s->msmpeg4_version>=6 ) {
+            if( s->qscale == 1 ) {
+                extquant = (level + 3) & 0x3;
+                code  = ((level+3)>>2);
+            } else if( s->qscale == 2 ) {
+                extquant = (level + 1) & 0x1;
+                code  = ((level+1)>>1);
+            }
+        }
 
         if (s->dc_table_index == 0) {
             if (n < 4) {
@@ -840,8 +850,13 @@ static void msmpeg4_encode_dc(MpegEncContext * s, int level, int n, int *dir_ptr
             }
         }
 
+        if(s->msmpeg4_version>=6 && s->qscale<=2)
+            extrabits = 3 - s->qscale;
+
         if (code == DC_MAX)
-            put_bits(&s->pb, 8, level);
+            put_bits(&s->pb, 8 + extrabits, level);
+        else if(extrabits > 0)//== VC1 && s->qscale<=2
+            put_bits(&s->pb, extrabits, extquant);
 
         if (level != 0) {
             put_bits(&s->pb, 1, sign);
@@ -852,7 +867,7 @@ static void msmpeg4_encode_dc(MpegEncContext * s, int level, int n, int *dir_ptr
 /* Encoding of a block. Very similar to MPEG4 except for a different
    escape coding (same as H263) and more vlc tables.
  */
-static inline void msmpeg4_encode_block(MpegEncContext * s, DCTELEM * block, int n)
+void ff_msmpeg4_encode_block(MpegEncContext * s, DCTELEM * block, int n)
 {
     int level, run, last, i, j, last_index;
     int last_non_zero, sign, slevel;
@@ -868,7 +883,7 @@ static inline void msmpeg4_encode_block(MpegEncContext * s, DCTELEM * block, int
         } else {
             rl = &rl_table[3 + s->rl_chroma_table_index];
         }
-        run_diff = 0;
+        run_diff = s->msmpeg4_version>=6;
         scantable= s->intra_scantable.permutated;
     } else {
         i = 0;
@@ -881,7 +896,7 @@ static inline void msmpeg4_encode_block(MpegEncContext * s, DCTELEM * block, int
     }
 
     /* recalculate block_last_index for M$ wmv1 */
-    if(s->msmpeg4_version>=4 && s->block_last_index[n]>0){
+    if(s->msmpeg4_version>=4 && s->msmpeg4_version<6 && s->block_last_index[n]>0){
         for(last_index=63; last_index>=0; last_index--){
             if(block[scantable[last_index]]) break;
         }
@@ -937,8 +952,9 @@ else
                             if(s->esc3_level_length==0){
                                 s->esc3_level_length=8;
                                 s->esc3_run_length= 6;
+                                //ESCLVLSZ + ESCRUNSZ
                                 if(s->qscale<8)
-                                    put_bits(&s->pb, 6, 3);
+                                    put_bits(&s->pb, 6 + (s->msmpeg4_version>=6), 3);
                                 else
                                     put_bits(&s->pb, 8, 3);
                             }
@@ -983,7 +999,8 @@ static VLC v1_intra_cbpc_vlc;
 static VLC v1_inter_cbpc_vlc;
 static VLC inter_intra_vlc;
 
-/* this table is practically identical to the one from h263 except that its inverted */
+/* This table is practically identical to the one from h263
+ * except that it is inverted. */
 static void init_h263_dc_for_msmpeg4(void)
 {
         int level, uni_code, uni_len;
@@ -1006,7 +1023,7 @@ static void init_h263_dc_for_msmpeg4(void)
             /* luminance h263 */
             uni_code= DCtab_lum[size][0];
             uni_len = DCtab_lum[size][1];
-            uni_code ^= (1<<uni_len)-1; //M$ doesnt like compatibility
+            uni_code ^= (1<<uni_len)-1; //M$ does not like compatibility
 
             if (size > 0) {
                 uni_code<<=size; uni_code|=l;
@@ -1022,7 +1039,7 @@ static void init_h263_dc_for_msmpeg4(void)
             /* chrominance h263 */
             uni_code= DCtab_chrom[size][0];
             uni_len = DCtab_chrom[size][1];
-            uni_code ^= (1<<uni_len)-1; //M$ doesnt like compatibility
+            uni_code ^= (1<<uni_len)-1; //M$ does not like compatibility
 
             if (size > 0) {
                 uni_code<<=size; uni_code|=l;
@@ -1132,7 +1149,7 @@ int ff_msmpeg4_decode_init(MpegEncContext *s)
         break;
     }
 
-    s->slice_height= s->mb_height; //to avoid 1/0 if the first frame isnt a keyframe
+    s->slice_height= s->mb_height; //to avoid 1/0 if the first frame is not a keyframe
 
     return 0;
 }
@@ -1380,7 +1397,7 @@ static void msmpeg4v2_encode_motion(MpegEncContext * s, int val)
 }
 #endif
 
-/* this is identical to h263 except that its range is multiplied by 2 */
+/* This is identical to h263 except that its range is multiplied by 2. */
 static int msmpeg4v2_decode_motion(MpegEncContext * s, int pred, int f_code)
 {
     int code, val, sign, shift;

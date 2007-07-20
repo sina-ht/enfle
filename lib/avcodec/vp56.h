@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 #ifndef VP56_H
@@ -27,6 +27,7 @@
 #include "vp56data.h"
 #include "dsputil.h"
 #include "mpegvideo.h"
+#include "bytestream.h"
 
 
 typedef struct vp56_context vp56_context_t;
@@ -169,8 +170,7 @@ static inline void vp56_init_range_decoder(vp56_range_coder_t *c,
     c->high = 255;
     c->bits = 8;
     c->buffer = buf;
-    c->code_word = *c->buffer++ << 8;
-    c->code_word |= *c->buffer++;
+    c->code_word = bytestream_get_be16(&c->buffer);
 }
 
 static inline int vp56_rac_get_prob(vp56_range_coder_t *c, uint8_t prob)

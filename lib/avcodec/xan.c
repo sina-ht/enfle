@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -354,8 +353,7 @@ static void xan_wc3_decode_frame(XanContext *s) {
 
         case 11:
         case 21:
-            size = (size_segment[0] << 16) | (size_segment[1] << 8) |
-                size_segment[2];
+            size = AV_RB24(size_segment);
             size_segment += 3;
             break;
         }

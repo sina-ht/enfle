@@ -18,7 +18,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -27,6 +26,12 @@
  *     exp golomb vlc stuff
  * @author Michael Niedermayer <michaelni@gmx.at> and Alex Beregszaszi
  */
+
+#ifndef AVCODEC_GOLOMB_H
+#define AVCODEC_GOLOMB_H
+
+#include <stdint.h>
+#include "bitstream.h"
 
 #define INVALID_VLC           0x80000000
 
@@ -477,3 +482,5 @@ static inline void set_sr_golomb_flac(PutBitContext *pb, int i, int k, int limit
 
     set_ur_golomb_jpegls(pb, v, k, limit, esc_len);
 }
+
+#endif // AVCODEC_GOLOMB_H

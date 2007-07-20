@@ -17,11 +17,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 #ifndef FF_S3TC_H
 #define FF_S3TC_H
+
+#include <stdint.h>
 
 #define FF_S3TC_DXT1    0x31545844
 #define FF_S3TC_DXT3    0x33545844

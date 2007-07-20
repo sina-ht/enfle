@@ -133,7 +133,7 @@ typedef struct Picture{
 #define IS_ACPRED(a)     ((a)&MB_TYPE_ACPRED)
 #define IS_QUANT(a)      ((a)&MB_TYPE_QUANT)
 #define IS_DIR(a, part, list) ((a) & (MB_TYPE_P0L0<<((part)+2*(list))))
-#define USES_LIST(a, list) ((a) & ((MB_TYPE_P0L0|MB_TYPE_P1L0)<<(2*(list)))) ///< does this mb use listX, note doesnt work if subMBs
+#define USES_LIST(a, list) ((a) & ((MB_TYPE_P0L0|MB_TYPE_P1L0)<<(2*(list)))) ///< does this mb use listX, note does not work if subMBs
 #define HAS_CBP(a)        ((a)&MB_TYPE_CBP)
 
     int field_poc[2];           ///< h264 top/bottom POC
@@ -161,9 +161,9 @@ struct MpegEncContext;
 typedef struct MotionEstContext{
     AVCodecContext *avctx;
     int skip;                          ///< set if ME is skipped for the current MB
-    int co_located_mv[4][2];           ///< mv from last p frame for direct mode ME
+    int co_located_mv[4][2];           ///< mv from last P-frame for direct mode ME
     int direct_basis_mv[4][2];
-    uint8_t *scratchpad;               ///< data area for the me algo, so that the ME doesnt need to malloc/free
+    uint8_t *scratchpad;               ///< data area for the ME algo, so that the ME does not need to malloc/free
     uint8_t *best_mb;
     uint8_t *temp_mb[2];
     uint8_t *temp;
@@ -248,8 +248,8 @@ typedef struct MpegEncContext {
 
     /* sequence parameters */
     int context_initialized;
-    int input_picture_number;  ///< used to set pic->display_picture_number, shouldnt be used for/by anything else
-    int coded_picture_number;  ///< used to set pic->coded_picture_number, shouldnt be used for/by anything else
+    int input_picture_number;  ///< used to set pic->display_picture_number, should not be used for/by anything else
+    int coded_picture_number;  ///< used to set pic->coded_picture_number, should not be used for/by anything else
     int picture_number;       //FIXME remove, unclear definition
     int picture_in_gop_number; ///< 0-> first pic in gop, ...
     int b_frames_since_non_b;  ///< used for encoding, relative to not yet reordered input
@@ -689,7 +689,6 @@ typedef struct MpegEncContext {
 } MpegEncContext;
 
 
-int DCT_common_init(MpegEncContext *s);
 void MPV_decode_defaults(MpegEncContext *s);
 int MPV_common_init(MpegEncContext *s);
 void MPV_common_end(MpegEncContext *s);
@@ -718,7 +717,6 @@ void MPV_common_init_armv4l(MpegEncContext *s);
 void MPV_common_init_ppc(MpegEncContext *s);
 #endif
 extern void (*draw_edges)(uint8_t *buf, int wrap, int width, int height, int w);
-void ff_copy_bits(PutBitContext *pb, uint8_t *src, int length);
 void ff_clean_intra_table_entries(MpegEncContext *s);
 void ff_init_scantable(uint8_t *, ScanTable *st, const uint8_t *src_scantable);
 void ff_draw_horiz_band(MpegEncContext *s, int y, int h);
@@ -762,6 +760,14 @@ static inline int get_bits_diff(MpegEncContext *s){
     s->last_bits = bits;
 
     return bits - last;
+}
+
+static inline int ff_h263_round_chroma(int x){
+    static const uint8_t h263_chroma_roundtab[16] = {
+    //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+        0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1,
+    };
+    return h263_chroma_roundtab[x & 0xf] + (x >> 3);
 }
 
 /* motion_est.c */
@@ -836,7 +842,7 @@ int16_t *h263_pred_motion(MpegEncContext * s, int block, int dir,
                         int *px, int *py);
 void mpeg4_pred_ac(MpegEncContext * s, DCTELEM *block, int n,
                    int dir);
-void ff_set_mpeg4_time(MpegEncContext * s, int picture_number);
+void ff_set_mpeg4_time(MpegEncContext * s);
 void mpeg4_encode_picture_header(MpegEncContext *s, int picture_number);
 #ifdef CONFIG_ENCODERS
 void h263_encode_init(MpegEncContext *s);
@@ -873,7 +879,6 @@ int ff_h263_resync(MpegEncContext *s);
 int ff_h263_get_gob_height(MpegEncContext *s);
 void ff_mpeg4_init_direct_mv(MpegEncContext *s);
 int ff_mpeg4_set_direct_mv(MpegEncContext *s, int mx, int my);
-int ff_h263_round_chroma(int x);
 void ff_h263_encode_motion(MpegEncContext * s, int val, int f_code);
 
 

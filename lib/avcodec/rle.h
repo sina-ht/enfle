@@ -16,11 +16,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 #ifndef RLE_H
 #define RLE_H
+
+#include <stdint.h>
 
 /**
  * RLE compress the row, with maximum size of out_size. Value before repeated bytes is (count ^ xor_rep) + add_rep.

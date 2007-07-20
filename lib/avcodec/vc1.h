@@ -20,6 +20,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#ifndef AVCODEC_VC1_H
+#define AVCODEC_VC1_H
+
 #include "avcodec.h"
 #include "mpegvideo.h"
 
@@ -148,7 +151,7 @@ enum COTypes {
 
 
 /** The VC1 Context
- * @fixme Change size wherever another size is more efficient
+ * @todo Change size wherever another size is more efficient
  * Many members are only used for Advanced Profile
  */
 typedef struct VC1Context{
@@ -300,3 +303,5 @@ typedef struct VC1Context{
     int p_frame_skipped;
     int bi_type;
 } VC1Context;
+
+#endif // AVCODEC_VC1_H

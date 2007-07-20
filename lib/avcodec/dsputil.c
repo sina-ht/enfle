@@ -3,6 +3,8 @@
  * Copyright (c) 2000, 2001 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
+ * gmc & q-pel & 32/64 bit based MC by Michael Niedermayer <michaelni@gmx.at>
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -18,8 +20,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * gmc & q-pel & 32/64 bit based MC by Michael Niedermayer <michaelni@gmx.at>
  */
 
 /**
@@ -32,6 +32,7 @@
 #include "mpegvideo.h"
 #include "simple_idct.h"
 #include "faandct.h"
+#include "h263.h"
 #include "snow.h"
 
 /* snow.c */
@@ -2020,7 +2021,7 @@ QPEL_MC(0, avg_       , _       , op_avg)
 
 #if 1
 #define H264_LOWPASS(OPNAME, OP, OP2) \
-static void OPNAME ## h264_qpel2_h_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride){\
+static av_unused void OPNAME ## h264_qpel2_h_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride){\
     const int h=2;\
     uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;\
     int i;\
@@ -2033,7 +2034,7 @@ static void OPNAME ## h264_qpel2_h_lowpass(uint8_t *dst, uint8_t *src, int dstSt
     }\
 }\
 \
-static void OPNAME ## h264_qpel2_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride){\
+static av_unused void OPNAME ## h264_qpel2_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride){\
     const int w=2;\
     uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;\
     int i;\
@@ -2053,7 +2054,7 @@ static void OPNAME ## h264_qpel2_v_lowpass(uint8_t *dst, uint8_t *src, int dstSt
     }\
 }\
 \
-static void OPNAME ## h264_qpel2_hv_lowpass(uint8_t *dst, int16_t *tmp, uint8_t *src, int dstStride, int tmpStride, int srcStride){\
+static av_unused void OPNAME ## h264_qpel2_hv_lowpass(uint8_t *dst, int16_t *tmp, uint8_t *src, int dstStride, int tmpStride, int srcStride){\
     const int h=2;\
     const int w=2;\
     uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;\
@@ -3139,7 +3140,7 @@ void ff_block_permute(DCTELEM *block, uint8_t *permutation, const uint8_t *scant
     DCTELEM temp[64];
 
     if(last<=0) return;
-    //if(permutation[1]==1) return; //FIXME its ok but not clean and might fail for some perms
+    //if(permutation[1]==1) return; //FIXME it is ok but not clean and might fail for some permutations
 
     for(i=0; i<=last; i++){
         const int j= scantable[i];
@@ -3433,11 +3434,11 @@ static int dct_sad8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2
 
 static int dct264_sad8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2, int stride, int h){
     MpegEncContext * const s= (MpegEncContext *)c;
-    int16_t dct[8][8];
+    DCTELEM dct[8][8];
     int i;
     int sum=0;
 
-    s->dsp.diff_pixels(dct, src1, src2, stride);
+    s->dsp.diff_pixels(dct[0], src1, src2, stride);
 
 #define SRC(x) dct[i][x]
 #define DST(x,v) dct[i][x]= v
@@ -3697,7 +3698,8 @@ static int vsse16_c(/*MpegEncContext*/ void *c, uint8_t *s1, uint8_t *s2, int st
     return score;
 }
 
-static int ssd_int8_vs_int16_c(int8_t *pix1, int16_t *pix2, int size){
+static int ssd_int8_vs_int16_c(const int8_t *pix1, const int16_t *pix2,
+                               int size){
     int score=0;
     int i;
     for(i=0; i<size; i++)
@@ -3797,7 +3799,7 @@ static void ff_jref_idct1_add(uint8_t *dest, int line_size, DCTELEM *block)
     dest[0] = cm[dest[0] + ((block[0] + 4)>>3)];
 }
 
-static void just_return() { return; }
+static void just_return(void *mem av_unused, int stride av_unused, int h av_unused) { return; }
 
 /* init static data */
 void dsputil_static_init(void)
@@ -3821,7 +3823,7 @@ int ff_check_alignment(void){
     static int did_fail=0;
     DECLARE_ALIGNED_16(int, aligned);
 
-    if((int)&aligned & 15){
+    if((long)&aligned & 15){
         if(!did_fail){
 #if defined(HAVE_MMX) || defined(HAVE_ALTIVEC)
             av_log(NULL, AV_LOG_ERROR,
@@ -4106,8 +4108,10 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->h264_h_loop_filter_chroma_intra= h264_h_loop_filter_chroma_intra_c;
     c->h264_loop_filter_strength= NULL;
 
-    c->h263_h_loop_filter= h263_h_loop_filter_c;
-    c->h263_v_loop_filter= h263_v_loop_filter_c;
+    if (ENABLE_ANY_H263) {
+        c->h263_h_loop_filter= h263_h_loop_filter_c;
+        c->h263_v_loop_filter= h263_v_loop_filter_c;
+    }
 
     c->h261_loop_filter= h261_loop_filter_c;
 
@@ -4138,33 +4142,15 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     memset(c->put_2tap_qpel_pixels_tab, 0, sizeof(c->put_2tap_qpel_pixels_tab));
     memset(c->avg_2tap_qpel_pixels_tab, 0, sizeof(c->avg_2tap_qpel_pixels_tab));
 
-#ifdef HAVE_MMX
-    dsputil_init_mmx(c, avctx);
-#endif
-#ifdef ARCH_ARMV4L
-    dsputil_init_armv4l(c, avctx);
-#endif
-#ifdef HAVE_MLIB
-    dsputil_init_mlib(c, avctx);
-#endif
-#ifdef ARCH_SPARC
-   dsputil_init_vis(c,avctx);
-#endif
-#ifdef ARCH_ALPHA
-    dsputil_init_alpha(c, avctx);
-#endif
-#ifdef ARCH_POWERPC
-    dsputil_init_ppc(c, avctx);
-#endif
-#ifdef HAVE_MMI
-    dsputil_init_mmi(c, avctx);
-#endif
-#ifdef ARCH_SH4
-    dsputil_init_sh4(c,avctx);
-#endif
-#ifdef ARCH_BFIN
-    dsputil_init_bfin(c,avctx);
-#endif
+    if (ENABLE_MMX)      dsputil_init_mmx   (c, avctx);
+    if (ENABLE_ARMV4L)   dsputil_init_armv4l(c, avctx);
+    if (ENABLE_MLIB)     dsputil_init_mlib  (c, avctx);
+    if (ENABLE_SPARC)    dsputil_init_vis   (c, avctx);
+    if (ENABLE_ALPHA)    dsputil_init_alpha (c, avctx);
+    if (ENABLE_POWERPC)  dsputil_init_ppc   (c, avctx);
+    if (ENABLE_MMI)      dsputil_init_mmi   (c, avctx);
+    if (ENABLE_SH4)      dsputil_init_sh4   (c, avctx);
+    if (ENABLE_BFIN)     dsputil_init_bfin  (c, avctx);
 
     for(i=0; i<64; i++){
         if(!c->put_2tap_qpel_pixels_tab[0][i])

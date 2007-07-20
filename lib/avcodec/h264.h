@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -34,7 +33,7 @@
 #include "mpegvideo.h"
 
 #define interlaced_dct interlaced_dct_is_a_bad_name
-#define mb_intra mb_intra_isnt_initalized_see_mb_type
+#define mb_intra mb_intra_is_not_initialized_see_mb_type
 
 #define LUMA_DC_BLOCK_INDEX   25
 #define CHROMA_DC_BLOCK_INDEX 26
@@ -122,13 +121,15 @@ typedef struct PPS{
     int weighted_bipred_idc;
     int init_qp;                ///< pic_init_qp_minus26 + 26
     int init_qs;                ///< pic_init_qs_minus26 + 26
-    int chroma_qp_index_offset;
+    int chroma_qp_index_offset[2];
     int deblocking_filter_parameters_present; ///< deblocking_filter_parameters_present_flag
     int constrained_intra_pred; ///< constrained_intra_pred_flag
     int redundant_pic_cnt_present; ///< redundant_pic_cnt_present_flag
     int transform_8x8_mode;     ///< transform_8x8_mode_flag
     uint8_t scaling_matrix4[6][16];
     uint8_t scaling_matrix8[2][64];
+    uint8_t chroma_qp_table[2][256];  ///< pre-scaled (with chroma_qp_index_offset) version of qp_table
+    int chroma_qp_diff;
 }PPS;
 
 /**
@@ -160,8 +161,8 @@ typedef struct H264Context{
     MpegEncContext s;
     int nal_ref_idc;
     int nal_unit_type;
-    uint8_t *rbsp_buffer;
-    unsigned int rbsp_buffer_size;
+    uint8_t *rbsp_buffer[2];
+    unsigned int rbsp_buffer_size[2];
 
     /**
       * Used to parse AVC variant of h264
@@ -170,7 +171,7 @@ typedef struct H264Context{
     int got_avcC; ///< flag used to parse avcC data only once
     int nal_length_size; ///< Number of bytes used for nal length (1, 2 or 4)
 
-    int chroma_qp; //QPc
+    int chroma_qp[2]; //QPc
 
     int prev_mb_skipped;
     int next_mb_skipped;
@@ -243,10 +244,10 @@ typedef struct H264Context{
     int unknown_svq3_flag;
     int next_slice_index;
 
-    SPS sps_buffer[MAX_SPS_COUNT];
+    SPS *sps_buffers[MAX_SPS_COUNT];
     SPS sps; ///< current sps
 
-    PPS pps_buffer[MAX_PPS_COUNT];
+    PPS *pps_buffers[MAX_PPS_COUNT];
     /**
      * current pps
      */

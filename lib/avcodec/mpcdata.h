@@ -17,8 +17,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
+
+#ifndef AVCODEC_MPCDATA_H
+#define AVCODEC_MPCDATA_H
+
+#include <stdint.h>
 
 static const int8_t mpc_idx30[] = { -1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1};
 static const int8_t mpc_idx31[] = { -1,-1,-1, 0, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 0, 1, 1, 1};
@@ -204,3 +208,5 @@ static const float mpc7_SCF[128] = {
     0.000000092001613439, 0.000000076635565449, 0.000000063835940978, 0.000000053174105119,
     0.000000044293003043, 0.000000036895215771, 0.000000030733001921, 0.000000025599996789
 };
+
+#endif // AVCODEC_MPCDATA_H

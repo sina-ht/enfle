@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -380,14 +379,13 @@ static int vmdvideo_decode_frame(AVCodecContext *avctx,
     /* make the palette available on the way out */
     memcpy(s->frame.data[1], s->palette, PALETTE_COUNT * 4);
 
-    if (s->prev_frame.data[0])
-        avctx->release_buffer(avctx, &s->prev_frame);
-
     /* shuffle frames */
-    s->prev_frame = s->frame;
+    FFSWAP(AVFrame, s->frame, s->prev_frame);
+    if (s->frame.data[0])
+        avctx->release_buffer(avctx, &s->frame);
 
     *data_size = sizeof(AVFrame);
-    *(AVFrame*)data = s->frame;
+    *(AVFrame*)data = s->prev_frame;
 
     /* report that the buffer was completely consumed */
     return buf_size;

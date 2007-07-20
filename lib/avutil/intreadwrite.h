@@ -19,6 +19,9 @@
 #ifndef INTREADWRITE_H
 #define INTREADWRITE_H
 
+#include <stdint.h>
+#include "bswap.h"
+
 #ifdef __GNUC__
 
 struct unaligned_64 { uint64_t l; } __attribute__((packed));

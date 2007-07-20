@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
 
 /**
@@ -26,6 +25,13 @@
  *     H264 / AVC / MPEG4 part10 codec data table
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
+
+#ifndef AVCODEC_H264DATA_H
+#define AVCODEC_H264DATA_H
+
+#include <stdint.h>
+#include "mpegvideo.h"
+#include "rational.h"
 
 #define VERT_PRED             0
 #define HOR_PRED              1
@@ -1321,3 +1327,5 @@ static const int cabac_context_init_PB[3][460][2] =
         {  31,  12 }, {  37,  23 }, {  31,  38 }, {  20,  64 },
     }
 };
+
+#endif // AVCODEC_H264DATA_H

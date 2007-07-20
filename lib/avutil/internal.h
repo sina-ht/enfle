@@ -26,19 +26,19 @@
 #ifndef INTERNAL_H
 #define INTERNAL_H
 
+#if !defined(DEBUG) && !defined(NDEBUG)
+#    define NDEBUG
+#endif
+
+#include <stdint.h>
+#include <stddef.h>
+#include <assert.h>
+
 #ifndef attribute_used
 #if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
 #    define attribute_used __attribute__((used))
 #else
 #    define attribute_used
-#endif
-#endif
-
-#ifndef attribute_unused
-#if defined(__GNUC__)
-#    define attribute_unused __attribute__((unused))
-#else
-#    define attribute_unused
 #endif
 #endif
 
@@ -93,29 +93,13 @@
 #include "intreadwrite.h"
 #include "bswap.h"
 
-#include <stddef.h>
 #ifndef offsetof
 #    define offsetof(T,F) ((unsigned int)((char *)&((T *)0)->F))
 #endif
 
-#ifdef __MINGW32__
-#    ifdef _DEBUG
-#        define DEBUG
-#    endif
-
-#    define snprintf _snprintf
-#    define vsnprintf _vsnprintf
-
-/* __MINGW32__ end */
-#elif defined (CONFIG_OS2)
-/* OS/2 EMX */
-
-#    include <float.h>
-
-#endif /* !__MINGW32__ && CONFIG_OS2 */
-
 #ifdef USE_FASTMEMCPY
 #    include "libvo/fastmemcpy.h"
+#    define memcpy(a,b,c) fast_memcpy(a,b,c)
 #endif
 
 // Use rip-relative addressing if compiling PIC code on x86-64.
@@ -137,11 +121,6 @@
 #endif
 
 /* debug stuff */
-
-#if !defined(DEBUG) && !defined(NDEBUG)
-#    define NDEBUG
-#endif
-#include <assert.h>
 
 /* dprintf macros */
 #ifdef DEBUG
@@ -238,17 +217,30 @@ if((y)<(x)){\
 #endif
 
 /* avoid usage of various functions */
+#undef  malloc
 #define malloc please_use_av_malloc
+#undef  free
 #define free please_use_av_free
+#undef  realloc
 #define realloc please_use_av_realloc
+#undef  time
 #define time time_is_forbidden_due_to_security_issues
-#define rand rand_is_forbidden_due_to_state_trashing
-#define srand srand_is_forbidden_due_to_state_trashing
+#undef  rand
+#define rand rand_is_forbidden_due_to_state_trashing_use_av_random
+#undef  srand
+#define srand srand_is_forbidden_due_to_state_trashing_use_av_init_random
+#undef  random
+#define random random_is_forbidden_due_to_state_trashing_use_av_random
+#undef  sprintf
 #define sprintf sprintf_is_forbidden_due_to_security_issues_use_snprintf
-#define strcat strcat_is_forbidden_due_to_security_issues_use_pstrcat
+#undef  strcat
+#define strcat strcat_is_forbidden_due_to_security_issues_use_av_strlcat
+#undef  exit
 #define exit exit_is_forbidden
-#if !(defined(LIBAVFORMAT_BUILD) || defined(_FRAMEHOOK_H))
+#if !(defined(LIBAVFORMAT_BUILD) || defined(FRAMEHOOK_H))
+#undef  printf
 #define printf please_use_av_log
+#undef  fprintf
 #define fprintf please_use_av_log
 #endif
 
@@ -267,21 +259,7 @@ if((y)<(x)){\
 /* btw, rintf() is existing on fbsd too -- alex */
 static av_always_inline long int lrintf(float x)
 {
-#ifdef __MINGW32__
-#  ifdef ARCH_X86_32
-    int32_t i;
-    asm volatile(
-        "fistpl %0\n\t"
-        : "=m" (i) : "t" (x) : "st"
-    );
-    return i;
-#  else
-    /* XXX: incorrect, but make it compile */
-    return (int)(x + (x < 0 ? -0.5 : 0.5));
-#  endif /* ARCH_X86_32 */
-#else
     return (int)(rint(x));
-#endif /* __MINGW32__ */
 }
 #endif /* HAVE_LRINTF */
 

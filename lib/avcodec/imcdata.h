@@ -19,8 +19,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
  */
+
+#ifndef AVCODEC_IMCDATA_H
+#define AVCODEC_IMCDATA_H
+
+#include <stdint.h>
 
 static const uint16_t band_tab[33] = {
       0,   3,   6,   9,  12,  16,  20,  24,  29,  34,  40,
@@ -162,3 +166,4 @@ static const uint16_t imc_huffman_bits[4][4][18] = {
     }
 };
 
+#endif // AVCODEC_IMCDATA_H
