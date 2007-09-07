@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan  6 15:07:28 2007.
- * $Id: avcodec.c,v 1.22 2007/05/19 01:59:01 sian Exp $
+ * Last Modified: Sat Sep  8 03:29:29 2007.
+ * $Id: avcodec.c,v 1.23 2007/09/07 18:30:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@
 
 DECLARE_VIDEODECODER_PLUGIN_METHODS;
 
-#define VIDEODECODER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Video Decoder plugin version 0.2.1"
+#define VIDEODECODER_AVCODEC_PLUGIN_DESCRIPTION "avcodec Video Decoder plugin version 0.2.2"
 
 static VideoDecoderPlugin plugin = {
   .type = ENFLE_PLUGIN_VIDEODECODER,
@@ -349,8 +349,10 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
     warning_fnc("avcodec %s not found\n", vdm->vcodec_name);
     return 0;
   }
+#if 0
   if (vdm->vcodec->capabilities & CODEC_CAP_TRUNCATED)
     vdm->vcodec_ctx->flags |= CODEC_FLAG_TRUNCATED;
+#endif
 #if defined(USE_DR1)
   if (vdm->vcodec->capabilities & CODEC_CAP_DR1)
     vdm->vcodec_ctx->flags |= CODEC_FLAG_EMU_EDGE;
@@ -359,6 +361,19 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
     warning_fnc("avcodec_open() failed.\n");
     return 0;
   }
+
+  debug_message_fnc("Codec Tag[%c%c%c%c](%08X) Stream Tag[%c%c%c%c](%08X)\n",
+		     vdm->vcodec_ctx->codec_tag        & 0xff,
+		    (vdm->vcodec_ctx->codec_tag >>  8) & 0xff,
+		    (vdm->vcodec_ctx->codec_tag >> 16) & 0xff,
+		    (vdm->vcodec_ctx->codec_tag >> 24) & 0xff,
+		     vdm->vcodec_ctx->codec_tag,
+		     vdm->vcodec_ctx->stream_codec_tag        & 0xff,
+		    (vdm->vcodec_ctx->stream_codec_tag >>  8) & 0xff,
+		    (vdm->vcodec_ctx->stream_codec_tag >> 16) & 0xff,
+		    (vdm->vcodec_ctx->stream_codec_tag >> 24) & 0xff,
+		     vdm->vcodec_ctx->stream_codec_tag);
+
   if (vdm->vcodec_ctx->pix_fmt == PIX_FMT_YUV420P &&
       vdm->vcodec->capabilities & CODEC_CAP_DR1) {
 #if defined(USE_DR1)
@@ -491,7 +506,10 @@ init(unsigned int fourcc, void *priv)
   vdm->vcodec_name = videodecoder_codec_name(fourcc);
   if ((vdm->vcodec_ctx = avcodec_alloc_context()) == NULL)
     goto error_vdm;
-  //vdm->vcodec_ctx->error_resilience = 3;
+  //vdm->vcodec_ctx->stream_codec_tag = fourcc;
+  vdm->vcodec_ctx->workaround_bugs = FF_BUG_AUTODETECT | FF_BUG_NO_PADDING;
+  vdm->vcodec_ctx->error_resilience = 2;
+  vdm->vcodec_ctx->error_concealment = 3;
   vdm->vcodec_ctx->pix_fmt = -1;
   vdm->vcodec_ctx->opaque = vdec;
   if ((vdm->vcodec_picture = avcodec_alloc_frame()) == NULL)
