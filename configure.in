@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2007 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Jun  3 20:48:30 2007.
-dnl $Id: configure.in,v 1.203 2007/06/03 11:54:54 sian Exp $
+dnl Last Modified: Sat Sep  8 03:26:25 2007.
+dnl $Id: configure.in,v 1.204 2007/09/07 18:31:04 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.60)
-AC_INIT([enfle],[20070529],[sian@big.or.jp])
+AC_INIT([enfle],[20070908],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -150,7 +150,10 @@ if test "$available_pthread" = "yes"; then
   dnl for avcodec
   AC_DEFINE(HAVE_PTHREAD,,[ Define if you have libpthread ])
   AC_DEFINE(HAVE_THREADS,,[ Define if you have libpthread ])
+  AC_DEFINE(ENABLE_THREADS,1,[ Define if you have libpthread ])
   CFLAGS="$CFLAGS -pthread -D_REENTRANT"
+else
+  AC_DEFINE(ENABLE_THREADS,0,[ Define if you have libpthread ])
 fi
 AM_CONDITIONAL(HAVE_PTHREAD, test "$available_pthread" = "yes")
 AC_SUBST(LIBADD_PTHREAD)
@@ -396,7 +399,10 @@ if test "${enable_mmx-set}" = set; then
   esac
 fi
 
-test "$enable_mmx" = "yes" && AC_DEFINE(USE_MMX, 1, [ Define if you have and use MMX. ])
+if test "$enable_mmx" = "yes"; then
+  AC_DEFINE(USE_MMX, 1, [ Define if you have and use MMX. ])
+  AC_DEFINE(ENABLE_MMX, 1, [ Define if you have and use MMX. ])
+fi
 AM_CONDITIONAL(USE_MMX, test "$enable_mmx" = "yes")
 
 AC_ARG_ENABLE(mmx-bgra,
@@ -422,7 +428,16 @@ fi
 test "$enable_sse" = "yes" && AC_DEFINE(USE_SSE, 1, [ Define if you have and use SSE. ])
 AM_CONDITIONAL(USE_SSE, test "$enable_sse" = "yes")
 
-dnl for libmpeg2
+dnl for libmpeg2 and libavcodec
+enable_x86=0
+enable_ppc=0
+enable_sparc=0
+enable_alpha=0
+enable_armv4l=0
+enable_mlib=0
+enable_mmi=0
+enable_sh4=0
+enable_bfin=0
 case "$host_cpu" in
   i*86 )
     AC_DEFINE(ARCH_X86, 1, [ Define if you have X86 architecture. ])
@@ -432,18 +447,30 @@ case "$host_cpu" in
   powerpc* )
     AC_DEFINE(ARCH_PPC, 1, [ Define if you have PowerPC architecture. ])
     arch_ppc=yes
+    enable_ppc=1
     ;;
   sparc* )
     AC_DEFINE(ARCH_SPARC, 1, [ Define if you have SPARC architecture. ])
     arch_sparc=yes
+    enable_sparc=1
     ;;
   alpha* )
     AC_DEFINE(ARCH_ALPHA, 1, [ Define if you have ALPHA architecture. ])
     arch_alpha=yes
+    enable_alpha=1
     ;;
   *)
     ;;
 esac
+AC_DEFINE_UNQUOTED(ENABLE_ARMV4L, $enable_armv4l, [ Define if you want to enable ARMV4L. ])
+AC_DEFINE_UNQUOTED(ENABLE_MLIB, $enable_mlib, [ Define if you want to enable MLIB. ])
+AC_DEFINE_UNQUOTED(ENABLE_SPARC, $enable_sparc, [ Define if you want to enable SPARC. ])
+AC_DEFINE_UNQUOTED(ENABLE_ALPHA, $enable_alpha, [ Define if you want to enable ALPHA. ])
+AC_DEFINE_UNQUOTED(ENABLE_POWERPC, $enable_ppc, [ Define if you want to enable POWERPC. ])
+AC_DEFINE_UNQUOTED(ENABLE_MMI, $enable_mmi, [ Define if you want to enable MMI. ])
+AC_DEFINE_UNQUOTED(ENABLE_SH4, $enable_sh4, [ Define if you want to enable SH4. ])
+AC_DEFINE_UNQUOTED(ENABLE_BFIN, $enable_bfin, [ Define if you want to enable BFIN. ])
+
 AM_CONDITIONAL(ARCH_X86, test "$arch_x86" = "yes")
 AM_CONDITIONAL(ARCH_PPC, test "$arch_ppc" = "yes")
 AM_CONDITIONAL(ARCH_SPARC, test "$arch_sparc" = "yes")
@@ -454,7 +481,7 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_STAT
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([errno.h fcntl.h float.h inttypes.h limits.h locale.h malloc.h memory.h stddef.h stdint.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([byteswap.h errno.h fcntl.h float.h inttypes.h limits.h locale.h malloc.h memory.h stddef.h stdint.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h sys/time.h unistd.h])
 
 dnl Checks for X libraries.
 AC_PATH_XTRA
@@ -574,7 +601,7 @@ AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STRTOD
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
-AC_CHECK_FUNCS([floor getopt_long getpagesize gettimeofday mblen memalign memmove memset munmap pow rint setlocale select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr strstr strtol])
+AC_CHECK_FUNCS([floor getopt_long getpagesize gettimeofday mblen memalign memmove memset mkstemp munmap pow rint setlocale select sqrt strcasecmp strchr strdup strerror strncasecmp strrchr strstr strtol])
 
 dnl debug option
 AC_ARG_ENABLE(debug,
@@ -654,6 +681,7 @@ test "$available_lrintf" = "yes" && AC_DEFINE(HAVE_LRINTF, 1, [Define if you hav
 AC_DEFINE(CONFIG_DECODERS, 1, [Define if you need this for avcodec.])
 AC_DEFINE(CONFIG_RISKY, 1, [Define if you need this for avcodec.])
 
+AC_DEFINE(ENABLE_SMALL, 0, [Define if you need this for avcodec.])
 dnl disabled decoders
 AC_DEFINE(ENABLE_AAC_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_MPEG4AAC_DECODER, 0, [Define if you need this for avcodec.])
@@ -666,6 +694,7 @@ AC_DEFINE(ENABLE_LIBGSM_MS_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBA52_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBAMR_NB_DECODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBAMR_WB_DECODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBFAAD_DECODER, 0, [Define if you need this for avcodec.])
 dnl enabled decoders
 AC_DEFINE(ENABLE_OGGVORBIS_DECODER, 1, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_GIF_DECODER, 1, [Define if you need this for avcodec.])
@@ -1110,6 +1139,12 @@ AC_DEFINE(ENABLE_LIBAMR_NB_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBAMR_WB_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_LIBVORBIS_ENCODER, 0, [Define if you need this for avcodec.])
 AC_DEFINE(ENABLE_ROQ_DPCM_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBX264_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBXVID_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBFAAC_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_LIBMP3LAME_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_QTRLE_ENCODER, 0, [Define if you need this for avcodec.])
+AC_DEFINE(ENABLE_ROQ_ENCODER, 0, [Define if you need this for avcodec.])
 
 dnl all parsers are disabled
 AC_DEFINE(ENABLE_AAC_PARSER, 0, [Define if you need this for avcodec.])
