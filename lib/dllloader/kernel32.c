@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Apr 29 15:57:54 2004.
- * $Id: kernel32.c,v 1.26 2004/04/29 19:12:44 sian Exp $
+ * Last Modified: Mon Oct 15 04:28:06 2007.
+ * $Id: kernel32.c,v 1.27 2007/10/20 13:38:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -127,6 +127,7 @@ DECLARE_W32API(DWORD, GetProcessHeaps, (DWORD, HANDLE *));
 /* string related */
 DECLARE_W32API(INT, lstrlenA, (LPCSTR));
 DECLARE_W32API(LPSTR, lstrcpyA, (LPSTR, LPCSTR));
+DECLARE_W32API(LPSTR, lstrcpynA, (LPSTR, LPCSTR, INT));
 DECLARE_W32API(LPSTR, lstrcatA, (LPSTR, LPCSTR));
 DECLARE_W32API(INT, lstrcmpA, (LPCSTR, LPCSTR));
 DECLARE_W32API(INT, lstrcmpiA, (LPCSTR, LPCSTR));
@@ -271,6 +272,7 @@ static Symbol_info symbol_infos[] = {
   { "GetProcessHeaps", GetProcessHeaps },
   { "lstrlenA", lstrlenA },
   { "lstrcpyA", lstrcpyA },
+  { "lstrcpynA", lstrcpynA },
   { "lstrcatA", lstrcatA },
   { "lstrcmpA", lstrcmpA },
   { "lstrcmpiA", lstrcmpiA },
@@ -470,13 +472,14 @@ DEFINE_W32API(UINT, _lclose,
 	       (HFILE handle))
 {
   debug_message_fn("(%p)\n", handle);
-  fclose((FILE *)handle);
+  fclose((FILE *)((Handle *)handle)->data);
   return 0;
 }
 
 DEFINE_W32API(DWORD, SetFilePointer,
 	      (HANDLE handle, LONG offset, LONG *high, DWORD whence))
 {
+  FILE *fp;
   debug_message_fn("(%p, %ld, %d)\n", handle, offset, whence);
 
   if (high && *high) {
@@ -484,8 +487,9 @@ DEFINE_W32API(DWORD, SetFilePointer,
     return 0;
   }
 
-  if (fseek((FILE *)handle, offset, whence) == 0)
-    return ftell((FILE *)handle);
+  fp = (FILE *)((Handle *)handle)->data;
+  if (fseek(fp, offset, whence) == 0)
+    return ftell(fp);
 
   return HFILE_ERROR;
 }
@@ -500,14 +504,16 @@ DEFINE_W32API(DWORD, GetFileSize,
 	      (HANDLE handle, LPDWORD filesizehigh))
 {
   DWORD size, cur;
+  FILE *fp;
 
   debug_message_fn("(%p): ", handle);
   if (filesizehigh)
     *filesizehigh = 0;
-  cur = ftell((FILE *)handle);
-  fseek((FILE *)handle, 0, SEEK_END);
-  size = ftell((FILE *)handle);
-  fseek((FILE *)handle, cur, SEEK_SET);
+  fp = (FILE *)((Handle *)handle)->data;
+  cur = ftell(fp);
+  fseek(fp, 0, SEEK_END);
+  size = ftell(fp);
+  fseek(fp, cur, SEEK_SET);
 
   debug_message("%d bytes\n", size);
   return size;
@@ -545,7 +551,7 @@ DEFINE_W32API(BOOL, FlushFileBuffers,
 DEFINE_W32API(LPVOID, MapViewOfFile,
 	      (HANDLE mapping, DWORD acc, DWORD high, DWORD low, DWORD count))
 {
-  FILE *fp = (FILE *)mapping;
+  FILE *fp = (FILE *)((Handle *)mapping)->data;
   int fd = fileno(fp);
   struct stat st;
   LPVOID p;
@@ -717,7 +723,8 @@ DEFINE_W32API(BOOL, CloseHandle,
     break;
   default:
     debug_message_fn("(Generic %p)\n", h);
-    break;
+    return TRUE;
+    //break;
   }
   __destroy_handle(h);
 
@@ -1126,6 +1133,21 @@ DEFINE_W32API(LPSTR, lstrcpyA,
   /* debug_message_fn("(%p, %s)\n", dest, src); */
 
   memcpy(dest, src, strlen(src) + 1);
+
+  return dest;
+}
+
+DEFINE_W32API(LPSTR, lstrcpynA,
+	      (LPSTR dest, LPCSTR src, INT len))
+{
+  /* debug_message_fn("(%p, %s)\n", dest, src); */
+
+  if (strlen(src) + 1 >= len)
+    memcpy(dest, src, strlen(src) + 1);
+  else {
+    memcpy(dest, src, len);
+    dest[len - 1] = '\0';
+  }
 
   return dest;
 }
