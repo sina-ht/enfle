@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Fri Jul 20 21:28:32 2007.
-# $Id: Makefile.am,v 1.59 2007/07/20 12:45:34 sian Exp $
+# Last Modified: Sun Sep 16 15:36:41 2007.
+# $Id: Makefile.am,v 1.60 2007/10/20 13:36:36 sian Exp $
 
 AUTOMAKE_OPTIONS = nostdinc
 
@@ -23,7 +23,7 @@ EXTRA_DIST = \
 	svq3.c mdec.c motion_est_template.c wmv2.c \
 	gcc_fixes.h
 
-DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H
+DEFS = -prefer-pic -DHAVE_AV_CONFIG_H
 
 if USE_MMX
 DEFS += -DHAVE_MMX -Dasm=__asm -Dvolatile=__volatile

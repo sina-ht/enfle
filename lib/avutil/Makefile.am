@@ -1,14 +1,14 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Thu Jul 19 19:01:46 2007.
-# $Id: Makefile.am,v 1.12 2007/07/20 12:45:33 sian Exp $
+# Last Modified: Sun Sep 16 15:36:28 2007.
+# $Id: Makefile.am,v 1.13 2007/10/20 13:36:36 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavutil.la
 endif
 INCLUDES = -I$(top_srcdir)/lib/avcodec -I$(top_srcdir)
 CFLAGS_POST = -Wno-error -Wno-unused
-DEFS = -prefer-non-pic -DHAVE_AV_CONFIG_H -Dasm=__asm -Dvolatile=__volatile
+DEFS = -prefer-pic -DHAVE_AV_CONFIG_H -Dasm=__asm -Dvolatile=__volatile
 
 noinst_HEADERS = \
 	aes.h \
