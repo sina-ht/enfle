@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Fri Apr 27 14:52:22 2007.
- * $Id: x11.c,v 1.23 2007/04/27 05:55:27 sian Exp $
+ * Last Modified: Sat Oct 20 01:03:08 2007.
+ * $Id: x11.c,v 1.24 2007/10/20 13:43:06 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -276,6 +276,84 @@ get_xvinfo(X11 *x11)
 }
 #endif
 
+#ifdef USE_SHM
+#include "enfle/memory.h"
+static int err_occurred = 0;
+static int
+err_handler(Display *disp, XErrorEvent *xee)
+{
+  if (xee->error_code != BadAccess)
+    exit(1);
+
+  err_occurred = 1;
+  return 0;
+}
+
+static void
+get_shminfo(X11 *x11)
+{
+  int major, minor;
+  Bool is_pixmap;
+  XShmSegmentInfo shminfo;
+  Memory *m;
+  void *p;
+  XImage *xi;
+  int (*prev_err_handler)(Display *, XErrorEvent *);
+
+  if (!XShmQueryExtension(x11_display(x11)))
+    return;
+
+  if (!XShmQueryVersion(x11_display(x11), &major, &minor, &is_pixmap))
+    return;
+
+  debug_message_fnc("MIT-SHM Extension OK: Version %d.%d, pixmap support: %s\n", major, minor, is_pixmap ? "OK" : "NO");
+
+  if ((m = memory_create()) == NULL)
+    goto cannot_use_mitshm;
+  if (memory_request_type(m, _SHM) != _SHM)
+    goto cannot_use_mitshm_destroy_m;
+
+  if ((xi = XShmCreateImage(x11_display(x11), x11_visual(x11), x11_depth(x11), ZPixmap, NULL, &shminfo, 16, 16)) == NULL)
+    goto cannot_use_mitshm_destroy_m;
+  if ((p = memory_alloc(m, xi->bytes_per_line * xi->height)) == NULL)
+    goto cannot_use_mitshm_destroy_xi;
+  shminfo.shmid = memory_shmid(m);
+  shminfo.shmaddr = memory_ptr(m);
+  shminfo.readOnly = False;
+  prev_err_handler = XSetErrorHandler(err_handler);
+  if (!XShmAttach(x11_display(x11), &shminfo))
+    goto cannot_use_mitshm_destroy_xi;
+  XSync(x11_display(x11), False);
+  XSetErrorHandler(prev_err_handler);
+  if (err_occurred)
+    goto cannot_use_mitshm_destroy_xi;
+
+  x11->extensions |= X11_EXT_SHM;
+  XDestroyImage(xi);
+  memory_destroy(m);
+  return;
+
+cannot_use_mitshm_destroy_xi:
+  XDestroyImage(xi);
+cannot_use_mitshm_destroy_m:
+  memory_destroy(m);
+cannot_use_mitshm:
+  warning_fnc("MIT-SHM Extension attach test failed.  MIT-SHM disabled.\n");
+  return;
+}
+#endif
+
+static void
+get_prefer_sb(X11 *x11)
+{
+  XImage *xi;
+
+  xi = XCreateImage(x11_display(x11), x11_visual(x11), x11_depth(x11),
+		    ZPixmap, 0, NULL, 16, 16, 8, 0);
+  x11->prefer_msb = (xi->byte_order == LSBFirst) ? 0 : 1;
+  XDestroyImage(xi);
+}
+
 /* methods */
 
 static int
@@ -337,24 +415,14 @@ open(X11 *x11, char *dispname)
 #endif
 
 #ifdef USE_SHM
-  if (XShmQueryExtension(x11_display(x11))) {
-    x11->extensions |= X11_EXT_SHM;
-    debug_message_fnc("MIT-SHM Extension OK\n");
-  }
+  get_shminfo(x11);
 #endif
 
 #ifdef USE_XV
   get_xvinfo(x11);
 #endif
 
-  {
-    XImage *xi;
-
-    xi = XCreateImage(x11_display(x11), x11_visual(x11), x11_depth(x11),
-		      ZPixmap, 0, NULL, 16, 16, 8, 0);
-    x11->prefer_msb = (xi->byte_order == LSBFirst) ? 0 : 1;
-    XDestroyImage(xi);
-  }
+  get_prefer_sb(x11);
 
   return 1;
 }
