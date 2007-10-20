@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2007 by Hiroshi Takekawa.
 
-             Last Modified: Tue May 29 00:43:41 2007.
+             Last Modified: Sat Oct 20 22:06:25 2007.
 
 ***************************************************************************
 
@@ -43,9 +43,8 @@ Acknowledgement
   GIF (sm) is a Service Mark property of CompuServe Incorporated.
 
   libungif is only linked, not distributed with this archive.
-  Moreover, libungif is not used by default, for avoiding possible
-  patent infringement.  It's up to you whether use it or not.  This
-  situation will change as the patent is expiring.
+  Moreover, libungif is not used by default.
+  Now that the patent was expired, enfle has the own gif loader plugin.
 
 Integrated libraries by other authors
   Thanks to all authors.
@@ -57,7 +56,7 @@ Integrated libraries by other authors
     libmpeg2 by Aaron Holtzman and others.  For this part, you can
     apply GPL2 or later version.
 
-  lib/avcodec: libavcodec from ffmpeg-cvs as of 20070529 for a/v decoding
+  lib/{avutil,avcodec}: libavcodec as of 20070719 for a/v decoding
     libavcodec by Fabrice Bellard and others.  For this part, you can
     apply LGPL2 or any later version.  LGPL license is in
     lib/avcodec/COPYING.LIB.
@@ -68,6 +67,10 @@ Integrated libraries by other authors
 
   lib/j2k: libj2k for JPEG2000 decoding
     libj2k by David Janssens.  Read lib/j2k/LICENSE.
+
+  plugins/archiver/rar/unrar: unrarsrc-3.7.8 for rar handling
+    You cannot use the code to develop a RAR (WinRAR) compatible archiver.
+    Read plugins/archiver/rar/unrar/license.txt.
 
 ***************************************************************************
 
@@ -96,39 +99,38 @@ various formatted pictures and movies with several effects.
 
 This software has plugin architecture.  You can write plugins to
 loader new formatted pictures and movies.  Also, you can read
-irregular files, such as tar, gz, bz2, and so on.
+regular archive files, such as tar, gz, bz2, and so on.
 
 Some plugins use libraries which is not included in distribution.  You
 should install corresponding libraries to use them.
 
 JPEG: jpegsrc-6b (libjpeg)
-PNG: libpng-1.0.2 or later (recommended: 1.2.7)
-gz: zlib-1.2.2 or later (Note: versions prior to 1.2.1 include the security hole)
+PNG: libpng-1.0.2 or later (recommended: 1.2.22)
+gz: zlib-1.2.3 or later (Note: versions prior to 1.2.1 include the security hole)
 bz2: bzip2-1.0.0 or later (recommended: 1.0.3)
-ungif: libungif-3.1.0 or later may work..., but even 4.1.0 has bug.
-       (recommended: cvs version or ask me the patch)
+ungif: libungif-4.1.4
 alsa: require ALSA_PCM_NEW_HW_PARAMS_API.
 ogg: libogg-1.1
 vorbis: libvorbis-1.0.1
 theora: libtheora-1.0-alpha4
 divx: divx4linux-20030428 (old version will not work)
 mng: libmng-1.0.0 or later (plugin unmaintained)
-libmpeg3: libmpeg3-1.2.2 or later
-mpeg_lib: mpeg_lib-1.3.1+patch (if you want the patch, contact me)
-avifile: avifile-0.53.5 or avifile-0.6 in CVS
+libmpeg3: libmpeg3-1.2.2 or later (not supported now)
+avifile: avifile-0.53.5 or avifile-0.6 in CVS (not supported any more)
+mpeg_lib: mpeg_lib-1.3.1+patch (obsolete)
 
 
 2. Requirements
 
 X server's depth should be 16 or 24(bpp 24, 32).  Other depths are
-unsupported so far.  If you don't see a correct colored-image in these
+unsupported for now.  If you don't see a correct colored-image in these
 supported depths, let me know with xdpyinfo's output.  When use in
 depth 16, color mask should be 0xf800, 0x7e0, 0x1f.  Other masks might
 be supported sometime.
 
 These environments are checked:
 
-Linux (kernel 2.2/2.4/2.6 + glibc-2.1/2.2/2.3, x86(-64))
+Linux (kernel 2.2/2.4/2.6 + glibc-2.[1234567], x86(-64))
 FreeBSD (4.1R, x86)
 
 Other similar environments should work.  Please let me know if you try
@@ -148,6 +150,8 @@ libc: glibc-2.3.5/cvs/nptl
 
 GCC is mandatory for compile, or compilation will fail.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(With some effort, you can compile with icc(Intel C++ Compieler).
+
 Basically, type ./configure && make, that's all.  If you get some
 error messages, please let me know with config.log, your environment,
 or such useful information.
