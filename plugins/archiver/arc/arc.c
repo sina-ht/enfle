@@ -4,8 +4,8 @@
  * Adapted for newer version by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Mar  3 01:45:25 2006.
- * $Id: arc.c,v 1.7 2006/03/03 16:46:31 sian Exp $
+ * Last Modified: Mon Sep 17 16:22:13 2007.
+ * $Id: arc.c,v 1.8 2007/10/20 13:38:54 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,7 +74,7 @@ arc_open(Archive *arc, Stream *st, char *path)
 
   if (strchr(path, '#') == NULL) {
     /* normal file */
-    return OPEN_NOT;
+    return 0;
   }
 
   strcpy(fullpath, arc->path);
@@ -83,7 +83,7 @@ arc_open(Archive *arc, Stream *st, char *path)
   url = url_arc_open(fullpath);
   if(url == NULL){
     err_message("Can't open: %s\n", fullpath);
-    return OPEN_NOT;
+    return 0;
   }
 
   mem_size = BUFSIZ * 2;
