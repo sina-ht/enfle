@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 17 03:46:08 2005.
- * $Id: convert.c,v 1.19 2005/07/16 18:52:06 sian Exp $
+ * Last Modified: Mon Oct 15 04:40:27 2007.
+ * $Id: convert.c,v 1.20 2007/10/20 13:39:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -93,6 +93,7 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
   if ((fd = open(outpath, O_WRONLY)) >= 0) {
     close(fd);
     show_message_fnc("file %s exists\n", outpath);
+    free(outpath);
     return 0;
   }
 
@@ -108,7 +109,7 @@ save_image(UIData *uidata, Image *p, char *format, char *path)
     unlink(outpath);
   }
   fclose(fp);
-  free(outpath);
+  /* outpath must not be free'd here */
 
   return 1;
 }
