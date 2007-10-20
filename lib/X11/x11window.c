@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:41:31 2004.
- * $Id: x11window.c,v 1.11 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sat Aug 25 16:25:29 2007.
+ * $Id: x11window.c,v 1.12 2007/10/20 13:40:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -84,14 +84,16 @@ static int
 get_geometry(X11Window *xw, unsigned int *x_return, unsigned int *y_return, unsigned int *w_return, unsigned int *h_return)
 {
   X11 *x11;
-  Window root, parent, *child;
-  int x, y, px, py;
+  Window root;
+  Window parent, *child;
+  int x, y;
   unsigned int nc;
-  unsigned int w, h, bw, depth;
+  unsigned int bw, depth;
 
   x11 = x11window_x11(xw);
   if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &x, &y, w_return, h_return, &bw, &depth))
     return 0;
+
   if (!XQueryTree(x11_display(x11), x11window_win(xw), &root, &parent, &child, &nc))
     return 0;
   if (child != NULL)
@@ -100,6 +102,9 @@ get_geometry(X11Window *xw, unsigned int *x_return, unsigned int *y_return, unsi
   y += bw;
 
   while (root != parent) {
+    unsigned int w, h;
+    int px, py;
+
     if (!XGetGeometry(x11_display(x11), parent, &root, &px, &py, &w, &h, &bw, &depth))
       return 0;
     x += px + bw;
