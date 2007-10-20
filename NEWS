@@ -1,4 +1,11 @@
-NEWS  Last Modified: Tue May 29 02:23:33 2007.
+NEWS  Last Modified: Sat Oct 20 22:49:19 2007.
+
+20071020:
+ RAR archiver plugin
+ Some fixes for x86-64.
+ Fixed Converter UI plugin double-free bug.
+ More strict MIT-SHM check.  MIT-SHM must be disabled for remote display.
+ libavcodec update.
 
 20070529:
  Implemented bilinear reduction as well as interger arithmetic image reduction.
