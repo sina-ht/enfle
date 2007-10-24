@@ -1,3 +1,7 @@
+2007-10-24  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Define ENABLE_MMX and USE_MMX to 0.
+
 2007-10-20  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Added rar archiver plugin.  Version up.
