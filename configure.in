@@ -4,8 +4,8 @@ dnl
 dnl (C)Copyright 1999-2007 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Oct 20 22:43:41 2007.
-dnl $Id: configure.in,v 1.205 2007/10/20 13:44:16 sian Exp $
+dnl Last Modified: Wed Oct 24 23:17:45 2007.
+dnl $Id: configure.in,v 1.206 2007/10/24 14:21:55 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.60)
-AC_INIT([enfle],[20071020],[sian@big.or.jp])
+AC_INIT([enfle],[20071024],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -402,6 +402,9 @@ fi
 if test "$enable_mmx" = "yes"; then
   AC_DEFINE(USE_MMX, 1, [ Define if you have and use MMX. ])
   AC_DEFINE(ENABLE_MMX, 1, [ Define if you have and use MMX. ])
+else
+  AC_DEFINE(USE_MMX, 0, [ Define if you have and use MMX. ])
+  AC_DEFINE(ENABLE_MMX, 0, [ Define if you have and use MMX. ])
 fi
 AM_CONDITIONAL(USE_MMX, test "$enable_mmx" = "yes")
 
