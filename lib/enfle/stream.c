@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  4 01:40:25 2006.
- * $Id: stream.c,v 1.13 2006/03/03 16:45:12 sian Exp $
+ * Last Modified: Sat Nov  3 16:08:56 2007.
+ * $Id: stream.c,v 1.14 2007/11/03 07:14:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -34,6 +34,7 @@ static Stream *transfer(Stream *);
 static int make_memorystream(Stream *, unsigned char *, int);
 static int make_fdstream(Stream *, int);
 static int make_filestream(Stream *, char *);
+static int make_tmpfilestream(Stream *, char *, char *);
 static void destroy(Stream *);
 
 static int dummy_read(Stream *, unsigned char *, int);
@@ -50,6 +51,7 @@ static Stream template = {
   .make_memorystream = make_memorystream,
   .make_fdstream = make_fdstream,
   .make_filestream = make_filestream,
+  .make_tmpfilestream = make_tmpfilestream,
   .read = dummy_read,
   .seek = dummy_seek,
   .tell = dummy_tell,
@@ -329,16 +331,21 @@ fdstream_close(Stream *s)
 static int
 filestream_close(Stream *s)
 {
-  int f;
-
-  free_stream_data(s);
+  int f = 1;
 
   if (s->data == NULL)
-    return 1;
+    goto exit;
 
   f = (fclose((FILE *)s->data) == 0) ? 1 : 0;
   s->data = NULL;
+  if (s->tmppath) {
+    unlink(s->tmppath);
+    free(s->tmppath);
+    s->tmppath = NULL;
+  }
 
+ exit:
+  free_stream_data(s);
   return f;
 }
 
@@ -413,6 +420,33 @@ make_filestream(Stream *s, char *path)
   s->seek = filestream_seek;
   s->tell = filestream_tell;
   s->close = filestream_close;
+  s->tmppath = NULL;
+
+  s->data = (void *)fp;
+
+  return 1;
+}
+
+/* Just for delete on close and set real name */
+static int
+make_tmpfilestream(Stream *s, char *path, char *name)
+{
+  FILE *fp;
+
+  if ((fp = fopen(path, "rb")) == NULL)
+    return 0;
+
+  if ((s->path = strdup(name)) == NULL) {
+    fclose(fp);
+    return 0;
+  }
+
+  s->format = strdup("TMPFILE");
+  s->read = filestream_read;
+  s->seek = filestream_seek;
+  s->tell = filestream_tell;
+  s->close = filestream_close;
+  s->tmppath = strdup(path);
 
   s->data = (void *)fp;
 

@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep 30 05:03:40 2000.
- * $Id: stream.h,v 1.1 2000/09/30 17:36:36 sian Exp $
+ * Last Modified: Sat Nov  3 16:08:46 2007.
+ * $Id: stream.h,v 1.2 2007/11/03 07:14:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,13 +41,15 @@ struct _stream {
   long ptr_offset;
   unsigned int buffer_size;
   unsigned int buffer_used;
-  
+  char *tmppath;
+
   /* transfer() transfers all data to new created object. The old object will be initialized */
   Stream *(*transfer)(Stream *);
   /* fundamental stream implementations */
   int (*make_memorystream)(Stream *, unsigned char *, int);
   int (*make_fdstream)(Stream *, int);
   int (*make_filestream)(Stream *, char *);
+  int (*make_tmpfilestream)(Stream *, char *, char *);
   /* must be overridden by stream implementor */
   int (*read)(Stream *, unsigned char *, int);
   int (*seek)(Stream *, long, StreamWhence);
@@ -61,6 +63,7 @@ struct _stream {
 #define stream_make_memorystream(st, p, size) (st)->make_memorystream((st), (p), (size))
 #define stream_make_fdstream(st, fd) (st)->make_fdstream((st), (fd))
 #define stream_make_filestream(st, path) (st)->make_filestream((st), (path))
+#define stream_make_tmpfilestream(st, path, name) (st)->make_tmpfilestream((st), (path), (name))
 #define stream_read(st, p, s) (st)->read((st), (p), (s))
 #define stream_seek(st, o, w) (st)->seek((st), (o), (w))
 #define stream_rewind(st) (st)->seek((st), 0, _SET)
