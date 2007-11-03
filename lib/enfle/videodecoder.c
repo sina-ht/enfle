@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jan 27 17:55:58 2006.
- * $Id: videodecoder.c,v 1.8 2006/02/05 14:36:51 sian Exp $
+ * Last Modified: Fri Jul 20 21:54:05 2007.
+ * $Id: videodecoder.c,v 1.9 2007/11/03 07:13:23 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -136,6 +136,7 @@ videodecoder_codec_name(unsigned int fourcc)
     return "cyuv";
   case FCC_Y422:
   case FCC_I420:
+  case FCC_HM12:
     return "rawvideo";
   case FCC_IV31:
   case FCC_IV32:
@@ -167,6 +168,8 @@ videodecoder_codec_name(unsigned int fourcc)
   case FCC_DIB:
   case FCC_RGB2:
     return "raw";
+  case FCC_GIF:
+    return "gif";
   default:
     break;
   }
@@ -262,12 +265,12 @@ videodecoder_select(EnflePlugins *eps, Movie *m, unsigned int fourcc, Config *c)
       }
       if ((p = pluginlist_get(pl, pluginname))) {
 	vdp = plugin_get(p);
-	debug_message_fnc("try %s (prefered for %s)\n", pluginname, codec_name);
+	debug_message_fnc("try %s (preferred for %s)\n", pluginname, codec_name);
 	if ((m->vdec = vdp->init(fourcc, vdp->vd_private)) != NULL)
 	  return 1;
-	debug_message_fnc("%s failed.\n", pluginname);
+	warning_fnc("%s (preferred for %s) failed.\n", pluginname, codec_name);
       } else {
-	show_message_fnc("%s (prefered for %s) not found.\n", pluginname, codec_name);
+	warning_fnc("%s (preferred for %s) not found.\n", pluginname, codec_name);
       }
       i++;
     }
