@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Oct  8 19:50:23 2007.
- * $Id: unrar.c,v 1.1 2007/10/20 13:41:55 sian Exp $
+ * $Id: unrar.c,v 1.2 2007/11/03 05:58:37 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -86,7 +86,7 @@ rar_open(Archive *arc, Stream *st, char *path)
 
   if (rar->current_index > info->idx) {
     if (rar->r)
-        RARCloseArchive(rar->r);
+      RARCloseArchive(rar->r);
     memset(&ro, 0, sizeof(ro));
     ro.ArcName = arc->path;
     ro.OpenMode = RAR_OM_EXTRACT;
@@ -200,7 +200,7 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
 	}
 	info->rar = rar;
 	info->idx = i;
-	show_message_fnc("%d: %s: %d -> %d\n", i, rh.FileName, rh.PackSize, rh.UnpSize);
+	debug_message_fnc("%d: %s: %d -> %d\n", i, rh.FileName, rh.PackSize, rh.UnpSize);
 	if (hash_define_str_value(hash, path, info) < 0)
 	  warning("%s: %s: %s already in hash.\n", __FILE__, __FUNCTION__, path);
       }
