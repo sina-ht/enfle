@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct  8 19:50:23 2007.
- * $Id: unrar.c,v 1.2 2007/11/03 05:58:37 sian Exp $
+ * Last Modified: Sat Nov  3 16:15:18 2007.
+ * $Id: unrar.c,v 1.3 2007/11/03 07:15:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -46,7 +46,7 @@ typedef struct _rar_info {
 static ArchiverPlugin plugin = {
   .type = ENFLE_PLUGIN_ARCHIVER,
   .name = "RAR",
-  .description = "rar Archiver plugin version 0.2",
+  .description = "rar Archiver plugin version 0.2.1",
   .author = "Hiroshi Takekawa",
   .archiver_private = NULL,
 
@@ -115,10 +115,8 @@ rar_open(Archive *arc, Stream *st, char *path)
 
   RARProcessFile(rar->r, RAR_EXTRACT, (char *)"", (char *)"/tmp/unrar-extracted");
 
-  if (!stream_make_filestream(st, (char *)"/tmp/unrar-extracted"))
+  if (!stream_make_tmpfilestream(st, (char *)"/tmp/unrar-extracted", path))
     return 0;
-  free(st->path);
-  st->path = strdup(path);
 
   return 1;
 }
