@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue May 29 02:22:10 2007.
- * $Id: jpeg.c,v 1.28 2007/06/03 09:59:11 sian Exp $
+ * Last Modified: Sun Mar 16 21:09:06 2008.
+ * $Id: jpeg.c,v 1.29 2008/04/19 09:02:43 sian Exp $
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -396,7 +396,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       unsigned int w, h;
 
       w = ((image_width(p)  + 7) >> 3) << 3;
-      h = ((image_height(p) + 1) >> 1) << 1;
+      h = ((image_height(p) + 3) >> 2) << 2;
 
       if (!image_rendered_image(p))
 	image_rendered_image(p) = memory_create();
