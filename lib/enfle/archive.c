@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 04:31:35 2006.
- * $Id: archive.c,v 1.41 2006/02/24 19:33:28 sian Exp $
+ * Last Modified: Sat Jan 12 04:32:42 2008.
+ * $Id: archive.c,v 1.42 2008/04/19 08:57:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -212,15 +212,17 @@ archive_add(Archive *arc, char *path, void *reminder)
       if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == 0)
 	result = 1;
       else if (result != FNM_NOMATCH)
-	fatal_perror(__FUNCTION__);
+	result = 1; //fatal_perror(__FUNCTION__);
       else
 	result = 0;
       break;
     case _ARCHIVE_FNMATCH_EXCLUDE:
-      if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == FNM_NOMATCH)
+      if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == FNM_NOMATCH) {
 	result = 1;
-      else if (result)
-	fatal_perror(__FUNCTION__);
+      }
+      else if (result) {
+	result = 1; //fatal_perror(__FUNCTION__);
+      }
       else
 	result = 0;
       break;
