@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Nov  3 16:15:18 2007.
- * $Id: unrar.c,v 1.3 2007/11/03 07:15:21 sian Exp $
+ * Last Modified: Sun Apr  6 11:25:30 2008.
+ * $Id: unrar.c,v 1.4 2008/04/19 09:00:22 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -159,8 +159,8 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
   Rar_data *rar;
   Rar_info *info;
   int i;
-  Hash *hash;
-  Dlist *dl;
+  Hash *hash = NULL;
+  Dlist *dl = NULL;
   Dlist_data *dd;
   ArchiverStatus res = OPEN_NOT;
 
@@ -243,7 +243,8 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
     hash_destroy(hash);
   if (dl)
     dlist_destroy(dl);
-  RARCloseArchive(rar->r);
+  if (rar->r)
+    RARCloseArchive(rar->r);
   if (rar)
     free(rar);
 
