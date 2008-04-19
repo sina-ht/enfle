@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sun Dec 14 21:33:55 2003.
-# $Id: Makefile.am,v 1.3 2003/12/16 16:51:55 sian Exp $
+# Last Modified: Sat Apr 12 23:46:48 2008.
+# $Id: Makefile.am,v 1.4 2008/04/19 08:59:56 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)
@@ -19,5 +19,5 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 
 archiver_arc_la_LDFLAGS = $(MORE_LDFLAGS) -module
 archiver_arc_la_CFLAGS = $(MORE_CFLAGS)
-archiver_arc_la_SOURCES = arc.c
+archiver_arc_la_SOURCES = arc.c url_enfle.c
 archiver_arc_la_LIBADD = @LIBADD_LIBARC@

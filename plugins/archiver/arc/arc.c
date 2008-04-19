@@ -1,11 +1,11 @@
 /*
  * arc.c -- libarc archiver plugin
- * (C)Copyright 2002 by Junji Hashimoto
- * Adapted for newer version by Hiroshi Takekawa
+ * (C)Copyright 2008 by Hiroshi Takekawa
+ *    Derived from the work by Junji Hashimoto
  * This file is part of Enfle.
  *
- * Last Modified: Mon Sep 17 16:22:13 2007.
- * $Id: arc.c,v 1.8 2007/10/20 13:38:54 sian Exp $
+ * Last Modified: Sun Apr 13 02:34:21 2008.
+ * $Id: arc.c,v 1.9 2008/04/19 08:59:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -27,9 +27,7 @@
 
 #include <libarc/arc.h>
 
-extern struct URL_module URL_module_file;
-
-#include "common.h"
+extern struct URL_module URL_module_enfle;
 
 #include "enfle/archiver-plugin.h"
 
@@ -38,8 +36,8 @@ DECLARE_ARCHIVER_PLUGIN_METHODS;
 static ArchiverPlugin plugin = {
   .type = ENFLE_PLUGIN_ARCHIVER,
   .name = "ARC",
-  .description = "libarc Archiver plugin version 0.0.8 compiled with libarc-" ARC_LIB_VERSION,
-  .author = "Junji Hashimoto",
+  .description = "libarc Archiver plugin version 0.1 compiled with libarc-" ARC_LIB_VERSION,
+  .author = "Hiroshi Takekawa",
   .archiver_private = NULL,
 
   .identify = identify,
@@ -50,7 +48,7 @@ ENFLE_PLUGIN_ENTRY(archiver_arc)
 {
   ArchiverPlugin *arp;
 
-  url_add_module(&URL_module_file);
+  url_add_module(&URL_module_enfle);
   if ((arp = (ArchiverPlugin *)calloc(1, sizeof(ArchiverPlugin))) == NULL)
     return NULL;
   memcpy(arp, &plugin, sizeof(ArchiverPlugin));
@@ -64,25 +62,42 @@ ENFLE_PLUGIN_EXIT(archiver_arc, p)
   free(p);
 }
 
+static char *
+create_enfle_url(Stream *st, char *path) {
+  char *buf;
+  int size;
+
+  size = 32 + strlen(st->path);
+  if (path)
+    size += strlen(path) + 1;
+  if ((buf = calloc(1, size)) == NULL)
+    return NULL;
+  if (path)
+    snprintf(buf, size, "enfle:%p:%s#%s", st, st->path, path);
+  else
+    snprintf(buf, size, "enfle:%p:%s", st, st->path);
+
+  return buf;
+}
+
 static int /* overrides archive::open */
 arc_open(Archive *arc, Stream *st, char *path)
 {
   int file_size = 0, get_num, mem_size = 0;
   unsigned char *region, *read_pos;
   URL url;
-  char fullpath[strlen(arc->path) + strlen(path) + 1];
+  char *urlstr;
 
   if (strchr(path, '#') == NULL) {
     /* normal file */
     return 0;
   }
 
-  strcpy(fullpath, arc->path);
-  strcat(fullpath, path);
-
-  url = url_arc_open(fullpath);
-  if(url == NULL){
-    err_message("Can't open: %s\n", fullpath);
+  if ((urlstr = create_enfle_url(arc->st, path)) == NULL)
+    return 0;
+  if ((url = url_arc_open(urlstr)) == NULL) {
+    err_message("Can't open: %s\n", urlstr);
+    free(urlstr);
     return 0;
   }
 
@@ -98,9 +113,9 @@ arc_open(Archive *arc, Stream *st, char *path)
     }
   }
   url_close(url);
+  free(urlstr);
 
   st->path = strdup(path);
-  //debug_message_fnc("OK: %s\n", st->path);
 
   return stream_make_memorystream(st, region, file_size);
 }
@@ -139,24 +154,28 @@ DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
 {
   char *filesbuf[2];
   char **files;
+  char *urlstr;
   int i, nfiles = 1;
   Dlist *dl;
   Dlist_data *dd;
 
-  filesbuf[0] = st->path;
+  if ((urlstr = create_enfle_url(st, NULL)) == NULL)
+    return OPEN_ERROR;
+  filesbuf[0] = urlstr;
   filesbuf[1] = NULL;
   files = expand_archive_names(&nfiles, filesbuf);
-  //debug_message_fnc("path = %s, files = %p\n", st->path, files);
-  if (files == NULL)
+  if (files == NULL) {
+    free(urlstr);
     return OPEN_NOT;
+  }
 
   dl = dlist_create();
   for (i = 0; i < nfiles; i++) {
-    char *base = files[i] + strlen(st->path);
-    //debug_message_fnc("%d: %s\n", i, base);
+    char *base = files[i] + strlen(urlstr);
     dlist_add_str(dl, base);
   }
   arc_list_free(files);
+  free(urlstr);
 
   dlist_set_compfunc(dl, archive_key_compare);
   dlist_sort(dl);
