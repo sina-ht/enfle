@@ -1,3 +1,39 @@
+2008-04-19  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h, configure.in, lib/enfle/stream.c,
+	plugins/audio/alsa/alsa.c, plugins/effect/gamma/gamma.c,
+	plugins/effect/rotate/rotate.c: Improved x86_64 support.
+
+	* plugins/videodecoder/avcodec/avcodec.c: Supply video extra data.
+
+	* plugins/player/generic/generic.c: Avoid A-V sync deal lock.
+
+	* plugins/loader/jpeg/jpeg.c: Fixed I420 rendering bug.
+
+	* plugins/demultiplexer/asf/asf.c: Fixed buffer_size calculation
+	bug.
+
+	* plugins/archiver/rar/unrar.c: Avoid crash.
+
+	* plugins/archiver/arc/Makefile.am, plugins/archiver/arc/arc.c,
+	plugins/archiver/arc/url_enfle.c: libarc now can read enfle Stream
+	instead of file stream.
+
+	* lib/enfle/identify.c: Plugged a memory leak.
+
+	* lib/enfle/archive.c: Don't treat as fatal when fnmatch() failed.
+
+2007-11-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/archiver/rar/unrar.c: Use tmpfilestream.
+
+	* lib/enfle/stream.c, lib/enfle/stream.h: Added tmpfilestream.
+
+	* lib/enfle/videodecoder.c: Mainly cosmetic changes.
+
+	* plugins/archiver/rar/unrar.c: Suppress a debug message for
+	non-debug build.
+
 2007-10-24  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Define ENABLE_MMX and USE_MMX to 0.
