@@ -3,8 +3,8 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Aug 15 19:27:51 2004.
- * $Id: identify.c,v 1.17 2004/08/16 11:06:49 sian Exp $
+ * Last Modified: Sat Mar 22 16:34:49 2008.
+ * $Id: identify.c,v 1.18 2008/04/19 08:58:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -123,8 +123,10 @@ identify_stream(EnflePlugins *eps, Image *p, Movie *m, Stream *s, VideoWindow *v
     if ((m->demux = demultiplexer_examine(eps, m->format, m, s, c)) == NULL) 
       return IDENTIFY_STREAM_MOVIE_FAILED;
     debug_message_fnc("demultiplexer_examine() OK.\n");
-    if (player_load(eps, vw, (char *)"generic", m, s, c) != PLAY_OK)
+    if (player_load(eps, vw, (char *)"generic", m, s, c) != PLAY_OK) {
+      demultiplexer_destroy(m->demux);
       return IDENTIFY_STREAM_MOVIE_FAILED;
+    }
     debug_message_fnc("player_load() OK.\n");
     return IDENTIFY_STREAM_MOVIE;
   }
