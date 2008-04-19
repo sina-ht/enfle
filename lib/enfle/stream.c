@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Nov  3 16:08:56 2007.
- * $Id: stream.c,v 1.14 2007/11/03 07:14:52 sian Exp $
+ * $Id: stream.c,v 1.15 2008/04/19 09:28:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -103,7 +103,7 @@ fdstream_grow(Stream *s , int size)
   }
 
   /* Should I use select()? */
-  if ((have_read = read((int)s->data, s->buffer + s->buffer_used, to_read)) < 0) {
+  if ((have_read = read((long)s->data, s->buffer + s->buffer_used, to_read)) < 0) {
     err_message_fnc("read failed\n");
     return -1;
   }
@@ -322,7 +322,7 @@ fdstream_close(Stream *s)
 
   free_stream_data(s);
 
-  f = (close((int)s->data) == 0) ? 1 : 0;
+  f = (close((int)(long)s->data) == 0) ? 1 : 0;
   s->data = NULL;
 
   return f;
@@ -397,7 +397,7 @@ make_fdstream(Stream *s, int fd)
   s->tell = fdstream_tell;
   s->close = fdstream_close;
 
-  s->data = (void *)fd;
+  s->data = (void *)(long)fd;
 
   return 1;
 }

@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon May 22 21:17:46 2006.
- * $Id: alsa.c,v 1.17 2006/05/22 12:19:56 sian Exp $
+ * $Id: alsa.c,v 1.18 2008/04/19 09:28:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -277,7 +277,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, unsigned int *rate
     return 0;
   }
 
-  debug_message_fnc("1 sample -> %d bytes\n", snd_pcm_samples_to_bytes(alsa->fd, 1));
+  debug_message_fnc("1 sample -> %ld bytes\n", snd_pcm_samples_to_bytes(alsa->fd, 1));
 
   return 1;
 }

@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf must be 2.60 or later, automake should be 1.8.2 or later.
 dnl
-dnl (C)Copyright 1999-2007 by Hiroshi Takekawa
+dnl (C)Copyright 1999-2008 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed Oct 24 23:17:45 2007.
-dnl $Id: configure.in,v 1.206 2007/10/24 14:21:55 sian Exp $
+dnl Last Modified: Sun Apr 13 00:57:22 2008.
+dnl $Id: configure.in,v 1.207 2008/04/19 09:28:05 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -20,8 +20,8 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_PREREQ(2.60)
-AC_INIT([enfle],[20071024],[sian@big.or.jp])
+AC_PREREQ(2.61)
+AC_INIT([enfle],[20080413],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -48,9 +48,64 @@ AC_ENABLE_STATIC(no)
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
+dnl for libmpeg2 and libavcodec
+enable_x86=0
+enable_ppc=0
+enable_sparc=0
+enable_alpha=0
+enable_armv4l=0
+enable_mlib=0
+enable_mmi=0
+enable_sh4=0
+enable_bfin=0
+lib_postfix=
+case "$host_cpu" in
+  i*86 )
+    AC_DEFINE(ARCH_X86, 1, [ Define if you have X86 architecture. ])
+    AC_DEFINE(ARCH_X86_32, 1, [ Define if you have X86 32bits architecture. ])
+    arch_x86=yes
+    ;;
+  x86_64* )
+    dnl AC_DEFINE(ARCH_X86, 1, [ Define if you have X86 architecture. ])
+    dnl AC_DEFINE(ARCH_X86_64, 1, [ Define if you have X86 64bits architecture. ])
+    dnl arch_x86_64=yes
+    lib_postfix=64
+    ;;
+  powerpc* )
+    AC_DEFINE(ARCH_PPC, 1, [ Define if you have PowerPC architecture. ])
+    arch_ppc=yes
+    enable_ppc=1
+    ;;
+  sparc* )
+    AC_DEFINE(ARCH_SPARC, 1, [ Define if you have SPARC architecture. ])
+    arch_sparc=yes
+    enable_sparc=1
+    ;;
+  alpha* )
+    AC_DEFINE(ARCH_ALPHA, 1, [ Define if you have ALPHA architecture. ])
+    arch_alpha=yes
+    enable_alpha=1
+    ;;
+  *)
+    ;;
+esac
+AC_DEFINE_UNQUOTED(ENABLE_ARMV4L, $enable_armv4l, [ Define if you want to enable ARMV4L. ])
+AC_DEFINE_UNQUOTED(ENABLE_MLIB, $enable_mlib, [ Define if you want to enable MLIB. ])
+AC_DEFINE_UNQUOTED(ENABLE_SPARC, $enable_sparc, [ Define if you want to enable SPARC. ])
+AC_DEFINE_UNQUOTED(ENABLE_ALPHA, $enable_alpha, [ Define if you want to enable ALPHA. ])
+AC_DEFINE_UNQUOTED(ENABLE_POWERPC, $enable_ppc, [ Define if you want to enable POWERPC. ])
+AC_DEFINE_UNQUOTED(ENABLE_MMI, $enable_mmi, [ Define if you want to enable MMI. ])
+AC_DEFINE_UNQUOTED(ENABLE_SH4, $enable_sh4, [ Define if you want to enable SH4. ])
+AC_DEFINE_UNQUOTED(ENABLE_BFIN, $enable_bfin, [ Define if you want to enable BFIN. ])
+
+AM_CONDITIONAL(ARCH_X86, test "$arch_x86" = "yes")
+AM_CONDITIONAL(ARCH_PPC, test "$arch_ppc" = "yes")
+AM_CONDITIONAL(ARCH_SPARC, test "$arch_sparc" = "yes")
+AM_CONDITIONAL(ARCH_ALPHA, test "$arch_alpha" = "yes")
+
 dnl Checks for libraries.
-if test -d /usr/local/lib; then
-  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+if test -d /usr/local/lib$lib_postfix; then
+  LDFLAGS="$LDFLAGS -L/usr/local/lib$lib_postfix"
   if test "${CC}" = "icc"; then
       CPPFLAGS="$CPPFLAGS -I/usr/local/include"
   else
@@ -430,54 +485,6 @@ fi
 
 test "$enable_sse" = "yes" && AC_DEFINE(USE_SSE, 1, [ Define if you have and use SSE. ])
 AM_CONDITIONAL(USE_SSE, test "$enable_sse" = "yes")
-
-dnl for libmpeg2 and libavcodec
-enable_x86=0
-enable_ppc=0
-enable_sparc=0
-enable_alpha=0
-enable_armv4l=0
-enable_mlib=0
-enable_mmi=0
-enable_sh4=0
-enable_bfin=0
-case "$host_cpu" in
-  i*86 )
-    AC_DEFINE(ARCH_X86, 1, [ Define if you have X86 architecture. ])
-    AC_DEFINE(ARCH_X86_32, 1, [ Define if you have X86 32bits architecture. ])
-    arch_x86=yes
-    ;;
-  powerpc* )
-    AC_DEFINE(ARCH_PPC, 1, [ Define if you have PowerPC architecture. ])
-    arch_ppc=yes
-    enable_ppc=1
-    ;;
-  sparc* )
-    AC_DEFINE(ARCH_SPARC, 1, [ Define if you have SPARC architecture. ])
-    arch_sparc=yes
-    enable_sparc=1
-    ;;
-  alpha* )
-    AC_DEFINE(ARCH_ALPHA, 1, [ Define if you have ALPHA architecture. ])
-    arch_alpha=yes
-    enable_alpha=1
-    ;;
-  *)
-    ;;
-esac
-AC_DEFINE_UNQUOTED(ENABLE_ARMV4L, $enable_armv4l, [ Define if you want to enable ARMV4L. ])
-AC_DEFINE_UNQUOTED(ENABLE_MLIB, $enable_mlib, [ Define if you want to enable MLIB. ])
-AC_DEFINE_UNQUOTED(ENABLE_SPARC, $enable_sparc, [ Define if you want to enable SPARC. ])
-AC_DEFINE_UNQUOTED(ENABLE_ALPHA, $enable_alpha, [ Define if you want to enable ALPHA. ])
-AC_DEFINE_UNQUOTED(ENABLE_POWERPC, $enable_ppc, [ Define if you want to enable POWERPC. ])
-AC_DEFINE_UNQUOTED(ENABLE_MMI, $enable_mmi, [ Define if you want to enable MMI. ])
-AC_DEFINE_UNQUOTED(ENABLE_SH4, $enable_sh4, [ Define if you want to enable SH4. ])
-AC_DEFINE_UNQUOTED(ENABLE_BFIN, $enable_bfin, [ Define if you want to enable BFIN. ])
-
-AM_CONDITIONAL(ARCH_X86, test "$arch_x86" = "yes")
-AM_CONDITIONAL(ARCH_PPC, test "$arch_ppc" = "yes")
-AM_CONDITIONAL(ARCH_SPARC, test "$arch_sparc" = "yes")
-AM_CONDITIONAL(ARCH_ALPHA, test "$arch_alpha" = "yes")
 
 dnl Checks for header files.
 AC_HEADER_DIRENT

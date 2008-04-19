@@ -4,7 +4,7 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Mar  6 12:00:34 2004.
- * $Id: rotate.c,v 1.4 2004/03/06 03:43:36 sian Exp $
+ * $Id: rotate.c,v 1.5 2008/04/19 09:28:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -85,7 +85,7 @@ ENFLE_PLUGIN_EXIT(effect_rotate, p)
 static int
 set_rotate(void *a)
 {
-  int m = (int)a;
+  int m = (int)(long)a;
 
   rotate_mode += m;
   rotate_mode &= 3;
@@ -96,7 +96,7 @@ set_rotate(void *a)
 static int
 set_flip(void *a)
 {
-  int m = (int)a;
+  int m = (int)(long)a;
 
   flip_mode ^= m;
 
