@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep  8 03:29:29 2007.
- * $Id: avcodec.c,v 1.23 2007/09/07 18:30:25 sian Exp $
+ * Last Modified: Sat Mar 22 17:12:01 2008.
+ * $Id: avcodec.c,v 1.24 2008/04/19 09:04:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -357,6 +357,8 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   if (vdm->vcodec->capabilities & CODEC_CAP_DR1)
     vdm->vcodec_ctx->flags |= CODEC_FLAG_EMU_EDGE;
 #endif
+  vdm->vcodec_ctx->extradata = m->video_extradata;
+  vdm->vcodec_ctx->extradata_size = m->video_extradata_size;
   if (avcodec_open(vdm->vcodec_ctx, vdm->vcodec) < 0) {
     warning_fnc("avcodec_open() failed.\n");
     return 0;
@@ -434,6 +436,7 @@ query(unsigned int fourcc, void *priv)
   case FCC_mpg4:
   case FCC_WMV1: // wmv1
   case FCC_WMV2: // wmv2
+  case FCC_WMV3: // wmv3
   case FCC_dvsd: // dvvideo
   case FCC_dvhd:
   case FCC_dvsl:
