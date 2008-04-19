@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 31 01:35:20 2006.
- * $Id: generic.c,v 1.31 2007/04/27 05:55:27 sian Exp $
+ * Last Modified: Sat Mar 22 12:15:07 2008.
+ * $Id: generic.c,v 1.32 2008/04/19 09:04:01 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -458,7 +458,7 @@ play_video(void *arg)
 
   debug_message_fnc("exit.\n");
 
-  return (void *)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
+  return (void *)(long)(vds == VD_ERROR ? PLAY_ERROR : PLAY_OK);
 }
 
 static void *
@@ -578,7 +578,7 @@ play_main(Movie *m, VideoWindow *vw)
   generic_info *info = (generic_info *)m->movie_private;
   Image *p = info->p;
   int video_time, diff_time;
-  int i = 0;
+  int i = 0, j;
   float rate;
 
   switch (m->status) {
@@ -670,7 +670,9 @@ play_main(Movie *m, VideoWindow *vw)
     if ((diff_time = video_time - get_audio_time(m, info->ad)) >= 0) {
       /* if too fast to display, wait before render */
 #if 1
-      while (diff_time > 0) {
+      /* Avoid dead-lock */
+      j = 3;
+      while (diff_time > 0 && j) {
 	struct timeval tv;
 
 	tv.tv_sec = diff_time / 1000;
@@ -679,6 +681,7 @@ play_main(Movie *m, VideoWindow *vw)
 	diff_time = video_time - get_audio_time(m, info->ad);
 	if (diff_time <= 1)
 	  break;
+	j--;
       }
 #else
       int audio_time = get_audio_time(m, info->ad);
@@ -704,7 +707,8 @@ play_main(Movie *m, VideoWindow *vw)
     if ((diff_time = video_time - timer_get_milli(m->timer)) >= 0) {
       /* if too fast to display, wait before render */
 #if 1
-      while (diff_time > 0) {
+      j = 3;
+      while (diff_time > 0 && j) {
 	struct timeval tv;
 
 	tv.tv_sec = diff_time / 1000;
@@ -713,6 +717,7 @@ play_main(Movie *m, VideoWindow *vw)
 	diff_time = video_time - timer_get_milli(m->timer);
 	if (diff_time <= 1)
 	  break;
+	j--;
       }
 #else
       while (video_time > timer_get_milli(m->timer)) ;
