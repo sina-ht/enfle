@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Jul 20 21:54:05 2007.
- * $Id: videodecoder.c,v 1.9 2007/11/03 07:13:23 sian Exp $
+ * Last Modified: Tue Nov 25 17:13:14 2008.
+ * $Id: videodecoder.c,v 1.10 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -74,6 +74,7 @@ videodecoder_codec_name(unsigned int fourcc)
   case FCC_viv1:
     return "h263p";
   case FCC_H264:
+  case FCC_X264:
     return "h264";
   case FCC_DIVX: // invalid_asf
   case FCC_divx: // invalid_asf
@@ -151,6 +152,8 @@ videodecoder_codec_name(unsigned int fourcc)
     return "vcr1";
   case FCC_FFV1:
     return "ffv1";
+  case FCC_FFVH:
+    return "ffvhuff";
   case FCC_Xxan:
     return "xan_wc4";
   case FCC_mrle:

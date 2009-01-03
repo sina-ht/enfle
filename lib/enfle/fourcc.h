@@ -3,8 +3,8 @@
  * (C)Copyright 2002-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May 20 00:29:01 2006.
- * $Id: fourcc.h,v 1.16 2006/05/19 15:37:06 sian Exp $
+ * Last Modified: Tue Nov 25 17:12:54 2008.
+ * $Id: fourcc.h,v 1.17 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -48,6 +48,7 @@
 #define FCC_H261 FCC('H', '2', '6', '1')
 #define FCC_H263 FCC('H', '2', '6', '3')
 #define FCC_H264 FCC('H', '2', '6', '4')
+#define FCC_X264 FCC('x', '2', '6', '4')
 #define FCC_I263 FCC('I', '2', '6', '3')
 #define FCC_U263 FCC('U', '2', '6', '3')
 #define FCC_viv1 FCC('v', 'i', 'v', '1')
@@ -97,6 +98,9 @@
 #define FCC_WMV1 FCC('W', 'M', 'V', '1')
 #define FCC_WMV2 FCC('W', 'M', 'V', '2')
 #define FCC_WMV3 FCC('W', 'M', 'V', '3')
+#define FCC_wmv1 FCC('w', 'm', 'v', '1')
+#define FCC_wmv2 FCC('w', 'm', 'v', '2')
+#define FCC_wmv3 FCC('w', 'm', 'v', '3')
 
 // DVVIDEO
 #define FCC_dvsd FCC('d', 'v', 's', 'd')
@@ -138,6 +142,7 @@
 #define FCC_ASV2 FCC('A', 'S', 'V', '2')
 #define FCC_VCR1 FCC('V', 'C', 'R', '1')
 #define FCC_FFV1 FCC('F', 'F', 'V', '1')
+#define FCC_FFVH FCC('F', 'F', 'V', 'H')
 #define FCC_Xxan FCC('X', 'x', 'a', 'n')
 #define FCC_cvid FCC('c', 'v', 'i', 'd')
 

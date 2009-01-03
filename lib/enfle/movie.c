@@ -3,8 +3,8 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 11:51:32 2004.
- * $Id: movie.c,v 1.12 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Sun Dec 28 10:29:23 2008.
+ * $Id: movie.c,v 1.13 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -41,13 +41,17 @@ static int pause_usec(unsigned int);
 
 static void unload(Movie *);
 static void destroy(Movie *);
+static void lock(Movie *);
+static void unlock(Movie *);
 
 static Movie template = {
   .initialize_screen = initialize_screen,
   .render_frame = render_frame,
   .pause_usec = pause_usec,
   .unload = unload,
-  .destroy = destroy
+  .destroy = destroy,
+  .lock = lock,
+  .unlock = unlock,
 };
 
 Movie *
@@ -109,4 +113,16 @@ destroy(Movie *m)
   if (m->timer)
     timer_destroy(m->timer);
   free(m);
+}
+
+static void
+lock(Movie *m)
+{
+  pthread_mutex_lock(&m->mutex);
+}
+
+static void
+unlock(Movie *m)
+{
+  pthread_mutex_unlock(&m->mutex);
 }

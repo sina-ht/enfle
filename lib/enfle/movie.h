@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:40:41 2006.
- * $Id: movie.h,v 1.28 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Sun Dec 28 10:28:39 2008.
+ * $Id: movie.h,v 1.29 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -62,6 +62,7 @@ struct _movie {
   Timer *timer;
   Demultiplexer *demux;
   int bitrate;
+  pthread_mutex_t mutex;
 
   int has_video;
   int width, height;
@@ -101,6 +102,8 @@ struct _movie {
   /* These are methods. */
   void (*unload)(Movie *);
   void (*destroy)(Movie *);
+  void (*lock)(Movie *);
+  void (*unlock)(Movie *);
 
   /* These are implemented by movie plugin. */
   PlayerStatus (*play)(Movie *);
@@ -117,6 +120,8 @@ struct _movie {
 #define movie_unload(m) (m)->unload((m))
 #define movie_resize(m) (m)->status = _RESIZING
 #define movie_destroy(m) (m)->destroy((m))
+#define movie_lock(m) (m)->lock((m))
+#define movie_unlock(m) (m)->unlock((m))
 
 Movie *movie_create(void);
 

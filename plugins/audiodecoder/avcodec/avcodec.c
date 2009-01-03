@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May 19 10:05:57 2007.
- * $Id: avcodec.c,v 1.10 2007/05/19 01:56:50 sian Exp $
+ * Last Modified: Sun Dec 28 10:28:13 2008.
+ * $Id: avcodec.c,v 1.11 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -110,7 +110,7 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     adm->size = len;
     if (used_r)
       *used_r = len;
-    debug_message_fnc("avcodec audio: feed %d bytes\n", adm->size);
+    //debug_message_fnc("avcodec audio: feed %d bytes\n", adm->size);
   }
 
   out_len =  AVCODEC_MAX_AUDIO_FRAME_SIZE;
@@ -126,7 +126,7 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
   if (out_len == 0)
     return AD_NEED_MORE_DATA;
 
-  debug_message_fnc("avcodec audio: consume %d bytes, output %d bytes\n", l, out_len);
+  //debug_message_fnc("avcodec audio: consume %d bytes, output %d bytes\n", l, out_len);
 
   if (adm->nframe == 0) {
     /* Set up audio device. */
@@ -185,10 +185,13 @@ setup(AudioDecoder *adec, Movie *m)
   adm->acodec_ctx->block_align = m->block_align;
   adm->acodec_ctx->extradata = m->audio_extradata;
   adm->acodec_ctx->extradata_size = m->audio_extradata_size;
+  movie_lock(m);
   if (avcodec_open(adm->acodec_ctx, adm->acodec) < 0) {
     warning_fnc("avcodec_open() failed.\n");
+    movie_unlock(m);
     return 0;
   }
+  movie_unlock(m);
 
   return 1;
 }

@@ -3,8 +3,8 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar 22 17:12:01 2008.
- * $Id: avcodec.c,v 1.24 2008/04/19 09:04:21 sian Exp $
+ * Last Modified: Sun Dec 28 10:28:17 2008.
+ * $Id: avcodec.c,v 1.25 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -237,7 +237,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
   l = avcodec_decode_video(vdm->vcodec_ctx, vdm->vcodec_picture, &got_picture,
 			   vdm->buf + vdm->offset, vdm->size);
   if (l < 0) {
-    warning_fnc("avcodec: avcodec_decode_video return %d\n", len);
+    warning_fnc("avcodec: avcodec_decode_video return %d\n", l);
     return VD_ERROR;
   }
 
@@ -359,10 +359,13 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 #endif
   vdm->vcodec_ctx->extradata = m->video_extradata;
   vdm->vcodec_ctx->extradata_size = m->video_extradata_size;
+  movie_lock(m);
   if (avcodec_open(vdm->vcodec_ctx, vdm->vcodec) < 0) {
     warning_fnc("avcodec_open() failed.\n");
+    movie_unlock(m);
     return 0;
   }
+  movie_unlock(m);
 
   debug_message_fnc("Codec Tag[%c%c%c%c](%08X) Stream Tag[%c%c%c%c](%08X)\n",
 		     vdm->vcodec_ctx->codec_tag        & 0xff,
@@ -404,6 +407,8 @@ query(unsigned int fourcc, void *priv)
   case FCC_H263: // h263
   case FCC_I263: // h263i
   case FCC_U263: // h263p
+  case FCC_H264: // h264
+  case FCC_X264:
   case FCC_viv1:
   case FCC_DIVX: // mpeg4
   case FCC_divx:
@@ -437,6 +442,9 @@ query(unsigned int fourcc, void *priv)
   case FCC_WMV1: // wmv1
   case FCC_WMV2: // wmv2
   case FCC_WMV3: // wmv3
+  case FCC_wmv1: // wmv1
+  case FCC_wmv2: // wmv2
+  case FCC_wmv3: // wmv3
   case FCC_dvsd: // dvvideo
   case FCC_dvhd:
   case FCC_dvsl:
@@ -460,6 +468,7 @@ query(unsigned int fourcc, void *priv)
   case FCC_ASV2: // asv2
   case FCC_VCR1: // vcr1
   case FCC_FFV1: // ffv1
+  case FCC_FFVH: // ffvhuff
   case FCC_Xxan: // xan_wc4
   case FCC_mrle: // msrle
   case FCC_0x01000000:
