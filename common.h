@@ -1,10 +1,10 @@
 /*
  * common.h -- common header file, which is included by almost all files.
- * (C)Copyright 2000-2008 by Hiroshi Takekawa
+ * (C)Copyright 2000-2009 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar 22 15:21:55 2008.
- * $Id: common.h,v 1.37 2008/04/19 09:28:05 sian Exp $
+ * Last Modified: Sun Jan  4 00:29:18 2009.
+ * $Id: common.h,v 1.38 2009/01/03 15:33:29 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -104,4 +104,4 @@
 #  define debug_message_fn(format, args...)
 #  define debug_message_fnc(format, args...)
 #endif
-#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2008 by Hiroshi Takekawa"
+#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2009 by Hiroshi Takekawa"
