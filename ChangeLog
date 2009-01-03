@@ -1,3 +1,22 @@
+2009-01-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: System-installed libavcodec support.
+
+	* lib/enfle/fourcc.h, lib/enfle/movie.c, lib/enfle/movie.h,
+	lib/enfle/videodecoder.c,
+	plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/avcodec.c: More fourccs.
+	System-installed libavcodec support.  Movie object locking
+	support.
+
+	* lib/X11/x11ximage.c: _INDEX44 rendering bug fix.
+
+	* common.h: Copyright year change.
+
+	* config.guess, config.sub, ltmain.sh: Updated tools.
+
 2008-04-19  Hiroshi Takekawa  <sian@fennel.org>
 
 	* common.h, configure.in, lib/enfle/stream.c,
