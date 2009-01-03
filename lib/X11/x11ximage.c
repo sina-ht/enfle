@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Jun  3 20:49:01 2007.
- * $Id: x11ximage.c,v 1.58 2007/06/03 11:54:54 sian Exp $
+ * Last Modified: Sun Jan  4 00:26:49 2009.
+ * $Id: x11ximage.c,v 1.59 2009/01/03 15:33:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -713,7 +713,7 @@ convert(X11XImage *xi, Image *p, int src, int dst)
 	  ximage->byte_order = LSBFirst;
 	  for (j = 0; j < h; j++) {
 	    d = dest + j * ximage->bytes_per_line;
-	    for (i = 0; i < w; i++) {
+	    for (i = 0; i < w / 2; i++) {
 	      *d++ = p->colormap[(s[i] >> 4) & 0xf][2];
 	      *d++ = p->colormap[(s[i] >> 4) & 0xf][1];
 	      *d++ = p->colormap[(s[i] >> 4) & 0xf][0];
