@@ -1,6 +1,6 @@
 ; enfle.rc
 ; Last Modified: Tue May 29 02:13:00 2007.
-; $Id: enfle.rc,v 1.54 2007/06/03 09:59:11 sian Exp $
+; $Id: enfle.rc,v 1.55 2009/02/23 14:29:46 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -37,10 +37,11 @@ enfle {
 	;
 	show_comment = no
 	; filename code conversion from internal representation to display
-	;filename_code_conversion = yes
-	;filename_code_from := EUC-JP:UTF-8:CP932:Shift_JIS
+	filename_code_conversion = yes
+	filename_code_from := EUC-JP:CP932:Shift_JIS
 	;filename_code_to = EUC-JP
 	;;filename_code_to = EUC-JISX0213
+	filename_code_to = UTF-8
 	; disable image cache
 	;disable_image_cache = yes
 	; image cache max
