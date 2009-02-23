@@ -3,8 +3,8 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May  6 02:34:44 2007.
- * $Id: bmp.c,v 1.17 2007/05/19 01:58:09 sian Exp $
+ * Last Modified: Sat Sep  6 18:12:26 2008.
+ * $Id: bmp.c,v 1.18 2009/02/23 14:28:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -33,6 +33,10 @@
 #include "enfle/stream-utils.h"
 #include "enfle/loader-plugin.h"
 
+#define BI_RGB  0
+#define BI_RLE8 1
+#define BI_RLE4 2
+
 //static const unsigned int types = (IMAGE_BGRA32 | IMAGE_BGR24 | IMAGE_INDEX | IMAGE_BITMAP_MSBFirst);
 
 DECLARE_LOADER_PLUGIN_METHODS;
@@ -40,7 +44,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
   .name = "BMP",
-  .description = "BMP Loader plugin version 0.2.1",
+  .description = "BMP Loader plugin version 0.3",
   .author = "Hiroshi Takekawa",
   .image_private = NULL,
 
@@ -75,7 +79,7 @@ load_image(Image *p, Stream *st)
   unsigned int file_size, header_size, image_size, offset_to_image;
   unsigned short int biPlanes;
   unsigned int bytes_per_pal;
-  int i, compress_method;
+  int i, c, c2, y, compress_method;
 
   if (stream_read(st, buf, 12) != 12)
     return 0;
@@ -186,13 +190,93 @@ load_image(Image *p, Stream *st)
 
   stream_seek(st, offset_to_image, _SET);
   pp = d + image_bpl(p) * (image_height(p) - 1);
-  if (!compress_method) {
+
+  switch (compress_method) {
+  case BI_RGB:
     for (i = (int)(image_height(p) - 1); i >= 0; i--) {
       stream_read(st, pp, image_bpl(p));
       pp -= image_bpl(p);
     }
-  } else {
-    show_message("Compressed bitmap not yet supported (method = %d).\n", compress_method);
+    break;
+  case BI_RLE4:
+    if (p->depth != 4)
+      show_message("Compressed RI_BLE4 bitmap with depth %d != 4.\n", p->depth);
+    /* RLE compressed data */
+    /* Not complete. */
+    y = image_height(p);
+    while ((c = stream_getc(st)) != -1 && y >= 0) {
+      if (c != 0) {
+        /* code mode */
+        c2 = stream_getc(st);
+	show_message_fnc("len %d data %d\n", c, c2);
+        for (i = 0; i < c; i += 2) {
+	  *pp++ = (unsigned char)c2;
+        }
+      } else {
+	if ((c = stream_getc(st)) == 0) {
+	  /* line end */
+	  show_message_fnc("line end %d\n", y);
+	  pp = d + image_bpl(p) * (y - 1);
+	  y--;
+	} else if (c == 1) {
+	  /* image end */
+	  break;
+	} else if (c == 2) {
+	  /* offset */
+	  c = stream_getc(st);
+	  c2 = stream_getc(st);
+	  show_message_fnc("offset %d, %d\n", c, c2);
+	  pp += (c - c2 * image_width(p)) / 2;
+	} else {
+	  /* absolute mode */
+	  show_message_fnc("abs len %d\n", c);
+	  for (i = 0; i < c; i += 2)
+	    *pp++ = (unsigned char)stream_getc(st);
+	  if (c % 2 != 0)
+	    /* read dummy */
+	    c = stream_getc(st);
+	}
+      }
+    }
+    break;
+  case BI_RLE8:
+    if (p->depth != 8)
+      show_message("Compressed RI_BLE8 bitmap with depth %d != 8.\n", p->depth);
+    /* RLE compressed data */
+    y = image_height(p);
+    while ((c = stream_getc(st)) != -1 && y >= 0) {
+      if (c != 0) {
+	/* code mode */
+	c2 = stream_getc(st);
+	for (i = 0; i < c; i++) {
+	  *pp++ = (unsigned char)c2;
+	}
+      } else {
+	if ((c = stream_getc(st)) == 0) {
+	  /* line end */
+	  pp = d + image_bpl(p) * (y - 1);
+	  y--;
+	} else if (c == 1) {
+	  /* image end */
+	  break;
+	} else if (c == 2) {
+	  /* offset */
+	  c = stream_getc(st);
+	  c2 = stream_getc(st);
+	  pp += (c - c2 * image_width(p));
+	} else {
+	  /* absolute mode */
+	  for (i = 0; i < c; i++)
+	    *pp++ = (unsigned char)stream_getc(st);
+	  if (c % 2 != 0)
+	    /* read dummy */
+	    c = stream_getc(st);
+	}
+      }
+    }
+    break;
+  default:
+    show_message("Compressed bitmap (method = %d) not supported.\n", compress_method);
     return 0;
   }
 
