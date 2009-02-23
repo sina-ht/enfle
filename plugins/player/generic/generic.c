@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar 22 12:15:07 2008.
- * $Id: generic.c,v 1.32 2008/04/19 09:04:01 sian Exp $
+ * Last Modified: Sun Dec 28 01:33:23 2008.
+ * $Id: generic.c,v 1.33 2009/02/23 14:29:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -63,7 +63,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   .type = ENFLE_PLUGIN_PLAYER,
   .name = "generic",
-  .description = "generic Player plugin version 0.4",
+  .description = "generic Player plugin version 0.4.1",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -103,7 +103,6 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
     err_message("%s: No enough memory.\n", __FUNCTION__);
     return PLAY_ERROR;
   }
-  m->movie_private = (void *)info;
 
   demultiplexer_set_input(m->demux, st);
   info->nvstreams = demultiplexer_nvideos(m->demux);
@@ -305,6 +304,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st, Config *c, EnflePlugins *eps)
 
   m->st = st;
   m->status = _STOP;
+  m->movie_private = info;
 
   return play(m);
 
@@ -651,8 +651,8 @@ play_main(Movie *m, VideoWindow *vw)
 
   rate = rational_to_double(m->framerate);
   //debug_message_fnc("frame %d, rate %f, pts %ld, ts_base %ld\n", m->current_frame, rate, m->vdec->pts, m->vdec->ts_base);
-  if (m->vdec->ts_base == 0 || m->vdec->pts == -1) {
-    /* videodecoder didn't provide pts */
+  if (m->vdec->ts_base == 0 || m->vdec->ts_base > 1000000 || m->vdec->pts == -1) {
+    /* videodecoder didn't provide pts or unreliable */
     video_time = m->current_frame * 1000 / rate;
     //debug_message_fnc("video_time %d (from fps)\n", video_time);
   } else if (m->vdec->ts_base == 1000) {
@@ -707,6 +707,7 @@ play_main(Movie *m, VideoWindow *vw)
     if ((diff_time = video_time - timer_get_milli(m->timer)) >= 0) {
       /* if too fast to display, wait before render */
 #if 1
+      /* Avoid dead-lock */
       j = 3;
       while (diff_time > 0 && j) {
 	struct timeval tv;
@@ -859,8 +860,10 @@ unload_movie(Movie *m)
   if (info) {
     if (info->p)
       image_destroy(info->p);
-    if (m->demux)
+    if (m->demux) {
       demultiplexer_destroy(m->demux);
+      m->demux = NULL;
+    }
     free(info);
     m->movie_private = NULL;
   }
