@@ -3,8 +3,8 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat May 19 00:15:37 2007.
- * $Id: Xlib.c,v 1.67 2007/05/19 01:58:35 sian Exp $
+ * Last Modified: Mon Feb 23 23:25:33 2009.
+ * $Id: Xlib.c,v 1.68 2009/02/23 14:31:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -72,7 +72,6 @@ typedef struct {
   Font caption_font;
   XFontSet xfontset;
   int fontset;
-  XFontStruct *fs;
   int is_rect_draw;
   unsigned int lx, uy, rx, dy;
 } X11Window_info;
@@ -326,7 +325,7 @@ open_window(void *data, VideoWindow *parent, unsigned int w, unsigned int h)
     }
   }
   xwi->caption_font = XLoadFont(x11_display(x11), fontname);
-  xwi->fs = XQueryFont(x11_display(x11), xwi->caption_font);
+  //xwi->fs = XQueryFont(x11_display(x11), xwi->caption_font);
 
   vw->full_width = WidthOfScreen(x11_sc(x11));
   vw->full_height = HeightOfScreen(x11_sc(x11));
@@ -414,8 +413,9 @@ draw_caption(VideoWindow *vw)
     XFree(text.value);
     x11_unlock(x11);
   } else {
-    int x = (vw->full_width - XTextWidth(xwi->fs, vw->caption, strlen(vw->caption))) >> 1;
-    int y = vw->full_height - (xwi->fs->ascent + xwi->fs->descent);
+    XFontSetExtents *extent = XExtentsOfFontSet(xwi->xfontset);
+    int x = (vw->full_width - XmbTextEscapement(xwi->xfontset, vw->caption, strlen(vw->caption))) >> 1;
+    int y = vw->full_height - extent->max_logical_extent.height;
     int oy = (vw->full_height + vw->render_height) >> 1;
 
     if (x < 0)
@@ -442,12 +442,13 @@ erase_caption(VideoWindow *vw)
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
+  XFontSetExtents *extent = XExtentsOfFontSet(xwi->xfontset);
   int x, y;
 
   x11_lock(x11);
-  x = (vw->full_width - XTextWidth(xwi->fs, vw->caption, strlen(vw->caption))) >> 1;
+  x = (vw->full_width - XmbTextEscapement(xwi->xfontset, vw->caption, strlen(vw->caption))) >> 1;
   x11_unlock(x11);
-  y = vw->full_height - (xwi->fs->ascent + xwi->fs->descent);
+  y = vw->full_height - extent->max_logical_extent.height;
 
   if (!vw->if_caption)
     return;
@@ -1233,9 +1234,7 @@ __update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, u
 	      left + vw->offset_x, top + vw->offset_y, w, h, left, top);
   } else {
     XCopyArea(x11_display(x11), xwi->full.pix, x11window_win(xw), xwi->full.gc,
-	      left + vw->offset_x, top + vw->offset_y, w, h,
-	      left + ((vw->full_width  - w) >> 1),
-	      top  + ((vw->full_height - h) >> 1));
+	      left + vw->offset_x, top + vw->offset_y, w, h, left, top);
   }
   x11_unlock(x11);
 }
@@ -1259,10 +1258,10 @@ update(VideoWindow *vw, unsigned int w, unsigned int h)
       __update(vw, 0, 0, w, h);
     }
   } else {
-    if (vw->if_direct) {
-      int sx = (vw->full_width < w) ? 0 : (vw->full_width - w) / 2;
-      int sy = (vw->full_height < h) ? 0 : (vw->full_height - h) / 2;
+    int sx = (vw->full_width < w) ? 0 : (vw->full_width - w) / 2;
+    int sy = (vw->full_height < h) ? 0 : (vw->full_height - h) / 2;
 
+    if (vw->if_direct) {
       if (xwi->xi->use_xv) {
 #ifdef USE_XV
 	x11ximage_put_scaled(xwi->xi, x11window_win(xw), xwi->full.gc, vw->offset_x, vw->offset_y,
@@ -1275,7 +1274,7 @@ update(VideoWindow *vw, unsigned int w, unsigned int h)
 		      w, h);
       }
     } else {
-      __update(vw, 0, 0, w, h);
+      __update(vw, sx, sy, w, h);
     }
   }
 }
@@ -1395,19 +1394,19 @@ render_scaled(VideoWindow *vw, Image *p, int auto_calc, unsigned int _dw, unsign
   if (vw->render_method != _VIDEO_RENDER_NORMAL) {
     if (!use_hw_scale) {
       debug_message_fnc("Magnifying..\n");
-      image_magnify(p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK, dw, dh, vw->interpolate_method);
-      image_data_swap(p, IMAGE_INDEX_WORK, IMAGE_INDEX_RENDERED);
+      if (image_magnify(p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK, dw, dh, vw->interpolate_method))
+	image_data_swap(p, IMAGE_INDEX_WORK, IMAGE_INDEX_RENDERED);
     }
   }
 
   image_data_copy(p, IMAGE_INDEX_RENDERED, IMAGE_INDEX_WORK);
   x11ximage_convert(xwi->xi, p, IMAGE_INDEX_WORK, IMAGE_INDEX_RENDERED);
 
+  //debug_message_fnc("sw,sh (%d, %d)  dw,dh (%d, %d)  use_xv: %d, full: %d, direct: %d\n", sw, sh, dw, dh, xwi->xi->use_xv, vw->if_fullscreen, vw->if_direct);
+
   resize(vw, dw, dh);
   vw->render_width  = dw;
   vw->render_height = dh;
-
-  //debug_message_fnc("sw,sh (%d, %d)  dw,dh (%d, %d)  use_xv: %d, full: %d, direct: %d\n", sw, sh, dw, dh, xwi->xi->use_xv, vw->if_fullscreen, vw->if_direct);
 
   if (!vw->if_fullscreen) {
     recreate_pixmap_if_resized(vw, &xwi->normal);
@@ -1484,8 +1483,6 @@ destroy_window(VideoWindow *vw)
     x11_free_gc(x11, xwi->full.gc);
   if (xwi->caption_font)
     XUnloadFont(x11_display(x11), xwi->caption_font);
-  if (xwi->fs)
-    XFreeFontInfo(NULL, xwi->fs, 1);
 #if !defined(DEBUG)
   /* XXX: This causes valgrind to seg. fault... */
   if (xwi->fontset)
