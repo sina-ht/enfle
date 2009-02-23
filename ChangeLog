@@ -1,3 +1,15 @@
+2009-02-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Fixed font rendering and full-screen
+	rendering.
+
+	* src/enfle.rc: Default to UTF-8.
+
+	* plugins/player/generic/generic.c: More robust code.
+
+	* plugins/loader/bmp/bmp.c: Added RLE4 and RLE8 support (not fully
+	tested).
+
 2009-01-03  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: System-installed libavcodec support.
