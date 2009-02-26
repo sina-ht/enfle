@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Feb 23 23:25:33 2009.
+ * Last Modified: Thu Feb 26 21:26:24 2009.
  * $Id: Xlib.c,v 1.68 2009/02/23 14:31:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -748,7 +748,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	if (!vw->if_fullscreen)
 	  __update(vw, rect.x, rect.y, rect.width, rect.height);
 	else
-	  __update(vw, 0, 0, vw->render_width, vw->render_height);
+	  update(vw, vw->render_width, vw->render_height);
 
 	XSetClipMask(x11_display(x11), gc, None);
 	XDestroyRegion(region);
@@ -1231,10 +1231,10 @@ __update(VideoWindow *vw, unsigned int left, unsigned int top, unsigned int w, u
   x11_lock(x11);
   if (!vw->if_fullscreen) {
     XCopyArea(x11_display(x11), xwi->normal.pix, x11window_win(xw), xwi->normal.gc,
-	      left + vw->offset_x, top + vw->offset_y, w, h, left, top);
+	      vw->offset_x, vw->offset_y, w, h, left, top);
   } else {
     XCopyArea(x11_display(x11), xwi->full.pix, x11window_win(xw), xwi->full.gc,
-	      left + vw->offset_x, top + vw->offset_y, w, h, left, top);
+	      vw->offset_x, vw->offset_y, w, h, left, top);
   }
   x11_unlock(x11);
 }
