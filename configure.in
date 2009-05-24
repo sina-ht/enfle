@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2009 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Mon Feb 23 23:26:41 2009.
+dnl Last Modified: Sun May 24 23:32:59 2009.
 dnl $Id: configure.in,v 1.209 2009/02/23 14:31:15 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.62)
-AC_INIT([enfle],[20090223],[sian@big.or.jp])
+AC_INIT([enfle],[20090524],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -1246,6 +1246,12 @@ dnl more warning
 AC_ARG_ENABLE(warnings,
         [  --enable-warnings       enable more compiler warnings.])
 enable_warnings=${enable_warnings-no}
+
+dnl document
+AC_ARG_ENABLE(doc,
+        [  --enable-doc            enable document generation.])
+enable_doc=${enable_doc-no}
+AM_CONDITIONAL(MAN_PAGES_ENABLED, test "$enable_doc" = "yes")
 
 dnl data directory path
 enfle_datadir=${datadir}/enfle

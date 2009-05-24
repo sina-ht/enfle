@@ -1,0 +1,211 @@
+<refentry id="enfle.1">
+  <refentryinfo>
+    <title>enfle</title>
+    <date>May 2009</date>
+    <productname>enfle</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>enfle</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="version"></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>enfle</refname>
+    <refpurpose>enfle plugin based graphic loader</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>enfle</command>
+      <arg><option>--ui</option></arg>
+      <arg><option>--video</option></arg>
+      <arg><option>--audio</option></arg>
+      <arg><option>--wallpaper</option></arg>
+      <arg><option>--convert</option></arg>
+      <arg><option>--magnify</option></arg>
+      <arg><option>--config</option></arg>
+      <arg><option>--nth</option></arg>
+      <arg><option>--nocache</option></arg>
+      <arg><option>--recache</option></arg>
+      <arg><option>--include</option></arg>
+      <arg><option>--exclude</option></arg>
+      <arg><option>--minwidth</option></arg>
+      <arg><option>--minheight</option></arg>
+      <arg><option>--readdir</option></arg>
+      <arg><option>--info</option></arg>
+      <arg><option>--help</option></arg>
+      <arg><option>--version</option></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      <emphasis><refentrytitle>enfle</refentrytitle></emphasis> is a plugin based graphic loader.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+      <varlistentry>
+	<term><option>--ui|-u</option></term>
+        <listitem>
+          <para>
+            Specify which UI to use.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--video|-v</option></term>
+        <listitem>
+          <para>
+            Specify which video to use.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--audio|-a</option></term>
+        <listitem>
+          <para>
+            Specify which audio to use.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--wallpaper|-w</option></term>
+        <listitem>
+          <para>
+            Set the first image as wallpaper(alias for -u Wallpaper).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--convert|-C</option></term>
+        <listitem>
+          <para>
+            Convert images automatically (default PNG, for Convert UI).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--magnify|-m</option></term>
+        <listitem>
+          <para>
+            Specify magnification method(for Normal UI).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--config|-c</option></term>
+        <listitem>
+          <para>
+            Additional config like -c '/enfle/plugins/saver/jpeg/quality = 80'.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--nth|-n</option></term>
+        <listitem>
+          <para>
+            Start at nth file/archive.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--nocache|-q</option></term>
+        <listitem>
+          <para>
+            Don't use plugin cache.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--recache|-N</option></term>
+        <listitem>
+          <para>
+            Re-create cache file.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--include|-i</option></term>
+        <listitem>
+          <para>
+            Specify the pattern to include.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--exclude|-x</option></term>
+        <listitem>
+          <para>
+            Specify the pattern to exclude.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--minwidth|-X</option></term>
+        <listitem>
+          <para>
+            Specify the minimum width of an image to display.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--minheight|-Y</option></term>
+        <listitem>
+          <para>
+            Specify the minimum height of an image to display.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--readdir|-d</option></term>
+        <listitem>
+          <para>
+            Read the directory wherein the specified file resides.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--info|-I</option></term>
+        <listitem>
+          <para>
+            Show information.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--help|-h</option></term>
+        <listitem>
+          <para>
+            Show help options.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--version|-V</option></term>
+        <listitem>
+          <para>
+            Show version.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by Hiroshi Takekawa <email>sian@big.or.jp</email>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports.
+    </para>
+  </refsect1>
+</refentry>
