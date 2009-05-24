@@ -35,7 +35,9 @@
 #endif
 
 #if !defined(_EMX) && !defined(_WIN_32) && !defined(_BEOS) && !defined(_APPLE)
+#if !defined(_UNIX)
   #define _UNIX
+#endif
 #endif
 
 #endif
