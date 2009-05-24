@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 03:48:50 2006.
+ * Last Modified: Sun May 24 23:30:39 2009.
  * $Id: enfle.c,v 1.74 2006/02/24 18:54:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <libgen.h>
 
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
@@ -70,6 +71,7 @@ static Option enfle_options[] = {
   { "exclude",   'x', _REQUIRED_ARGUMENT, "Specify the pattern to exclude." },
   { "minwidth",  'X', _REQUIRED_ARGUMENT, "Specify the minimum width of an image to display." },
   { "minheight", 'Y', _REQUIRED_ARGUMENT, "Specify the minimum height of an image to display." },
+  { "readdir",   'd', _NO_ARGUMENT,       "Read the directory wherein the specified file resides." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
   { "help",      'h', _NO_ARGUMENT,       "Show help message." },
   { "version",   'V', _NO_ARGUMENT,       "Show version." },
@@ -391,6 +393,7 @@ main(int argc, char **argv)
   int include_fnmatch = 0;
   int exclude_fnmatch = 0;
   int if_use_cache = -1;
+  int if_readdir = 0;
   int nth = 0;
   int minw = 0, minh = 0;
   char *pattern = NULL;
@@ -475,6 +478,9 @@ main(int argc, char **argv)
       break;
     case 'Y':
       minh = atoi(optarg);
+      break;
+    case 'd':
+      if_readdir = 1;
       break;
     case 'V':
       printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n");
@@ -598,6 +604,7 @@ main(int argc, char **argv)
   uidata.nth = nth;
   uidata.minw = minw;
   uidata.minh = minh;
+  uidata.if_readdir = if_readdir;
   uidata.a = archive_create(ARCHIVE_ROOT);
 
   if (include_fnmatch)
@@ -612,7 +619,28 @@ main(int argc, char **argv)
       if (strcmp(argv[i], "-") == 0) {
 	warning("Cannot specify stdin(-) with other files. ignored.\n");
       } else {
-	archive_add(uidata.a, argv[i], strdup(argv[i]));
+	if (uidata.if_readdir == 1) {
+	  struct stat st;
+
+	  if (!stat(argv[i], &st) == 0) {
+	    warning("stat() failed with '-d' for %s.\n", argv[i]);
+	  } else {
+	    if (!S_ISREG(st.st_mode)) {
+	      warning("Non regular file: %s.\n", argv[i]);
+	    } else {
+	      char *path = strdup(argv[i]);
+	      char *dir = dirname(path);
+	      char *path2 = strdup(argv[i]);
+
+	      uidata.path = basename(path2);
+	      show_message_fnc("readdir: %s -> %s\n", uidata.path, dir);
+	      uidata.if_readdir++;
+	      archive_add(uidata.a, dir, dir);
+	      continue;
+	    }
+	  }
+	}
+	  archive_add(uidata.a, argv[i], strdup(argv[i]));
       }
     }
   }

@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 28 00:59:55 2006.
+ * Last Modified: Sun May 24 23:54:53 2009.
  * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -826,8 +826,17 @@ process_file(UIData *uidata, char *path, Archive *a, Stream *s, Movie *m, void *
   r = identify_file(eps, path, s, a, c);
   switch (r) {
   case IDENTIFY_FILE_DIRECTORY:
+    if (uidata->if_readdir >= 3) {
+      debug_message("Skipping %s (%d).\n", path, uidata->if_readdir);
+      return MAIN_LOOP_DELETE_FROM_LIST;
+    } else if (uidata->if_readdir == 2) {
+      debug_message("Reading for '-d': %s.\n", path);
+      uidata->if_readdir++;
+    } else {
+      debug_message("Reading %s (%d).\n", path, uidata->if_readdir);
+    }
+
     arc = archive_create(a);
-    debug_message("Reading %s.\n", path);
 
     if (!archive_read_directory(arc, path, 1)) {
       show_message("Error in reading %s.\n", path);
@@ -962,6 +971,8 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
   m->ap = uidata->ap;
 
   path = NULL;
+
+  /* 'n' option */
   if (uidata->nth > 1 && archive_nfiles(a) > 1 && archive_iteration_start(a)) {
     for (i = 0; i < uidata->nth - 2; i++) {
       path = archive_iteration_next(a);
@@ -971,6 +982,24 @@ process_files_of_archive(UIData *uidata, Archive *a, void *gui)
     if (i == uidata->nth - 2)
       path = archive_iteration_next(a);
     uidata->nth = 0;
+  }
+
+  /* 'd' option */
+  debug_message_fnc("readdir: archive files %d.\n", a->nfiles);
+  if (uidata->if_readdir == 3 && archive_nfiles(a) >= 1) {
+    path = archive_iteration_start(a);
+    do {
+      debug_message_fnc("readdir: path = %s.\n", path);
+      if (strcmp(path, uidata->path) == 0) {
+	uidata->if_readdir++;
+	break;
+      }
+    } while ((path = archive_iteration_next(a)));
+    if (!path) {
+      err_message("Specified '-d' but not found the file.\n");
+      return 0;
+    }
+    debug_message_fnc("readdir: found %s.\n", path);
   }
 
   ret = MAIN_LOOP_DO_NOTHING;
