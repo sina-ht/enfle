@@ -14,6 +14,7 @@ enfle-config.h.in
 config.log
 config.status
 config.sub
+config.rpath
 configure
 install-sh
 makedist
@@ -28,3 +29,9 @@ ltmain.sh
 libtool
 .libs
 depcomp
+.anjuta
+.tm_project2.cache
+autom4te.cache
+TODO.tasks
+enfle.anjuta
+lib/mad/mad.h
