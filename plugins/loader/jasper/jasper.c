@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:23:46 2006.
+ * Last Modified: Sun May 24 23:48:23 2009.
  * $Id: jasper.c,v 1.5 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -172,7 +172,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 
   jas_stream_close(js);
   free(buf);
-  debug_message("JasPer: jas_image_decode() OK: (%d,%d)\n", jas_image_cmptwidth(ji, 0), jas_image_cmptheight(ji, 0));
+  debug_message("JasPer: jas_image_decode() OK: (%ld,%ld)\n", jas_image_cmptwidth(ji, 0), jas_image_cmptheight(ji, 0));
 
   /* convert to enfle format */
 
