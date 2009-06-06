@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  6 19:34:50 2009.
+ * Last Modified: Sat Jun  6 20:37:35 2009.
  * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -107,6 +107,7 @@ typedef struct _main_loop {
   Image *p;
   Movie *m;
   Timer *timer;
+  Timer *slide_timer;
   //unsigned int magnified_width, magnified_height; /* For arbitrary size magnification */
   char *path;
   VideoButton pointed_button;
@@ -401,6 +402,33 @@ main_loop_set_wallpaper(void *a)
   return 1;
 }
 static int
+main_loop_toggle_autoforward(void *a)
+{
+  MainLoop *ml = a;
+
+  if (ml->uidata->if_slideshow) {
+    timer_stop(ml->slide_timer);
+    ml->uidata->if_slideshow = 0;
+  } else {
+    ml->uidata->if_slideshow = 2;
+  }
+  return 1;
+}
+static int
+main_loop_toggle_slideshow(void *a)
+{
+  MainLoop *ml = a;
+
+  if (ml->uidata->if_slideshow) {
+    timer_stop(ml->slide_timer);
+    ml->uidata->if_slideshow = 0;
+  } else {
+    timer_start(ml->slide_timer);
+    ml->uidata->if_slideshow = 1;
+  }
+  return 1;
+}
+static int
 main_loop_toggle_interpolate(void *a)
 {
   MainLoop *ml = a; 
@@ -590,6 +618,12 @@ static UIAction built_in_actions[] = {
   /* 'd' */
   { "delete_from_list", main_loop_delete_from_list, NULL,
     ENFLE_KEY_d, ENFLE_MOD_None, ENFLE_Button_None },
+  /* 'a' */
+  { "toggle_autoforward", main_loop_toggle_autoforward, NULL,
+    ENFLE_KEY_a, ENFLE_MOD_None, ENFLE_Button_None },
+  /* 's' */
+  { "toggle_slideshow", main_loop_toggle_slideshow, NULL,
+    ENFLE_KEY_s, ENFLE_MOD_None, ENFLE_Button_None },
   /* 'S' */
   { "toggle_interpolate", main_loop_toggle_interpolate, NULL,
     ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None },
@@ -724,6 +758,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 {
   MainLoop ml;
   int caption_to_be_set = 0;
+  int loop = 0;
 
   memset(&ml, 0, sizeof(ml));
   ml.button = ENFLE_Button_None;
@@ -733,6 +768,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   ml.m = m;
   ml.p = p;
   ml.timer = enfle_timer_create(timer_gettimeofday());
+  ml.slide_timer = enfle_timer_create(timer_gettimeofday());
   ml.st = st;
   ml.a = a;
   ml.path = path;
@@ -761,6 +797,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   video_window_set_cursor(vw, _VIDEO_CURSOR_NORMAL);
 
   timer_start(ml.timer);
+  timer_start(ml.slide_timer);
   ml.ret = MAIN_LOOP_DO_NOTHING;
   while (ml.ret == MAIN_LOOP_DO_NOTHING) {
     if (timer_is_running(ml.timer) && timer_get(ml.timer) >= 2) {
@@ -851,10 +888,21 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 	caption_to_be_set = 0;
       }
     }
+
+    if (ml.ret == MAIN_LOOP_DO_NOTHING &&
+	((ml.uidata->if_slideshow == 2 && loop > 50) ||
+	 (ml.uidata->if_slideshow == 1 && timer_get(ml.slide_timer) >= ml.uidata->slide_interval))) {
+      ml.ret = MAIN_LOOP_NEXT;
+      timer_stop(ml.slide_timer);
+      loop = 0;
+    }
+    loop++;
   }
 
   if (ml.timer)
     timer_destroy(ml.timer);
+  if (ml.slide_timer)
+    timer_destroy(ml.slide_timer);
 
   return ml.ret;
 }

@@ -2,9 +2,9 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-           (C) Copyright 1998-2007 by Hiroshi Takekawa.
+           (C) Copyright 1998-2009 by Hiroshi Takekawa.
 
-             Last Modified: Sat Oct 20 22:06:44 2007.
+             Last Modified: Sat Jun  6 20:50:54 2009.
 
 ***************************************************************************
 
@@ -139,15 +139,6 @@ FreeBSD (4.1R, x86)
 
 同じ/他の環境下で試された方は結果を御報告ください。
 
-私のメインの開発環境は 2005/7/3 現在 以下の通りです。
-
-Kernel: Linux-2.6.12-mm1
-CPU: PentiumIV/3GHz or PentiumIII/700MHz
-X server: X11R6.8.1
-Video: NVIDIA GeForce4 Ti4800 SE or Silicon Motion, Inc. SM720 Lynx3DM
-Compiler: gcc version 2.95.3 or 3.4.4, icc 8.0
-libc: glibc-2.3.5/cvs/nptl
-
 
 3.コンパイル
 
@@ -202,7 +193,7 @@ Enfle は非常にシンプルなプログラムです。引数に表示したいファイル名を続
 -i は指定したパターンのファイル名のみ対象とします。
 -x は指定したパターンのファイル名を対象から外します。
 -n は指定した数字番目のファイルから表示します。
--w は最初に読みこんだ画像を壁紙にして終了します。
+-w は最初に読みこんだ画像を壁紙にして終了します。Gnome環境では使えません。
 -m は拡大表示方法を指定します。
       0: normal 1: double 2: short 3: long
 -c は config の上書きをします。複数指定可。
@@ -216,6 +207,8 @@ Enfle は非常にシンプルなプログラムです。引数に表示したいファイル名を続
 -N はプラグインの検索に使うキャッシュを再構築します。
 -X は表示する画像の横幅の閾値を指定します。
 -Y は表示する画像の縦幅の閾値を指定します。
+-d は指定したファイルがあるディレクトリを読みこみます。
+-s はスライドショーを開始します。間隔を秒を指定できます。デフォルトは5秒です。
 
 
 5.使い方
@@ -232,6 +225,8 @@ d			今表示してるファイルを表示リストからはずす
 D (shift+d)		今表示してるファイルを削除する
 q			終了
 f			フルスクリーン on/off
+a			自動的に次々画像を表示します(間隔0のスライドショー)
+s			スライドショーの開始
 S (shift+s)		拡大アルゴリズムの変更 (nointerpolate/bilinear)
 C-s			表示中の画像を PNG 形式で保存
 Alt-S			config で指定した形式で保存

@@ -1,7 +1,7 @@
 <refentry id="enfle.1">
   <refentryinfo>
     <title>enfle</title>
-    <date>May 2009</date>
+    <date>Jun 2009</date>
     <productname>enfle</productname>
   </refentryinfo>
 
@@ -34,6 +34,7 @@
       <arg><option>--minwidth</option></arg>
       <arg><option>--minheight</option></arg>
       <arg><option>--readdir</option></arg>
+      <arg><option>--slideshow</option></arg>
       <arg><option>--info</option></arg>
       <arg><option>--help</option></arg>
       <arg><option>--version</option></arg>
@@ -77,7 +78,7 @@
 	<term><option>--wallpaper|-w</option></term>
         <listitem>
           <para>
-            Set the first image as wallpaper(alias for -u Wallpaper).
+            Set the first image as wallpaper(alias for -u Wallpaper).  This will not work in gnome environment.
           </para>
         </listitem>
       </varlistentry>
@@ -166,6 +167,14 @@
         <listitem>
           <para>
             Read the directory wherein the specified file resides.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--slideshow|-s</option></term>
+        <listitem>
+          <para>
+            Slideshow, optionally accepts interval timer in second.
           </para>
         </listitem>
       </varlistentry>

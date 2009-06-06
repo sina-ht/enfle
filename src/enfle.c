@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May 24 23:30:39 2009.
+ * Last Modified: Sat Jun  6 20:36:58 2009.
  * $Id: enfle.c,v 1.74 2006/02/24 18:54:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -56,6 +56,8 @@
 /* Static plugin prototypes */
 STATIC_PLUGIN_PROTO
 
+#define DEFAULT_SLIDE_INTERVAL 5
+
 static Option enfle_options[] = {
   { "ui",        'u', _REQUIRED_ARGUMENT, "Specify which UI to use." },
   { "video",     'v', _REQUIRED_ARGUMENT, "Specify which video to use." },
@@ -72,6 +74,7 @@ static Option enfle_options[] = {
   { "minwidth",  'X', _REQUIRED_ARGUMENT, "Specify the minimum width of an image to display." },
   { "minheight", 'Y', _REQUIRED_ARGUMENT, "Specify the minimum height of an image to display." },
   { "readdir",   'd', _NO_ARGUMENT,       "Read the directory wherein the specified file resides." },
+  { "slideshow", 's', _OPTIONAL_ARGUMENT, "Slideshow, optionally accepts interval timer in second." },
   { "info",      'I', _NO_ARGUMENT,       "Print more information." },
   { "help",      'h', _NO_ARGUMENT,       "Show help message." },
   { "version",   'V', _NO_ARGUMENT,       "Show version." },
@@ -394,6 +397,8 @@ main(int argc, char **argv)
   int exclude_fnmatch = 0;
   int if_use_cache = -1;
   int if_readdir = 0;
+  int if_slideshow = 0;
+  int slide_interval;
   int nth = 0;
   int minw = 0, minh = 0;
   char *pattern = NULL;
@@ -481,6 +486,16 @@ main(int argc, char **argv)
       break;
     case 'd':
       if_readdir = 1;
+      break;
+    case 's':
+      if_slideshow = 1;
+      if (optarg) {
+	slide_interval = atoi(optarg);
+	if (slide_interval == 0)
+	  if_slideshow = 2;
+      } else {
+	slide_interval = DEFAULT_SLIDE_INTERVAL;
+      }
       break;
     case 'V':
       printf(PROGNAME " version " VERSION "\n" COPYRIGHT_MESSAGE "\n");
@@ -605,6 +620,8 @@ main(int argc, char **argv)
   uidata.minw = minw;
   uidata.minh = minh;
   uidata.if_readdir = if_readdir;
+  uidata.if_slideshow = if_slideshow;
+  uidata.slide_interval = slide_interval;
   uidata.a = archive_create(ARCHIVE_ROOT);
 
   if (include_fnmatch)

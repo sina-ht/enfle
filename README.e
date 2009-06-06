@@ -2,9 +2,9 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-           (C) Copyright 1998-2007 by Hiroshi Takekawa.
+           (C) Copyright 1998-2009 by Hiroshi Takekawa.
 
-             Last Modified: Sat Oct 20 22:06:25 2007.
+             Last Modified: Sat Jun  6 20:49:20 2009.
 
 ***************************************************************************
 
@@ -86,7 +86,7 @@ Revised Unabridged Dictionary (1913)).
 
 1. Blurb
 
-This software aims to view many pictures just clicking.  You can view
+This software aims to view many pictures with ease.  You can view
 various formatted pictures and movies with several effects.
 
  Formats you can view:
@@ -136,15 +136,6 @@ FreeBSD (4.1R, x86)
 Other similar environments should work.  Please let me know if you try
 on the same/other environments.
 
-My main environment (2005/07/03) is:
-
-Kernel: Linux-2.6.12-mm1
-CPU: PentiumIV/3GHz or PentiumIII/700MHz
-X server: XFree86-4.3.99.902
-Video: NVIDIA GeForce4 Ti4800 SE or Silicon Motion, Inc. SM720 Lynx3DM
-Compiler: gcc version 2.95.3 or 3.4.4, icc 8.0
-libc: glibc-2.3.5/cvs/nptl
-
 
 3. Compile
 
@@ -191,7 +182,7 @@ directory will be added recursively.  Supported archives(such as
 -C converts images by specified Saver plugin.  If the argument is omitted, PNG is used.
 -i specifies the pattern to include.
 -x specifies the pattern to exclude.
--w sets the first image as wallpaper.
+-w sets the first image as wallpaper.  Will not work in gnome environment.
 -m specifies the method to magnify.
    0: normal 1: double 2: short 3: long
 -c specifies the string to configure, multiple allowed.
@@ -205,6 +196,8 @@ directory will be added recursively.  Supported archives(such as
 -N updates plugin cache
 -X specifies the threshold width of images to be displayed
 -Y specifies the threshold height of images to be displayed
+-d reads the directory wherein the specified file resides.
+-s starts slideshow, optionally accepts interval timer in second.
 
 
 5. Usage
@@ -221,6 +214,8 @@ d			delete displaying file from list
 D(shift+d)		delete displaying file
 q			quit
 f			full screen on/off
+a			Auto forward mode
+s			Slideshow
 S(shift+s)		toggle magnification algorithm(nointerpolate/bilinear)
 C-s			save the image displayed as PNG.
 Alt-s			save the image displayed as specified in config.
