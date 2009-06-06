@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May 24 23:54:53 2009.
+ * Last Modified: Sat Jun  6 19:34:50 2009.
  * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -514,45 +514,106 @@ main_loop_save(void *a)
 }
 
 static UIAction built_in_actions[] = {
-  { "go_first", main_loop_first, NULL, ENFLE_KEY_less, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "go_last", main_loop_last, NULL, ENFLE_KEY_greater, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "quit", main_loop_quit, NULL, ENFLE_KEY_q, ENFLE_MOD_None, ENFLE_Button_None },
-  { "toggle-fullscreen", main_loop_toggle_fullscreen_mode, NULL, ENFLE_KEY_f, ENFLE_MOD_None, ENFLE_Button_None },
-  { "next", main_loop_next, NULL, ENFLE_KEY_n, ENFLE_MOD_None, ENFLE_Button_None },
-  { "next", main_loop_next, NULL, ENFLE_KEY_space, ENFLE_MOD_None, ENFLE_Button_None },
-  { "next", main_loop_next, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_1 },
-  { "next", main_loop_next, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_4 },
-  { "next5", main_loop_next5, NULL, ENFLE_KEY_n, ENFLE_MOD_Ctrl, ENFLE_Button_None },
-  { "next5", main_loop_next5, NULL, ENFLE_KEY_space, ENFLE_MOD_Ctrl, ENFLE_Button_None },
-  { "next5", main_loop_next5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_1 },
-  { "next5", main_loop_next5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_4 },
-  { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_n, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_space, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "next_archive", main_loop_nextarchive, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_2 },
-  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_n, ENFLE_MOD_Alt, ENFLE_Button_None },
-  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_space, ENFLE_MOD_Alt, ENFLE_Button_None },
-  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_1 },
-  { "next_archive5", main_loop_nextarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_4 },
-  { "prev", main_loop_prev, NULL, ENFLE_KEY_b, ENFLE_MOD_None, ENFLE_Button_None },
-  { "prev", main_loop_prev, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_3 },
-  { "prev", main_loop_prev, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_5 },
-  { "prev5", main_loop_prev5, NULL, ENFLE_KEY_b, ENFLE_MOD_Ctrl, ENFLE_Button_None },
-  { "prev5", main_loop_prev5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_3 },
-  { "prev5", main_loop_prev5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_5 },
-  { "prev_archive", main_loop_prevarchive, NULL, ENFLE_KEY_b, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "prev_archive5", main_loop_prevarchive5, NULL, ENFLE_KEY_b, ENFLE_MOD_Alt, ENFLE_Button_None },
-  { "prev_archive5", main_loop_prevarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_3 },
-  { "prev_archive5", main_loop_prevarchive5, NULL, ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_5 },
-  { "delete_file", main_loop_delete_file, NULL, ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "delete_from_list", main_loop_delete_from_list, NULL, ENFLE_KEY_d, ENFLE_MOD_None, ENFLE_Button_None },
-  { "toggle_interpolate", main_loop_toggle_interpolate, NULL, ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "save_png", main_loop_save_png, NULL, ENFLE_KEY_s, ENFLE_MOD_Ctrl, ENFLE_Button_None },
-  { "save", main_loop_save, NULL, ENFLE_KEY_s, ENFLE_MOD_Alt, ENFLE_Button_None },
-  { "magnify_double", main_loop_magnify_double, NULL, ENFLE_KEY_m, ENFLE_MOD_None, ENFLE_Button_None },
-  { "magnify_short",  main_loop_magnify_short, NULL, ENFLE_KEY_m, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "magnify_long",  main_loop_magnify_long, NULL, ENFLE_KEY_m, ENFLE_MOD_Alt, ENFLE_Button_None },
-  { "erase_rectangle", main_loop_erase_rectangle, NULL, ENFLE_KEY_c, ENFLE_MOD_None, ENFLE_Button_None },
-  { "set_wallpaper", main_loop_set_wallpaper, NULL, ENFLE_KEY_w, ENFLE_MOD_None, ENFLE_Button_None },
+  /* '<' */
+  { "go_first", main_loop_first, NULL,
+    ENFLE_KEY_less, ENFLE_MOD_Shift, ENFLE_Button_None },
+  /* '>' */
+  { "go_last", main_loop_last, NULL,
+    ENFLE_KEY_greater, ENFLE_MOD_Shift, ENFLE_Button_None },
+  /* 'q' */
+  { "quit", main_loop_quit, NULL,
+    ENFLE_KEY_q, ENFLE_MOD_None, ENFLE_Button_None },
+  /* 'f' */
+  { "toggle-fullscreen", main_loop_toggle_fullscreen_mode, NULL,
+    ENFLE_KEY_f, ENFLE_MOD_None, ENFLE_Button_None },
+  /* 'n', ' ', M-1(Left), M-4 */
+  { "next", main_loop_next, NULL,
+    ENFLE_KEY_n, ENFLE_MOD_None, ENFLE_Button_None },
+  { "next", main_loop_next, NULL, ENFLE_KEY_space,
+    ENFLE_MOD_None, ENFLE_Button_None },
+  { "next", main_loop_next, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_1 },
+  { "next", main_loop_next, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_4 },
+  /* C-n, C-space, C-M-1, C-M-4 */
+  { "next5", main_loop_next5, NULL,
+    ENFLE_KEY_n, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  { "next5", main_loop_next5, NULL,
+    ENFLE_KEY_space, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  { "next5", main_loop_next5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_1 },
+  { "next5", main_loop_next5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_4 },
+  /* 'N', S-space, M-2(Center) */
+  { "next_archive", main_loop_nextarchive, NULL,
+    ENFLE_KEY_n, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "next_archive", main_loop_nextarchive, NULL,
+    ENFLE_KEY_space, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "next_archive", main_loop_nextarchive, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_2 },
+  /* A-n, A-space, A-M-1, A-M-4 */
+  { "next_archive5", main_loop_nextarchive5, NULL,
+    ENFLE_KEY_n, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "next_archive5", main_loop_nextarchive5, NULL,
+    ENFLE_KEY_space, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "next_archive5", main_loop_nextarchive5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_1 },
+  { "next_archive5", main_loop_nextarchive5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_4 },
+  /* 'b', M-3(Left), M-5 */
+  { "prev", main_loop_prev, NULL,
+    ENFLE_KEY_b, ENFLE_MOD_None, ENFLE_Button_None },
+  { "prev", main_loop_prev, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_3 },
+  { "prev", main_loop_prev, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_5 },
+  /* C-b, C-M-3, C-M-5 */
+  { "prev5", main_loop_prev5, NULL,
+    ENFLE_KEY_b, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  { "prev5", main_loop_prev5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_3 },
+  { "prev5", main_loop_prev5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_5 },
+  /* 'B' */
+  { "prev_archive", main_loop_prevarchive, NULL,
+    ENFLE_KEY_b, ENFLE_MOD_Shift, ENFLE_Button_None },
+  /* A-b, A-M-3, A-M-5 */
+  { "prev_archive5", main_loop_prevarchive5, NULL,
+    ENFLE_KEY_b, ENFLE_MOD_Alt, ENFLE_Button_None },
+  { "prev_archive5", main_loop_prevarchive5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_3 },
+  { "prev_archive5", main_loop_prevarchive5, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_5 },
+  /* 'D' */
+  { "delete_file", main_loop_delete_file, NULL,
+    ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
+  /* 'd' */
+  { "delete_from_list", main_loop_delete_from_list, NULL,
+    ENFLE_KEY_d, ENFLE_MOD_None, ENFLE_Button_None },
+  /* 'S' */
+  { "toggle_interpolate", main_loop_toggle_interpolate, NULL,
+    ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None },
+  /* C-s */
+  { "save_png", main_loop_save_png, NULL,
+    ENFLE_KEY_s, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+  /* A-s */
+  { "save", main_loop_save, NULL,
+    ENFLE_KEY_s, ENFLE_MOD_Alt, ENFLE_Button_None },
+  /* 'm' */
+  { "magnify_double", main_loop_magnify_double, NULL,
+    ENFLE_KEY_m, ENFLE_MOD_None, ENFLE_Button_None },
+  /* 'M' */
+  { "magnify_short",  main_loop_magnify_short, NULL,
+    ENFLE_KEY_m, ENFLE_MOD_Shift, ENFLE_Button_None },
+  /* A-m */
+  { "magnify_long",  main_loop_magnify_long, NULL,
+    ENFLE_KEY_m, ENFLE_MOD_Alt, ENFLE_Button_None },
+  /* 'c' */
+  { "erase_rectangle", main_loop_erase_rectangle, NULL,
+    ENFLE_KEY_c, ENFLE_MOD_None, ENFLE_Button_None },
+  /* 'w' */
+  { "set_wallpaper", main_loop_set_wallpaper, NULL,
+    ENFLE_KEY_w, ENFLE_MOD_None, ENFLE_Button_None },
   UI_ACTION_END
 };
 
