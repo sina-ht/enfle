@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  6 19:53:52 2009.
+ * Last Modified: Sat Jun  6 21:26:16 2009.
  * $Id: ui-extra.h,v 1.11 2006/01/27 06:27:53 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -37,6 +37,7 @@ struct _ui_data {
   Config *c;
   Cache *cache;
   VideoPlugin *vp;
+  VideoKey key;
   AudioPlugin *ap;
   VideoWindow *vw;
   Archive *a;

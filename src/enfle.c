@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  6 20:36:58 2009.
+ * Last Modified: Sat Jun  6 21:40:07 2009.
  * $Id: enfle.c,v 1.74 2006/02/24 18:54:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -398,7 +398,7 @@ main(int argc, char **argv)
   int if_use_cache = -1;
   int if_readdir = 0;
   int if_slideshow = 0;
-  int slide_interval;
+  int slide_interval = DEFAULT_SLIDE_INTERVAL;
   int nth = 0;
   int minw = 0, minh = 0;
   char *pattern = NULL;
@@ -493,8 +493,6 @@ main(int argc, char **argv)
 	slide_interval = atoi(optarg);
 	if (slide_interval == 0)
 	  if_slideshow = 2;
-      } else {
-	slide_interval = DEFAULT_SLIDE_INTERVAL;
       }
       break;
     case 'V':

@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  6 20:37:35 2009.
+ * Last Modified: Sat Jun  6 21:38:11 2009.
  * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -672,7 +672,7 @@ main_loop_button_pressed(MainLoop *ml)
 static int
 main_loop_key_pressed(MainLoop *ml)
 {
-  ml->key = ml->ev.key.key;
+  ml->uidata->key = ml->ev.key.key;
   return 1;
 }
 
@@ -714,9 +714,9 @@ main_loop_button_released(MainLoop *ml)
 static int
 main_loop_key_released(MainLoop *ml)
 {
-  VideoKey key = ml->key;
+  VideoKey key = ml->uidata->key;
 
-  ml->key = ENFLE_KEY_Empty;
+  ml->uidata->key = ENFLE_KEY_Empty;
   if (key == ml->ev.key.key)
     return main_loop_do_action(ml, ml->ev.key.key, ml->ev.key.modkey, ENFLE_Button_None);
   return 1;
@@ -758,11 +758,9 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
 {
   MainLoop ml;
   int caption_to_be_set = 0;
-  int loop = 0;
 
   memset(&ml, 0, sizeof(ml));
   ml.button = ENFLE_Button_None;
-  ml.key = ENFLE_KEY_Empty;
   ml.uidata = uidata;
   ml.vw = vw;
   ml.m = m;
@@ -890,13 +888,11 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
     }
 
     if (ml.ret == MAIN_LOOP_DO_NOTHING &&
-	((ml.uidata->if_slideshow == 2 && loop > 50) ||
+	((ml.uidata->if_slideshow == 2) ||
 	 (ml.uidata->if_slideshow == 1 && timer_get(ml.slide_timer) >= ml.uidata->slide_interval))) {
       ml.ret = MAIN_LOOP_NEXT;
       timer_stop(ml.slide_timer);
-      loop = 0;
     }
-    loop++;
   }
 
   if (ml.timer)
@@ -1334,6 +1330,7 @@ ui_main(UIData *uidata)
     uidata->cache = cache_create(cache_max, cache_memsize_max);
   }
 
+  uidata->key = ENFLE_KEY_Empty;
 #ifdef ENABLE_GUI_GTK
   gui.en = eventnotifier_create();
   gui.uidata = uidata;
