@@ -20,7 +20,5 @@ demultiplexer_asf_la_LDFLAGS = $(MORE_LDFLAGS) -module
 demultiplexer_asf_la_CFLAGS = $(MORE_CFLAGS)
 if HAVE_ASF
 demultiplexer_asf_la_SOURCES = asf.c
-else
-am__demultiplexer_asf_la_SOURCES_DIST =
 endif
 demultiplexer_asf_la_LIBADD = $(top_builddir)/lib/enfle/libenfle.la

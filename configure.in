@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2009 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Jun  6 20:42:05 2009.
+dnl Last Modified: Sat Aug 29 22:47:48 2009.
 dnl $Id: configure.in,v 1.209 2009/02/23 14:31:15 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
@@ -20,8 +20,8 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
-AC_PREREQ(2.62)
-AC_INIT([enfle],[20090606],[sian@big.or.jp])
+AC_PREREQ(2.63)
+AC_INIT([enfle],[20090829],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE
@@ -46,8 +46,11 @@ AM_ICONV
 dnl libtool
 AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
+_LT_SET_OPTION([LT_INIT],[dlopen])
+AC_DIAGNOSE([obsolete],[AC_LIBTOOL_DLOPEN: Remove this warning and the call to _LT_SET_OPTION when you
+put the `dlopen' option into LT_INIT's first parameter.])
+
+LT_INIT
 
 dnl for libmpeg2 and libavcodec
 enable_x86=0
@@ -1305,6 +1308,7 @@ AC_C_INLINE
 
 AC_CONFIG_FILES([
  Makefile
+  doc/Makefile
   lib/Makefile
    lib/X11/Makefile
    lib/avcodec/Makefile
