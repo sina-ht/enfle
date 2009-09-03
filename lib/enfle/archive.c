@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jan 12 04:32:42 2008.
+ * Last Modified: Thu Sep  3 22:24:53 2009.
  * $Id: archive.c,v 1.42 2008/04/19 08:57:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -64,7 +64,19 @@ archive_create(Archive *parent)
   } else {
     arc->parent = parent;
     if (parent->pattern) {
-      arc->fnmatch = parent->fnmatch;
+      switch (parent->fnmatch) {
+      case _ARCHIVE_FNMATCH_INCLUDE:
+      case _ARCHIVE_FNMATCH_INCLUDE_NOT_AT_FIRST:
+	arc->fnmatch = _ARCHIVE_FNMATCH_INCLUDE;
+	break;
+      case _ARCHIVE_FNMATCH_EXCLUDE:
+      case _ARCHIVE_FNMATCH_EXCLUDE_NOT_AT_FIRST:
+	arc->fnmatch = _ARCHIVE_FNMATCH_EXCLUDE;
+	break;
+      default:
+	arc->fnmatch = parent->fnmatch;
+	break;
+      }
       arc->pattern = strdup(parent->pattern);
     }
   }
@@ -199,7 +211,15 @@ archive_add(Archive *arc, char *path, void *reminder)
 {
   //debug_message_fnc("%s\n", path);
 
-  if (arc->pattern) {
+  int use_pattern = 0;
+
+  if (arc->parent == ARCHIVE_ROOT) {
+    use_pattern = (arc->fnmatch != _ARCHIVE_FNMATCH_INCLUDE_NOT_AT_FIRST && arc->fnmatch != _ARCHIVE_FNMATCH_EXCLUDE_NOT_AT_FIRST);
+  } else {
+    use_pattern = (arc->pattern != NULL);
+  }
+
+  if (use_pattern) {
     int result = 0;
     char *base_name;
 
@@ -209,9 +229,9 @@ archive_add(Archive *arc, char *path, void *reminder)
       result = 1;
       break;
     case _ARCHIVE_FNMATCH_INCLUDE:
-      if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == 0)
+      if ((result = fnmatch(arc->pattern, base_name, FNM_PATHNAME | FNM_PERIOD)) == 0) {
 	result = 1;
-      else if (result != FNM_NOMATCH)
+      } else if (result != FNM_NOMATCH)
 	result = 1; //fatal_perror(__FUNCTION__);
       else
 	result = 0;
@@ -225,6 +245,10 @@ archive_add(Archive *arc, char *path, void *reminder)
       }
       else
 	result = 0;
+      break;
+    case _ARCHIVE_FNMATCH_INCLUDE_NOT_AT_FIRST:
+    case _ARCHIVE_FNMATCH_EXCLUDE_NOT_AT_FIRST:
+      warning_fnc("fnmatch = %d\n", arc->fnmatch);
       break;
     }
 

@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  6 21:40:07 2009.
+ * Last Modified: Thu Sep  3 22:24:47 2009.
  * $Id: enfle.c,v 1.74 2006/02/24 18:54:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -622,10 +622,17 @@ main(int argc, char **argv)
   uidata.slide_interval = slide_interval;
   uidata.a = archive_create(ARCHIVE_ROOT);
 
-  if (include_fnmatch)
-    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_INCLUDE);
-  else if (exclude_fnmatch)
-    archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE);
+  if (include_fnmatch) {
+    if (argc - optind > 1)
+      archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_INCLUDE);
+    else
+      archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_INCLUDE_NOT_AT_FIRST);
+  } else if (exclude_fnmatch) {
+    if (argc - optind > 1)
+      archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE);
+    else
+      archive_set_fnmatch(uidata.a, pattern, _ARCHIVE_FNMATCH_EXCLUDE_NOT_AT_FIRST);
+  }
 
   if (strcmp(argv[optind], "-") == 0) {
     archive_add(uidata.a, argv[optind], strdup(argv[optind]));

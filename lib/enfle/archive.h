@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Feb 25 02:24:06 2006.
+ * Last Modified: Thu Sep  3 22:19:08 2009.
  * $Id: archive.h,v 1.16 2006/02/24 17:55:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -29,7 +29,9 @@
 typedef enum _archive_fnmatch {
   _ARCHIVE_FNMATCH_ALL = 0,
   _ARCHIVE_FNMATCH_INCLUDE,
-  _ARCHIVE_FNMATCH_EXCLUDE
+  _ARCHIVE_FNMATCH_EXCLUDE,
+  _ARCHIVE_FNMATCH_INCLUDE_NOT_AT_FIRST,
+  _ARCHIVE_FNMATCH_EXCLUDE_NOT_AT_FIRST,
 } Archive_fnmatch;
 
 typedef struct _archive Archive;
