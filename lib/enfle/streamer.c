@@ -1,10 +1,9 @@
 /*
  * streamer.c -- streamer plugin interface
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2009 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Mar 11 23:10:09 2004.
- * $Id: streamer.c,v 1.14 2004/03/11 15:07:04 sian Exp $
+ * Last Modified: Sat Oct  3 20:19:26 2009.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -58,7 +57,7 @@ streamer_identify(EnflePlugins *eps, Stream *st, char *filepath, Config *c)
 	  stp = plugin_get(p);
 	  debug_message_fnc("try %s (assoc'd with %s)\n", pluginname, ext);
 	  if (stp->identify(st, filepath) == STREAM_OK) {
-	    st->format = pluginname;
+	    st->format = strdup(pluginname);
 	    free(ext);
 	    return 1;
 	  }
@@ -77,7 +76,7 @@ streamer_identify(EnflePlugins *eps, Stream *st, char *filepath, Config *c)
       stp = plugin_get(p);
       //debug_message("streamer: identify: try %s\n", (char *)k);
       if (stp->identify(st, filepath) == STREAM_OK) {
-	st->format = (char *)k;
+	st->format = strdup((char *)k);
 	pluginlist_move_to_top;
 	return 1;
       }
