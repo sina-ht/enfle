@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2009 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Fri Sep 25 23:19:07 2009.
+dnl Last Modified: Fri Oct  2 22:30:11 2009.
 dnl $Id: configure.in,v 1.209 2009/02/23 14:31:15 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
@@ -21,7 +21,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 AC_PREREQ(2.64)
-AC_INIT([enfle],[20090829],[sian@big.or.jp])
+AC_INIT([enfle],[20091002],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE(silent-rules)
@@ -378,6 +378,18 @@ if test "$available_bzlib" != "yes"; then
 fi
 AM_CONDITIONAL(HAVE_BZLIB, test "$available_bzlib" = "yes")
 AC_SUBST(LIBADD_BZLIB)
+
+available_liblzma=no
+AC_CHECK_HEADER(lzma.h, [
+  AC_CHECK_LIB(lzma, lzma_stream_decoder, [
+    available_liblzma=yes; LIBADD_XZLIB="-llzma" 
+  ])
+])
+if test "$available_liblzma" != "yes"; then
+  ENFLE_PLUGIN_DISABLE(streamer/xz)
+fi
+AM_CONDITIONAL(HAVE_XZLIB, test "$available_liblzma" = "yes")
+AC_SUBST(LIBADD_XZLIB)
 
 available_libarc=no
 AC_CHECK_HEADER(libarc/arc.h, [
@@ -1329,6 +1341,7 @@ AC_CONFIG_FILES([
    plugins/streamer/Makefile
     plugins/streamer/bz2/Makefile
     plugins/streamer/gz/Makefile
+    plugins/streamer/xz/Makefile
    plugins/loader/Makefile
     plugins/loader/bmp/Makefile
     plugins/loader/j2k/Makefile
