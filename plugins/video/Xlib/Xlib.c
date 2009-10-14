@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Thu Feb 26 21:26:24 2009.
+ * Last Modified: Wed Oct 14 14:25:27 2009.
  * $Id: Xlib.c,v 1.68 2009/02/23 14:31:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -745,10 +745,7 @@ dispatch_event(VideoWindow *vw, VideoEventData *ev)
 	XClipBox(region, &rect);
 	XSetRegion(x11_display(x11), gc, region);
 
-	if (!vw->if_fullscreen)
-	  __update(vw, rect.x, rect.y, rect.width, rect.height);
-	else
-	  update(vw, vw->render_width, vw->render_height);
+	update(vw, vw->render_width, vw->render_height);
 
 	XSetClipMask(x11_display(x11), gc, None);
 	XDestroyRegion(region);
