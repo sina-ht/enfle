@@ -1,9 +1,9 @@
 /*
  * normal.c -- Normal UI plugin
- * (C)Copyright 2000-2006 by Hiroshi Takekawa
+ * (C)Copyright 2000-2009 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  6 21:38:11 2009.
+ * Last Modified: Sat Oct 31 21:03:43 2009.
  * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -174,7 +174,7 @@ save_image(Image *p, UIData *uidata, char *path, char *format)
 }
 
 static void
-convert_cat(String *cap, char *s, Config *c)
+convert_cat(String *cap, char *s, Config *c, int maxlen)
 {
   int res;
 
@@ -191,31 +191,47 @@ convert_cat(String *cap, char *s, Config *c)
 	//debug_message_fnc("%s->%s: %s\n", from, to, s);
 	if ((res = converter_convert(s, &tmp, strlen(s), from, to)) < 0)
 	  continue;
-	string_cat(cap, tmp);
+	if (maxlen)
+	  string_ncat(cap, tmp, maxlen);
+	else
+	  string_cat(cap, tmp);
 	free(tmp);
 	return;
       }
     }
   }
 
-  string_cat(cap, s);
+  if (maxlen)
+    string_ncat(cap, s, maxlen);
+  else
+    string_cat(cap, s);
 }
 
 static void
-convert_path(String *cap, char *s, Config *c)
+convert_path(String *cap, char *s, Config *c, int maxlen, int reserve)
 {
   static char delimiters[] = { '/', '#', '\0' };
   char *part, **parts, *used_delim;
-  int i;
+  int i, n;
 
   if ((parts = misc_str_split_delimiters(s, delimiters, &used_delim)) == NULL) {
     err_message_fnc("No enough memory.\n");
     return;
   }
 
+  n = 0;
+  while (parts[n])
+    n++;
+
   i = 0;
   while ((part = parts[i])) {
-    convert_cat(cap, part, c);
+    int over = string_length(cap) + strlen(part) + reserve / n - maxlen;
+    if (maxlen > 0 && over > 0) {
+      convert_cat(cap, part, c, strlen(part) - over);
+      string_cat(cap, "...");
+    } else {
+      convert_cat(cap, part, c, 0);
+    }
     if (used_delim[i] != '\0')
       string_cat_ch(cap, used_delim[i]);
     i++;
@@ -223,7 +239,6 @@ convert_path(String *cap, char *s, Config *c)
   misc_free_str_array(parts);
   free(used_delim);
 }
-
 
 static void
 set_caption_string(MainLoop *ml)
@@ -234,6 +249,7 @@ set_caption_string(MainLoop *ml)
   char *fullpath;
   int i;
   int literal_start, literal_mode;
+  int maxlen = vw->full_width / 7; /* XXX */
 
   if ((cap = string_create()) == NULL)
     return;
@@ -294,20 +310,20 @@ set_caption_string(MainLoop *ml)
       case 'p':
 	if (ml->a->parent && strcmp(ml->a->parent->format, "NORMAL") != 0 && ml->a->parent->path[0] != 0) {
 	  debug_message_fnc("parent path = %s\n", ml->a->parent->path);
-	  convert_path(cap, misc_basename(ml->a->parent->path), ml->uidata->c);
 	  fullpath = archive_getpathname(ml->a, ml->path);
-	  convert_path(cap, fullpath, ml->uidata->c);
+	  convert_path(cap, misc_basename(ml->a->parent->path), ml->uidata->c, maxlen, strlen(fullpath));
+	  convert_path(cap, fullpath, ml->uidata->c, 0, 0);
 	  free(fullpath);
 	} else {
-	  convert_path(cap, misc_basename(ml->a->path), ml->uidata->c);
+	  convert_path(cap, misc_basename(ml->a->path), ml->uidata->c, maxlen, strlen(ml->path));
 	  if (strcmp(ml->a->format, "NORMAL") == 0)
 	    string_cat_ch(cap, '/');
-	  convert_path(cap, ml->path, ml->uidata->c);
+	  convert_path(cap, ml->path, ml->uidata->c, 0, 0);
 	}
 	break;
       case 'P':
-	convert_path(cap, ml->a->path, ml->uidata->c);
-	convert_path(cap, ml->path, ml->uidata->c); break;
+	convert_path(cap, ml->a->path, ml->uidata->c, maxlen, strlen(ml->path));
+	convert_path(cap, ml->path, ml->uidata->c, 0, 0); break;
       case 'N':
 	string_cat(cap, PROGNAME); break;
       case 'i':
