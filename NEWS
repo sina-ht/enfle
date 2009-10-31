@@ -1,4 +1,11 @@
-NEWS  Last Modified: Sat Oct 20 22:49:19 2007.
+NEWS  Last Modified: Fri Oct 30 11:16:12 2009.
+
+20091030:
+ Slideshow support: -s option, 's' and 'a' key for UI.
+ XZ streamer plugin.
+ -d option: reads the directory wherein the specified file resides.
+ System-installed libavcodec support.
+ Man page.
 
 20071020:
  RAR archiver plugin
