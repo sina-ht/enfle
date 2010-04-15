@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2009 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Fri Oct 30 16:08:41 2009.
+dnl Last Modified: Thu Apr 15 21:44:53 2010.
 dnl $Id: configure.in,v 1.209 2009/02/23 14:31:15 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
@@ -245,7 +245,7 @@ if test "$available_pthread" = "yes"; then
     ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
 fi
 if test "$available_divx" != "yes"; then
-  ENFLE_PLUGIN_DISABLE(player/divx)
+  ENFLE_PLUGIN_DISABLE(videodecoder/divx)
 fi
 AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_divx" = "yes")
 AC_SUBST(LIBADD_DIVXDECORE)
