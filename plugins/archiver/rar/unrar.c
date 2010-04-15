@@ -65,7 +65,7 @@ ENFLE_PLUGIN_ENTRY(archiver_rar)
   return (void *)arp;
 }
 
-ENFLE_PLUGIN_EXIT(arciver_rar, p)
+ENFLE_PLUGIN_EXIT(archiver_rar, p)
 {
   free(p);
 }
