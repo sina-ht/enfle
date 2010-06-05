@@ -1,4 +1,32 @@
-2009-10-30  Hiroshi Takekawa  <sian@fennel.org>
+2010-06-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Version up.
+
+2010-06-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11window.c: Fixed get_geometry() window drift bug.  Using XTranslateCoordinates() and XGetGeometry() effectively fixes
+	the long-standing window drift bug.
+
+2010-06-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/ui/normal/normal.c: Path shortening fix.
+
+2010-04-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/archiver/rar/unrar.c: Fixed the typo which caused a link
+	error.
+
+2010-04-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Fixed the type of divx plugin.  divx plugin is no longer player/divx.  It's videodecoder/divx.  This
+	caused a link error when configured with --enable-all-static and
+	libdivxdecore is not available.
+
+2009-10-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog, NEWS, configure.in: enfle-20091030 release.
+
+2009-10-31  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/normal/normal.c: Shorten a long pathname to display the
 	whole caption in screen.  This is a preliminary implementation.  Needs improvement.
