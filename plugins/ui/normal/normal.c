@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2009 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct 31 21:03:43 2009.
+ * Last Modified: Wed Nov  4 22:37:44 2009.
  * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -201,12 +201,14 @@ convert_cat(String *cap, char *s, Config *c, int maxlen)
     }
   }
 
-  if (maxlen)
+  if (maxlen > 0)
     string_ncat(cap, s, maxlen);
   else
     string_cat(cap, s);
 }
 
+#define REPLACE_STR "..."
+#define RESERVE_LEN 32
 static void
 convert_path(String *cap, char *s, Config *c, int maxlen, int reserve)
 {
@@ -225,10 +227,10 @@ convert_path(String *cap, char *s, Config *c, int maxlen, int reserve)
 
   i = 0;
   while ((part = parts[i])) {
-    int over = string_length(cap) + strlen(part) + reserve / n - maxlen;
+    int over = RESERVE_LEN + string_length(cap) + strlen(part) + strlen(REPLACE_STR) + reserve / n - maxlen;
     if (maxlen > 0 && over > 0) {
       convert_cat(cap, part, c, strlen(part) - over);
-      string_cat(cap, "...");
+      string_cat(cap, REPLACE_STR);
     } else {
       convert_cat(cap, part, c, 0);
     }
