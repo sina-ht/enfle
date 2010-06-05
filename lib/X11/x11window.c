@@ -3,7 +3,7 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sat Aug 25 16:25:29 2007.
+ * Last Modified: Sat Jun  5 14:54:28 2010.
  * $Id: x11window.c,v 1.12 2007/10/20 13:40:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -84,36 +84,17 @@ static int
 get_geometry(X11Window *xw, unsigned int *x_return, unsigned int *y_return, unsigned int *w_return, unsigned int *h_return)
 {
   X11 *x11;
-  Window root;
-  Window parent, *child;
-  int x, y;
-  unsigned int nc;
+  int x, y, rx, ry;
+  Window root, child;
   unsigned int bw, depth;
 
   x11 = x11window_x11(xw);
-  if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &x, &y, w_return, h_return, &bw, &depth))
+  if (!XGetGeometry(x11_display(x11), x11window_win(xw), &root, &rx, &ry, w_return, h_return, &bw, &depth))
     return 0;
-
-  if (!XQueryTree(x11_display(x11), x11window_win(xw), &root, &parent, &child, &nc))
+  if (!XTranslateCoordinates(x11_display(x11), x11window_win(xw), root, 0, 0, &x, &y, &child))
     return 0;
-  if (child != NULL)
-    XFree(child);
-  x += bw;
-  y += bw;
-
-  while (root != parent) {
-    unsigned int w, h;
-    int px, py;
-
-    if (!XGetGeometry(x11_display(x11), parent, &root, &px, &py, &w, &h, &bw, &depth))
-      return 0;
-    x += px + bw;
-    y += py + bw;
-    if (!XQueryTree(x11_display(x11), parent, &root, &parent, &child, &nc))
-      return 0;
-    if (child != NULL)
-      XFree(child);
-  }
+  x -= rx;
+  y -= ry;
 
   *x_return = x;
   *y_return = y;
