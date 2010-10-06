@@ -8,6 +8,10 @@ THEDIR=`pwd`
 cd $srcdir
 DIE=0
 
+if ! test -f config.rpath; then
+  touch config.rpath
+fi
+
 (autoconf --version) < /dev/null > /dev/null 2>&1 || {
 	echo
 	echo "You must have autoconf installed to compile enfle."
