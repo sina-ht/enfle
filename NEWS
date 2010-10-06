@@ -1,4 +1,9 @@
-NEWS  Last Modified: Fri Oct 30 11:16:12 2009.
+NEWS  Last Modified: Wed Oct  6 21:23:10 2010.
+
+20101006:
+ Added webp loader plugin.
+ Fixed get_geometry() window drift bug.
+ Disable YUV output for jpeg by default.  With YUV output, we cannot use effect plugins.
 
 20091030:
  Slideshow support: -s option, 's' and 'a' key for UI.
