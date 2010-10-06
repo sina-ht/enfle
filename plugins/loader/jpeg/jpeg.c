@@ -3,8 +3,7 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Mar 16 21:09:06 2008.
- * $Id: jpeg.c,v 1.29 2008/04/19 09:02:43 sian Exp $
+ * Last Modified: Wed Oct  6 21:17:55 2010.
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -236,7 +235,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-#define ENABLE_YUV
+//#define ENABLE_YUV
 
 DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
