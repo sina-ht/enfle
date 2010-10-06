@@ -1,3 +1,22 @@
+2010-10-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* NEWS: enfle-20101006 release.
+
+2010-10-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/loader/Makefile.am,
+	plugins/loader/webp/Makefile.am, plugins/loader/webp/webp.c: Added
+	webp loader plugin.
+
+2010-10-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/jpeg/jpeg.c: Disable YUV output for jpeg by
+	default.  With YUV output, we cannot use effect plugins.
+
+2010-06-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
 2010-06-05  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: Version up.
