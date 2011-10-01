@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct 14 14:25:27 2009.
+ * Last Modified: Sun Jul 24 02:53:24 2011.
  * $Id: Xlib.c,v 1.68 2009/02/23 14:31:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -1028,6 +1028,7 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);
+  unsigned int rw, rh;
 
   if (!vw->parent)
     return 1;
@@ -1063,7 +1064,10 @@ resize(VideoWindow *vw, unsigned int w, unsigned int h)
     //x11window_wait_mapped(xw);
     x11_unlock(x11);
   } else {
-    if (w == vw->render_width && h == vw->render_height)
+    rw = vw->render_width;
+    rh = vw->render_height;
+    clip(vw, &rw, &rh);
+    if (w == rw && h == rh)
       return 1;
 
     if (vw->render_width > w || vw->render_height > h) {
