@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 15 04:40:27 2007.
+ * Last Modified: Fri Nov 18 23:03:48 2011.
  * $Id: convert.c,v 1.20 2007/10/20 13:39:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -123,7 +123,7 @@ process_files_of_archive(UIData *uidata, Archive *a)
   Stream *s;
   Image *p;
   char *path, *format;
-  int f, ret = 0, r;
+  int ret = 0, r;
 
   s = stream_create();
   p = image_create();
@@ -174,7 +174,6 @@ process_files_of_archive(UIData *uidata, Archive *a)
       continue;
     }
 
-    f = LOAD_NOT;
     r = identify_stream(eps, p, NULL, s, NULL, c);
     stream_close(s);
     switch (r) {

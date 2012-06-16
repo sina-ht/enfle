@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Sep  6 18:12:26 2008.
+ * Last Modified: Fri Nov 18 23:05:02 2011.
  * $Id: bmp.c,v 1.18 2009/02/23 14:28:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -147,6 +147,7 @@ load_image(Image *p, Stream *st)
   if (header_size >= WIN_BMP_HEADER_SIZE) {
     compress_method = utils_get_little_uint16(&buf[12]);
     image_size = utils_get_little_uint32(&buf[16]);
+    image_size = image_size; // dummy
   }
   /* other header informations are intentionally ignored */
 

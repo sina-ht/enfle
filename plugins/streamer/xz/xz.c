@@ -3,7 +3,7 @@
  * (C)Copyright 2009 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Oct  3 20:18:37 2009.
+ * Last Modified: Fri Nov 18 23:04:30 2011.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -257,7 +257,6 @@ DEFINE_STREAMER_PLUGIN_IDENTIFY(st, filepath)
 DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
 {
   struct xz_priv *xz;
-  lzma_ret ret;
 
 #ifdef IDENTIFY_BEFORE_OPEN
   {
@@ -271,7 +270,7 @@ DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
   if ((xz = calloc(1, sizeof(*xz))) == NULL)
     return STREAM_ERROR;
 
-  ret = init_lzma(&xz->strm);
+  init_lzma(&xz->strm);
   xz->action = LZMA_RUN;
   xz->pos = 0;
   xz->size = -1;

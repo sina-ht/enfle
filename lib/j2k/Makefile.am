@@ -1,12 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# Last Modified: Sat Feb  7 00:44:20 2004.
+# Last Modified: Fri Nov 18 23:02:45 2011.
 # $Id: Makefile.am,v 1.1 2004/02/14 05:12:33 sian Exp $
 
 noinst_LTLIBRARIES = libenflej2k.la
 #INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
 EXTRA_DIST = LICENSE
 
+CFLAGS_POST = -Wno-error
 libenflej2k_la_SOURCES = \
 	j2k.c j2k.h \
 	tcd.c tcd.h \

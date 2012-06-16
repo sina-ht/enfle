@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 31 01:26:22 2006.
+ * Last Modified: Fri Nov 18 23:06:10 2011.
  * $Id: ungif.c,v 1.35 2007/04/27 05:55:27 sian Exp $
  *
  * NOTES:
@@ -367,6 +367,7 @@ play_main(Movie *m, VideoWindow *vw)
 	  transparent_index = -1;
 	}
 	user_input = extension[1] & 2;
+	user_input = user_input; // dummy
 	image_disposal = (extension[1] & 0x1c) >> 2;
 	delay = extension[2] + (extension[3] << 8);
 	//debug_message("UNGIF: Graphics Extention: trans %d(index %d) user_input %d disposal %d delay %d\n", if_transparent, transparent_index, user_input, image_disposal, delay);

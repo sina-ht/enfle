@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file if part of Enfle.
  *
- * Last Modified: Sun Jan  4 00:26:49 2009.
+ * Last Modified: Fri Nov 18 22:58:21 2011.
  * $Id: x11ximage.c,v 1.59 2009/01/03 15:33:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -54,7 +54,9 @@ X11XImage *
 x11ximage_create(X11 *x11)
 {
   X11XImage *xi;
+#ifdef USE_MMX_BGRA
   CPUCaps cpucaps;
+#endif
 
   if ((xi = calloc(1, sizeof(X11XImage))) == NULL)
     return NULL;
@@ -68,8 +70,8 @@ x11ximage_create(X11 *x11)
     return NULL;
   }
 #endif
-  cpucaps = cpucaps_get();
 #ifdef USE_MMX_BGRA
+  cpucaps = cpucaps_get();
   if (cpucaps_is_mmx(cpucaps)) {
     //debug_message_fnc("MMX is available.\n");
     xi->bgra32to16 = bgra32to16_maybe_mmx;

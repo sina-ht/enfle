@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon May 22 21:17:46 2006.
+ * Last Modified: Fri Nov 18 23:07:25 2011.
  * $Id: alsa.c,v 1.18 2008/04/19 09:28:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -239,6 +239,7 @@ set_params(AudioDevice *ad, AudioFormat *format_p, int *ch_p, unsigned int *rate
 
   r = snd_pcm_hw_params_get_channels(hwparams, &ad->channels);
   r = snd_pcm_hw_params_get_rate(hwparams, &ad->speed, 0);
+  r = r; // dummy
 
 #ifdef DEBUG
   {

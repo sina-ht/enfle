@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  4 01:41:38 2006.
+ * Last Modified: Fri Nov 18 23:05:34 2011.
  * $Id: tga.c,v 1.1 2006/03/03 16:54:03 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -96,6 +96,7 @@ load_image(Image *p, Stream *st)
   color_map_type = buf[1];
   image_type = buf[2];
   cm_first = utils_get_little_uint16(&buf[3]);
+  cm_first = cm_first; // dummy
   cm_nentries = utils_get_little_uint16(&buf[5]);
   cm_size = buf[7];
   image_left(p) = utils_get_little_uint16(&buf[8]);

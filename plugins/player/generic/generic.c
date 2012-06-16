@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 28 01:33:23 2008.
+ * Last Modified: Fri Nov 18 23:06:36 2011.
  * $Id: generic.c,v 1.33 2009/02/23 14:29:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -526,6 +526,7 @@ play_audio(void *arg)
 	unsigned long pts, dts;
 	pts = dp->pts;
 	dts = dp->dts;
+	dts = dts; // dummy
 	if (pts != -1) {
 	  if (!m->timer_offset_set) {
 	    m->timer_offset_set = 1;

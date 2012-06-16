@@ -3,7 +3,7 @@
  * (C)Copyright 1999-2005 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Tue Sep 27 22:47:55 2005.
+ * Last Modified: Fri Nov 18 22:57:34 2011.
  * $Id: hash.c,v 1.21 2005/09/27 13:49:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -43,10 +43,9 @@ static unsigned int
 default_hash_function(void *key, unsigned int len)
 {
   unsigned char c, *k;
-  unsigned int h = 0, l;
+  unsigned int h = 0;
 
   k = key;
-  l = len;
   while (len--) {
     c = *k++;
     h += c + (c << 17);
@@ -60,10 +59,9 @@ static unsigned int
 default_hash_function2(void *key, unsigned int len)
 {
   unsigned char c, *k;
-  unsigned int h = 0, l;
+  unsigned int h = 0;
 
   k = key;
-  l = len;
   while (len--) {
     c = *k++;
     h += c + (c << 13);

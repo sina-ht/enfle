@@ -3,7 +3,7 @@
  * (C)Copyright 2001-2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Dec 26 01:12:43 2005.
+ * Last Modified: Fri Nov 18 23:08:09 2011.
  * $Id: mp3.c,v 1.6 2005/12/27 14:44:07 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -147,12 +147,9 @@ __examine(Demultiplexer *demux, int identify_only)
   DemultiplexerStatus ds;
   unsigned char *buf;
   int read_size, tag_size;
-  int vstream, astream;
 
   debug_message("%s...\n", identify_only ? "identify" : "examine");
 
-  vstream = 0;
-  astream = 0;
   demux->nastreams = 0;
   demux->nvstreams = 0;
   //demux->vstreams[0] = 0;
