@@ -14,6 +14,7 @@ libdir = $(enfle_videodecoder_plugindir)
 if USE_AVCODEC
 lib_LTLIBRARIES = videodecoder_avcodec.la
 libavcodec = $(top_builddir)/lib/avutil/libavutil.la $(top_builddir)/lib/avcodec/libavcodec/la
+NEED_AVCODEC_INIT = -DNEED_AVCODEC_INIT
 endif
 if USE_SYSTEM_AVCODEC
 lib_LTLIBRARIES = videodecoder_avcodec.la
@@ -22,7 +23,7 @@ endif
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib -I$(top_srcdir)/lib/avutil
 
-videodecoder_avcodec_la_LDFLAGS = $(MORE_LDFLAGS) -module
+videodecoder_avcodec_la_LDFLAGS = $(MORE_LDFLAGS) $(NEED_AVCODEC_INIT) -module
 videodecoder_avcodec_la_CFLAGS = -Dasm=__asm $(MORE_CFLAGS)
 videodecoder_avcodec_la_SOURCES = avcodec.c
 videodecoder_avcodec_la_LIBADD = $(libavcodec) @LIBADD_VORBIS@ @LIBADD_THEORA@ @LIBADD_ZLIB@

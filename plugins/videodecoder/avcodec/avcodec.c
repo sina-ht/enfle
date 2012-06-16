@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 28 10:28:17 2008.
+ * Last Modified: Fri Mar 23 20:32:07 2012.
  * $Id: avcodec.c,v 1.25 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -102,7 +102,9 @@ ENFLE_PLUGIN_ENTRY(videodecoder_avcodec)
   string_destroy(s);
 
   /* avcodec initialization */
+#if defined(NEED_AVCODEC_INIT)
   avcodec_init();
+#endif
   avcodec_register_all();
 
   return (void *)vdp;
