@@ -2,9 +2,9 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-           (C) Copyright 1998-2009 by Hiroshi Takekawa.
+           (C) Copyright 1998-2012 by Hiroshi Takekawa.
 
-             Last Modified: Sat Jun  6 20:49:20 2009.
+             Last Modified: Sun Jun 17 00:31:49 2012.
 
 ***************************************************************************
 
@@ -44,7 +44,7 @@ Acknowledgement
 
   libungif is only linked, not distributed with this archive.
   Moreover, libungif is not used by default.
-  Now that the patent was expired, enfle has the own gif loader plugin.
+  Now that the patent was expired, enfle has its own gif loader plugin.
 
 Integrated libraries by other authors
   Thanks to all authors.
@@ -59,7 +59,7 @@ Integrated libraries by other authors
   lib/{avutil,avcodec}: libavcodec as of 20070719 for a/v decoding
     libavcodec by Fabrice Bellard and others.  For this part, you can
     apply LGPL2 or any later version.  LGPL license is in
-    lib/avcodec/COPYING.LIB.
+    lib/avcodec/COPYING.LIB.  System-installed libavcodec is also supported.
 
   lib/mad: libmad-0.15.0 for mp3 decoding
     libmad by Underbit Technologies, Inc.  For this part, you can
@@ -90,7 +90,7 @@ This software aims to view many pictures with ease.  You can view
 various formatted pictures and movies with several effects.
 
  Formats you can view:
-  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, TGA, JPEG2000
+  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, TGA, JPEG2000, WEBP
   spi(highly unstable, any formats which (some of) susie plugins support)
   animated GIF
   mng
@@ -130,7 +130,7 @@ be supported sometime.
 
 These environments are checked:
 
-Linux (kernel 2.2/2.4/2.6 + glibc-2.[1234567], x86(-64))
+Linux (kernel 2.2/2.4/2.6/3.0 + glibc-2.[1234567], x86(-64))
 FreeBSD (4.1R, x86)
 
 Other similar environments should work.  Please let me know if you try

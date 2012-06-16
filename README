@@ -2,9 +2,9 @@
 
              Simple Plugin-based Graphic Loader Enfle
 
-           (C) Copyright 1998-2009 by Hiroshi Takekawa.
+           (C) Copyright 1998-2012 by Hiroshi Takekawa.
 
-             Last Modified: Sat Jun  6 20:50:54 2009.
+             Last Modified: Sun Jun 17 00:31:50 2012.
 
 ***************************************************************************
 
@@ -44,7 +44,7 @@ Acknowledgement
 
   libungif is only linked, not distributed with this archive.
   Moreover, libungif is not used by default.
-  Now that the patent was expired, enfle has the own gif loader plugin.
+  Now that the patent was expired, enfle has its own gif loader plugin.
 
 Integrated libraries by other authors
   Thanks to all authors.
@@ -59,7 +59,7 @@ Integrated libraries by other authors
   lib/{avutil,avcodec}: libavcodec as of 20070719 for a/v decoding
     libavcodec by Fabrice Bellard and others.  For this part, you can
     apply LGPL2 or any later version.  LGPL license is in
-    lib/avcodec/COPYING.LIB.
+    lib/avcodec/COPYING.LIB.  System-installed libavcodec is also supported.
 
   lib/mad: libmad-0.15.0 for mp3 decoding
     libmad by Underbit Technologies, Inc.  For this part, you can
@@ -92,7 +92,7 @@ See README.e if you don't read Japanese, but English.
 にも対応しています。
 
 対応フォーマット
-  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, TGA, JPEG2000
+  BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, TGA, JPEG2000, WEBP
   spi (不安定, Susie plugin を利用できる)
   animated GIF
   mng
@@ -134,7 +134,7 @@ xdpyinfo の出力と詳しい環境をお知らせください。なお、 depth 16 の mask
 
 今のところ以下の環境での動作が確認されています。
 
-Linux (kernel 2.2/2.4/2.6 + glibc-2.[1234567], x86(-64))
+Linux (kernel 2.2/2.4/2.6/3.0 + glibc-2.[1234567], x86(-64))
 FreeBSD (4.1R, x86)
 
 同じ/他の環境下で試された方は結果を御報告ください。

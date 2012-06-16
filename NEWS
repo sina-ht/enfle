@@ -1,4 +1,8 @@
-NEWS  Last Modified: Wed Oct  6 21:23:10 2010.
+NEWS  Last Modified: Sun Jun 17 00:27:13 2012.
+
+20120617:
+ Clip render_width and render_height.  This fixes full screen flickering.
+ Fixes for newer system-installed libavcodec support.
 
 20101006:
  Added webp loader plugin.

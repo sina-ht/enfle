@@ -1,6 +1,35 @@
+2012-06-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/avcodec.c: Included old libavcodec
+	needs avcodec_init().
+
+2012-06-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11ximage.c, lib/j2k/Makefile.am, lib/utils/hash.c,
+	plugins/audio/alsa/alsa.c, plugins/demultiplexer/mp3/mp3.c,
+	plugins/loader/bmp/bmp.c, plugins/loader/tga/tga.c,
+	plugins/player/generic/generic.c, plugins/player/ungif/ungif.c,
+	plugins/streamer/xz/xz.c, plugins/ui/convert/convert.c: Eliminated
+	compiler warnings.
+
+2011-10-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Clip render_width and render_height.  This fixes full screen flickering.
+
+2010-10-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
 2010-10-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS: enfle-20101006 release.
+
+2010-10-06  Hiroshi Takekawa  <sian@fennel.org>
+
+	* autogen.sh: autogen.sh: Create config.rpath if not exists.
 
 2010-10-06  Hiroshi Takekawa  <sian@fennel.org>
 
