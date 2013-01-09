@@ -4,7 +4,7 @@
  *    Derived from the work by Junji Hashimoto
  * This file is part of Enfle.
  *
- * Last Modified: Sun Apr 13 02:34:21 2008.
+ * Last Modified: Wed Jan  9 21:15:10 2013.
  * $Id: arc.c,v 1.9 2008/04/19 08:59:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -36,7 +36,7 @@ DECLARE_ARCHIVER_PLUGIN_METHODS;
 static ArchiverPlugin plugin = {
   .type = ENFLE_PLUGIN_ARCHIVER,
   .name = "ARC",
-  .description = "libarc Archiver plugin version 0.1 compiled with libarc-" ARC_LIB_VERSION,
+  .description = "libarc Archiver plugin version 0.1.1 compiled with libarc-" ARC_LIB_VERSION,
   .author = "Hiroshi Takekawa",
   .archiver_private = NULL,
 
@@ -83,7 +83,8 @@ create_enfle_url(Stream *st, char *path) {
 static int /* overrides archive::open */
 arc_open(Archive *arc, Stream *st, char *path)
 {
-  int file_size = 0, get_num, mem_size = 0;
+  int get_num;
+  unsigned int file_size = 0, mem_size = 0;
   unsigned char *region, *read_pos;
   URL url;
   char *urlstr;
