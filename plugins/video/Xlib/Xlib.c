@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jul 24 02:53:24 2011.
+ * Last Modified: Fri Apr  5 21:19:56 2013.
  * $Id: Xlib.c,v 1.68 2009/02/23 14:31:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
+#include <X11/Xatom.h>
 
 #define REQUIRE_STRING_H
 #define REQUIRE_UNISTD_H
@@ -55,6 +56,8 @@ static Cursor normal_cursor, wait_cursor, invisible_cursor;
 static const char invisible_cursor_data[] = {
   0, 0, 0, 0, 0, 0, 0, 0
 };
+
+#define USE_WM_STATE_FULLSCREEN
 
 #include "Xlib.h"
 
@@ -995,7 +998,6 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
     x11window_wait_mapped(xwi->normal.xw);
   } else {
     if (xwi->full.xw == NULL) {
-      XSetWindowAttributes set_attr;
       X11Window_info *p_xwi = (X11Window_info *)vw->parent->private_data;
       X11Window *p_xw = vw->parent->if_fullscreen ? p_xwi->full.xw : p_xwi->normal.xw;
 
@@ -1006,8 +1008,22 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
       XSetFont(x11_display(x11), xwi->full.gc, xwi->caption_font);
       XSetForeground(x11_display(x11), xwi->full.gc, x11_black(x11));
       XSetBackground(x11_display(x11), xwi->full.gc, x11_black(x11));
-      set_attr.override_redirect = True;
-      XChangeWindowAttributes(x11_display(x11), x11window_win(xwi->full.xw), CWOverrideRedirect, &set_attr);
+#if !defined(USE_WM_STATE_FULLSCREEN)
+      {
+	XSetWindowAttributes set_attr;
+
+	set_attr.override_redirect = True;
+	XChangeWindowAttributes(x11_display(x11), x11window_win(xwi->full.xw), CWOverrideRedirect, &set_attr);
+      }
+#else
+      {
+	Atom newstate = XInternAtom(x11_display(x11), "_NET_WM_STATE_FULLSCREEN", True);
+
+	XChangeProperty(x11_display(x11), x11window_win(xwi->full.xw),
+			XInternAtom(x11_display(x11), "_NET_WM_STATE", True), XA_ATOM, 32,
+			PropModeReplace, (unsigned char *)&newstate, 1);
+      }
+#endif
     }
     recreate_pixmap_if_resized(vw, &xwi->full);
     resize(vw, vw->render_width, vw->render_height);
@@ -1016,6 +1032,24 @@ set_fullscreen_mode(VideoWindow *vw, VideoWindowFullscreenMode mode)
       x11ximage_put(xwi->xi, xwi->full.pix, xwi->full.gc, 0, 0, 0, 0, vw->render_width, vw->render_height);
     x11window_map_raised(xwi->full.xw);
     x11window_wait_mapped(xwi->full.xw);
+#if defined(USE_WM_STATE_FULLSCREEN)
+    {
+      XEvent xev;
+
+      xev.xclient.type = ClientMessage;
+      xev.xclient.serial = 0;
+      xev.xclient.send_event = True;
+      xev.xclient.window = x11window_win(xwi->full.xw);
+      xev.xclient.message_type = XInternAtom(x11_display(x11), "_NET_WM_STATE", False);
+      xev.xclient.format = 32;
+      xev.xclient.data.l[0] = 1; //_NET_WM_STATE_ADD
+      xev.xclient.data.l[1] = XInternAtom(x11_display(x11), "_NET_WM_STATE_FULLSCREEN", False);
+      xev.xclient.data.l[2] = 0;
+      XSendEvent(x11_display(x11), DefaultRootWindow(x11_display(x11)), False,
+		 SubstructureRedirectMask | SubstructureNotifyMask,
+		 &xev);
+    }
+#endif
   }
   x11_unlock(x11);
 
