@@ -1,3 +1,22 @@
+2013-04-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: enfle-20130405 release
+
+2013-04-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Use _NET_WM_STATE_FULLSCREEN to switch
+	to full-screen mode
+
+2013-01-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/archiver/arc/arc.c: Use unsigned for file size and buffer
+	size in libarc archiver plugin.
+
+2012-06-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog, NEWS, README, README.e, configure.in: enfle-20120617
+	release.
+
 2012-06-17  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/audiodecoder/avcodec/Makefile.am,
