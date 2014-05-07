@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:00:56 2004.
+ * Last Modified: Wed May  7 21:13:20 2014.
  * $Id: gamma.c,v 1.6 2008/04/19 09:28:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -52,7 +52,7 @@ int gamma_idx = 3;
 static EffectPlugin plugin = {
   .type = ENFLE_PLUGIN_EFFECT,
   .name = "Gamma",
-  .description = "Gamma Correction Effect plugin version 0.1",
+  .description = "Gamma Correction Effect plugin version 0.1.1",
   .author = "Hiroshi Takekawa",
 
   .actions = actions,
@@ -102,7 +102,7 @@ set_gamma(void *a)
 void
 calc_gamma(unsigned char g[256], int gamma_value)
 {
-  static unsigned int log_table[510];
+  static unsigned int log_table[511];
   int i, j;
 
   if (gamma_value == 0) {
