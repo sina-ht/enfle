@@ -328,7 +328,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     for (y = 0; y < m->height; y++) {
       memcpy(memory_ptr(image_renderable_image(p)) + image_bpl(p) * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, image_bpl(p));
     }
-  } else if (vdm->vcodec_ctx->pix_fmt == PIX_FMT_RGB555) {
+  } else if (vdm->vcodec_ctx->pix_fmt == AV_PIX_FMT_RGB555) {
 #else
   if (vdm->vcodec_ctx->pix_fmt == PIX_FMT_RGB555) {
 #endif
@@ -447,7 +447,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 		    (vdm->vcodec_ctx->stream_codec_tag >> 24) & 0xff,
 		     vdm->vcodec_ctx->stream_codec_tag);
 
-  if (vdm->vcodec_ctx->pix_fmt == PIX_FMT_YUV420P &&
+  if (vdm->vcodec_ctx->pix_fmt == AV_PIX_FMT_YUV420P &&
       vdm->vcodec->capabilities & CODEC_CAP_DR1) {
 #if defined(USE_DR1)
     vdm->vcodec_ctx->get_buffer = get_buffer;
