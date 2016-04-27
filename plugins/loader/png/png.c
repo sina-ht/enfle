@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:22:41 2006.
+ * Last Modified: Wed Apr 27 21:24:15 2016.
  * $Id: png.c,v 1.18 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 
@@ -187,7 +188,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     return try_when_error ? LOAD_OK : LOAD_ERROR;
   }
 
-  png_set_read_fn(png_ptr, (voidp)st, (png_rw_ptr)read_data);
+  png_set_read_fn(png_ptr, (png_voidp)st, (png_rw_ptr)read_data);
 #ifdef IDENTIFY_BEFORE_LOAD
   png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 #endif

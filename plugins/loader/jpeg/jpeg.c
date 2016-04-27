@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct  6 21:17:55 2010.
+ * Last Modified: Wed Apr 27 21:00:17 2016.
  *
  * This software is based in part on the work of the Independent JPEG Group
  *
@@ -38,8 +38,6 @@
 #if BITS_IN_JSAMPLE != 8
 #  error BITS_IN_JSAMPLE must be 8
 #endif
-
-static const unsigned int types = IMAGE_RGB24;
 
 DECLARE_LOADER_PLUGIN_METHODS;
 

@@ -3,7 +3,7 @@
  * (C)Copyright 2004-2006 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon May  1 00:52:29 2006.
+ * Last Modified: Wed Apr 27 21:24:59 2016.
  * $Id: j2k.c,v 1.5 2006/04/30 15:52:48 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -32,8 +32,6 @@
 #include "enfle/utils.h"
 #include "utils/libstring.h"
 #include "j2k/j2k.h"
-
-static const unsigned int types = IMAGE_RGB24;
 
 DECLARE_LOADER_PLUGIN_METHODS;
 

@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Aug 16 20:03:42 2004.
+ * Last Modified: Wed Apr 27 21:26:49 2016.
  * $Id: tar.c,v 1.15 2004/08/16 11:08:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -151,7 +151,7 @@ tar_open(Archive *arc, Stream *st, char *path)
   if ((ti = (TarInfo *)archive_get(arc, path)) == NULL)
     return 0;
 
-  if (!stream_seek(arc->st, ti->offset, _SET) < 0) {
+  if (stream_seek(arc->st, ti->offset, _SET) < 0) {
     show_message_fnc("%s (at %ld %d bytes): seek failed.\n", ti->path, ti->offset, ti->size);
     return 0;
   }

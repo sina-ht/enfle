@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jun  7 10:36:06 2014.
+ * Last Modified: Wed Apr 27 21:32:45 2016.
  * $Id: avcodec.c,v 1.11 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -163,11 +163,11 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     /* Set up audio device. */
     m->sampleformat = _AUDIO_FORMAT_S16_LE;
 
-    debug_message_fnc("avcodec: from acodec_ctx    %d ch %d Hz %d kbps\n", adm->acodec_ctx->channels, adm->acodec_ctx->sample_rate, adm->acodec_ctx->bit_rate / 1024);
+    debug_message_fnc("avcodec: from acodec_ctx    %d ch %d Hz %" PRId64 " kbps\n", adm->acodec_ctx->channels, adm->acodec_ctx->sample_rate, adm->acodec_ctx->bit_rate / 1024);
     debug_message_fnc("avcodec: from demultiplexer %d ch %d Hz\n", m->channels, m->samplerate);
     m->channels = m->channels == 0 ? adm->acodec_ctx->channels : m->channels;
     m->samplerate = m->samplerate == 0 ? adm->acodec_ctx->sample_rate : m->samplerate;
-    debug_message_fnc("avcodec: (%d format) %d ch %d Hz %d kbps\n", m->sampleformat, m->channels, m->samplerate, adm->acodec_ctx->bit_rate / 1024);
+    debug_message_fnc("avcodec: (%d format) %d ch %d Hz %" PRId64 " kbps\n", m->sampleformat, m->channels, m->samplerate, adm->acodec_ctx->bit_rate / 1024);
     m->sampleformat_actual = m->sampleformat;
     m->channels_actual = m->channels;
     m->samplerate_actual = m->samplerate;

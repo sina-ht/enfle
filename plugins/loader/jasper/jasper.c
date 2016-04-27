@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun May 24 23:48:23 2009.
+ * Last Modified: Wed Apr 27 21:24:42 2016.
  * $Id: jasper.c,v 1.5 2006/03/12 08:24:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -38,8 +38,6 @@
 
 #include "enfle/loader-plugin.h"
 #include "utils/libstring.h"
-
-static const unsigned int types = IMAGE_RGB24;
 
 DECLARE_LOADER_PLUGIN_METHODS;
 

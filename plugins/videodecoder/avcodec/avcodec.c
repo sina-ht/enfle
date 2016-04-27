@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  7 23:03:49 2014.
+ * Last Modified: Wed Apr 27 21:39:40 2016.
  * $Id: avcodec.c,v 1.25 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -435,6 +435,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   }
   movie_unlock(m);
 
+#if 0
   debug_message_fnc("Codec Tag[%c%c%c%c](%08X) Stream Tag[%c%c%c%c](%08X)\n",
 		     vdm->vcodec_ctx->codec_tag        & 0xff,
 		    (vdm->vcodec_ctx->codec_tag >>  8) & 0xff,
@@ -446,6 +447,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 		    (vdm->vcodec_ctx->stream_codec_tag >> 16) & 0xff,
 		    (vdm->vcodec_ctx->stream_codec_tag >> 24) & 0xff,
 		     vdm->vcodec_ctx->stream_codec_tag);
+#endif
 
   if (vdm->vcodec_ctx->pix_fmt == AV_PIX_FMT_YUV420P &&
       vdm->vcodec->capabilities & CODEC_CAP_DR1) {
