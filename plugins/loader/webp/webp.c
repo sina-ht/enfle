@@ -1,9 +1,9 @@
 /*
  * webp.c -- webp loader plugin
- * (C)Copyright 2010 by Hiroshi Takekawa
+ * (C)Copyright 2010-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Oct  6 21:35:23 2010.
+ * Last Modified: Wed May  4 19:55:05 2016.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -38,7 +38,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
   .name = "WEBP",
-  .description = "WEBP Loader plugin version 0.1",
+  .description = "WEBP Loader plugin version 0.1.1",
   .author = "Hiroshi Takekawa",
   .image_private = NULL,
 
@@ -103,7 +103,7 @@ load_image(Image *p, Stream *st)
   p->bits_per_pixel = 24;
   p->depth = 24;
 
-  show_message_fnc("WEBP (%d,%d) %d bytes\n", image_width(p), image_height(p), size);
+  debug_message_fnc("WEBP (%d,%d) %d bytes\n", image_width(p), image_height(p), size);
 
   image_bpl(p) = (image_width(p) * p->bits_per_pixel) >> 3;
   memory_set(image_image(p), d, _NORMAL, image_bpl(p) * image_height(p), image_bpl(p) * image_height(p));

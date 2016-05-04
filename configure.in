@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2012 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Wed May  4 19:34:57 2016.
+dnl Last Modified: Wed May  4 19:50:08 2016.
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
@@ -586,8 +586,8 @@ AM_CONDITIONAL(HAVE_ASF, test "$available_asf" = "yes")
 
 available_webp=no
 AC_CHECK_HEADER(webp/decode.h, [
-    AC_CHECK_LIB(webpdecode, WebPDecodeRGB, [
-      available_webp=yes; LIBADD_WEBP=-lwebpdecode;
+    AC_CHECK_LIB(webp, WebPDecodeRGB, [
+      available_webp=yes; LIBADD_WEBP=-lwebp;
     ], [], [])
 ])
 if test "$available_webp" != "yes"; then
