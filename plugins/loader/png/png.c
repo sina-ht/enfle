@@ -1,10 +1,9 @@
 /*
  * png.c -- png loader plugin
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 27 21:24:15 2016.
- * $Id: png.c,v 1.18 2006/03/12 08:24:16 sian Exp $
+ * Last Modified: Wed May  4 19:36:07 2016.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -26,14 +25,10 @@
 
 #include "common.h"
 
-#ifdef HAVE_PNG_H
-# include <png.h>
+#ifdef HAVE_LIBPNG12_PNG_H
+# include <libpng12/png.h>
 #else
-#ifdef HAVE_LIBPNG_PNG_H
-# include <libpng/png.h>
-#else
-#error Install libpng
-#endif
+#error Install libpng12
 #endif
 
 #include "enfle/loader-plugin.h"
@@ -50,7 +45,7 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.3.1"
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.3.2"
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,

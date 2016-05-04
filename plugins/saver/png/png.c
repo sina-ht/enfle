@@ -1,10 +1,9 @@
 /*
  * png.c -- PNG Saver plugin
- * (C)Copyright 2000-2003 by Hiroshi Takekawa
+ * (C)Copyright 2000-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Mar  6 12:01:43 2004.
- * $Id: png.c,v 1.15 2004/03/06 03:43:36 sian Exp $
+ * Last Modified: Wed May  4 19:37:05 2016.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -30,14 +29,10 @@
 #include "compat.h"
 #include "common.h"
 
-#ifdef HAVE_PNG_H
-# include <png.h>
+#ifdef HAVE_LIBPNG12_PNG_H
+# include <libpng12/png.h>
 #else
-#ifdef HAVE_LIBPNG_PNG_H
-# include <libpng/png.h>
-#else
-#error Install libpng
-#endif
+#error Install libpng12
 #endif
 
 #include "utils/libstring.h"
@@ -49,7 +44,7 @@ DECLARE_SAVER_PLUGIN_METHODS;
 static SaverPlugin plugin = {
   .type = ENFLE_PLUGIN_SAVER,
   .name = "PNG",
-  .description = "PNG Saver plugin version 0.2",
+  .description = "PNG Saver plugin version 0.2.1",
   .author = "Hiroshi Takekawa",
 
   .save = save,
