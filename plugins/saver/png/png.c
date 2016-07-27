@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  4 19:37:05 2016.
+ * Last Modified: Sat Jul 23 12:29:52 2016.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -29,10 +29,10 @@
 #include "compat.h"
 #include "common.h"
 
-#ifdef HAVE_LIBPNG12_PNG_H
-# include <libpng12/png.h>
+#ifdef HAVE_LIBPNG_PNG_H
+# include <libpng/png.h>
 #else
-#error Install libpng12
+#error Install libpng
 #endif
 
 #include "utils/libstring.h"

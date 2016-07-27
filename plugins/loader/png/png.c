@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  4 19:36:07 2016.
+ * Last Modified: Sat Jul 23 12:55:40 2016.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -25,10 +25,10 @@
 
 #include "common.h"
 
-#ifdef HAVE_LIBPNG12_PNG_H
-# include <libpng12/png.h>
+#ifdef HAVE_LIBPNG_PNG_H
+# include <libpng/png.h>
 #else
-#error Install libpng12
+#error Install libpng
 #endif
 
 #include "enfle/loader-plugin.h"
@@ -45,7 +45,7 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.3.2"
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.4"
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
@@ -109,7 +109,9 @@ error_handler(png_structp png_ptr, png_const_charp error_msg)
   else
     err_message("png loader: %s\n", error_msg);
 
+#if 0
   longjmp(png_jmpbuf(png_ptr), 1);
+#endif
 }
 
 static void
@@ -154,6 +156,8 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
   int num_trans;
   png_color_16p trans_values;
   png_bytep trans;
+  png_colorp palette = NULL;
+  int num_palette = 0;
 
   //debug_message("png loader: load() called\n");
 
@@ -182,7 +186,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return try_when_error ? LOAD_OK : LOAD_ERROR;
   }
-
+  
   png_set_read_fn(png_ptr, (png_voidp)st, (png_rw_ptr)read_data);
 #ifdef IDENTIFY_BEFORE_LOAD
   png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
@@ -269,13 +273,13 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       break;
     case PNG_COLOR_TYPE_RGB:
     case PNG_COLOR_TYPE_RGB_ALPHA:
-      p->transparent_color.red = info_ptr->trans_values.red >> 8;
-      p->transparent_color.green = info_ptr->trans_values.green >> 8;
-      p->transparent_color.blue = info_ptr->trans_values.blue >> 8;
+      p->transparent_color.red = trans_values->red >> 8;
+      p->transparent_color.green = trans_values->green >> 8;
+      p->transparent_color.blue = trans_values->blue >> 8;
       break;
     case PNG_COLOR_TYPE_GRAY:
     case PNG_COLOR_TYPE_GRAY_ALPHA:
-      p->transparent_color.gray = info_ptr->trans_values.gray;
+      p->transparent_color.gray = trans_values->gray;
       break;
     default:
       break;
@@ -303,7 +307,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
       p->background_color.red = p->background_color.green = p->background_color.blue = p->background_color.index = p->background_color.gray =
 	my_background.red = my_background.green = my_background.blue = my_background.index = my_background.gray = 0;
     }
-    png_set_background(png_ptr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, DISPLAY_GAMMA);
+    //png_set_background(png_ptr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, DISPLAY_GAMMA);
   }
 
   /* prepare image data, store palette if exists */
@@ -336,16 +340,19 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     break;
   default:
     p->type = _INDEX;
-    p->ncolors = info_ptr->num_palette;
     p->depth = 8;
     p->bits_per_pixel = 8;
     image_bpl(p) = width;
 
-    for (i = 0; i < p->ncolors; i++) {
-      p->colormap[i][0] = info_ptr->palette[i].red;
-      p->colormap[i][1] = info_ptr->palette[i].green;
-      p->colormap[i][2] = info_ptr->palette[i].blue;
+    if ((png_get_PLTE(png_ptr, info_ptr, &palette, &num_palette) & PNG_INFO_PLTE) && num_palette > 0 && palette != NULL) {
+      p->ncolors = num_palette;
+      for (i = 0; i < p->ncolors; i++) {
+	p->colormap[i][0] = palette[i].red;
+	p->colormap[i][1] = palette[i].green;
+	p->colormap[i][2] = palette[i].blue;
+      }
     }
+    break;
   }
 
   /* allocate memory for returned image */

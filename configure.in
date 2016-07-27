@@ -292,13 +292,13 @@ AC_SUBST(LIBADD_ZLIB)
 available_png=no
 if test "$available_zlib" = "yes"; then
   LIBADD_PNG=$LIBADD_ZLIB
-  AC_CHECK_HEADER(libpng12/png.h, [
-   AC_DEFINE(HAVE_LIBPNG12_PNG_H, 1, [ Define if you have the <libpng12/png.h> header file. ])
+  AC_CHECK_HEADER(libpng/png.h, [
+   AC_DEFINE(HAVE_LIBPNG_PNG_H, 1, [ Define if you have the <libpng/png.h> header file. ])
    png_header_ok=yes
   ], [ png_header_ok=no ])
   if test "$png_header_ok" = yes; then
     AC_CHECK_LIB(png, png_get_IHDR, [
-      available_png=yes; LIBADD_PNG="$LIBADD_POW -lpng12 $LIBADD_PNG";
+      available_png=yes; LIBADD_PNG="$LIBADD_POW -lpng $LIBADD_PNG";
       AC_DEFINE(CONFIG_PNG_DECODER, 1, [Define if you need this for avcodec.])
     ], [], [$LIBADD_POW $LIBADD_ZLIB])
   fi
