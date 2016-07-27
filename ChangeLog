@@ -1,3 +1,68 @@
+2016-07-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: enfle-20160727 release
+
+2016-07-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/loader/png/png.c, plugins/saver/png/png.c:
+	Use libpng instead of libpng12 You might require newer libpng version.
+
+2016-05-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/loader/webp/webp.c: Update webp loader
+	plugin
+
+2016-05-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/loader/png/png.c, plugins/saver/png/png.c:
+	png loader and saver now requires libpng12
+
+2016-04-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in, plugins/archiver/tar/tar.c,
+	plugins/audiodecoder/avcodec/avcodec.c, plugins/loader/j2k/j2k.c,
+	plugins/loader/jasper/jasper.c, plugins/loader/jpeg/jpeg.c,
+	plugins/loader/png/png.c, plugins/videodecoder/avcodec/avcodec.c:
+	Fix warnings found by gcc-6.1.0.
+
+2015-12-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: enfle-20151223 release
+
+2015-12-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/videodecoder/avcodec/avcodec.c: Support newer libavcodec
+
+2014-06-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/avcodec.c: Support newer libavcodec
+
+2014-05-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/effect/gamma/gamma.c: Fix the buffer overflow of log_table
+
+2014-04-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Disable obsoleted plugins
+
+2014-04-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* INSTALL, config.guess, config.sub, install-sh, missing,
+	mkinstalldirs: Updated INSTALL, config.guess,config.sub, install-sh,
+	missing, and mkinstalldirs
+
+2013-05-18  Hiroshi Takekawa  <sian@fennel.org>
+
+	* INSTALL, config.guess, config.sub, ltmain.sh: Updated INSTALL,
+	config.guess, config.sub, and ltmain.sh
+
+2013-04-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: Update ChangeLog
+
 2013-04-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: enfle-20130405 release
@@ -182,7 +247,7 @@
 
 2009-05-24  Hiroshi Takekawa  <sian@fennel.org>
 
-	* .cvsignore, .gitignore: Added .gitignore.
+	* .cvsignore => .gitignore: Added .gitignore.
 
 2009-02-26  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -552,9 +617,9 @@
 	lib/avcodec/indeo2data.h, lib/avcodec/indeo3data.h,
 	lib/avcodec/interplayvideo.c, lib/avcodec/jpeglsdec.h,
 	lib/avcodec/kmvc.c, lib/avcodec/lcl.c, lib/avcodec/lcl.h,
-	lib/avcodec/lcldec.c, lib/avcodec/libvorbis.c, lib/avcodec/loco.c,
-	lib/avcodec/mathops.h, lib/avcodec/mdec.c, lib/avcodec/mjpeg.c,
-	lib/avcodec/mjpeg.h, lib/avcodec/mjpegdec.c,
+	lib/avcodec/lcldec.c, lib/avcodec/{oggvorbis.c => libvorbis.c},
+	lib/avcodec/loco.c, lib/avcodec/mathops.h, lib/avcodec/mdec.c,
+	lib/avcodec/mjpeg.c, lib/avcodec/mjpeg.h, lib/avcodec/mjpegdec.c,
 	lib/avcodec/motion-test.c, lib/avcodec/motion_est.c,
 	lib/avcodec/motion_est_template.c, lib/avcodec/mp3lameaudio.c,
 	lib/avcodec/mpc.c, lib/avcodec/mpcdata.h, lib/avcodec/mpeg12.c,
@@ -567,26 +632,25 @@
 	lib/avcodec/mpegvideo_common.h, lib/avcodec/msmpeg4.c,
 	lib/avcodec/msmpeg4.h, lib/avcodec/msmpeg4data.c,
 	lib/avcodec/msmpeg4data.h, lib/avcodec/msmpeg4tab.h,
-	lib/avcodec/msvideo1.c, lib/avcodec/oggvorbis.c, lib/avcodec/opt.c,
-	lib/avcodec/opt.h, lib/avcodec/png.c, lib/avcodec/png.h,
-	lib/avcodec/pngdec.c, lib/avcodec/ppc/dsputil_altivec.h,
-	lib/avcodec/ppc/dsputil_ppc.h, lib/avcodec/ppc/h264_altivec.c,
-	lib/avcodec/ppc/idct_altivec.c, lib/avcodec/ppc/int_altivec.c,
-	lib/avcodec/ppc/mathops.h, lib/avcodec/ppc/snow_altivec.c,
-	lib/avcodec/ppc/types_altivec.h, lib/avcodec/ppc/vc1dsp_altivec.c,
-	lib/avcodec/ps2/dsputil_mmi.c, lib/avcodec/ps2/idct_mmi.c,
-	lib/avcodec/ps2/mmi.h, lib/avcodec/ps2/mpegvideo_mmi.c,
-	lib/avcodec/pthread.c, lib/avcodec/ptx.c, lib/avcodec/qdm2.c,
-	lib/avcodec/qdm2data.h, lib/avcodec/qdrw.c, lib/avcodec/qpeg.c,
-	lib/avcodec/qtrle.c, lib/avcodec/rangecoder.c,
-	lib/avcodec/rangecoder.h, lib/avcodec/ratecontrol.c,
-	lib/avcodec/ratecontrol.h, lib/avcodec/raw.c, lib/avcodec/raw.h,
-	lib/avcodec/rawdec.c, lib/avcodec/resample.c,
-	lib/avcodec/resample2.c, lib/avcodec/rl.h, lib/avcodec/rle.c,
-	lib/avcodec/rle.h, lib/avcodec/roqvideo.c, lib/avcodec/roqvideo.h,
-	lib/avcodec/roqvideodec.c, lib/avcodec/rpza.c,
-	lib/avcodec/rtjpeg.h, lib/avcodec/rv10.c, lib/avcodec/s3tc.c,
-	lib/avcodec/s3tc.h, lib/avcodec/simple_idct.h,
+	lib/avcodec/msvideo1.c, lib/avcodec/opt.c, lib/avcodec/opt.h,
+	lib/avcodec/png.c, lib/avcodec/png.h, lib/avcodec/pngdec.c,
+	lib/avcodec/ppc/dsputil_altivec.h, lib/avcodec/ppc/dsputil_ppc.h,
+	lib/avcodec/ppc/h264_altivec.c, lib/avcodec/ppc/idct_altivec.c,
+	lib/avcodec/ppc/int_altivec.c, lib/avcodec/ppc/mathops.h,
+	lib/avcodec/ppc/snow_altivec.c, lib/avcodec/ppc/types_altivec.h,
+	lib/avcodec/ppc/vc1dsp_altivec.c, lib/avcodec/ps2/dsputil_mmi.c,
+	lib/avcodec/ps2/idct_mmi.c, lib/avcodec/ps2/mmi.h,
+	lib/avcodec/ps2/mpegvideo_mmi.c, lib/avcodec/pthread.c,
+	lib/avcodec/ptx.c, lib/avcodec/qdm2.c, lib/avcodec/qdm2data.h,
+	lib/avcodec/qdrw.c, lib/avcodec/qpeg.c, lib/avcodec/qtrle.c,
+	lib/avcodec/rangecoder.c, lib/avcodec/rangecoder.h,
+	lib/avcodec/ratecontrol.c, lib/avcodec/ratecontrol.h,
+	lib/avcodec/raw.c, lib/avcodec/raw.h, lib/avcodec/rawdec.c,
+	lib/avcodec/resample.c, lib/avcodec/resample2.c, lib/avcodec/rl.h,
+	lib/avcodec/rle.c, lib/avcodec/rle.h, lib/avcodec/roqvideo.c,
+	lib/avcodec/roqvideo.h, lib/avcodec/roqvideodec.c,
+	lib/avcodec/rpza.c, lib/avcodec/rtjpeg.h, lib/avcodec/rv10.c,
+	lib/avcodec/s3tc.c, lib/avcodec/s3tc.h, lib/avcodec/simple_idct.h,
 	lib/avcodec/smacker.c, lib/avcodec/smc.c, lib/avcodec/snow.c,
 	lib/avcodec/snow.h, lib/avcodec/sp5x.h, lib/avcodec/sp5xdec.c,
 	lib/avcodec/sparc/vis.h, lib/avcodec/svq1.c, lib/avcodec/svq1.h,
@@ -4118,21 +4182,16 @@
 
 2004-02-14  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/demultiplexer/Makefile.am, lib/demultiplexer/demultiplexer.c,
-	lib/demultiplexer/demultiplexer.h,
-	lib/demultiplexer/demultiplexer_avi.c,
-	lib/demultiplexer/demultiplexer_avi.h,
-	lib/demultiplexer/demultiplexer_avi_private.h,
-	lib/demultiplexer/demultiplexer_mpeg.c,
-	lib/demultiplexer/demultiplexer_mpeg.h,
-	lib/demultiplexer/demultiplexer_old.c,
+	* lib/demultiplexer/Makefile.am, lib/demultiplexer/demultiplexer.h,
+	lib/demultiplexer/{demultiplexer.c => demultiplexer_old.c},
 	lib/demultiplexer/demultiplexer_old.h,
-	lib/demultiplexer/demultiplexer_old_avi.c,
-	lib/demultiplexer/demultiplexer_old_avi.h,
-	lib/demultiplexer/demultiplexer_old_avi_private.h,
-	lib/demultiplexer/demultiplexer_old_mpeg.c,
-	lib/demultiplexer/demultiplexer_old_mpeg.h,
-	plugins/player/avcodec/Makefile.am,
+	lib/demultiplexer/{demultiplexer_avi.c => demultiplexer_old_avi.c},
+	lib/demultiplexer/{demultiplexer_avi.h => demultiplexer_old_avi.h},
+	lib/demultiplexer/{demultiplexer_avi_private.h =>
+	demultiplexer_old_avi_private.h},
+	lib/demultiplexer/{demultiplexer_mpeg.c =>
+	demultiplexer_old_mpeg.c}, lib/demultiplexer/{demultiplexer_mpeg.h
+	=> demultiplexer_old_mpeg.h}, plugins/player/avcodec/Makefile.am,
 	plugins/player/avcodec/avcodec.c, plugins/player/divx/Makefile.am,
 	plugins/player/divx/divx.c, plugins/player/libmpeg2.old/libmpeg2.c,
 	plugins/player/libmpeg2.old/libmpeg2_vo.h,
@@ -6989,7 +7048,7 @@
 	plugins/saver/glic/vmpm_decompose_recur3.c,
 	plugins/saver/glic/vmpm_decompose_token.c,
 	plugins/saver/glic/vmpm_decompose_token2.c,
-	plugins/saver/png/png.c, plugins/video/Xlib/Xlib.c, src/enfle.c: 
+	plugins/saver/png/png.c, plugins/video/Xlib/Xlib.c, src/enfle.c:
 	Fixed signed-unsigned issues, using -W option. Many cosmetic changes
 	and cleanups. Bug fixes.
 
@@ -9371,18 +9430,18 @@
 
 2001-02-19  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/mpeg2/Makefile.am, lib/mpeg2/attributes.h, lib/mpeg2/debug.c,
-	lib/mpeg2/debug.h, lib/mpeg2/decode.c, lib/mpeg2/header.c,
+	* lib/mpeg2/Makefile.am, lib/mpeg2/{stats.h => attributes.h},
+	lib/mpeg2/debug.c, lib/mpeg2/decode.c, lib/mpeg2/header.c,
 	lib/mpeg2/idct.c, lib/mpeg2/idct_mlib.c, lib/mpeg2/idct_mmx.c,
-	lib/mpeg2/mm_accel.h, lib/mpeg2/mmx.h, lib/mpeg2/motion_comp.c,
-	lib/mpeg2/motion_comp.h, lib/mpeg2/motion_comp_mlib.c,
-	lib/mpeg2/motion_comp_mmx.c, lib/mpeg2/mpeg2.h,
-	lib/mpeg2/mpeg2_internal.h, lib/mpeg2/oms_accel.h,
-	lib/mpeg2/slice.c, lib/mpeg2/slice.h, lib/mpeg2/stats.c,
-	lib/mpeg2/stats.h, lib/mpeg2/video_out.c, lib/mpeg2/video_out.h,
-	lib/mpeg2/video_out_internal.h, lib/mpeg2/vlc.h,
-	lib/mpeg2/yuv2rgb.c, lib/mpeg2/yuv2rgb.h, lib/mpeg2/yuv2rgb_mlib.c,
-	lib/mpeg2/yuv2rgb_mmx.c: Updated to mpeg2dec-0.2.0.
+	lib/mpeg2/{debug.h => mm_accel.h}, lib/mpeg2/mmx.h,
+	lib/mpeg2/motion_comp.c, lib/mpeg2/motion_comp.h,
+	lib/mpeg2/motion_comp_mlib.c, lib/mpeg2/motion_comp_mmx.c,
+	lib/mpeg2/mpeg2.h, lib/mpeg2/mpeg2_internal.h, lib/mpeg2/slice.c,
+	lib/mpeg2/slice.h, lib/mpeg2/stats.c, lib/mpeg2/video_out.c,
+	lib/mpeg2/video_out.h, lib/mpeg2/video_out_internal.h,
+	lib/mpeg2/vlc.h, lib/mpeg2/yuv2rgb.c, lib/mpeg2/{oms_accel.h =>
+	yuv2rgb.h}, lib/mpeg2/yuv2rgb_mlib.c, lib/mpeg2/yuv2rgb_mmx.c:
+	Updated to mpeg2dec-0.2.0.
 
 2001-02-12  Hiroshi Takekawa  <sian@fennel.org>
 
@@ -11283,7 +11342,7 @@
 
 2000-10-08  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/image.h: Added background_color,	transparent_color.
+	* lib/enfle/image.h: Added background_color, transparent_color.
 	Deleted delay_usec.
 
 2000-10-02  Hiroshi Takekawa  <sian@fennel.org>
