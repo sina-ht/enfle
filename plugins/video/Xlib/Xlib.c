@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2007 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Apr  5 21:19:56 2013.
+ * Last Modified: Fri Sep  2 23:53:20 2016.
  * $Id: Xlib.c,v 1.68 2009/02/23 14:31:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -407,14 +407,11 @@ draw_caption(VideoWindow *vw)
   vw->if_caption = 1;
 
   if (!vw->if_fullscreen) {
-    XTextProperty text;
-    char *list[] = { vw->caption };
-
-    XmbTextListToTextProperty(x11_display(x11), list, 1, XCompoundTextStyle, &text);
-    x11_lock(x11);
-    x11window_setwmname(xw, &text);
-    XFree(text.value);
-    x11_unlock(x11);
+    XChangeProperty(x11_display(x11), x11window_win(xw), 
+		    XInternAtom(x11_display(x11), "_NET_WM_NAME", True),
+		    XInternAtom(x11_display(x11), "UTF8_STRING", True),
+		    8, PropModeReplace, 
+		    (unsigned char *)vw->caption, (int)strlen(vw->caption));
   } else {
     XFontSetExtents *extent = XExtentsOfFontSet(xwi->xfontset);
     int x = (vw->full_width - XmbTextEscapement(xwi->xfontset, vw->caption, strlen(vw->caption))) >> 1;
