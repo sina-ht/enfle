@@ -40,3 +40,6 @@ enfle.anjuta
 lib/mad/mad.h
 doc/enfle.1
 src/enfle
+compile
+optbuild
+updatecl.sh
