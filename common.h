@@ -103,4 +103,4 @@
 #  define debug_message_fn(format, args...)
 #  define debug_message_fnc(format, args...)
 #endif
-#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2009 by Hiroshi Takekawa"
+#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2016 by Hiroshi Takekawa"
