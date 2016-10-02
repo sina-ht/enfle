@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sat Jul 23 12:55:40 2016.
+ * Last Modified: Sun Oct  2 20:29:50 2016.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,7 +44,7 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.4"
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.4.1"
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
@@ -255,6 +255,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     png_set_strip_alpha(png_ptr);
 #endif
 
+  png_set_interlace_handling(png_ptr);
   png_read_update_info(png_ptr, info_ptr);
   color_type = png_get_color_type(png_ptr, info_ptr);
 
