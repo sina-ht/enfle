@@ -1,10 +1,9 @@
 /*
  * cache.c -- cache object
- * (C)Copyright 2005 by Hiroshi Takekawa
+ * (C)Copyright 2005-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
  * Last Modified: Thu Sep  7 23:11:59 2006.
- * $Id: cache.c,v 1.4 2006/09/09 12:55:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -96,8 +95,9 @@ cached_object_create(void *p, CachableObjectType cot, void *key, unsigned int ke
     return NULL;
   co->p = p;
   co->cot = cot;
-  co->key = malloc(keylen);
+  co->key = malloc(keylen + 1);
   memcpy(co->key, key, keylen);
+  *((unsigned char *)(co->key + keylen)) = 0;
   co->keylen = keylen;
 
   return co;
