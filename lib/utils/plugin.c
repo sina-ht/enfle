@@ -1,10 +1,9 @@
 /*
  * plugin.c -- plugin interface
- * (C)Copyright 2000, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2016 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
  * Last Modified: Sun Aug  6 16:44:06 2006.
- * $Id: plugin.c,v 1.17 2006/08/06 07:50:26 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -128,6 +127,11 @@ plugin_unload(Plugin *p)
     if (p->substance_unload)
       p->substance_unload(p->substance);
     p->substance = NULL;
+  }
+
+  if (p->filepath) {
+    free(p->filepath);
+    p->filepath = NULL;
   }
 
   if (p->handle) {
