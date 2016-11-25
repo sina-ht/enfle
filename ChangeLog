@@ -1,3 +1,196 @@
+2016-11-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.ac: configure.ac: Version up
+
+2016-11-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/cache.c: cache: Avoid potential heap overflow
+
+2016-11-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/plugin.c: plugin: Plug memory leaks on plugin_unload()
+
+2016-10-22  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e, README.jp, README.md: Convert README.e to
+	README.md README.md is the primary document and README.jp is for reference for
+	Japanese.
+
+2016-10-02  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/png/png.c: loader: png: Call
+	png_set_interlace_handling() Suppress warnings below and loader images correctly: Interlace
+	handling should be turned on when using png_read_image
+
+2016-09-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* common.h: Update copyright year
+
+2016-09-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in => configure.ac: Rename configure.in to configure.ac
+
+2016-09-09  Hiroshi Takekawa  <sian@fennel.org>
+
+	* INSTALL, config.guess, config.sub, ltmain.sh, missing: Update
+	autotools
+
+2016-09-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.e, acinclude.m4, common.h, compat.h, configure.in,
+	lib/X11/rgbparse.c, lib/X11/rgbparse.h, lib/X11/x11.c,
+	lib/X11/x11.h, lib/X11/x11window.c, lib/X11/x11window.h,
+	lib/X11/x11ximage.c, lib/X11/x11ximage.h, lib/avcodec/integer.c,
+	lib/avcodec/integer.h, lib/avcodec/rational.c,
+	lib/avcodec/rational.h, lib/demultiplexer/demultiplexer_old.c,
+	lib/demultiplexer/demultiplexer_old.h,
+	lib/demultiplexer/demultiplexer_old_avi.c,
+	lib/demultiplexer/demultiplexer_old_avi.h,
+	lib/demultiplexer/demultiplexer_old_avi_private.h,
+	lib/demultiplexer/demultiplexer_old_mpeg.c,
+	lib/demultiplexer/demultiplexer_old_mpeg.h,
+	lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h,
+	lib/dllloader/advapi32.c, lib/dllloader/advapi32.h,
+	lib/dllloader/borlndmm.c, lib/dllloader/borlndmm.h,
+	lib/dllloader/export.h, lib/dllloader/kernel32.c,
+	lib/dllloader/kernel32.h, lib/dllloader/mm.c, lib/dllloader/mm.h,
+	lib/dllloader/module.c, lib/dllloader/module.h,
+	lib/dllloader/msdmo.c, lib/dllloader/msdmo.h,
+	lib/dllloader/msvcrt.c, lib/dllloader/msvcrt.h, lib/dllloader/pe.h,
+	lib/dllloader/pe_image.c, lib/dllloader/pe_image.h,
+	lib/dllloader/user32.c, lib/dllloader/user32.h,
+	lib/dllloader/w32api.h, lib/dllloader/windef.h,
+	lib/enfle/archive.c, lib/enfle/archive.h,
+	lib/enfle/archiver-extra.h, lib/enfle/archiver-plugin.h,
+	lib/enfle/archiver.c, lib/enfle/archiver.h,
+	lib/enfle/audio-plugin.h, lib/enfle/audio.h,
+	lib/enfle/audiodecoder-plugin.h, lib/enfle/audiodecoder.c,
+	lib/enfle/audiodecoder.h, lib/enfle/cache_image.c,
+	lib/enfle/cache_image.h, lib/enfle/demultiplexer-plugin.h,
+	lib/enfle/demultiplexer.c, lib/enfle/demultiplexer.h,
+	lib/enfle/demultiplexer_bitmapinfoheader.h,
+	lib/enfle/demultiplexer_types.h,
+	lib/enfle/demultiplexer_waveformatex.h, lib/enfle/dmo.c,
+	lib/enfle/effect-plugin.h, lib/enfle/effect.c, lib/enfle/effect.h,
+	lib/enfle/enfle-plugin.c, lib/enfle/enfle-plugin.h,
+	lib/enfle/enfle-plugins.c, lib/enfle/enfle-plugins.h,
+	lib/enfle/enfle-plugintype.h, lib/enfle/fourcc.h,
+	lib/enfle/identify.c, lib/enfle/identify.h, lib/enfle/image.c,
+	lib/enfle/image.h, lib/enfle/image_magnify.c,
+	lib/enfle/loader-extra.h, lib/enfle/loader-plugin.h,
+	lib/enfle/loader.c, lib/enfle/loader.h, lib/enfle/memory.c,
+	lib/enfle/memory.h, lib/enfle/movie.c, lib/enfle/movie.h,
+	lib/enfle/player-extra.h, lib/enfle/player-plugin.h,
+	lib/enfle/player.c, lib/enfle/player.h, lib/enfle/saver-plugin.h,
+	lib/enfle/saver.c, lib/enfle/saver.h, lib/enfle/spi.c,
+	lib/enfle/stream-utils.c, lib/enfle/stream-utils.h,
+	lib/enfle/stream.c, lib/enfle/stream.h,
+	lib/enfle/streamer-plugin.h, lib/enfle/streamer.c,
+	lib/enfle/streamer.h, lib/enfle/ui-action.h, lib/enfle/ui-extra.h,
+	lib/enfle/ui-plugin.h, lib/enfle/ui.c, lib/enfle/ui.h,
+	lib/enfle/utils.c, lib/enfle/utils.h, lib/enfle/video-plugin.h,
+	lib/enfle/video.h, lib/enfle/videodecoder-plugin.h,
+	lib/enfle/videodecoder.c, lib/enfle/videodecoder.h, lib/mad/D.dat,
+	lib/mad/bit.c, lib/mad/bit.h, lib/mad/decoder.c, lib/mad/decoder.h,
+	lib/mad/fixed.c, lib/mad/fixed.h, lib/mad/frame.c, lib/mad/frame.h,
+	lib/mad/global.h, lib/mad/huffman.c, lib/mad/huffman.h,
+	lib/mad/imdct_l_arm.S, lib/mad/imdct_s.dat, lib/mad/layer12.c,
+	lib/mad/layer12.h, lib/mad/layer3.c, lib/mad/layer3.h,
+	lib/mad/mad.h.sed, lib/mad/minimad.c, lib/mad/qc_table.dat,
+	lib/mad/rq_table.dat, lib/mad/sf_table.dat, lib/mad/stream.c,
+	lib/mad/stream.h, lib/mad/synth.c, lib/mad/synth.h,
+	lib/mad/timer.c, lib/mad/timer.h, lib/mad/version.c,
+	lib/mad/version.h, lib/mpeg2/alloc.c, lib/mpeg2/attributes.h,
+	lib/mpeg2/cpu_accel.c, lib/mpeg2/cpu_state.c, lib/mpeg2/decode.c,
+	lib/mpeg2/header.c, lib/mpeg2/header.h, lib/mpeg2/idct.c,
+	lib/mpeg2/idct.h, lib/mpeg2/idct_alpha.c, lib/mpeg2/idct_altivec.c,
+	lib/mpeg2/idct_mlib.c, lib/mpeg2/idct_mlib.h, lib/mpeg2/idct_mmx.c,
+	lib/mpeg2/idct_mmx.h, lib/mpeg2/mm_accel.h, lib/mpeg2/mmx.h,
+	lib/mpeg2/motion_comp.c, lib/mpeg2/motion_comp_alpha.c,
+	lib/mpeg2/motion_comp_altivec.c, lib/mpeg2/motion_comp_mlib.c,
+	lib/mpeg2/motion_comp_mmx.c, lib/mpeg2/motion_comp_vis.c,
+	lib/mpeg2/mpeg2.h, lib/mpeg2/mpeg2_internal.h, lib/mpeg2/slice.c,
+	lib/mpeg2/stats.c, lib/mpeg2/video_out.c, lib/mpeg2/video_out.h,
+	lib/mpeg2/video_out_internal.h, lib/mpeg2/vlc.h,
+	lib/mpeg2/yuv2rgb.c, lib/mpeg2/yuv2rgb.h, lib/mpeg2/yuv2rgb_mlib.c,
+	lib/mpeg2/yuv2rgb_mmx.c, lib/utils/cache.c, lib/utils/cache.h,
+	lib/utils/converter.c, lib/utils/converter.h, lib/utils/cpucaps.c,
+	lib/utils/cpucaps.h, lib/utils/dlist.c, lib/utils/dlist.h,
+	lib/utils/fifo.c, lib/utils/fifo.h, lib/utils/hash.c,
+	lib/utils/hash.h, lib/utils/libconfig.c, lib/utils/libconfig.h,
+	lib/utils/libstring.c, lib/utils/libstring.h, lib/utils/misc.c,
+	lib/utils/misc.h, lib/utils/plugin.c, lib/utils/plugin.h,
+	lib/utils/pluginlist.c, lib/utils/pluginlist.h,
+	lib/utils/stdio-support.c, lib/utils/stdio-support.h,
+	lib/utils/timer.c, lib/utils/timer.h,
+	lib/utils/timer_gettimeofday.c, lib/utils/timer_gettimeofday.h,
+	lib/utils/timer_impl.h, plugins/archiver/arc/arc.c,
+	plugins/archiver/arc/url_enfle.c, plugins/archiver/rar/unrar.c,
+	plugins/archiver/tar/_tar.h, plugins/archiver/tar/tar.c,
+	plugins/audio/alsa/alsa.c, plugins/audio/esd/esd.c,
+	plugins/audio/oss/oss.c, plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/audiodecoder/vorbis/vorbis.c,
+	plugins/demultiplexer/avi/avi.c,
+	plugins/demultiplexer/avi/demultiplexer_avi.h,
+	plugins/demultiplexer/avi/demultiplexer_avi_private.h,
+	plugins/demultiplexer/avi/libriff.c,
+	plugins/demultiplexer/avi/libriff.h,
+	plugins/demultiplexer/mp3/mp3.c,
+	plugins/demultiplexer/mpeg/demultiplexer_mpeg.h,
+	plugins/demultiplexer/mpeg/mpeg.c,
+	plugins/demultiplexer/ogg/demultiplexer_ogg.h,
+	plugins/demultiplexer/ogg/ogg.c, plugins/effect/gamma/gamma.c,
+	plugins/effect/rotate/rotate.c, plugins/loader/bmp/bmp.c,
+	plugins/loader/gif/gif.c, plugins/loader/gif/gifbitio.c,
+	plugins/loader/gif/gifbitio.h, plugins/loader/gif/gifext.c,
+	plugins/loader/gif/gifimage.c, plugins/loader/gif/giflib.c,
+	plugins/loader/gif/giflib.h, plugins/loader/j2k/j2k.c,
+	plugins/loader/jasper/jasper.c, plugins/loader/jpeg/jpeg.c,
+	plugins/loader/pcx/pcx.c, plugins/loader/png/png.c,
+	plugins/loader/pnm/pnm.c, plugins/loader/tga/tga.c,
+	plugins/loader/ungif/ungif.c, plugins/loader/webp/webp.c,
+	plugins/loader/xbm/xbm.c, plugins/loader/xpm/xpm.c,
+	plugins/player/avcodec/avcodec.c,
+	plugins/player/avifile/avifile.cpp,
+	plugins/player/avifile/config.h, plugins/player/divx/divx.c,
+	plugins/player/generic/generic.c,
+	plugins/player/libmpeg2.old/libmpeg2.c,
+	plugins/player/libmpeg2.old/libmpeg2_vo.c,
+	plugins/player/libmpeg2.old/libmpeg2_vo.h,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
+	plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/mpglib/mpglib.c,
+	plugins/player/opendivx/avcodec.c, plugins/player/opendivx/divx.c,
+	plugins/player/opendivx/libavi.c, plugins/player/opendivx/libavi.h,
+	plugins/player/opendivx/libriff.c,
+	plugins/player/opendivx/libriff.h,
+	plugins/player/opendivx/opendivx.c, plugins/player/ungif/ungif.c,
+	plugins/saver/jpeg/jpeg.c, plugins/saver/png/png.c,
+	plugins/streamer/bz2/bz2.c, plugins/streamer/bz2/bz2.h,
+	plugins/streamer/gz/gz.c, plugins/streamer/xz/xz.c,
+	plugins/ui/convert/convert.c, plugins/ui/normal/normal.c,
+	plugins/ui/wallpaper/wallpaper.c, plugins/video/Xlib/Xlib.c,
+	plugins/video/Xlib/Xlib.h, plugins/videodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/divx/divx.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/raw/raw.c, src/enfle.c, src/getopt-support.c,
+	src/getopt-support.h: Update file headers for applying GPL Replace the old snail mail address with the URL.
+
+2016-09-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* .gitignore: Update .gitignore
+
+2016-09-03  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/video/Xlib/Xlib.c: Use XChangeProperty to set window
+	caption
+
+2016-07-27  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: Update ChangeLog
+
 2016-07-27  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.in: enfle-20160727 release
@@ -213,13 +406,13 @@
 
 2009-06-06  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c: 
+	* lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c:
 	Fixed the bug that some key presses are not processed properly.
 
 2009-06-06  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README, README.e, configure.in, doc/enfle.xml,
-	lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c: 
+	lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c:
 	Implemented slideshow.  Added '-s' option.  Added 's', 'a' action to normal UI.
 
 2009-06-06  Hiroshi Takekawa  <sian@fennel.org>
@@ -228,7 +421,7 @@
 
 2009-05-25  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c: 
+	* lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c:
 	Implemented --readdir option.
 
 2009-05-25  Hiroshi Takekawa  <sian@fennel.org>
@@ -681,7 +874,7 @@
 	lib/avutil/internal.h, lib/avutil/intreadwrite.h, lib/avutil/lls.c,
 	lib/avutil/lls.h, lib/avutil/md5.c, lib/avutil/md5.h,
 	lib/avutil/rational.c, lib/avutil/rational.h, lib/avutil/sha1.c,
-	lib/avutil/sha1.h, lib/avutil/softfloat.h, lib/avutil/string.c: 
+	lib/avutil/sha1.h, lib/avutil/softfloat.h, lib/avutil/string.c:
 	Updated.
 
 2007-06-03  Hiroshi Takekawa  <sian@fennel.org>
@@ -898,7 +1091,7 @@
 	lib/avcodec/xan.c, lib/avcodec/xvidff.c, lib/avcodec/zmbv.c,
 	lib/avutil/aes.c, lib/avutil/avutil.h, lib/avutil/bswap.h,
 	lib/avutil/common.h, lib/avutil/internal.h,
-	lib/avutil/intreadwrite.h, lib/avutil/sha1.c, lib/avutil/x86_cpu.h: 
+	lib/avutil/intreadwrite.h, lib/avutil/sha1.c, lib/avutil/x86_cpu.h:
 	Updated.
 
 2007-05-02  Hiroshi Takekawa  <sian@fennel.org>
@@ -1181,7 +1374,7 @@
 	lib/avcodec/vqavideo.c, lib/avcodec/wavpack.c,
 	lib/avcodec/wmadec.c, lib/avutil/Makefile.am, lib/avutil/bswap.h,
 	lib/avutil/common.h, lib/avutil/internal.h,
-	lib/avutil/intreadwrite.h, lib/avutil/rational.c, lib/avutil/tree.h: 
+	lib/avutil/intreadwrite.h, lib/avutil/rational.c, lib/avutil/tree.h:
 	Updated.
 
 2006-11-24  Hiroshi Takekawa  <sian@fennel.org>
@@ -1194,7 +1387,7 @@
 	lib/avcodec/flac.c, lib/avcodec/flicvideo.c, lib/avcodec/mjpeg.c,
 	lib/avcodec/mpegvideo.c, lib/avcodec/ppc/dsputil_ppc.c,
 	lib/avcodec/ppc/types_altivec.h, lib/avcodec/shorten.c,
-	lib/avcodec/svq1.c, lib/avcodec/vmdav.c, lib/avutil/common.h: 
+	lib/avcodec/svq1.c, lib/avcodec/vmdav.c, lib/avutil/common.h:
 	Updated.
 
 2006-11-18  Hiroshi Takekawa  <sian@fennel.org>
@@ -1244,7 +1437,7 @@
 
 	* lib/avcodec/Makefile.am, lib/avutil/Makefile.am,
 	lib/avutil/avutil.h, lib/avutil/bswap.h, lib/avutil/common.h,
-	lib/avutil/internal.h, lib/avutil/mathematics.c, lib/avutil/md5.c: 
+	lib/avutil/internal.h, lib/avutil/mathematics.c, lib/avutil/md5.c:
 	Updated.
 
 2006-11-02  Hiroshi Takekawa  <sian@fennel.org>
@@ -1282,7 +1475,7 @@
 	lib/avcodec/vp56.c, lib/avcodec/vp56.h, lib/avcodec/vp56data.c,
 	lib/avcodec/vp56data.h, lib/avcodec/vp5data.h, lib/avcodec/vp6.c,
 	lib/avcodec/vp6data.h, lib/avcodec/wavpack.c,
-	lib/avcodec/ws-snd1.c, lib/avcodec/x264.c, lib/avcodec/xvidff.c: 
+	lib/avcodec/ws-snd1.c, lib/avcodec/x264.c, lib/avcodec/xvidff.c:
 	Updated.
 
 2006-10-27  Hiroshi Takekawa  <sian@fennel.org>
@@ -1803,7 +1996,7 @@
 	lib/avcodec/ppc/gcc_fixes.h, lib/avcodec/rtjpeg.c,
 	lib/avcodec/rtjpeg.h, lib/avcodec/smacker.c, lib/avcodec/snow.c,
 	lib/avcodec/snow.h, lib/avcodec/swscale.h, lib/avcodec/utils.c,
-	lib/avcodec/wmadec.c, lib/avutil/avutil.h, lib/avutil/common.h: 
+	lib/avcodec/wmadec.c, lib/avutil/avutil.h, lib/avutil/common.h:
 	Updated.
 
 2006-03-19  Hiroshi Takekawa  <sian@fennel.org>
@@ -1865,7 +2058,7 @@
 	plugins/loader/ungif/ungif.c, plugins/player/generic/generic.c,
 	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
 	plugins/player/mpglib/mpglib.c, plugins/player/ungif/ungif.c,
-	plugins/video/Xlib/Xlib.c, plugins/videodecoder/avcodec/avcodec.c: 
+	plugins/video/Xlib/Xlib.c, plugins/videodecoder/avcodec/avcodec.c:
 	Clean up image and movie interfaces.
 
 2006-03-12  Hiroshi Takekawa  <sian@fennel.org>
@@ -1982,7 +2175,7 @@
 	lib/avcodec/ppc/dsputil_h264_altivec.c, lib/avcodec/qdm2.c,
 	lib/avcodec/raw.c, lib/avcodec/snow.c, lib/avcodec/utils.c,
 	lib/avcodec/vc9.c, lib/avcodec/vorbis.c, lib/avcodec/vorbis.h,
-	lib/avcodec/vp3.c, lib/avcodec/wmadec.c, lib/avcodec/wmv2.c: 
+	lib/avcodec/vp3.c, lib/avcodec/wmadec.c, lib/avcodec/wmv2.c:
 	Updated.
 
 2006-01-28  Hiroshi Takekawa  <sian@fennel.org>
@@ -2001,7 +2194,7 @@
 
 2006-01-27  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c: 
+	* lib/enfle/ui-extra.h, plugins/ui/normal/normal.c, src/enfle.c:
 	Added new options: --minwidth(-X) and minheight(-Y).
 
 2006-01-27  Hiroshi Takekawa  <sian@fennel.org>
@@ -2292,7 +2485,7 @@
 	* plugins/demultiplexer/avi/avi.c, plugins/demultiplexer/mp3/mp3.c,
 	plugins/demultiplexer/mpeg/mpeg.c, plugins/demultiplexer/ogg/ogg.c,
 	plugins/player/avifile/avifile.cpp,
-	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mpglib/mpglib.c: 
+	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mpglib/mpglib.c:
 	Use return instead of pthread_exit().
 
 2005-12-27  Hiroshi Takekawa  <sian@fennel.org>
@@ -2540,7 +2733,7 @@
 	lib/avcodec/armv4l/mpegvideo_iwmmxt.c, lib/avcodec/avcodec.h,
 	lib/avcodec/dsputil.h, lib/avcodec/h264.c, lib/avcodec/parser.c,
 	lib/avcodec/ppc/dsputil_ppc.c, lib/avcodec/ppc/mpegvideo_ppc.c,
-	lib/avcodec/ulti.c, lib/avcodec/vc9.c, lib/avcodec/wmadec.c: 
+	lib/avcodec/ulti.c, lib/avcodec/vc9.c, lib/avcodec/wmadec.c:
 	Updated.
 
 2005-07-03  Hiroshi Takekawa  <sian@fennel.org>
@@ -2618,7 +2811,7 @@
 	lib/avcodec/truemotion1data.h, lib/avcodec/ulti_cb.h,
 	lib/avcodec/utils.c, lib/avcodec/vc9.c, lib/avcodec/vorbis.c,
 	lib/avcodec/vorbis.h, lib/avcodec/vp3.c, lib/avcodec/vp3data.h,
-	lib/avcodec/vp3dsp.c, lib/avcodec/wmv2.c, lib/avcodec/xvmcvideo.c: 
+	lib/avcodec/vp3dsp.c, lib/avcodec/wmv2.c, lib/avcodec/xvmcvideo.c:
 	Updated.
 
 2005-05-03  Hiroshi Takekawa  <sian@fennel.org>
@@ -2630,7 +2823,7 @@
 	plugins/demultiplexer/avi/libriff.h,
 	plugins/demultiplexer/mpeg/mpeg.c, plugins/demultiplexer/ogg/ogg.c,
 	plugins/videodecoder/avcodec/avcodec.c,
-	plugins/videodecoder/divx/divx.c, src/enfle.c, src/getopt-support.h: 
+	plugins/videodecoder/divx/divx.c, src/enfle.c, src/getopt-support.h:
 	Fixed signed-ness problems.
 
 2005-05-01  Hiroshi Takekawa  <sian@fennel.org>
@@ -2781,7 +2974,7 @@
 	lib/avcodec/raw.c, lib/avcodec/resample2.c, lib/avcodec/rv10.c,
 	lib/avcodec/snow.c, lib/avcodec/sonic.c,
 	lib/avcodec/sparc/dsputil_vis.c, lib/avcodec/svq1.c,
-	lib/avcodec/utils.c, lib/avcodec/vp3.c, lib/avcodec/wmadec.c: 
+	lib/avcodec/utils.c, lib/avcodec/vp3.c, lib/avcodec/wmadec.c:
 	Updated.
 
 2004-12-30  Hiroshi Takekawa  <sian@fennel.org>
@@ -2917,7 +3110,7 @@
 	* lib/avcodec/allcodecs.c, lib/avcodec/avcodec.h,
 	lib/avcodec/common.h, lib/avcodec/dsputil.c, lib/avcodec/dsputil.h,
 	lib/avcodec/mjpeg.c, lib/avcodec/motion_est.c,
-	lib/avcodec/motion_est_template.c, lib/avcodec/sparc/dsputil_vis.c: 
+	lib/avcodec/motion_est_template.c, lib/avcodec/sparc/dsputil_vis.c:
 	Updated.
 
 2004-08-21  Hiroshi Takekawa  <sian@fennel.org>
@@ -2933,7 +3126,7 @@
 	lib/avcodec/imgconvert.c, lib/avcodec/mem.c, lib/avcodec/mjpeg.c,
 	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c, lib/avcodec/raw.c,
 	lib/avcodec/resample2.c, lib/avcodec/rv10.c, lib/avcodec/svq1.c,
-	lib/avcodec/utils.c, lib/avcodec/vp3.c, lib/avcodec/wmadec.c: 
+	lib/avcodec/utils.c, lib/avcodec/vp3.c, lib/avcodec/wmadec.c:
 	Updated.
 
 2004-08-16  Hiroshi Takekawa  <sian@fennel.org>
@@ -2982,7 +3175,7 @@
 	lib/avcodec/mpegaudio.c, lib/avcodec/mpegvideo.c,
 	lib/avcodec/parser.c, lib/avcodec/rational.c,
 	lib/avcodec/rational.h, lib/avcodec/resample.c,
-	lib/avcodec/resample2.c, lib/avcodec/smc.c, lib/avcodec/utils.c: 
+	lib/avcodec/resample2.c, lib/avcodec/smc.c, lib/avcodec/utils.c:
 	Updated.
 
 2004-06-28  Hiroshi Takekawa  <sian@fennel.org>
@@ -2999,7 +3192,7 @@
 	lib/avcodec/h264.c, lib/avcodec/i386/cputest.c,
 	lib/avcodec/mp3lameaudio.c, lib/avcodec/mpeg12.c,
 	lib/avcodec/mpegaudiodec.c, lib/avcodec/oggvorbis.c,
-	lib/avcodec/pthread.c, lib/avcodec/utils.c, lib/avcodec/wmadec.c: 
+	lib/avcodec/pthread.c, lib/avcodec/utils.c, lib/avcodec/wmadec.c:
 	Updated.
 
 2004-06-21  Hiroshi Takekawa  <sian@fennel.org>
@@ -3040,7 +3233,7 @@
 	lib/avcodec/h263.c, lib/avcodec/imgresample.c,
 	lib/avcodec/motion_est_template.c, lib/avcodec/mpeg12.c,
 	lib/avcodec/resample.c, lib/avcodec/resample2.c,
-	lib/avcodec/svq1.c, lib/avcodec/svq3.c, lib/avcodec/xvmcvideo.c: 
+	lib/avcodec/svq1.c, lib/avcodec/svq3.c, lib/avcodec/xvmcvideo.c:
 	Updated.
 
 2004-06-21  Hiroshi Takekawa  <sian@fennel.org>
@@ -3163,7 +3356,7 @@
 	lib/avcodec/mpeg12.c, lib/avcodec/mpeg12data.h,
 	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
 	lib/avcodec/pthread.c, lib/avcodec/svq1.c, lib/avcodec/svq1_cb.h,
-	lib/avcodec/svq1_vlc.h, lib/avcodec/utils.c, lib/avcodec/vcr1.c: 
+	lib/avcodec/svq1_vlc.h, lib/avcodec/utils.c, lib/avcodec/vcr1.c:
 	Updated.
 
 2004-04-29  Hiroshi Takekawa  <sian@fennel.org>
@@ -3218,7 +3411,7 @@
 
 	* lib/enfle/demultiplexer.h, plugins/demultiplexer/avi/avi.c,
 	plugins/demultiplexer/mp3/mp3.c, plugins/demultiplexer/mpeg/mpeg.c,
-	plugins/demultiplexer/ogg/ogg.c, plugins/player/generic/generic.c: 
+	plugins/demultiplexer/ogg/ogg.c, plugins/player/generic/generic.c:
 	Try to use pts.
 
 2004-04-23  Hiroshi Takekawa  <sian@fennel.org>
@@ -3461,7 +3654,7 @@
 	lib/enfle/audiodecoder.h, plugins/audiodecoder/mad/mad.c,
 	plugins/audiodecoder/mpglib/mpglib.c,
 	plugins/audiodecoder/vorbis/vorbis.c,
-	plugins/demultiplexer/avi/avi.c, plugins/player/generic/generic.c: 
+	plugins/demultiplexer/avi/avi.c, plugins/player/generic/generic.c:
 	audiodecoder enhancements.
 
 2004-03-31  Hiroshi Takekawa  <sian@fennel.org>
@@ -3490,7 +3683,7 @@
 
 2004-03-31  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/ui/convert/Makefile.am, plugins/ui/wallpaper/Makefile.am: 
+	* plugins/ui/convert/Makefile.am, plugins/ui/wallpaper/Makefile.am:
 	Link libenfle.
 
 2004-03-30  Hiroshi Takekawa  <sian@fennel.org>
@@ -3522,7 +3715,7 @@
 
 	* lib/enfle/demultiplexer.h, plugins/demultiplexer/avi/avi.c,
 	plugins/demultiplexer/mp3/mp3.c, plugins/demultiplexer/mpeg/mpeg.c,
-	plugins/demultiplexer/ogg/ogg.c, plugins/player/generic/generic.c: 
+	plugins/demultiplexer/ogg/ogg.c, plugins/player/generic/generic.c:
 	Use demux->astreams[], demux->vstreams[].  Removed
 	demux->av_contig_number.
 
@@ -3693,7 +3886,7 @@
 2004-03-08  Hiroshi Takekawa  <sian@fennel.org>
 
 	* lib/avcodec/Makefile.am, lib/avcodec/flac.c,
-	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c, lib/avcodec/vp3.c: 
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c, lib/avcodec/vp3.c:
 	Eliminated warnings.
 
 2004-03-08  Hiroshi Takekawa  <sian@fennel.org>
@@ -3776,7 +3969,7 @@
 	lib/avcodec/ppc/mpegvideo_altivec.c,
 	lib/avcodec/ppc/mpegvideo_ppc.c, lib/avcodec/ps2/mpegvideo_mmi.c,
 	lib/avcodec/rv10.c, lib/avcodec/smc.c, lib/avcodec/truemotion1.c,
-	lib/avcodec/utils.c, lib/avcodec/vmdav.c, lib/avcodec/xvmcvideo.c: 
+	lib/avcodec/utils.c, lib/avcodec/vmdav.c, lib/avcodec/xvmcvideo.c:
 	Updated.
 
 2004-03-03  Hiroshi Takekawa  <sian@fennel.org>
@@ -4075,7 +4268,7 @@
 
 2004-02-14  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/audiodecoder-plugin.h, lib/enfle/videodecoder-plugin.h: 
+	* lib/enfle/audiodecoder-plugin.h, lib/enfle/videodecoder-plugin.h:
 	init() now accepts fourcc for a argument.
 
 2004-02-14  Hiroshi Takekawa  <sian@fennel.org>
@@ -4177,7 +4370,7 @@
 	lib/avcodec/huffyuv.c, lib/avcodec/i386/dsputil_mmx.c,
 	lib/avcodec/mjpeg.c, lib/avcodec/mpeg12.c,
 	lib/avcodec/mpegaudiodec.c, lib/avcodec/mpegvideo.c,
-	lib/avcodec/mpegvideo.h, lib/avcodec/qtrle.c, lib/avcodec/ra144.c: 
+	lib/avcodec/mpegvideo.h, lib/avcodec/qtrle.c, lib/avcodec/ra144.c:
 	Updated.
 
 2004-02-14  Hiroshi Takekawa  <sian@fennel.org>
@@ -4345,7 +4538,7 @@
 
 	* lib/demultiplexer/demultiplexer_avi.c,
 	lib/demultiplexer/demultiplexer_mpeg.c,
-	lib/demultiplexer/libriff.c, plugins/player/avcodec/avcodec.c: 
+	lib/demultiplexer/libriff.c, plugins/player/avcodec/avcodec.c:
 	Cleaned up.
 
 2004-01-19  Hiroshi Takekawa  <sian@fennel.org>
@@ -4381,7 +4574,7 @@
 	lib/demultiplexer/demultiplexer.h,
 	lib/demultiplexer/demultiplexer_avi.c,
 	lib/demultiplexer/demultiplexer_mpeg.c,
-	lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h: 
+	lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h:
 	Demultiplexer clean up.
 
 2004-01-18  Hiroshi Takekawa  <sian@fennel.org>
@@ -4513,7 +4706,7 @@
 	lib/avcodec/motion_est.c, lib/avcodec/motion_est_template.c,
 	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c,
 	lib/avcodec/mpegvideo.h, lib/avcodec/msmpeg4.c,
-	lib/avcodec/ratecontrol.c, lib/avcodec/rv10.c, lib/avcodec/utils.c: 
+	lib/avcodec/ratecontrol.c, lib/avcodec/rv10.c, lib/avcodec/utils.c:
 	Updated.
 
 2004-01-10  Hiroshi Takekawa  <sian@fennel.org>
@@ -4533,7 +4726,7 @@
 	* lib/avcodec/avcodec.h, lib/avcodec/dsputil.c,
 	lib/avcodec/dsputil.h, lib/avcodec/dv.c,
 	lib/avcodec/i386/dsputil_mmx.c, lib/avcodec/motion_est.c,
-	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c, lib/avcodec/utils.c: 
+	lib/avcodec/mpeg12.c, lib/avcodec/mpegvideo.c, lib/avcodec/utils.c:
 	Updated.
 
 2004-01-09  Hiroshi Takekawa  <sian@fennel.org>
@@ -4599,7 +4792,7 @@
 	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
 	lib/avcodec/ppc/dsputil_altivec.c,
 	lib/avcodec/ppc/dsputil_altivec.h, lib/avcodec/ppc/dsputil_ppc.c,
-	lib/avcodec/ratecontrol.c, lib/avcodec/rv10.c, lib/avcodec/svq1.c: 
+	lib/avcodec/ratecontrol.c, lib/avcodec/rv10.c, lib/avcodec/svq1.c:
 	avcodec update.
 
 2004-01-03  Hiroshi Takekawa  <sian@fennel.org>
@@ -4626,7 +4819,7 @@
 
 2004-01-03  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in, lib/Makefile.am, plugins/player/Makefile.am: 
+	* configure.in, lib/Makefile.am, plugins/player/Makefile.am:
 	Preserve old libmpeg2(0.2.1) library and plugin as libmpeg2.old.
 
 2004-01-03  Hiroshi Takekawa  <sian@fennel.org>
@@ -4801,7 +4994,7 @@
 
 2003-12-27  Hiroshi Takekawa  <sian@fennel.org>
 
-	* config.guess, config.sub, install-sh, missing, mkinstalldirs: 
+	* config.guess, config.sub, install-sh, missing, mkinstalldirs:
 	Upgraded.
 
 2003-12-23  Hiroshi Takekawa  <sian@fennel.org>
@@ -4840,7 +5033,7 @@
 	* lib/avcodec/avcodec.h, lib/avcodec/h263.c,
 	lib/avcodec/h263data.h, lib/avcodec/h264.c, lib/avcodec/mpeg12.c,
 	lib/avcodec/mpegvideo.c, lib/avcodec/mpegvideo.h,
-	lib/avcodec/ratecontrol.c, lib/avcodec/rv10.c, lib/avcodec/svq3.c: 
+	lib/avcodec/ratecontrol.c, lib/avcodec/rv10.c, lib/avcodec/svq3.c:
 	libavcodec update
 
 2003-12-16  Hiroshi Takekawa  <sian@fennel.org>
@@ -4900,7 +5093,7 @@
 	plugins/saver/jpeg/Makefile.am, plugins/saver/png/Makefile.am,
 	plugins/streamer/bz2/Makefile.am, plugins/streamer/gz/Makefile.am,
 	plugins/ui/convert/Makefile.am, plugins/ui/normal/Makefile.am,
-	plugins/ui/wallpaper/Makefile.am, plugins/video/Xlib/Makefile.am: 
+	plugins/ui/wallpaper/Makefile.am, plugins/video/Xlib/Makefile.am:
 	Add -static for static linked plugins.
 
 2003-12-16  Hiroshi Takekawa  <sian@fennel.org>
@@ -4995,7 +5188,7 @@
 
 2003-11-17  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h: 
+	* lib/demultiplexer/libriff.c, lib/demultiplexer/libriff.h:
 	Introduce EOF, foucc, list_fourcc.
 
 2003-11-17  Hiroshi Takekawa  <sian@fennel.org>
@@ -5172,7 +5365,7 @@
 
 2003-11-08  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/spi.c, lib/utils/misc.c, plugins/archiver/tar/tar.c: 
+	* lib/enfle/spi.c, lib/utils/misc.c, plugins/archiver/tar/tar.c:
 	Avoid warnings.
 
 2003-11-08  Hiroshi Takekawa  <sian@fennel.org>
@@ -5249,7 +5442,7 @@
 	* acinclude.m4, configure.in, plugins/archiver/arc/Makefile.am,
 	plugins/streamer/bz2/Makefile.am, plugins/streamer/gz/Makefile.am,
 	plugins/ui/convert/Makefile.am, plugins/ui/normal/Makefile.am,
-	plugins/ui/wallpaper/Makefile.am, plugins/video/Xlib/Makefile.am: 
+	plugins/ui/wallpaper/Makefile.am, plugins/video/Xlib/Makefile.am:
 	Better support for --enable-all-static.
 
 2003-02-05  Hiroshi Takekawa  <sian@fennel.org>
@@ -5833,7 +6026,7 @@
 
 2002-06-18  Hiroshi Takekawa  <sian@fennel.org>
 
-	* INSTALL, config.guess, config.sub, missing, mkinstalldirs: 
+	* INSTALL, config.guess, config.sub, missing, mkinstalldirs:
 	Upgraded automake to 1.6.2.
 
 2002-06-14  Hiroshi Takekawa  <sian@fennel.org>
@@ -5857,7 +6050,7 @@
 
 2002-06-13  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/image.c, lib/enfle/image.h, lib/enfle/image_magnify.c: 
+	* lib/enfle/image.c, lib/enfle/image.h, lib/enfle/image_magnify.c:
 	Added use_hw_scale arg. to image_magnify().
 
 2002-06-13  Hiroshi Takekawa  <sian@fennel.org>
@@ -5923,7 +6116,7 @@
 
 2002-04-27  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in, plugins/loader/png/png.c, plugins/saver/png/png.c: 
+	* configure.in, plugins/loader/png/png.c, plugins/saver/png/png.c:
 	Adapted for libpng-1.2.2.
 
 2002-04-27  Hiroshi Takekawa  <sian@fennel.org>
@@ -5995,7 +6188,7 @@
 	* plugins/player/libmpeg2/libmpeg2.c,
 	plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
 	plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/mpglib/mpglib.c,
-	plugins/player/opendivx/opendivx.c, plugins/player/ungif/ungif.c: 
+	plugins/player/opendivx/opendivx.c, plugins/player/ungif/ungif.c:
 	Avoid switch warnings.
 
 2002-03-14  Hiroshi Takekawa  <sian@fennel.org>
@@ -6514,7 +6707,7 @@
 
 2001-10-14  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/ui/convert/convert.c, plugins/ui/wallpaper/wallpaper.c: 
+	* plugins/ui/convert/convert.c, plugins/ui/wallpaper/wallpaper.c:
 	Adapted for identify_file() change.
 
 2001-10-14  Hiroshi Takekawa  <sian@fennel.org>
@@ -6654,7 +6847,7 @@
 
 2001-10-09  Hiroshi Takekawa  <sian@fennel.org>
 
-	* configure.in, lib/utils/Makefile.am, lib/utils/converter.c: 
+	* configure.in, lib/utils/Makefile.am, lib/utils/converter.c:
 	Reverted jpeg-mmx support change. Use AM_ICONV.
 
 2001-10-09  Hiroshi Takekawa  <sian@fennel.org>
@@ -7310,7 +7503,7 @@
 
 2001-09-07  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/glic/threshold.c, plugins/saver/glic/threshold.h: 
+	* plugins/saver/glic/threshold.c, plugins/saver/glic/threshold.h:
 	New files.
 
 2001-09-07  Hiroshi Takekawa  <sian@fennel.org>
@@ -8444,7 +8637,7 @@
 
 2001-06-15  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/player/libmpeg3/libmpeg3.c, plugins/video/Xlib/Xlib.c: 
+	* plugins/player/libmpeg3/libmpeg3.c, plugins/video/Xlib/Xlib.c:
 	Real Xv support.
 
 2001-06-15  Hiroshi Takekawa  <sian@fennel.org>
@@ -8829,7 +9022,7 @@
 2001-04-25  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/ui/wallpaper/.cvsignore,
-	plugins/ui/wallpaper/Makefile.am, plugins/ui/wallpaper/wallpaper.c: 
+	plugins/ui/wallpaper/Makefile.am, plugins/ui/wallpaper/wallpaper.c:
 	New Wallpaper UI plugin.
 
 2001-04-25  Hiroshi Takekawa  <sian@fennel.org>
@@ -8912,7 +9105,7 @@
 	plugins/saver/glic/vmpm_decompose_token_old.c,
 	plugins/saver/glic/vmpm_decompose_token_old2.c,
 	plugins/saver/glic/vmpm_error.c, plugins/saver/glic/vmpm_error.h,
-	plugins/saver/glic/vmpm_hash.c, plugins/saver/glic/vmpm_hash.h: 
+	plugins/saver/glic/vmpm_hash.c, plugins/saver/glic/vmpm_hash.h:
 	Added rcs Id header.
 
 2001-04-21  Hiroshi Takekawa  <sian@fennel.org>
@@ -8996,7 +9189,7 @@
 	plugins/saver/glic/vmpm_decompose_token_old.c,
 	plugins/saver/glic/vmpm_decompose_token_old2.c,
 	plugins/saver/glic/vmpm_error.c, plugins/saver/glic/vmpm_error.h,
-	plugins/saver/glic/vmpm_hash.c, plugins/saver/glic/vmpm_hash.h: 
+	plugins/saver/glic/vmpm_hash.c, plugins/saver/glic/vmpm_hash.h:
 	Implemented new Saver: GLIC. This is for my research only.
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
@@ -9073,7 +9266,7 @@
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/loader/pnm/Makefile.am, plugins/loader/pnm/pnm.c: 
+	* plugins/loader/pnm/Makefile.am, plugins/loader/pnm/pnm.c:
 	Implemented PNM Loader.
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
@@ -9082,7 +9275,7 @@
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/saver/png/Makefile.am, plugins/saver/png/png.c: 
+	* plugins/saver/png/Makefile.am, plugins/saver/png/png.c:
 	Implemented PNG Saver plugin.
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
@@ -9095,7 +9288,7 @@
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/effect/rotate/Makefile.am, plugins/effect/rotate/rotate.c: 
+	* plugins/effect/rotate/Makefile.am, plugins/effect/rotate/rotate.c:
 	Implemented Rotate Effect plugin.
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
@@ -9115,12 +9308,12 @@
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/saver-plugin.h, lib/enfle/saver.c, lib/enfle/saver.h: 
+	* lib/enfle/saver-plugin.h, lib/enfle/saver.c, lib/enfle/saver.h:
 	New type of plugin: saver.
 
 2001-04-18  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/effect-plugin.h, lib/enfle/effect.c, lib/enfle/effect.h: 
+	* lib/enfle/effect-plugin.h, lib/enfle/effect.c, lib/enfle/effect.h:
 	New type of plugin: effect.
 
 2001-03-25  Hiroshi Takekawa  <sian@fennel.org>
@@ -9528,7 +9721,7 @@
 	lib/enfle/archiver.c, lib/enfle/loader.c, lib/enfle/player.c,
 	lib/enfle/streamer.c, lib/utils/dlist.c, lib/utils/dlist.h,
 	lib/utils/hash.c, lib/utils/hash.h, lib/utils/libconfig.c,
-	lib/utils/pluginlist.c, lib/utils/pluginlist.h, src/enfle.c: 
+	lib/utils/pluginlist.c, lib/utils/pluginlist.h, src/enfle.c:
 	Improved Hash and Dlist implementations.
 
 2001-02-05  Hiroshi Takekawa  <sian@fennel.org>
@@ -9637,7 +9830,7 @@
 
 	* configure.in, plugins/player/Makefile.am,
 	plugins/player/mpglib/.cvsignore,
-	plugins/player/mpglib/Makefile.am, plugins/player/mpglib/mpglib.c: 
+	plugins/player/mpglib/Makefile.am, plugins/player/mpglib/mpglib.c:
 	New mpglib player plugin.
 
 2001-01-28  Hiroshi Takekawa  <sian@fennel.org>
@@ -9709,7 +9902,7 @@
 
 2001-01-25  Hiroshi Takekawa  <sian@fennel.org>
 
-	* OpenDivX-LICENSE, README, plugins/player/opendivx/opendivx.c: 
+	* OpenDivX-LICENSE, README, plugins/player/opendivx/opendivx.c:
 	Changed copyright/license description.
 
 2001-01-24  Hiroshi Takekawa  <sian@fennel.org>
@@ -9722,7 +9915,7 @@
 
 2001-01-24  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/divxdecore/.cvsignore, plugins/player/opendivx/.cvsignore: 
+	* lib/divxdecore/.cvsignore, plugins/player/opendivx/.cvsignore:
 	Added .cvsignore.
 
 2001-01-24  Hiroshi Takekawa  <sian@fennel.org>
@@ -10444,7 +10637,7 @@
 2000-12-10  Hiroshi Takekawa  <sian@fennel.org>
 
 	* plugins/player/libmpeg3/libmpeg3.c, plugins/player/mng/mng.c,
-	plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/ungif/ungif.c: 
+	plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/ungif/ungif.c:
 	Adapted to Image object's change.
 
 2000-12-10  Hiroshi Takekawa  <sian@fennel.org>
@@ -10691,7 +10884,7 @@
 	lib/utils/libconfig.h, lib/utils/libstring.c,
 	lib/utils/libstring.h, lib/utils/misc.c, lib/utils/misc.h,
 	lib/utils/plugin.c, lib/utils/plugin.h, lib/utils/pluginlist.c,
-	lib/utils/pluginlist.h, plugins/ui/normal/normal.c, src/enfle.c: 
+	lib/utils/pluginlist.h, plugins/ui/normal/normal.c, src/enfle.c:
 	Removed warnings when -Wstrict-prototypes -Winline -Wwrite-strings
 	is added to CFLAGS.
 
@@ -10806,7 +10999,7 @@
 
 2000-11-02  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/X11/x11.c, lib/dllloader/module.c, lib/enfle/enfle-plugins.c: 
+	* lib/X11/x11.c, lib/dllloader/module.c, lib/enfle/enfle-plugins.c:
 	Plugged a memory leak.
 
 2000-10-30  Hiroshi Takekawa  <sian@fennel.org>
@@ -10862,7 +11055,7 @@
 
 2000-10-29  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/Makefile.am, lib/enfle/spi-private.h, lib/enfle/spi.c: 
+	* lib/enfle/Makefile.am, lib/enfle/spi-private.h, lib/enfle/spi.c:
 	More spi implementations.
 
 2000-10-29  Hiroshi Takekawa  <sian@fennel.org>
@@ -10875,7 +11068,7 @@
 
 2000-10-29  Hiroshi Takekawa  <sian@fennel.org>
 
-	* lib/enfle/movie.c, lib/utils/timer.c, lib/utils/timer.h: 
+	* lib/enfle/movie.c, lib/utils/timer.c, lib/utils/timer.h:
 	Work-around timer_create() collision.
 
 2000-10-29  Hiroshi Takekawa  <sian@fennel.org>
@@ -11061,7 +11254,7 @@
 
 2000-10-16  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/ungif/ungif.c: 
+	* plugins/player/mpeg_lib/mpeg_lib.c, plugins/player/ungif/ungif.c:
 	Renamed nthframe as current_frame.
 
 2000-10-16  Hiroshi Takekawa  <sian@fennel.org>
@@ -11176,7 +11369,7 @@
 
 	* plugins/player/mpeg_lib/Makefile.am,
 	plugins/player/mpeg_lib/mpeg_lib.c,
-	plugins/player/ungif/Makefile.am, plugins/player/ungif/ungif.c: 
+	plugins/player/ungif/Makefile.am, plugins/player/ungif/ungif.c:
 	Implemented stop_movie().
 
 2000-10-12  Hiroshi Takekawa  <sian@fennel.org>
@@ -11278,7 +11471,7 @@
 
 2000-10-09  Hiroshi Takekawa  <sian@fennel.org>
 
-	* plugins/loader/ungif/ungif.c, plugins/player/ungif/ungif.c: 
+	* plugins/loader/ungif/ungif.c, plugins/player/ungif/ungif.c:
 	Loosened identify().
 
 2000-10-09  Hiroshi Takekawa  <sian@fennel.org>
@@ -11299,7 +11492,7 @@
 	plugins/loader/ungif/.cvsignore, plugins/player/.cvsignore,
 	plugins/player/ungif/.cvsignore, plugins/streamer/.cvsignore,
 	plugins/streamer/bz2/.cvsignore, plugins/streamer/gz/.cvsignore,
-	plugins/ui/.cvsignore, plugins/ui/Xlib/.cvsignore, src/.cvsignore: 
+	plugins/ui/.cvsignore, plugins/ui/Xlib/.cvsignore, src/.cvsignore:
 	Added cvsignore.
 
 2000-10-08  Hiroshi Takekawa  <sian@fennel.org>
