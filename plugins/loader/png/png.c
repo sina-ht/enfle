@@ -1,9 +1,9 @@
 /*
  * png.c -- png loader plugin
- * (C)Copyright 2000-2016 by Hiroshi Takekawa
+ * (C)Copyright 2000-2017 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct  2 20:29:50 2016.
+ * Last Modified: Sun Jan 29 11:22:39 2017.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,7 +44,7 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.4.1"
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.4.2"
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
@@ -256,7 +256,6 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 #endif
 
   png_set_interlace_handling(png_ptr);
-  png_read_update_info(png_ptr, info_ptr);
   color_type = png_get_color_type(png_ptr, info_ptr);
 
   /* Set the transparent color */
@@ -309,6 +308,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     }
     //png_set_background(png_ptr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, DISPLAY_GAMMA);
   }
+  png_read_update_info(png_ptr, info_ptr);
 
   /* prepare image data, store palette if exists */
   switch (color_type) {
