@@ -3,7 +3,7 @@
  * (C)Copyright 2000-2017 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Jan 29 11:22:39 2017.
+ * Last Modified: Sat Feb 25 11:40:21 2017.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -44,7 +44,7 @@
 
 DECLARE_LOADER_PLUGIN_METHODS;
 
-#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.4.2"
+#define LOADER_PNG_PLUGIN_DESCRIPTION "PNG Loader plugin version 0.4.3"
 
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
@@ -309,6 +309,32 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
     //png_set_background(png_ptr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, DISPLAY_GAMMA);
   }
   png_read_update_info(png_ptr, info_ptr);
+
+  color_type = png_get_color_type(png_ptr, info_ptr);
+#ifdef DEBUG
+  debug_message("updated png color type: ");
+  switch (color_type) {
+  case PNG_COLOR_TYPE_PALETTE:
+    debug_message("PALETTE");
+    break;
+  case PNG_COLOR_TYPE_RGB:
+    debug_message("RGB");
+    break;
+  case PNG_COLOR_TYPE_RGB_ALPHA:
+    debug_message("RGB_ALPHA");
+    break;
+  case PNG_COLOR_TYPE_GRAY:
+    debug_message("GRAY");
+    break;
+  case PNG_COLOR_TYPE_GRAY_ALPHA:
+    debug_message("GRAY_ALPHA");
+    break;
+  default:
+    debug_message("UNKNOWN");
+    break;
+  }
+  debug_message("\n");
+#endif
 
   /* prepare image data, store palette if exists */
   switch (color_type) {
