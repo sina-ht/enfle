@@ -52,6 +52,7 @@ archiver_identify(EnflePlugins *eps, Archive *a, Stream *st, Config *c)
       while ((pluginname = pluginnames[i])) {
 	if (strcmp(pluginname, ".") == 0) {
 	  debug_message_fnc("Failed, no further try.\n");
+	  free(ext);
 	  return 0;
 	}
 	if ((p = pluginlist_get(pl, pluginname))) {

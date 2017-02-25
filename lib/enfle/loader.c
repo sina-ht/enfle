@@ -51,6 +51,7 @@ loader_identify(EnflePlugins *eps, Image *ip, Stream *st, VideoWindow *vw, Confi
       while ((pluginname = pluginnames[i])) {
 	if (strcmp(pluginname, ".") == 0) {
 	  debug_message_fnc("Failed, no further try.\n");
+	  free(ext);
 	  return 0;
 	}
 	if ((p = pluginlist_get(pl, pluginname))) {
