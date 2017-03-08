@@ -81,6 +81,10 @@ ENFLE_PLUGIN_ENTRY(audio_alsa)
 
 ENFLE_PLUGIN_EXIT(audio_alsa, p)
 {
+  AudioPlugin *ap = (AudioPlugin *)p;
+
+  if (ap->description)
+	free((void *)ap->description);
   free(p);
 }
 
