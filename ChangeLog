@@ -1,3 +1,47 @@
+2017-04-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.ac: configure.ac: Version up
+
+2017-04-05  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/enfle-plugins.c: enfle-plugins: Plug memory leak
+	detected by asan Plugins struct pointers allocated for autoload are overwritten by
+	the pointers for normal loaded plugins.  Free already allocated
+	Plugin struct before overwriting it.
+
+2017-03-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audio/alsa/alsa.c: audio: alsa: Plug a memory leak
+
+2017-02-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/png/png.c: loader: png: Fix color_type handling color_type should be updated after calling png_read_update_info().
+	Decoding could be broken, because you get the wrong image type, for
+	example, when you have a RGBA image.
+
+2017-02-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/enfle/archiver.c, lib/enfle/demultiplexer.c,
+	lib/enfle/loader.c, lib/enfle/player.c, lib/enfle/streamer.c:
+	plugin: Plug memory leaks in searching for the plugin *_identify() functions search for the plugin associated to the
+	extension of the filename.  In failing to find the associated
+	plugin, the functions returned without freeing the memory for the
+	extension.  This commit fixes those leaks.
+
+2017-01-29  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/loader/png/png.c: loader: png: Fix incompatibility with
+	libpng-1.6 Fix the error: invalid after png_start_read_image or
+	png_read_update_info
+
+2017-01-04  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, src/Makefile.am: Update for newer autotools
+
+2016-11-25  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: Update ChangeLog
+
 2016-11-25  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.ac: configure.ac: Version up
