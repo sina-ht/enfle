@@ -1,10 +1,9 @@
 /*
  * enfle-plugins.c -- enfle plugin interface
- * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2000-2017 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Jun  1 00:03:11 2005.
- * $Id: enfle-plugins.c,v 1.18 2005/06/30 13:03:09 sian Exp $
+ * Last Modified: Wed Apr  5 20:06:56 2017.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -151,6 +150,7 @@ load(EnflePlugins *eps, char *path, PluginType *type_return)
   PluginList *pl;
   EnflePlugin *ep;
   Plugin *p = plugin_create();
+  Plugin *pp;
 
   if (!plugin_load(p, path, "plugin_entry", "plugin_exit")) {
     show_message_fnc("%s\n", p->err);
@@ -161,6 +161,10 @@ load(EnflePlugins *eps, char *path, PluginType *type_return)
   ep = plugin_get(p);
   pl = eps->pls[ep->type];
 
+  if ((pp = pluginlist_get(pl, (char *)ep->name))) {
+    debug_message_fnc("Already allocated plugin for %s, free it\n", ep->name);
+    plugin_destroy(pp);
+  }
   if (!pluginlist_add(pl, p, ep->name)) {
     plugin_destroy(p);
     return NULL;
@@ -190,6 +194,7 @@ static char *
 add(EnflePlugins *eps, void *(*plugin_entry)(void), void (*plugin_exit)(void *), PluginType *type_return)
 {
   Plugin *p = plugin_create_from_static(plugin_entry, plugin_exit);
+  Plugin *pp;
   PluginList *pl;
   EnflePlugin *ep;
 
@@ -199,6 +204,10 @@ add(EnflePlugins *eps, void *(*plugin_entry)(void), void (*plugin_exit)(void *),
   ep = plugin_get(p);
   pl = eps->pls[ep->type];
 
+  if ((pp = pluginlist_get(pl, (char *)ep->name))) {
+    debug_message_fnc("Already allocated plugin for %s, free it\n", ep->name);
+    plugin_destroy(pp);
+  }
   if (!pluginlist_add(pl, p, ep->name)) {
     plugin_destroy(p);
     return NULL;
