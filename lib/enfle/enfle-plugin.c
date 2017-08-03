@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Tue Mar  9 22:15:09 2004.
- * $Id: enfle-plugin.c,v 1.7 2004/03/09 13:59:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

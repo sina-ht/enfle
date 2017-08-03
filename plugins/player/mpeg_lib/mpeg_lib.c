@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Mar  6 12:14:55 2004.
- * $Id: mpeg_lib.c,v 1.21 2004/03/06 03:43:36 sian Exp $
  *
  * NOTES:
  *  Requires mpeg_lib version 1.3.1 (or later).

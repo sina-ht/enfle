@@ -1,6 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.5 2004/04/18 06:22:58 sian Exp $
 
 if USE_SPI
 noinst_LTLIBRARIES = libdllloader.la

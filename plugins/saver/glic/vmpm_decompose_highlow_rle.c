@@ -2,7 +2,6 @@
  * vmpm_decompose_highlow.c -- Threshold decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:55:09 2001.
- * $Id: vmpm_decompose_highlow_rle.c,v 1.10 2001/12/26 00:57:24 sian Exp $
  */
 
 #include <stdio.h>

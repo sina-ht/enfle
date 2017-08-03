@@ -2,7 +2,6 @@
  * arithmodel.h -- Statistical model layer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Tue Aug  7 16:55:50 2001.
- * $Id: arithmodel.h,v 1.2 2001/08/07 09:28:20 sian Exp $
  */
 
 #ifndef _ARITHMODEL_H

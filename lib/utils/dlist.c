@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Sep  9 20:59:04 2002.
- * $Id: dlist.c,v 1.14 2002/09/22 21:31:20 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

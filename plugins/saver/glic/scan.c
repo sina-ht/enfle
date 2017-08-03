@@ -2,7 +2,6 @@
  * scan.c -- Scanning modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * Last Modified: Tue Sep 18 14:18:59 2001.
- * $Id: scan.c,v 1.4 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdlib.h>

@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Sep  2 23:53:20 2016.
- * $Id: Xlib.c,v 1.68 2009/02/23 14:31:02 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

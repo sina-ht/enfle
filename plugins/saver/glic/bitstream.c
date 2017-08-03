@@ -2,7 +2,6 @@
  * bitstream.c -- bitwise I/O stream
  * (C)Copyright 2000 by Hiroshi Takekawa
  * Last Modified: Tue Aug 28 10:45:44 2001.
- * $Id: bitstream.c,v 1.4 2001/08/28 06:37:15 sian Exp $
  */
 
 #include <stdlib.h>

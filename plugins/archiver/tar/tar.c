@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Wed Apr 27 21:26:49 2016.
- * $Id: tar.c,v 1.15 2004/08/16 11:08:21 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

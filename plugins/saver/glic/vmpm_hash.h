@@ -2,7 +2,6 @@
  * vmpm_hash.h -- Hash related routines header
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Fri Apr 20 18:43:11 2001.
- * $Id: vmpm_hash.h,v 1.2 2001/04/21 07:28:07 sian Exp $
  */
 
 #ifndef _VMPM_HASH_H

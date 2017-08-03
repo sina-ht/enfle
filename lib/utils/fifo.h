@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Jan 12 06:24:27 2004.
- * $Id: fifo.h,v 1.7 2004/01/11 21:37:47 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Apr 18 11:53:58 2004.
- * $Id: windef.h,v 1.13 2004/04/18 06:25:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

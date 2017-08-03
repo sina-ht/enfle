@@ -2,7 +2,6 @@
  * arithcoder_range.c -- Renormalization for range coder
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Mar 28 09:51:08 2001.
- * $Id: arithcoder_range.c,v 1.1 2001/04/18 05:43:31 sian Exp $
  *
  * WARNING:
  *  This renormalization code does not infringe any patent, hopefully.

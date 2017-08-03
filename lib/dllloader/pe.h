@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Oct  5 14:16:29 2001.
- * $Id: pe.h,v 1.7 2001/10/05 11:56:00 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

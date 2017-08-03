@@ -2,7 +2,6 @@
  * vmpm_decompose_escc.c -- ESC estimation method C decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:50:03 2001.
- * $Id: vmpm_decompose_escc.c,v 1.7 2001/12/26 00:57:24 sian Exp $
  */
 
 #include <stdio.h>

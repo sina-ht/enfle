@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Tue Nov 25 17:12:54 2008.
- * $Id: fourcc.h,v 1.17 2009/01/03 15:35:57 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

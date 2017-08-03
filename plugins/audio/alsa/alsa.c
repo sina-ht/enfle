@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Nov 18 23:07:25 2011.
- * $Id: alsa.c,v 1.18 2008/04/19 09:28:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

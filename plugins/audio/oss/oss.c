@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun May  1 17:01:49 2005.
- * $Id: oss.c,v 1.15 2005/05/01 15:37:55 sian Exp $
  *
  * Note: Audio support is incomplete.
  *

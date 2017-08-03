@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Jan 19 20:51:49 2004.
- * $Id: libriff.c,v 1.9 2004/01/19 13:15:08 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

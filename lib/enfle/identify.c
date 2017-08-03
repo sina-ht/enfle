@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Mar 22 16:34:49 2008.
- * $Id: identify.c,v 1.18 2008/04/19 08:58:11 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

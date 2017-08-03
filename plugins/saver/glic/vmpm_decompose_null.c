@@ -2,7 +2,6 @@
  * vmpm_decompose_null.c -- Normal decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Tue Aug  7 22:02:33 2001.
- * $Id: vmpm_decompose_null.c,v 1.3 2001/08/09 17:32:08 sian Exp $
  */
 
 #include <stdio.h>

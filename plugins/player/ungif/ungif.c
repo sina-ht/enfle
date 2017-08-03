@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Nov 18 23:06:10 2011.
- * $Id: ungif.c,v 1.35 2007/04/27 05:55:27 sian Exp $
  *
  * NOTES:
  *  This file does NOT include LZW code.

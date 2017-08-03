@@ -2,7 +2,6 @@
  * vmpm_decompose.h -- Decomposition header
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Fri Apr 20 18:42:21 2001.
- * $Id: vmpm_decompose.h,v 1.2 2001/04/21 07:28:07 sian Exp $
  */
 
 #ifndef _VMPM_DECOMPOSE_H

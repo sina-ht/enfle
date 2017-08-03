@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Oct 15 04:28:06 2007.
- * $Id: kernel32.c,v 1.27 2007/10/20 13:38:05 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

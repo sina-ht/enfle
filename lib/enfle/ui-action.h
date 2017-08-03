@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Jul  7 22:50:45 2002.
- * $Id: ui-action.h,v 1.1 2002/08/03 04:54:45 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

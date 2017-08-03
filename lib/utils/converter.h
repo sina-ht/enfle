@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Oct  7 00:14:55 2001.
- * $Id: converter.h,v 1.1 2001/10/06 16:00:24 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

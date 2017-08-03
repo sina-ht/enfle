@@ -2,7 +2,6 @@
  * vmpm_decompose_token -- Token decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Tue Sep 18 13:40:20 2001.
- * $Id: vmpm_decompose_token2.c,v 1.8 2001/09/18 05:22:23 sian Exp $
  */
 
 #include <stdio.h>

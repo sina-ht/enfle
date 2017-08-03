@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Aug 18 23:14:51 2002.
- * $Id: libconfig.c,v 1.25 2002/08/18 14:26:17 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

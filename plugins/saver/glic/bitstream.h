@@ -2,7 +2,6 @@
  * bitstream.h -- bitwise I/O stream header
  * (C)Copyright 2000 by Hiroshi Takekawa
  * Last Modified: Tue Apr  3 18:08:07 2001.
- * $Id: bitstream.h,v 1.1 2001/04/18 05:43:31 sian Exp $
  */
 
 #ifndef _BITSTREAM_H

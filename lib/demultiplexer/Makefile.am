@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
 # Last Modified: Thu Feb 12 23:56:12 2004.
-# $Id: Makefile.am,v 1.5 2004/02/14 05:09:32 sian Exp $
 
 if HAVE_PTHREAD
 noinst_LTLIBRARIES = libdemultiplexer.la

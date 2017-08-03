@@ -2,7 +2,6 @@
  * vmpm_decompose_recur.c -- Recursive decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:51:05 2001.
- * $Id: vmpm_decompose_recur.c,v 1.7 2003/02/05 15:19:41 sian Exp $
  */
 
 #include <stdio.h>

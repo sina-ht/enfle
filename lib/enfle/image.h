@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Wed Apr 19 00:32:37 2006.
- * $Id: image.h,v 1.25 2006/04/24 14:05:46 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

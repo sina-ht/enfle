@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Nov 18 22:57:34 2011.
- * $Id: hash.c,v 1.21 2005/09/27 13:49:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

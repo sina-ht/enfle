@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Wed Nov  4 22:37:44 2009.
- * $Id: normal.c,v 1.98 2006/10/27 16:01:36 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

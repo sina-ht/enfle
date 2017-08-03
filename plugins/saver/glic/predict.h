@@ -2,7 +2,6 @@
  * predict.h -- Prediction modules header
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * Last Modified: Mon Aug  6 00:37:45 2001.
- * $Id: predict.h,v 1.3 2001/08/05 16:17:58 sian Exp $
  */
 
 #ifndef _PREDICT_H

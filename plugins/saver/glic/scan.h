@@ -2,7 +2,6 @@
  * scan.h -- Scanning modules header
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * Last Modified: Mon Aug  6 00:37:57 2001.
- * $Id: scan.h,v 1.2 2001/08/05 16:17:58 sian Exp $
  */
 
 #ifndef _SCAN_H

@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat May  1 16:50:29 2004.
- * $Id: cpucaps.c,v 1.8 2004/05/15 04:06:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

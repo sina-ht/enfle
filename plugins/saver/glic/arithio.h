@@ -2,7 +2,6 @@
  * arithio.h -- Data I/O with symbolization
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Mar 28 10:29:09 2001.
- * $Id: arithio.h,v 1.1 2001/04/18 05:43:31 sian Exp $
  */
 
 #ifndef _ARITHIO_H

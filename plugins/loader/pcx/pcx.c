@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Wed Mar  1 00:23:31 2006.
- * $Id: pcx.c,v 1.10 2006/03/12 08:24:16 sian Exp $
  *
  * Note: This plugin is not complete.
  *

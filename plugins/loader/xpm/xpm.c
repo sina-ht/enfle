@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Tue May 29 00:13:50 2007.
- * $Id: xpm.c,v 1.7 2007/05/28 15:26:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

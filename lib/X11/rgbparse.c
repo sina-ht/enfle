@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Aug  6 16:45:04 2006.
- * $Id: rgbparse.c,v 1.6 2006/08/06 07:50:56 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

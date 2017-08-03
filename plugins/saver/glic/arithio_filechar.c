@@ -2,7 +2,6 @@
  * arithio_filechar.c -- Data I/O with character-based symbolization
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * Last Modified: Tue Apr  3 18:56:44 2001.
- * $Id: arithio_filechar.c,v 1.1 2001/04/18 05:43:31 sian Exp $
  */
 
 #include <stdio.h>

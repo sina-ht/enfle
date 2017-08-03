@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Nov  3 16:08:46 2007.
- * $Id: stream.h,v 1.2 2007/11/03 07:14:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

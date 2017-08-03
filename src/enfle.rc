@@ -1,6 +1,5 @@
 ; enfle.rc
 ; Last Modified: Tue May 29 02:13:00 2007.
-; $Id: enfle.rc,v 1.55 2009/02/23 14:29:46 sian Exp $
 
 enfle {
   ; Uncomment this to enable plugin cache feature

@@ -4,7 +4,6 @@
  * This file if part of Enfle.
  *
  * Last Modified: Sun Oct 12 04:00:07 2003.
- * $Id: x11window.h,v 1.5 2003/10/12 04:08:16 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

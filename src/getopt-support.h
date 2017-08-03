@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Jul 17 03:50:39 2005.
- * $Id: getopt-support.h,v 1.3 2005/07/16 18:52:28 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

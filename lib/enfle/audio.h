@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Tue May  3 09:35:33 2005.
- * $Id: audio.h,v 1.5 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

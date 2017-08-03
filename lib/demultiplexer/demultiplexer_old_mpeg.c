@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Feb 13 00:08:25 2004.
- * $Id: demultiplexer_old_mpeg.c,v 1.1 2004/02/14 05:09:32 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

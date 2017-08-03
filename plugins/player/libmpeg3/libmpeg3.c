@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Dec 31 01:28:12 2006.
- * $Id: libmpeg3.c,v 1.50 2007/04/27 05:55:27 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream

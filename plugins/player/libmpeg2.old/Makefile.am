@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
 # Last Modified: Thu Jan  1 19:59:38 2004.
-# $Id: Makefile.am,v 1.1 2004/01/09 15:58:31 sian Exp $
 
 STATIC_PLUGINS = @Static_plugins@
 MORE_CFLAGS = $(shell if echo $(STATIC_PLUGINS) | grep $(PLUGIN_ID) >/dev/null; then echo -n "-DSTATIC -static"; else echo -n ""; fi)

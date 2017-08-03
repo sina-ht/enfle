@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Mar 20 18:08:22 2004.
- * $Id: demultiplexer_types.h,v 1.1 2004/03/24 14:54:25 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

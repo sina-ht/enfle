@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Jan 10 00:54:51 2004.
- * $Id: libmpeg2_vo.c,v 1.1 2004/01/09 15:58:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun May  1 16:46:57 2005.
- * $Id: gif.c,v 1.5 2005/05/01 15:37:55 sian Exp $
  *
  *             The Graphics Interchange Format(c) is
  *       the Copyright property of CompuServe Incorporated.

@@ -2,7 +2,6 @@
  * vmpm_decompose_half -- Half decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Thu Sep  6 12:24:54 2001.
- * $Id: vmpm_decompose_half.c,v 1.5 2001/09/07 04:56:33 sian Exp $
  */
 
 #include <stdio.h>

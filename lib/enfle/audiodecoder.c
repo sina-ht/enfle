@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat May 20 00:30:18 2006.
- * $Id: audiodecoder.c,v 1.8 2006/05/19 15:40:14 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

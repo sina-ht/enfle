@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Mon Dec 26 01:15:05 2005.
- * $Id: avifile.cpp,v 1.38 2005/12/27 14:44:07 sian Exp $
  *
  * NOTES: 
  *  This plugin is not fully enfle plugin compatible, because stream

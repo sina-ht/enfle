@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat May  4 23:25:47 2002.
- * $Id: utils.h,v 1.6 2002/05/04 14:36:00 sian Exp $
  *
  * Note: common.h should be included before including this header.
  *

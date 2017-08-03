@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat May 19 00:15:00 2007.
- * $Id: mng.c,v 1.26 2007/05/19 01:58:27 sian Exp $
  *
  * Note: mng implementation is far from complete.
  *

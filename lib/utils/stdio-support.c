@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Sep 21 02:26:39 2001.
- * $Id: stdio-support.c,v 1.4 2001/09/21 02:57:31 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

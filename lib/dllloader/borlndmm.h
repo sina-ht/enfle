@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Jan  6 01:38:09 2001.
- * $Id: borlndmm.h,v 1.2 2001/01/06 23:52:52 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

@@ -2,7 +2,6 @@
  * vmpm_decompose.c -- decompose plugin manager
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:42:15 2001.
- * $Id: vmpm_decompose.c,v 1.4 2001/12/26 00:57:25 sian Exp $
  */
 
 #include <stdio.h>

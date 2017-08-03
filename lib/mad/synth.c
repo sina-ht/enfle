@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: synth.c,v 1.3 2007/05/19 01:56:07 sian Exp $
  */
 
 # ifdef HAVE_CONFIG_H

@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
 # Last Modified: Sun Aug 29 15:37:46 2004.
-# $Id: Makefile.am,v 1.7 2004/08/29 06:54:17 sian Exp $
 
 AM_CFLAGS = -Dasm=__asm__
 EXTRA_DIST = mad.h.sed CHANGES COPYRIGHT CREDITS README TODO VERSION

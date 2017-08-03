@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
 # Last Modified: Tue Jan 27 23:14:59 2004.
-# $Id: Makefile.am,v 1.4 2004/01/30 12:40:02 sian Exp $
 
 AM_CFLAGS = -DLAYER1 -DLAYER2 -DLAYER3
 

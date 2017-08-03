@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Thu Sep  7 22:47:17 2006.
- * $Id: cache.h,v 1.3 2006/09/09 12:55:55 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

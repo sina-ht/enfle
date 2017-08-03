@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
 # Last Modified: Sun Sep 16 15:36:28 2007.
-# $Id: Makefile.am,v 1.13 2007/10/20 13:36:36 sian Exp $
 
 if USE_AVCODEC
 noinst_LTLIBRARIES = libavutil.la

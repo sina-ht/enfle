@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: frame.c,v 1.1 2004/01/18 07:10:19 sian Exp $
  */
 
 # ifdef HAVE_CONFIG_H

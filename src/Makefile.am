@@ -1,6 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.10 2004/04/23 16:34:23 sian Exp $
 
 AM_CFLAGS = -DENFLE_PLUGINDIR=\"$(enfle_plugindir)\" -DENFLE_DATADIR=\"$(enfle_datadir)\"
 AM_CPPFLAG = -I$(top_srcdir) -I$(top_srcdir)/lib

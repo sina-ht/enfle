@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Tue May  3 09:38:01 2005.
- * $Id: mpglib.c,v 1.7 2005/05/03 01:08:30 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

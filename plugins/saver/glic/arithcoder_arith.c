@@ -2,7 +2,6 @@
  * arithcoder_arith.c -- Renormalization for arithmetic coder
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Aug 15 18:05:32 2001.
- * $Id: arithcoder_arith.c,v 1.3 2001/08/26 00:59:15 sian Exp $
  *
  * WARNING:
  *  This renormalization code probably implements the exact patented arithmetic coder.

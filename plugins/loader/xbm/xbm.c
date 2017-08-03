@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sat Mar  6 12:17:48 2004.
- * $Id: xbm.c,v 1.3 2004/03/06 03:43:36 sian Exp $
  *
  * NOTE: This plugin is not optimized for speed.
  *

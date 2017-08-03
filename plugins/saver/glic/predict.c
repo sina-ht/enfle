@@ -2,7 +2,6 @@
  * predict.c -- Prediction modules
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * Last Modified: Tue Sep 18 14:18:48 2001.
- * $Id: predict.c,v 1.6 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdlib.h>

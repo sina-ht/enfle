@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Sun Jun 23 15:17:42 2002.
- * $Id: loader-plugin.h,v 1.7 2002/08/03 05:08:40 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

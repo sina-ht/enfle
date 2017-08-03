@@ -2,7 +2,6 @@
  * expand.c
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Mon Sep 24 02:32:44 2001.
- * $Id: expand.c,v 1.5 2001/09/23 17:36:57 sian Exp $
  */
 
 #include <stdio.h>

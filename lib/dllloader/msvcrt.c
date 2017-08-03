@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Fri Apr 16 01:02:06 2004.
- * $Id: msvcrt.c,v 1.6 2004/04/18 06:24:50 sian Exp $
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as

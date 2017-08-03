@@ -2,7 +2,6 @@
  * glic.c -- GLIC(Grammer-based Lossless Image Code) Saver plugin
  * (C)Copyright 2000, 2001, 2002 by Hiroshi Takekawa
  * Last Modified: Sun Jun 23 16:05:43 2002.
- * $Id: glic.c,v 1.25 2002/08/03 05:08:37 sian Exp $
  */
 
 #include <stdlib.h>

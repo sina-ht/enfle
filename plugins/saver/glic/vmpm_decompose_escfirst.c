@@ -2,7 +2,6 @@
  * vmpm_decompose_escfirst.c -- ESC-encode-first decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:47:51 2001.
- * $Id: vmpm_decompose_escfirst.c,v 1.14 2003/02/05 15:19:41 sian Exp $
  */
 
 #include <stdio.h>

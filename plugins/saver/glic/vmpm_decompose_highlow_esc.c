@@ -2,7 +2,6 @@
  * vmpm_decompose_highlow_esc.c -- Threshold ESC-A decomposer
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Wed Dec 26 09:54:23 2001.
- * $Id: vmpm_decompose_highlow_esc.c,v 1.11 2003/02/05 15:19:41 sian Exp $
  */
 
 #include <stdio.h>

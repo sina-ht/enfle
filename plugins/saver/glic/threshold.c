@@ -2,7 +2,6 @@
  * threshold.c
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Mon Sep 17 22:43:59 2001.
- * $Id: threshold.c,v 1.3 2001/09/18 05:22:24 sian Exp $
  */
 
 #include <stdlib.h>

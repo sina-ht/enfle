@@ -2,7 +2,6 @@
  * arithmodel_order_zero.h -- Order zero statistical model
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Mon Sep 17 22:50:49 2001.
- * $Id: arithmodel_order_zero.h,v 1.10 2001/09/18 05:22:24 sian Exp $
  */
 
 #ifndef _ARITHMODEL_ORDER_ZERO_H

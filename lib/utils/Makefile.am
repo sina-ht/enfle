@@ -1,6 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
-# $Id: Makefile.am,v 1.12 2005/07/08 18:16:20 sian Exp $
 
 noinst_LTLIBRARIES = libenfleutils.la
 INCLUDES = -I$(top_srcdir)

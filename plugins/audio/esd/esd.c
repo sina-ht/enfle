@@ -4,7 +4,6 @@
  * This file is part of Enfle.
  *
  * Last Modified: Tue May  3 09:36:32 2005.
- * $Id: esd.c,v 1.8 2005/05/03 01:08:30 sian Exp $
  *
  * Note: Audio support is incomplete.
  *

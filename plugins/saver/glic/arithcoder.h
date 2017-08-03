@@ -2,7 +2,6 @@
  * arithcoder.h -- Arithmetic coder base class
  * (C)Copyright 2001 by Hiroshi Takekawa
  * Last Modified: Mon Sep 17 23:04:56 2001.
- * $Id: arithcoder.h,v 1.2 2001/09/18 05:22:24 sian Exp $
  */
 
 #ifndef _ARITHCODER_H
