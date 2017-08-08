@@ -1,5 +1,11 @@
 NEWS  Last Modified: Sun Jun 17 00:27:13 2012.
 
+20160903:
+ Use XChangeProperty to set window caption
+
+20130412:
+ Use _NET_WM_STATE_FULLSCREEN to switch to full-screen mode
+
 20120617:
  Clip render_width and render_height.  This fixes full screen flickering.
  Fixes for newer system-installed libavcodec support.
