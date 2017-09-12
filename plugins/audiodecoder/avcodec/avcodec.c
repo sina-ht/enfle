@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 27 21:32:45 2016.
+ * Last Modified: Wed Sep 13 00:50:34 2017.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -128,13 +128,13 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
 #if defined(USE_SYSTEM_AVCODEC)
   {
     AVPacket avp;
-    int got_frame = 0;
 
     av_init_packet(&avp);
     avp.data = adm->buf + adm->offset;
     avp.size = adm->size;
 
-    l = avcodec_decode_audio4(adm->acodec_ctx, adm->acodec_sample, &got_frame, &avp);
+    l = avcodec_send_packet(adm->acodec_ctx, &avp);
+    l = avcodec_receive_frame(adm->acodec_ctx, adm->acodec_sample);
 
     out_len = av_samples_get_buffer_size(NULL, adm->acodec_ctx->channels,
 					 adm->acodec_sample->nb_samples,

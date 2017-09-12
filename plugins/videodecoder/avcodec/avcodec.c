@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Apr 27 21:39:40 2016.
+ * Last Modified: Wed Sep 13 00:54:24 2017.
  *
  * Enfle is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as
@@ -230,7 +230,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
   unsigned char *buf = dp->data;
   int l;
   int y;
-  int got_picture;
+  int got_picture = 0;
 
   if (vdm->size <= 0) {
     if (len == 0)
@@ -249,7 +249,8 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     avp.data = vdm->buf + vdm->offset;
     avp.size = vdm->size;
 
-    l = avcodec_decode_video2(vdm->vcodec_ctx, vdm->vcodec_picture, &got_picture, &avp);
+    l = avcodec_send_packet(vdm->vcodec_ctx, &avp);
+    l = avcodec_receive_frame(vdm->vcodec_ctx, vdm->vcodec_picture);
   }
 #else
   l = avcodec_decode_video(vdm->vcodec_ctx, vdm->vcodec_picture, &got_picture,
