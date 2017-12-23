@@ -642,7 +642,7 @@ main(int argc, char **argv)
 	if (uidata.if_readdir == 1) {
 	  struct stat st;
 
-	  if (!stat(argv[i], &st) == 0) {
+	  if (stat(argv[i], &st) != 0) {
 	    warning("stat() failed with '-d' for %s.\n", argv[i]);
 	  } else {
 	    if (!S_ISREG(st.st_mode)) {
