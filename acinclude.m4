@@ -4,7 +4,6 @@ dnl (C)Copyright 1999-2003 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
 dnl Last Modified: Sat Sep  9 21:40:07 2006.
-dnl $Id: acinclude.m4,v 1.7 2006/09/09 12:53:54 sian Exp $
 dnl
 dnl Enfle is free software; you can redistribute it and/or modify it
 dnl under the terms of the GNU General Public License version 2 as
