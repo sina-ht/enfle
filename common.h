@@ -1,6 +1,6 @@
 /*
  * common.h -- common header file, which is included by almost all files.
- * (C)Copyright 2000-2009 by Hiroshi Takekawa
+ * (C)Copyright 2000-2018 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
  * Last Modified: Sun Jan  4 00:29:18 2009.
@@ -102,4 +102,4 @@
 #  define debug_message_fn(format, args...)
 #  define debug_message_fnc(format, args...)
 #endif
-#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2017 by Hiroshi Takekawa"
+#define COPYRIGHT_MESSAGE "(C)Copyright 2000-2018 by Hiroshi Takekawa"
