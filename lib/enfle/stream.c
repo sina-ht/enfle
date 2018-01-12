@@ -113,7 +113,7 @@ fdstream_grow(Stream *s , int size)
 /* read functions */
 
 static int
-dummy_read(Stream *s, unsigned char *p, int size)
+dummy_read(Stream *s __attribute__((unused)), unsigned char *p, int size)
 {
   warning_fnc("This function only fills the buffer with 0.\n");
   memset(p, 0, size);
@@ -161,7 +161,7 @@ filestream_read(Stream *s, unsigned char *p, int size)
 /* seek functions */
 
 static int
-dummy_seek(Stream *s, long offset, StreamWhence whence)
+dummy_seek(Stream *s __attribute__((unused)), long offset __attribute__((unused)), StreamWhence whence __attribute__((unused)))
 {
   warning_fnc("This function always returns 1.\n");
   return 1;
@@ -257,7 +257,7 @@ filestream_seek(Stream *s, long offset, StreamWhence whence)
 /* tell functions */
 
 static long
-dummy_tell(Stream *s)
+dummy_tell(Stream *s __attribute__((unused)))
 {
   warning_fnc("This function always returns 0\n");
   return 0;
@@ -284,7 +284,7 @@ filestream_tell(Stream *s)
 /* close functions */
 
 static int
-dummy_close(Stream *s)
+dummy_close(Stream *s __attribute__((unused)))
 {
   return 1;
 }

@@ -113,7 +113,7 @@ static void state_restore_altivec (cpu_state_t * state)
 }
 #endif
 
-void mpeg2_cpu_state_init (uint32_t accel)
+void mpeg2_cpu_state_init (uint32_t accel __attribute__((unused)))
 {
 #ifdef ARCH_X86
     if (accel & MPEG2_ACCEL_X86_MMX) {

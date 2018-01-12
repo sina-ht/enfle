@@ -89,7 +89,7 @@ ENFLE_PLUGIN_EXIT(loader_jasper, p)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p __attribute__((unused)), st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[16];
   static unsigned char id[] = { 0x00, 0x00, 0x00, 0x0c, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a };
@@ -102,13 +102,26 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+, c
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+, priv
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+)
 {
   jas_image_t *ji;
   jas_stream_t *js;
   unsigned char *d;
   char *buf = NULL;
-  int i, j, k, cmp[3];
+  int k, cmp[3];
+  unsigned int i, j;
   int tlx, tly;
   int vs, hs;
 

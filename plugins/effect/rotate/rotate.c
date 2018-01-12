@@ -38,14 +38,14 @@ static int init_rotate(void *);
 static int effect(Image *, int, int);
 
 static UIAction actions[] = {
-  { "rotate_left", set_rotate, (void *)1, ENFLE_KEY_l, ENFLE_MOD_None, ENFLE_Button_None },
-  { "rotate_right", set_rotate, (void *)-1, ENFLE_KEY_r, ENFLE_MOD_None, ENFLE_Button_None },
-  { "rotate_180", set_rotate, (void *)2, ENFLE_KEY_l, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "rotate_180", set_rotate, (void *)-2, ENFLE_KEY_r, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "flip_vertical", set_flip, (void *)1, ENFLE_KEY_v, ENFLE_MOD_None, ENFLE_Button_None },
-  { "flip_horizontal", set_flip, (void *)2, ENFLE_KEY_h, ENFLE_MOD_None, ENFLE_Button_None },
-  { "rotate_init", init_rotate, NULL, ENFLE_KEY_v, ENFLE_MOD_Shift, ENFLE_Button_None },
-  { "rotate_init", init_rotate, NULL, ENFLE_KEY_h, ENFLE_MOD_Shift, ENFLE_Button_None },
+  { "rotate_left", set_rotate, (void *)1, ENFLE_KEY_l, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "rotate_right", set_rotate, (void *)-1, ENFLE_KEY_r, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "rotate_180", set_rotate, (void *)2, ENFLE_KEY_l, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
+  { "rotate_180", set_rotate, (void *)-2, ENFLE_KEY_r, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
+  { "flip_vertical", set_flip, (void *)1, ENFLE_KEY_v, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "flip_horizontal", set_flip, (void *)2, ENFLE_KEY_h, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "rotate_init", init_rotate, NULL, ENFLE_KEY_v, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
+  { "rotate_init", init_rotate, NULL, ENFLE_KEY_h, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   UI_ACTION_END
 };
 
@@ -102,7 +102,7 @@ set_flip(void *a)
 }
 
 static int
-init_rotate(void *a)
+init_rotate(void *a __attribute__((unused)))
 {
   rotate_mode = 0;
   flip_mode = 0;

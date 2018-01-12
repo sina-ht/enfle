@@ -64,7 +64,7 @@ ENFLE_PLUGIN_EXIT(ui_wallpaper, p)
 /* for internal use */
 
 static int
-initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
+initialize_screen(VideoWindow *vw __attribute__((unused)), Movie *m __attribute__((unused)), int w __attribute__((unused)), int h __attribute__((unused)))
 {
   /* do nothing */
 
@@ -72,7 +72,7 @@ initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
 }
 
 static int
-render_frame(VideoWindow *vw, Movie *m, Image *p)
+render_frame(VideoWindow *vw, Movie *m __attribute__((unused)), Image *p)
 {
   video_window_set_background(vw, p);
 
@@ -80,7 +80,7 @@ render_frame(VideoWindow *vw, Movie *m, Image *p)
 }
 
 static int
-main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, char *path)
+main_loop(UIData *uidata __attribute__((unused)), VideoWindow *vw, Movie *m, Image *p, char *path __attribute__((unused)))
 {
   int loop = 1;
 

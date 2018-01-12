@@ -539,7 +539,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m __attribute__((unused)), st, c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[3];
 
@@ -562,7 +562,15 @@ DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
   return PLAY_OK;
 }
 
-DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c
+#if !defined(IDENTIFY_BEFORE_PLAY)
+__attribute__((unused))
+#endif
+, priv
+#if !defined(IDENTIFY_BEFORE_PLAY)
+__attribute__((unused))
+#endif
+)
 {
   debug_message("ungif player: load() called\n");
 

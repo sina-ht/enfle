@@ -143,7 +143,7 @@ tell_func(void *arg)
 
 static DemultiplexerStatus __examine(Demultiplexer *, int);
 
-DEFINE_DEMULTIPLEXER_PLUGIN_IDENTIFY(st, c, priv)
+DEFINE_DEMULTIPLEXER_PLUGIN_IDENTIFY(st, c __attribute__((unused)), priv __attribute__((unused)))
 {
   Demultiplexer *demux = create();
   DemultiplexerStatus ds;
@@ -154,7 +154,7 @@ DEFINE_DEMULTIPLEXER_PLUGIN_IDENTIFY(st, c, priv)
   return ds;
 }
 
-DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c, priv)
+DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c __attribute__((unused)), priv __attribute__((unused)))
 {
   Demultiplexer *demux = create();
   DemultiplexerStatus ds;
@@ -424,7 +424,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	      }
 	      info->width = bih.biWidth;
 	      info->height = bih.biHeight;
-	      if (info->video_extradata && info->video_extradata_size != riff_chunk_get_size(rc) - sizeof(BITMAPINFOHEADER)) {
+	      if (info->video_extradata && info->video_extradata_size != (int)(riff_chunk_get_size(rc) - sizeof(BITMAPINFOHEADER))) {
 		free(info->video_extradata);
 		info->video_extradata = NULL;
 	      }
@@ -449,7 +449,7 @@ RIFF( 'AVI' LIST ( 'hdrl'
 	      info->samples_per_sec = wfx.nSamplesPerSec;
 	      info->block_align = wfx.nBlockAlign;
 	      info->avg_bytes_per_sec = wfx.nAvgBytesPerSec;
-	      if (info->audio_extradata && info->audio_extradata_size != riff_chunk_get_size(rc) - sizeof(WAVEFORMATEX)) {
+	      if (info->audio_extradata && info->audio_extradata_size != (int)(riff_chunk_get_size(rc) - sizeof(WAVEFORMATEX))) {
 		free(info->audio_extradata);
 		info->audio_extradata = NULL;
 	      }

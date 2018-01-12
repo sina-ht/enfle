@@ -75,7 +75,7 @@ load_image(Image *p, Stream *st)
   buf = NULL;
   {
     unsigned char *tmp;
-    int len;
+    unsigned int len;
     int bufsize = 65536;
 
     for (;;) {
@@ -112,7 +112,7 @@ load_image(Image *p, Stream *st)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p __attribute__((unused)), st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[16];
 
@@ -126,7 +126,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   debug_message("webp loader: load() called\n");
 

@@ -35,13 +35,13 @@ static int set_gamma(void *);
 static int effect(Image *, int, int);
 
 static UIAction actions[] = {
-  { "gamma_1", set_gamma, (void *)0, ENFLE_KEY_1, ENFLE_MOD_None, ENFLE_Button_None },
-  { "gamma_2", set_gamma, (void *)1, ENFLE_KEY_2, ENFLE_MOD_None, ENFLE_Button_None },
-  { "gamma_3", set_gamma, (void *)2, ENFLE_KEY_3, ENFLE_MOD_None, ENFLE_Button_None },
-  { "gamma_4", set_gamma, (void *)3, ENFLE_KEY_4, ENFLE_MOD_None, ENFLE_Button_None },
-  { "gamma_5", set_gamma, (void *)4, ENFLE_KEY_5, ENFLE_MOD_None, ENFLE_Button_None },
-  { "gamma_6", set_gamma, (void *)5, ENFLE_KEY_6, ENFLE_MOD_None, ENFLE_Button_None },
-  { "gamma_7", set_gamma, (void *)6, ENFLE_KEY_7, ENFLE_MOD_None, ENFLE_Button_None },
+  { "gamma_1", set_gamma, (void *)0, ENFLE_KEY_1, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "gamma_2", set_gamma, (void *)1, ENFLE_KEY_2, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "gamma_3", set_gamma, (void *)2, ENFLE_KEY_3, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "gamma_4", set_gamma, (void *)3, ENFLE_KEY_4, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "gamma_5", set_gamma, (void *)4, ENFLE_KEY_5, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "gamma_6", set_gamma, (void *)5, ENFLE_KEY_6, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "gamma_7", set_gamma, (void *)6, ENFLE_KEY_7, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   UI_ACTION_END
 };
 

@@ -102,7 +102,7 @@ destroy(Demultiplexer *demux)
 
 static DemultiplexerStatus __examine(Demultiplexer *, int);
 
-DEFINE_DEMULTIPLEXER_PLUGIN_IDENTIFY(st, c, priv)
+DEFINE_DEMULTIPLEXER_PLUGIN_IDENTIFY(st, c __attribute__((unused)), priv __attribute__((unused)))
 {
   Demultiplexer *demux = create();
   DemultiplexerStatus ds;
@@ -113,7 +113,7 @@ DEFINE_DEMULTIPLEXER_PLUGIN_IDENTIFY(st, c, priv)
   return ds;
 }
 
-DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c, priv)
+DEFINE_DEMULTIPLEXER_PLUGIN_EXAMINE(m, st, c __attribute__((unused)), priv __attribute__((unused)))
 {
   Demultiplexer *demux = create();
   DemultiplexerStatus ds;

@@ -85,7 +85,7 @@ audiodecoder_codec_name(unsigned int fourcc)
 }
 
 int
-audiodecoder_query(EnflePlugins *eps, Movie *m, unsigned int fourcc, unsigned int *types_r, Config *c)
+audiodecoder_query(EnflePlugins *eps, Movie *m __attribute__((unused)), unsigned int fourcc, unsigned int *types_r, Config *c)
 {
   PluginList *pl = eps->pls[ENFLE_PLUGIN_AUDIODECODER];
   Plugin *p;

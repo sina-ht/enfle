@@ -122,6 +122,7 @@ load_image(Image *p, Stream *st)
   case 1:
     p->type = _BITMAP_MSBFirst; /* XXX: check order */
     p->depth = p->bits_per_pixel;
+    /* FALL THROUGH */
   case 4:
   case 8:
     p->type = _INDEX;
@@ -188,7 +189,7 @@ load_image(Image *p, Stream *st)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p __attribute__((unused)), st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[26];
 
@@ -202,7 +203,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   debug_message("tga loader: load() called\n");
 

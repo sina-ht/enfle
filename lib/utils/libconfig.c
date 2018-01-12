@@ -267,7 +267,7 @@ config_load(Config *c, const char *filepath)
 }
 
 int
-config_save(Config *c, char *path)
+config_save(Config *c __attribute__((unused)), char *path __attribute__((unused)))
 {
   err_message("Not implemented yet\n");
   return 0;
@@ -372,7 +372,7 @@ check_typed_data(Config *c, const char *path, const char *type)
 }
 
 static char *
-setup_typed_data(Config *c, char *path, const char *type, int size)
+setup_typed_data(Config *c __attribute__((unused)), char *path __attribute__((unused)), const char *type, int size)
 {
   char *p;
 

@@ -53,7 +53,8 @@ void I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],stru
 void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 	unsigned int scale_index[2][SBLIMIT],struct frame *fr)
 {
-  int i,n;
+  int i;
+  unsigned int n;
   int smpb[2*SBLIMIT]; /* values: 0-65535 */
   int *sample;
   register unsigned int *ba;
@@ -77,17 +78,17 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
     ba = balloc;
     for (sample=smpb,i=0;i<jsbound;i++) {
       if((n=*ba++))
-        *f0++ = (real) ( ((-1)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
+        *f0++ = (real) ( ((~0UL)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
       else
         *f0++ = 0.0;
       if((n=*ba++))
-        *f1++ = (real) ( ((-1)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
+        *f1++ = (real) ( ((~0UL)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
       else
         *f1++ = 0.0;
     }
     for (i=jsbound;i<SBLIMIT;i++) {
       if ((n=*ba++)) {
-        real samp = ( ((-1)<<n) + (*sample++) + 1);
+        real samp = ( ((~0UL)<<n) + (*sample++) + 1);
         *f0++ = samp * muls[n+1][*sca++];
         *f1++ = samp * muls[n+1][*sca++];
       }
@@ -104,7 +105,7 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
     ba = balloc;
     for (sample=smpb,i=0;i<SBLIMIT;i++) {
       if((n=*ba++))
-        *f0++ = (real) ( ((-1)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
+        *f0++ = (real) ( ((~0UL)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
       else
         *f0++ = 0.0;
     }

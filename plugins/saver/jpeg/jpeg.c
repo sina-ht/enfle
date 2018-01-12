@@ -94,12 +94,12 @@ ENFLE_PLUGIN_EXIT(saver_jpeg, p)
 
 /* methods */
 
-DEFINE_SAVER_PLUGIN_GET_EXT(c)
+DEFINE_SAVER_PLUGIN_GET_EXT(c __attribute__((unused)))
 {
   return strdup("jpg");
 }
 
-DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
+DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params __attribute__((unused)))
 {
   struct jpeg_compress_struct *cinfo = malloc(sizeof(struct jpeg_compress_struct));
   struct my_error_mgr jerr;

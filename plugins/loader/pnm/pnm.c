@@ -270,7 +270,7 @@ pnm_read_header(Stream *st, Image *p, PNMdata *data)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   PNMdata pnmdata;
 
@@ -283,7 +283,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   PNMdata pnmdata;
   unsigned int i, j, x, y, image_size;

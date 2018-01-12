@@ -234,7 +234,7 @@ __close(Stream *st)
 
 /* methods */
 
-DEFINE_STREAMER_PLUGIN_IDENTIFY(st, filepath)
+DEFINE_STREAMER_PLUGIN_IDENTIFY(st __attribute__((unused)), filepath)
 {
   FILE *fp;
   unsigned char buf[6];

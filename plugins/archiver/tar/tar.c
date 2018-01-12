@@ -184,7 +184,7 @@ tar_destroy(Archive *arc)
 
 #define READ_HEADER(p, st) (stream_read(st, (unsigned char *)p, sizeof(TarHeader)) == sizeof(TarHeader))
 
-DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
+DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a __attribute__((unused)), st, priv __attribute__((unused)))
 {
   TarHeader th;
 
@@ -196,7 +196,7 @@ DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
   return OPEN_OK;
 }
 
-DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
+DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv __attribute__((unused)))
 {
   TarHeader th;
   TarInfo *ti = NULL;

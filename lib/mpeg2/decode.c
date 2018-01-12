@@ -259,6 +259,7 @@ mpeg2_state_t mpeg2_parse_header (mpeg2dec_t * mpeg2dec)
 	/* state transition after a sequence header */
 	case RECEIVED (0x00, STATE_SEQUENCE):
 	    mpeg2dec->action = mpeg2_header_picture_start;
+	    /* FALL THROUGH */
 	case RECEIVED (0xb8, STATE_SEQUENCE):
 	    mpeg2_header_sequence_finalize (mpeg2dec);
 	    break;

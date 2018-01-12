@@ -81,7 +81,7 @@ ENFLE_PLUGIN_EXIT(audio_esd, p)
 /* audio plugin methods */
 
 static AudioDevice *
-open_device(void *data, Config *c)
+open_device(void *data __attribute__((unused)), Config *c)
 {
   AudioDevice *ad;
   ESD_data *esd;

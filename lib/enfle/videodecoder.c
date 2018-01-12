@@ -179,7 +179,7 @@ videodecoder_codec_name(unsigned int fourcc)
 }
 
 int
-videodecoder_query(EnflePlugins *eps, Movie *m, unsigned int fourcc, unsigned int *types_r, Config *c)
+videodecoder_query(EnflePlugins *eps, Movie *m __attribute__((unused)), unsigned int fourcc, unsigned int *types_r, Config *c)
 {
   PluginList *pl = eps->pls[ENFLE_PLUGIN_VIDEODECODER];
   Plugin *p;

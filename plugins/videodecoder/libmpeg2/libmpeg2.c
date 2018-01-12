@@ -176,13 +176,13 @@ destroy(VideoDecoder *vdec)
 }
 
 static int
-setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
+setup(VideoDecoder *vdec __attribute__((unused)), Movie *m __attribute__((unused)), Image *p __attribute__((unused)), int w __attribute__((unused)), int h __attribute__((unused)))
 {
   return 1;
 }
 
 static unsigned int
-query(unsigned int fourcc, void *priv)
+query(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   switch (fourcc) {
   case FCC_mpg1:
@@ -200,7 +200,7 @@ query(unsigned int fourcc, void *priv)
 }
 
 static VideoDecoder *
-init(unsigned int fourcc, void *priv)
+init(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   VideoDecoder *vdec;
   struct videodecoder_libmpeg2 *vdm;

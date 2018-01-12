@@ -1348,7 +1348,7 @@ static void motion_fr_field_##FORMAT (mpeg2_decoder_t * const decoder,	      \
 									      \
 static void motion_fr_dmv_##FORMAT (mpeg2_decoder_t * const decoder,	      \
 				    motion_t * const motion,		      \
-				    mpeg2_mc_fct * const * const table)	      \
+				    mpeg2_mc_fct * const * const table __attribute__((unused)))	      \
 {									      \
     int motion_x, motion_y, dmv_x, dmv_y, m, other_x, other_y;		      \
     unsigned int pos_x, pos_y, xy_half, offset;				      \
@@ -1476,7 +1476,7 @@ static void motion_fi_16x8_##FORMAT (mpeg2_decoder_t * const decoder,	      \
 									      \
 static void motion_fi_dmv_##FORMAT (mpeg2_decoder_t * const decoder,	      \
 				    motion_t * const motion,		      \
-				    mpeg2_mc_fct * const * const table)	      \
+				    mpeg2_mc_fct * const * const table __attribute__((unused)))	      \
 {									      \
     int motion_x, motion_y, other_x, other_y;				      \
     unsigned int pos_x, pos_y, xy_half, offset;				      \
@@ -2020,7 +2020,7 @@ void mpeg2_slice (mpeg2_decoder_t * const decoder, const int code,
 	    } else switch (UBITS (bit_buf, 11)) {
 	    case 8:		/* macroblock_escape */
 		mba_inc += 33;
-		/* pass through */
+		/* FALL THROUGH */
 	    case 15:	/* macroblock_stuffing (MPEG1 only) */
 		DUMPBITS (bit_buf, bits, 11);
 		NEEDBITS (bit_buf, bits, bit_ptr);

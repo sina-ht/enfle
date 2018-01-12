@@ -189,13 +189,13 @@ destroy(AudioDecoder *adec)
 }
 
 static int
-setup(AudioDecoder *adec, Movie *m)
+setup(AudioDecoder *adec __attribute__((unused)), Movie *m __attribute__((unused)))
 {
   return 1;
 }
 
 static unsigned int
-query(unsigned int fourcc, void *priv)
+query(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   switch (fourcc) {
   case 0:
@@ -209,7 +209,7 @@ query(unsigned int fourcc, void *priv)
 }
 
 static AudioDecoder *
-init(unsigned int fourcc, void *priv)
+init(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   AudioDecoder *adec;
   struct audiodecoder_mad *adm;

@@ -264,7 +264,7 @@ play_audio(void *arg)
 }
 
 static PlayerStatus
-play_main(Movie *m, VideoWindow *vw)
+play_main(Movie *m, VideoWindow *vw __attribute__((unused)))
 {
   Mpglib_info *info = (Mpglib_info *)m->movie_private;
   //Image *p = info->p;
@@ -374,14 +374,18 @@ unload_movie(Movie *m)
 
 /* methods */
 
-DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m __attribute__((unused)), st, c __attribute__((unused)), priv __attribute__((unused)))
 {
   if (strlen(st->path) >= 4 && !strcasecmp(st->path + strlen(st->path) - 4, ".mp3"))
     return PLAY_OK;
   return PLAY_NOT;
 }
 
-DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv)
+DEFINE_PLAYER_PLUGIN_LOAD(vw, m, st, c, priv
+#if !defined(IDENTIFY_BEFORE_PLAY)
+__attribute__((unused))
+#endif
+)
 {
   debug_message("mpglib player: load() called\n");
 

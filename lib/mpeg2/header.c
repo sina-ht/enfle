@@ -230,6 +230,7 @@ static int sequence_ext (mpeg2dec_t * mpeg2dec)
 	return 1;
     case 2:	/* 4:2:0 */
 	sequence->chroma_height >>= 1;
+	/* FALL THROUGH */
     case 4:	/* 4:2:2 */
 	sequence->chroma_width >>= 1;
     }
@@ -544,6 +545,7 @@ static int picture_coding_ext (mpeg2dec_t * mpeg2dec)
     switch (decoder->picture_structure) {
     case TOP_FIELD:
 	flags |= PIC_FLAG_TOP_FIELD_FIRST;
+	/* FALL THROUGH */
     case BOTTOM_FIELD:
 	picture->nb_fields = 1;
 	break;
@@ -737,7 +739,7 @@ void mpeg2_header_picture_finalize (mpeg2dec_t * mpeg2dec, uint32_t accels)
     info_user_data (mpeg2dec);
 }
 
-static int copyright_ext (mpeg2dec_t * mpeg2dec)
+static int copyright_ext (mpeg2dec_t * mpeg2dec __attribute__((unused)))
 {
     return 0;
 }

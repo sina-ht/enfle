@@ -64,7 +64,7 @@ ENFLE_PLUGIN_EXIT(loader_pcx, p)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[128];
   int xmax, ymax, xmin, ymin;
@@ -140,7 +140,19 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, config, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+, config
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+, priv
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+)
 {
   int j, l;
   unsigned int i, k, ppl;

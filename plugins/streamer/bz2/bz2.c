@@ -161,7 +161,7 @@ __close(Stream *st)
 
 /* methods */
 
-DEFINE_STREAMER_PLUGIN_IDENTIFY(st, filepath)
+DEFINE_STREAMER_PLUGIN_IDENTIFY(st __attribute__((unused)), filepath)
 {
   FILE *fp;
   unsigned char buf[2];
@@ -180,7 +180,11 @@ DEFINE_STREAMER_PLUGIN_IDENTIFY(st, filepath)
   return STREAM_OK;
 }
 
-DEFINE_STREAMER_PLUGIN_OPEN(st, filepath)
+DEFINE_STREAMER_PLUGIN_OPEN(st
+#if !defined(IDENTIFY_BEFORE_OPEN)
+__attribute__((unused))
+#endif
+, filepath)
 {
   BZFILE *bzfile;
 

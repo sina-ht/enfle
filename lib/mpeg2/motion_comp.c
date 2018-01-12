@@ -31,7 +31,7 @@
 
 mpeg2_mc_t mpeg2_mc;
 
-void mpeg2_mc_init (uint32_t accel)
+void mpeg2_mc_init (uint32_t accel __attribute__((unused)))
 {
 #ifdef ARCH_X86
   if (accel & MPEG2_ACCEL_X86_MMXEXT) {

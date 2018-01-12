@@ -525,7 +525,7 @@ play_audio(void *arg)
 	pts = dp->pts;
 	dts = dp->dts;
 	dts = dts; // dummy
-	if (pts != -1) {
+	if (pts != (unsigned long)-1) {
 	  if (!m->timer_offset_set) {
 	    m->timer_offset_set = 1;
 	    m->timer_offset = pts / 90;
@@ -650,7 +650,7 @@ play_main(Movie *m, VideoWindow *vw)
 
   rate = rational_to_double(m->framerate);
   //debug_message_fnc("frame %d, rate %f, pts %ld, ts_base %ld\n", m->current_frame, rate, m->vdec->pts, m->vdec->ts_base);
-  if (m->vdec->ts_base == 0 || m->vdec->ts_base > 1000000 || m->vdec->pts == -1) {
+  if (m->vdec->ts_base == 0 || m->vdec->ts_base > 1000000 || m->vdec->pts == (unsigned long)-1) {
     /* videodecoder didn't provide pts or unreliable */
     video_time = m->current_frame * 1000 / rate;
     //debug_message_fnc("video_time %d (from fps)\n", video_time);
@@ -872,7 +872,7 @@ unload_movie(Movie *m)
 
 /* methods */
 
-DEFINE_PLAYER_PLUGIN_IDENTIFY(m, st, c, eps)
+DEFINE_PLAYER_PLUGIN_IDENTIFY(m __attribute__((unused)), st __attribute__((unused)), c __attribute__((unused)), eps __attribute__((unused)))
 {
   return PLAY_NOT;
 }

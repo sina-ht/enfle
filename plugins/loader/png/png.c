@@ -125,7 +125,7 @@ warning_handler(png_structp png_ptr, png_const_charp warning_msg)
 
 #define PNG_BYTES_TO_CHECK 4
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p __attribute__((unused)), st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[PNG_BYTES_TO_CHECK];
 
@@ -140,7 +140,19 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK;
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+,c
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+, priv
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+)
 {
   png_structp png_ptr;
   png_infop info_ptr;

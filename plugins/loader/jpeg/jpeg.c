@@ -142,7 +142,7 @@ skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 }
 
 METHODDEF(void)
-term_source(j_decompress_ptr cinfo)
+term_source(j_decompress_ptr cinfo __attribute__((unused)))
 {
 }
 
@@ -199,7 +199,7 @@ my_error_exit (j_common_ptr cinfo)
 
 /* methods */
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[16];
   static unsigned char id[] = { 0xff, 0xd8 };
@@ -234,7 +234,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
 
 //#define ENABLE_YUV
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv __attribute__((unused)))
 {
   struct jpeg_decompress_struct *cinfo;
   struct my_error_mgr jerr;

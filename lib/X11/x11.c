@@ -69,8 +69,8 @@ x11_create(void)
 #ifdef USE_XV
 //#define more_debug_message_fnc debug_message_fnc
 //#define more_debug_message debug_message
-#define more_debug_message_fnc(f, a...)
-#define more_debug_message(f, a...)
+#define more_debug_message_fnc(f, a...) do {} while (0)
+#define more_debug_message(f, a...) do {} while (0)
 
 static void
 get_xvinfo(X11 *x11)
@@ -278,7 +278,7 @@ get_xvinfo(X11 *x11)
 #include "enfle/memory.h"
 static int err_occurred = 0;
 static int
-err_handler(Display *disp, XErrorEvent *xee)
+err_handler(Display *disp __attribute__((unused)), XErrorEvent *xee)
 {
   if (xee->error_code != BadAccess)
     exit(1);

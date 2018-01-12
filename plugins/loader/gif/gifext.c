@@ -28,7 +28,7 @@
 #define APPL_BLOCK_SIZE 11
 
 int
-GIFSkipExtensionBlock(Stream *st, GIF_info *info)
+GIFSkipExtensionBlock(Stream *st, GIF_info *info __attribute__((unused)))
 {
   unsigned char size;
 

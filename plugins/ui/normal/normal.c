@@ -116,7 +116,7 @@ typedef struct _main_loop {
 } MainLoop;
 
 static int
-initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
+initialize_screen(VideoWindow *vw, Movie *m __attribute__((unused)), int w, int h)
 {
   video_window_resize(vw, w, h);
 
@@ -124,7 +124,7 @@ initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
 }
 
 static int
-render_frame(VideoWindow *vw, Movie *m, Image *p)
+render_frame(VideoWindow *vw, Movie *m __attribute__((unused)), Image *p)
 {
   video_window_render(vw, p);
 
@@ -560,110 +560,110 @@ main_loop_save(void *a)
 static UIAction built_in_actions[] = {
   /* '<' */
   { "go_first", main_loop_first, NULL,
-    ENFLE_KEY_less, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_less, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   /* '>' */
   { "go_last", main_loop_last, NULL,
-    ENFLE_KEY_greater, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_greater, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   /* 'q' */
   { "quit", main_loop_quit, NULL,
-    ENFLE_KEY_q, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_q, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   /* 'f' */
   { "toggle-fullscreen", main_loop_toggle_fullscreen_mode, NULL,
-    ENFLE_KEY_f, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_f, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   /* 'n', ' ', M-1(Left), M-4 */
   { "next", main_loop_next, NULL,
-    ENFLE_KEY_n, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_n, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   { "next", main_loop_next, NULL, ENFLE_KEY_space,
-    ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   { "next", main_loop_next, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_1 },
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_1, 0, 0 },
   { "next", main_loop_next, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_4 },
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_4, 0, 0 },
   /* C-n, C-space, C-M-1, C-M-4 */
   { "next5", main_loop_next5, NULL,
-    ENFLE_KEY_n, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+    ENFLE_KEY_n, ENFLE_MOD_Ctrl, ENFLE_Button_None, 0, 0 },
   { "next5", main_loop_next5, NULL,
-    ENFLE_KEY_space, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+    ENFLE_KEY_space, ENFLE_MOD_Ctrl, ENFLE_Button_None, 0, 0 },
   { "next5", main_loop_next5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_1 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_1, 0, 0 },
   { "next5", main_loop_next5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_4 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_4, 0, 0 },
   /* 'N', S-space, M-2(Center) */
   { "next_archive", main_loop_nextarchive, NULL,
-    ENFLE_KEY_n, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_n, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   { "next_archive", main_loop_nextarchive, NULL,
-    ENFLE_KEY_space, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_space, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   { "next_archive", main_loop_nextarchive, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_2 },
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_2, 0, 0 },
   /* A-n, A-space, A-M-1, A-M-4 */
   { "next_archive5", main_loop_nextarchive5, NULL,
-    ENFLE_KEY_n, ENFLE_MOD_Alt, ENFLE_Button_None },
+    ENFLE_KEY_n, ENFLE_MOD_Alt, ENFLE_Button_None, 0, 0 },
   { "next_archive5", main_loop_nextarchive5, NULL,
-    ENFLE_KEY_space, ENFLE_MOD_Alt, ENFLE_Button_None },
+    ENFLE_KEY_space, ENFLE_MOD_Alt, ENFLE_Button_None, 0, 0 },
   { "next_archive5", main_loop_nextarchive5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_1 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_1, 0, 0 },
   { "next_archive5", main_loop_nextarchive5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_4 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_4, 0, 0 },
   /* 'b', M-3(Left), M-5 */
   { "prev", main_loop_prev, NULL,
-    ENFLE_KEY_b, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_b, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   { "prev", main_loop_prev, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_3 },
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_3, 0, 0 },
   { "prev", main_loop_prev, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_5 },
+    ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_5, 0, 0 },
   /* C-b, C-M-3, C-M-5 */
   { "prev5", main_loop_prev5, NULL,
-    ENFLE_KEY_b, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+    ENFLE_KEY_b, ENFLE_MOD_Ctrl, ENFLE_Button_None, 0, 0 },
   { "prev5", main_loop_prev5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_3 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_3, 0, 0 },
   { "prev5", main_loop_prev5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_5 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Ctrl, ENFLE_Button_5, 0, 0 },
   /* 'B' */
   { "prev_archive", main_loop_prevarchive, NULL,
-    ENFLE_KEY_b, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_b, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   /* A-b, A-M-3, A-M-5 */
   { "prev_archive5", main_loop_prevarchive5, NULL,
-    ENFLE_KEY_b, ENFLE_MOD_Alt, ENFLE_Button_None },
+    ENFLE_KEY_b, ENFLE_MOD_Alt, ENFLE_Button_None, 0, 0 },
   { "prev_archive5", main_loop_prevarchive5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_3 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_3, 0, 0 },
   { "prev_archive5", main_loop_prevarchive5, NULL,
-    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_5 },
+    ENFLE_KEY_Empty, ENFLE_MOD_Alt, ENFLE_Button_5, 0, 0 },
   /* 'D' */
   { "delete_file", main_loop_delete_file, NULL,
-    ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_d, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   /* 'd' */
   { "delete_from_list", main_loop_delete_from_list, NULL,
-    ENFLE_KEY_d, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_d, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   /* 'a' */
   { "toggle_autoforward", main_loop_toggle_autoforward, NULL,
-    ENFLE_KEY_a, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_a, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   /* 's' */
   { "toggle_slideshow", main_loop_toggle_slideshow, NULL,
-    ENFLE_KEY_s, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_s, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   /* 'S' */
   { "toggle_interpolate", main_loop_toggle_interpolate, NULL,
-    ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_s, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   /* C-s */
   { "save_png", main_loop_save_png, NULL,
-    ENFLE_KEY_s, ENFLE_MOD_Ctrl, ENFLE_Button_None },
+    ENFLE_KEY_s, ENFLE_MOD_Ctrl, ENFLE_Button_None, 0, 0 },
   /* A-s */
   { "save", main_loop_save, NULL,
-    ENFLE_KEY_s, ENFLE_MOD_Alt, ENFLE_Button_None },
+    ENFLE_KEY_s, ENFLE_MOD_Alt, ENFLE_Button_None, 0, 0 },
   /* 'm' */
   { "magnify_double", main_loop_magnify_double, NULL,
-    ENFLE_KEY_m, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_m, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   /* 'M' */
   { "magnify_short",  main_loop_magnify_short, NULL,
-    ENFLE_KEY_m, ENFLE_MOD_Shift, ENFLE_Button_None },
+    ENFLE_KEY_m, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
   /* A-m */
   { "magnify_long",  main_loop_magnify_long, NULL,
-    ENFLE_KEY_m, ENFLE_MOD_Alt, ENFLE_Button_None },
+    ENFLE_KEY_m, ENFLE_MOD_Alt, ENFLE_Button_None, 0, 0 },
   /* 'c' */
   { "erase_rectangle", main_loop_erase_rectangle, NULL,
-    ENFLE_KEY_c, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_c, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   /* 'w' */
   { "set_wallpaper", main_loop_set_wallpaper, NULL,
-    ENFLE_KEY_w, ENFLE_MOD_None, ENFLE_Button_None },
+    ENFLE_KEY_w, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
   UI_ACTION_END
 };
 
@@ -770,7 +770,7 @@ main_loop_pointer_moved(MainLoop *ml)
 }
 
 static int
-main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archive *a, char *path, void *gui)
+main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archive *a, char *path, void *gui __attribute__((unused)))
 {
   MainLoop ml;
   int caption_to_be_set = 0;
@@ -1032,7 +1032,7 @@ process_file(UIData *uidata, char *path, Archive *a, Stream *s, Movie *m, void *
     break;
   case IDENTIFY_STREAM_IMAGE:
     debug_message("%s: (%d, %d) %s\n", path, image_width(p), image_height(p), image_type_to_string(p->type));
-    if (image_width(p) < uidata->minw || image_height(p) < uidata->minh) {
+    if (image_width(p) < (unsigned int)uidata->minw || image_height(p) < (unsigned int)uidata->minh) {
       debug_message("Too small image.  Skipped.\n");
       ret = MAIN_LOOP_DELETE_FROM_LIST;
       break;

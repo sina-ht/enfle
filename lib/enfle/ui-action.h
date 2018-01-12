@@ -34,6 +34,6 @@ typedef struct _ui_action {
   int id;
 } UIAction;
 
-#define UI_ACTION_END { NULL, NULL, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_None }
+#define UI_ACTION_END { NULL, NULL, NULL, ENFLE_KEY_Empty, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 }
 
 #endif

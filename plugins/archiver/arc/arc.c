@@ -132,7 +132,7 @@ arc_destroy(Archive *arc)
 }
 
 /* methods */
-DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
+DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a __attribute__((unused)), st, priv __attribute__((unused)))
 {
   char *tmp;
 
@@ -149,7 +149,7 @@ DEFINE_ARCHIVER_PLUGIN_IDENTIFY(a, st, priv)
   return OPEN_OK;
 }
 
-DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv)
+DEFINE_ARCHIVER_PLUGIN_OPEN(a, st, priv __attribute__((unused)))
 {
   char *filesbuf[2];
   char **files;

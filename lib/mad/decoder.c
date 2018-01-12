@@ -91,7 +91,7 @@ void mad_decoder_init(struct mad_decoder *decoder, void *data,
   decoder->message_func = message_func;
 }
 
-int mad_decoder_finish(struct mad_decoder *decoder)
+int mad_decoder_finish(struct mad_decoder *decoder __attribute__((unused)))
 {
 # if defined(USE_ASYNC)
   if (decoder->mode == MAD_DECODER_MODE_ASYNC && decoder->async.pid) {
@@ -564,8 +564,19 @@ int mad_decoder_run(struct mad_decoder *decoder, enum mad_decoder_mode mode)
  * NAME:	decoder->message()
  * DESCRIPTION:	send a message to and receive a reply from the decoder process
  */
-int mad_decoder_message(struct mad_decoder *decoder,
-			void *message, unsigned int *len)
+int mad_decoder_message(struct mad_decoder *decoder
+#if !defined(USE_ASYNC)
+__attribute__((unused))
+#endif
+, void *message
+#if !defined(USE_ASYNC)
+__attribute__((unused))
+#endif
+, unsigned int *len
+#if !defined(USE_ASYNC)
+__attribute__((unused))
+#endif
+)
 {
 # if defined(USE_ASYNC)
   if (decoder->mode != MAD_DECODER_MODE_ASYNC ||

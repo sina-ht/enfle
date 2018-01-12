@@ -82,7 +82,7 @@ ceildiv(int a, int b)
   return (a + b - 1) / b;
 }
 
-DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_IDENTIFY(p __attribute__((unused)), st, vw __attribute__((unused)), c __attribute__((unused)), priv __attribute__((unused)))
 {
   unsigned char buf[16];
   static unsigned char id[] = { 0xff, 0x4f, 0xff, 0x51 }; /* JPC/J2K: SOC, SIZ */
@@ -99,12 +99,25 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p, st, vw, c, priv)
   return LOAD_OK; /* JP2 */
 }
 
-DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
+DEFINE_LOADER_PLUGIN_LOAD(p, st, vw
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+, c
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+, priv
+#if !defined(IDENTIFY_BEFORE_LOAD)
+__attribute__((unused))
+#endif
+)
 {
   j2k_image_t *ji;
   j2k_cp_t *cp;
   unsigned char *d, *buf = NULL, *ptr;
-  int i, size;
+  int size;
+  unsigned int i;
 
   //debug_message("J2K: load() called\n");
 

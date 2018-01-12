@@ -341,7 +341,7 @@ bytes_written(AudioDevice *ad)
 }
 
 static int
-sync_device(AudioDevice *ad)
+sync_device(AudioDevice *ad __attribute__((unused)))
 {
   return 1;
 }

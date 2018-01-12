@@ -69,14 +69,14 @@ movie_create(void)
 /* default callback functions */
 
 static int
-initialize_screen(VideoWindow *vw, Movie *m, int w, int h)
+initialize_screen(VideoWindow *vw __attribute__((unused)), Movie *m __attribute__((unused)), int w, int h)
 {
   show_message("Movie screen: (%d x %d)\n", w, h);
   return 1;
 }
 
 static int
-render_frame(VideoWindow *vw, Movie *m, Image *p)
+render_frame(VideoWindow *vw __attribute__((unused)), Movie *m __attribute__((unused)), Image *p __attribute__((unused)))
 {
   /* do nothing */
   return 1;

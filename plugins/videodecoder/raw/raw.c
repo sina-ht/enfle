@@ -72,7 +72,7 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
 {
   //struct videodecoder_raw *vdm = (struct videodecoder_raw *)vdec->opaque;
   unsigned char *buf = dp->data;
-  int i;
+  unsigned int i;
 
   if (len == 0)
     return VD_NEED_MORE_DATA;
@@ -115,7 +115,7 @@ destroy(VideoDecoder *vdec)
 }
 
 static int
-setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
+setup(VideoDecoder *vdec __attribute__((unused)), Movie *m __attribute__((unused)), Image *p, int w __attribute__((unused)), int h __attribute__((unused)))
 {
   //struct videodecoder_raw *vdm = (struct videodecoder_raw *)vdec->opaque;
 
@@ -128,7 +128,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 }
 
 static unsigned int
-query(unsigned int fourcc, void *priv)
+query(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   switch (fourcc) {
   case FCC_DIB:
@@ -141,7 +141,7 @@ query(unsigned int fourcc, void *priv)
 }
 
 static VideoDecoder *
-init(unsigned int fourcc, void *priv)
+init(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   VideoDecoder *vdec;
   struct videodecoder_raw *vdm;

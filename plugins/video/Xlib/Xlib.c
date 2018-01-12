@@ -598,7 +598,7 @@ calc_magnified_size(VideoWindow *vw, int use_hw_scale, unsigned int sw, unsigned
 		    int *dw_return, int *dh_return)
 {
   double s, ws, hs;
-  unsigned int fw, fh;
+  int fw, fh;
   X11Window_info *xwi = (X11Window_info *)vw->private_data;
   X11Window *xw = vw->if_fullscreen ? xwi->full.xw : xwi->normal.xw;
   X11 *x11 = x11window_x11(xw);

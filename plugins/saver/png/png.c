@@ -68,12 +68,12 @@ ENFLE_PLUGIN_EXIT(saver_png, p)
 
 /* methods */
 
-DEFINE_SAVER_PLUGIN_GET_EXT(c)
+DEFINE_SAVER_PLUGIN_GET_EXT(c __attribute__((unused)))
 {
   return strdup("png");
 }
 
-DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
+DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params __attribute__((unused)))
 {
   png_structp png_ptr;
   png_infop info_ptr;
@@ -186,6 +186,7 @@ DEFINE_SAVER_PLUGIN_SAVE(p, fp, c, params)
 #endif
   case _BGR24:
     png_set_bgr(png_ptr);
+    /* FALL THROUGH */
   case _RGB24:
     png_set_IHDR(png_ptr, info_ptr, image_width(p), image_height(p), 8,
 		 PNG_COLOR_TYPE_RGB, interlace_flag,
