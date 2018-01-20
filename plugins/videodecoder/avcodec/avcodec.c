@@ -449,7 +449,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 #endif
 
   if (vdm->vcodec_ctx->pix_fmt == AV_PIX_FMT_YUV420P &&
-      vdm->vcodec->capabilities & CODEC_CAP_DR1) {
+      vdm->vcodec->capabilities & AV_CODEC_CAP_DR1) {
 #if defined(USE_DR1)
     vdm->vcodec_ctx->get_buffer = get_buffer;
     vdm->vcodec_ctx->reget_buffer = reget_buffer;
