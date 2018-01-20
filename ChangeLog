@@ -1,3 +1,73 @@
+2018-01-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.ac: configure.ac: Version up
+
+2018-01-20  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/videodecoder/avcodec/avcodec.c: videodecoder: avcodec: Fix
+	a contant macro name
+
+2018-01-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* AUTHORS, common.h: Update copyright year
+
+2018-01-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/X11/x11.c, lib/enfle/audiodecoder.c, lib/enfle/movie.c,
+	lib/enfle/stream.c, lib/enfle/ui-action.h,
+	lib/enfle/videodecoder.c, lib/mad/bit.c, lib/mad/decoder.c,
+	lib/mad/frame.c, lib/mad/layer3.c, lib/mpeg2/cpu_state.c,
+	lib/mpeg2/decode.c, lib/mpeg2/header.c, lib/mpeg2/idct.c,
+	lib/mpeg2/motion_comp.c, lib/mpeg2/slice.c, lib/mpglib/layer1.c,
+	lib/utils/libconfig.c, plugins/archiver/arc/arc.c,
+	plugins/archiver/tar/tar.c, plugins/audio/alsa/alsa.c,
+	plugins/audio/esd/esd.c, plugins/audiodecoder/mad/mad.c,
+	plugins/audiodecoder/mpglib/mpglib.c,
+	plugins/audiodecoder/vorbis/vorbis.c,
+	plugins/demultiplexer/avi/avi.c, plugins/demultiplexer/mp3/mp3.c,
+	plugins/demultiplexer/mpeg/mpeg.c, plugins/demultiplexer/ogg/ogg.c,
+	plugins/effect/gamma/gamma.c, plugins/effect/rotate/rotate.c,
+	plugins/loader/bmp/bmp.c, plugins/loader/gif/gif.c,
+	plugins/loader/gif/gifext.c, plugins/loader/j2k/j2k.c,
+	plugins/loader/jasper/jasper.c, plugins/loader/jpeg/jpeg.c,
+	plugins/loader/pcx/pcx.c, plugins/loader/png/png.c,
+	plugins/loader/pnm/pnm.c, plugins/loader/tga/tga.c,
+	plugins/loader/ungif/ungif.c, plugins/loader/webp/webp.c,
+	plugins/loader/xbm/xbm.c, plugins/loader/xpm/xpm.c,
+	plugins/player/generic/generic.c, plugins/player/mpglib/mpglib.c,
+	plugins/player/ungif/ungif.c, plugins/saver/jpeg/jpeg.c,
+	plugins/saver/png/png.c, plugins/streamer/bz2/bz2.c,
+	plugins/streamer/gz/gz.c, plugins/streamer/xz/xz.c,
+	plugins/ui/normal/normal.c, plugins/ui/wallpaper/wallpaper.c,
+	plugins/video/Xlib/Xlib.c,
+	plugins/videodecoder/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/raw/raw.c: Supress many warnings --enable-debug enables -Werror and prevents this from being built.
+	This commit fixes these issues with naked __attribute__((unused)),
+	which could be wrapped by macros.  gcc and clang (as of this commit)
+	are able to compile.
+
+2018-01-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* Makefile.am, acinclude.m4, common.h, compat.h: Remove old CVS $Id$
+	tags.
+
+2017-12-23  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/enfle.c: src/enfle.c: Suppress a warning Suppress the warning below, detected by clang-5.0.1: warning:
+	logical not is only applied to the left hand side of this comparison
+	[-Wlogical-not-parentheses]
+
+2017-09-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/videodecoder/avcodec/avcodec.c: avcodec: Replace deprecated
+	functions with the newer fucntions Replace avcodec_decode_audio4() and avcodec_decode_video2() with
+	avcodec_send_packet() and avcodec_receive_frame().
+
+2017-08-08  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
 2017-08-08  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS: Update NEWS
