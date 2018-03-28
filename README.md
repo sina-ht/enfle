@@ -3,13 +3,17 @@ Simple Plugin-based Graphic Loader Enfle
 
 Metadeta
 --------
-(C) Copyright 1998-2016 by Hiroshi Takekawa.
+(C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-Last Modified: Sat Oct 22 13:11:19 2016.
+Last Modified: Wed Mar 28 23:13:25 2018.
 
 
 License
 -------
+- SPDX-License-Identifier: GPL-2.0-only
+- GPLv2 grants the right of _copying, distribution and modification_ of this software.  I hereby explicitly grant the _use_ of this software freely.  The disclaimer is also applied for using.
+- The Japanese copyright law enforces me to have the personal right and I cannot abandon or revoke it.  I hereby explicitly permit to use or modify this software for your own need, unless the modification is beneath my dignity.
+- The software under this directory contain SPDX-License-Identifier: tag to simplify licensing (if not, apply GPL-2.0-only), of course these tags are legal bindings, though here I include the boilerplate.  Note that the license is GPLv2 only, no later option.
 
 ``` text
   This file is part of Enfle.

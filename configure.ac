@@ -4,19 +4,9 @@ dnl
 dnl (C)Copyright 1999-2017 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Thu Aug  3 21:28:47 2017.
+dnl Last Modified: Wed Mar 28 23:10:40 2018.
 dnl
-dnl Enfle is free software; you can redistribute it and/or modify it
-dnl under the terms of the GNU General Public License version 2 as
-dnl published by the Free Software Foundation.
-dnl
-dnl Enfle is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
+dnl SPDX-License-Identifier: GPL-2.0-only
 
 AC_PREREQ(2.64)
 AC_INIT([enfle],[20180120],[sian@big.or.jp])
