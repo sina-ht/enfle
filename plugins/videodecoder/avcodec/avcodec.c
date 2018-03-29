@@ -100,7 +100,6 @@ ENFLE_PLUGIN_ENTRY(videodecoder_avcodec)
 #if !defined(USE_SYSTEM_AVCODEC)
   avcodec_init();
 #endif
-  avcodec_register_all();
 
   return (void *)vdp;
 }

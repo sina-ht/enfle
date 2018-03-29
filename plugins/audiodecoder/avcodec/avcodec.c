@@ -81,7 +81,6 @@ ENFLE_PLUGIN_ENTRY(audiodecoder_avcodec)
 #if !defined(USE_SYSTEM_AVCODEC)
   avcodec_init();
 #endif
-  avcodec_register_all();
 
   return (void *)adp;
 }
