@@ -1,4 +1,8 @@
-NEWS  Last Modified: Sun Jun 17 00:27:13 2012.
+NEWS  Last Modified: Sat Apr  7 15:37:19 2018.
+
+20180407:
+ Remove lib/{avcodec,avutil,j2k} and their supports
+ Plug memory leaks
 
 20160903:
  Use XChangeProperty to set window caption
