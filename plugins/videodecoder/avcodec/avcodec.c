@@ -24,14 +24,9 @@
 
 #include "enfle/videodecoder-plugin.h"
 #undef SWAP
-#if defined(USE_SYSTEM_AVCODEC)
 #include <libavutil/common.h>
 #include <libavutil/pixdesc.h>
 #include <libavcodec/avcodec.h>
-#else
-#include "avutil/common.h"
-#include "avcodec/avcodec.h"
-#endif
 #include "utils/libstring.h"
 
 DECLARE_VIDEODECODER_PLUGIN_METHODS;
@@ -95,11 +90,6 @@ ENFLE_PLUGIN_ENTRY(videodecoder_avcodec)
   string_catf(s, " with " LIBAVCODEC_IDENT);
   vdp->description = strdup((const char *)string_get(s));
   string_destroy(s);
-
-  /* avcodec initialization */
-#if !defined(USE_SYSTEM_AVCODEC)
-  avcodec_init();
-#endif
 
   return (void *)vdp;
 }
@@ -230,7 +220,6 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     *used_r = len;
   }
 
-#if defined(USE_SYSTEM_AVCODEC)
   {
     AVPacket avp;
 
@@ -241,10 +230,6 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     l = avcodec_send_packet(vdm->vcodec_ctx, &avp);
     l = avcodec_receive_frame(vdm->vcodec_ctx, vdm->vcodec_picture);
   }
-#else
-  l = avcodec_decode_video(vdm->vcodec_ctx, vdm->vcodec_picture, &got_picture,
-			   vdm->buf + vdm->offset, vdm->size);
-#endif
 
   if (l < 0) {
     warning_fnc("avcodec: avcodec_decode_video return %d\n", l);
@@ -256,14 +241,10 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     m->height = image_height(p) = vdm->vcodec_ctx->height;
     m->framerate.num = vdm->vcodec_ctx->time_base.den;
     m->framerate.den = vdm->vcodec_ctx->time_base.num;
-#if defined(USE_SYSTEM_AVCODEC)
     {
       const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(vdm->vcodec_ctx->pix_fmt);
       image_bpl(p) = vdm->vcodec_ctx->width * (av_get_bits_per_pixel(desc) >> 3);
     }
-#else
-    image_bpl(p) = vdm->vcodec_ctx->width * 2; /* XXX: hmm... */
-#endif
     show_message_fnc("(%d, %d) bpl %d, fps %2.5f\n", m->width, m->height, image_bpl(p), rational_to_double(m->framerate));
     if (memory_alloc(image_renderable_image(p), image_bpl(p) * image_height(p)) == NULL) {
       err_message("No enough memory for image body (%d bytes).\n", image_bpl(p) * image_height(p));
@@ -289,7 +270,6 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
   }
 
   pthread_mutex_lock(&vdec->update_mutex);
-#if defined(USE_SYSTEM_AVCODEC)
   {
     static int flag;
     if (!flag) {
@@ -302,7 +282,6 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
       flag++;
     }
   }
-#endif
 #if defined(USE_DR1)
   if (vdm->vcodec_ctx->get_buffer == get_buffer) {
     struct pic_buf *pb;
@@ -311,15 +290,11 @@ decode(VideoDecoder *vdec, Movie *m, Image *p, DemuxedPacket *dp, unsigned int l
     image_rendered_set_image(vdm->p, pb->mem);
   } else
 #endif
-#if defined(USE_SYSTEM_AVCODEC)
   if (av_pix_fmt_count_planes(vdm->vcodec_ctx->pix_fmt) == 1) {
     for (y = 0; y < m->height; y++) {
       memcpy(memory_ptr(image_renderable_image(p)) + image_bpl(p) * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, image_bpl(p));
     }
   } else if (vdm->vcodec_ctx->pix_fmt == AV_PIX_FMT_RGB555) {
-#else
-  if (vdm->vcodec_ctx->pix_fmt == PIX_FMT_RGB555) {
-#endif
     for (y = 0; y < m->height; y++) {
       memcpy(memory_ptr(image_renderable_image(p)) + m->width * 2 * y, vdm->vcodec_picture->data[0] + vdm->vcodec_picture->linesize[0] * y, m->width * 2);
     }
@@ -358,11 +333,7 @@ destroy(VideoDecoder *vdec)
       av_free(vdm->vcodec_ctx);
     }
     if (vdm->vcodec_picture)
-#if defined(USE_SYSTEM_AVCODEC)
       av_freep(&vdm->vcodec_picture);
-#else
-      av_free(vdm->vcodec_picture);
-#endif
 #if defined(USE_DR1)
     /* free picture_buffer */
     {
@@ -412,11 +383,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
   vdm->vcodec_ctx->extradata = m->video_extradata;
   vdm->vcodec_ctx->extradata_size = m->video_extradata_size;
   movie_lock(m);
-#if defined(USE_SYSTEM_AVCODEC)
   if (avcodec_open2(vdm->vcodec_ctx, vdm->vcodec, NULL) < 0) {
-#else
-  if (avcodec_open(vdm->vcodec_ctx, vdm->vcodec) < 0) {
-#endif
     warning_fnc("avcodec_open() failed.\n");
     movie_unlock(m);
     return 0;
@@ -575,11 +542,7 @@ init(unsigned int fourcc, void *priv)
   vdec->destroy = destroy;
 
   vdm->vcodec_name = videodecoder_codec_name(fourcc);
-#if defined(USE_SYSTEM_AVCODEC)
   if ((vdm->vcodec_ctx = avcodec_alloc_context3(NULL)) == NULL)
-#else
-  if ((vdm->vcodec_ctx = avcodec_alloc_context()) == NULL)
-#endif
     goto error_vdm;
   //vdm->vcodec_ctx->stream_codec_tag = fourcc;
   vdm->vcodec_ctx->workaround_bugs = FF_BUG_AUTODETECT | FF_BUG_NO_PADDING;
@@ -587,11 +550,7 @@ init(unsigned int fourcc, void *priv)
   vdm->vcodec_ctx->error_concealment = 3;
   vdm->vcodec_ctx->pix_fmt = -1;
   vdm->vcodec_ctx->opaque = vdec;
-#if defined(USE_SYSTEM_AVCODEC)
   if ((vdm->vcodec_picture = av_frame_alloc()) == NULL)
-#else
-  if ((vdm->vcodec_picture = avcodec_alloc_frame()) == NULL)
-#endif
     goto error_ctx;
 
   return vdec;

@@ -23,13 +23,8 @@
 
 #include "enfle/audiodecoder-plugin.h"
 #undef SWAP
-#if defined(USE_SYSTEM_AVCODEC)
 #include <libavutil/common.h>
 #include <libavcodec/avcodec.h>
-#else
-#include "avutil/common.h"
-#include "avcodec/avcodec.h"
-#endif
 #include "utils/libstring.h"
 
 #define MAX_AUDIO_FRAME_SIZE 192000 // 1 second of 48khz 32bit audio
@@ -53,11 +48,7 @@ struct audiodecoder_avcodec {
   AVCodec *acodec;
   AVCodecContext *acodec_ctx;
   unsigned char *buf;
-#if defined(USE_SYSTEM_AVCODEC)
   AVFrame *acodec_sample;
-#else
-  int16_t *outbuf;
-#endif
   int offset, size;
   int nframe;
 };
@@ -76,11 +67,6 @@ ENFLE_PLUGIN_ENTRY(audiodecoder_avcodec)
   string_catf(s, " with " LIBAVCODEC_IDENT);
   adp->description = strdup((const char *)string_get(s));
   string_destroy(s);
-
-  /* avcodec initialization */
-#if !defined(USE_SYSTEM_AVCODEC)
-  avcodec_init();
-#endif
 
   return (void *)adp;
 }
@@ -114,7 +100,6 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
   }
 
   out_len = MAX_AUDIO_FRAME_SIZE;
-#if defined(USE_SYSTEM_AVCODEC)
   {
     AVPacket avp;
 
@@ -129,10 +114,6 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
 					 adm->acodec_sample->nb_samples,
 					 adm->acodec_ctx->sample_fmt, 1);
   }
-#else
-  l = avcodec_decode_audio2(adm->acodec_ctx, adm->outbuf, &out_len,
-			    adm->buf + adm->offset, adm->size);
-#endif
 
   if (l < 0) {
     warning_fnc("avcodec: avcodec_decode_audio return %d\n", l);
@@ -164,11 +145,7 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
   adm->nframe++;
 
   /* write to sound card */
-#if defined(USE_SYSTEM_AVCODEC)
   m->ap->write_device(ad, (unsigned char *)adm->acodec_sample->data[0], out_len);
-#else
-  m->ap->write_device(ad, (unsigned char *)adm->outbuf, out_len);
-#endif
 
   return AD_OK;
 }
@@ -184,13 +161,8 @@ destroy(AudioDecoder *adec)
 	avcodec_close(adm->acodec_ctx);
       av_free(adm->acodec_ctx);
     }
-#if defined(USE_SYSTEM_AVCODEC)
     if (adm->acodec_sample)
       av_freep(&adm->acodec_sample);
-#else
-    if (adm->outbuf)
-      av_free(adm->outbuf);
-#endif
     av_free(adm);
   }
   _audiodecoder_destroy(adec);
@@ -213,11 +185,7 @@ setup(AudioDecoder *adec, Movie *m)
   adm->acodec_ctx->extradata = m->audio_extradata;
   adm->acodec_ctx->extradata_size = m->audio_extradata_size;
   movie_lock(m);
-#if defined(USE_SYSTEM_AVCODEC)
   if (avcodec_open2(adm->acodec_ctx, adm->acodec, NULL) < 0) {
-#else
-  if (avcodec_open(adm->acodec_ctx, adm->acodec) < 0) {
-#endif
     warning_fnc("avcodec_open() failed.\n");
     movie_unlock(m);
     return 0;
@@ -275,20 +243,11 @@ init(unsigned int fourcc, void *priv)
   adec->destroy = destroy;
 
   adm->acodec_name = audiodecoder_codec_name(fourcc);
-#if defined(USE_SYSTEM_AVCODEC)
   if ((adm->acodec_ctx = avcodec_alloc_context3(NULL)) == NULL)
-#else
-  if ((adm->acodec_ctx = avcodec_alloc_context()) == NULL)
-#endif
     goto error_adm;
   adm->acodec_ctx->opaque = adec;
-#if defined(USE_SYSTEM_AVCODEC)
   if ((adm->acodec_sample = av_frame_alloc()) == NULL)
     goto error_ctx;
-#else
-  if ((adm->outbuf = malloc(MAX_AUDIO_FRAME_SIZE)) == NULL)
-    goto error_ctx;
-#endif
   adm->nframe = 0;
 
   return adec;

@@ -5,7 +5,7 @@ Metadeta
 --------
 (C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-Last Modified: Wed Mar 28 23:13:25 2018.
+Last Modified: Sat Apr  7 15:13:23 2018.
 
 
 License
@@ -61,10 +61,7 @@ Integrated libraries by other authors.  Thanks to all authors.
     libmpeg2 by Aaron Holtzman and others.  For this part, you can
     apply GPL2 or later version.
 
-* lib/{avutil,avcodec}: libavcodec as of 20070719 for a/v decoding.
-    libavcodec by Fabrice Bellard and others.  For this part, you can
-    apply LGPL2 or any later version.  LGPL license is in
-    lib/avcodec/COPYING.LIB.  System-installed libavcodec is also supported.
+* lib/{avutil,avcodec}: libavcodec as of 20070719 has been removed.
 
 * lib/mad: libmad-0.15.0 for mp3 decoding.
     libmad by Underbit Technologies, Inc.  For this part, you can
@@ -163,9 +160,6 @@ message by typing ./configure --help.
 Plugins are compiled as a shared object.  Filename should end with
 .so. If you get not .so but only .a, the chances are your system
 cannot/don't create shared object.
-
-Compiling avcodec takes much time.  If you don't need this, disable it
-by --disable-avcodec option.
 
 
 Command line
