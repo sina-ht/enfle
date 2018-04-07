@@ -821,7 +821,6 @@ AC_CONFIG_FILES([
    lib/X11/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
-   lib/j2k/Makefile
    lib/mad/Makefile
    lib/mpeg2/Makefile
    lib/mpglib/Makefile
@@ -838,7 +837,6 @@ AC_CONFIG_FILES([
     plugins/streamer/xz/Makefile
    plugins/loader/Makefile
     plugins/loader/bmp/Makefile
-    plugins/loader/j2k/Makefile
     plugins/loader/jasper/Makefile
     plugins/loader/jpeg/Makefile
     plugins/loader/pcx/Makefile

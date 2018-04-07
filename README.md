@@ -67,8 +67,7 @@ Integrated libraries by other authors.  Thanks to all authors.
     libmad by Underbit Technologies, Inc.  For this part, you can
     apply GPL2 or later version.
 
-* lib/j2k: libj2k for JPEG2000 decoding.
-    libj2k by David Janssens.  Read lib/j2k/LICENSE.
+* lib/j2k: libj2k has been removed.
 
 * plugins/archiver/rar/unrar: unrarsrc-3.7.8 for rar handling.
     You cannot use the code to develop a RAR (WinRAR) compatible archiver.
