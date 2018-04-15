@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2018 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sat Apr  7 15:44:48 2018.
+dnl Last Modified: Sun Apr 15 23:11:36 2018.
 dnl
 dnl SPDX-License-Identifier: GPL-2.0-only
 
@@ -223,20 +223,6 @@ if test "$available_libmpeg3" != "yes"; then
 fi
 AM_CONDITIONAL(HAVE_LIBMPEG3, test "$available_libmpeg3" = "yes")
 AC_SUBST(LIBADD_LIBMPEG3)
-
-available_divx=no
-if test "$available_pthread" = "yes"; then
-  AC_CHECK_HEADER(decore.h, [
-    AC_CHECK_LIB(divxdecore, decore, [
-      available_divx=yes;
-      LIBADD_DIVXDECORE="$LIBADD_POW -ldivxdecore $LIBADD_PTHREAD";
-    ], [], [$LIBADD_POW $LIBADD_PTHREAD]) ])
-fi
-if test "$available_divx" != "yes"; then
-  ENFLE_PLUGIN_DISABLE(videodecoder/divx)
-fi
-AM_CONDITIONAL(HAVE_LIBDIVXDECORE, test "$available_divx" = "yes")
-AC_SUBST(LIBADD_DIVXDECORE)
 
 available_ogg=no
 AC_CHECK_HEADER(ogg/ogg.h, [
@@ -717,8 +703,6 @@ AM_CONDITIONAL(USE_AVCODEC, test "$enable_avcodec" = "yes")
 ENFLE_PLUGIN_DISABLE(player/libmpeg2.old)
 ENFLE_PLUGIN_DISABLE(player/libmpeg2)
 ENFLE_PLUGIN_DISABLE(player/avcodec)
-ENFLE_PLUGIN_DISABLE(player/divx)
-ENFLE_PLUGIN_DISABLE(player/opendivx)
 ENFLE_PLUGIN_DISABLE(saver/glic)
 
 Static_plugin_objs=""
@@ -879,7 +863,6 @@ AC_CONFIG_FILES([
     plugins/audiodecoder/vorbis/Makefile
    plugins/videodecoder/Makefile
     plugins/videodecoder/avcodec/Makefile
-    plugins/videodecoder/divx/Makefile
     plugins/videodecoder/libmpeg2/Makefile
     plugins/videodecoder/raw/Makefile
    plugins/demultiplexer/Makefile

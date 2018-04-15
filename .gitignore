@@ -6,12 +6,10 @@
 *.o
 Makefile
 Makefile.in
-build*
 config.cache
 config.guess
 config.h
 configure.scan
-debugbuild*
 enfle-config.h.in
 config.log
 config.status
@@ -41,5 +39,9 @@ lib/mad/mad.h
 doc/enfle.1
 src/enfle
 compile
-optbuild
 updatecl.sh
+build
+optbuild
+debugbuild
+clangbuild
+plainbuild
