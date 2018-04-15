@@ -700,7 +700,6 @@ else
 fi
 AM_CONDITIONAL(USE_AVCODEC, test "$enable_avcodec" = "yes")
 
-ENFLE_PLUGIN_DISABLE(player/libmpeg2.old)
 ENFLE_PLUGIN_DISABLE(player/libmpeg2)
 ENFLE_PLUGIN_DISABLE(player/avcodec)
 ENFLE_PLUGIN_DISABLE(saver/glic)
