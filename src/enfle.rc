@@ -138,7 +138,7 @@ enfle {
     }
     audiodecoder {
       preference {
-        mp3 := mad:avcodec:mpglib:.
+        mp3 := mad:avcodec:.
 	vorbis := vorbis:avcodec:.
       }
     }

@@ -1,4 +1,4 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for enfle
 
-SUBDIRS = mad mpglib vorbis avcodec
+SUBDIRS = mad vorbis avcodec

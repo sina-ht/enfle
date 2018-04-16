@@ -54,8 +54,7 @@ Acknowledgement
 
 Integrated libraries by other authors.  Thanks to all authors.
 
-* lib/mpglib: mpglib from mpg123 for mp3 decoding.
-    mpglib by Michael Hipp.  Read lib/mpglib/README.
+* lib/mpglib: mpglib has been removed.
 
 * lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 for MPEG decoding.
     libmpeg2 by Aaron Holtzman and others.  For this part, you can

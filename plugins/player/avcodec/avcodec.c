@@ -525,8 +525,6 @@ play_audio(void *arg)
 
   debug_message_fn("()\n");
 
-  // XXX: should be selectable
-  //info->adec = audiodecoder_create(info->eps, "mpglib");
   info->adec = audiodecoder_create(info->eps, "mad");
   if (info->adec == NULL) {
     err_message("audiodecoder plugin not found. Audio disabled.\n");

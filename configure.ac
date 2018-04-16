@@ -806,7 +806,6 @@ AC_CONFIG_FILES([
    lib/enfle/Makefile
    lib/mad/Makefile
    lib/mpeg2/Makefile
-   lib/mpglib/Makefile
    lib/utils/Makefile
   src/Makefile
   plugins/Makefile
@@ -841,7 +840,6 @@ AC_CONFIG_FILES([
     plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
     plugins/player/mpeg_lib/Makefile
-    plugins/player/mpglib/Makefile
     plugins/player/ungif/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
@@ -858,7 +856,6 @@ AC_CONFIG_FILES([
    plugins/audiodecoder/Makefile
     plugins/audiodecoder/avcodec/Makefile
     plugins/audiodecoder/mad/Makefile
-    plugins/audiodecoder/mpglib/Makefile
     plugins/audiodecoder/vorbis/Makefile
    plugins/videodecoder/Makefile
     plugins/videodecoder/avcodec/Makefile
