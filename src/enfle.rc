@@ -1,5 +1,5 @@
 ; enfle.rc
-; Last Modified: Tue May 29 02:13:00 2007.
+; Last Modified: Tue Apr 17 22:39:27 2018.
 
 enfle {
   ; Uncomment this to enable plugin cache feature
@@ -151,15 +151,10 @@ enfle {
 	;asf := AviFile:.
 	;avi := AviFile:.
         gif := UNGIF:.
-        m1v := MPEG_lib:.
         mng := MNG:.
         ;mp3 := Mpglib:.
-        ;mpg := LibMPEG3:.
 	;wmv := AviFile:.
       }
-      MPEG_lib/disabled = yes
-      ; libmpeg3 plugin is not maintained...
-      LibMPEG3/disabled = yes
     }
     saver {
       png {

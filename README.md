@@ -5,7 +5,7 @@ Metadeta
 --------
 (C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-Last Modified: Tue Apr 17 21:40:48 2018.
+Last Modified: Tue Apr 17 22:40:52 2018.
 
 
 License
@@ -109,9 +109,7 @@ should install corresponding libraries to use them.
 * vorbis: libvorbis-1.0.1
 * theora: libtheora-1.0-alpha4
 * mng: libmng-1.0.0 or later (plugin unmaintained)
-* libmpeg3: libmpeg3-1.2.2 or later (not supported now)
 * avifile: avifile-0.53.5 or avifile-0.6 in CVS (not supported any more)
-* mpeg_lib: mpeg_lib-1.3.1+patch (obsolete)
 
 
 Requirements

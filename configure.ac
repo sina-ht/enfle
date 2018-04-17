@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2018 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Apr 17 20:56:54 2018.
+dnl Last Modified: Tue Apr 17 22:40:23 2018.
 dnl
 dnl SPDX-License-Identifier: GPL-2.0-only
 
@@ -171,22 +171,6 @@ fi
 AM_CONDITIONAL(HAVE_JASPER, test "$available_jasper" = "yes")
 AC_SUBST(LIBADD_JASPER)
 
-available_mpeg_lib=no
-AC_CHECK_HEADER(mpeg.h, [
-  AC_CHECK_LIB(mpeg, OpenMPEG, [
-    AC_CHECK_LIB(mpeg, OpenMPEGStream, [
-      available_mpeg_lib=yes; LIBADD_MPEG_LIB=-lmpeg
-    ], [
-      AC_MSG_WARN([*** mpeg_lib requires a patch.]);
-    ])
-  ], [])
-])
-if test "$available_mpeg_lib" != "yes"; then
-  ENFLE_PLUGIN_DISABLE(player/mpeg_lib)
-fi
-AM_CONDITIONAL(HAVE_MPEG_LIB, test "$available_mpeg_lib" = "yes")
-AC_SUBST(LIBADD_MPEG_LIB)
-
 available_pthread=no
 AC_CHECK_HEADER(pthread.h, [
   AC_CHECK_LIB(pthread, pthread_create, [ available_pthread=yes; LIBADD_PTHREAD=-lpthread; ], [
@@ -204,25 +188,6 @@ else
 fi
 AM_CONDITIONAL(HAVE_PTHREAD, test "$available_pthread" = "yes")
 AC_SUBST(LIBADD_PTHREAD)
-
-available_libmpeg3=no
-dnl Some libmpeg3 needs -lm
-if test "$available_pthread" = "yes"; then
-  AC_CHECK_HEADER(mpeg3/libmpeg3.h, [
-    AC_CHECK_LIB(mpeg3, mpeg3_open, [
-      available_libmpeg3=yes; LIBADD_LIBMPEG3="$LIBADD_POW -lmpeg3 $LIBADD_PTHREAD";
-    ], [], [$LIBADD_POW $LIBADD_PTHREAD])
-  ], [
-    AC_CHECK_HEADER(libmpeg3.h, [
-      AC_MSG_WARN([*** please put libmpeg3 headers in (/usr/local/)include/mpeg3/.]);
-    ])
-  ])
-fi
-if test "$available_libmpeg3" != "yes"; then
-  ENFLE_PLUGIN_DISABLE(player/libmpeg3)
-fi
-AM_CONDITIONAL(HAVE_LIBMPEG3, test "$available_libmpeg3" = "yes")
-AC_SUBST(LIBADD_LIBMPEG3)
 
 available_ogg=no
 AC_CHECK_HEADER(ogg/ogg.h, [
@@ -833,9 +798,7 @@ AC_CONFIG_FILES([
    plugins/player/Makefile
     plugins/player/avifile/Makefile
     plugins/player/generic/Makefile
-    plugins/player/libmpeg3/Makefile
     plugins/player/mng/Makefile
-    plugins/player/mpeg_lib/Makefile
     plugins/player/ungif/Makefile
    plugins/video/Makefile
     plugins/video/Xlib/Makefile
