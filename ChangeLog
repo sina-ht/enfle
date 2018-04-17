@@ -1,3 +1,144 @@
+2018-04-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.ac: configure.ac: Version up
+
+2018-04-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README.jp, README.md, configure.ac, plugins/player/Makefile.am,
+	plugins/player/libmpeg3/.cvsignore,
+	plugins/player/libmpeg3/Makefile.am,
+	plugins/player/libmpeg3/libmpeg3.c,
+	plugins/player/mpeg_lib/.cvsignore,
+	plugins/player/mpeg_lib/Makefile.am,
+	plugins/player/mpeg_lib/mpeg_lib.c, src/enfle.rc: Remove libmpeg3
+	and mpeg_lib
+
+2018-04-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/videodecoder/libmpeg2/.cvsignore,
+	plugins/videodecoder/libmpeg2/Makefile.am,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: Remove libmpeg2 support
+	completely
+
+2018-04-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* .gitignore, README.jp, README.md, configure.ac, lib/Makefile.am,
+	lib/mad/.cvsignore, lib/mad/CHANGES, lib/mad/COPYING,
+	lib/mad/COPYRIGHT, lib/mad/CREDITS, lib/mad/D.dat,
+	lib/mad/Makefile.am, lib/mad/README, lib/mad/TODO, lib/mad/VERSION,
+	lib/mad/bit.c, lib/mad/bit.h, lib/mad/config.h, lib/mad/decoder.c,
+	lib/mad/decoder.h, lib/mad/fixed.c, lib/mad/fixed.h,
+	lib/mad/frame.c, lib/mad/frame.h, lib/mad/global.h,
+	lib/mad/huffman.c, lib/mad/huffman.h, lib/mad/imdct_l_arm.S,
+	lib/mad/imdct_s.dat, lib/mad/layer12.c, lib/mad/layer12.h,
+	lib/mad/layer3.c, lib/mad/layer3.h, lib/mad/libmad.list.in,
+	lib/mad/mad.h.sed, lib/mad/minimad.c, lib/mad/qc_table.dat,
+	lib/mad/rq_table.dat, lib/mad/sf_table.dat, lib/mad/stream.c,
+	lib/mad/stream.h, lib/mad/synth.c, lib/mad/synth.h,
+	lib/mad/timer.c, lib/mad/timer.h, lib/mad/version.c,
+	lib/mad/version.h, plugins/audiodecoder/Makefile.am,
+	plugins/audiodecoder/mad/.cvsignore,
+	plugins/audiodecoder/mad/Makefile.am,
+	plugins/audiodecoder/mad/mad.c, plugins/player/avcodec/.cvsignore,
+	plugins/player/avcodec/Makefile.am,
+	plugins/player/avcodec/avcodec.c, src/enfle.rc: Remove mad and its
+	support
+
+2018-04-17  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README.jp, README.md, acinclude.m4, configure.ac,
+	lib/Makefile.am, lib/mpeg2/.cvsignore, lib/mpeg2/Makefile.am,
+	lib/mpeg2/alloc.c, lib/mpeg2/attributes.h, lib/mpeg2/cpu_accel.c,
+	lib/mpeg2/cpu_state.c, lib/mpeg2/decode.c, lib/mpeg2/header.c,
+	lib/mpeg2/header.h, lib/mpeg2/idct.c, lib/mpeg2/idct.h,
+	lib/mpeg2/idct_alpha.c, lib/mpeg2/idct_altivec.c,
+	lib/mpeg2/idct_mlib.c, lib/mpeg2/idct_mlib.h, lib/mpeg2/idct_mmx.c,
+	lib/mpeg2/idct_mmx.h, lib/mpeg2/mm_accel.h, lib/mpeg2/mmx.h,
+	lib/mpeg2/motion_comp.c, lib/mpeg2/motion_comp_alpha.c,
+	lib/mpeg2/motion_comp_altivec.c, lib/mpeg2/motion_comp_mlib.c,
+	lib/mpeg2/motion_comp_mmx.c, lib/mpeg2/motion_comp_vis.c,
+	lib/mpeg2/mpeg2.h, lib/mpeg2/mpeg2_internal.h, lib/mpeg2/slice.c,
+	lib/mpeg2/stats.c, lib/mpeg2/video_out.c, lib/mpeg2/video_out.h,
+	lib/mpeg2/video_out_internal.h, lib/mpeg2/vlc.h,
+	lib/mpeg2/yuv2rgb.c, lib/mpeg2/yuv2rgb.h, lib/mpeg2/yuv2rgb_mlib.c,
+	lib/mpeg2/yuv2rgb_mmx.c, plugins/player/Makefile.am,
+	plugins/player/libmpeg2/.cvsignore,
+	plugins/player/libmpeg2/Makefile.am,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/Makefile.am: Remove libmpeg2 and its support
+
+2018-04-16  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README.jp, README.md, configure.ac, lib/Makefile.am,
+	lib/mpglib/.cvsignore, lib/mpglib/CHANGES, lib/mpglib/Makefile.am,
+	lib/mpglib/README, lib/mpglib/TODO, lib/mpglib/common.c,
+	lib/mpglib/dct64_i386.c, lib/mpglib/decode_i386.c,
+	lib/mpglib/huffman.h, lib/mpglib/interface.c,
+	lib/mpglib/l2tables.h, lib/mpglib/layer1.c, lib/mpglib/layer2.c,
+	lib/mpglib/layer3.c, lib/mpglib/main.c, lib/mpglib/mpg123.h,
+	lib/mpglib/mpglib.h, lib/mpglib/tabinit.c,
+	plugins/audiodecoder/Makefile.am,
+	plugins/audiodecoder/mpglib/.cvsignore,
+	plugins/audiodecoder/mpglib/Makefile.am,
+	plugins/audiodecoder/mpglib/mpglib.c, plugins/player/Makefile.am,
+	plugins/player/avcodec/avcodec.c,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/player/mpglib/.cvsignore,
+	plugins/player/mpglib/Makefile.am, plugins/player/mpglib/mpglib.c,
+	src/enfle.rc: Remove mpglib and its support
+
+2018-04-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* NEWS, configure.ac, plugins/player/Makefile.am,
+	plugins/player/libmpeg2.old/.cvsignore,
+	plugins/player/libmpeg2.old/Makefile.am,
+	plugins/player/libmpeg2.old/libmpeg2.c,
+	plugins/player/libmpeg2.old/libmpeg2_vo.c,
+	plugins/player/libmpeg2.old/libmpeg2_vo.h: Remove libmpeg2.old and
+	its support
+
+2018-04-15  Hiroshi Takekawa  <sian@fennel.org>
+
+	* .gitignore, README.jp, README.md, configure.ac,
+	lib/divxdecore/.cvsignore, lib/divxdecore/Makefile.am,
+	lib/divxdecore/basic_prediction.c,
+	lib/divxdecore/basic_prediction.h, lib/divxdecore/decore.c,
+	lib/divxdecore/decore.h, lib/divxdecore/getbits.c,
+	lib/divxdecore/global.h, lib/divxdecore/idct.c,
+	lib/divxdecore/idct.h, lib/divxdecore/idct_mmx.c,
+	lib/divxdecore/mp4_block.c, lib/divxdecore/mp4_block.h,
+	lib/divxdecore/mp4_decoder.c, lib/divxdecore/mp4_decoder.h,
+	lib/divxdecore/mp4_header.c, lib/divxdecore/mp4_header.h,
+	lib/divxdecore/mp4_mblock.c, lib/divxdecore/mp4_mblock.h,
+	lib/divxdecore/mp4_picture.c, lib/divxdecore/mp4_predict.c,
+	lib/divxdecore/mp4_predict.h, lib/divxdecore/mp4_recon.c,
+	lib/divxdecore/mp4_vld.c, lib/divxdecore/mp4_vld.h,
+	lib/divxdecore/portab.h, lib/divxdecore/postprocess.c,
+	lib/divxdecore/postprocess.h, lib/divxdecore/transferIDCT.c,
+	lib/divxdecore/transferIDCT.h, lib/divxdecore/transferIDCT_mmx.c,
+	lib/divxdecore/yuv2rgb.c, lib/divxdecore/yuv2rgb.h,
+	lib/divxdecore/yuv2rgb_mmx.c, plugins/player/divx/.cvsignore,
+	plugins/player/divx/Makefile.am, plugins/player/divx/divx.c,
+	plugins/player/opendivx/.cvsignore,
+	plugins/player/opendivx/Makefile.am,
+	plugins/player/opendivx/avcodec.c, plugins/player/opendivx/divx.c,
+	plugins/player/opendivx/libavi.c, plugins/player/opendivx/libavi.h,
+	plugins/player/opendivx/libriff.c,
+	plugins/player/opendivx/libriff.h,
+	plugins/player/opendivx/opendivx.c,
+	plugins/videodecoder/Makefile.am,
+	plugins/videodecoder/divx/.cvsignore,
+	plugins/videodecoder/divx/Makefile.am,
+	plugins/videodecoder/divx/divx.c: Remove old divx/opendivx support
+
+2018-04-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
+2018-04-07  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.ac: configure.ac: Version up
+
 2018-04-07  Hiroshi Takekawa  <sian@fennel.org>
 
 	* NEWS: Updated NEWS
