@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-             Last Modified: Sun Apr 15 23:10:50 2018.
+             Last Modified: Tue Apr 17 20:53:26 2018.
 
 ***************************************************************************
 (ライセンス関係のみ英語ですが、後は日本語です。ただし内容が古いかもしれません)
@@ -51,9 +51,7 @@ Integrated libraries by other authors
 
   lib/mpglib: mpglib has been removed.
 
-  lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 for MPEG decoding
-    libmpeg2 by Aaron Holtzman and others.  For this part, you can
-    apply GPL2 or later version.
+  lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 has been removed.
 
   lib/{avutil,avcodec}: libavcodec as of 20070719 has been removed.
 

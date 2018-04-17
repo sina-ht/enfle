@@ -5,7 +5,7 @@ Metadeta
 --------
 (C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-Last Modified: Sun Apr 15 23:11:01 2018.
+Last Modified: Tue Apr 17 20:53:41 2018.
 
 
 License
@@ -56,9 +56,7 @@ Integrated libraries by other authors.  Thanks to all authors.
 
 * lib/mpglib: mpglib has been removed.
 
-* lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 for MPEG decoding.
-    libmpeg2 by Aaron Holtzman and others.  For this part, you can
-    apply GPL2 or later version.
+* lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 has been removed.
 
 * lib/{avutil,avcodec}: libavcodec as of 20070719 has been removed.
 

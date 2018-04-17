@@ -76,17 +76,3 @@ AC_DEFUN([ENFLE_MAX_ALIGN], [
     AC_MSG_RESULT(no support)
   fi
 ])
-
-dnl for ASMALIGN
-AC_DEFUN([ENFLE_ASMALIGN], [
-  AC_MSG_CHECKING(find if .align argument is power-of-two or not)
-  asmalign_pot="no"
-  echo 'asm (".align 3");' > /tmp/asmalign_pot.c
-  $CC /tmp/asmalign_pot.c && asmalign_pot="yes"
-  if test "$asmalign_pot" = "yes"; then
-    AC_DEFINE(ASMALIGN_POT, 1, [Define if argument of .align must be power-of-two])
-    AC_MSG_RESULT(power-of-two)
-  else
-    AC_MSG_RESULT(not power-of-two)
-  fi
-])

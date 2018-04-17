@@ -4,7 +4,7 @@ dnl
 dnl (C)Copyright 1999-2018 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Apr 15 23:11:36 2018.
+dnl Last Modified: Tue Apr 17 20:56:54 2018.
 dnl
 dnl SPDX-License-Identifier: GPL-2.0-only
 
@@ -594,7 +594,6 @@ AC_TYPE_PID_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 ENFLE_MAX_ALIGN
-ENFLE_ASMALIGN
 
 dnl Checks for library functions.
 AC_REPLACE_FNMATCH
@@ -700,7 +699,6 @@ else
 fi
 AM_CONDITIONAL(USE_AVCODEC, test "$enable_avcodec" = "yes")
 
-ENFLE_PLUGIN_DISABLE(player/libmpeg2)
 ENFLE_PLUGIN_DISABLE(player/avcodec)
 ENFLE_PLUGIN_DISABLE(saver/glic)
 
@@ -805,7 +803,6 @@ AC_CONFIG_FILES([
    lib/dllloader/Makefile
    lib/enfle/Makefile
    lib/mad/Makefile
-   lib/mpeg2/Makefile
    lib/utils/Makefile
   src/Makefile
   plugins/Makefile
@@ -859,7 +856,6 @@ AC_CONFIG_FILES([
     plugins/audiodecoder/vorbis/Makefile
    plugins/videodecoder/Makefile
     plugins/videodecoder/avcodec/Makefile
-    plugins/videodecoder/libmpeg2/Makefile
     plugins/videodecoder/raw/Makefile
    plugins/demultiplexer/Makefile
     plugins/demultiplexer/asf/Makefile
