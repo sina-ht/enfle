@@ -5,7 +5,7 @@ Metadeta
 --------
 (C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-Last Modified: Tue Apr 17 20:53:41 2018.
+Last Modified: Tue Apr 17 21:40:48 2018.
 
 
 License
@@ -60,9 +60,7 @@ Integrated libraries by other authors.  Thanks to all authors.
 
 * lib/{avutil,avcodec}: libavcodec as of 20070719 has been removed.
 
-* lib/mad: libmad-0.15.0 for mp3 decoding.
-    libmad by Underbit Technologies, Inc.  For this part, you can
-    apply GPL2 or later version.
+* lib/mad: libmad-0.15.0 has been removed.
 
 * lib/j2k: libj2k has been removed.
 

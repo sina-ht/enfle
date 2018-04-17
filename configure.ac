@@ -802,7 +802,6 @@ AC_CONFIG_FILES([
    lib/X11/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
-   lib/mad/Makefile
    lib/utils/Makefile
   src/Makefile
   plugins/Makefile
@@ -852,7 +851,6 @@ AC_CONFIG_FILES([
     plugins/saver/png/Makefile
    plugins/audiodecoder/Makefile
     plugins/audiodecoder/avcodec/Makefile
-    plugins/audiodecoder/mad/Makefile
     plugins/audiodecoder/vorbis/Makefile
    plugins/videodecoder/Makefile
     plugins/videodecoder/avcodec/Makefile

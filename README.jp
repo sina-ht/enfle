@@ -4,7 +4,7 @@
 
            (C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-             Last Modified: Tue Apr 17 20:53:26 2018.
+             Last Modified: Tue Apr 17 21:40:32 2018.
 
 ***************************************************************************
 (ライセンス関係のみ英語ですが、後は日本語です。ただし内容が古いかもしれません)
@@ -55,9 +55,7 @@ Integrated libraries by other authors
 
   lib/{avutil,avcodec}: libavcodec as of 20070719 has been removed.
 
-  lib/mad: libmad-0.15.0 for mp3 decoding
-    libmad by Underbit Technologies, Inc.  For this part, you can
-    apply GPL2 or later version.
+  lib/mad: libmad-0.15.0 has been removed.
 
   lib/j2k: libj2k for JPEG2000 decoding has been removed.
 

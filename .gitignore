@@ -35,7 +35,6 @@ depcomp
 autom4te.cache
 TODO.tasks
 enfle.anjuta
-lib/mad/mad.h
 doc/enfle.1
 src/enfle
 compile
