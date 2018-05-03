@@ -1,143 +1,110 @@
 #include "rar.hpp"
 
-
-#include "smallfn.cpp"
-
-#ifdef _DJGPP
-extern "C" char **__crt0_glob_function (char *arg) { return 0; }
-extern "C" void   __crt0_load_environment_file (char *progname) { }
-#endif
-
-#if !defined(GUI) && !defined(RARDLL)
+#if !defined(RARDLL)
 int main(int argc, char *argv[])
 {
+
 #ifdef _UNIX
   setlocale(LC_ALL,"");
 #endif
 
-#if defined(_EMX) && !defined(_DJGPP)
-  uni_init(0);
-#endif
-
-#if !defined(_SFX_RTL_) && !defined(_WIN_32)
-  setbuf(stdout,NULL);
-#endif
-
-#if !defined(SFX_MODULE) && defined(_EMX)
-  EnumConfigPaths(argv[0],-1);
-#endif
-
+  InitConsole();
   ErrHandler.SetSignalHandlers(true);
 
-  RARInitData();
-
 #ifdef SFX_MODULE
-  char ModuleName[NM];
-#ifdef _WIN_32
-  GetModuleFileName(NULL,ModuleName,sizeof(ModuleName));
+  wchar ModuleName[NM];
+#ifdef _WIN_ALL
+  GetModuleFileName(NULL,ModuleName,ASIZE(ModuleName));
 #else
-  strcpy(ModuleName,argv[0]);
+  CharToWide(argv[0],ModuleName,ASIZE(ModuleName));
 #endif
 #endif
 
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   SetErrorMode(SEM_NOALIGNMENTFAULTEXCEPT|SEM_FAILCRITICALERRORS|SEM_NOOPENFILEERRORBOX);
 
 
 #endif
 
-#if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(SHELL_EXT)
-  bool ShutdownOnClose;
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
+  // Must be initialized, normal initialization can be skipped in case of
+  // exception.
+  POWER_MODE ShutdownOnClose=POWERMODE_KEEP;
 #endif
 
-#ifdef ALLOW_EXCEPTIONS
   try 
-#endif
   {
   
-    CommandData Cmd;
+    CommandData *Cmd=new CommandData;
 #ifdef SFX_MODULE
-    strcpy(Cmd.Command,"X");
-    char *Switch=NULL;
-#ifdef _SFX_RTL_
-    char *CmdLine=GetCommandLine();
-    if (CmdLine!=NULL && *CmdLine=='\"')
-      CmdLine=strchr(CmdLine+1,'\"');
-    if (CmdLine!=NULL && (CmdLine=strpbrk(CmdLine," /"))!=NULL)
-    {
-      while (isspace(*CmdLine))
-        CmdLine++;
-      Switch=CmdLine;
-    }
-#else
-    Switch=argc>1 ? argv[1]:NULL;
-#endif
-    if (Switch!=NULL && Cmd.IsSwitch(Switch[0]))
+    wcscpy(Cmd->Command,L"X");
+    char *Switch=argc>1 ? argv[1]:NULL;
+    if (Switch!=NULL && Cmd->IsSwitch(Switch[0]))
     {
       int UpperCmd=etoupper(Switch[1]);
       switch(UpperCmd)
       {
         case 'T':
         case 'V':
-          Cmd.Command[0]=UpperCmd;
+          Cmd->Command[0]=UpperCmd;
           break;
         case '?':
-          Cmd.OutHelp();
+          Cmd->OutHelp(RARX_SUCCESS);
           break;
       }
     }
-    Cmd.AddArcName(ModuleName,NULL);
-#else
-    if (Cmd.IsConfigEnabled(argc,argv))
+    Cmd->AddArcName(ModuleName);
+    Cmd->ParseDone();
+    Cmd->AbsoluteLinks=true; // If users runs SFX, he trusts an archive source.
+#else // !SFX_MODULE
+    Cmd->ParseCommandLine(true,argc,argv);
+    if (!Cmd->ConfigDisabled)
     {
-      Cmd.ReadConfig(argc,argv);
-      Cmd.ParseEnvVar();
+      Cmd->ReadConfig();
+      Cmd->ParseEnvVar();
     }
-    for (int I=1;I<argc;I++)
-      Cmd.ParseArg(argv[I],NULL);
-#endif
-    Cmd.ParseDone();
-
-#if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(SHELL_EXT)
-    ShutdownOnClose=Cmd.Shutdown;
+    Cmd->ParseCommandLine(false,argc,argv);
 #endif
 
-    InitConsoleOptions(Cmd.MsgStream,Cmd.Sound);
-    InitLogOptions(Cmd.LogName);
-    ErrHandler.SetSilent(Cmd.AllYes || Cmd.MsgStream==MSG_NULL);
-    ErrHandler.SetShutdown(Cmd.Shutdown);
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
+    ShutdownOnClose=Cmd->Shutdown;
+#endif
 
-    Cmd.OutTitle();
-    Cmd.ProcessCommand();
+    uiInit(Cmd->Sound);
+    InitLogOptions(Cmd->LogName,Cmd->ErrlogCharset);
+    ErrHandler.SetSilent(Cmd->AllYes || Cmd->MsgStream==MSG_NULL);
+
+    Cmd->OutTitle();
+/*
+    byte Buf[10000];
+    File Src;
+    Src.TOpen(L"123.rar");
+    int Size=Src.Read(Buf,sizeof(Buf));
+    Cmd->SetArcInMem(Buf,Size);
+*/
+    Cmd->ProcessCommand();
+    delete Cmd;
   }
-#ifdef ALLOW_EXCEPTIONS
-  catch (int ErrCode)
+  catch (RAR_EXIT ErrCode)
   {
     ErrHandler.SetErrorCode(ErrCode);
   }
-#ifdef ENABLE_BAD_ALLOC
-  catch (bad_alloc)
+  catch (std::bad_alloc&)
   {
-    ErrHandler.SetErrorCode(MEMORY_ERROR);
+    ErrHandler.MemoryErrorMsg();
+    ErrHandler.SetErrorCode(RARX_MEMORY);
   }
-#endif
   catch (...)
   {
-    ErrHandler.SetErrorCode(FATAL_ERROR);
+    ErrHandler.SetErrorCode(RARX_FATAL);
   }
+
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
+  if (ShutdownOnClose!=POWERMODE_KEEP && ErrHandler.IsShutdownEnabled())
+    Shutdown(ShutdownOnClose);
 #endif
-  File::RemoveCreated();
-#if defined(SFX_MODULE) && defined(_DJGPP)
-  _chmod(ModuleName,1,0x20);
-#endif
-#if defined(_EMX) && !defined(_DJGPP)
-  uni_done();
-#endif
-#if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(SHELL_EXT)
-  if (ShutdownOnClose)
-    Shutdown();
-#endif
-  return(ErrHandler.GetErrorCode());
+  ErrHandler.MainExit=true;
+  return ErrHandler.GetErrorCode();
 }
 #endif
 

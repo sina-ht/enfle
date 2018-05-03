@@ -1,31 +1,72 @@
 #ifndef _RAR_OPTIONS_
 #define _RAR_OPTIONS_
 
-#define DEFAULT_RECOVERY    -1
+#define DEFAULT_RECOVERY     -3
 
 #define DEFAULT_RECVOLUMES  -10
 
-enum PathExclMode {
-  EXCL_NONE,EXCL_BASEPATH,EXCL_SKIPWHOLEPATH,EXCL_SAVEFULLPATH,
-  EXCL_SKIPABSPATH,EXCL_ABSPATH
+#define VOLSIZE_AUTO   INT64NDF // Automatically detect the volume size.
+
+enum PATH_EXCL_MODE {
+  EXCL_UNCHANGED=0,    // Process paths as is (default).
+  EXCL_SKIPWHOLEPATH,  // -ep  (exclude the path completely)
+  EXCL_BASEPATH,       // -ep1 (exclude the base part of path)
+  EXCL_SAVEFULLPATH,   // -ep2 (the full path without the disk letter)
+  EXCL_ABSPATH,        // -ep3 (the full path with the disk letter)
+
+  EXCL_SKIPABSPATH     // Works as EXCL_BASEPATH for fully qualified paths
+                       // and as EXCL_UNCHANGED for relative paths.
+                       // Used by WinRAR GUI only.
 };
+
 enum {SOLID_NONE=0,SOLID_NORMAL=1,SOLID_COUNT=2,SOLID_FILEEXT=4,
       SOLID_VOLUME_DEPENDENT=8,SOLID_VOLUME_INDEPENDENT=16};
-enum {ARCTIME_NONE,ARCTIME_KEEP,ARCTIME_LATEST};
+
+enum {ARCTIME_NONE=0,ARCTIME_KEEP,ARCTIME_LATEST};
+
 enum EXTTIME_MODE {
-  EXTTIME_NONE,EXTTIME_1S,EXTTIME_HIGH1,EXTTIME_HIGH2,EXTTIME_HIGH3
-};
-enum {NAMES_ORIGINALCASE,NAMES_UPPERCASE,NAMES_LOWERCASE};
-enum MESSAGE_TYPE {MSG_STDOUT,MSG_STDERR,MSG_ERRONLY,MSG_NULL};
-enum OVERWRITE_MODE {
-  OVERWRITE_ASK,OVERWRITE_ALL,OVERWRITE_NONE,OVERWRITE_AUTORENAME
+  EXTTIME_NONE=0,EXTTIME_1S,EXTTIME_HIGH1,EXTTIME_HIGH2,EXTTIME_HIGH3
 };
 
-enum RAR_CHARSET { RCH_DEFAULT=0,RCH_ANSI,RCH_OEM,RCH_UNICODE };
+enum {NAMES_ORIGINALCASE=0,NAMES_UPPERCASE,NAMES_LOWERCASE};
 
-#define     MAX_FILTERS           16
+enum MESSAGE_TYPE {MSG_STDOUT=0,MSG_STDERR,MSG_ERRONLY,MSG_NULL};
+
+enum RECURSE_MODE 
+{
+  RECURSE_NONE=0,    // no recurse switches
+  RECURSE_DISABLE,   // switch -r-
+  RECURSE_ALWAYS,    // switch -r
+  RECURSE_WILDCARDS, // switch -r0
+};
+
+enum OVERWRITE_MODE 
+{
+  OVERWRITE_DEFAULT=0, // Ask when extracting, silently overwrite when archiving.
+  OVERWRITE_ALL,
+  OVERWRITE_NONE,
+  OVERWRITE_AUTORENAME,
+  OVERWRITE_FORCE_ASK
+};
+
+
+enum QOPEN_MODE { QOPEN_NONE, QOPEN_AUTO, QOPEN_ALWAYS };
+
+enum RAR_CHARSET { RCH_DEFAULT=0,RCH_ANSI,RCH_OEM,RCH_UNICODE,RCH_UTF8 };
+
+#define     MAX_FILTER_TYPES           16
 enum FilterState {FILTER_DEFAULT=0,FILTER_AUTO,FILTER_FORCE,FILTER_DISABLE};
 
+
+enum SAVECOPY_MODE {
+  SAVECOPY_NONE=0, SAVECOPY_SILENT, SAVECOPY_LIST, SAVECOPY_LISTEXIT,
+  SAVECOPY_DUPLISTEXIT
+};
+
+enum POWER_MODE {
+  POWERMODE_KEEP=0,POWERMODE_OFF,POWERMODE_HIBERNATE,POWERMODE_SLEEP,
+  POWERMODE_RESTART
+};
 
 struct FilterMode
 {
@@ -33,6 +74,8 @@ struct FilterMode
   int Param1;
   int Param2;
 };
+
+#define MAX_GENERATE_MASK  128
 
 
 class RAROptions
@@ -45,95 +88,109 @@ class RAROptions
     uint ExclFileAttr;
     uint InclFileAttr;
     bool InclAttrSet;
-    uint WinSize;
-    char TempPath[NM];
-    char SFXModule[NM];
-    char ExtrPath[NM];
-    wchar ExtrPathW[NM];
-    char CommentFile[NM];
+    size_t WinSize;
+    wchar TempPath[NM];
+    wchar SFXModule[NM];
+
+#ifdef USE_QOPEN
+    QOPEN_MODE QOpenMode;
+#endif
+
+    bool ConfigDisabled; // Switch -cfg-.
+    wchar ExtrPath[NM];
+    wchar CommentFile[NM];
     RAR_CHARSET CommentCharset;
     RAR_CHARSET FilelistCharset;
-    char ArcPath[NM];
-    char Password[MAXPASSWORD];
+    RAR_CHARSET ErrlogCharset;
+    RAR_CHARSET RedirectCharset;
+
+    wchar ArcPath[NM];
+    SecPassword Password;
     bool EncryptHeaders;
-    char LogName[NM];
+    
+    bool ManualPassword; // Password entered manually during operation, might need to clean for next archive.
+
+    wchar LogName[NM];
     MESSAGE_TYPE MsgStream;
     bool Sound;
     OVERWRITE_MODE Overwrite;
     int Method;
+    HASH_TYPE HashType;
     int Recovery;
     int RecVolNumber;
     bool DisablePercentage;
     bool DisableCopyright;
     bool DisableDone;
+    bool PrintVersion;
     int Solid;
     int SolidCount;
     bool ClearArc;
     bool AddArcOnly;
-    bool AV;
     bool DisableComment;
     bool FreshFiles;
     bool UpdateFiles;
-    PathExclMode ExclPath;
-    int Recurse;
-    Int64 VolSize;
-    Array<Int64> NextVolSizes;
-    int CurVolNum;
+    PATH_EXCL_MODE ExclPath;
+    RECURSE_MODE Recurse;
+    int64 VolSize;
+    Array<int64> NextVolSizes;
+    uint CurVolNum;
     bool AllYes;
-    bool DisableViewAV;
+    bool MoreInfo; // -im, show more information, used only in "WinRAR t" now.
     bool DisableSortSolid;
     int ArcTime;
     int ConvertNames;
     bool ProcessOwners;
-    bool SaveLinks;
+    bool SaveSymLinks;
+    bool SaveHardLinks;
+    bool AbsoluteLinks;
     int Priority;
     int SleepTime;
     bool KeepBroken;
-    bool EraseDisk;
     bool OpenShared;
-    bool ExclEmptyDir;
     bool DeleteFiles;
-    bool SyncFiles;
+
+#ifdef _WIN_ALL
+    bool AllowIncompatNames; // Allow names with trailing dots and spaces.
+#endif
+
+
+#ifndef SFX_MODULE
     bool GenerateArcName;
-    char GenerateMask[80];
+    wchar GenerateMask[MAX_GENERATE_MASK];
+#endif
+    bool SyncFiles;
     bool ProcessEA;
     bool SaveStreams;
     bool SetCompressedAttr;
-    uint FileTimeOlder;
-    uint FileTimeNewer;
+    bool IgnoreGeneralAttr;
     RarTime FileTimeBefore;
     RarTime FileTimeAfter;
-    Int64 FileSizeLess;
-    Int64 FileSizeMore;
-    bool OldNumbering;
+    int64 FileSizeLess;
+    int64 FileSizeMore;
     bool Lock;
     bool Test;
     bool VolumePause;
-    FilterMode FilterModes[MAX_FILTERS];
-    char EmailTo[NM];
-    int VersionControl;
-    bool NoEndBlock;
+    FilterMode FilterModes[MAX_FILTER_TYPES];
+    wchar EmailTo[NM];
+    uint VersionControl;
     bool AppendArcNameToPath;
-    bool Shutdown;
+    POWER_MODE Shutdown;
     EXTTIME_MODE xmtime;
     EXTTIME_MODE xctime;
     EXTTIME_MODE xatime;
-    EXTTIME_MODE xarctime;
-    char CompressStdin[NM];
+    wchar CompressStdin[NM];
 
-#ifdef PACK_SMP
-    uint Threads;
-#endif
+    uint Threads; // We use it to init hash even if RAR_SMP is not defined.
+
 
 
 
 
 #ifdef RARDLL
-    char DllDestName[NM];
-    wchar DllDestNameW[NM];
+    wchar DllDestName[NM];
     int DllOpMode;
     int DllError;
-    LONG UserData;
+    LPARAM UserData;
     UNRARCALLBACK Callback;
     CHANGEVOLPROC ChangeVolProc;
     PROCESSDATAPROC ProcessDataProc;

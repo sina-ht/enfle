@@ -5,6 +5,9 @@
  *  Contents: memory allocation routines                                    *
  ****************************************************************************/
 
+static const uint UNIT_SIZE=Max(sizeof(RARPPM_CONTEXT),sizeof(RARPPM_MEM_BLK));
+static const uint FIXED_UNIT_SIZE=12;
+
 SubAllocator::SubAllocator()
 {
   Clean();
@@ -34,17 +37,18 @@ inline void* SubAllocator::RemoveNode(int indx)
 
 inline uint SubAllocator::U2B(int NU) 
 { 
-  return /*8*NU+4*NU*/UNIT_SIZE*NU;
+  // We calculate the size of units in bytes based on real UNIT_SIZE.
+  // In original implementation it was 8*NU+4*NU.
+  return UNIT_SIZE*NU;
 }
 
 
-/*
-   calculate RAR_MEM_BLK + Items address. Real RAR_MEM_BLK size must be
-   equal to UNIT_SIZE, so we cannot just add Items to RAR_MEM_BLK address
-*/
-inline RAR_MEM_BLK* SubAllocator::MBPtr(RAR_MEM_BLK *BasePtr,int Items)
+
+// Calculate RARPPM_MEM_BLK+Items address. Real RARPPM_MEM_BLK size must be
+// equal to UNIT_SIZE, so we cannot just add Items to RARPPM_MEM_BLK address.
+inline RARPPM_MEM_BLK* SubAllocator::MBPtr(RARPPM_MEM_BLK *BasePtr,int Items)
 {
-  return((RAR_MEM_BLK*)( ((byte *)(BasePtr))+U2B(Items) ));
+  return((RARPPM_MEM_BLK*)( ((byte *)(BasePtr))+U2B(Items) ));
 }
 
 
@@ -62,14 +66,12 @@ inline void SubAllocator::SplitBlock(void* pv,int OldIndx,int NewIndx)
 }
 
 
-
-
 void SubAllocator::StopSubAllocator()
 {
   if ( SubAllocatorSize ) 
   {
     SubAllocatorSize=0;
-    rarfree(HeapStart);
+    free(HeapStart);
   }
 }
 
@@ -80,16 +82,22 @@ bool SubAllocator::StartSubAllocator(int SASize)
   if (SubAllocatorSize == t)
     return TRUE;
   StopSubAllocator();
-  uint AllocSize=t/FIXED_UNIT_SIZE*UNIT_SIZE+UNIT_SIZE;
-#ifdef STRICT_ALIGNMENT_REQUIRED
-  AllocSize+=UNIT_SIZE;
-#endif
-  if ((HeapStart=(byte *)rarmalloc(AllocSize)) == NULL)
+
+  // Original algorithm expects FIXED_UNIT_SIZE, but actual structure size
+  // can be larger. So let's recalculate the allocated size and add two more
+  // units: one as reserve for HeapEnd overflow checks and another
+  // to provide the space to correctly align UnitsStart.
+  uint AllocSize=t/FIXED_UNIT_SIZE*UNIT_SIZE+2*UNIT_SIZE;
+  if ((HeapStart=(byte *)malloc(AllocSize)) == NULL)
   {
     ErrHandler.MemoryError();
     return FALSE;
   }
+
+  // HeapEnd did not present in original algorithm. We added it to control
+  // invalid memory access attempts when processing corrupt archived data.
   HeapEnd=HeapStart+AllocSize-UNIT_SIZE;
+
   SubAllocatorSize=t;
   return TRUE;
 }
@@ -100,17 +108,46 @@ void SubAllocator::InitSubAllocator()
   int i, k;
   memset(FreeList,0,sizeof(FreeList));
   pText=HeapStart;
+
+  // Original algorithm operates with 12 byte FIXED_UNIT_SIZE, but actual
+  // size of RARPPM_MEM_BLK and RARPPM_CONTEXT structures can exceed this value
+  // because of alignment and larger pointer fields size.
+  // So we define UNIT_SIZE for this larger size and adjust memory
+  // pointers accordingly.
+
+  // Size2 is (HiUnit-LoUnit) memory area size to allocate as originally
+  // supposed by compression algorithm. It is 7/8 of total allocated size.
   uint Size2=FIXED_UNIT_SIZE*(SubAllocatorSize/8/FIXED_UNIT_SIZE*7);
+
+  // RealSize2 is the real adjusted size of (HiUnit-LoUnit) memory taking
+  // into account that our UNIT_SIZE can be larger than FIXED_UNIT_SIZE.
   uint RealSize2=Size2/FIXED_UNIT_SIZE*UNIT_SIZE;
+
+  // Size1 is the size of memory area from HeapStart to FakeUnitsStart
+  // as originally supposed by compression algorithm. This area can contain
+  // different data types, both single symbols and structures.
   uint Size1=SubAllocatorSize-Size2;
-  uint RealSize1=Size1/FIXED_UNIT_SIZE*UNIT_SIZE+Size1%FIXED_UNIT_SIZE;
-#ifdef STRICT_ALIGNMENT_REQUIRED
-  if (Size1%FIXED_UNIT_SIZE!=0)
-    RealSize1+=UNIT_SIZE-Size1%FIXED_UNIT_SIZE;
-#endif
-  HiUnit=HeapStart+SubAllocatorSize;
+
+  // Real size of this area. We correct it according to UNIT_SIZE vs
+  // FIXED_UNIT_SIZE difference. Also we add one more UNIT_SIZE
+  // to compensate a possible reminder from Size1/FIXED_UNIT_SIZE,
+  // which would be lost otherwise. We add UNIT_SIZE instead of 
+  // this Size1%FIXED_UNIT_SIZE reminder, because it allows to align
+  // UnitsStart easily and adding more than reminder is ok for algorithm.
+  uint RealSize1=Size1/FIXED_UNIT_SIZE*UNIT_SIZE+UNIT_SIZE;
+
+  // RealSize1 must be divided by UNIT_SIZE without a reminder, so UnitsStart
+  // is aligned to UNIT_SIZE. It is important for those architectures,
+  // where a proper memory alignment is mandatory. Since we produce RealSize1
+  // multiplying by UNIT_SIZE, this condition is always true. So LoUnit,
+  // UnitsStart, HeapStart are properly aligned,
   LoUnit=UnitsStart=HeapStart+RealSize1;
+
+  // When we reach FakeUnitsStart, we restart the model. It is where
+  // the original algorithm expected to see UnitsStart. Real UnitsStart
+  // can have a larger value.
   FakeUnitsStart=HeapStart+Size1;
+
   HiUnit=LoUnit+RealSize2;
   for (i=0,k=1;i < N1     ;i++,k += 1)
     Indx2Units[i]=k;
@@ -130,14 +167,14 @@ void SubAllocator::InitSubAllocator()
 
 inline void SubAllocator::GlueFreeBlocks()
 {
-  RAR_MEM_BLK s0, * p, * p1;
+  RARPPM_MEM_BLK s0, * p, * p1;
   int i, k, sz;
   if (LoUnit != HiUnit)
     *LoUnit=0;
   for (i=0, s0.next=s0.prev=&s0;i < N_INDEXES;i++)
     while ( FreeList[i].next )
     {
-      p=(RAR_MEM_BLK*)RemoveNode(i);
+      p=(RARPPM_MEM_BLK*)RemoveNode(i);
       p->insertAt(&s0);
       p->Stamp=0xFFFF;
       p->NU=Indx2Units[i];
@@ -178,13 +215,13 @@ void* SubAllocator::AllocUnitsRare(int indx)
       GlueCount--;
       i=U2B(Indx2Units[indx]);
       int j=FIXED_UNIT_SIZE*Indx2Units[indx];
-      if (FakeUnitsStart-pText > j)
+      if (FakeUnitsStart - pText > j)
       {
-        FakeUnitsStart-=j;
+        FakeUnitsStart -= j;
         UnitsStart -= i;
-        return(UnitsStart);
+        return UnitsStart;
       }
-      return(NULL);
+      return NULL;
     }
   } while ( !FreeList[i].next );
   void* RetVal=RemoveNode(i);
