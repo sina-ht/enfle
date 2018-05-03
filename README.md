@@ -5,7 +5,7 @@ Metadeta
 --------
 (C) Copyright 1998-2018 by Hiroshi Takekawa.
 
-Last Modified: Tue Apr 17 22:40:52 2018.
+Last Modified: Thu May  3 22:55:00 2018.
 
 
 License
@@ -52,19 +52,9 @@ Acknowledgement
   Moreover, libungif is not used by default.
   Now that the patent was expired, enfle has its own gif loader plugin.
 
-Integrated libraries by other authors.  Thanks to all authors.
+Integrated library by other authors.  Thanks to all authors.
 
-* lib/mpglib: mpglib has been removed.
-
-* lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 has been removed.
-
-* lib/{avutil,avcodec}: libavcodec as of 20070719 has been removed.
-
-* lib/mad: libmad-0.15.0 has been removed.
-
-* lib/j2k: libj2k has been removed.
-
-* plugins/archiver/rar/unrar: unrarsrc-3.7.8 for rar handling.
+* plugins/archiver/rar/unrar: unrarsrc-5.6.3 for rar handling.
     You cannot use the code to develop a RAR (WinRAR) compatible archiver.
     Read plugins/archiver/rar/unrar/license.txt.
 
@@ -73,7 +63,6 @@ Blurb
 -----
 
 OK, legal part is over.  The rest is fun.
-(BTW, my English is rather bad.  Are there any volunteers for correction?)
 
 Enfle is a clipped form of Enfleurage.  Enfleurage means: A process of
 extracting perfumes by exposing absorbents, as fixed oils or fats, to
@@ -93,11 +82,11 @@ Formats you can view:
 * avi,ogg,ogm, (codec supported by avcodec, vorbis)
 
 This software has plugin architecture.  You can write plugins to
-loader new formatted pictures and movies.  Also, you can read
-regular archive files, such as tar, gz, bz2, and so on.
+support new formatted pictures and movies.  Also, you can read
+regular archive files, such as tar, gz, bz2, rar, and so on.
 
-Some plugins use libraries which is not included in distribution.  You
-should install corresponding libraries to use them.
+Some plugins use libraries which are not included in distribution.  You
+should install corresponding libraries to use them. (Very old list)
 
 * JPEG: jpegsrc-6b (libjpeg)
 * PNG: libpng-1.0.2 or later (recommended: 1.2.22)
@@ -123,34 +112,33 @@ be supported sometime.
 
 These environments are checked:
 
-* Linux (kernel 2.2/2.4/2.6/3.x/4.x + glibc-2.1-2.24, x86(-64))
+* Linux (kernel 2.2/2.4/2.6/3.x/4.x + glibc-2.1-2.27, x86(-64))
 * FreeBSD (4.1R, x86)
 
 Other similar environments should work.  Please let me know if you try
 on the same/other environments.
 
-*WARNING*: Enfle is old software.  Some functionality don't worked well
+*WARNING*: Enfle is old software.  Some functionality doesn't work well
 now. e.g. no wall paper support on GNOME environment.
 
 
 Compile
 -------
 
-GCC is mandatory for compile, or compilation will fail.
-(With some effort, you can compile with icc(Intel C++ Compieler)).
+GCC is the primary compiler. clang/llvm is also supported.
 
-Basically, type ./configure && make, that's all.  If you get some
+Basically, type './configure && make', that's all.  If you get some
 error messages, please let me know with config.log, your environment,
-or such useful information.
+or such useful information to debug.
 
-After successfully compiled, type sudo make install.
+After successfully compiled, type 'sudo make install'.
 
 You can pass several options to configure script.  You can see help
-message by typing ./configure --help.
+message by typing './configure --help'.
 
 Plugins are compiled as a shared object.  Filename should end with
 .so. If you get not .so but only .a, the chances are your system
-cannot/don't create shared object.
+cannot/doesn't create shared objects.
 
 
 Command line
@@ -209,9 +197,9 @@ Usage
 * Alt-m: magnify according to shorter edge.
 * 1-7: do gamma correction with 2.2, 1.7, 1.45, 1, 1/1.45, 1/1.7, 1/2.2.
 
-Enfle will also quit when all pictures are viewed.
+Enfle will also quit when it reaches the end of the pictures.
 
-If you have wheel on mouse, you can use it for Left, Right click.
+If you have a wheel on mouse, you can use it for Left, Right click.
 
 
 Customize
@@ -252,14 +240,6 @@ All bug reporting and comments are welcome.
 
         Hiroshi Takekawa <sian@big.or.jp>
                          <sian@fennel.org>
-
-
-Distribution
-------------
-
-Enfle is distributed under GNU GENERAL PUBLIC LICENSE Version 2.  See
-COPYING in detail.  You cannot apply any later version without my
-explicit permission.  This situation may change.
 
 
 Disclaimer
