@@ -90,7 +90,7 @@ converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
 }
 #else
 int
-converter_convert(char *s, char **d_r, size_t insize, char *from, char *to)
+converter_convert(char *s, char **d_r, size_t insize __attribute__((unused)), char *from __attribute__((unused)), char *to __attribute__((unused)))
 {
   *d_r = strdup(s);
   return strlen(*d_r);

@@ -79,7 +79,7 @@ ENFLE_PLUGIN_EXIT(loader_png, p)
 /* png data source functions */
 
 static void
-read_data(png_structp png_ptr, png_bytep data, png_uint_32 len)
+read_data(png_structp png_ptr, png_bytep data, png_size_t len)
 {
   Stream *st = png_get_io_ptr(png_ptr);
 

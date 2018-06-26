@@ -424,7 +424,7 @@ setup(VideoDecoder *vdec, Movie *m, Image *p, int w, int h)
 }
 
 static unsigned int
-query(unsigned int fourcc, void *priv)
+query(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   /* Should get image color type from avcodec */
   switch (fourcc) {

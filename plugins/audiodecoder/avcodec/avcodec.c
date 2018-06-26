@@ -134,7 +134,7 @@ decode(AudioDecoder *adec, Movie *m, AudioDevice *ad, unsigned char *buf, unsign
     debug_message_fnc("avcodec: from acodec_ctx    %d ch %d Hz %" PRId64 " kbps\n", adm->acodec_ctx->channels, adm->acodec_ctx->sample_rate, adm->acodec_ctx->bit_rate / 1024);
     debug_message_fnc("avcodec: from demultiplexer %d ch %d Hz\n", m->channels, m->samplerate);
     m->channels = m->channels == 0 ? adm->acodec_ctx->channels : m->channels;
-    m->samplerate = m->samplerate == 0 ? adm->acodec_ctx->sample_rate : m->samplerate;
+    m->samplerate = m->samplerate == 0 ? (unsigned int)adm->acodec_ctx->sample_rate : m->samplerate;
     debug_message_fnc("avcodec: (%d format) %d ch %d Hz %" PRId64 " kbps\n", m->sampleformat, m->channels, m->samplerate, adm->acodec_ctx->bit_rate / 1024);
     m->sampleformat_actual = m->sampleformat;
     m->channels_actual = m->channels;
@@ -196,7 +196,7 @@ setup(AudioDecoder *adec, Movie *m)
 }
 
 static unsigned int
-query(unsigned int fourcc, void *priv)
+query(unsigned int fourcc, void *priv __attribute__((unused)))
 {
   switch (fourcc) {
   case WAVEFORMAT_TAG_PCM:
