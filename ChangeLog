@@ -1,3 +1,81 @@
+2019-02-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.ac: configure.ac: Version up
+
+2019-02-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* plugins/archiver/rar/unrar/arccmt.cpp,
+	plugins/archiver/rar/unrar/archive.cpp,
+	plugins/archiver/rar/unrar/archive.hpp,
+	plugins/archiver/rar/unrar/arcmem.cpp,
+	plugins/archiver/rar/unrar/arcmem.hpp,
+	plugins/archiver/rar/unrar/arcread.cpp,
+	plugins/archiver/rar/unrar/cmddata.cpp,
+	plugins/archiver/rar/unrar/cmddata.hpp,
+	plugins/archiver/rar/unrar/cmdfilter.cpp,
+	plugins/archiver/rar/unrar/cmdmix.cpp,
+	plugins/archiver/rar/unrar/crypt3.cpp,
+	plugins/archiver/rar/unrar/dll.cpp,
+	plugins/archiver/rar/unrar/dll.hpp,
+	plugins/archiver/rar/unrar/errhnd.cpp,
+	plugins/archiver/rar/unrar/errhnd.hpp,
+	plugins/archiver/rar/unrar/extract.cpp,
+	plugins/archiver/rar/unrar/extract.hpp,
+	plugins/archiver/rar/unrar/file.cpp,
+	plugins/archiver/rar/unrar/file.hpp,
+	plugins/archiver/rar/unrar/filefn.cpp,
+	plugins/archiver/rar/unrar/find.cpp,
+	plugins/archiver/rar/unrar/hardlinks.cpp,
+	plugins/archiver/rar/unrar/headers.hpp,
+	plugins/archiver/rar/unrar/list.cpp,
+	plugins/archiver/rar/unrar/loclang.hpp,
+	plugins/archiver/rar/unrar/match.cpp,
+	plugins/archiver/rar/unrar/match.hpp,
+	plugins/archiver/rar/unrar/options.hpp,
+	plugins/archiver/rar/unrar/os.hpp,
+	plugins/archiver/rar/unrar/pathfn.cpp,
+	plugins/archiver/rar/unrar/pathfn.hpp,
+	plugins/archiver/rar/unrar/qopen.cpp,
+	plugins/archiver/rar/unrar/qopen.hpp,
+	plugins/archiver/rar/unrar/rar.cpp,
+	plugins/archiver/rar/unrar/rdwrfn.cpp,
+	plugins/archiver/rar/unrar/recvol3.cpp,
+	plugins/archiver/rar/unrar/recvol5.cpp,
+	plugins/archiver/rar/unrar/rijndael.cpp,
+	plugins/archiver/rar/unrar/rs16.cpp,
+	plugins/archiver/rar/unrar/scantree.cpp,
+	plugins/archiver/rar/unrar/scantree.hpp,
+	plugins/archiver/rar/unrar/strfn.cpp,
+	plugins/archiver/rar/unrar/strfn.hpp,
+	plugins/archiver/rar/unrar/suballoc.cpp,
+	plugins/archiver/rar/unrar/suballoc.hpp,
+	plugins/archiver/rar/unrar/system.cpp,
+	plugins/archiver/rar/unrar/system.hpp,
+	plugins/archiver/rar/unrar/timefn.cpp,
+	plugins/archiver/rar/unrar/ui.hpp,
+	plugins/archiver/rar/unrar/uicommon.cpp,
+	plugins/archiver/rar/unrar/uiconsole.cpp,
+	plugins/archiver/rar/unrar/uisilent.cpp,
+	plugins/archiver/rar/unrar/unicode.cpp,
+	plugins/archiver/rar/unrar/unpack50.cpp,
+	plugins/archiver/rar/unrar/unpack50frag.cpp,
+	plugins/archiver/rar/unrar/unpack50mt.cpp,
+	plugins/archiver/rar/unrar/version.hpp,
+	plugins/archiver/rar/unrar/volume.cpp,
+	plugins/archiver/rar/unrar/win32acl.cpp,
+	plugins/archiver/rar/unrar/win32stm.cpp: archiver/unrar: Update
+	unrarsrc to 5.7.3
+
+2018-06-26  Hiroshi Takekawa  <sian@fennel.org>
+
+	* lib/utils/converter.c, plugins/audiodecoder/avcodec/avcodec.c,
+	plugins/loader/png/png.c, plugins/videodecoder/avcodec/avcodec.c:
+	Fix new warnings with newer gcc
+
+2018-05-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
 2018-05-11  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.ac: configure.ac: Version up
