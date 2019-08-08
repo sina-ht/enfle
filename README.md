@@ -3,9 +3,9 @@ Simple Plugin-based Graphic Loader Enfle
 
 Metadeta
 --------
-(C) Copyright 1998-2018 by Hiroshi Takekawa.
+(C) Copyright 1998-2019 by Hiroshi Takekawa.
 
-Last Modified: Thu May  3 22:55:00 2018.
+Last Modified: Thu Aug  8 22:32:29 2019.
 
 
 License
@@ -54,7 +54,7 @@ Acknowledgement
 
 Integrated library by other authors.  Thanks to all authors.
 
-* plugins/archiver/rar/unrar: unrarsrc-5.6.3 for rar handling.
+* plugins/archiver/rar/unrar: unrarsrc-5.7.3 for rar handling.
     You cannot use the code to develop a RAR (WinRAR) compatible archiver.
     Read plugins/archiver/rar/unrar/license.txt.
 
@@ -93,7 +93,7 @@ should install corresponding libraries to use them. (Very old list)
 * gz: zlib-1.2.3 or later (Note: versions prior to 1.2.1 include the security hole)
 * bz2: bzip2-1.0.0 or later (recommended: 1.0.3)
 * ungif: libungif-4.1.4
-* alsa: require ALSA_PCM_NEW_HW_PARAMS_API.
+* alsa: require ALSA\_PCM\_NEW\_HW\_PARAMS_API.
 * ogg: libogg-1.1
 * vorbis: libvorbis-1.0.1
 * theora: libtheora-1.0-alpha4
@@ -238,7 +238,8 @@ Contact
 
 All bug reporting and comments are welcome.
 
-        Hiroshi Takekawa <sian@big.or.jp>
+        Hiroshi Takekawa <sian.ht@gmail.com>
+                         <sian@big.or.jp>
                          <sian@fennel.org>
 
 
