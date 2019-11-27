@@ -559,6 +559,7 @@ AC_TYPE_PID_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 ENFLE_MAX_ALIGN
+ENFLE_ASMALIGN
 
 dnl Checks for library functions.
 AC_REPLACE_FNMATCH
@@ -664,6 +665,7 @@ else
 fi
 AM_CONDITIONAL(USE_AVCODEC, test "$enable_avcodec" = "yes")
 
+ENFLE_PLUGIN_DISABLE(player/libmpeg2)
 ENFLE_PLUGIN_DISABLE(player/avcodec)
 ENFLE_PLUGIN_DISABLE(saver/glic)
 
@@ -767,6 +769,7 @@ AC_CONFIG_FILES([
    lib/X11/Makefile
    lib/dllloader/Makefile
    lib/enfle/Makefile
+   lib/mpeg2/Makefile
    lib/utils/Makefile
   src/Makefile
   plugins/Makefile
@@ -817,6 +820,7 @@ AC_CONFIG_FILES([
     plugins/audiodecoder/vorbis/Makefile
    plugins/videodecoder/Makefile
     plugins/videodecoder/avcodec/Makefile
+    plugins/videodecoder/libmpeg2/Makefile
     plugins/videodecoder/raw/Makefile
    plugins/demultiplexer/Makefile
     plugins/demultiplexer/asf/Makefile
