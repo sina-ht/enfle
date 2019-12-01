@@ -1,3 +1,68 @@
+2019-12-01  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* configure.ac: configure.ac: Version up
+
+2019-12-01  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* README.md, lib/mpeg2/Makefile.am, lib/mpeg2/alloc.c,
+	lib/mpeg2/attributes.h, lib/mpeg2/cpu_accel.c,
+	lib/mpeg2/cpu_state.c, lib/mpeg2/decode.c, lib/mpeg2/header.c,
+	lib/mpeg2/header.h, lib/mpeg2/idct.c, lib/mpeg2/idct.h,
+	lib/mpeg2/idct_alpha.c, lib/mpeg2/idct_altivec.c,
+	lib/mpeg2/idct_mlib.c, lib/mpeg2/idct_mlib.h, lib/mpeg2/idct_mmx.c,
+	lib/mpeg2/idct_mmx.h, lib/mpeg2/mm_accel.h, lib/mpeg2/mmx.h,
+	lib/mpeg2/motion_comp.c, lib/mpeg2/motion_comp_mlib.c,
+	lib/mpeg2/motion_comp_mmx.c, lib/mpeg2/mpeg2.h,
+	lib/mpeg2/mpeg2_internal.h, lib/mpeg2/slice.c, lib/mpeg2/stats.c,
+	lib/mpeg2/video_out.c, lib/mpeg2/video_out.h,
+	lib/mpeg2/video_out_internal.h, lib/mpeg2/vlc.h,
+	lib/mpeg2/yuv2rgb.c, lib/mpeg2/yuv2rgb.h, lib/mpeg2/yuv2rgb_mlib.c,
+	lib/mpeg2/yuv2rgb_mmx.c, plugins/videodecoder/libmpeg2/libmpeg2.c:
+	libmpeg2: Update to 0.5.1
+
+2019-11-27  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* README.jp, README.md, acinclude.m4, configure.ac,
+	lib/Makefile.am, lib/mpeg2/.cvsignore, lib/mpeg2/Makefile.am,
+	lib/mpeg2/alloc.c, lib/mpeg2/attributes.h, lib/mpeg2/cpu_accel.c,
+	lib/mpeg2/cpu_state.c, lib/mpeg2/decode.c, lib/mpeg2/header.c,
+	lib/mpeg2/header.h, lib/mpeg2/idct.c, lib/mpeg2/idct.h,
+	lib/mpeg2/idct_alpha.c, lib/mpeg2/idct_altivec.c,
+	lib/mpeg2/idct_mlib.c, lib/mpeg2/idct_mlib.h, lib/mpeg2/idct_mmx.c,
+	lib/mpeg2/idct_mmx.h, lib/mpeg2/mm_accel.h, lib/mpeg2/mmx.h,
+	lib/mpeg2/motion_comp.c, lib/mpeg2/motion_comp_alpha.c,
+	lib/mpeg2/motion_comp_altivec.c, lib/mpeg2/motion_comp_mlib.c,
+	lib/mpeg2/motion_comp_mmx.c, lib/mpeg2/motion_comp_vis.c,
+	lib/mpeg2/mpeg2.h, lib/mpeg2/mpeg2_internal.h, lib/mpeg2/slice.c,
+	lib/mpeg2/stats.c, lib/mpeg2/video_out.c, lib/mpeg2/video_out.h,
+	lib/mpeg2/video_out_internal.h, lib/mpeg2/vlc.h,
+	lib/mpeg2/yuv2rgb.c, lib/mpeg2/yuv2rgb.h, lib/mpeg2/yuv2rgb_mlib.c,
+	lib/mpeg2/yuv2rgb_mmx.c, plugins/player/libmpeg2/.cvsignore,
+	plugins/player/libmpeg2/Makefile.am,
+	plugins/player/libmpeg2/libmpeg2.c,
+	plugins/videodecoder/Makefile.am: Revert "Remove libmpeg2 and its
+	support" This reverts commit c057ad6f8fbb5873826b5f7c151e362d1c411457.
+
+2019-11-27  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/videodecoder/libmpeg2/.cvsignore,
+	plugins/videodecoder/libmpeg2/Makefile.am,
+	plugins/videodecoder/libmpeg2/libmpeg2.c: Revert "Remove libmpeg2
+	support completely" This reverts commit b198b407dee3b9c276749682226373d52e0574af.
+
+2019-08-08  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* README.md: Update copyright year As well as fixing the unrar version and my mail addresses.
+
+2019-08-08  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* config.guess, config.sub, install-sh, missing, mkinstalldirs:
+	Update autotools files
+
+2019-02-28  Hiroshi Takekawa  <sian@fennel.org>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
 2019-02-28  Hiroshi Takekawa  <sian@fennel.org>
 
 	* configure.ac: configure.ac: Version up
