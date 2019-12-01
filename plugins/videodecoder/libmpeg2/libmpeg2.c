@@ -29,7 +29,7 @@ DECLARE_VIDEODECODER_PLUGIN_METHODS;
 static VideoDecoderPlugin plugin = {
   .type = ENFLE_PLUGIN_VIDEODECODER,
   .name = "LibMPEG2",
-  .description = "libmpeg2 Video Decoder plugin version 0.3 with integrated libmpeg2(mpeg2dec-0.4.0)",
+  .description = "libmpeg2 Video Decoder plugin version 0.3 with integrated libmpeg2-0.5.1)",
   .author = "Hiroshi Takekawa",
 
   .query = query,

@@ -31,19 +31,15 @@
 
 mpeg2_mc_t mpeg2_mc;
 
-void mpeg2_mc_init (uint32_t accel __attribute__((unused)))
+void mpeg2_mc_init (uint32_t accel)
 {
 #ifdef ARCH_X86
-  if (accel & MPEG2_ACCEL_X86_MMXEXT) {
-    debug_message("libmpeg2: using MMXEXT MC\n");
-    mpeg2_mc = mpeg2_mc_mmxext;
-  } else if (accel & MPEG2_ACCEL_X86_3DNOW) {
-    debug_message("libmpeg2: using 3DNOW MC\n");
-    mpeg2_mc = mpeg2_mc_3dnow;
-  } else if (accel & MPEG2_ACCEL_X86_MMX) {
-    debug_message("libmpeg2: using MMX MC\n");
-    mpeg2_mc = mpeg2_mc_mmx;
-  }
+    if (accel & MPEG2_ACCEL_X86_MMXEXT)
+	mpeg2_mc = mpeg2_mc_mmxext;
+    else if (accel & MPEG2_ACCEL_X86_3DNOW)
+	mpeg2_mc = mpeg2_mc_3dnow;
+    else if (accel & MPEG2_ACCEL_X86_MMX)
+	mpeg2_mc = mpeg2_mc_mmx;
     else
 #endif
 #ifdef ARCH_PPC
@@ -61,10 +57,12 @@ void mpeg2_mc_init (uint32_t accel __attribute__((unused)))
 	mpeg2_mc = mpeg2_mc_vis;
     else
 #endif
-      {
-	debug_message("libmpeg2: using C MC\n");
+#ifdef ARCH_ARM
+    if (accel & MPEG2_ACCEL_ARM) {
+	mpeg2_mc = mpeg2_mc_arm;
+    } else
+#endif
 	mpeg2_mc = mpeg2_mc_c;
-      }
 }
 
 #define avg2(a,b) ((a+b+1)>>1)

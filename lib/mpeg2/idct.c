@@ -233,16 +233,18 @@ static void mpeg2_idct_add_c (const int last, int16_t * block,
     }
 }
 
-void mpeg2_idct_init (uint32_t accel __attribute__((unused)))
+void mpeg2_idct_init (uint32_t accel)
 {
 #ifdef ARCH_X86
-    if (accel & MPEG2_ACCEL_X86_MMXEXT) {
-      debug_message("libmpeg2: using MMXEXT IDCT\n");
+    if (accel & MPEG2_ACCEL_X86_SSE2) {
+	mpeg2_idct_copy = mpeg2_idct_copy_sse2;
+	mpeg2_idct_add = mpeg2_idct_add_sse2;
+	mpeg2_idct_mmx_init ();
+    } else if (accel & MPEG2_ACCEL_X86_MMXEXT) {
 	mpeg2_idct_copy = mpeg2_idct_copy_mmxext;
 	mpeg2_idct_add = mpeg2_idct_add_mmxext;
 	mpeg2_idct_mmx_init ();
     } else if (accel & MPEG2_ACCEL_X86_MMX) {
-      debug_message("libmpeg2: using MMX IDCT\n");
 	mpeg2_idct_copy = mpeg2_idct_copy_mmx;
 	mpeg2_idct_add = mpeg2_idct_add_mmx;
 	mpeg2_idct_mmx_init ();
@@ -271,11 +273,8 @@ void mpeg2_idct_init (uint32_t accel __attribute__((unused)))
     } else
 #endif
     {
-	extern uint8_t mpeg2_scan_norm[64];
-	extern uint8_t mpeg2_scan_alt[64];
 	int i, j;
 
-      debug_message("libmpeg2: using C IDCT\n");
 	mpeg2_idct_copy = mpeg2_idct_copy_c;
 	mpeg2_idct_add = mpeg2_idct_add_c;
 	for (i = -3840; i < 3840 + 256; i++)

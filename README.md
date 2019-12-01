@@ -54,7 +54,7 @@ Acknowledgement
 
 Integrated library by other authors.  Thanks to all authors.
 
-* lib/mpeg2: libmpeg2 from mpeg2dec-0.4.0 for MPEG decoding.
+* lib/mpeg2: libmpeg2-0.5.1 for MPEG decoding.
     libmpeg2 by Aaron Holtzman and others.  For this part, you can
     apply GPL2 or later version.
 

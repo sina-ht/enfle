@@ -4,7 +4,7 @@
 
 noinst_LTLIBRARIES = libenflempeg2.la
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/lib
-##CFLAGS_POST = -O3 -fomit-frame-pointer -fno-common -mcpu=pentiumpro
+CFLAGS_POST = -Wno-unused-parameter
 
 libenflempeg2_la_SOURCES = \
 	alloc.c \

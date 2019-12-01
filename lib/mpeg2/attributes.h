@@ -20,6 +20,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LIBMPEG2_ATTRIBUTES_H
+#define LIBMPEG2_ATTRIBUTES_H
+
 /* use gcc attribs to align critical data structures */
 #ifdef ATTRIBUTE_ALIGNED_MAX
 #define ATTR_ALIGN(align) __attribute__ ((__aligned__ ((ATTRIBUTE_ALIGNED_MAX < align) ? ATTRIBUTE_ALIGNED_MAX : align)))
@@ -27,12 +30,20 @@
 #define ATTR_ALIGN(align)
 #endif
 
-#if !defined(unlikely)
 #ifdef HAVE_BUILTIN_EXPECT
+#ifndef likely
 #define likely(x) __builtin_expect ((x) != 0, 1)
+#endif
+#ifndef unlikely
 #define unlikely(x) __builtin_expect ((x) != 0, 0)
+#endif
 #else
+#ifndef likely
 #define likely(x) (x)
+#endif
+#ifndef unlikely
 #define unlikely(x) (x)
 #endif
 #endif
+
+#endif /* LIBMPEG2_ATTRIBUTES_H */

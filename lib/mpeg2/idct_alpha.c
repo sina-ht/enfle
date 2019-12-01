@@ -59,7 +59,7 @@ do {					\
 } while (0)
 #endif
 
-static void inline idct_row (int16_t * const block)
+static inline void idct_row (int16_t * const block)
 {
     uint64_t l, r;
     int_fast32_t d0, d1, d2, d3;
@@ -116,7 +116,7 @@ static void inline idct_row (int16_t * const block)
     block[7] = (a0 - b0) >> 12;
 }
 
-static void inline idct_col (int16_t * const block)
+static inline void idct_col (int16_t * const block)
 {
     int_fast32_t d0, d1, d2, d3;
     int_fast32_t a0, a1, a2, a3, b0, b1, b2, b3;
@@ -364,8 +364,6 @@ void mpeg2_idct_add_alpha (const int last, int16_t * block,
 
 void mpeg2_idct_alpha_init (void)
 {
-    extern uint8_t mpeg2_scan_norm[64];
-    extern uint8_t mpeg2_scan_alt[64];
     int i, j;
 
     for (i = 0; i < 64; i++) {
