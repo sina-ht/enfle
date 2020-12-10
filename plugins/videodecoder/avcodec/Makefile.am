@@ -10,7 +10,9 @@ PLUGIN_ID = videodecoder/avcodec
 
 libdir = $(enfle_videodecoder_plugindir)
 
+if USE_AVCODEC
 lib_LTLIBRARIES = videodecoder_avcodec.la
+endif
 libavcodec = -lavutil -lavcodec
 AVCODEC_HEADER = -I/usr/local/include
 
