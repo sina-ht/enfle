@@ -1,3 +1,25 @@
+2020-12-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* configure.ac: configure.ac: Version up
+
+2020-12-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* AUTHORS: Add a new email address
+
+2020-12-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* AUTHORS, README.jp, README.md, common.h, configure.ac: Update
+	copyright year
+
+2020-12-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/audiodecoder/avcodec/Makefile.am,
+	plugins/videodecoder/avcodec/Makefile.am: Build without avcodec
+
+2019-12-01  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
 2019-12-01  Hiroshi Takekawa  <sian.ht@gmail.com>
 
 	* configure.ac: configure.ac: Version up
