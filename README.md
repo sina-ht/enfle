@@ -3,7 +3,7 @@ Simple Plugin-based Graphic Loader Enfle
 
 Metadeta
 --------
-(C) Copyright 1998-2019 by Hiroshi Takekawa.
+(C) Copyright 1998-2020 by Hiroshi Takekawa.
 
 Last Modified: Thu Aug  8 22:32:29 2019.
 
