@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf must be 2.64 or later, automake should be 1.8.2 or later.
 dnl
-dnl (C)Copyright 1999-2020 by Hiroshi Takekawa
+dnl (C)Copyright 1999-2021 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
 dnl Last Modified: Tue Apr 17 22:51:14 2018.

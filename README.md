@@ -1,18 +1,19 @@
 Simple Plugin-based Graphic Loader Enfle
 ========================================
 
-Metadeta
+Metadata
 --------
-(C) Copyright 1998-2020 by Hiroshi Takekawa.
+(C) Copyright 1998-2021 by Hiroshi Takekawa.
 
-Last Modified: Thu Aug  8 22:32:29 2019.
+Last Modified: Mon Jan  4 15:46:12 2021.
 
 
 License
 -------
 - SPDX-License-Identifier: GPL-2.0-only
+- The moral right of the author has been asserted.
 - GPLv2 grants the right of _copying, distribution and modification_ of this software.  I hereby explicitly grant the _use_ of this software freely.  The disclaimer is also applied for using.
-- The Japanese copyright law enforces me to have the personal right and I cannot abandon or revoke it.  I hereby explicitly permit to use or modify this software for your own need, unless the modification is beneath my dignity.
+- The Japanese copyright law enforces me to have the moral right and I cannot abandon or revoke it.  I hereby explicitly permit to use or modify this software for your own need, _unless_ the modification is beneath my dignity.
 - The software under this directory contain SPDX-License-Identifier: tag to simplify licensing (if not, apply GPL-2.0-only), of course these tags are legal bindings, though here I include the boilerplate.  Note that the license is GPLv2 only, no later option.
 
 ``` text
@@ -39,10 +40,10 @@ Acknowledgement
 ---------------
 
 * JPEG Loader plugin and JPEG Saver plugin are based in part on the
-  work of the Independent JPEG Group
+  work of the Independent JPEG Group.
 
 * libjpeg is only linked, not distributed with this archive.  You
-  should install it.
+  _MUST_ install it to use.
 
 * The Graphics Interchange Format (c) is
   the Copyright property of CompuServe Incorporated.
@@ -77,38 +78,23 @@ Revised Unabridged Dictionary (1913)).
 This software aims to view many pictures with ease.  You can view
 various formatted pictures and movies with several effects.
 
-Formats you can view:
+Formats you can view (which can be supported with proper libraries):
 
 * BMP, GIF, JPEG, PCX, PNG, PNM, XBM, XPM, TGA, JPEG2000, WEBP
 * animated GIF
-* mng
+* mng (old extention for png)
 * mpeg (mpeg1, mpeg2)
-* avi,ogg,ogm, (codec supported by avcodec, vorbis)
+* avi, ogg, ogm, (codec supported by avcodec, vorbis)
 
-This software has plugin architecture.  You can write plugins to
+This software has a plugin architecture.  You can write plugins to
 support new formatted pictures and movies.  Also, you can read
 regular archive files, such as tar, gz, bz2, rar, and so on.
-
-Some plugins use libraries which are not included in distribution.  You
-should install corresponding libraries to use them. (Very old list)
-
-* JPEG: jpegsrc-6b (libjpeg)
-* PNG: libpng-1.0.2 or later (recommended: 1.2.22)
-* gz: zlib-1.2.3 or later (Note: versions prior to 1.2.1 include the security hole)
-* bz2: bzip2-1.0.0 or later (recommended: 1.0.3)
-* ungif: libungif-4.1.4
-* alsa: require ALSA\_PCM\_NEW\_HW\_PARAMS_API.
-* ogg: libogg-1.1
-* vorbis: libvorbis-1.0.1
-* theora: libtheora-1.0-alpha4
-* mng: libmng-1.0.0 or later (plugin unmaintained)
-* avifile: avifile-0.53.5 or avifile-0.6 in CVS (not supported any more)
 
 
 Requirements
 ------------
 
-X server's depth should be 16 or 24(bpp 24, 32).  Other depths are
+X server's depth _SHOULD_ be 16 or 24 (bpp 24, 32).  Other depths are
 unsupported for now.  If you don't see a correct colored-image in these
 supported depths, let me know with xdpyinfo's output.  When use in
 depth 16, color mask should be 0xf800, 0x7e0, 0x1f.  Other masks might
@@ -116,42 +102,42 @@ be supported sometime.
 
 These environments are checked:
 
-* Linux (kernel 2.2/2.4/2.6/3.x/4.x + glibc-2.1-2.27, x86(-64))
+* Linux (kernel 2.2/2.4/2.6/3.x/4.x/5.x + glibc-2.1-2.32, x86(-64))
 * FreeBSD (4.1R, x86)
 
 Other similar environments should work.  Please let me know if you try
 on the same/other environments.
 
-*WARNING*: Enfle is old software.  Some functionality doesn't work well
-now. e.g. no wall paper support on GNOME environment.
+*WARNING*: Enfle is _VERY_ old software.  Some functionality doesn't work
+well now. e.g. no wall paper support on GNOME environment.
 
 
 Compile
 -------
 
-GCC is the primary compiler. clang/llvm is also supported.
+GCC is the primary compiler. clang/llvm should be able to compile.
 
-Basically, type './configure && make', that's all.  If you get some
-error messages, please let me know with config.log, your environment,
-or such useful information to debug.
+Basically, type './configure && make', and that's all.  If you get some
+error messages, please let me know with config.log, your environment, and/or
+such useful information to debug.
 
 After successfully compiled, type 'sudo make install'.
 
 You can pass several options to configure script.  You can see help
 message by typing './configure --help'.
 
-Plugins are compiled as a shared object.  Filename should end with
-.so. If you get not .so but only .a, the chances are your system
-cannot/doesn't create shared objects.
+Plugins are compiled as shared objects.  A plugin's filename should end with
+.so. If you get not .so but only .a, the chances are your system cannot /
+doesn't create shared objects.
 
 
 Command line
 ------------
 
-Enfle is very simple software.  Pass filenames to arguments which you
-want to view.  If you pass directory name, then files under that
-directory will be added recursively.  Supported archives(such as
-.tar.gz) can be directly specified.
+Enfle is _very_ simple software (which doesn't use some toolkit or
+something).  Pass filenames to arguments which you want to view.  If you
+pass directory name, then files under that directory will be added
+recursively.  Supported archives(such as .tar.gz) can be directly specified.
 
 * -C converts images by specified Saver plugin.  If the argument is omitted, PNG is used.
 * -i specifies the pattern to include.
@@ -210,7 +196,7 @@ Customize
 ---------
 
 There is the configuration file in
-$prefix/share/enfle/enfle.rc(normally, /usr/local/share/enfle/enfle.rc
+$prefix/share/enfle/enfle.rc (normally, /usr/local/share/enfle/enfle.rc
 or like).  If you'd like to customize, copy and edit it.
 
 ``` shell
