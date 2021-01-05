@@ -3,7 +3,7 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Nov 18 23:05:02 2011.
+ * Last Modified: Sat Jan  4 21:33:41 2020.
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
@@ -172,7 +172,7 @@ load_image(Image *p, Stream *st)
   image_bpl(p) = (image_width(p) * p->bits_per_pixel) >> 3;
   image_bpl(p) += (4 - (image_bpl(p) % 4)) % 4;
 
-  debug_message_fnc("(%d, %d): bpp %d depth %d compress %d\n", image_width(p), image_height(p), p->bits_per_pixel, p->depth, compress_method);
+  //debug_message_fnc("(%d, %d): bpp %d depth %d compress %d\n", image_width(p), image_height(p), p->bits_per_pixel, p->depth, compress_method);
 
   if ((d = memory_alloc(image_image(p), image_bpl(p) * image_height(p))) == NULL)
     return 0;
@@ -291,7 +291,7 @@ DEFINE_LOADER_PLUGIN_LOAD(p, st, vw, c, priv)
 {
   LoaderStatus status;
 
-  debug_message("bmp loader: load() called\n");
+  //debug_message("bmp loader: load() called\n");
 
   /* identify() must be called() */
   if ((status = identify(p, st, vw, c, priv)) != LOAD_OK)
