@@ -1,9 +1,9 @@
 /*
  * normal.c -- Normal UI plugin
- * (C)Copyright 2000-2009 by Hiroshi Takekawa
+ * (C)Copyright 2000-2021 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Nov  4 22:37:44 2009.
+ * Last Modified: Thu Dec 23 22:43:35 2021.
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
@@ -44,7 +44,7 @@ static int ui_main(UIData *);
 static UIPlugin plugin = {
   .type = ENFLE_PLUGIN_UI,
   .name = "Normal",
-  .description = "Normal UI plugin version 0.7.1",
+  .description = "Normal UI plugin version 0.8",
   .author = "Hiroshi Takekawa",
 
   .ui_main = ui_main,
@@ -96,6 +96,7 @@ typedef struct _main_loop {
   Movie *m;
   Timer *timer;
   Timer *slide_timer;
+  Timer *double_click_timer;
   //unsigned int magnified_width, magnified_height; /* For arbitrary size magnification */
   char *path;
   VideoButton pointed_button;
@@ -103,6 +104,7 @@ typedef struct _main_loop {
   unsigned int lx, uy, rx, dy;
   int offset_x, offset_y;
   int ret;
+  int is_waiting_for_double_click;
 } MainLoop;
 
 static int
@@ -560,6 +562,8 @@ static UIAction built_in_actions[] = {
   /* 'f' */
   { "toggle-fullscreen", main_loop_toggle_fullscreen_mode, NULL,
     ENFLE_KEY_f, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "toggle-fullscreen", main_loop_toggle_fullscreen_mode, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_DoubleClick, ENFLE_Button_1, 0, 0 },
   /* 'n', ' ', M-1(Left), M-4 */
   { "next", main_loop_next, NULL,
     ENFLE_KEY_n, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
@@ -627,6 +631,8 @@ static UIAction built_in_actions[] = {
   /* 'a' */
   { "toggle_autoforward", main_loop_toggle_autoforward, NULL,
     ENFLE_KEY_a, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
+  { "toggle_autoforward", main_loop_toggle_autoforward, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_DoubleClick, ENFLE_Button_2, 0, 0 },
   /* 's' */
   { "toggle_slideshow", main_loop_toggle_slideshow, NULL,
     ENFLE_KEY_s, ENFLE_MOD_None, ENFLE_Button_None, 0, 0 },
@@ -645,6 +651,8 @@ static UIAction built_in_actions[] = {
   /* 'M' */
   { "magnify_short",  main_loop_magnify_short, NULL,
     ENFLE_KEY_m, ENFLE_MOD_Shift, ENFLE_Button_None, 0, 0 },
+  { "magnify_short",  main_loop_magnify_short, NULL,
+    ENFLE_KEY_Empty, ENFLE_MOD_DoubleClick, ENFLE_Button_3, 0, 0 },
   /* A-m */
   { "magnify_long",  main_loop_magnify_long, NULL,
     ENFLE_KEY_m, ENFLE_MOD_Alt, ENFLE_Button_None, 0, 0 },
@@ -706,14 +714,39 @@ main_loop_do_action(MainLoop *ml, VideoKey key, VideoModifierKey modkey, VideoBu
   return result;
 }
 
+static const int double_click_enfle_buttons[ENFLE_Button_MAX] = {
+  [ENFLE_Button_1] = 1,
+  [ENFLE_Button_2] = 1,
+  [ENFLE_Button_3] = 1,
+};
+
+static int is_double_clickable(VideoButton button)
+{
+  if (button >= ENFLE_Button_None && button < ENFLE_Button_MAX)
+    return double_click_enfle_buttons[button];
+  return 0;
+}
+
 static int
 main_loop_button_released(MainLoop *ml)
 {
+  VideoModifierKey mod = ENFLE_MOD_None;
   VideoButton button = ml->button;
+
+  /* Double click check logic */
+  if (is_double_clickable(button) && ml->is_waiting_for_double_click == 0) {
+    ml->is_waiting_for_double_click = 1;
+    timer_start(ml->double_click_timer);
+    return 0;
+  }
+  if (ml->is_waiting_for_double_click == 1)
+    mod = ENFLE_MOD_DoubleClick;
+  ml->is_waiting_for_double_click = 0;
+  timer_stop(ml->double_click_timer);
 
   ml->button = ENFLE_Button_None;
   if (button == ml->ev.button.button)
-    return main_loop_do_action(ml, ENFLE_KEY_Empty, ENFLE_MOD_None, ml->ev.button.button);
+    return main_loop_do_action(ml, ENFLE_KEY_Empty, mod, ml->ev.button.button);
   return 0;
 }
 
@@ -773,6 +806,7 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
   ml.p = p;
   ml.timer = enfle_timer_create(timer_gettimeofday());
   ml.slide_timer = enfle_timer_create(timer_gettimeofday());
+  ml.double_click_timer = enfle_timer_create(timer_gettimeofday());
   ml.st = st;
   ml.a = a;
   ml.path = path;
@@ -808,6 +842,13 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
       /* Pointer is inside window and has been stopped 2seconds */
       video_window_set_cursor(vw, _VIDEO_CURSOR_INVISIBLE);
       timer_stop(ml.timer);
+    }
+    if (timer_is_running(ml.double_click_timer) && timer_get_milli(ml.double_click_timer) >= 300 &&
+	is_double_clickable(ml.button)) {
+      /* Double click check period has expired. */
+      ml.is_waiting_for_double_click = 2;
+      timer_stop(ml.double_click_timer);
+      main_loop_button_released(&ml);
     }
     if (video_window_dispatch_event(vw, &ml.ev)) {
       switch (ml.ev.type) {
@@ -905,6 +946,8 @@ main_loop(UIData *uidata, VideoWindow *vw, Movie *m, Image *p, Stream *st, Archi
     timer_destroy(ml.timer);
   if (ml.slide_timer)
     timer_destroy(ml.slide_timer);
+  if (ml.double_click_timer)
+    timer_destroy(ml.double_click_timer);
 
   return ml.ret;
 }

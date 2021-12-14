@@ -1,9 +1,9 @@
 /*
  * video.h -- Video header
- * (C)Copyright 2000, 2001 by Hiroshi Takekawa
+ * (C)Copyright 2000-2021 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Dec 31 01:23:37 2006.
+ * Last Modified: Thu Dec 23 22:07:20 2021.
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
@@ -29,13 +29,16 @@ typedef enum {
   ENFLE_KEY_q, ENFLE_KEY_r, ENFLE_KEY_s, ENFLE_KEY_t,
   ENFLE_KEY_u, ENFLE_KEY_v, ENFLE_KEY_w, ENFLE_KEY_x,
   ENFLE_KEY_y, ENFLE_KEY_z,
+  ENFLE_KEY_MAX,
 } VideoKey;
 
 typedef enum {
-  ENFLE_MOD_None  = 0,
-  ENFLE_MOD_Shift = 1,
-  ENFLE_MOD_Ctrl  = 2,
-  ENFLE_MOD_Alt   = 4
+  ENFLE_MOD_None        = 0,
+  ENFLE_MOD_Shift       = 1,
+  ENFLE_MOD_Ctrl        = 2,
+  ENFLE_MOD_Alt         = 4,
+  ENFLE_MOD_DoubleClick = 8,
+  ENFLE_MOD_MAX = 9,
 } VideoModifierKey;
 
 typedef enum {
@@ -44,7 +47,8 @@ typedef enum {
   ENFLE_Button_2    = 2,
   ENFLE_Button_3    = 4,
   ENFLE_Button_4    = 8,
-  ENFLE_Button_5    = 16
+  ENFLE_Button_5    = 16,
+  ENFLE_Button_MAX  = 32,
 } VideoButton;
 
 #define ENFLE_ExposureMask 1
