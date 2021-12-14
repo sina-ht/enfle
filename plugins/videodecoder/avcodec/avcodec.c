@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 13 00:54:24 2017.
+ * Last Modified: Tue Dec 14 19:05:42 2021.
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
@@ -65,7 +65,7 @@ typedef struct __picture_buffer {
 struct videodecoder_avcodec {
   Image *p;
   const char *vcodec_name;
-  AVCodec *vcodec;
+  const AVCodec *vcodec;
   AVCodecContext *vcodec_ctx;
   AVFrame *vcodec_picture;
   unsigned char *buf;
