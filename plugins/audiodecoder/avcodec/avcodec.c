@@ -3,7 +3,7 @@
  * (C)Copyright 2004 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Sep 13 00:50:34 2017.
+ * Last Modified: Tue Dec 14 19:05:10 2021.
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
@@ -45,7 +45,7 @@ static AudioDecoderPlugin plugin = {
 
 struct audiodecoder_avcodec {
   const char *acodec_name;
-  AVCodec *acodec;
+  const AVCodec *acodec;
   AVCodecContext *acodec_ctx;
   unsigned char *buf;
   AVFrame *acodec_sample;
