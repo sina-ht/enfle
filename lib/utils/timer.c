@@ -19,7 +19,7 @@
 static void destroy(Timer *);
 static void reset(Timer *);
 static void start(Timer *);
-static void pause(Timer *);
+static void __pause(Timer *);
 static void restart(Timer *);
 static void stop(Timer *);
 static Timer_t get_micro(Timer *);
@@ -36,7 +36,7 @@ static Timer template = {
   .destroy = destroy,
   .reset = reset,
   .start = start,
-  .pause = pause,
+  .pause = __pause,
   .restart = restart,
   .stop = stop,
   .get_micro = get_micro,
@@ -87,7 +87,7 @@ start(Timer *timer)
 }
 
 static void
-pause(Timer *timer)
+__pause(Timer *timer)
 {
   if (timer->status == _TIMER_STOP)
     return;
@@ -122,7 +122,7 @@ get_micro(Timer *timer)
 {
   Timer_t t;
 
-  pause(timer);
+  __pause(timer);
   t = timer->time;
   restart(timer);
 
@@ -140,7 +140,7 @@ get_milli(Timer *timer)
 {
   Timer_t t;
 
-  pause(timer);
+  __pause(timer);
   t = timer->time / 1000;
   restart(timer);
 
@@ -158,7 +158,7 @@ get(Timer *timer)
 {
   Timer_t t;
 
-  pause(timer);
+  __pause(timer);
   t = timer->time / 1000000;
   restart(timer);
 

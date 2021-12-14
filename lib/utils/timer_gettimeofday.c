@@ -22,7 +22,7 @@
 static Timer *create(Timer *);
 static void destroy(Timer *);
 static void start(Timer *);
-static void pause(Timer *);
+static void __pause(Timer *);
 static void restart(Timer *);
 static void stop(Timer *);
 static Timer_t get_micro(Timer *);
@@ -39,7 +39,7 @@ static Timer_impl timer_impl_gettimeofday = {
   .destroy =   destroy,
   .reset =     NULL,
   .start =     start,
-  .pause =     pause,
+  .pause =     __pause,
   .restart =   restart,
   .stop =      stop,
   .get_micro = get_micro,
@@ -94,7 +94,7 @@ start(Timer *timer)
 }
 
 static void
-pause(Timer *timer)
+__pause(Timer *timer)
 {
   struct time_data *t = (struct time_data *)timer->impl->impl_data;
 
