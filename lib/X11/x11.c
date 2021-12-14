@@ -29,12 +29,12 @@
 #include "x11.h"
 
 static int open(X11 *, char *);
-static int close(X11 *);
+static int __close(X11 *);
 static void destroy(X11 *);
 
 static X11 template = {
   .open = open,
-  .close = close,
+  .close = __close,
   .destroy = destroy
 };
 
@@ -416,7 +416,7 @@ open(X11 *x11, char *dispname)
 }
 
 static int
-close(X11 *x11)
+__close(X11 *x11)
 {
   XCloseDisplay(x11_display(x11));
   x11_display(x11) = NULL;
@@ -433,7 +433,7 @@ static void
 destroy(X11 *x11)
 {
   if (x11_display(x11))
-    close(x11);
+    __close(x11);
 #ifdef USE_XV
   if (x11->xv)
     free(x11->xv);
