@@ -3,7 +3,7 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Sun Oct 14 12:41:12 2001.
+ * Last Modified: Tue Dec 14 18:48:40 2021.
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
@@ -52,10 +52,10 @@ Timer *enfle_timer_create(Timer_impl *);
 #define timer_restart(t) (t)->restart((t))
 #define timer_stop(t) (t)->stop((t))
 #define timer_get_micro(t) (t)->get_micro((t))
-#define timer_get_difference_micro(t) (t)->get_micro((t))
+#define timer_get_difference_micro(t) (t)->get_difference_micro((t))
 #define timer_get_milli(t) (t)->get_milli((t))
-#define timer_get_difference_milli(t) (t)->get_milli((t))
+#define timer_get_difference_milli(t) (t)->get_difference_milli((t))
 #define timer_get(t) (t)->get((t))
-#define timer_get_difference(t) (t)->get((t))
+#define timer_get_difference(t) (t)->get_difference((t))
 
 #endif
