@@ -1,3 +1,55 @@
+2021-12-26  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* configure.ac: configure.ac: Version up
+
+2021-12-26  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/effect/gamma/gamma.c: effect: gamma: Fix calc_gamma()
+	prototype
+
+2021-12-14  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* lib/enfle/video.h, plugins/ui/normal/normal.c: ui: normal: Add
+	double click support Make the left double click toggle-fullscreen.  Make the center double click auto-forward, but come with the
+	inability to stop auto forwarding. This restriction is to be fixed.
+
+2021-12-14  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* lib/utils/timer.c, lib/utils/timer_gettimeofday.c: timer: Rename
+	pause() to __pause() pause() is too common to use.
+
+2021-12-14  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* lib/X11/x11.c: lib/X11: Rename close() to __close() close() is too common to use.
+
+2021-12-14  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/videodecoder/avcodec/avcodec.c: videodecoder: avcodec:
+	Make vcodec const
+
+2021-12-14  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/audiodecoder/avcodec/avcodec.c: audiodecoder: avcodec:
+	Make acodec const
+
+2021-12-14  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* lib/utils/timer.h: timer.h: Fix twenty-year-old typos
+
+2021-01-05  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/loader/bmp/bmp.c: plugins/loader/bmp: Deleted debug
+	messages
+
+2021-01-04  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* AUTHORS, README.jp, README.md, common.h, configure.ac: Update
+	copyright year and documents
+
+2020-12-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
 2020-12-10  Hiroshi Takekawa  <sian.ht@gmail.com>
 
 	* configure.ac: configure.ac: Version up
