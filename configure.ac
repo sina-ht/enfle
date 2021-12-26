@@ -4,12 +4,12 @@ dnl
 dnl (C)Copyright 1999-2021 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Tue Apr 17 22:51:14 2018.
+dnl Last Modified: Sun Dec 26 09:58:48 2021.
 dnl
 dnl SPDX-License-Identifier: GPL-2.0-only
 
 AC_PREREQ(2.64)
-AC_INIT([enfle],[20201210],[sian@big.or.jp])
+AC_INIT([enfle],[20211226],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE(silent-rules)
