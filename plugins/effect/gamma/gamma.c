@@ -47,7 +47,7 @@ static EffectPlugin plugin = {
   .effect = effect
 };
 
-static void calc_gamma(unsigned char *, int);
+static void calc_gamma(unsigned char g[256], int);
 
 ENFLE_PLUGIN_ENTRY(effect_gamma)
 {
