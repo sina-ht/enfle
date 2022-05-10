@@ -277,7 +277,6 @@ close_device(AudioDevice *ad)
 {
   close(ad->fd);
   free(ad);
-  ad->opened = 0;
 
   return 1;
 }
