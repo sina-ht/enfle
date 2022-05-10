@@ -1,4 +1,8 @@
-NEWS  Last Modified: Sun Dec 26 10:12:13 2021.
+NEWS  Last Modified: Tue May 10 22:24:41 2022.
+
+20220510:
+ Fix a use-after-free and accessing a local-variable on stack outside its scope.
+ These are found by gcc-12.
 
 20211226:
  Add double click support. Double click left mouse button to toggle full-screen mode.
