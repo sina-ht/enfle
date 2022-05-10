@@ -172,11 +172,13 @@ GIFDestroyData(GIF_info *info)
   gif_free(info);
 }
 
+/* Don't use a stack for 'buf' */
+static char buf[512];
+
 int
 GIFParseNextBlock(Stream *st, GIF_info *info)
 {
   int c;
-  char buf[512];
 
   c = stream_getc(st);
   debug_message_fnc("%02X at %lX\n", c, stream_tell(st));
