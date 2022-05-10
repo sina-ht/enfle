@@ -1,3 +1,24 @@
+2022-05-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* configure.ac: configure.ac: Version up
+
+2022-05-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/loader/gif/giflib.c: loader: gif: Don't use a stack which
+	is used outside its scope
+
+2022-05-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/audio/oss/oss.c: audio: oss: Fix an obvious use-after-free
+
+2021-12-26  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* NEWS: Update NEWS
+
+2021-12-26  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
 2021-12-26  Hiroshi Takekawa  <sian.ht@gmail.com>
 
 	* configure.ac: configure.ac: Version up
