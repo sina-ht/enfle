@@ -1,15 +1,15 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl NOTE: autoconf must be 2.64 or later, automake should be 1.8.2 or later.
 dnl
-dnl (C)Copyright 1999-2021 by Hiroshi Takekawa
+dnl (C)Copyright 1999-2022 by Hiroshi Takekawa
 dnl This file is part of Enfle.
 dnl
-dnl Last Modified: Sun Dec 26 09:58:48 2021.
+dnl Last Modified: Tue May 10 22:25:45 2022.
 dnl
 dnl SPDX-License-Identifier: GPL-2.0-only
 
 AC_PREREQ(2.64)
-AC_INIT([enfle],[20211226],[sian@big.or.jp])
+AC_INIT([enfle],[20220510],[sian@big.or.jp])
 AC_CONFIG_SRCDIR(src/enfle.c)
 AC_CONFIG_HEADERS([enfle-config.h])
 AM_INIT_AUTOMAKE(silent-rules)
