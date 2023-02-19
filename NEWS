@@ -1,4 +1,7 @@
-NEWS  Last Modified: Tue May 10 22:24:41 2022.
+NEWS  Last Modified: Sun Feb 19 18:27:29 2023.
+
+20230219
+ Update webp plugin.
 
 20220510:
  Fix a use-after-free and accessing a local-variable on stack outside its scope.
