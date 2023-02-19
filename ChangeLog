@@ -1,3 +1,30 @@
+2023-02-19  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* NEWS: Update NEWS
+
+2023-02-19  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* configure.ac: configure.ac: Version up
+
+2023-02-19  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* INSTALL, config.guess, config.sub, install-sh, missing,
+	mkinstalldirs: Update autotools files
+
+2023-02-19  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/loader/webp/webp.c: loader: webp: Allow WEBPVP8X We allowed "WEBPVP8 " (8 letters), but there're "WEBPVP8X" and we
+	should allow them. It suffices that we check the first 7 letters are
+	"WEBPVP8" (7 letters).
+
+2022-05-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* NEWS: Update NEWS
+
+2022-05-10  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* ChangeLog: ChangeLog: Update ChangeLog
+
 2022-05-10  Hiroshi Takekawa  <sian.ht@gmail.com>
 
 	* configure.ac: configure.ac: Version up
