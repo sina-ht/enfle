@@ -1,9 +1,9 @@
 /*
  * webp.c -- webp loader plugin
- * (C)Copyright 2010-2016 by Hiroshi Takekawa
+ * (C)Copyright 2010-2023 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed May  4 19:55:05 2016.
+ * Last Modified: Sun Feb 19 18:10:06 2023.
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
@@ -27,7 +27,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
   .name = "WEBP",
-  .description = "WEBP Loader plugin version 0.1.1",
+  .description = "WEBP Loader plugin version 0.1.2",
   .author = "Hiroshi Takekawa",
   .image_private = NULL,
 
@@ -110,7 +110,7 @@ DEFINE_LOADER_PLUGIN_IDENTIFY(p __attribute__((unused)), st, vw __attribute__((u
     return LOAD_ERROR;
   if (memcmp(buf, "RIFF", 4) != 0)
     return LOAD_NOT;
-  if (memcmp(buf + 8, "WEBPVP8 ", 8) != 0)
+  if (memcmp(buf + 8, "WEBPVP8", 7) != 0)
     return LOAD_NOT;
 
   return LOAD_OK;
