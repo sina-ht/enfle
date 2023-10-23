@@ -4,12 +4,12 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 23 15:44:39 2023.
+ * Last Modified: Mon Oct 23 15:47:04 2023.
  *
  * NOTES:
  *  This file does NOT include LZW code.
  *  This plugin is incomplete, but works.
- *  Requires libungif version 3.1.0 or later(4.1.0 recommended).
+ *  Requires libungif version 5.2.1 or later.
  *
  *             The Graphics Interchange Format(c) is
  *       the Copyright property of CompuServe Incorporated.
@@ -47,7 +47,7 @@ static PlayerStatus stop_movie(Movie *);
 static PlayerPlugin plugin = {
   .type = ENFLE_PLUGIN_PLAYER,
   .name = "UNGIF",
-  .description = "UNGIF Player plugin version 0.4.1 with libungif",
+  .description = "UNGIF Player plugin version 0.5 with libungif",
   .author = "Hiroshi Takekawa",
 
   .identify = identify,
@@ -86,13 +86,14 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   int i, size, direct_renderable;
   UNGIF_info *info;
   Image *p;
+  int err;
 
   if ((info = calloc(1, sizeof(UNGIF_info))) == NULL) {
     show_message("UNGIF: load_movie: No enough memory.\n");
     return PLAY_ERROR;
   }
 
-  if ((info->gf = DGifOpen(st, ungif_input_func)) == NULL) {
+  if ((info->gf = DGifOpen(st, ungif_input_func, &err)) == NULL) {
     PrintGifError();
     free(info);
     return PLAY_ERROR;
@@ -159,6 +160,7 @@ static PlayerStatus
 play(Movie *m)
 {
   UNGIF_info *info = (UNGIF_info *)m->movie_private;
+  int err;
 
   switch (m->status) {
   case _PLAY:
@@ -183,7 +185,7 @@ play(Movie *m)
     return PLAY_OK;
 
   stream_rewind(m->st);
-  if ((info->gf = DGifOpen(m->st, ungif_input_func)) == NULL) {
+  if ((info->gf = DGifOpen(m->st, ungif_input_func, &err)) == NULL) {
     PrintGifError();
     return PLAY_ERROR;
   }
@@ -475,6 +477,7 @@ static PlayerStatus
 stop_movie(Movie *m)
 {
   UNGIF_info *info = (UNGIF_info *)m->movie_private;
+  int err;
 
   switch (m->status) {
   case _PLAY:
@@ -494,7 +497,7 @@ stop_movie(Movie *m)
 
   if (info->gf) {
     /* stop */
-    if (DGifCloseFile(info->gf) == GIF_ERROR) {
+    if (DGifCloseFile(info->gf, &err) == GIF_ERROR) {
       PrintGifError();
       return PLAY_ERROR;
     }
@@ -508,6 +511,7 @@ static void
 unload_movie(Movie *m)
 {
   UNGIF_info *info = (UNGIF_info *)m->movie_private;
+  int err;
 
   timer_stop(m->timer);
   if (info->prev_buffer)
@@ -519,7 +523,7 @@ unload_movie(Movie *m)
   if (info->p)
     image_destroy(info->p);
 
-  if (info->gf && DGifCloseFile(info->gf) == GIF_ERROR) {
+  if (info->gf && DGifCloseFile(info->gf, &err) == GIF_ERROR) {
     PrintGifError();
   }
 
