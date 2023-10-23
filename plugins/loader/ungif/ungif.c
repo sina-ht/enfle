@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /*
  * ungif.c -- gif loader plugin, which exploits libungif.
  * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Wed Mar  1 00:23:16 2006.
+ * Last Modified: Mon Oct 23 15:40:26 2023.
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -13,8 +14,6 @@
  *             The Graphics Interchange Format(c) is
  *       the Copyright property of CompuServe Incorporated.
  * GIF(sm) is a Service Mark property of CompuServe Incorporated.
- *
- * SPDX-License-Identifier: GPL-2.0-only
  */
 
 #include <stdio.h>
