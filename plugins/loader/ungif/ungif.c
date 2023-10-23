@@ -4,7 +4,7 @@
  * (C)Copyright 1998, 99, 2000, 2002, 2023 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 23 15:43:14 2023.
+ * Last Modified: Mon Oct 23 15:53:54 2023.
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -67,6 +67,16 @@ ungif_input_func(GifFileType *GifFile, GifByteType *p, int s)
   return stream_read(st, p, s);
 }
 
+static void
+PrintGifError(int ErrorCode) {
+    const char *Err = GifErrorString(ErrorCode);
+
+    if (Err != NULL)
+        fprintf(stderr, "GIF-LIB error: %s.\n", Err);
+    else
+        fprintf(stderr, "GIF-LIB undefined error %d.\n", ErrorCode);
+}
+
 static LoaderStatus
 load_image(Image *p, Stream *st)
 {
@@ -85,7 +95,7 @@ load_image(Image *p, Stream *st)
 
   if ((GifFile = DGifOpen(st, ungif_input_func, &err)) == NULL) {
 #ifdef DEBUG
-    PrintGifError();
+    PrintGifError(err);
 #endif
     return LOAD_ERROR;
   }
@@ -95,7 +105,7 @@ load_image(Image *p, Stream *st)
   if ((ScreenBuffer = (GifRowType *)
        calloc(sheight, sizeof(GifRowType *))) == NULL) {
     if (DGifCloseFile(GifFile, &err) == GIF_ERROR)
-      PrintGifError();
+      PrintGifError(err);
     return LOAD_ERROR;
   }
 
@@ -103,7 +113,7 @@ load_image(Image *p, Stream *st)
   if ((ScreenBuffer[0] = (GifRowType)calloc(sheight, size)) == NULL) {
     free(ScreenBuffer);
     if (DGifCloseFile(GifFile, &err) == GIF_ERROR)
-      PrintGifError();
+      PrintGifError(err);
     return LOAD_ERROR;
   }
   for (i = 1; i < sheight; i++)
@@ -116,7 +126,7 @@ load_image(Image *p, Stream *st)
       if (!image_loaded)
 	goto error;
       /* Show error message, but try to display. */
-      PrintGifError();
+      PrintGifError(err);
       break;
     }
 
@@ -244,7 +254,7 @@ load_image(Image *p, Stream *st)
   return LOAD_OK;
 
  error:
-  PrintGifError();
+  PrintGifError(err);
   DGifCloseFile(GifFile, &err);
  error_after_closed:
   free(ScreenBuffer[0]);

@@ -4,7 +4,7 @@
  * (C)Copyright 2000, 2002 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 23 15:47:04 2023.
+ * Last Modified: Mon Oct 23 15:54:56 2023.
  *
  * NOTES:
  *  This file does NOT include LZW code.
@@ -80,6 +80,16 @@ ungif_input_func(GifFileType *GifFile, GifByteType *p, int s)
   return stream_read(st, p, s);
 }
 
+static void
+PrintGifError(int ErrorCode) {
+    const char *Err = GifErrorString(ErrorCode);
+
+    if (Err != NULL)
+        fprintf(stderr, "GIF-LIB error: %s.\n", Err);
+    else
+        fprintf(stderr, "GIF-LIB undefined error %d.\n", ErrorCode);
+}
+
 static PlayerStatus
 load_movie(VideoWindow *vw, Movie *m, Stream *st)
 {
@@ -94,7 +104,7 @@ load_movie(VideoWindow *vw, Movie *m, Stream *st)
   }
 
   if ((info->gf = DGifOpen(st, ungif_input_func, &err)) == NULL) {
-    PrintGifError();
+    PrintGifError(err);
     free(info);
     return PLAY_ERROR;
   }
@@ -186,7 +196,7 @@ play(Movie *m)
 
   stream_rewind(m->st);
   if ((info->gf = DGifOpen(m->st, ungif_input_func, &err)) == NULL) {
-    PrintGifError();
+    PrintGifError(err);
     return PLAY_ERROR;
   }
 
@@ -238,7 +248,7 @@ play_main(Movie *m, VideoWindow *vw)
     if (DGifGetRecordType(gf, &rectype) == GIF_ERROR) {
       if (image_loaded)
 	break;
-      PrintGifError();
+      //PrintGifError(err);
       return PLAY_OK;
     }
 
@@ -498,7 +508,7 @@ stop_movie(Movie *m)
   if (info->gf) {
     /* stop */
     if (DGifCloseFile(info->gf, &err) == GIF_ERROR) {
-      PrintGifError();
+      PrintGifError(err);
       return PLAY_ERROR;
     }
     info->gf = NULL;
@@ -524,7 +534,7 @@ unload_movie(Movie *m)
     image_destroy(info->p);
 
   if (info->gf && DGifCloseFile(info->gf, &err) == GIF_ERROR) {
-    PrintGifError();
+    PrintGifError(err);
   }
 
   free(info);
