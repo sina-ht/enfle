@@ -1,11 +1,18 @@
 Simple Plugin-based Graphic Loader Enfle
 ========================================
 
+WARNING
+-------
+*WARNING*: Enfle is _VERY_ old software.  There might be vulnerabilities
+unfixed.  Some functionality doesn't work well now. e.g. no wall paper
+support on GNOME environment.
+
+
 Metadata
 --------
-(C) Copyright 1998-2021 by Hiroshi Takekawa.
+(C) Copyright 1998-2023 by Hiroshi Takekawa.
 
-Last Modified: Mon Jan  4 15:46:12 2021.
+Last Modified: Mon Oct 23 16:05:45 2023.
 
 
 License
@@ -107,9 +114,6 @@ These environments are checked:
 
 Other similar environments should work.  Please let me know if you try
 on the same/other environments.
-
-*WARNING*: Enfle is _VERY_ old software.  Some functionality doesn't work
-well now. e.g. no wall paper support on GNOME environment.
 
 
 Compile
