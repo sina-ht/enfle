@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * ungif.c -- gif loader plugin, which exploits libungif.
- * (C)Copyright 1998, 99, 2000, 2002 by Hiroshi Takekawa
+ * (C)Copyright 1998, 99, 2000, 2002, 2023 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Mon Oct 23 15:40:26 2023.
+ * Last Modified: Mon Oct 23 15:43:14 2023.
  *
  * NOTES:
  *  This file does NOT include LZW code.
  *  This plugin is incomplete, but works.
- *  Requires libungif version 3.1.0 or later(4.1.0 recommended).
+ *  Requires libungif version 5.1.2 or later.
  *
  *             The Graphics Interchange Format(c) is
  *       the Copyright property of CompuServe Incorporated.
@@ -33,7 +33,7 @@ DECLARE_LOADER_PLUGIN_METHODS;
 static LoaderPlugin plugin = {
   .type = ENFLE_PLUGIN_LOADER,
   .name = "UNGIF",
-  .description = "UNGIF Loader plugin version 0.3 with libungif",
+  .description = "UNGIF Loader plugin version 0.4 with libungif",
   .author = "Hiroshi Takekawa",
   .image_private = NULL,
 
@@ -81,8 +81,9 @@ load_image(Image *p, Stream *st)
   ColorMapObject *ColorMap;
   int image_loaded = 0;
   unsigned char *d;
+  int err;
 
-  if ((GifFile = DGifOpen(st, ungif_input_func)) == NULL) {
+  if ((GifFile = DGifOpen(st, ungif_input_func, &err)) == NULL) {
 #ifdef DEBUG
     PrintGifError();
 #endif
@@ -93,7 +94,7 @@ load_image(Image *p, Stream *st)
 
   if ((ScreenBuffer = (GifRowType *)
        calloc(sheight, sizeof(GifRowType *))) == NULL) {
-    if (DGifCloseFile(GifFile) == GIF_ERROR)
+    if (DGifCloseFile(GifFile, &err) == GIF_ERROR)
       PrintGifError();
     return LOAD_ERROR;
   }
@@ -101,7 +102,7 @@ load_image(Image *p, Stream *st)
   size = GifFile->SWidth * sizeof(GifPixelType);
   if ((ScreenBuffer[0] = (GifRowType)calloc(sheight, size)) == NULL) {
     free(ScreenBuffer);
-    if (DGifCloseFile(GifFile) == GIF_ERROR)
+    if (DGifCloseFile(GifFile, &err) == GIF_ERROR)
       PrintGifError();
     return LOAD_ERROR;
   }
@@ -123,7 +124,7 @@ load_image(Image *p, Stream *st)
     case IMAGE_DESC_RECORD_TYPE:
       if (image_loaded) {
 	debug_message("GIF contains Multiple images. (maybe animated?)\n");
-	DGifCloseFile(GifFile);
+	DGifCloseFile(GifFile, &err);
 	free(ScreenBuffer[0]);
 	free(ScreenBuffer);
 
@@ -223,7 +224,7 @@ load_image(Image *p, Stream *st)
     p->colormap[i][2] = ColorMap->Colors[i].Blue;
   }
 
-  if (DGifCloseFile(GifFile) == GIF_ERROR)
+  if (DGifCloseFile(GifFile, &err) == GIF_ERROR)
     goto error;
 
   p->type = _INDEX;
@@ -244,7 +245,7 @@ load_image(Image *p, Stream *st)
 
  error:
   PrintGifError();
-  DGifCloseFile(GifFile);
+  DGifCloseFile(GifFile, &err);
  error_after_closed:
   free(ScreenBuffer[0]);
   free(ScreenBuffer);
