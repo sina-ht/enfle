@@ -1,3 +1,44 @@
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* configure.ac: configure.ac: Version up
+
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* NEWS: Update NEWS
+
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* README.md: Update README.md
+
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/loader/ungif/ungif.c, plugins/player/ungif/ungif.c: ungif:
+	Adapt for PrintGifError() change
+
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/player/ungif/ungif.c: ungif: Update to adapt for
+	libungif-5.1.2
+
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/player/ungif/ungif.c: ungif: Put a SPDX-License-Identifier
+	at a top of lines
+
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/loader/ungif/ungif.c: ungif: Update to adapt for
+	libungif-5.1.2
+
+2023-10-23  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* plugins/loader/ungif/ungif.c: ungif: Put a SPDX-License-Identifier
+	at a top of lines
+
+2023-02-19  Hiroshi Takekawa  <sian.ht@gmail.com>
+
+	* ChangeLog: Update ChangeLog
+
 2023-02-19  Hiroshi Takekawa  <sian.ht@gmail.com>
 
 	* NEWS: Update NEWS
